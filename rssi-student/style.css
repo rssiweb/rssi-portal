@@ -38,7 +38,7 @@
 }
 
 .page-topbar .logo-area {
-    background-image: url(../img/WebsiteHeaderLogo.png);
+    background-image: url(../rssi-student/img/WebsiteHeaderLogo.png);
     background-repeat: no-repeat;
     background-size: 140px;
     margin-top: 0.75%;
@@ -54,7 +54,7 @@
 }
 
 .page-topbar .logo-icon {
-    background-image: url(../img/icon.png) !important;
+    background-image: url(../rssi-student/img/icon.png) !important;
     background-repeat: no-repeat !important;
     background-size: 37px;
     margin-top: 0.79%;
