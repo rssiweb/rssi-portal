@@ -1,3 +1,4 @@
+<link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
 <div class="page-topbar">
     <div class="logo-area"> </div>
     <div class="quick-area">
