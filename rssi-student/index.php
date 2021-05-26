@@ -8,7 +8,6 @@ session_start(); //session starts here
 <head lang="en">
     <meta charset="UTF-8">
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
     <title>Login</title>
 </head>
 <style>
