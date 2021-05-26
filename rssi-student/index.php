@@ -67,9 +67,9 @@ if (isset($_POST['login'])) {
 
     $check_user = "select * from studentdata WHERE Student_ID='$Student_ID'AND colors='$colors'";
 
-    $run = mysqli_query($con, $check_user);
+    $run = pg_query($con, $check_user);
 
-    if (mysqli_num_rows($run)) {
+    if (pg_num_rows($run)) {
         echo "<script>window.open('home.php','_self')</script>";
 
         $_SESSION['sid'] = $Student_ID; //here session is used and value of $user_email store in $_SESSION. 

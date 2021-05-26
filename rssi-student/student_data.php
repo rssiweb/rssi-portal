@@ -1,9 +1,9 @@
 <?php  
         include("database.php");  
         $view_users_query="select * from studentdata WHERE Student_ID='$user_check'";//select query for viewing users.  
-        $run=mysqli_query($con,$view_users_query);//here run the sql query.  
+        $run=pg_query($con,$view_users_query);//here run the sql query.  
   
-        while($row=mysqli_fetch_array($run))//while look to fetch the result and store in a array $row.  
+        while($row=pg_fetch_array($run))//while look to fetch the result and store in a array $row.  
         { 
 $Category=$row[0]; 
 $Student_ID=$row[1];
