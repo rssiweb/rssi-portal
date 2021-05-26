@@ -65,7 +65,7 @@ if (isset($_POST['login'])) {
     $Student_ID = $_POST['sid'];
     $colors = $_POST['pass'];
 
-    $check_user = "select * from studentdata WHERE Student_ID='$Student_ID'AND colors='$colors'";
+    $check_user = "select * from studentdata WHERE BINARY Student_ID='$Student_ID'AND colors='$colors'";
 
     $run = pg_query($con, $check_user);
 

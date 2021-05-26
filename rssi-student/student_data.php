@@ -1,6 +1,6 @@
 <?php  
         include("database.php");  
-        $view_users_query="select * from studentdata WHERE Student_ID='$user_check'";//select query for viewing users.  
+        $view_users_query="select * from studentdata WHERE BINARY Student_ID='$user_check'";//select query for viewing users.  
         $run=pg_query($con,$view_users_query);//here run the sql query.  
   
         while($row=pg_fetch_array($run))//while look to fetch the result and store in a array $row.  
