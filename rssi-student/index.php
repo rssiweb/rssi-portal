@@ -62,7 +62,7 @@ session_start(); //session starts here
 include("database.php");
 
 if (isset($_POST['login'])) {
-    $Student_ID = $_POST['sid'];
+    $Student_ID = strtoupper($_POST['sid']);
     $colors = $_POST['pass'];
 
     $check_user = "select * from studentdata WHERE Student_ID='$Student_ID'AND colors='$colors'";
