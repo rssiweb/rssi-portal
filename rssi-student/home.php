@@ -20,6 +20,7 @@ include("student_data.php");
     <meta charset="utf-8">
     <title>Classroom</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
     <style>
         <?php include 'style.css'; ?>
