@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa');
+
 /*Transition==========================*/
 
 .page-topbar,
@@ -486,4 +488,46 @@ section.box {
 .link a:active {
     text-decoration: underline !important;
     color: #F2545F !important;
+}
+
+@media (max-width:767px) {
+    .hidden-xs {
+        display: none!important
+    }
+}
+
+@media (max-width:767px) {
+    td {
+        display: block;
+    }
+    th {
+        display: block;
+    }
+    li.profile img {
+        top: 15px;
+        right: 10px;
+        position: fixed;
+    }
+    /* .page-topbar li .dropdown-menu.profile {
+            max-width: 100%;
+            position: relative;
+            right: 20%;
+        }*/
+    .page-topbar .quick-area .info-menu {
+        padding: 0px;
+        height: 0px;
+    }
+    .page-topbar .logo-icon {
+        width: 0px!important;
+    }
+    .page-topbar .logo-area {
+        width: 0px!important;
+    }
+    .page-topbar li .dropdown-menu.profile {
+        max-width: 180px;
+        height: auto;
+        padding: 0;
+        position: relative;
+        top: 50px;
+    }
 }

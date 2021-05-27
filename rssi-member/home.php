@@ -1,16 +1,16 @@
 <?php
 session_start();
 // Storing Session
-$user_check = $_SESSION['sid'];
+$user_check = $_SESSION['aid'];
 
-if (!$_SESSION['sid']) {
+if (!$_SESSION['aid']) {
 
-    header("Location: unauth.php"); //redirect to the login page to secure the welcome page without login access.  
+  header("Location: unauth.php"); //redirect to the login page to secure the welcome page without login access.  
 }
 ?>
 
 <?php
-include("student_data.php");
+include("member_data.php");
 ?>
 
 <!DOCTYPE html>
@@ -22,13 +22,11 @@ include("student_data.php");
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Classroom</title>
+    <title>Class details</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-    <style>
-        <?php include 'style.css'; ?>
-    </style>
+    <link rel="stylesheet" href="/rssi-student/style.css">
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
@@ -47,26 +45,30 @@ include("student_data.php");
                     <table class="table">
                         <thead>
                             <tr>
+                                <th scope="col">Class Allotment</th>
                                 <th scope="col">Class URL</th>
-                                <th scope="col">Annual Fee</th>
+                                <th scope="col">Class attendance</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><?php echo $ClassURL ?></td>
-                                <td style="line-height: 2;"><?php echo $Fees ?></td>
+                                <td style="line-height: 2;"><?php echo $Class ?></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $GM ?>" target="_blank"><?php echo $GM ?></a></span></td>
+                                <td style="line-height: 2;"><?php echo $Attd ?></td>
                             </tr>
                         </tbody>
                     </table>
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Library Status</th>
+                            <th scope="col">Evaluation path</th>
+                            <th scope="col">Quick Link</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><?php echo $BookStstus ?></td>
+                                <td style="line-height: 2;"><?php echo $EvaluationPath ?></td>
+                                <td style="line-height: 2;"><?php echo $Quicklink ?></td>
                             </tr>
                         </tbody>
                     </table>

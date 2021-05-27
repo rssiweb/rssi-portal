@@ -13,7 +13,7 @@ session_start(); //session starts here
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
-    <title>Login</title>
+    <title>My Account</title>
 </head>
 <style>
     .login-panel {
@@ -36,7 +36,7 @@ session_start(); //session starts here
                         <form role="form" method="post" action="index.php">
                             <fieldset>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Student ID" name="sid" type="text" autofocus required>
+                                    <input class="form-control" placeholder="Associate ID" name="aid" type="text" autofocus required>
                                 </div>
                                 <div class="form-group">
                                     <input class="form-control" placeholder="Password" name="pass" type="password" value="" required>
@@ -66,17 +66,17 @@ session_start(); //session starts here
 include("database.php");
 
 if (isset($_POST['login'])) {
-    $Student_ID = strtoupper($_POST['sid']);
+    $AssociateNumber = strtoupper($_POST['aid']);
     $colors = $_POST['pass'];
 
-    $check_user = "select * from studentdata WHERE Student_ID='$Student_ID'AND colors='$colors'";
+    $check_user = "select * from memberdata WHERE AssociateNumber='$AssociateNumber'AND colors='$colors'";
 
     $run = pg_query($con, $check_user);
 
     if (pg_num_rows($run)) {
         echo "<script>window.open('home.php','_self')</script>";
 
-        $_SESSION['sid'] = $Student_ID; //here session is used and value of $user_email store in $_SESSION. 
+        $_SESSION['aid'] = $AssociateNumber; //here session is used and value of $user_email store in $_SESSION. 
 
     } else {?>
         <div class="container">
