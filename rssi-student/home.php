@@ -17,7 +17,11 @@ include("student_data.php");
 <html>
 
 <head>
-    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>Classroom</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
@@ -43,8 +47,8 @@ include("student_data.php");
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col" width=50%>Class URL</th>
-                                <th scope="col" width=50%>Annual Fee</th>
+                                <th scope="col">Class URL</th>
+                                <th scope="col">Annual Fee</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -57,7 +61,7 @@ include("student_data.php");
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col" width=50%>Library Status</th>
+                                <th scope="col">Library Status</th>
                             </tr>
                         </thead>
                         <tbody>

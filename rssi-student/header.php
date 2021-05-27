@@ -16,7 +16,7 @@
             <li class="profile dropdown">
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle" aria-expanded="false">
                     <img src="<?php echo $PhotoURL ?>" class="img-circle img-inline">
-                    <span><?php echo $StudentName ?> <i class="fa fa-angle-down"></i></span>
+                    <span class="hidden-xs"><?php echo $StudentName ?> <i class="fa fa-angle-down"></i></span>
                 </a>
                 <ul class="dropdown-menu profile fadeIn">
                     <li>
@@ -127,4 +127,18 @@
 
     });
 </script>
+<script>
+    $(document).ready(function() {
+        if ($(window).width() < 760) {
+            if ($('.page-sidebar').hasClass('expandit')) {
+                $('.page-sidebar').addClass('collapseit');
+                $('.page-sidebar').removeClass('expandit');
+                $('.profile-info').addClass('short-profile');
+                $('.logo-area').addClass('logo-icon');
+                $('#main-content').addClass('sidebar_shift');
+                $('.menu-title').css("display", "none");
+            }else{}
+        }
+    });
+    </script>
 <script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" data-auto-replace-svg="nest"></script>
