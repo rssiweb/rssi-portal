@@ -28,7 +28,10 @@ if (!$_SESSION['aid_admin']) {
   <!------ Include the above in your HEAD tag ---------->
 
 </head>
-
+<div class=container>
+  <div class=row>
+    <div class=col style="text-align: right">
+      <span class="noticet">[X]&nbsp;<a href="logout.php">Logout</a></span></div></div></div>
 <?php
 include("database.php");
 $result = pg_query($con, "SELECT * FROM memberdata order by filterstatus asc,today desc");
