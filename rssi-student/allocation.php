@@ -42,7 +42,8 @@ include("student_data.php");
   <section id="main-content">
     <section class="wrapper main-wrapper row">
       <div class="col-md-12">
-        <section class="box" style="padding: 2%;">
+        <div class=col style="text-align: right;">Last synced: <?php echo $Lastupdatedon ?></div>
+                <section class="box" style="padding: 2%;">
 
           <table class="table">
             <thead>
