@@ -62,7 +62,10 @@
                 $SLBal=$row[54];
                 $ELBal=$row[55];
                 $Lastlogin=$row[56];
-                $Quicklink=$row[57]
+                $Profile=$row[57];
+                $FileName=$row[58];
+                $FName=$row[59];
+                $Quicklink=$row[60]                
                 
  
 ?>     
