@@ -60,7 +60,7 @@ echo '<table class="table">
 
 foreach ($resultArr as $array) {
   echo '<tr>
-            <td width="10%><img src="' . $array['photo'] . '" width="50px"/></td>
+            <td width="7%"><img src="' . $array['photo'] . '" width=50px/></td>
             <td width="20%">Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')<br><br>DOJ - ' . $array['doj'] . '</td>
             <td width="15%">' . $array['position'] . '</td>
