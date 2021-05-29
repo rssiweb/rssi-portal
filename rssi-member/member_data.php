@@ -61,11 +61,8 @@
                 $CLBal=$row[53];
                 $SLBal=$row[54];
                 $ELBal=$row[55];
-                $Lastlogin=$row[56];
-                $Profile=$row[57];
-                $FileName=$row[58];
-                $FName=$row[59];
-                $Quicklink=$row[60]                 
+                $Lastlogin=$row[56]
+                
  
 ?>     
 <?php }?>    
