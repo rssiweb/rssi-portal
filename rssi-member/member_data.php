@@ -61,7 +61,8 @@
                 $CLBal=$row[53];
                 $SLBal=$row[54];
                 $ELBal=$row[55];
-                $Lastlogin=$row[56]
+                $Lastlogin=$row[56];
+                $Quicklink=$row[57]
                 
  
 ?>     
