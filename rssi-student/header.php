@@ -4,7 +4,7 @@
 
         <ul class="pull-left info-menu  user-notify">
             <button id="menu_icon"><i class="fa fa-bars" aria-hidden="true"></i></button>
-            <li><a href="https://www.rssi.in/"> <i class="fas fa-home"></i>
+            <li><a href="#"> <i class="fa fa-envelope"></i>
                     <!--<span class="badge">1</span>-->
                 </a></li>
             <li><a href="#"> <i class="fa fa-bell"></i>
