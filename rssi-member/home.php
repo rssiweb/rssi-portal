@@ -39,7 +39,7 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $Lastupdatedon ?></div>
+                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -52,9 +52,9 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><?php echo $Class ?></td>
-                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $GM ?>" target="_blank"><?php echo $GM ?></a></span></td>
-                                <td style="line-height: 2;"><?php echo $Attd ?></td>
+                                <td style="line-height: 2;"><?php echo $class ?></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo $gm ?></a></span></td>
+                                <td style="line-height: 2;"><?php echo $attd ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -67,8 +67,8 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><?php echo $EvaluationPath ?></td>
-                                <td style="line-height: 2;"><?php echo $Quicklink ?></td>
+                                <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
+                                <td style="line-height: 2;"><?php echo $quicklink ?></td>
                             </tr>
                         </tbody>
                     </table>

@@ -40,7 +40,7 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $Lastupdatedon ?></div>
+                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -54,8 +54,8 @@ include("member_data.php");
                         <tbody>
                             <tr>
                               
-                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $Profile ?>" target="_blank"><?php echo $FileName ?></a></span></td>
-                                <td style="line-height: 2;"><?php echo $Notification ?></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span></td>
+                                <td style="line-height: 2;"><?php echo $notification ?></td>
                                 <td style="line-height: 2;"></td>
                             </tr>
                         </tbody>

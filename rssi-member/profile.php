@@ -40,7 +40,7 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $Lastupdatedon ?></div>
+                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -55,10 +55,10 @@ include("member_data.php");
                         <tbody>
                             <tr>
 
-                                <td>Name - <b><?php echo $Fullname ?></b><br>Associate ID - <b><?php echo $AssociateNumber ?></b></b><br><br><b><?php echo $Gender ?> (<?php echo $Age ?> Years)</b></td>
-                                <td><?php echo $DOJ ?></td> 
-                                <td><?php echo $Astatus ?><br><br><?php echo $Remarks ?></td>
-                                <td><?php echo $Badge ?></td>
+                                <td>Name - <b><?php echo $fullname ?></b><br>Associate ID - <b><?php echo $associatenumber ?></b></b><br><br><b><?php echo $gender ?> (<?php echo $age ?> Years)</b></td>
+                                <td><?php echo $doj ?></td> 
+                                <td><?php echo $astatus ?><br><br><?php echo $remarks ?></td>
+                                <td><?php echo $badge ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -73,9 +73,9 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $DateofBirth ?></td>
-                                <td><?php echo $NationalIdentifier ?></td>
-                                <td><?php echo $Identifier ?></td>
+                                <td><?php echo $dateofbirth ?></td>
+                                <td><?php echo $nationalIdentifier ?></td>
+                                <td><?php echo $identifier ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -90,8 +90,8 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $Position ?></td>    
-                                <td><?php echo $BaseBranch ?></td>
+                                <td><?php echo $position ?></td>    
+                                <td><?php echo $basebranch ?></td>
                                 <td>Lucknow, UP</td>
                             </tr>
                         </tbody>
@@ -109,9 +109,9 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $CurrentAddress ?></td>
-                                <td><?php echo $PermanentAddress ?></td>
-                                <td style="line-height: 1.5;"><?php echo $Phone ?><br><?php echo $Email ?></td>
+                                <td><?php echo $currentaddress ?></td>
+                                <td><?php echo $permanentaddress ?></td>
+                                <td style="line-height: 1.5;"><?php echo $phone ?><br><?php echo $email ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -125,9 +125,9 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;">English - <?php echo $LanguageDetailsEnglish ?><br>हिंदी - <?php echo $LanguageDetailsHindi ?></td>
-                                <td><?php echo $WorkExperience ?></td>
-                                <td><?php echo $ApprovedBy ?></td>
+                                <td style="line-height: 2;">English - <?php echo $languagedetailsenglish ?><br>हिंदी - <?php echo $languagedetailshindi ?></td>
+                                <td><?php echo $workexperience ?></td>
+                                <td><?php echo $approvedby ?></td>
                             </tr>
                         </tbody>
                     </table>

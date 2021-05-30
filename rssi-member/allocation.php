@@ -40,7 +40,7 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $Lastupdatedon ?></div>
+                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -55,11 +55,11 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><?php echo $AllocationDate ?></td>
-                                <td style="line-height: 2;"><?php echo $Maxclass ?></td>
-                                <td style="line-height: 2;"><?php echo $Classtaken ?>&nbsp;(<?php echo $CTP ?>)</td>
-                                <td style="line-height: 2;"><?php echo $Leave ?></td>
-                                <td style="line-height: 2;"><?php echo $Feedback ?></td>
+                                <td style="line-height: 2;"><?php echo $allocationdate ?></td>
+                                <td style="line-height: 2;"><?php echo $maxclass ?></td>
+                                <td style="line-height: 2;"><?php echo $classtaken ?>&nbsp;(<?php echo $ctp ?>)</td>
+                                <td style="line-height: 2;"><?php echo $leave ?></td>
+                                <td style="line-height: 2;"><?php echo $feedback ?></td>
                             </tr>
                         </tbody>
                     </table>

@@ -66,17 +66,17 @@ session_start(); //session starts here
 include("database.php");
 
 if (isset($_POST['login'])) {
-    $AssociateNumber = strtoupper($_POST['aid']);
+    $associatenumber = strtoupper($_POST['aid']);
     $colors = $_POST['pass'];
 
-    $check_user = "select * from memberdata WHERE AssociateNumber='$AssociateNumber'AND colors='$colors'";
+    $check_user = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'AND colors='$colors'";
 
     $run = pg_query($con, $check_user);
 
     if (pg_num_rows($run)) {
         echo "<script>window.open('home.php','_self')</script>";
 
-        $_SESSION['aid'] = $AssociateNumber; //here session is used and value of $user_email store in $_SESSION. 
+        $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION. 
 
     } else {?>
         <div class="container">

@@ -40,7 +40,7 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $Lastupdatedon ?></div>
+                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -54,10 +54,10 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                            <td style="line-height: 2;">Casual Leave - <?php echo $CL ?> <br>Sick Leave - <?php echo $SL ?> <br>Other Leave - <?php echo $EL ?></td>
-                            <td style="line-height: 2;">Casual Leave - <?php echo $CLTaken ?> <br>Sick Leave - <?php echo $SLTaken ?> <br>Other Leave - <?php echo $OTHTaken ?></td>
-                                <td style="line-height: 2;">Casual Leave - <?php echo $CLBal ?> <br>Sick Leave - <?php echo $SLBal ?> <br>Other Leave - <?php echo $ELBal ?></td>
-                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $Leaveapply ?>" target="_blank">Leave Request Form</a></span></td>
+                            <td style="line-height: 2;">Casual Leave - <?php echo $cl ?> <br>Sick Leave - <?php echo $sl ?> <br>Other Leave - </td>
+                            <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php echo $sltaken ?> <br>Other Leave - <?php echo $othtaken ?></td>
+                                <td style="line-height: 2;">Casual Leave - <?php echo $clbal ?> <br>Sick Leave - <?php echo $slbal ?> <br>Other Leave - <?php echo $elbal ?></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span></td>
                             </tr>
                         </tbody>
                     </table>

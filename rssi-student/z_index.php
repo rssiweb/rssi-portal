@@ -17,7 +17,7 @@ if (!isset($_POST['username'], $_POST['password'])) {
     exit('Please fill both the username and password fields!');
 }
 // Prepare our SQL, preparing the SQL statement will prevent SQL injection.
-if ($stmt = $con->prepare('SELECT Category,Student_ID,Roll_Number,StudentName,Gender,Age,Class,Profile,Contact,GuardiansName,RelationwithStudent,StudentAAdhar,GuardianAAdhar,DateofBirth,PostalAddress,NameOfTheSubjects,PreferredBranch,NameOfTheSchool,NameOfTheBoard,StateofDomicile,EmailAddress,SchoolAdmissionRequired,Selectdateofformsubmission,Status,EffectiveFrom,Remarks,NameofVendorFoundation,PhotoURL,Familymonthlyincome,Totalnumberoffamilymembers,Medium,Fees,BookStstus,MyDocument,ProfileStatus,Lastupdatedon,colors,ClassURL,Remarks1,Notice,Badge,Filterstatus,AllocationDate,Maxclass,Attd,Leaveapply,CLTaken,SLTaken,OTHTaken,FileName,Lastlogin FROM studentdata WHERE Student_ID = ?')) {
+if ($stmt = $con->prepare('SELECT Category,Student_ID,Roll_Number,StudentName,Gender,Age,Class,Profile,Contact,GuardiansName,RelationwithStudent,StudentAAdhar,GuardianAAdhar,DateofBirth,PostalAddress,NameOfTheSubjects,PreferredBranch,NameOfTheSchool,NameOfTheBoard,StateofDomicile,EmailAddress,SchoolAdmissionRequired,Selectdateofformsubmission,Status,EffectiveFrom,Remarks,NameofVendorFoundation,PhotoURL,Familymonthlyincome,Totalnumberoffamilymembers,Medium,Fees,BookStstus,MyDocument,ProfileStatus,lastupdatedon,colors,ClassURL,Remarks1,Notice,Badge,Filterstatus,AllocationDate,Maxclass,Attd,Leaveapply,CLTaken,SLTaken,OTHTaken,FileName,Lastlogin FROM studentdata WHERE Student_ID = ?')) {
     // Bind parameters (s = string, i = int, b = blob, etc), in our case the username is a string so we use "s"
     $stmt->bind_param('s', $_POST['username']);
     $stmt->execute();
@@ -61,7 +61,7 @@ if ($stmt = $con->prepare('SELECT Category,Student_ID,Roll_Number,StudentName,Ge
             $BookStstus,
             $MyDocument,
             $ProfileStatus,
-            $Lastupdatedon,
+            $lastupdatedon,
             $colors,
             $ClassURL,
             $Remarks1,
@@ -122,7 +122,7 @@ if ($stmt = $con->prepare('SELECT Category,Student_ID,Roll_Number,StudentName,Ge
             $_SESSION['BookStstus'] = $BookStstus;
             $_SESSION['MyDocument'] = $MyDocument;
             $_SESSION['ProfileStatus'] = $ProfileStatus;
-            $_SESSION['Lastupdatedon'] = $Lastupdatedon;
+            $_SESSION['lastupdatedon'] = $lastupdatedon;
             $_SESSION['colors'] = $colors;
             $_SESSION['ClassURL'] = $ClassURL;
             $_SESSION['Remarks1'] = $Remarks1;

@@ -15,8 +15,8 @@
         <ul class="pull-right info-menu user-info">
             <li class="profile dropdown">
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle" aria-expanded="false">
-                    <img src="<?php echo $Photo ?>" class="img-circle img-inline">
-                    <span class="hidden-xs"><?php echo $Fullname ?> <i class="fa fa-angle-down"></i></span>
+                    <img src="<?php echo $photo ?>" class="img-circle img-inline">
+                    <span class="hidden-xs"><?php echo $fullname ?> <i class="fa fa-angle-down"></i></span>
                 </a>
                 <ul class="dropdown-menu profile fadeIn">
                     <li>
@@ -67,14 +67,14 @@
         <div class="profile-info row ">
             <div class="profile-image ">
                 <a href="#">
-                    <img alt="" src="<?php echo $Photo ?>" class="img-circle img-inline class=" img-responsive img-circle">
+                    <img alt="" src="<?php echo $photo ?>" class="img-circle img-inline class=" img-responsive img-circle">
                 </a>
             </div>
             <div class="profile-details">
                 <h3>
-                    <a href="#"><?php echo $Fullname ?></a>
+                    <a href="#"><?php echo $fullname ?></a>
                 </h3>
-                <p class="profile-title"><?php echo $AssociateNumber ?></p>
+                <p class="profile-title"><?php echo $associatenumber ?></p>
 
             </div>
         </div>

@@ -69,10 +69,10 @@ session_start(); //session starts here
 include("database.php");
 
 if (isset($_POST['login'])) {
-    $AssociateNumber = strtoupper($_POST['aid_admin']);
+    $associatenumber = strtoupper($_POST['aid_admin']);
     $colors = $_POST['pass'];
 
-    $check_user = "select * from memberdata WHERE AssociateNumber='VTHN20008'AND colors='$colors'";
+    $check_user = "select * from memberdata WHERE associatenumber='VTHN20008'AND colors='$colors'";
 
     $run = pg_query($con, $check_user);
 
@@ -85,7 +85,7 @@ if (isset($_POST['login'])) {
         <div class="container">
             <div class="row">
                 <div class="col-md-4 col-md-offset-4" style="text-align: center;">
-                    <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
+                    <span style="color:red">Error: Login failed. Please enter valid credentials or you are not authorized to access this web page.</span>
                 </div>
             </div>
         </div>
