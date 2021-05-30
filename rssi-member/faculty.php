@@ -34,7 +34,7 @@ if (!$_SESSION['aid_admin']) {
       <span class="noticet">[X]&nbsp;<a href="logout.php">Logout</a></span></div></div></div>
 <?php
 include("database.php");
-$result = pg_query($con, "SELECT * FROM memberdata order by filterstatus asc,today desc");
+$result = pg_query($con, "SELECT * FROM rssimyaccount_members order by filterstatus asc,today desc");
 if (!$result) {
   echo "An error occurred.\n";
   exit;
