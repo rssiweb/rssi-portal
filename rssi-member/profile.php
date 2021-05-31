@@ -32,13 +32,23 @@ include("member_data.php");
     <!------ Include the above in your HEAD tag ---------->
     <style>
         @media (max-width:767px) {
-            #cw {
+            #cw #cw1 #cw2 #cw3 {
                 width: 100% !important;
             }
+
         }
 
         #cw {
-            width: 35%;
+            width: 30%;
+        }
+        #cw1 {
+            width: 25%;
+        }
+        #cw2 {
+            width: 25%;
+        }
+        #cw3 {
+            width: 20%;
         }
     </style>
 </head>
@@ -65,10 +75,10 @@ include("member_data.php");
                         <tbody>
                             <tr>
 
-                                <td style="line-height: 2;">Name - <b><?php echo $fullname ?></b><br>Associate ID - <b><?php echo $associatenumber ?></b></b><br><span style="line-height: 3;"><b><?php echo $gender ?> (<?php echo $age ?> Years)</b></span></td>
-                                <td style="line-height: 2;"><?php echo $doj ?>&nbsp;(<?php echo $yos ?>)<br>Original DOJ&nbsp;-&nbsp;<?php echo $originaldoj ?></td>
+                                <td id="cw1" style="line-height: 2;">Name - <b><?php echo $fullname ?></b><br>Associate ID - <b><?php echo $associatenumber ?></b></b><br><span style="line-height: 3;"><b><?php echo $gender ?> (<?php echo $age ?> Years)</b></span></td>
+                                <td id="cw2" style="line-height: 2;"><?php echo $doj ?>&nbsp;(<?php echo $yos ?>)<br>Original DOJ&nbsp;-&nbsp;<?php echo $originaldoj ?></td>
                                 <td id="cw"><?php echo $astatus ?><br><br><?php echo $effectivedate ?>&nbsp;<?php echo $remarks ?></td>
-                                <td><?php echo $badge ?></td>
+                                <td id="cw3"><?php echo $badge ?></td>
                             </tr>
                         </tbody>
                     </table>
