@@ -5,7 +5,7 @@ $user_check = $_SESSION['aid'];
 
 if (!$_SESSION['aid']) {
 
-  header("Location: index.php"); //redirect to the login page to secure the welcome page without login access.  
+    header("Location: index.php"); //redirect to the login page to secure the welcome page without login access.  
 }
 ?>
 
@@ -17,7 +17,7 @@ include("member_data.php");
 <html>
 
 <head>
-<meta name="description" content="">
+    <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
@@ -30,7 +30,17 @@ include("member_data.php");
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
+    <style>
+        @media (max-width:767px) {
+            #cw {
+                width: 100% !important;
+            }
+        }
 
+        #cw {
+            width: 35%;
+        }
+    </style>
 </head>
 
 <body>
@@ -57,20 +67,8 @@ include("member_data.php");
 
                                 <td style="line-height: 2;">Name - <b><?php echo $fullname ?></b><br>Associate ID - <b><?php echo $associatenumber ?></b></b><br><span style="line-height: 3;"><b><?php echo $gender ?> (<?php echo $age ?> Years)</b></span></td>
                                 <td style="line-height: 2;"><?php echo $doj ?>&nbsp;(<?php echo $yos ?>)<br>Original DOJ&nbsp;-&nbsp;<?php echo $originaldoj ?></td>
-                                <td><?php echo $astatus ?></td> 
+                                <td id="cw"><?php echo $astatus ?><br><br><?php echo $effectivedate ?>&nbsp;<?php echo $remarks ?></td>
                                 <td><?php echo $badge ?></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><?php echo $remarks ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -101,14 +99,14 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $position ?></td>    
+                                <td><?php echo $position ?></td>
                                 <td><?php echo $basebranch ?></td>
                                 <td>Lucknow, UP</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    
+
 
                     <table class="table">
                         <thead>
