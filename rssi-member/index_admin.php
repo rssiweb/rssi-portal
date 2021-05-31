@@ -72,7 +72,7 @@ if (isset($_POST['login'])) {
     $associatenumber = strtoupper($_POST['aid_admin']);
     $colors = $_POST['pass'];
 
-    $check_user = "select * from memberdata WHERE associatenumber='$associatenumber'AND colors='$colors'AND role='Admin'";
+    $check_user = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'AND colors='$colors'AND role='Admin'";
 
     $run = pg_query($con, $check_user);
 

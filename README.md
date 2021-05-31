@@ -85,3 +85,6 @@ select class from rssimyaccount_members where associatenumber='VLKO21034'
 UPDATE rssimyaccount_members
 SET class = 'LG4 Accountancy - Mon, Wed, Fri - 4 p.m. to 4:45 p.m.<br>' 
 WHERE associatenumber='VLKO21034';
+
+ALTER TABLE rssimyaccount_members 
+ALTER COLUMN effectivedate TYPE VARCHAR(512);

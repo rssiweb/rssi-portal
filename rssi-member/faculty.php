@@ -31,7 +31,7 @@ if (!$_SESSION['aid_admin']) {
 <div class=container>
   <div class=row>
     <div class=col style="text-align: right">
-      <span class="noticet">[X]&nbsp;<a href="logout.php">Logout</a></span></div></div></div>
+      <span class="noticet">[<?php echo $user_check ?>]&nbsp;<a href="logout.php">Logout</a></span></div></div></div>
 <?php
 include("database.php");
 $result = pg_query($con, "SELECT * FROM rssimyaccount_members order by filterstatus asc,today desc");
