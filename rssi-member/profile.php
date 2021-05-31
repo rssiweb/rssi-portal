@@ -150,7 +150,7 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;">English - <?php echo $languagedetailsenglish ?><br>हिंदी - <?php echo $languagedetailshindi ?></td>
+                                <td style="line-height: 2;">English - <?php echo $languagedetailsenglish ?><br>Hindi - <?php echo $languagedetailshindi ?></td>
                                 <td><?php echo $workexperience ?></td>
                                 <td><?php echo $approvedby ?></td>
                             </tr>
