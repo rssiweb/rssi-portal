@@ -41,12 +41,15 @@ include("member_data.php");
         #cw {
             width: 30%;
         }
+
         #cw1 {
             width: 25%;
         }
+
         #cw2 {
             width: 25%;
         }
+
         #cw3 {
             width: 20%;
         }
@@ -93,7 +96,8 @@ include("member_data.php");
                         <tbody>
                             <tr>
                                 <td><?php echo $dateofbirth ?></td>
-                                <td><span class="noticet"><a href="<?php echo $iddoc ?>" target="_blank"><?php echo $nationalidentifier ?></a></span></td>
+                                <td>
+                                    <embed src="<?php echo $iddoc ?>" width="300px" height="200px" /></td>
                                 <td><?php echo $identifier ?></td>
                             </tr>
                         </tbody>
@@ -102,8 +106,8 @@ include("member_data.php");
                     <table class="table">
                         <thead>
                             <tr>
-                            <th scope="col">Application Number</th>    
-                            <th scope="col">Designation</th>
+                                <th scope="col">Application Number</th>
+                                <th scope="col">Designation</th>
                                 <th scope="col">Base Branch</th>
                                 <th scope="col">Deputed Branch</th>
                             </tr>
