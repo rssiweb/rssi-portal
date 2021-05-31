@@ -93,7 +93,7 @@ include("member_data.php");
                         <tbody>
                             <tr>
                                 <td><?php echo $dateofbirth ?></td>
-                                <td><?php echo $nationalidentifier ?></td>
+                                <td><span class="noticet"><a href="<?php echo $iddoc ?>" target="_blank"><?php echo $nationalidentifier ?></a></span></td>
                                 <td><?php echo $identifier ?></td>
                             </tr>
                         </tbody>
@@ -102,14 +102,16 @@ include("member_data.php");
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Designation</th>
+                            <th scope="col">Application Number</th>    
+                            <th scope="col">Designation</th>
                                 <th scope="col">Base Branch</th>
                                 <th scope="col">Deputed Branch</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $position ?></td>
+                                <td><?php echo $applicationnumber ?></td>
+                                <td id=cw1><?php echo $position ?></td>
                                 <td><?php echo $basebranch ?></td>
                                 <td>Lucknow, UP</td>
                             </tr>

@@ -68,7 +68,8 @@
                 $__hevo__marked_deleted=$row[60];
                 $yos=$row[61];
                 $role=$row[62];
-                $originaldoj=$row[63]
+                $originaldoj=$row[63];
+                $iddoc=$row[64]
                 
 ?>     
 <?php }?>    
