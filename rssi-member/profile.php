@@ -55,14 +55,25 @@ include("member_data.php");
                         <tbody>
                             <tr>
 
-                                <td style="line-height: 2;">Name - <b><?php echo $fullname ?></b><br>Associate ID - <b><?php echo $associatenumber ?></b></b><br><b><?php echo $gender ?> (<?php echo $age ?> Years)</b></td>
-                                <td style="line-height: 2;"><?php echo $doj ?>&nbsp;(<?php echo $yos ?>)<br>Original DOJ&nbsp;-&nbsp;<?php echo $originaldoj ?></td> 
-                                <td><?php echo $astatus ?><br><br><?php echo $remarks ?></td>
+                                <td style="line-height: 2;">Name - <b><?php echo $fullname ?></b><br>Associate ID - <b><?php echo $associatenumber ?></b></b><br><span style="line-height: 3;"><b><?php echo $gender ?> (<?php echo $age ?> Years)</b></span></td>
+                                <td style="line-height: 2;"><?php echo $doj ?>&nbsp;(<?php echo $yos ?>)<br>Original DOJ&nbsp;-&nbsp;<?php echo $originaldoj ?></td>
+                                <td><?php echo $astatus ?></td> 
                                 <td><?php echo $badge ?></td>
                             </tr>
                         </tbody>
                     </table>
-
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><?php echo $remarks ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
                     <table class="table">
                         <thead>
                             <tr>
