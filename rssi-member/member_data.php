@@ -65,6 +65,10 @@
                 $cltaken=$row[57];
                 $feedback=$row[58];
                 $__hevo__ingested_at=$row[59];
-                $__hevo__marked_deleted=$row[60]
+                $__hevo__marked_deleted=$row[60];
+                $yos=$row[61];
+                $role=$row[62];
+                $originaldoj=$row[63]
+                
 ?>     
 <?php }?>    

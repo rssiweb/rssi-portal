@@ -55,8 +55,8 @@ include("member_data.php");
                         <tbody>
                             <tr>
 
-                                <td>Name - <b><?php echo $fullname ?></b><br>Associate ID - <b><?php echo $associatenumber ?></b></b><br><br><b><?php echo $gender ?> (<?php echo $age ?> Years)</b></td>
-                                <td><?php echo $doj ?></td> 
+                                <td style="line-height: 2;">Name - <b><?php echo $fullname ?></b><br>Associate ID - <b><?php echo $associatenumber ?></b></b><br><b><?php echo $gender ?> (<?php echo $age ?> Years)</b></td>
+                                <td style="line-height: 2;"><?php echo $doj ?>&nbsp;(<?php echo $yos ?>)<br>Original DOJ&nbsp;-&nbsp;<?php echo $originaldoj ?></td> 
                                 <td><?php echo $astatus ?><br><br><?php echo $remarks ?></td>
                                 <td><?php echo $badge ?></td>
                             </tr>
@@ -74,7 +74,7 @@ include("member_data.php");
                         <tbody>
                             <tr>
                                 <td><?php echo $dateofbirth ?></td>
-                                <td><?php echo $nationalIdentifier ?></td>
+                                <td><?php echo $nationalidentifier ?></td>
                                 <td><?php echo $identifier ?></td>
                             </tr>
                         </tbody>

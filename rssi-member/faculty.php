@@ -65,7 +65,7 @@ foreach ($resultArr as $array) {
   echo '<tr>
             <td width="7%"><img src="' . $array['photo'] . '" width=50px/></td>
             <td width="20%">Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
-            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')<br><br>DOJ - ' . $array['doj'] . '</td>
+            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['doj'] . '&nbsp;'. $array['yos'] .'</td>
             <td width="15%">' . $array['position'] . '</td>
             <td width="15%">' . $array['class'] . '</td>
             <td width="15%"><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . $array['gm'] . '</td>

@@ -72,14 +72,14 @@ if (isset($_POST['login'])) {
     $associatenumber = strtoupper($_POST['aid_admin']);
     $colors = $_POST['pass'];
 
-    $check_user = "select * from memberdata WHERE associatenumber='VTHN20008'AND colors='$colors'";
+    $check_user = "select * from memberdata WHERE associatenumber='$associatenumber'AND colors='$colors'AND role='Admin'";
 
     $run = pg_query($con, $check_user);
 
     if (pg_num_rows($run)) {
         echo "<script>window.open('faculty.php','_self')</script>";
 
-        $_SESSION['aid_admin'] = 'VTHN20008'; //here session is used and value of $user_email store in $_SESSION. 
+        $_SESSION['aid_admin'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION. 
 
     } else { ?>
         <div class="container">
