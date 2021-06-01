@@ -15,8 +15,8 @@
         <ul class="pull-right info-menu user-info">
             <li class="profile dropdown">
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle" aria-expanded="false">
-                    <img src="<?php echo $PhotoURL ?>" class="img-circle img-inline">
-                    <span class="hidden-xs"><?php echo $StudentName ?> <i class="fa fa-angle-down"></i></span>
+                    <img src="<?php echo $photourl ?>" class="img-circle img-inline">
+                    <span class="hidden-xs"><?php echo $studentname ?> <i class="fa fa-angle-down"></i></span>
                 </a>
                 <ul class="dropdown-menu profile fadeIn">
                     <li>
@@ -67,14 +67,14 @@
         <div class="profile-info row ">
             <div class="profile-image ">
                 <a href="#">
-                    <img alt="" src="<?php echo $PhotoURL ?>" class="img-circle img-inline class=" img-responsive img-circle">
+                    <img alt="" src="<?php echo $photourl ?>" class="img-circle img-inline class=" img-responsive img-circle">
                 </a>
             </div>
             <div class="profile-details">
                 <h3>
-                    <a href="#"><?php echo $StudentName ?></a>
+                    <a href="#"><?php echo $studentname ?></a>
                 </h3>
-                <p class="profile-title"><?php echo $Student_ID ?></p>
+                <p class="profile-title"><?php echo $student_id ?></p>
 
             </div>
         </div>

@@ -81,17 +81,17 @@ session_start(); //session starts here
 include("database.php");
 
 if (isset($_POST['login'])) {
-    $Student_ID = strtoupper($_POST['sid']);
+    $student_id = strtoupper($_POST['sid']);
     $colors = $_POST['pass'];
 
-    $check_user = "select * from studentdata WHERE Student_ID='$Student_ID'AND colors='$colors'";
+    $check_user = "select * from rssimyprofile_student WHERE student_id='$student_id'AND colors='$colors'";
 
     $run = pg_query($con, $check_user);
 
     if (pg_num_rows($run)) {
         echo "<script>window.open('home.php','_self')</script>";
 
-        $_SESSION['sid'] = $Student_ID; //here session is used and value of $user_email store in $_SESSION. 
+        $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION. 
 
     } else {?>
         <div class="container">

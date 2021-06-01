@@ -54,8 +54,8 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><?php echo $ClassURL ?></td>
-                                <td style="line-height: 2;"><?php echo $Fees ?></td>
+                                <td style="line-height: 2;"><?php echo $classurl ?></td>
+                                <td style="line-height: 2;"><?php echo $fees ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -67,7 +67,7 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><?php echo $BookStstus ?></td>
+                                <td style="line-height: 2;"><?php echo $bookststus ?></td>
                             </tr>
                         </tbody>
                     </table>

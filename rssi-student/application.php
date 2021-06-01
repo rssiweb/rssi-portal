@@ -53,7 +53,7 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $MyDocument ?></td>
+                                <td><?php echo $mydocument ?></td>
                             </tr>
                         </tbody>
                     </table>

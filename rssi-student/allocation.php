@@ -56,9 +56,9 @@ include("student_data.php");
             </thead>
             <tbody>
               <tr>
-                <td><?php echo $AllocationDate ?></td>
-                <td><?php echo $Maxclass ?></td>
-                <td><?php echo $Attd ?></td>
+                <td><?php echo $allocationdate ?></td>
+                <td><?php echo $maxclass ?></td>
+                <td><?php echo $attd ?></td>
               </tr>
             </tbody>
           </table>

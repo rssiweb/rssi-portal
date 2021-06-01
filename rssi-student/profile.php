@@ -56,9 +56,10 @@ include("student_data.php");
                         <tbody>
                             <tr>
 
-                                <td>Name - <b><?php echo $StudentName ?></b><br>Student ID - <b><?php echo $Student_ID ?></b>, Roll No - <b><?php echo $Roll_Number ?></b><br><br><b><?php echo $Gender ?> (<?php echo $Age ?> Years)</b></td>
-                                <td><?php echo $ProfileStatus ?><br><br><?php echo $Remarks1 ?></td>
-                                <td><?php echo $Badge ?></td>
+                                <td style="line-height: 1.7;"><b><?php echo $studentname ?></b><br>Student ID - <b><?php echo $student_id ?></b>, Roll No - <b><?php echo $roll_number ?></b><br>
+                                <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?> Years)</span></td>
+                                <td><?php echo $profilestatus ?><br><br><?php echo $remarks1 ?></td>
+                                <td><?php echo $badge ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -76,12 +77,12 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $Selectdateofformsubmission ?></td>
-                                <td><?php echo $PreferredBranch ?></td>
-                                <td><?php echo $Class ?>/<?php echo $Category ?></td>
-                                <td><?php echo $DateofBirth ?></td>
-                                <td><?php echo $StudentAAdhar ?></td>
-                                <td><?php echo $NameofVendorFoundation ?></td>
+                                <td><?php echo $selectdateofformsubmission ?></td>
+                                <td><?php echo $preferredbranch ?></td>
+                                <td><?php echo $class ?>/<?php echo $category ?></td>
+                                <td><?php echo $dateofbirth ?></td>
+                                <td><?php echo $studentaadhar ?></td>
+                                <td><?php echo $nameofvendorfoundation ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -99,12 +100,12 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $GuardiansName ?> - <?php echo $RelationwithStudent ?></td>
-                                <td><?php echo $GuardianAAdhar ?></td>
-                                <td><?php echo $PostalAddress ?></td>
-                                <td style="line-height: 1.5;"><?php echo $Contact ?><br><?php echo $EmailAddress ?></td>
-                                <td><?php echo $Familymonthlyincome ?></td>
-                                <td><?php echo $Totalnumberoffamilymembers ?></td>
+                                <td><?php echo $guardiansname ?> - <?php echo $relationwithstudent ?></td>
+                                <td><?php echo $guardianaadhar ?></td>
+                                <td><?php echo $postaladdress ?></td>
+                                <td style="line-height: 1.5;"><?php echo $contact ?><br><?php echo $emailaddress ?></td>
+                                <td><?php echo $familymonthlyincome ?></td>
+                                <td><?php echo $totalnumberoffamilymembers ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -121,12 +122,12 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $SchoolAdmissionRequired ?></td>
-                                <td><?php echo $NameOfTheSubjects ?></td>
-                                <td><?php echo $NameOfTheSchool ?></td>
-                                <td><?php echo $NameOfTheBoard ?></td>
-                                <td><?php echo $Medium ?></td>
-                                <td><span class="noticet"><a href="<?php echo $Profile ?>" target="_blank"><?php echo $FileName ?></a></span></td>
+                                <td><?php echo $schooladmissionrequired ?></td>
+                                <td><?php echo $nameofthesubjects ?></td>
+                                <td><?php echo $nameoftheschool ?></td>
+                                <td><?php echo $nameoftheboard ?></td>
+                                <td><?php echo $medium ?></td>
+                                <td><span class="noticet"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span></td>
                             </tr>
                         </tbody>
                     </table>
