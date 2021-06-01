@@ -32,7 +32,7 @@ include("member_data.php");
     <!------ Include the above in your HEAD tag ---------->
     <style>
         @media (max-width:767px) {
-            #cw #cw1 #cw2 #cw3 {
+            #cw, #cw1, #cw2, #cw3 {
                 width: 100% !important;
             }
 
@@ -78,7 +78,9 @@ include("member_data.php");
                         <tbody>
                             <tr>
 
-                                <td id="cw1" style="line-height: 2;">Name - <b><?php echo $fullname ?></b><br>Associate ID - <b><?php echo $associatenumber ?></b></b><br><span style="line-height: 3;"><b><?php echo $gender ?> (<?php echo $age ?> Years)</b></span></td>
+                                <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?></b><br>
+                                Associate ID - <b><?php echo $associatenumber ?></b><br>
+                                <span style="line-height: 3;"><?php echo $engagement ?>, <?php echo $gender ?> (<?php echo $age ?> Years)</span></td>
                                 <td id="cw2" style="line-height: 2;"><?php echo $doj ?>&nbsp;(<?php echo $yos ?>)<br>Original DOJ&nbsp;-&nbsp;<?php echo $originaldoj ?></td>
                                 <td id="cw"><?php echo $astatus ?><br><br><?php echo $effectivedate ?>&nbsp;<?php echo $remarks ?></td>
                                 <td id="cw3"><?php echo $badge ?></td>

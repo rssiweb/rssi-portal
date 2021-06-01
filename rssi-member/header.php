@@ -144,3 +144,17 @@
     });
     </script>
 <script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" data-auto-replace-svg="nest"></script>
+<!--protected by reCAPTCHA-->
+<script src="https://www.google.com/recaptcha/api.js?render=6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL"></script>
+    <script>
+        function onClick(e) {
+            e.preventDefault();
+            grecaptcha.ready(function() {
+                grecaptcha.execute('6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL', {
+                    action: 'submit'
+                }).then(function(token) {
+                    // Add your logic to submit to your backend server here.
+                });
+            });
+        }
+    </script>
