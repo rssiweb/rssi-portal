@@ -86,5 +86,21 @@ UPDATE rssimyaccount_members
 SET class = 'LG4 Accountancy - Mon, Wed, Fri - 4 p.m. to 4:45 p.m.<br>' 
 WHERE associatenumber='VLKO21034';
 
+UPDATE rssimyprofile_student
+SET photourl = 'https://res.cloudinary.com/hs4stt5kg/image/upload/v1622616675/students/Aditya1.jpg' 
+WHERE student_id='ALKO21059';
+
 ALTER TABLE rssimyaccount_members 
 ALTER COLUMN effectivedate TYPE VARCHAR(512);
+
+update employee 
+set department = null, name = null, bloodgroup = null
+where employeeid=2;
+
+ALTER TABLE rssimyprofile_student
+  ALTER selectdateofformsubmission DROP DEFAULT
+ ,ALTER selectdateofformsubmission type timestamp USING selectdateofformsubmission::timestamp
+ ,ALTER selectdateofformsubmission SET DEFAULT '1970-01-01 01:00:00'::timestamp;
+
+
+ DELETE from `tablename` WHERE `id` IN (1, 5 , 7);
