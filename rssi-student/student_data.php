@@ -58,7 +58,8 @@
                 $othtaken=$row[50];
                 $nameofvendorfoundation=$row[51];
                 $badge=$row[52];
-                $sltaken=$row[53]
+                $sltaken=$row[53];
+                $doa=$row[54]
                 
  
 ?>     

@@ -77,7 +77,7 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $selectdateofformsubmission ?></td>
+                                <td><?php echo $doa ?></td>
                                 <td><?php echo $preferredbranch ?></td>
                                 <td><?php echo $class ?>/<?php echo $category ?></td>
                                 <td><?php echo $dateofbirth ?></td>
