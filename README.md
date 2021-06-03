@@ -108,3 +108,6 @@ ALTER TABLE rssimyprofile_student
  DELETE from rssimyaccount_members WHERE __hevo_id IN (21);
 
  select lastupdatedon,__hevo_id,fullname from rssimyaccount_members where associatenumber='VBKP21033';
+
+
+ and Col32 is null or Col32 > date '"&text(datevalue("2021/06/3"),"yyyy-mm-dd")&"'
