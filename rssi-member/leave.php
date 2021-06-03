@@ -61,6 +61,7 @@ include("member_data.php");
                             </tr>
                         </tbody>
                     </table>
+                    #&nbsp;Opening balance is the balance carried forward from previous credit cycle and refers to the leave till the allocation end date.</b>
                 </section>
             </div>
 
