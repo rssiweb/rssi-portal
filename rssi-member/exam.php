@@ -82,7 +82,7 @@ include("member_data.php");
                                 <td>QT1-2021</td>
                                 <td id=cw>Written Test - 50, Max. Time - 2 hours<br><br>
 
-                                The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format as shared in your profile.<br><br>
+                                The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br><br>
 
                                     After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticet"><a href = "mailto: info@rssi.in">info@rssi.in</a></span>.</td>
 
