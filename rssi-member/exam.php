@@ -79,14 +79,14 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td>QT1-2021</td>
+                                <td>QT1/2021</td>
                                 <td id=cw>Descriptive written exam - Online, Full marks-50, Max. Time - 2 hours<br><br>
 
                                 The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br><br>
 
                                     After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticet"><a href = "mailto: info@rssi.in">info@rssi.in</a></span>.</td>
 
-                                <td style="text-align: center"><span class="noticet"><a href="https://drive.google.com/file/d/1tRelLLSOCxjC1TmbkdU4p2oSQ4RClAjs/view?usp=sharing" title="Download" target="_blank"><i class="far fa-file-word" style="font-size: 20px; color:#495057"></i></a></span></td>
+                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1tRelLLSOCxjC1TmbkdU4p2oSQ4RClAjs/view?usp=sharing" title="Download" target="_blank">Download</a></span></td>
 
                                 <td><span class="noticet"><a href="https://drive.google.com/file/d/15cgBw0nOYKKzY_LHZ7U6u-rj4AxWxE8O/view" target="_blank">Click Here</i></a></span></td>
 
