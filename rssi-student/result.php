@@ -22,7 +22,7 @@ include("student_data.php");
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Examination</title>
+    <title>Results</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -64,7 +64,7 @@ include("student_data.php");
 </style>
 
 <body>
-    <?php $exam_active = 'active'; ?>
+    <?php $result_active = 'active'; ?>
     <?php include 'header.php'; ?>
 
     <section id="main-content">
@@ -76,37 +76,14 @@ include("student_data.php");
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Exam Name</th>
-                                <th scope="col">Exam Description</th>
-                                <th scope="col">Date Sheet</th>
+                                <th scope="col">Result portal</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>QT1/2021</td>
-                                <td id=cw>Descriptive written exam - Online, Full marks-50, Max. Time - 2 hours<br><br>
-
-                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br></td>
-
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Examination Schedule</i></a></span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Question paper</th>
-                                <th scope="col">Answersheet (Cover page)</th>
-                                <th scope="col">Upload Answersheet</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><span class="noticet"><a href="https://www.rssi.in/online-exam" target="_blank">View question paper</i></a></span></td>
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1k0m6y_xqg523v3S1HLJGBTGxVc1DGlZj/view" target="_blank">Download coverpage</i></a></span></td>
-                                <td><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
+                                <td>
+                                    <embed src="https://www.rssi.in/result-portal#name=<?php echo $student_id ?>&ename=<?php echo $dateofbirth ?>&name1=2021-2022" style="width:100%; height: 300px;"></embed>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
