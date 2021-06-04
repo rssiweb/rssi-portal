@@ -80,7 +80,7 @@ include("member_data.php");
                         <tbody>
                             <tr>
                                 <td>QT1-2021</td>
-                                <td id=cw>Written Test - 50, Max. Time - 2 hours<br><br>
+                                <td id=cw>Descriptive written exam - Online, Full marks-50, Max. Time - 2 hours<br><br>
 
                                 The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br><br>
 

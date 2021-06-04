@@ -111,3 +111,5 @@ ALTER TABLE rssimyprofile_student
 
 
  and Col32 is null or Col32 > date '"&text(datevalue("2021/06/3"),"yyyy-mm-dd")&"'
+
+ and Col33 is null or Col33 > date '"&text(datevalue("2021/06/1"),"yyyy-mm-dd")&"'
