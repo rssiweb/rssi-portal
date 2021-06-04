@@ -22,7 +22,7 @@ include("student_data.php");
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Classroom</title>
+    <title>Examination</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -78,7 +78,7 @@ include("student_data.php");
                             <tr>
                                 <th scope="col">Exam Name</th>
                                 <th scope="col">Exam Description</th>
-                                <th scope="col">Exam Schedule</th>
+                                <th scope="col">Date Sheet</th>
                                 <th scope="col">Question bank</th>
                                 <th scope="col">Upload Answersheet</th>
                             </tr>
@@ -90,7 +90,7 @@ include("student_data.php");
 
                                     The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br></td>
 
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Click Here</i></a></span></td>
+                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">DS-QT/2021</i></a></span></td>
 
                                 <td><span class="noticet"><a href="https://www.rssi.in/online-exam" target="_blank">Get question</i></a></span></td>
                                 <td><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Click here to upload</i></a></span></td>
