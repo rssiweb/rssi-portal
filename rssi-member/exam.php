@@ -73,8 +73,7 @@ include("member_data.php");
                                 <th scope="col">Exam Name</th>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Question paper Template</th>
-                                <th scope="col">Question paper submission date</th>
-                                <th scope="col">Exam Schedule</th>
+                                <th scope="col">Date Sheet</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,11 +85,11 @@ include("member_data.php");
 
                                     After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticet"><a href = "mailto: info@rssi.in">info@rssi.in</a></span>.</td>
 
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1tRelLLSOCxjC1TmbkdU4p2oSQ4RClAjs/view?usp=sharing" title="Download" target="_blank">Download</a></span></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="https://drive.google.com/file/d/1tRelLLSOCxjC1TmbkdU4p2oSQ4RClAjs/view?usp=sharing" title="Download" target="_blank">Download</a></span></td>
 
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/15cgBw0nOYKKzY_LHZ7U6u-rj4AxWxE8O/view" target="_blank">Click Here</i></a></span></td>
+                                <td><span class="noticet"><a href="https://drive.google.com/file/d/15cgBw0nOYKKzY_LHZ7U6u-rj4AxWxE8O/view" target="_blank">Question paper submission date</i></a></span><br>
 
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Click Here</i></a></span></td>
+                                <span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">DT-QT1/2021</i></a></span></td>
                             </tr>
                         </tbody>
                     </table>
