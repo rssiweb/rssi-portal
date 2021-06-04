@@ -35,29 +35,33 @@ include("student_data.php");
 
 </head>
 <style>
-        @media (max-width:767px) {
-            #cw, #cw1, #cw2, #cw3 {
-                width: 100% !important;
-            }
+    @media (max-width:767px) {
 
-        }
-
-        #cw {
-            width: 50%;
-        }
-
-        #cw1 {
-            width: 25%;
-        }
-
-        #cw2 {
-            width: 25%;
-        }
-
+        #cw,
+        #cw1,
+        #cw2,
         #cw3 {
-            width: 20%;
+            width: 100% !important;
         }
-    </style>
+
+    }
+
+    #cw {
+        width: 50%;
+    }
+
+    #cw1 {
+        width: 25%;
+    }
+
+    #cw2 {
+        width: 25%;
+    }
+
+    #cw3 {
+        width: 20%;
+    }
+</style>
 
 <body>
     <?php $exam_active = 'active'; ?>
@@ -84,12 +88,12 @@ include("student_data.php");
                                 <td>QT1/2021</td>
                                 <td id=cw>Descriptive written exam - Online, Full marks-50, Max. Time - 2 hours<br><br>
 
-                                The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br></td>
+                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br></td>
 
                                 <td><span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Click Here</i></a></span></td>
 
                                 <td><span class="noticet"><a href="https://www.rssi.in/online-exam" target="_blank">Click Here</i></a></span></td>
-                                <td><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform" target="_blank">Click here to upload</i></a></span></td>
+                                <td><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Click here to upload</i></a></span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -101,7 +105,9 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span class="noticet"><a href="https://www.rssi.in/result-portal" target="_blank">Check Results</a></span></td>
+                                <td>
+                                    <embed src="https://www.rssi.in/result-portal#name=<?php echo $student_id ?>&ename=<?php echo $dateofbirth ?>&name1=2021-2022" style="width:100%; height: 300px;">
+                                </td>
                             </tr>
                         </tbody>
                     </table>
