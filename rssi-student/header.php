@@ -99,7 +99,7 @@
 
             <li>
                 <a href="exam.php" class="<?php echo $exam_active ?>">
-                    <span class="sidebar-icon"><i class="fa fa-desktop"></i>
+                    <span class="sidebar-icon"><i class="fas fa-spell-check"></i>
                     </span>
                     <span class="menu-title">Examination</span>
                 </a>
