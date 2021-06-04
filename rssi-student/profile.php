@@ -59,7 +59,7 @@ include("student_data.php");
                                 <td style="line-height: 1.7;"><b><?php echo $studentname ?></b><br>Student ID - <b><?php echo $student_id ?></b>, Roll No - <b><?php echo $roll_number ?></b><br>
                                 <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?> Years)</span></td>
                                 <td><?php echo $profilestatus ?><br><br><?php echo $remarks1 ?></td>
-                                <td><?php echo $badge ?></td>
+                                <td><?php //echo $badge ?></td>
                             </tr>
                         </tbody>
                     </table>
@@ -82,7 +82,7 @@ include("student_data.php");
                                 <td><?php echo $class ?>/<?php echo $category ?></td>
                                 <td><?php echo $dateofbirth ?></td>
                                 <td><?php echo $studentaadhar ?></td>
-                                <td><?php echo $nameofvendorfoundation ?></td>
+                                <td><?php //echo $nameofvendorfoundation ?></td>
                             </tr>
                         </tbody>
                     </table>

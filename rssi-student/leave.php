@@ -55,7 +55,7 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php echo $sltaken ?> <br>Other Leave - <?php echo $othtaken ?></td>
+                                <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php //echo $sltaken ?> <br>Other Leave - <?php echo $othtaken ?></td>
                                 <td><span class="noticet"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span></td>
                                 <td></td>
                             </tr>

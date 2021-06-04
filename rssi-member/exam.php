@@ -85,9 +85,9 @@ include("member_data.php");
 
                                     After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticet"><a href = "mailto: info@rssi.in">info@rssi.in</a></span>.</td>
 
-                                <td style="line-height: 2;"><span class="noticet"><a href="https://drive.google.com/file/d/1tRelLLSOCxjC1TmbkdU4p2oSQ4RClAjs/view?usp=sharing" title="Download" target="_blank">Download</a></span></td>
+                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1tRelLLSOCxjC1TmbkdU4p2oSQ4RClAjs/view?usp=sharing" title="Download" target="_blank">Download</a></span></td>
 
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/15cgBw0nOYKKzY_LHZ7U6u-rj4AxWxE8O/view" target="_blank">Question paper submission date</i></a></span><br>
+                                <td style="line-height: 2"><span class="noticet"><a href="https://drive.google.com/file/d/15cgBw0nOYKKzY_LHZ7U6u-rj4AxWxE8O/view" target="_blank">Question paper submission date</i></a></span><br>
 
                                 <span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Examination Schedule</i></a></span></td>
                             </tr>
@@ -96,14 +96,14 @@ include("member_data.php");
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Question paper</th>
+                                <th scope="col">Question paper&nbsp;<i class="far fa-question-circle" title="The submitted question paper will appear on the portal after 24 hours of submission."></i></th>
                                 <th scope="col">Evaluation Path</th>
                                 <th scope="col">Marks upload</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                            <td id=cw1><span class="noticet"><a href="https://www.rssi.in/online-exam" target="_blank">Question paper</i></a></span> <br><br>@ To view the password-protected question paper please click on the Test Code button after opening this link, enter Test ID and "admin" as PIN to get the password.<br><br>The submitted question paper will appear on the portal after 24 hours of submission.</td>
+                            <td id=cw1><span class="noticet"><a href="https://www.rssi.in/online-exam" target="_blank">Question paper</i></a></span> <br><br><span style="line-height:2">Password-protected question paper?<br>Question paper&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;Test Code&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;Enter Test ID and PIN (admin).</span></td>
                                 <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
                                 <td><span class="noticet"><a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a></span></td>
                             </tr>
