@@ -7,8 +7,8 @@
             <li><a href="#"> <i class="fa fa-envelope"></i>
                     <!--<span class="badge">1</span>-->
                 </a></li>
-            <li><a href="#"> <i class="fa fa-bell"></i>
-                    <!--<span class="badge">1</span>-->
+            <li><a href="exam.php" title="1 new notification"> <i class="fa fa-bell"></i>
+                    <span class="badge">1</span>
                 </a></li>
         </ul>
 
@@ -94,6 +94,14 @@
                     <span class="sidebar-icon"><i class="fa fa-desktop"></i>
                     </span>
                     <span class="menu-title">Applications</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="exam.php" class="<?php echo $exam_active ?>">
+                    <span class="sidebar-icon"><i class="fa fa-desktop"></i>
+                    </span>
+                    <span class="menu-title">Examination</span>
                 </a>
             </li>
 
