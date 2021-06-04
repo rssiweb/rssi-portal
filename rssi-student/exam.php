@@ -79,7 +79,7 @@ include("student_data.php");
                                 <th scope="col">Exam Name</th>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Exam Schedule</th>
-                                <th scope="col">Exam portal</th>
+                                <th scope="col">Question bank</th>
                                 <th scope="col">Upload Answersheet</th>
                             </tr>
                         </thead>
@@ -92,7 +92,7 @@ include("student_data.php");
 
                                 <td><span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Click Here</i></a></span></td>
 
-                                <td><span class="noticet"><a href="https://www.rssi.in/online-exam" target="_blank">Click Here</i></a></span></td>
+                                <td><span class="noticet"><a href="https://www.rssi.in/online-exam" target="_blank">Get question</i></a></span></td>
                                 <td><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Click here to upload</i></a></span></td>
                             </tr>
                         </tbody>
