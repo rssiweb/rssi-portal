@@ -63,11 +63,13 @@ include("student_data.php");
                         <thead>
                             <tr>
                                 <th scope="col">Library Status</th>
+                                <th scope="col">Quick link</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td style="line-height: 2;"><?php echo $bookststus ?></td>
+                                <td style="line-height: 2;"><?php echo $lastlogin ?></td>
                             </tr>
                         </tbody>
                     </table>
