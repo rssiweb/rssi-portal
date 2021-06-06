@@ -140,6 +140,9 @@ include("student_data.php");
 #main-menu-wrapper ul {
     margin-top: 2px;
 }
+.dropdown-toggle::after {
+    display: none;
+}
 </style>
 <!-- =========================
      NAVIGATION LINKS     
@@ -351,7 +354,7 @@ include("student_data.php");
                         order.forEach(sub => {
                             records.forEach(item => {
                                 if (sub === item.Category) {
-                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + item.Category + '</td>' + '<td>' + item.Subject + '</td>' + '<td>' + item.Testcode + '</td>' + '<td>' + item.Fullmarks + '</td>' + '<td>' + item.Examname + '</td>' + '<td>' + '<a href="' + item.Url + '"target="blank"><div class="columnExam2 exam_btn">Start</div></a>' + '</td>' + '<td>' + item.Topic + '</td>' + '</tr>');
+                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + item.Category + '</td>' + '<td>' + item.Subject + '</td>' + '<td>' + item.Testcode + '</td>' + '<td>' + item.Fullmarks + '</td>' + '<td>' + item.Examname + '</td>' + '<td>' + '<a href="' + item.Url + '"target="blank"><div class="columnExam2 exam_btn" style="text-transform: unset;">view</div></a>' + '</td>' + '<td>' + item.Topic + '</td>' + '</tr>');
                                 }
                             })
                         })
