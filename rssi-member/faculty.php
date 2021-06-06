@@ -39,7 +39,7 @@ if (!$_SESSION['aid']) {
 <div class=container>
   <div class=row>
     <div class=col style="text-align: right">
-      <span>[<?php echo $user_check ?>]&nbsp;<span class="noticet">&nbsp;<a href="home.php">Home</a></span>&nbsp;|&nbsp;<span class="noticet"><a href="logout.php">Logout</a>
+      <span>[<?php echo $user_check ?>]&nbsp;<span class="noticet"><a href="logout.php">Logout</a>
         </span>
     </div>
   </div>
