@@ -91,7 +91,12 @@ if (isset($_POST['login'])) {
     if (pg_num_rows($run)) {
         echo "<script>window.open('home.php','_self')</script>";
 
-        $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION. 
+        $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
+
+        $row = pg_fetch_row($run);
+        $filterstatus= $row[27];
+
+       $_SESSION['filterstatus'] = $filterstatus;
 
     } else {?>
         <div class="container">
