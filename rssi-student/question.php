@@ -1,9 +1,9 @@
 <?php
 session_start();
 // Storing Session
-$user_check = $_SESSION['aid'];
+$user_check = $_SESSION['sid'];
 
-if (!$_SESSION['aid']) {
+if (!$_SESSION['sid']) {
 
     header("Location: index.php"); //redirect to the login page to secure the welcome page without login access.  
 } else if ($_SESSION['filterstatus'] != 'Active') {
@@ -16,7 +16,7 @@ if (!$_SESSION['aid']) {
 }
 ?>
 <?php
-include("member_data.php");
+include("student_data.php");
 ?>
 
 
@@ -36,7 +36,9 @@ include("member_data.php");
     <link rel="stylesheet" href="https://rssi.in/css/style.css">
     <link rel="stylesheet" href="https://rssi.in/css/addstyle.css">
     <!-- Main css -->
-    <link rel="stylesheet" href="../rssi-student/style.css">
+    <style>
+        <?php include 'style.css'; ?>
+    </style>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
