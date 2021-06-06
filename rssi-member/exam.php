@@ -111,7 +111,7 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                            <td id=cw1><span class="noticet"><a href="https://www.rssi.in/online-exam" target="_blank">Question paper</i></a></span> <br><br><span style="line-height:2">Password-protected question paper?<br>Question paper&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;Test Code&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;Enter Test ID and PIN (admin).</span></td>
+                            <td id=cw1><span class="noticet"><a href="question.php">Question paper</i></a></span></td>
                                 <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
                                 <td><span class="noticet"><a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a></span></td>
                             </tr>
