@@ -113,3 +113,10 @@ ALTER TABLE rssimyprofile_student
  and Col32 is null or Col32 > date '"&text(datevalue("2021/06/3"),"yyyy-mm-dd")&"'
 
  and Col33 is null or Col33 > date '"&text(datevalue("2021/06/1"),"yyyy-mm-dd")&"'
+
+
+UPDATE rssimyprofile_student
+SET fees = 'Development Fees - &#8377;200, <b><span style=color:red>Fees due.</span></b><br>1st Term Exam Fees - &#8377;200<br>2nd Term Exam Fees - &#8377;200<br>Annual Exam Fees - &#8377;200' 
+WHERE __hevo_id='24';
+
+&& $role='Admin'

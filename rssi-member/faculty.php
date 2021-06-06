@@ -1,11 +1,18 @@
 <?php
 session_start();
 // Storing Session
-$user_check = $_SESSION['aid_admin'];
+$user_check = $_SESSION['aid'];
 
-if (!$_SESSION['aid_admin']) {
+if (!$_SESSION['aid']) {
 
-  header("Location: index_admin.php"); //redirect to the login page to secure the welcome page without login access.
+  header("Location: index.php"); //redirect to the login page to secure the welcome page without login access.  
+} else if ($_SESSION['role'] != 'Admin') {
+
+  //header("Location: index.php"); //redirect to the login page to secure the welcome page without login access.
+  echo '<script type="text/javascript">';
+  echo 'alert("Access Denied. You are not authorized to access this web page.");';
+  echo 'window.location.href = "home.php";';
+  echo '</script>';
 }
 ?>
 
@@ -25,13 +32,18 @@ if (!$_SESSION['aid_admin']) {
   <link rel="stylesheet" href="../rssi-student/style.css">
   <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" data-auto-replace-svg="nest"></script>
   <!------ Include the above in your HEAD tag ---------->
 
 </head>
 <div class=container>
   <div class=row>
     <div class=col style="text-align: right">
-      <span class="noticet">[<?php echo $user_check ?>]&nbsp;<a href="logout.php">Logout</a></span></div></div></div>
+      <span>[<?php echo $user_check ?>]&nbsp;<span class="noticet">&nbsp;<a href="home.php">Home</a></span>&nbsp;|&nbsp;<span class="noticet"><a href="logout.php">Logout</a>
+        </span>
+    </div>
+  </div>
+</div>
 <?php
 include("database.php");
 $result = pg_query($con, "SELECT * FROM rssimyaccount_members order by filterstatus asc,today desc");
@@ -65,7 +77,7 @@ foreach ($resultArr as $array) {
   echo '<tr>
             <td width="7%"><img src="' . $array['photo'] . '" width=50px/></td>
             <td width="20%">Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
-            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['doj'] . '&nbsp;'. $array['yos'] .'</td>
+            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['doj'] . '&nbsp;' . $array['yos'] . '</td>
             <td width="15%">' . $array['position'] . '</td>
             <td width="15%">' . $array['class'] . '</td>
             <td width="15%"><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . $array['gm'] . '</td>

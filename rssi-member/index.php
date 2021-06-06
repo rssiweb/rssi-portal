@@ -88,11 +88,24 @@ if (isset($_POST['login'])) {
     $run = pg_query($con, $check_user);
 
     if (pg_num_rows($run)) {
-        echo "<script>window.open('home.php','_self')</script>";
+       echo "<script>window.open('home.php','_self')</script>";
 
-        $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION. 
+        $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
 
-    } else {?>
+        $row = pg_fetch_row($run);
+        $role= $row[62];
+        $filterstatus= $row[31];
+
+        $_SESSION['role'] = $role;
+       $_SESSION['filterstatus'] = $filterstatus;
+
+       //echo "<script>alert('";  
+       //echo $role;
+       //echo $filterstatus;
+       //echo "')</script>";
+
+
+    }else {?>
         <div class="container">
         <div class="row">
             <div class="col-md-4 col-md-offset-4" style="text-align: center;">
