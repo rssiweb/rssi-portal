@@ -53,12 +53,6 @@ include("student_data.php");
         line-height: unset;
     }
 
-    .navbar {
-        padding: unset;
-        font-weight: unset;
-        display: inline-block;
-    }
-
     body,
     h1,
     h2,
@@ -233,20 +227,6 @@ include("student_data.php");
                             <div class="col">
 
                                 <body>
-
-                                    <!-- <div style="text-align: right;" class="white
-                            hoverdecoration"><a href="#" TARGET="" class="primary_btn" style="padding-right:1.5vh; line-height: 35px;
-                                padding-left:1.5vh; margin-right: 1.5%;
-                                margin-top: 1.5%;margin-bottom: -10px;
-                                background-color:#708090; border-color:#708090;
-                                text-transform: unset;" onClick="window.open('/code', '',
-                                'toolbar=no,location=no,directories=no,status=no,menubar=no,'
-                                +
-                                'scrollbars=no,resizable=no,width=400,height=400,left=100,top=100');return
-                                false;">
-                                            Test Code&nbsp;&nbsp;<i style="font-size: 15px;" class="fas fa-user-lock"></i></a></div>-->
-
-
                                     <div class="container text-center my-4" style="overflow-x:
                             auto;">
                                         <!-- Table  -->
@@ -347,7 +327,7 @@ include("student_data.php");
                         // else {document.getElementById('demo').innerHTML= "no record2";}
                     }
                     if (records.length == 0) {
-                        document.getElementById('demo').innerHTML += ('<tr>' + '<td></td><td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
+                        document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
                     } else {
                         var order = ["LG3", "LG4", "LG4S1", "LG4S2"]
                         // var order = ["1/CT01", "1/CT02", "QT1", "2/CT01", "2/CT02", "QT2", "3/CT01", "3/CT02", "QT3"]
