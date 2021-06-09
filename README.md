@@ -90,6 +90,10 @@ UPDATE rssimyprofile_student
 SET photourl = 'https://res.cloudinary.com/hs4stt5kg/image/upload/v1622616675/students/Aditya1.jpg' 
 WHERE student_id='ALKO21059';
 
+UPDATE rssimyaccount_members
+SET class = 'XI LG4S2 Biology - Mon, Wed, Fri - 4 p.m. to 4:45 p.m.' 
+WHERE associatenumber='VLKO21035';
+
 ALTER TABLE rssimyaccount_members 
 ALTER COLUMN effectivedate TYPE VARCHAR(512);
 
