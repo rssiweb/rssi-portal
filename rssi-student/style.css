@@ -545,3 +545,7 @@ section.box {
         top: 50px;
     }
 }
+
+.prebanner {
+    display: none;
+}

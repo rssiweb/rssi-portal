@@ -45,6 +45,9 @@ if ($_POST) {
     [type="submit"]:focus {
         outline: none;
     }
+    .prebanner {
+    display: none;
+}
 </style>
 
 <body>
@@ -142,3 +145,13 @@ if (isset($_POST['login'])) {
             });
     });
 </script>
+
+<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+        });
+    </script>
