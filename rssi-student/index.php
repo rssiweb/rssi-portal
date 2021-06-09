@@ -1,5 +1,24 @@
 <?php
-session_start(); //session starts here  
+session_start(); //session starts here
+
+define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
+define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
+
+if ($_POST) {
+    function getCaptcha($SecretKey)
+    {
+        $Response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" . SECRET_KEY . "&response={$SecretKey}");
+        $Return = json_decode($Response);
+        return $Return;
+    }
+    $Return = getCaptcha($_POST['g-recaptcha-response']);
+    //var_dump($Return);
+    if ($Return->success == true && $Return->score > 0.5) {
+        echo "Succes!";
+    } else {
+        echo "You are a Robot!!";
+    }
+}
 
 ?>
 
@@ -14,6 +33,7 @@ session_start(); //session starts here
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
     <title>My Profile</title>
+    <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
 </head>
 <style>
     .login-panel {
@@ -41,6 +61,7 @@ session_start(); //session starts here
                                 <div class="form-group">
                                     <input class="form-control" placeholder="Password" name="pass" type="password" value="" required>
                                 </div>
+                                <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                 <input class="btn btn-lg btn-success btn-block" type="submit" value="Login" name="login">
 
                                 <!-- Change this to a button or input when using this as a form -->
@@ -55,21 +76,6 @@ session_start(); //session starts here
     <script>
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
-        }
-    </script>
-    </script>
-    <!--protected by reCAPTCHA-->
-<script src="https://www.google.com/recaptcha/api.js?render=6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL"></script>
-    <script>
-        function onClick(e) {
-            e.preventDefault();
-            grecaptcha.ready(function() {
-                grecaptcha.execute('6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL', {
-                    action: 'submit'
-                }).then(function(token) {
-                    // Add your logic to submit to your backend server here.
-                });
-            });
         }
     </script>
 </body>
@@ -109,3 +115,16 @@ if (isset($_POST['login'])) {
         <?php }
 }
 ?>
+
+<!--protected by reCAPTCHA-->
+<script>
+    grecaptcha.ready(function() {
+        grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+                action: 'homepage'
+            })
+            .then(function(token) {
+                //console.log(token);
+                document.getElementById('g-recaptcha-response').value = token;
+            });
+    });
+</script>
