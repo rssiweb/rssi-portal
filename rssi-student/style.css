@@ -549,3 +549,20 @@ section.box {
 .prebanner {
     display: none;
 }
+
+.badge {
+    padding-left: 9px;
+    padding-right: 9px;
+    -webkit-border-radius: 9px;
+    -moz-border-radius: 9px;
+    border-radius: 9px;
+}
+
+#lblCartCount {
+    font-size: 10px;
+    background: #323F46;
+    color: #fff;
+    padding: 3px 5px;
+    vertical-align: top;
+    margin-left: -10px;
+}
