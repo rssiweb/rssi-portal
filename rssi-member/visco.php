@@ -41,7 +41,7 @@ include("member_data.php");
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -125,29 +125,38 @@ include("member_data.php");
         background-color: unset;
     }
 
-    h1, h2, h3, h4, h5, h6 {
-    font-family: Roboto;
-}
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: Roboto;
+    }
 
-.profile-info .profile-details .profile-title {
-    color: rgba(174, 178, 183, 1.0);
-    font-size: 13px !important;
-    margin: 0px 0px 6px 14px !important;
-    line-height: unset !important;
-}
-.profile-info .profile-details h3 {
-    margin: 19px 0px 5px 14px;
-    line-height: 1.7;
-}
-#main-menu-wrapper ul {
-    margin-top: 2px;
-}
-.dropdown-toggle::after {
-    display: none;
-}
-section.box {
-    width: 100%;
-}
+    .profile-info .profile-details .profile-title {
+        color: rgba(174, 178, 183, 1.0);
+        font-size: 13px !important;
+        margin: 0px 0px 6px 14px !important;
+        line-height: unset !important;
+    }
+
+    .profile-info .profile-details h3 {
+        margin: 19px 0px 5px 14px;
+        line-height: 1.7;
+    }
+
+    #main-menu-wrapper ul {
+        margin-top: 2px;
+    }
+
+    .dropdown-toggle::after {
+        display: none;
+    }
+
+    section.box {
+        width: 100%;
+    }
 </style>
 <!-- =========================
      NAVIGATION LINKS     
@@ -165,7 +174,7 @@ section.box {
 
                     <div class="container">
                         <!--<span style="color: #F2545F; display: inline;"></span>-->
-                        <p style="display: inline;">You have to enter at least one value to watch video.</p>
+                        <p style="display: inline;"></p>
                         <div class="row" style="background-color: rgb(255, 245,
                 194);height: 110%; padding-top: 0; padding-bottom:
                 1.5%;padding-left: 1.5%">
@@ -200,10 +209,15 @@ section.box {
                                 </select>
                             </div>
                             <div class="col2">
+                                
+                                <input type="checkbox" value="0" id="name2" name="name2" style="margin: .4rem; width:fit-content">
+                                <label for="name2">All video</label>
+                            </div>
+                            <div class="col2">
                                 <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
-                                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSehs8jikEjGGysmho6ceQl939Xfe_Vwdvqe5Os2RJpfmsxZ4w/viewform?usp=pp_url&entry.333758641=<?php echo $fullname ?>" target="_blank"><button type="button" class="exam_btn"><i class="fas fa-plus"></i>
-                                    add</button></a>
+                                <a href="https://docs.google.com/forms/d/e/1FAIpQLSehs8jikEjGGysmho6ceQl939Xfe_Vwdvqe5Os2RJpfmsxZ4w/viewform?usp=pp_url&entry.333758641=<?php echo $fullname ?>" target="_blank"><button type="button" class="exam_btn"><i class="fas fa-plus"></i>
+                                        add</button></a>
                             </div>
 
 
@@ -257,6 +271,7 @@ section.box {
         var loaddata = function() {
             var category = document.getElementById('name').value
             var subject = document.getElementById('name1').value
+            var flag = document.getElementById('name2').value.toUpperCase()
 
             $.getJSON("https://spreadsheets.google.com/feeds/list/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/2/public/values?alt=json",
                 function(data) {
@@ -272,8 +287,10 @@ section.box {
                         var Class = data.feed.entry[i]['gsx$class']['$t'];
                         var Uploadedby = data.feed.entry[i]['gsx$uploadedby']['$t'];
                         var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
+                        var Flag = data.feed.entry[i]['gsx$flag']['$t'];
 
-                        if ((Category === category && subject === '--') ||
+                        if ((category === '--' && subject === '--' && Flag === flag) ||
+                            (Category === category && subject === '--') ||
                             (category === '--' && Subject === subject) ||
                             (Category === category && Subject === subject)) {
                             // sort records
@@ -284,7 +301,8 @@ section.box {
                                 Uploadvideo: Uploadvideo,
                                 Uploadedby: Uploadedby,
                                 Topicofthevideo: Topicofthevideo,
-                                Class: Class
+                                Class: Class,
+                                Flag: Flag
                             })
                         }
 
@@ -293,12 +311,12 @@ section.box {
                     if (records.length == 0) {
                         document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
                     } else {
-                        var order = ["LG3", "LG4S1","LG4","LG4S2"]
+                        var order = ["LG3", "LG4S1", "LG4", "LG4S2"]
                         // var order = ["1/CT01", "1/CT02", "QT1", "2/CT01", "2/CT02", "QT2", "3/CT01", "3/CT02", "QT3"]
                         order.forEach(sub => {
                             records.forEach(item => {
                                 if (sub === item.Category) {
-                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject +'&nbsp;-&nbsp;'+ item.Category +'&nbsp;/&nbsp;'+ item.Class +'<br>'+ item.Topicofthevideo +'<br><br>Uploaded by&nbsp;'+ item.Uploadedby +'&nbsp;on&nbsp;'+ item.Timestamp +'</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="'+ item.Uploadvideo + '" allowfullscreen></iframe></div></td>' + '</tr>');
+                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject + '&nbsp;-&nbsp;' + item.Category + '&nbsp;/&nbsp;' + item.Class + '<br>' + item.Topicofthevideo + '<br><br>Uploaded by&nbsp;' + item.Uploadedby + '&nbsp;on&nbsp;' + item.Timestamp + '</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="' + item.Uploadvideo + '" allowfullscreen></iframe></div></td>' + '</tr>');
                                 }
                             })
                         })
@@ -337,6 +355,20 @@ section.box {
             window.addEventListener("orientationChange", lazyload);
         });
     </script>
+    <script> 
+   $(document).ready(function() {
+         $('#name2').click(function(){
+             if($(this).is(':checked'))
+             {              
+                  $(this).val('1');
+             }
+             else
+             {
+                 $(this).val('0');
+             }
+         });
+    });
+</script>
     <!-- =========================
      FOOTER   
 ============================== -->
