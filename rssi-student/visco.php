@@ -202,6 +202,11 @@ section.box {
                                 </select>
                             </div>
                             <div class="col2">
+                                
+                                <input type="checkbox" value="0" id="name2" name="name2" style="margin: .4rem; width:fit-content">
+                                <label for="name2">All video</label>
+                            </div>
+                            <div class="col2">
                                 <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
                             </div>
@@ -257,6 +262,7 @@ section.box {
         var loaddata = function() {
             var category = document.getElementById('name').value
             var subject = document.getElementById('name1').value
+            var flag = document.getElementById('name2').value
 
             $.getJSON("https://spreadsheets.google.com/feeds/list/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/2/public/values?alt=json",
                 function(data) {
@@ -272,9 +278,12 @@ section.box {
                         var Class = data.feed.entry[i]['gsx$class']['$t'];
                         var Uploadedby = data.feed.entry[i]['gsx$uploadedby']['$t'];
                         var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
+                        var Flag = data.feed.entry[i]['gsx$flag']['$t'];
 
-                        if ((Category === category && subject === '--') ||
-                            (category === '--' && Subject === subject)||
+
+                        if ((category === '--' && subject === '--' && Flag === flag) ||
+                            (Category === category && subject === '--') ||
+                            (category === '--' && Subject === subject) ||
                             (Category === category && Subject === subject)) {
                             // sort records
                             records.push({
@@ -283,8 +292,9 @@ section.box {
                                 Category: Category,
                                 Uploadvideo: Uploadvideo,
                                 Uploadedby: Uploadedby,
-                                Topicofthevideo:Topicofthevideo,
-                                Class: Class
+                                Topicofthevideo: Topicofthevideo,
+                                Class: Class,
+                                Flag: Flag
                             })
                         }
 
@@ -337,6 +347,20 @@ section.box {
             window.addEventListener("orientationChange", lazyload);
         });
     </script>
+    <script> 
+   $(document).ready(function() {
+         $('#name2').click(function(){
+             if($(this).is(':checked'))
+             {              
+                  $(this).val('1');
+             }
+             else
+             {
+                 $(this).val('0');
+             }
+         });
+    });
+</script>
     <!-- =========================
      FOOTER   
 ============================== -->
