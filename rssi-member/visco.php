@@ -175,13 +175,10 @@ section.box {
                                 <label for="name">Category<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name" id="name" class="notranslate">
                                     <option selected>--</option>
-                                    <option>LG2</option>
                                     <option>LG3</option>
+                                    <option>LG4S1</option>
                                     <option>LG4</option>
-                                    <option>LG4S1-IX</option>
-                                    <option>LG4S1-X</option>
-                                    <option>LG4S2-XI</option>
-                                    <option>LG4S2-XII</option>
+                                    <option>LG4S2</option>
                                 </select></div>
                             <div class="col2">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
@@ -272,22 +269,22 @@ section.box {
                         var Subject = data.feed.entry[i]['gsx$subject']['$t'];
                         var Category = data.feed.entry[i]['gsx$category']['$t'];
                         var Uploadyourvideo = data.feed.entry[i]['gsx$uploadyourvideo']['$t'];
-                        var Emailaddress = data.feed.entry[i]['gsx$emailaddress']['$t'];
+                        var Class = data.feed.entry[i]['gsx$class']['$t'];
                         var Uploadedby = data.feed.entry[i]['gsx$uploadedby']['$t'];
                         var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
 
                         if ((Category === category && subject === '--') ||
-                            (category === '--' && Subject === subject)||
-                            (category === category && Subject === subject)) {
+                            (category === '--' && Subject === subject) ||
+                            (Category === category && Subject === subject)) {
                             // sort records
                             records.push({
                                 Timestamp: Timestamp,
                                 Subject: Subject,
                                 Category: Category,
                                 Uploadyourvideo: Uploadyourvideo,
-                                Emailaddress: Emailaddress,
                                 Uploadedby: Uploadedby,
-                                Topicofthevideo:Topicofthevideo
+                                Topicofthevideo: Topicofthevideo,
+                                Class: Class
                             })
                         }
 
@@ -296,12 +293,12 @@ section.box {
                     if (records.length == 0) {
                         document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
                     } else {
-                        var order = ["LG2","LG3", "LG4S1-IX","LG4S1-X","LG4","LG4S2-XI", "LG4S2-XII"]
+                        var order = ["LG3", "LG4S1","LG4","LG4S2"]
                         // var order = ["1/CT01", "1/CT02", "QT1", "2/CT01", "2/CT02", "QT2", "3/CT01", "3/CT02", "QT3"]
                         order.forEach(sub => {
                             records.forEach(item => {
                                 if (sub === item.Category) {
-                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject +'&nbsp;-&nbsp;'+ item.Category +'<br>'+ item.Topicofthevideo +'<br><br>Uploaded by&nbsp;'+ item.Uploadedby +'&nbsp;on&nbsp;'+ item.Timestamp +'</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="'+ item.Uploadyourvideo + '" allowfullscreen></iframe></div></td>' + '</tr>');
+                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject +'&nbsp;-&nbsp;'+ item.Category +'&nbsp;/&nbsp;'+ item.Class +'<br>'+ item.Topicofthevideo +'<br><br>Uploaded by&nbsp;'+ item.Uploadedby +'&nbsp;on&nbsp;'+ item.Timestamp +'</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="'+ item.Uploadyourvideo + '" allowfullscreen></iframe></div></td>' + '</tr>');
                                 }
                             })
                         })

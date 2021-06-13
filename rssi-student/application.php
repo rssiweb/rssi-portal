@@ -63,7 +63,7 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><?php echo $mydocument ?></td>
+                                <td style="line-height: 2;"><?php echo $mydocument ?></td>
                             </tr>
                         </tbody>
                     </table>
