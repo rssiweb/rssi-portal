@@ -174,7 +174,7 @@ include("member_data.php");
 
                     <div class="container">
                         <!--<span style="color: #F2545F; display: inline;"></span>-->
-                        <p style="display: inline;"></p>
+                        <p style="display: inline;">You have to enter at least one value to watch video.</p>
                         <div class="row" style="background-color: rgb(255, 245,
                 194);height: 110%; padding-top: 0; padding-bottom:
                 1.5%;padding-left: 1.5%">
