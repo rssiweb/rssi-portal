@@ -199,7 +199,7 @@ section.box {
                             </div>
                             <div class="col2">
                                 
-                                <input type="checkbox" value="0" id="name2" name="name2" style="margin: .4rem; width:fit-content">
+                                <input type="checkbox" id="name2" name="name2" style="margin: .4rem; width:fit-content">
                                 <label for="name2">All video</label>
                             </div>
                             <div class="col2">
