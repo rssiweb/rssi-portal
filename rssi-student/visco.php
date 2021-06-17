@@ -32,9 +32,7 @@ include("student_data.php");
     <title>Visco</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="https://rssi.in/css/bootstrap_sheet.min.css">
-    <link rel="stylesheet" href="https://rssi.in/css/style.css">
-    <link rel="stylesheet" href="https://rssi.in/css/addstyle.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <!-- Main css -->
     <style>
         <?php include 'style.css'; ?>

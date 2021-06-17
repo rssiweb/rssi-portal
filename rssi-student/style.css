@@ -566,3 +566,22 @@ section.box {
     vertical-align: top;
     margin-left: -10px;
 }
+.exam_btn {
+    display: inline-block;
+    background: #F2545F;
+    padding: 0px 10px;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    letter-spacing: 1px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 30px;
+    border: 1px solid #F2545F;
+    border-radius: 0px;
+    outline: none !important;
+    box-shadow: none !important;
+    text-align: center;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 300ms linear 0s;
+}

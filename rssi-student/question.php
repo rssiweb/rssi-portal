@@ -32,9 +32,7 @@ include("student_data.php");
     <title>Question</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="https://rssi.in/css/bootstrap_sheet.min.css">
-    <link rel="stylesheet" href="https://rssi.in/css/style.css">
-    <link rel="stylesheet" href="https://rssi.in/css/addstyle.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <!-- Main css -->
     <style>
         <?php include 'style.css'; ?>
@@ -43,7 +41,7 @@ include("student_data.php");
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -127,26 +125,50 @@ include("student_data.php");
         background-color: unset;
     }
 
-    h1, h2, h3, h4, h5, h6 {
-    font-family: Roboto;
-}
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: Roboto;
+    }
 
-.profile-info .profile-details .profile-title {
-    color: rgba(174, 178, 183, 1.0);
-    font-size: 13px !important;
-    margin: 0px 0px 6px 14px !important;
-    line-height: unset !important;
-}
-.profile-info .profile-details h3 {
-    margin: 19px 0px 5px 14px;
-    line-height: 1.7;
-}
-#main-menu-wrapper ul {
-    margin-top: 2px;
-}
-.dropdown-toggle::after {
-    display: none;
-}
+    .profile-info .profile-details .profile-title {
+        color: rgba(174, 178, 183, 1.0);
+        font-size: 13px !important;
+        margin: 0px 0px 6px 14px !important;
+        line-height: unset !important;
+    }
+
+    .profile-info .profile-details h3 {
+        margin: 19px 0px 5px 14px;
+        line-height: 1.7;
+    }
+
+    #main-menu-wrapper ul {
+        margin-top: 2px;
+    }
+
+    .dropdown-toggle::after {
+        display: none;
+    }
+
+    .col2ass {
+        width: 15%;
+        margin-top: 25px;
+    }
+
+    @media screen and (max-width: 800px) {
+
+        .col1,
+        .col2,
+        .col2ass {
+            width: 100%;
+            padding-left: 3%;
+            margin-top: 10px;
+        }
+    }
 </style>
 <!-- =========================
      NAVIGATION LINKS     
@@ -179,7 +201,8 @@ include("student_data.php");
                                     <option>LG4</option>
                                     <option>LG4S1</option>
                                     <option>LG4S2</option>
-                                </select></div>
+                                </select>
+                            </div>
                             <div class="col2ass">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
