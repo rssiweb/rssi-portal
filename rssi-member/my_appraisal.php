@@ -114,7 +114,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <option>Quarterly 3/2022</option>
                             </select>
                         </div>
-                        <button type="submit" name="search_by_id" class="btn btn-primary">
+                        <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
                         <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
                     </form>
                     
