@@ -117,9 +117,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <div class="col2" style="display: inline-block;">
                                 <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
                                     <option value="" disabled selected hidden>Select Appraisal type</option>
-                                    <option>Quarterly 1/2021</option>
                                     <option>Quarterly 2/2021</option>
-                                    <option>Quarterly 3/2022</option>
+                                    <option>Quarterly 1/2021</option>
                                 </select>
                             </div>
                         </div>

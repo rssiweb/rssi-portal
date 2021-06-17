@@ -107,7 +107,7 @@
 
             <li>
                 <a href="result.php" class="<?php echo $result_active ?>">
-                    <span class="sidebar-icon"><i class="fas fa-poll-h"></i>
+                    <span class="sidebar-icon"><i class="fas fa-chart-line"></i>
                     </span>
                     <span class="menu-title">Results</span>
                 </a>

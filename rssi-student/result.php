@@ -12,8 +12,9 @@ if (!$_SESSION['sid']) {
 include("student_data.php");
 ?>
 <?php  
-        include("database.php");  
-        $view_users_query="select * from result_database_result WHERE studentid='$user_check'";//select query for viewing users.  
+        include("database.php");
+        @$id = $_POST['get_id'];  
+        $view_users_query="select * from result_database_result WHERE studentid='$user_check' AND examname='$id'";//select query for viewing users.  
         $run=pg_query($con,$view_users_query);//here run the sql query.  
   
         while($row=pg_fetch_array($run))//while look to fetch the result and store in a array $row.  
@@ -63,6 +64,11 @@ include("student_data.php");
             policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
         });
     </script>
+    <style>        @media (min-width:767px) {
+            .left {
+                margin-left: 2%;
+            }
+        }</style>
 
 </head>
 
@@ -77,33 +83,25 @@ include("student_data.php");
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
+                <?php echo $id ?>
                 <section class="box" style="padding: 2%;">
 
-                    <!--<div class="container">
-                        <div class="row" style="background-color: rgb(255, 245, 194);height: 110%; padding-top: 0; padding-bottom: 1.5%;  padding-left: 1.5%">
-                            <div class=col2ass>
-                                <label for="name">Student ID<span style="color: #F2545F"></span>&nbsp;</label><input type="text" disabled="disabled" id="name" name="name" value="<?php echo $student_id ?>" minlength="9" maxlength="12" size="12" style="text-transform:uppercase; background-color:#dddddd">
-                            </div>
-                            <div class=col2ass>
-                                <label for="ename">Date of Birth<span style="color: #F2545F"></span>&nbsp;</label><input type="text" disabled="disabled" name="ename" id="ename" value="<?php echo $dateofbirth ?>" minlength="10" maxlength="10" size="12" style="text-transform:uppercase;background-color:#dddddd">
-                            </div>
-                            <div class=col2ass>
-                                <label for="name1">Academic year<span style="color: #F2545F"></span>&nbsp;</label>
-                                <select name="name1" id="name1">
-                                    <option selected>--</option>
-                                    <option>2021-2022</option>
-                                    <option>2020-2021</option>
+                <form action="" method="POST">
+                        <div class="form-group" style="display: inline-block;">
+                            <div class="col2" style="display: inline-block;">
+                                <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                                    <option value="" disabled selected hidden>Select Exam name</option>
+                                    <option>QT1/2021</option>
+                                    <option>QT3/2021</option>
                                 </select>
                             </div>
-
-                            <div class="col2">
-                                <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
-                                    search</button>
-                            </div>
-
-
                         </div>
-                    </div>-->
+                        <div class="col2 left" style="display: inline-block;">
+                            <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
+                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                        </div>
+                    </form>
+
 
                     <table class="table">
                         <thead>
@@ -117,6 +115,8 @@ include("student_data.php");
                                 <th scope="col">Download report card</th>
                             </tr>
                         </thead>
+                        <?php if (@$examname > 0) {
+                            ?>
                         <tbody>
                             <tr>
 
@@ -128,6 +128,20 @@ include("student_data.php");
                                 <td style="line-height: 1.7;"><?php echo $examname ?></td>
                                 <td style="line-height: 1.7;"><span class="noticet"><a href="<?php echo $result ?>" target="_blank"><?php echo $examname ?>/<?php echo $filename ?></a></span></td>
                             </tr>
+                            <?php
+                            } else if ($id=="") {
+                                ?>
+                                <tr>
+                                    <td>Please select Exam name.</td>
+                                </tr>
+                            <?php
+                            } else {
+                                ?>
+                                <tr>
+                                    <td>No record found for <?php echo $id ?></td>
+                                </tr>
+                            <?php }
+                            ?>
                         </tbody>
                     </table>
                     
