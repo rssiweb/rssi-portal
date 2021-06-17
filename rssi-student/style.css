@@ -568,7 +568,7 @@ section.box {
 }
 
 .btn:focus,
-.button:focus,
+.btn-primary:focus,
 [type="submit"]:focus {
-    outline: none;
+    outline: none !important;
 }
