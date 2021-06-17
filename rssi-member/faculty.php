@@ -44,19 +44,40 @@ if (!$_SESSION['aid']) {
             policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
         });
     </script>
+    <style>
+    @media (max-width:767px) {
+            td {width:100%}
+        }
+    </style>
 
 </head>
 <div class=container>
   <div class=row>
-    <div class=col style="text-align: right">
-      <span>[<?php echo $user_check ?>]&nbsp;<span class="noticet"><a href="logout.php">Logout</a>
-        </span>
+    <div class=col style="text-align: right; padding: 1%;">
+      <span style="display: inline-block;">[<?php echo $user_check ?>]&nbsp;<span class="noticet"><a href="logout.php">Logout</a>
+        </span>&nbsp;&nbsp;
+        <form action="" method="POST" style="display: inline-block">
+                        <div class="form-group" style="display: inline-block;">
+                            <div class="col2" style="display: inline-block;">
+                                <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                                    <option value="" disabled selected hidden>Select Status</option>
+                                    <option>Active</option>
+                                    <option>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col2 left" style="display: inline-block;">
+                            <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
+                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                        </div>
+                    </form>
     </div>
   </div>
 </div>
 <?php
 include("database.php");
-$result = pg_query($con, "SELECT * FROM rssimyaccount_members order by filterstatus asc,today desc");
+@$id = $_POST['get_id'];
+$result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' order by filterstatus asc,today desc");
 if (!$result) {
   echo "An error occurred.\n";
   exit;
@@ -90,8 +111,8 @@ foreach ($resultArr as $array) {
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['doj'] . '&nbsp;' . $array['yos'] . '</td>
             <td width="15%">' . $array['position'] . '</td>
             <td width="15%">' . $array['class'] . '</td>
-            <td width="15%"><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . $array['gm'] . '</td>
-            <td>' . $array['astatus'] . '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
+            <td><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . $array['gm'] . '</td>
+            <td width="15%">' . $array['astatus'] . '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
             <td>' . $array['today'] . '</td>
             <td>' . $array['colors'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '</td>
