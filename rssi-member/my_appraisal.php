@@ -90,6 +90,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         #cw3 {
             width: 20%;
         }
+        @media (min-width:767px) {.left {margin-left: 2%;}}
     </style>
 </head>
 
@@ -107,15 +108,19 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <section class="box" style="padding: 2%;">
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
-                        <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                        <div class="col2" style="display: inline-block;">
+                            <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
                             <option selected>Select Appraisal type</option>
                                     <option>Quarterly 1/2021</option>
                                     <option>Quarterly 2/2021</option>
                                     <option>Quarterly 3/2022</option>
                             </select>
                         </div>
-                        <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
+                        </div>
+                        <div class="col2 left" style="display: inline-block;">
+                            <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
                         <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                        </div>
                     </form>
                     
                     <table class="table">
