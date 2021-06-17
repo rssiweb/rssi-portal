@@ -90,7 +90,12 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         #cw3 {
             width: 20%;
         }
-        @media (min-width:767px) {.left {margin-left: 2%;}}
+
+        @media (min-width:767px) {
+            .left {
+                margin-left: 2%;
+            }
+        }
     </style>
 </head>
 
@@ -105,24 +110,25 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
+                <?php echo $id ?>
                 <section class="box" style="padding: 2%;">
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
-                        <div class="col2" style="display: inline-block;">
-                            <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
-                            <option selected>Select Appraisal type</option>
+                            <div class="col2" style="display: inline-block;">
+                                <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                                    <option value="" disabled selected hidden>Select Appraisal type</option>
                                     <option>Quarterly 1/2021</option>
                                     <option>Quarterly 2/2021</option>
                                     <option>Quarterly 3/2022</option>
-                            </select>
-                        </div>
+                                </select>
+                            </div>
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
-                        <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
                         </div>
                     </form>
-                    
+
                     <table class="table">
                         <thead>
                             <tr>
@@ -135,8 +141,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             </tr>
                         </thead>
                         <?php if (@$appraisaltype > 0) {
-                                ?>
-                        <tbody>
+                            ?>
+                            <tbody>
                                 <tr>
 
                                     <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?></b><br>
@@ -149,15 +155,20 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <td style="line-height: 1.7;"><?php echo $ipf ?></td>
                                 </tr>
                             <?php
+                            } else if ($id=="") {
+                                ?>
+                                <tr>
+                                    <td>Please select Appraisal type.</td>
+                                </tr>
+                            <?php
                             } else {
                                 ?>
                                 <tr>
                                     <td>No record found for <?php echo $id ?></td>
                                 </tr>
-                            <?php
-                            }
+                            <?php }
                             ?>
-                        </tbody>
+                            </tbody>
                     </table>
 
 
