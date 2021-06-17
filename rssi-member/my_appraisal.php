@@ -11,27 +11,28 @@ if (!$_SESSION['aid']) {
 <?php
 include("member_data.php");
 ?>
-<?php  
-        include("database.php");  
-        $view_users_query="select * from myappraisal_sheet1 WHERE associatenumber='$user_check'";//select query for viewing users.  
-        $run=pg_query($con,$view_users_query);//here run the sql query.  
-  
-        while($row=pg_fetch_array($run))//while look to fetch the result and store in a array $row.  
-        { 
-            $associatenumber=$row[0];
-            $fullname=$row[1];
-            $appraisaltype=$row[2];
-            $effectivestartdate=$row[3];
-            $effectiveenddate=$row[4];
-            $role=$row[5];
-            $feedback=$row[6];
-            $scopeofimprovement=$row[7];
-            $ipf=$row[8];
-            $__hevo_id=$row[9];
-            $__hevo__ingested_at=$row[10];
-            $__hevo__marked_deleted=$row[11]                       
-?>     
-<?php }?>    
+<?php
+include("database.php");
+$id = $_POST['get_id'];
+$view_users_query = "select * from myappraisal_sheet1 WHERE associatenumber='$user_check' AND appraisaltype='$id'"; //select query for viewing users.  
+$run = pg_query($con, $view_users_query); //here run the sql query.  
+
+while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
+{
+    $associatenumber = $row[0];
+    $fullname = $row[1];
+    $appraisaltype = $row[2];
+    $effectivestartdate = $row[3];
+    $effectiveenddate = $row[4];
+    $role = $row[5];
+    $feedback = $row[6];
+    $scopeofimprovement = $row[7];
+    $ipf = $row[8];
+    $__hevo_id = $row[9];
+    $__hevo__ingested_at = $row[10];
+    $__hevo__marked_deleted = $row[11]
+    ?>
+<?php } ?>
 
 
 <!DOCTYPE html>
@@ -53,7 +54,7 @@ include("member_data.php");
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -62,9 +63,13 @@ include("member_data.php");
             policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
         });
     </script>
-<style>
+    <style>
         @media (max-width:767px) {
-            #cw, #cw1, #cw2, #cw3 {
+
+            #cw,
+            #cw1,
+            #cw2,
+            #cw3 {
                 width: 100% !important;
             }
 
@@ -100,6 +105,19 @@ include("member_data.php");
             <div class="col-md-12">
                 <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
+                    <form action="" method="POST">
+                        <div class="form-group" style="display: inline-block;">
+                        <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                            <option selected>Select Appraisal type</option>
+                                    <option>Quarterly 1/2021</option>
+                                    <option>Quarterly 2/2021</option>
+                                    <option>Quarterly 3/2022</option>
+                            </select>
+                        </div>
+                        <button type="submit" name="search_by_id" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                    </form>
+                    
                     <table class="table">
                         <thead>
                             <tr>
@@ -111,28 +129,39 @@ include("member_data.php");
                                 <th scope="col">IPF (Individual Performance Factor)</th>
                             </tr>
                         </thead>
+                        <?php if (@$appraisaltype > 0) {
+                                ?>
                         <tbody>
-                            <tr>
+                                <tr>
 
-                            <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?></b><br>
-                                Associate ID - <b><?php echo $associatenumber ?></b><br>
-                                <span style="line-height: 3;"><?php echo $role ?></span></td>
-                                <td style="line-height: 1.7;"><?php echo $appraisaltype ?></td>
-                                <td id="cw" style="line-height: 1.7;"><?php echo $effectivestartdate ?> to <?php echo $effectiveenddate ?></td>
-                                <td style="line-height: 1.7;"><?php echo $feedback ?></td>
-                                <td style="line-height: 1.7;"><?php echo $scopeofimprovement ?></td>
-                                <td style="line-height: 1.7;"><?php echo $ipf ?></td>
-                            </tr>
+                                    <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?></b><br>
+                                        Associate ID - <b><?php echo $associatenumber ?></b><br>
+                                        <span style="line-height: 3;"><?php echo $role ?></span></td>
+                                    <td style="line-height: 1.7;"><?php echo $appraisaltype ?></td>
+                                    <td id="cw" style="line-height: 1.7;"><?php echo $effectivestartdate ?> to <?php echo $effectiveenddate ?></td>
+                                    <td style="line-height: 1.7;"><?php echo $feedback ?></td>
+                                    <td style="line-height: 1.7;"><?php echo $scopeofimprovement ?></td>
+                                    <td style="line-height: 1.7;"><?php echo $ipf ?></td>
+                                </tr>
+                            <?php
+                            } else {
+                                ?>
+                                <tr>
+                                    <td>No record found for <?php echo $id ?></td>
+                                </tr>
+                            <?php
+                            }
+                            ?>
                         </tbody>
                     </table>
-                    
 
-                            </div>
-                        </div>
-                    </div>
-                </section>
+
+            </div>
+            </div>
             </div>
         </section>
+        </div>
+    </section>
     </section>
 
 

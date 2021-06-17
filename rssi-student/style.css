@@ -566,3 +566,9 @@ section.box {
     vertical-align: top;
     margin-left: -10px;
 }
+
+.btn:focus,
+.button:focus,
+[type="submit"]:focus {
+    outline: none;
+}

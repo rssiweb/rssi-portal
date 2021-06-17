@@ -128,3 +128,6 @@ WHERE __hevo_id='24';
 UPDATE rssimyaccount_members
 SET badge = '<img src=../images/smile.jpg title="Volunteer of the Quarter" style=height:32px,width:32px>'
 WHERE associatenumber='VLKO20016';
+
+UPDATE myappraisal_sheet1  
+SET appraisaltype = 'Quarterly 1/2021' 
