@@ -172,7 +172,7 @@ section.box {
                             <div class="col2">
                                 <label for="name">Category<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name" id="name" class="notranslate">
-                                <option selected>--</option>
+                                <option selected>ALL</option>
                                     <option>LG3</option>
                                     <option>LG4S1</option>
                                     <option>LG4</option>
@@ -181,7 +181,7 @@ section.box {
                             <div class="col2">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
-                                    <option selected>--</option>
+                                    <option selected>ALL</option>
                                     <option>Hindi</option>
                                     <option>English</option>
                                     <option>Bengali</option>
@@ -199,8 +199,8 @@ section.box {
                             </div>
                             <div class="col2">
                                 
-                                <input type="checkbox" id="name2" name="name2" style="margin: .4rem; width:fit-content">
-                                <label for="name2">All video</label>
+                                <input type="checkbox" value="1" id="name2" name="name2" style="margin: .4rem; width:fit-content" hidden>
+                                <!--<label for="name2">All video</label>-->
                             </div>
                             <div class="col2">
                                 <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
@@ -277,9 +277,9 @@ section.box {
                         var Flag = data.feed.entry[i]['gsx$flag']['$t'];
 
 
-                        if ((category === '--' && subject === '--' && Flag === flag) ||
-                            (Category === category && subject === '--') ||
-                            (category === '--' && Subject === subject) ||
+                        if ((category === 'ALL' && subject === 'ALL' && Flag === flag) ||
+                            (Category === category && subject === 'ALL') ||
+                            (category === 'ALL' && Subject === subject) ||
                             (Category === category && Subject === subject)) {
                             // sort records
                             records.push({
@@ -343,7 +343,7 @@ section.box {
             window.addEventListener("orientationChange", lazyload);
         });
     </script>
-    <script> 
+    <!--<script> 
    $(document).ready(function() {
          $('#name2').click(function(){
              if($(this).is(':checked'))
@@ -356,7 +356,7 @@ section.box {
              }
          });
     });
-</script>
+</script>-->
     <!-- =========================
      FOOTER   
 ============================== -->
