@@ -280,10 +280,9 @@ include("student_data.php");
                         var Class = data.feed.entry[i]['gsx$class']['$t'];
                         var Uploadedby = data.feed.entry[i]['gsx$uploadedby']['$t'];
                         var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
-                        var Flag = data.feed.entry[i]['gsx$flag']['$t'];
 
 
-                        if ((category === 'ALL' && subject === 'ALL' && Flag === '1') ||
+                        if ((category === 'ALL' && subject === 'ALL') ||
                             (Category === category && subject === 'ALL') ||
                             (category === 'ALL' && Subject === subject) ||
                             (Category === category && Subject === subject)) {
@@ -296,7 +295,6 @@ include("student_data.php");
                                 Uploadedby: Uploadedby,
                                 Topicofthevideo: Topicofthevideo,
                                 Class: Class,
-                                Flag: Flag
                             })
                         }
 
@@ -349,20 +347,6 @@ include("student_data.php");
             window.addEventListener("orientationChange", lazyload);
         });
     </script>
-    <!--<script> 
-   $(document).ready(function() {
-         $('#name2').click(function(){
-             if($(this).is(':checked'))
-             {              
-                  $(this).val('1');
-             }
-             else
-             {
-                 $(this).val('0');
-             }
-         });
-    });
-</script>-->
     <!-- =========================
      FOOTER   
 ============================== -->
