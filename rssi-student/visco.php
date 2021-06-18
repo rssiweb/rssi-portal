@@ -34,12 +34,14 @@ include("student_data.php");
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <!-- Main css -->
-    <style><?php include '../css/style.css'; ?></style>
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -123,29 +125,38 @@ include("student_data.php");
         background-color: unset;
     }
 
-    h1, h2, h3, h4, h5, h6 {
-    font-family: Roboto;
-}
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: Roboto;
+    }
 
-.profile-info .profile-details .profile-title {
-    color: rgba(174, 178, 183, 1.0);
-    font-size: 13px !important;
-    margin: 0px 0px 6px 14px !important;
-    line-height: unset !important;
-}
-.profile-info .profile-details h3 {
-    margin: 19px 0px 5px 14px;
-    line-height: 1.7;
-}
-#main-menu-wrapper ul {
-    margin-top: 2px;
-}
-.dropdown-toggle::after {
-    display: none;
-}
-section.box {
-    width: 100%;
-}
+    .profile-info .profile-details .profile-title {
+        color: rgba(174, 178, 183, 1.0);
+        font-size: 13px !important;
+        margin: 0px 0px 6px 14px !important;
+        line-height: unset !important;
+    }
+
+    .profile-info .profile-details h3 {
+        margin: 19px 0px 5px 14px;
+        line-height: 1.7;
+    }
+
+    #main-menu-wrapper ul {
+        margin-top: 2px;
+    }
+
+    .dropdown-toggle::after {
+        display: none;
+    }
+
+    section.box {
+        width: 100%;
+    }
 </style>
 <!-- =========================
      NAVIGATION LINKS     
@@ -172,12 +183,13 @@ section.box {
                             <div class="col2">
                                 <label for="name">Category<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name" id="name" class="notranslate">
-                                <option selected>ALL</option>
+                                    <option selected>ALL</option>
                                     <option>LG3</option>
                                     <option>LG4S1</option>
                                     <option>LG4</option>
                                     <option>LG4S2</option>
-                                </select></div>
+                                </select>
+                            </div>
                             <div class="col2">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
@@ -198,8 +210,8 @@ section.box {
                                 </select>
                             </div>
                             <div class="col2">
-                                
-                                <input type="checkbox" value="1" id="name2" name="name2" style="margin: .4rem; width:fit-content" hidden>
+
+                                <input type="text" value="1" id="name2" name="name2" style="margin: .4rem; width:fit-content" hidden>
                                 <!--<label for="name2">All video</label>-->
                             </div>
                             <div class="col2">
@@ -299,12 +311,12 @@ section.box {
                     if (records.length == 0) {
                         document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
                     } else {
-                        var order = ["LG3", "LG4S1","LG4","LG4S2"]
+                        var order = ["LG3", "LG4S1", "LG4", "LG4S2"]
                         // var order = ["1/CT01", "1/CT02", "QT1", "2/CT01", "2/CT02", "QT2", "3/CT01", "3/CT02", "QT3"]
                         order.forEach(sub => {
                             records.forEach(item => {
                                 if (sub === item.Category) {
-                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject +'&nbsp;-&nbsp;'+ item.Category +'&nbsp;/&nbsp;'+ item.Class +'<br>'+ item.Topicofthevideo +'<br><br>Uploaded by&nbsp;'+ item.Uploadedby +'&nbsp;on&nbsp;'+ item.Timestamp +'</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="'+ item.Uploadvideo + '" allowfullscreen></iframe></div></td>' + '</tr>');
+                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject + '&nbsp;-&nbsp;' + item.Category + '&nbsp;/&nbsp;' + item.Class + '<br>' + item.Topicofthevideo + '<br><br>Uploaded by&nbsp;' + item.Uploadedby + '&nbsp;on&nbsp;' + item.Timestamp + '</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="' + item.Uploadvideo + '" allowfullscreen></iframe></div></td>' + '</tr>');
                                 }
                             })
                         })

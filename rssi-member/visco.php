@@ -33,7 +33,9 @@ include("member_data.php");
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <style><?php include '../css/style.css'; ?></style>
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
@@ -185,7 +187,8 @@ include("member_data.php");
                                     <option>LG4S1</option>
                                     <option>LG4</option>
                                     <option>LG4S2</option>
-                                </select></div>
+                                </select>
+                            </div>
                             <div class="col2">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
@@ -206,8 +209,8 @@ include("member_data.php");
                                 </select>
                             </div>
                             <div class="col2">
-                                
-                            <input type="checkbox" value="1" id="name2" name="name2" style="margin: .4rem; width:fit-content" hidden>
+
+                                <input type="text" value="1" id="name2" name="name2" style="margin: .4rem; width:fit-content" hidden>
                                 <!--<label for="name2">All video</label>-->
                             </div>
                             <div class="col2">
@@ -352,7 +355,7 @@ include("member_data.php");
             window.addEventListener("orientationChange", lazyload);
         });
     </script>
-   <!--<script> 
+    <!--<script> 
    $(document).ready(function() {
          $('#name2').click(function(){
              if($(this).is(':checked'))
