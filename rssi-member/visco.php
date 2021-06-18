@@ -209,11 +209,6 @@ include("member_data.php");
                                 </select>
                             </div>
                             <div class="col2">
-
-                                <input type="text" value="1" id="name2" name="name2" style="margin: .4rem; width:fit-content" hidden>
-                                <!--<label for="name2">All video</label>-->
-                            </div>
-                            <div class="col2">
                                 <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
                                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSehs8jikEjGGysmho6ceQl939Xfe_Vwdvqe5Os2RJpfmsxZ4w/viewform?usp=pp_url&entry.333758641=<?php echo $fullname ?>" target="_blank"><button type="button" class="exam_btn"><i class="fas fa-plus"></i>
@@ -271,7 +266,6 @@ include("member_data.php");
         var loaddata = function() {
             var category = document.getElementById('name').value
             var subject = document.getElementById('name1').value
-            var flag = document.getElementById('name2').value
 
             $.getJSON("https://spreadsheets.google.com/feeds/list/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/2/public/values?alt=json",
                 function(data) {
@@ -289,7 +283,7 @@ include("member_data.php");
                         var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
                         var Flag = data.feed.entry[i]['gsx$flag']['$t'];
 
-                        if ((category === 'ALL' && subject === 'ALL' && Flag === flag) ||
+                        if ((category === 'ALL' && subject === 'ALL' && Flag === '1') ||
                             (Category === category && subject === 'ALL') ||
                             (category === 'ALL' && Subject === subject) ||
                             (Category === category && Subject === subject)) {
