@@ -321,35 +321,24 @@ include("student_data.php");
                     }
                 });
         }
+    </script>
+    <script>
+        // Initiate an Ajax request on button click
+        $(document).on("click", "button", function() {
+            // Adding timestamp to set cache false
+            $.get("viso.php?v=" + $.now(), function(data) {
+                $("body").html(data);
+            });
+        });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            var lazyloadImages = document.querySelectorAll("img.lazy");
-            var lazyloadThrottleTimeout;
-
-            function lazyload() {
-                if (lazyloadThrottleTimeout) {
-                    clearTimeout(lazyloadThrottleTimeout);
-                }
-
-                lazyloadThrottleTimeout = setTimeout(function() {
-                    var scrollTop = window.pageYOffset;
-                    lazyloadImages.forEach(function(img) {
-                        if (img.offsetTop < (window.innerHeight + scrollTop)) {
-                            img.src = img.dataset.src;
-                            img.classList.remove('lazy');
-                        }
-                    });
-                    if (lazyloadImages.length == 0) {
-                        document.removeEventListener("scroll", lazyload);
-                        window.removeEventListener("resize", lazyload);
-                        window.removeEventListener("orientationChange", lazyload);
-                    }
-                }, 20);
+        // Add remove loading class on body element depending on Ajax request status
+        $(document).on({
+            ajaxStart: function() {
+                $("body").addClass("loading");
+            },
+            ajaxStop: function() {
+                $("body").removeClass("loading");
             }
-
-            document.addEventListener("scroll", lazyload);
-            window.addEventListener("resize", lazyload);
-            window.addEventListener("orientationChange", lazyload);
         });
     </script>
     <!-- =========================
@@ -375,6 +364,7 @@ include("student_data.php");
         });
     </script>
     <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+    <div class="overlay"></div>
 </body>
 
 </html>

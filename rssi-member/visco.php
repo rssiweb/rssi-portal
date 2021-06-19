@@ -321,6 +321,26 @@ include("member_data.php");
                 });
         }
     </script>
+
+    <script>
+        // Initiate an Ajax request on button click
+        $(document).on("click", "button", function() {
+            // Adding timestamp to set cache false
+            $.get("viso.php?v=" + $.now(), function(data) {
+                $("body").html(data);
+            });
+        });
+
+        // Add remove loading class on body element depending on Ajax request status
+        $(document).on({
+            ajaxStart: function() {
+                $("body").addClass("loading");
+            },
+            ajaxStop: function() {
+                $("body").removeClass("loading");
+            }
+        });
+    </script>
     <!-- =========================
      FOOTER   
 ============================== -->
@@ -344,6 +364,7 @@ include("member_data.php");
         });
     </script>
     <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+    <div class="overlay"></div>
 </body>
 
 </html>
