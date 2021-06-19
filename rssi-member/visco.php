@@ -172,8 +172,8 @@ include("member_data.php");
                 <section class="box" style="padding: 2%;">
 
                     <div class="container">
-                        <!--<span style="color: #F2545F; display: inline;"></span>-->
-                        <p style="display: inline;">You have to enter at least one value to watch video.</p>
+                        <!--<span style="color: #F2545F; display: inline;"></span>
+                        <p style="display: inline;">You have to enter at least one value to watch video.</p>-->
                         <div class="row" style="background-color: rgb(255, 245,
                 194);height: 110%; padding-top: 0; padding-bottom:
                 1.5%;padding-left: 1.5%">
@@ -182,7 +182,8 @@ include("member_data.php");
                             <div class="col2">
                                 <label for="name">Category<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name" id="name" class="notranslate">
-                                <option value="" disabled selected hidden>ALL</option>
+                                    <option>--</option>
+                                    <option>ALL</option>
                                     <option>LG3</option>
                                     <option>LG4S1</option>
                                     <option>LG4</option>
@@ -192,7 +193,8 @@ include("member_data.php");
                             <div class="col2">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
-                                <option value="" disabled selected hidden>ALL</option>
+                                    <option>--</option>
+                                    <option>ALL</option>
                                     <option>Hindi</option>
                                     <option>English</option>
                                     <option>Bengali</option>
@@ -282,9 +284,13 @@ include("member_data.php");
                         var Uploadedby = data.feed.entry[i]['gsx$uploadedby']['$t'];
                         var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
 
-                        if ((category === '' && subject === '') ||
-                            (Category === category && subject === '') ||
-                            (category === '' && Subject === subject) ||
+                        if ((category === 'ALL' && subject === '--') ||
+                            (category === 'ALL' && subject === 'ALL') ||
+                            (category === '--' && subject === 'ALL') ||
+                            (Category === category && subject === '--') ||
+                            (Category === category && subject === 'ALL') ||
+                            (category === '--' && Subject === subject) ||
+                            (category === 'ALL' && Subject === subject) ||
                             (Category === category && Subject === subject)) {
                             // sort records
                             records.push({
