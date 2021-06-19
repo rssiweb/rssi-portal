@@ -284,7 +284,7 @@ include("member_data.php");
 
                         if ((Category === category && Subject === subject) ||
                             (category === '--' && Subject === subject) ||
-                            (Category === category && Subject === '--')
+                            (Category === category && subject === '--') ||
                             (category === '--' && subject === '--')) {
                             // sort records
                             records.push({
