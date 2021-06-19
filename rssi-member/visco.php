@@ -277,7 +277,7 @@ include("member_data.php");
                         var Timestamp = data.feed.entry[i]['gsx$टाइमस्टैम्प']['$t'];
                         var Subject = data.feed.entry[i]['gsx$subject']['$t'];
                         var Category = data.feed.entry[i]['gsx$category']['$t'];
-                        var Uploadvideo = data.feed.entry[i]['gsx$uploadvideo']['$t'];
+                        var Fuploadvideo = data.feed.entry[i]['gsx$fuploadvideo']['$t'];
                         var Class = data.feed.entry[i]['gsx$class']['$t'];
                         var Uploadedby = data.feed.entry[i]['gsx$uploadedby']['$t'];
                         var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
@@ -291,7 +291,7 @@ include("member_data.php");
                                 Timestamp: Timestamp,
                                 Subject: Subject,
                                 Category: Category,
-                                Uploadvideo: Uploadvideo,
+                                Fuploadvideo: Fuploadvideo,
                                 Uploadedby: Uploadedby,
                                 Topicofthevideo: Topicofthevideo,
                                 Class: Class,
@@ -308,7 +308,7 @@ include("member_data.php");
                         order.forEach(sub => {
                             records.forEach(item => {
                                 if (sub === item.Category) {
-                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject + '&nbsp;-&nbsp;' + item.Category + '&nbsp;/&nbsp;' + item.Class + '<br>' + item.Topicofthevideo + '<br><br>Uploaded by&nbsp;' + item.Uploadedby + '&nbsp;on&nbsp;' + item.Timestamp + '</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="' + item.Uploadvideo + '" allowfullscreen></iframe></div></td>' + '</tr>');
+                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject + '&nbsp;-&nbsp;' + item.Category + '&nbsp;/&nbsp;' + item.Class + '<br>' + item.Topicofthevideo + '<br><br>Uploaded by&nbsp;' + item.Uploadedby + '&nbsp;on&nbsp;' + item.Timestamp + '</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="' + item.Fuploadvideo + '/preview" allowfullscreen></iframe></div></td>' + '</tr>');
                                 }
                             })
                         })
