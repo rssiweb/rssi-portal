@@ -1,9 +1,9 @@
 <?php
 session_start();
 // Storing Session
-$user_check = $_SESSION['aid'];
+$user_check = $_SESSION['sid'];
 
-if (!$_SESSION['aid']) {
+if (!$_SESSION['sid']) {
 
     header("Location: index.php"); //redirect to the login page to secure the welcome page without login access.  
 } else if ($_SESSION['filterstatus'] != 'Active') {
@@ -16,7 +16,7 @@ if (!$_SESSION['aid']) {
 }
 ?>
 <?php
-include("member_data.php");
+include("student_data.php");
 ?>
 
 
@@ -29,10 +29,11 @@ include("member_data.php");
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Visco</title>
+    <title>Library</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <!-- Main css -->
     <style>
         <?php include '../css/style.css'; ?>
     </style>
@@ -115,7 +116,7 @@ include("member_data.php");
 
     .col2 {
         width: unset;
-        margin-top: 2%;
+        margin-top: 4%;
         margin-left: 5%;
     }
 
@@ -153,8 +154,20 @@ include("member_data.php");
         display: none;
     }
 
-    section.box {
-        width: 100%;
+    .col2ass {
+        width: 15%;
+        margin-top: 25px;
+    }
+
+    @media screen and (max-width: 800px) {
+
+        .col1,
+        .col2,
+        .col2ass {
+            width: 100%;
+            padding-left: 3%;
+            margin-top: 10px;
+        }
     }
 </style>
 <!-- =========================
@@ -173,30 +186,37 @@ include("member_data.php");
 
                     <div class="container">
                         <!--<span style="color: #F2545F; display: inline;"></span>
-                        <p style="display: inline;">You have to enter at least one value to watch video.</p>-->
+                        <p style="display: inline;">You have to enter at least one value to get the question paper.</p>-->
                         <div class="row" style="background-color: rgb(255, 245,
                 194);height: 110%; padding-top: 0; padding-bottom:
                 1.5%;padding-left: 1.5%">
 
 
-                            <div class="col2">
-                                <label for="name">Category<span style="color: #F2545F"></span>&nbsp;</label>
+                            <div class="col2ass">
+                                <label for="name">Class<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name" id="name" class="notranslate">
                                     <option value="--" selected>ALL</option>
-                                    <option>LG3</option>
-                                    <option>LG4S1</option>
-                                    <option>LG4</option>
-                                    <option>LG4S2</option>
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                    <option>5</option>
+                                    <option>6</option>
+                                    <option>7</option>
+                                    <option>8</option>
+                                    <option>9</option>
+                                    <option>10</option>
+                                    <option>11</option>
+                                    <option>12</option>
+                                    <option>Other</option>
                                 </select>
                             </div>
-                            <div class="col2">
+                            <div class="col2ass">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
                                     <option value="--" selected>ALL</option>
                                     <option>Hindi</option>
                                     <option>English</option>
-                                    <option>Bengali</option>
-                                    <option>Sanskrit</option>
                                     <option>Physics</option>
                                     <option>Chemistry</option>
                                     <option>Mathematics</option>
@@ -206,13 +226,21 @@ include("member_data.php");
                                     <option>Computer</option>
                                     <option>GK</option>
                                     <option>Accountancy</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div class="col2ass">
+                                <label for="name2">Language<span style="color: #F2545F"></span>&nbsp;</label>
+                                <select name="name2" id="name2" class="notranslate">
+                                    <option value="--" selected>ALL</option>
+                                    <option>Hindi</option>
+                                    <option>English</option>
+                                    <option>Bengali</option>
                                 </select>
                             </div>
                             <div class="col2">
                                 <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
-                                <a href="https://docs.google.com/forms/d/e/1FAIpQLSehs8jikEjGGysmho6ceQl939Xfe_Vwdvqe5Os2RJpfmsxZ4w/viewform?usp=pp_url&entry.333758641=<?php echo $fullname ?>" target="_blank"><button type="button" class="exam_btn"><i class="fas fa-plus"></i>
-                                        add</button></a>
                             </div>
 
 
@@ -233,8 +261,17 @@ include("member_data.php");
                                             <thead style="background-color: whitesmoke;
                                     font-style: oblique;">
                                                 <tr>
-                                                    <th><b>Details</b></th>
-                                                    <th width="50%"><b>Watch video</b></th>
+                                                    <th><b>Book Registration Number</b></th>
+                                                    <th><b>Name of the book</b></th>
+                                                    <th><b>Author</b></th>
+                                                    <th><b>ISBN</b></th>
+                                                    <!--<th><b>Price (₹)</b></th>-->
+                                                    <th><b>Subject</b></th>
+                                                    <th><b>Class</b></th>
+                                                    <th><b>Board</b></th>
+                                                    <th><b>Language</b></th>
+
+
 
                                                 </tr>
                                             </thead>
@@ -264,37 +301,48 @@ include("member_data.php");
 ============================== -->
     <script type="text/javascript">
         var loaddata = function() {
-            var category = document.getElementById('name').value
+            var class1 = document.getElementById('name').value
             var subject = document.getElementById('name1').value
+            var language = document.getElementById('name2').value
 
-            $.getJSON("https://spreadsheets.google.com/feeds/list/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/2/public/values?alt=json",
+            $.getJSON("https://spreadsheets.google.com/feeds/list/1iwtUG3z5orDmOhgN_gIEIA7yf1waA3jrgMO9pDUHnbE/1/public/values?alt=json",
                 function(data) {
                     document.getElementById('demo').innerHTML = ""
                     var sheetData = data.feed.entry;
                     var i;
                     var records = []
                     for (i = 0; i < sheetData.length; i++) {
-                        var Timestamp = data.feed.entry[i]['gsx$timestamp']['$t'];
+                        var Bookregistrationnumber = data.feed.entry[i]['gsx$bookregistrationnumber']['$t'];
+                        var Nameofthebook = data.feed.entry[i]['gsx$nameofthebook']['$t'];
+                        var Author = data.feed.entry[i]['gsx$author']['$t'];
+                        var Isbn = data.feed.entry[i]['gsx$isbn']['$t'];
+                        var Price = data.feed.entry[i]['gsx$price']['$t'];
                         var Subject = data.feed.entry[i]['gsx$subject']['$t'];
-                        var Category = data.feed.entry[i]['gsx$category']['$t'];
-                        var Uploadvideo = data.feed.entry[i]['gsx$uploadvideo']['$t'];
-                        var Class = data.feed.entry[i]['gsx$class']['$t'];
-                        var Uploadedby = data.feed.entry[i]['gsx$uploadedby']['$t'];
-                        var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
+                        var Class = data.feed.entry[i]['gsx$class1']['$t'];
+                        var Board = data.feed.entry[i]['gsx$board']['$t'];
+                        var Language = data.feed.entry[i]['gsx$language']['$t'];
 
-                        if ((category === '--' && subject === '--') ||
-                            (Category === category && subject === '--') ||
-                            (category === '--' && Subject === subject) ||
-                            (Category === category && Subject === subject)) {
+                        if ((Class === class1 && Subject === subject && Language === language) ||
+                            (Class === class1 && subject === '--' && language === '--') ||
+                            (Class === class1 && subject === '--' && Language === language) ||
+                            (Class === class1 && Subject === subject && language === '--') ||
+
+                            (class1 === '--' && Subject === subject && language === '--') ||
+                            (class1 === '--' && Subject === subject && Language === language) ||
+
+                            (class1 === '--' && subject === '--' && Language === language)||
+                            (class1 === '--' && subject === '--' && language === '--')) {
                             // sort records
                             records.push({
-                                Timestamp: Timestamp,
+                                Bookregistrationnumber: Bookregistrationnumber,
+                                Nameofthebook: Nameofthebook,
+                                Author: Author,
+                                Isbn: Isbn,
+                                Price: Price,
                                 Subject: Subject,
-                                Category: Category,
-                                Uploadvideo: Uploadvideo,
-                                Uploadedby: Uploadedby,
-                                Topicofthevideo: Topicofthevideo,
                                 Class: Class,
+                                Board: Board,
+                                Language: Language
                             })
                         }
 
@@ -303,12 +351,14 @@ include("member_data.php");
                     if (records.length == 0) {
                         document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
                     } else {
-                        var order = ["LG3", "LG4S1", "LG4", "LG4S2"]
+                        var order = ["Hindi", "English", "Physics", "Chemistry", "Mathematics", "Biology", "Science", "Social Science",
+                            "Computer", "GK", "Accountancy", "Other"
+                        ]
                         // var order = ["1/CT01", "1/CT02", "QT1", "2/CT01", "2/CT02", "QT2", "3/CT01", "3/CT02", "QT3"]
                         order.forEach(sub => {
                             records.forEach(item => {
-                                if (sub === item.Category) {
-                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject + '&nbsp;-&nbsp;' + item.Category + '&nbsp;/&nbsp;' + item.Class + '<br>' + item.Topicofthevideo + '<br><br>Uploaded by&nbsp;' + item.Uploadedby + '&nbsp;on&nbsp;' + item.Timestamp + '</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="' + item.Uploadvideo + '" allowfullscreen></iframe></div></td>' + '</tr>');
+                                if (sub === item.Subject) {
+                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + item.Bookregistrationnumber + '</td>' + '<td>' + item.Nameofthebook + '</td>' + '<td>' + item.Author + '</td>' + '<td>' + item.Isbn + '</td>' + '<!--<td>' + item.Price + '</td>-->' + '<td>' + item.Subject + '</td>' + '<td>' + item.Class + '</td>' + '<td>' + item.Board + '</td>' + '<td>' + item.Language + '</td>' + '</tr>');
                                 }
                             })
                         })
