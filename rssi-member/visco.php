@@ -182,7 +182,8 @@ include("member_data.php");
                             <div class="col2">
                                 <label for="name">Category<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name" id="name" class="notranslate">
-                                    <option value="--" selected>ALL</option>
+                                    <option value="" disabled selected hidden>Select</option>
+                                    <option>All</option>
                                     <option>LG3</option>
                                     <option>LG4S1</option>
                                     <option>LG4</option>
@@ -192,7 +193,8 @@ include("member_data.php");
                             <div class="col2">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
-                                    <option value="--" selected>ALL</option>
+                                    <option value="" disabled selected hidden>Select</option>
+                                    <option>All</option>
                                     <option>Hindi</option>
                                     <option>English</option>
                                     <option>Bengali</option>
@@ -282,9 +284,11 @@ include("member_data.php");
                         var Uploadedby = data.feed.entry[i]['gsx$uploadedby']['$t'];
                         var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
 
-                        if ((category === '--' && subject === '--') ||
-                            (Category === category && subject === '--') ||
-                            (category === '--' && Subject === subject) ||
+                        if ((category === 'All' && subject === 'All') ||
+                            (category === 'All' && subject === '') ||
+                            (category === '' && subject === 'All') ||
+                            (Category === category && subject === 'All') ||
+                            (category === 'All' && Subject === subject) ||
                             (Category === category && Subject === subject)) {
                             // sort records
                             records.push({
@@ -316,36 +320,6 @@ include("member_data.php");
                     }
                 });
         }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            var lazyloadImages = document.querySelectorAll("img.lazy");
-            var lazyloadThrottleTimeout;
-
-            function lazyload() {
-                if (lazyloadThrottleTimeout) {
-                    clearTimeout(lazyloadThrottleTimeout);
-                }
-
-                lazyloadThrottleTimeout = setTimeout(function() {
-                    var scrollTop = window.pageYOffset;
-                    lazyloadImages.forEach(function(img) {
-                        if (img.offsetTop < (window.innerHeight + scrollTop)) {
-                            img.src = img.dataset.src;
-                            img.classList.remove('lazy');
-                        }
-                    });
-                    if (lazyloadImages.length == 0) {
-                        document.removeEventListener("scroll", lazyload);
-                        window.removeEventListener("resize", lazyload);
-                        window.removeEventListener("orientationChange", lazyload);
-                    }
-                }, 20);
-            }
-
-            document.addEventListener("scroll", lazyload);
-            window.addEventListener("resize", lazyload);
-            window.addEventListener("orientationChange", lazyload);
-        });
     </script>
     <!-- =========================
      FOOTER   

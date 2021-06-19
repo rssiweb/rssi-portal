@@ -184,7 +184,8 @@ include("student_data.php");
                                 <label for="name">Category<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name" id="name" class="notranslate">
 
-                                    <option value="--" selected>ALL</option>
+                                    <option value="" disabled selected hidden>Select</option>
+                                    <option>All</option>
                                     <option>LG3</option>
                                     <option>LG4S1</option>
                                     <option>LG4</option>
@@ -194,7 +195,8 @@ include("student_data.php");
                             <div class="col2">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
-                                    <option value="--" selected>ALL</option>
+                                    <option value="" disabled selected hidden>Select</option>
+                                    <option>All</option>
                                     <option>Hindi</option>
                                     <option>English</option>
                                     <option>Bengali</option>
@@ -283,9 +285,11 @@ include("student_data.php");
                         var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
 
 
-                        if ((category === '--' && subject === '--') ||
-                            (Category === category && subject === '--') ||
-                            (category === '--' && Subject === subject) ||
+                        if ((category === 'All' && subject === 'All') ||
+                            (category === 'All' && subject === '') ||
+                            (category === '' && subject === 'All') ||
+                            (Category === category && subject === 'All') ||
+                            (category === 'All' && Subject === subject) ||
                             (Category === category && Subject === subject)) {
                             // sort records
                             records.push({
