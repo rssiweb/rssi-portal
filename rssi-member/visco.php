@@ -267,14 +267,14 @@ include("member_data.php");
             var category = document.getElementById('name').value
             var subject = document.getElementById('name1').value
 
-            $.getJSON("https://spreadsheets.google.com/feeds/list/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/2/public/values?alt=json",
+            $.getJSON("https://spreadsheets.google.com/feeds/list/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/1/public/values?alt=json",
                 function(data) {
                     document.getElementById('demo').innerHTML = ""
                     var sheetData = data.feed.entry;
                     var i;
                     var records = []
                     for (i = 0; i < sheetData.length; i++) {
-                        var Timestamp = data.feed.entry[i]['gsx$timestamp']['$t'];
+                        var Timestamp = data.feed.entry[i]['gsx$टाइमस्टैम्प']['$t'];
                         var Subject = data.feed.entry[i]['gsx$subject']['$t'];
                         var Category = data.feed.entry[i]['gsx$category']['$t'];
                         var Uploadvideo = data.feed.entry[i]['gsx$uploadvideo']['$t'];
