@@ -182,7 +182,7 @@ include("member_data.php");
                             <div class="col2">
                                 <label for="name">Category<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name" id="name" class="notranslate">
-                                    <option value="" disabled selected hidden>Select</option>
+                                    <option value="All" disabled selected hidden>Select</option>
                                     <option>All</option>
                                     <option>LG3</option>
                                     <option>LG4S1</option>
@@ -193,7 +193,7 @@ include("member_data.php");
                             <div class="col2">
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
-                                    <option value="" disabled selected hidden>Select</option>
+                                    <option value="All" disabled selected hidden>Select</option>
                                     <option>All</option>
                                     <option>Hindi</option>
                                     <option>English</option>
