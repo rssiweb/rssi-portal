@@ -169,6 +169,27 @@ include("student_data.php");
             margin-top: 10px;
         }
     }
+
+    .btn {
+        background-color: DodgerBlue;
+        border: none;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    /* Darker background on mouse-over */
+    .btn:hover {
+        background-color: #90BAA4;
+    }
+
+    .visited {
+        background-color: #90BAA4;
+    }
+
+    a.disabled {
+        pointer-events: none;
+        cursor: default;
+    }
 </style>
 <!-- =========================
      NAVIGATION LINKS     
@@ -261,15 +282,17 @@ include("student_data.php");
                                             <thead style="background-color: whitesmoke;
                                     font-style: oblique;">
                                                 <tr>
-                                                    <th><b>Book Registration Number</b></th>
+                                                    <th><b>Book Reg. No</b></th>
                                                     <th><b>Name of the book</b></th>
                                                     <th><b>Author</b></th>
-                                                    <th><b>ISBN</b></th>
+                                                    <!--<th><b>ISBN</b></th>-->
                                                     <!--<th><b>Price (₹)</b></th>-->
                                                     <th><b>Subject</b></th>
                                                     <th><b>Class</b></th>
                                                     <th><b>Board</b></th>
                                                     <th><b>Language</b></th>
+                                                    <!--<th><b>Availability</b></th>-->
+                                                    <th><b>Order Now</b></th>
 
 
 
@@ -321,6 +344,8 @@ include("student_data.php");
                         var Class = data.feed.entry[i]['gsx$class1']['$t'];
                         var Board = data.feed.entry[i]['gsx$board']['$t'];
                         var Language = data.feed.entry[i]['gsx$language']['$t'];
+                        var Availability = data.feed.entry[i]['gsx$availability']['$t'];
+                        var Status = data.feed.entry[i]['gsx$status']['$t'];
 
                         if ((Class === class1 && Subject === subject && Language === language) ||
                             (Class === class1 && subject === '--' && language === '--') ||
@@ -330,10 +355,12 @@ include("student_data.php");
                             (class1 === '--' && Subject === subject && language === '--') ||
                             (class1 === '--' && Subject === subject && Language === language) ||
 
-                            (class1 === '--' && subject === '--' && Language === language)||
+                            (class1 === '--' && subject === '--' && Language === language) ||
                             (class1 === '--' && subject === '--' && language === '--')) {
                             // sort records
                             records.push({
+                                Availability: Availability,
+                                Status: Status,
                                 Bookregistrationnumber: Bookregistrationnumber,
                                 Nameofthebook: Nameofthebook,
                                 Author: Author,
@@ -358,7 +385,8 @@ include("student_data.php");
                         order.forEach(sub => {
                             records.forEach(item => {
                                 if (sub === item.Subject) {
-                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + item.Bookregistrationnumber + '</td>' + '<td>' + item.Nameofthebook + '</td>' + '<td>' + item.Author + '</td>' + '<td>' + item.Isbn + '</td>' + '<!--<td>' + item.Price + '</td>-->' + '<td>' + item.Subject + '</td>' + '<td>' + item.Class + '</td>' + '<td>' + item.Board + '</td>' + '<td>' + item.Language + '</td>' + '</tr>');
+                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + item.Bookregistrationnumber + '</td>' + '<td>' + item.Nameofthebook + '</td>' + '<td>' + item.Author + '</td>' + '<!--<td>' + item.Isbn + '</td>-->' + '<!--<td>' + item.Price + '</td>-->' + '<td>' + item.Subject + '</td>' + '<td>' + item.Class + '</td>' + '<td>' + item.Board + '</td>' + '<td>' + item.Language + '</td>' +
+                                        '<td><a href="https://docs.google.com/forms/d/e/1FAIpQLScq95SXdR4fAhebTDykJKd-76AyvWlkkDlsUuKICvIWk98KmA/formResponse?entry.1000027=' + item.Bookregistrationnumber + '&entry.1929545355=' + item.Nameofthebook + '&entry.1000022=<?php echo $student_id ?>&entry.1000020=<?php echo $studentname ?>&entry.1000025=<?php echo $emailaddress ?>" target="_blank" class="'+ item.Status +'"><button class="btn ' + item.Status +'" style="color:#fff" onclick="onClick(this)"><i class="fas fa-cart-plus" style="font-size:16px;"></i> &nbsp;Order Now</button></a></td>' + '</tr>');
                                 }
                             })
                         })
@@ -367,35 +395,11 @@ include("student_data.php");
                 });
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
-            var lazyloadImages = document.querySelectorAll("img.lazy");
-            var lazyloadThrottleTimeout;
+        var clicks = 0;
 
-            function lazyload() {
-                if (lazyloadThrottleTimeout) {
-                    clearTimeout(lazyloadThrottleTimeout);
-                }
-
-                lazyloadThrottleTimeout = setTimeout(function() {
-                    var scrollTop = window.pageYOffset;
-                    lazyloadImages.forEach(function(img) {
-                        if (img.offsetTop < (window.innerHeight + scrollTop)) {
-                            img.src = img.dataset.src;
-                            img.classList.remove('lazy');
-                        }
-                    });
-                    if (lazyloadImages.length == 0) {
-                        document.removeEventListener("scroll", lazyload);
-                        window.removeEventListener("resize", lazyload);
-                        window.removeEventListener("orientationChange", lazyload);
-                    }
-                }, 20);
-            }
-
-            document.addEventListener("scroll", lazyload);
-            window.addEventListener("resize", lazyload);
-            window.addEventListener("orientationChange", lazyload);
-        });
+        function onClick(event) {
+            event.className = "btn visited";
+        };
     </script>
     <!-- =========================
      FOOTER   
