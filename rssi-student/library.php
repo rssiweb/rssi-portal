@@ -260,7 +260,7 @@ include("student_data.php");
                                 </select>
                             </div>
                             <div class="col2">
-                                <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
+                                <button id=search type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
                             </div>
 
@@ -323,7 +323,33 @@ include("student_data.php");
      SCRIPTS   
 ============================== -->
     <script type="text/javascript">
-        var loaddata = function() {
+        var clicks = 0;
+
+        function onClick(event) {
+            event.className = "btn visited";
+        };
+    </script>
+    <script>
+        // Initiate an Ajax request on button click
+        $(document).on("click", "button", function() {
+            // Adding timestamp to set cache false
+            $.get("viso.php?v=" + $.now(), function(data) {
+                $("body").html(data);
+            });
+        });
+
+        // Add remove loading class on body element depending on Ajax request status
+        $(document).on({
+            ajaxStart: function() {
+                $("body").addClass("loading");
+            },
+            ajaxStop: function() {
+                $("body").removeClass("loading");
+            }
+        });
+    </script>
+    <script>
+        function loaddata() {
             var class1 = document.getElementById('name').value
             var subject = document.getElementById('name1').value
             var language = document.getElementById('name2').value
@@ -386,7 +412,7 @@ include("student_data.php");
                             records.forEach(item => {
                                 if (sub === item.Subject) {
                                     document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + item.Bookregistrationnumber + '</td>' + '<td>' + item.Nameofthebook + '</td>' + '<td>' + item.Author + '</td>' + '<!--<td>' + item.Isbn + '</td>-->' + '<!--<td>' + item.Price + '</td>-->' + '<td>' + item.Subject + '</td>' + '<td>' + item.Class + '</td>' + '<td>' + item.Board + '</td>' + '<td>' + item.Language + '</td>' +
-                                        '<td><a href="https://docs.google.com/forms/d/e/1FAIpQLScq95SXdR4fAhebTDykJKd-76AyvWlkkDlsUuKICvIWk98KmA/formResponse?entry.1000027=' + item.Bookregistrationnumber + '&entry.1929545355=' + item.Nameofthebook + '&entry.1000022=<?php echo $student_id ?>&entry.1000020=<?php echo $studentname ?>&entry.1000025=<?php echo $emailaddress ?>" target="_blank" class="'+ item.Status +'"><button class="btn ' + item.Status +'" style="color:#fff" onclick="onClick(this)"><i class="fas fa-cart-plus" style="font-size:16px;"></i> &nbsp;Order Now</button></a></td>' + '</tr>');
+                                        '<td><a href="https://docs.google.com/forms/d/e/1FAIpQLScq95SXdR4fAhebTDykJKd-76AyvWlkkDlsUuKICvIWk98KmA/formResponse?entry.1000027=' + item.Bookregistrationnumber + '&entry.1929545355=' + item.Nameofthebook + '&entry.1000022=<?php echo $student_id ?>&entry.1000020=<?php echo $studentname ?>&entry.1000025=<?php echo $emailaddress ?>" target="_blank" class="' + item.Status + '"><button onClick="setTimeout(function(){window.location.reload();},10);" class="btn ' + item.Status + '" style="color:#fff" onclick="onClick(this)"><i class="fas fa-cart-plus" style="font-size:16px;"></i> &nbsp;Order Now</button></a></td>' + '</tr>');
                                 }
                             })
                         })
@@ -394,12 +420,9 @@ include("student_data.php");
                     }
                 });
         }
-
-        var clicks = 0;
-
-        function onClick(event) {
-            event.className = "btn visited";
-        };
+        window.onload = function() {
+            document.getElementById('search').click();
+        }
     </script>
     <!-- =========================
      FOOTER   
@@ -424,6 +447,7 @@ include("student_data.php");
         });
     </script>
     <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+    <div class="overlay"></div>
 </body>
 
 </html>
