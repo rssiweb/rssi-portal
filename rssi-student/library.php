@@ -196,7 +196,7 @@ include("student_data.php");
 ============================== -->
 
 <body>
-
+    <?php $library_active = 'active'; ?>
     <?php include 'header.php'; ?>
 
     <section id="main-content">
@@ -260,8 +260,10 @@ include("student_data.php");
                                 </select>
                             </div>
                             <div class="col2">
-                                <button id=search type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
+                                <button id=search type="button1" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
+                                    <a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
+My Book</button></a>
                             </div>
 
 
@@ -331,7 +333,7 @@ include("student_data.php");
     </script>
     <script>
         // Initiate an Ajax request on button click
-        $(document).on("click", "button", function() {
+        $(document).on("click", "button1", function() {
             // Adding timestamp to set cache false
             $.get("viso.php?v=" + $.now(), function(data) {
                 $("body").html(data);

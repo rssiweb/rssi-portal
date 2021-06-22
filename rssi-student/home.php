@@ -57,30 +57,30 @@ include("student_data.php");
                         <thead>
                             <tr>
                                 <th scope="col">Class URL</th>
+                                <th scope="col">Quick link</th>
                                 <th scope="col">Annual Fee</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td style="line-height: 2;"><?php echo $classurl ?></td>
+                                <td style="line-height: 2;"><?php echo $lastlogin ?></td>
                                 <td style="line-height: 2;"><?php echo $fees ?></td>
                             </tr>
                         </tbody>
                     </table>
-                    <table class="table">
+                    <!--<table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Library Status</th>
                                 <th scope="col">Quick link</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><?php echo $bookststus ?></td>
                                 <td style="line-height: 2;"><?php echo $lastlogin ?></td>
                             </tr>
                         </tbody>
-                    </table>
+                    </table>-->
                 </section>
             </div>
 

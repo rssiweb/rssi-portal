@@ -260,8 +260,17 @@ include("member_data.php");
                                 </select>
                             </div>
                             <div class="col2">
-                                <button id=search type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
+                                <button id=search type="button1" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
+                                    <a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
+My Book</button></a>
+                                <?php
+                                if ($role == 'Admin') {
+                                    echo '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeOUDHu8tt13ltUGT2rh4UmdQlWPicuz-GBIt-uU1deC8yZuA/viewform" target="_blank"><button type="button" class="exam_btn"><i class="fas fa-plus"></i>
+add</button></a>';
+                                }
+                                ?>
+
                             </div>
 
 
@@ -329,9 +338,9 @@ include("member_data.php");
             event.className = "btn visited";
         };
     </script>
-    <script>
+   <script>
         // Initiate an Ajax request on button click
-        $(document).on("click", "button", function() {
+        $(document).on("click", "button1", function() {
             // Adding timestamp to set cache false
             $.get("viso.php?v=" + $.now(), function(data) {
                 $("body").html(data);

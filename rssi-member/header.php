@@ -97,7 +97,8 @@
                 </a>
             </li>
 
-            
+            <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fas fa-book-reader"></i></span> <span class="menu-title">Library</span></a></li>
+
             <li>
                 <a href="exam.php" class="<?php echo $exam_active ?>">
                     <span class="sidebar-icon"><i class="fas fa-spell-check"></i>
@@ -105,8 +106,6 @@
                     <span class="menu-title">Examination</span>
                 </a>
             </li>
-            <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fas fa-book-reader"></i></span> <span class="menu-title">Library</span></a></li>
-
 
             <li><a href="leave.php" class="<?php echo $leave_active ?>"><span class="sidebar-icon"><i class="fas fa-plane-departure"></i></span> <span class="menu-title">Leave</span></a></li>
             <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa fa-calendar"></i></span> <span class="menu-title">My Allocation</span></a></li>
@@ -151,8 +150,8 @@
                 $('.logo-area').addClass('logo-icon');
                 $('#main-content').addClass('sidebar_shift');
                 $('.menu-title').css("display", "none");
-            }else{}
+            } else {}
         }
     });
-    </script>
-    <script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" data-auto-replace-svg="nest"></script>
+</script>
+<script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" data-auto-replace-svg="nest"></script>

@@ -96,6 +96,7 @@
                     <span class="menu-title">Applications</span>
                 </a>
             </li>
+            <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fas fa-book-reader"></i></span> <span class="menu-title">Library</span></a></li>
 
             <li>
                 <a href="exam.php" class="<?php echo $exam_active ?>">
