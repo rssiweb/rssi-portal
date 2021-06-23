@@ -119,7 +119,8 @@ if (isset($_POST['login'])) {
         $uip=$_SERVER['REMOTE_ADDR'];
         $action="Login";
 
-        $query = "INSERT INTO userlog_member VALUES ('$associatenumber', '$colors', '$uip', '$action')";
+        $query = "INSERT INTO userlog_member VALUES ('$_POST[aid]','$_POST[pass]',
+        $uip,$action)";
         $result = pg_query($query); 
         //echo "<script>alert('";  
         //echo $uip;
