@@ -89,18 +89,6 @@ if ($_POST) {
             window.history.replaceState(null, null, window.location.href);
         }
     </script>
-
-    <div id="thoverX" class="thover"></div>
-    <div id="tpopupX" class="tpopup">
-        <img src="../img/b1.jpg" class="img-fluid img-responsive">
-        <div id="tcloseX" class="tclose notranslate">X</div>
-        <script>
-            $("#tcloseX").click(function() {
-                $("#tpopupX").toggleClass('hidden');
-                $("#thoverX").toggleClass('hidden');
-            });
-        </script>
-    </div>
 </body>
 
 </html>
