@@ -21,6 +21,10 @@ if ($_POST) {
 }
 
 ?>
+<?php
+      date_default_timezone_set('Asia/Kolkata');
+      $date = date('Y-m-d H:i:s'); 
+?>
 
 <html>
 
@@ -108,8 +112,8 @@ if (isset($_POST['login'])) {
        $_SESSION['filterstatus'] = $filterstatus;
        $uip=$_SERVER['REMOTE_ADDR'];
 
-       $query = "INSERT INTO userlog_member VALUES ('$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]',NOW())";
-        $result = pg_query($con, $query); 
+       $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
+       $result = pg_query($con, $query); 
 
     } else {?>
         <div class="container">
