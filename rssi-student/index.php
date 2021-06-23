@@ -106,6 +106,10 @@ if (isset($_POST['login'])) {
         $filterstatus= $row[27];
 
        $_SESSION['filterstatus'] = $filterstatus;
+       $uip=$_SERVER['REMOTE_ADDR'];
+
+       $query = "INSERT INTO userlog_member VALUES ('$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]',NOW())";
+        $result = pg_query($con, $query); 
 
     } else {?>
         <div class="container">
