@@ -64,7 +64,7 @@ if ($_POST) {
                         <h3 class="panel-title">Sign In</h3>
                     </div>
                     <div class="panel-body">
-                        <form role="form" method="post" action="index.php">
+                        <form role="form" method="post" name="login" action="index.php">
                             <fieldset>
                                 <div class="form-group">
                                     <input class="form-control" placeholder="Associate ID" name="aid" type="text" autofocus required>
@@ -116,9 +116,10 @@ if (isset($_POST['login'])) {
 
         $_SESSION['role'] = $role;
         $_SESSION['filterstatus'] = $filterstatus;
+        $uip=$_SERVER['REMOTE_ADDR'];
 
         //echo "<script>alert('";  
-        //echo $role;
+        //echo $uip;
         //echo $filterstatus;
         //echo "')</script>";
 

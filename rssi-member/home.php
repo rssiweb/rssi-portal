@@ -2,6 +2,7 @@
 session_start();
 // Storing Session
 $user_check = $_SESSION['aid'];
+$uip=$_SERVER['REMOTE_ADDR'];
 
 if (!$_SESSION['aid']) {
 
@@ -49,7 +50,7 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
+                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?><br><?php echo $uip ?></div>
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
