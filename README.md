@@ -138,3 +138,9 @@ CREATE TABLE Public. "userlog_member" (
   userip varchar(16) NOT NULL,
   logintime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
+
+select * from userlog_member
+truncate table userlog_member
+drop table userlog_member
+
+CREATE TABLE Public."userlog_member"(username text,	password text, ipaddress text, time text)

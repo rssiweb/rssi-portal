@@ -106,7 +106,7 @@ if (isset($_POST['login'])) {
     $run = pg_query($con, $check_user);
 
     if (pg_num_rows($run)) {
-        echo "<script>window.open('home.php','_self')</script>";
+       echo "<script>window.open('home.php','_self')</script>";
 
         $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
 
@@ -119,12 +119,11 @@ if (isset($_POST['login'])) {
         $uip=$_SERVER['REMOTE_ADDR'];
         $action="Login";
 
-        $query = "INSERT INTO userlog_member VALUES ('$_POST[aid]','$_POST[pass]',
-        $uip,$action)";
-        $result = pg_query($query); 
+        $query = "INSERT INTO userlog_member VALUES ('$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]',NOW())";
+        $result = pg_query($con, $query); 
+
         //echo "<script>alert('";  
-        //echo $uip;
-        //echo $filterstatus;
+        //echo $result;
         //echo "')</script>";
 
     } else { ?>
