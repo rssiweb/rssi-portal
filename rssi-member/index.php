@@ -21,7 +21,6 @@ if ($_POST) {
 }
 
 ?>
-
 <html>
 
 <head lang="en">

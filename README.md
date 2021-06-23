@@ -143,4 +143,10 @@ select * from userlog_member
 truncate table userlog_member
 drop table userlog_member
 
-CREATE TABLE Public."userlog_member"(username text,	password text, ipaddress text, time text)
+CREATE TABLE Public."userlog_member"(username text,	password text, ipaddress text, logintime timestamptz)
+SET TIMEZONE='Asia/Calcutta';
+
+set timezone to 'Asia/Calcutta';
+select now();
+
+SHOW TIMEZONE;
