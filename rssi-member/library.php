@@ -168,6 +168,7 @@ include("member_data.php");
             padding-left: 3%;
             margin-top: 10px;
         }
+        .exam_btn {margin-top: 2%;}
     }
 
     .btn {
@@ -204,10 +205,16 @@ include("member_data.php");
             <div class="col-md-12">
                 <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
-
+                <div class=col style="text-align: right;"><a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
+My Book</button></a>
+<?php
+                                if ($role == 'Admin') {
+                                    echo '<a href="library_status_admin.php"><button type="button" class="exam_btn"><i class="fas fa-tags"></i>
+                                    all orders</button></a>';
+                                }
+                                ?>
+                                </div><br>
                     <div class="container">
-                        <!--<span style="color: #F2545F; display: inline;"></span>
-                        <p style="display: inline;">You have to enter at least one value to get the question paper.</p>-->
                         <div class="row" style="background-color: rgb(255, 245,
                 194);height: 110%; padding-top: 0; padding-bottom:
                 1.5%;padding-left: 1.5%">
@@ -262,8 +269,6 @@ include("member_data.php");
                             <div class="col2">
                                 <button id=search type="button1" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
-                                    <a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
-My Book</button></a>
                                 <?php
                                 if ($role == 'Admin') {
                                     echo '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeOUDHu8tt13ltUGT2rh4UmdQlWPicuz-GBIt-uU1deC8yZuA/viewform" target="_blank"><button type="button" class="exam_btn"><i class="fas fa-plus"></i>
