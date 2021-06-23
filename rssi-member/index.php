@@ -117,12 +117,14 @@ if (isset($_POST['login'])) {
         $_SESSION['role'] = $role;
         $_SESSION['filterstatus'] = $filterstatus;
         $uip=$_SERVER['REMOTE_ADDR'];
+        $action="Login";
 
+        $query = "INSERT INTO userlog_member VALUES ('$associatenumber', '$colors', '$uip', '$action')";
+        $result = pg_query($query); 
         //echo "<script>alert('";  
         //echo $uip;
         //echo $filterstatus;
         //echo "')</script>";
-
 
     } else { ?>
         <div class="container">

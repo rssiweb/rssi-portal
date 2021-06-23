@@ -131,3 +131,10 @@ WHERE associatenumber='VLKO20016';
 
 UPDATE myappraisal_sheet1  
 SET appraisaltype = 'Quarterly 1/2021' 
+
+CREATE TABLE Public. "userlog_member" (
+  username varchar(255) NOT NULL,
+  password varchar(255) NOT NULL,
+  userip varchar(16) NOT NULL,
+  logintime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
