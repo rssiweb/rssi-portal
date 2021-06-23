@@ -32,8 +32,12 @@ if ($_POST) {
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
     <title>My Account</title>
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 </head>
 <style>
     .login-panel {
@@ -45,9 +49,10 @@ if ($_POST) {
     [type="submit"]:focus {
         outline: none;
     }
+
     .prebanner {
-    display: none;
-}
+        display: none;
+    }
 </style>
 
 <body>
@@ -84,6 +89,18 @@ if ($_POST) {
             window.history.replaceState(null, null, window.location.href);
         }
     </script>
+
+    <div id="thoverX" class="thover"></div>
+    <div id="tpopupX" class="tpopup">
+        <img src="../img/b1.jpg" class="img-fluid img-responsive">
+        <div id="tcloseX" class="tclose notranslate">X</div>
+        <script>
+            $("#tcloseX").click(function() {
+                $("#tpopupX").toggleClass('hidden');
+                $("#thoverX").toggleClass('hidden');
+            });
+        </script>
+    </div>
 </body>
 
 </html>
@@ -147,11 +164,11 @@ if (isset($_POST['login'])) {
 </script>
 
 <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
-    <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
-        });
-    </script>
+<!-- Glow Cookies v3.0.1 -->
+<script>
+    glowCookies.start('en', {
+        analytics: 'G-S25QWTFJ2S',
+        //facebookPixel: '',
+        policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+    });
+</script>

@@ -608,3 +608,94 @@ body.loading {
 body.loading .overlay {
     display: block;
 }
+
+.thover {
+    top: 0;
+    left: 0;
+    position: fixed;
+    background: #000;
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
+    z-index: 5000;
+}
+
+
+/*.tpopup {
+position: fixed;
+width: 60%;
+background: #fff;
+left: 20%;
+top: 9%;
+border-radius: 5px;
+padding: 20px 0;
+text-align: center;
+box-shadow: 0 0 10px 0 #000;
+z-index: 5001;
+}*/
+
+.tpopup {
+    position: fixed;
+    width: 60%;
+    background: #fff;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 5px;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 0 10px 0 #000;
+    z-index: 5001;
+}
+
+@media (max-width:880px) {
+    .tpopup {
+        position: fixed;
+        width: 90%;
+        background: #fff;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 5px;
+        padding: 20px 0;
+        text-align: center;
+        box-shadow: 0 0 10px 0 #000;
+        z-index: 5001;
+    }
+}
+
+
+/*@media (max-width:880px){.tpopup {
+position: fixed;
+width: 90%;
+background: #fff;
+left: 5%;
+top: 35%;
+border-radius: 5px;
+padding: 20px 0;
+text-align: center;
+box-shadow: 0 0 10px 0 #000;
+z-index: 5001;
+}}*/
+
+.tclose {
+    position: absolute;
+    background: #000;
+    color: white;
+    right: -15px;
+    top: -15px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    font-size: 8px;
+    font-weight: bold;
+    font-family: 'Arial Black', Arial, sans-serif;
+    cursor: pointer;
+    box-shadow: 0 0 10px 0 #000;
+}
+
+.tclose:hover {
+    background: #F2545F;
+}
