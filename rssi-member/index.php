@@ -107,7 +107,7 @@ if (isset($_POST['login'])) {
 
     if (pg_num_rows($run)) {
 
-        echo "<script>window.open('home.php','_self')</script>";
+        header("Location: ../rssi-member/home.php");
 
         $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
 
