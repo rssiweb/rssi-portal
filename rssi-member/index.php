@@ -22,9 +22,10 @@ if ($_POST) {
 
 ?>
 <?php
-      date_default_timezone_set('Asia/Kolkata');
-      $date = date('Y-m-d H:i:s'); 
+date_default_timezone_set('Asia/Kolkata');
+$date = date('Y-m-d H:i:s');
 ?>
+
 <head lang="en">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -107,7 +108,7 @@ if (isset($_POST['login'])) {
     $run = pg_query($con, $check_user);
 
     if (pg_num_rows($run)) {
-      echo "<script>window.open('home.php','_self')</script>";
+        echo "<script>window.open('home.php','_self')</script>";
 
         $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
 
@@ -117,10 +118,10 @@ if (isset($_POST['login'])) {
 
         $_SESSION['role'] = $role;
         $_SESSION['filterstatus'] = $filterstatus;
-        $uip=$_SERVER['REMOTE_ADDR'];
+        $uip = $_SERVER['REMOTE_ADDR'];
 
         $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
-        $result = pg_query($con, $query); 
+        $result = pg_query($con, $query);
 
         //echo "<script>alert('";  
         //echo $result;

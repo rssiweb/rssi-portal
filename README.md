@@ -110,6 +110,7 @@ ALTER TABLE rssimyprofile_student
  DELETE from `tablename` WHERE `id` IN (1, 5 , 7);
 
  DELETE from rssimyaccount_members WHERE __hevo_id IN (21);
+ DELETE from userlog_member WHERE ipaddress IN ('::1');
 
  select lastupdatedon,__hevo_id,fullname from rssimyaccount_members where associatenumber='VBKP21033';
 
