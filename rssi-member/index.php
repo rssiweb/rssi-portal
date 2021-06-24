@@ -25,6 +25,7 @@ if ($_POST) {
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 ?>
+<!DOCTYPE html>
 
 <head lang="en">
     <meta name="description" content="">
@@ -34,9 +35,6 @@ $date = date('Y-m-d H:i:s');
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <style>
-        <?php include '../css/style.css'; ?>
-    </style>
     <title>My Account</title>
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -108,7 +106,10 @@ if (isset($_POST['login'])) {
     $run = pg_query($con, $check_user);
 
     if (pg_num_rows($run)) {
-        echo "<script>window.open('home.php','_self')</script>";
+
+        // 301 Moved Permanently
+        header("Location: https://login.rssi.in/rssi-member/home.php");
+        exit();
 
         $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
 
