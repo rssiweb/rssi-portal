@@ -107,9 +107,7 @@ if (isset($_POST['login'])) {
 
     if (pg_num_rows($run)) {
 
-        // 301 Moved Permanently
-        header("Location: https://login.rssi.in/rssi-member/home.php");
-        exit();
+        echo "<script>window.open('home.php','_self')</script>";
 
         $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
 
