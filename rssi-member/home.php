@@ -117,7 +117,7 @@ include("member_data.php");
         });
 
         $('#notvaccinated').click(function() {
-            $('#count').val('Notvaccinated');
+            $('#count').val('Not vaccinated');
         });
     </script>
     <script>
