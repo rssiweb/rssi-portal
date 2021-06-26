@@ -161,7 +161,7 @@ include("member_data.php");
                     $('.pop-up').delay(10).fadeOut(700);
                     e.stopPropagation();
 
-                    createCookie("name", "3 days", 3);
+                    createCookie("name", "30 days", 30);
                     //return false;
                 });
 
