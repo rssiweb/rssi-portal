@@ -151,3 +151,9 @@ set timezone to 'Asia/Calcutta';
 select now();
 
 SHOW TIMEZONE;
+
+ALTER TABLE table_name 
+DROP COLUMN column_name;
+
+ALTER TABLE bookdata_book
+ADD COLUMN val varchar;

@@ -56,7 +56,7 @@ include("member_data.php");
                 <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?>
                     <?php if (@$vaccination > 0) {
                     ?>
-                        <br><img src="../img/vaccine.png"><?php echo $vaccination ?>
+                        <br><img src="https://img.icons8.com/flat-round/32/4a90e2/protection-mask.png"/>&nbsp;<?php echo $vaccination ?>
                 </div>
             <?php
                     } else {
