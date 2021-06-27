@@ -53,15 +53,7 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?>
-                    <?php if (@$vaccination > 0) {
-                    ?>
-                        <br><img src="https://img.icons8.com/small/24/000000/user-shield.png"/>&nbsp;<?php echo $vaccination ?>
-                </div>
-            <?php
-                    } else {
-            ?>
-            </div><?php } ?>
+                <div class=col style="text-align: right;"><?php echo $badge ?></div>
         <section class="box" style="padding: 2%;">
 
             <table class="table">
@@ -96,7 +88,16 @@ include("member_data.php");
             </table>
         </section>
         </div>
-
+        <div class="col-md-12">
+                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?>
+                    <?php if (@$vaccination > 0) {
+                    ?>
+                        <br><img src="https://img.icons8.com/small/24/000000/user-shield.png"/>&nbsp;<?php echo $vaccination ?>
+                </div>
+            <?php
+                    } else {
+            ?>
+            </div><?php } ?>
         <div class="clearfix"></div>
         </section>
     </section>
