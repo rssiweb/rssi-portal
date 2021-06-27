@@ -20,7 +20,7 @@ include("member_data.php");
 ?>
 <?php
 include("database.php");
-$result = pg_query($con, "SELECT * FROM bookdata_book");
+$result = pg_query($con, "SELECT * FROM bookdata_book order by yourid asc,orderdate");
 if (!$result) {
     echo "An error occurred.\n";
     exit;
