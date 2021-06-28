@@ -26,12 +26,14 @@ include("member_data.php");
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-    <style><?php include '../css/style.css'; ?></style>
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -42,7 +44,11 @@ include("member_data.php");
     </script>
     <style>
         @media (max-width:767px) {
-            #cw, #cw1, #cw2, #cw3 {
+
+            #cw,
+            #cw1,
+            #cw2,
+            #cw3 {
                 width: 100% !important;
             }
 
@@ -89,11 +95,20 @@ include("member_data.php");
                             <tr>
 
                                 <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?></b><br>
-                                Associate ID - <b><?php echo $associatenumber ?></b><br>
-                                <span style="line-height: 3;"><?php echo $engagement ?>, <?php echo $gender ?> (<?php echo $age ?> Years)</span></td>
+                                    Associate ID - <b><?php echo $associatenumber ?></b><br>
+                                    <span style="line-height: 3;"><?php echo $engagement ?>, <?php echo $gender ?> (<?php echo $age ?> Years)</span>
+                                </td>
                                 <td id="cw2" style="line-height: 2;"><?php echo $doj ?>&nbsp;(<?php echo $yos ?>)<br>Original DOJ&nbsp;-&nbsp;<?php echo $originaldoj ?></td>
                                 <td id="cw"><?php echo $astatus ?><br><br><?php echo $effectivedate ?>&nbsp;<?php echo $remarks ?></td>
-                                <td id="cw3"><?php echo $badge ?></td>
+                                <td id="cw3"><?php echo $badge ?>
+                                    <?php if (@$vaccination == "COVID-19: Vaccinated") {
+                                    ?>
+                                        <img src="../images/smile10.jpg" title="Applause for <?php echo $vaccination ?>" />
+                                    <?php
+                                    } else {
+                                    ?>
+                                    <?php } ?>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -109,7 +124,8 @@ include("member_data.php");
                             <tr>
                                 <td><?php echo $dateofbirth ?></td>
                                 <td>
-                                    <embed src="<?php echo $iddoc ?>" width="300px" height="200px" /></td>
+                                    <embed src="<?php echo $iddoc ?>" width="300px" height="200px" />
+                                </td>
                                 <td><?php echo $identifier ?></td>
                             </tr>
                         </tbody>

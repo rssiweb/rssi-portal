@@ -116,8 +116,8 @@ foreach ($resultArr as $array) {
             <td>' . $array['today'] . '</td>
             <td>' . $array['colors'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '</td>
-            <td>' . $array['badge'] . '</td>
-          </tr>';
+            <td>' . $array['badge'] . '<br>' . $array['vaccination'] . '</td>
+            </tr>';
 }
 echo '</table>';
 ?>

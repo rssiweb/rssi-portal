@@ -54,9 +54,9 @@ include("member_data.php");
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class=col style="text-align: right;"><?php echo $badge ?>
-                    <?php if (@$vaccination > 0) {
+                    <?php if (@$vaccination =="COVID-19: Vaccinated") {
                     ?>
-                    <img src="https://img.icons8.com/small/24/000000/user-shield.png" title="<?php echo $vaccination ?>" />
+                    <img src="../images/smile10.jpg" title="Applause for <?php echo $vaccination ?>"/>
                 </div>
             <?php
                     } else {
