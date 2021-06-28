@@ -53,52 +53,45 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;"><?php echo $badge ?>
-                    <?php if (@$vaccination =="COVID-19: Vaccinated") {
-                    ?>
-                    <img src="../images/smile10.jpg" title="Applause for <?php echo $vaccination ?>"/>
-                </div>
-            <?php
-                    } else {
-            ?>
-            </div><?php } ?>
-        <section class="box" style="padding: 2%;">
+                <div class=col style="text-align: right;"><?php echo $badge ?></div>
 
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th scope="col">Class Allotment</th>
-                        <th scope="col">Class URL</th>
-                        <th scope="col">Class attendance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="line-height: 2;"><?php echo $class ?></td>
-                        <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo $gm ?></a></span></td>
-                        <td style="line-height: 2;"><?php echo $attd ?></td>
-                    </tr>
-                </tbody>
-            </table>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th scope="col">Evaluation path</th>
-                        <th scope="col">Quick Link</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
-                        <td style="line-height: 2;"><?php echo $quicklink ?></td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-        </div>
-        <div class="col-md-12">
-            <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
-            <div class="clearfix"></div>
+                <section class="box" style="padding: 2%;">
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Class Allotment</th>
+                                <th scope="col">Class URL</th>
+                                <th scope="col">Class attendance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="line-height: 2;"><?php echo $class ?></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo $gm ?></a></span></td>
+                                <td style="line-height: 2;"><?php echo $attd ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Evaluation path</th>
+                                <th scope="col">Quick Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
+                                <td style="line-height: 2;"><?php echo $quicklink ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+            <div class="col-md-12">
+                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
+                <div class="clearfix"></div>
         </section>
     </section>
     <!--**************User confirmation**************-->

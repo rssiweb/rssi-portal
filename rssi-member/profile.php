@@ -101,13 +101,6 @@ include("member_data.php");
                                 <td id="cw2" style="line-height: 2;"><?php echo $doj ?>&nbsp;(<?php echo $yos ?>)<br>Original DOJ&nbsp;-&nbsp;<?php echo $originaldoj ?></td>
                                 <td id="cw"><?php echo $astatus ?><br><br><?php echo $effectivedate ?>&nbsp;<?php echo $remarks ?></td>
                                 <td id="cw3"><?php echo $badge ?>
-                                    <?php if (@$vaccination == "COVID-19: Vaccinated") {
-                                    ?>
-                                        <img src="../images/smile10.jpg" title="Applause for <?php echo $vaccination ?>" />
-                                    <?php
-                                    } else {
-                                    ?>
-                                    <?php } ?>
                                 </td>
                             </tr>
                         </tbody>
