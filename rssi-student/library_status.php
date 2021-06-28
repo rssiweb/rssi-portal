@@ -71,9 +71,8 @@ $resultArr = pg_fetch_all($result);
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?>
-
-                    <br><span class="noticet" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
+                <div class=col style="text-align: right;">
+                    <span class="noticet" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
                 </div>
                 <section class="box" style="padding: 2%;">
                     <?php echo '
