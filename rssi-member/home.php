@@ -53,7 +53,15 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;"><?php echo $badge ?></div>
+                <div class=col style="text-align: right;"><?php echo $badge ?>
+                    <?php if (@$vaccination > 0) {
+                    ?>
+                    <img src="https://img.icons8.com/small/24/000000/user-shield.png" title="<?php echo $vaccination ?>" />
+                </div>
+            <?php
+                    } else {
+            ?>
+            </div><?php } ?>
         <section class="box" style="padding: 2%;">
 
             <table class="table">
@@ -89,20 +97,12 @@ include("member_data.php");
         </section>
         </div>
         <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?>
-                    <?php if (@$vaccination > 0) {
-                    ?>
-                        <br><img src="https://img.icons8.com/small/24/000000/user-shield.png"/>&nbsp;<?php echo $vaccination ?>
-                </div>
-            <?php
-                    } else {
-            ?>
-            </div><?php } ?>
-        <div class="clearfix"></div>
+            <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
+            <div class="clearfix"></div>
         </section>
     </section>
     <!--**************User confirmation**************-->
-    <?php if (@$vaccination==null) {
+    <?php if (@$vaccination == null) {
     ?>
 
         <div id="thoverX" class="thover pop-up"></div>
