@@ -237,10 +237,6 @@ if(!$_SESSION['sid'])
     display: flex;
 }
 
-.info-menu li{
-   
-}
-
 .page-topbar .badge {
     display: inline-block;
     min-width: 10px;
@@ -320,7 +316,7 @@ li.profile img {
      animation: ripple 1s ease-out;
 }
 .page-topbar li .dropdown-menu.profile {
-    max-width: 180px;
+    width: fit-content;
     height: auto;
     padding: 0px;
 }

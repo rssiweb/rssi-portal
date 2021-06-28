@@ -109,7 +109,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
+                
                 <?php echo $id ?>
                 <section class="box" style="padding: 2%;">
                     <form action="" method="POST">

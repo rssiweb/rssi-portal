@@ -167,13 +167,11 @@ include("member_data.php");
 
     <section id="main-content">
         <section class="wrapper main-wrapper row">
+            
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
 
                     <div class="container">
-                        <!--<span style="color: #F2545F; display: inline;"></span>
-                        <p style="display: inline;">You have to enter at least one value to watch video.</p>-->
                         <div class="row" style="background-color: rgb(255, 245,
                 194);height: 110%; padding-top: 0; padding-bottom:
                 1.5%;padding-left: 1.5%">

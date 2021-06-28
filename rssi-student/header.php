@@ -19,6 +19,11 @@
                     <span class="hidden-xs"><?php echo $studentname ?> <i class="fa fa-angle-down"></i></span>
                 </a>
                 <ul class="dropdown-menu profile fadeIn">
+                <li>
+                        <a>
+                            Last synced: <?php echo $lastupdatedon ?>
+                        </a>
+                    </li>
                     <li>
                         <a href="#settings">
                             <i class="fa fa-wrench"></i>

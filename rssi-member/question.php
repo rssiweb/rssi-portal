@@ -185,8 +185,8 @@ include("member_data.php");
 
     <section id="main-content">
         <section class="wrapper main-wrapper row">
+        
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
 
                     <div class="container">

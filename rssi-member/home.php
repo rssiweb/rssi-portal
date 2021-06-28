@@ -90,7 +90,7 @@ include("member_data.php");
                 </section>
             </div>
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
+                
                 <div class="clearfix"></div>
         </section>
     </section>

@@ -168,7 +168,10 @@ include("member_data.php");
             padding-left: 3%;
             margin-top: 10px;
         }
-        .exam_btn {margin-top: 2%;}
+
+        .exam_btn {
+            margin-top: 2%;
+        }
     }
 
     .btn {
@@ -202,18 +205,18 @@ include("member_data.php");
 
     <section id="main-content">
         <section class="wrapper main-wrapper row">
+        
             <div class="col-md-12">
-                <div class=col style="text-align: right;">Last synced: <?php echo $lastupdatedon ?></div>
                 <section class="box" style="padding: 2%;">
-                <div class=col style="text-align: right;"><a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
-My Book</button></a>
-<?php
-                                if ($role == 'Admin') {
-                                    echo '<a href="library_status_admin.php"><button type="button" class="exam_btn"><i class="fas fa-tags"></i>
+                    <div class=col style="text-align: right;"><a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
+                                My Book</button></a>
+                        <?php
+                        if ($role == 'Admin') {
+                            echo '<a href="library_status_admin.php"><button type="button" class="exam_btn"><i class="fas fa-tags"></i>
                                     all orders</button></a>';
-                                }
-                                ?>
-                                </div><br>
+                        }
+                        ?>
+                    </div><br>
                     <div class="container">
                         <div class="row" style="background-color: rgb(255, 245,
                 194);height: 110%; padding-top: 0; padding-bottom:
@@ -343,7 +346,7 @@ add</button></a>';
             event.className = "btn visited";
         };
     </script>
-   <script>
+    <script>
         // Initiate an Ajax request on button click
         $(document).on("click", "button1", function() {
             // Adding timestamp to set cache false
