@@ -66,11 +66,17 @@ include("member_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td style="line-height: 2;"><?php echo $class ?></td>
-                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo $gm ?></a></span></td>
-                                <td style="line-height: 2;"><?php echo $attd ?></td>
-                            </tr>
+                            <?php if (@$filterstatus == 'Active') {
+                            ?>
+                                <tr>
+                                    <td style="line-height: 2;"><?php echo $class ?></td>
+                                    <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo $gm ?></a></span></td>
+                                    <td style="line-height: 2;"><?php echo $attd ?></td>
+                                </tr>
+                            <?php
+                            } else {
+                            }
+                            ?>
                         </tbody>
                     </table>
                     <table class="table">
@@ -81,16 +87,22 @@ include("member_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
-                                <td style="line-height: 2;"><?php echo $quicklink ?></td>
-                            </tr>
+                            <?php if (@$filterstatus == 'Active') {
+                            ?>
+                                <tr>
+                                    <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
+                                    <td style="line-height: 2;"><?php echo $quicklink ?></td>
+                                </tr>
+                            <?php
+                            } else {
+                            }
+                            ?>
                         </tbody>
                     </table>
                 </section>
             </div>
             <div class="col-md-12">
-                
+
                 <div class="clearfix"></div>
         </section>
     </section>
