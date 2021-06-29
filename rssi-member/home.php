@@ -107,7 +107,9 @@ include("member_data.php");
         </section>
     </section>
     <!--**************User confirmation**************-->
-    <?php if (@$vaccination == null) {
+    <?php 
+     $word = "Not vaccinated";
+    if ((@$vaccination == null || strpos(@$vaccination, $word) !== false) && $filterstatus=='Active') {
     ?>
 
         <div id="thoverX" class="thover pop-up"></div>
