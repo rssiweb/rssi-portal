@@ -8,7 +8,7 @@
                     <!--<span class="badge">1</span>-->
                 </a></li>
             <li>
-                <?php if (@$engagement == 'Intern') {
+                <?php if (@$engagement == 'Intern' and @$filterstatus=='Active') {
                 ?>
                     <a href="document.php" title="Document submission and Exit interview"> <i class="fa fa-bell"></i>
                         <span class="badge">1</span></a>
