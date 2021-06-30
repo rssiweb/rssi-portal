@@ -71,7 +71,8 @@
                 $originaldoj=$row[63];
                 $iddoc=$row[64];
                 $vaccination=$row[65];
-                $officialdoc=$row[66]
+                $officialdoc=$row[66];
+                $exitinterview=$row[67];
                 
 ?>     
 <?php }?>    

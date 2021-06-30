@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Admin Corner</title>
+    <title>Experience Report</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -96,7 +96,7 @@ foreach ($resultArr as $array) {
             <td style="line-height:2">' . $array['doj'] . '&nbsp;to&nbsp;' . $array['effectivedate'] . '<br>' . $array['yos'] . '</td>
             <td>' . $array['effectivedate'] . '</td>
             <td>' . $array['effectivedate'] . '</td>
-            <td>' . $array['approvedby'] . '</td>
+            <td>' . $array['exitinterview'] . '</td>
             </tr>';
 }
 echo '</table>
