@@ -70,7 +70,8 @@
                 $role=$row[62];
                 $originaldoj=$row[63];
                 $iddoc=$row[64];
-                $vaccination=$row[65]
+                $vaccination=$row[65];
+                $officialdoc=$row[66]
                 
 ?>     
 <?php }?>    

@@ -64,7 +64,9 @@ include("member_data.php");
                         <tbody>
                             <tr>
                               
-                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span>
+                                <?php echo $officialdoc ?>
+                                </td>
                                 <td style="line-height: 2;"><?php echo $notification ?></td>
                                 <td style="line-height: 2;"></td>
                             </tr>
