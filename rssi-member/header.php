@@ -7,9 +7,18 @@
             <li><a href="#"> <i class="fa fa-envelope"></i>
                     <!--<span class="badge">1</span>-->
                 </a></li>
-            <li><a href="my_appraisal.php"> <i class="fa fa-bell"></i>
-                    <!--<span class="badge">1</span>title="1 new notification"-->
-                </a></li>
+            <li>
+                <?php if (@$engagement == 'Intern') {
+                ?>
+                    <a href="document.php" title="Document submission and Exit interview"> <i class="fa fa-bell"></i>
+                        <span class="badge">1</span></a>
+                <?php
+                } else {?>
+                    <a href="#"> <i class="fa fa-bell"></i>
+                    <?php  }
+                ?>
+
+            </li>
         </ul>
 
         <ul class="pull-right info-menu user-info">
@@ -19,7 +28,7 @@
                     <span class="hidden-xs"><?php echo $fullname ?> <i class="fa fa-angle-down"></i></span>
                 </a>
                 <ul class="dropdown-menu profile fadeIn">
-                <li>
+                    <li>
                         <a>
                             Last synced: <?php echo $lastupdatedon ?>
                         </a>
