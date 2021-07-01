@@ -93,12 +93,6 @@ include("member_data.php");
     select:focus {
         outline: none;
     }
-
-    .exam_btn:hover {
-        background: #90BAA4;
-        border: 1px solid #90BAA4;
-    }
-
     .columnExam2 {
         float: left;
         width: unset !important;
