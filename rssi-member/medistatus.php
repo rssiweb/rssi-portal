@@ -127,8 +127,8 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Submission Date</th>
                                 <th scope="col">Beneficiary</th>
                                 <th scope="col">Account Number</th>
-                                <th scope="col">Claimed Amount</th>
-                                <th scope="col">Approved Amount</th>
+                                <th scope="col">Claimed Amount (&#8377;)</th>
+                                <th scope="col">Approved Amount (&#8377;)</th>
                                 <th scope="col">Current Claim Status</th>
                             </tr>
                         </thead>' ?>

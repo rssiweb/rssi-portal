@@ -108,8 +108,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><?php echo 'Know Your Policy' ?></td>
-                                <td style="line-height: 2;"><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSePgeXEKY4R_WH_d6mOcHFPiEoMbbWnh2MxIxTojrxMzvckYA/viewform?usp=pp_url&entry.1268051974=<?php echo $fullname ?>&entry.288127209=<?php echo $associatenumber ?>&entry.995125243=<?php echo $phone ?>&entry.605633398=<?php echo $email ?>&entry.1867197840=<?php echo $bankname ?>&entry.1288695359=<?php echo $accountnumber ?>&entry.1236133419=<?php echo $acname ?>&entry.1547933107=<?php echo $ifsccode ?>" target="_blank">Domiciliary Claim</a></span><br><br></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="https://drive.google.com/file/d/1pqXufu38P3T15L0jMeK_poRifJAMPPP1/view" target="_blank">RSSI Vaccination Policy</a></span></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSePgeXEKY4R_WH_d6mOcHFPiEoMbbWnh2MxIxTojrxMzvckYA/viewform?usp=pp_url&entry.1268051974=<?php echo $fullname ?>&entry.288127209=<?php echo $associatenumber ?>&entry.995125243=<?php echo $phone ?>&entry.605633398=<?php echo $email ?>&entry.1867197840=<?php echo $bankname ?>&entry.1288695359=<?php echo $accountnumber ?>&entry.1236133419=<?php echo $acname ?>&entry.1547933107=<?php echo $ifsccode ?>" target="_blank">Domiciliary Claim</a></span></td>
                             </tr>
                         </tbody>
                     </table>
