@@ -121,10 +121,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;">
-                                    Account Number:&nbsp;<?php echo $accountnumber ?><br>
+                                <td style="line-height: 2; font-size:13px">
+                                    <?php echo $bankname ?><br>
+                                    Account Number:&nbsp;<b><?php echo $accountnumber ?></b><br>
                                     Account Holder Name:&nbsp;<?php echo $acname ?><br>
-                                    Bank Name:&nbsp;<?php echo $bankname ?><br>
                                     IFSC Code:&nbsp;<?php echo $ifsccode ?>
                                 </td>
                             </tr>
