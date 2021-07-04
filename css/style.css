@@ -690,9 +690,16 @@ z-index: 5001;
         left: auto;
     }
     
+    #noti {
+        width: 360px;
+    }
+    
     @media (max-width:767px) {
         .dropdown-menu {
             right: 0%;
             left: auto;
+        }
+        #noti {
+            width: auto !important;
         }
     }

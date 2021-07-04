@@ -7,17 +7,28 @@
             <li><a href="#"> <i class="fa fa-envelope"></i>
                     <!--<span class="badge">1</span>-->
                 </a></li>
-            <li>
-                <?php if (@$engagement == 'Intern' and @$filterstatus=='Active') {
+            <!--<li>
+                <?php if (@$engagement == 'Intern' and @$filterstatus == 'Active') {
                 ?>
                     <a href="document.php" title="Document submission and Exit interview"> <i class="fa fa-bell"></i>
                         <span class="badge">1</span></a>
                 <?php
-                } else {?>
+                } else { ?>
                     <a href="#"> <i class="fa fa-bell"></i>
                     <?php  }
-                ?>
+                    ?>
 
+            </li>-->
+            <li class="profile dropdown">
+                <a href="#"> <i class="fa fa-bell"></i><span class="badge">1</span></a>
+                <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
+                    <li style="height: unset;">
+                        <a style="font-size:13px;font-family:Roboto;white-space:normal !important;word-wrap:break-word;">Guidelines regarding invigilation duty will be published soon.</a>
+                    </li>
+                    <li style="height: unset;">
+                        <a style="font-size:13px;font-family:Roboto;white-space:normal !important;word-wrap:break-word;">Medimate Portal has been launched.</a>
+                    </li>
+                </ul>
             </li>
         </ul>
 
