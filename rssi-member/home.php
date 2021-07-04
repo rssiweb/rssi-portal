@@ -205,6 +205,105 @@ include("member_data.php");
     } else {
     ?>
     <?php } ?>
+    <!--**************User confirmation2**************-->
+    <?php 
+     $word = "Not vaccinated";
+    if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus=='Active') {
+    ?>
+
+        <div id="thoverX" class="thover pop-up"></div>
+        <div id="tpopupX" class="tpopup pop-up">
+            <form name="submit-to-google-sheet" action="" method="POST">
+                <br>
+                <input type="hidden" class="form-control" name="membername1" type="text" value="<?php echo $fullname ?>" readonly>
+                <input type="hidden" class="form-control" name="memberid1" type="text" value="<?php echo $associatenumber ?>" readonly>
+                <input type="hidden" type="text" name="status1" id="count1" value="" readonly required>
+                <p>Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Do you know how to submit QT1/2021 question paper?<br>For more details please visit the <span class="noticet"><a href="exam.php" target="_blank">Examination Portal.</a></span></p><br>
+                <!--<p>Yes, I know the process and I am working on it right now. I will share the question paper as per the stipulated time.</p>-->
+                <button type="submit" id="yes" class="close-button btn btn-success">
+                    <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I know the process. I will share the question paper as per the stipulated time.</button><br><br>
+                <button type="submit" id="no" class="close-button btn btn-default">
+                    <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;I have not been assigned any question paper for this quarter.
+                </button>
+                <br><br>
+            </form>
+        </div>
+        <script>
+            $('#yes').click(function() {
+                $('#count1').val('Agree');
+            });
+
+            $('#no').click(function() {
+                $('#count1').val('NA');
+            });
+        </script>
+        <script>
+            const scriptURL = 'https://script.google.com/macros/s/AKfycby2Ok3NM5WqWbv9cuF36Vx3ueboXsbT4PPiqzK43Cdz0o-OnGM/exec'
+            const form = document.forms['submit-to-google-sheet']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                if (Boolean(readCookie('name1'))) {
+                    $('.pop-up').hide();
+                    $('.pop-up').fadeOut(1000);
+                }
+                $('.close-button').click(function(e) {
+
+                    $('.pop-up').delay(10).fadeOut(700);
+                    e.stopPropagation();
+
+                    createCookie("name1", "4 days", 4);
+                    //return false;
+                });
+
+                function createCookie(name, value, days) {
+                    if (days) {
+                        var date = new Date();
+                        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                        var expires = "; expires=" + date.toGMTString();
+                    } else var expires = "";
+                    document.cookie = name + "=" + value + expires + "; path=/";
+                }
+
+
+
+                function readCookie(name) {
+                    var nameEQ = name + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                    }
+                    return null;
+                }
+
+                function eraseCookie(name) {
+                    createCookie(name, "", -1);
+                }
+
+            });
+        </script>
+    <?php
+    } else {
+    ?>
+    <?php } ?>
     <style>
         .x-btn:focus,
         .button:focus,
