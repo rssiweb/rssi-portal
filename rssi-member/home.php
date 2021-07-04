@@ -221,7 +221,7 @@ include("member_data.php");
                 <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Do you know how to submit QT1/2021 question paper? For more details please visit the <span class="noticet"><a href="exam.php" target="_blank">Examination Portal.</a></span></p><br>
                 <!--<p>Yes, I know the process and I am working on it right now. I will share the question paper as per the stipulated time.</p>-->
                 <button type="submit" id="yes" class="close-button btn btn-success" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
-                    <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I know the process.<br>I will share the question paper as per the stipulated time.</button><br><br>
+                    <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I know the process. I will share the question paper as per the stipulated time.</button><br><br>
                 <button type="submit" id="no" class="close-button btn btn-default" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
                     <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;I have not been assigned any question paper for this quarter.
                 </button>
