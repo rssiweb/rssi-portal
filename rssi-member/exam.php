@@ -91,7 +91,7 @@ include("member_data.php");
                                 <th scope="col">Exam Name</th>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Question paper Template</th>
-                                <th scope="col">Date Sheet</th>
+                                <th scope="col">Date Sheet/Info</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -107,7 +107,11 @@ include("member_data.php");
 
                                 <td style="line-height: 2"><span class="noticet"><a href="https://drive.google.com/file/d/15cgBw0nOYKKzY_LHZ7U6u-rj4AxWxE8O/view" target="_blank">Question paper submission date</i></a></span><br>
 
-                                <span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Examination Schedule</i></a></span></td>
+                                <span class="noticet"><a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Examination Schedule</i></a></span><br>
+                                
+                                <span class="noticet"><a href="https://drive.google.com/file/d/1RR5MaWwSpogiRWjRK-REh-hXKfAbvttm/view" target="_blank">Invigilation duty list</i></a></span><br>
+                                
+                                <span class="noticet"><a href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Invigilation duty - Guidelines</i></a></span></td>
                             </tr>
                         </tbody>
                     </table>
