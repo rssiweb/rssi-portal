@@ -42,7 +42,7 @@
                 <?php if (@$role == 'Admin') {
                 ?>
                     <li class="profile dropdown">
-                        <a href="#"> <i class="fas fa-database"></i></a>
+                        <a href="#"> <i class="fas fa-tachometer-alt"></i></a>
                         <ul class="dropdown-menu profile fadeIn" style="right:unset;">
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="faculty.php" target="_blank"><i class="fas fa-user-tie"></i>&nbsp;RSSI Volunteer</a>
