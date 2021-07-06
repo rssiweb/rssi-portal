@@ -31,7 +31,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $__hevo_id = $row[9];
     $__hevo__ingested_at = $row[10];
     $__hevo__marked_deleted = $row[11]
-    ?>
+?>
 <?php } ?>
 
 
@@ -49,7 +49,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
     <!-- Main css -->
-    <style><?php include '../css/style.css'; ?></style>
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
@@ -109,14 +111,18 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                
-                <?php echo $id ?>
                 <section class="box" style="padding: 2%;">
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
                                 <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
-                                    <option value="" disabled selected hidden>Select Appraisal type</option>
+                                    <?php if ($id == null) { ?>
+                                        <option value="" hidden selected>Select Appraisal type</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $id ?></option>
+                                    <?php }
+                                    ?>
                                     <option>Quarterly 2/2021</option>
                                     <option>Quarterly 1/2021</option>
                                 </select>
@@ -140,13 +146,14 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             </tr>
                         </thead>
                         <?php if (@$appraisaltype > 0) {
-                            ?>
+                        ?>
                             <tbody>
                                 <tr>
 
                                     <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?></b><br>
                                         Associate ID - <b><?php echo $associatenumber ?></b><br>
-                                        <span style="line-height: 3;"><?php echo $role ?></span></td>
+                                        <span style="line-height: 3;"><?php echo $role ?></span>
+                                    </td>
                                     <td style="line-height: 1.7;"><?php echo $appraisaltype ?></td>
                                     <td id="cw" style="line-height: 1.7;"><?php echo $effectivestartdate ?> to <?php echo $effectiveenddate ?></td>
                                     <td style="line-height: 1.7;"><?php echo $feedback ?></td>
@@ -154,14 +161,14 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <td style="line-height: 1.7;"><?php echo $ipf ?></td>
                                 </tr>
                             <?php
-                            } else if ($id=="") {
-                                ?>
+                        } else if ($id == "") {
+                            ?>
                                 <tr>
                                     <td>Please select Appraisal type.</td>
                                 </tr>
                             <?php
-                            } else {
-                                ?>
+                        } else {
+                            ?>
                                 <tr>
                                     <td>No record found for <?php echo $id ?></td>
                                 </tr>

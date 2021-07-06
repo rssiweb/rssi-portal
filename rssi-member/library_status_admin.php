@@ -20,7 +20,21 @@ include("member_data.php");
 ?>
 <?php
 include("database.php");
-$result = pg_query($con, "SELECT * FROM bookdata_book order by yourid asc,orderdate");
+@$id = $_POST['get_bid'];
+@$status = $_POST['get_status'];
+
+if ($id == null && $status == 'ALL') {
+    $result = pg_query($con, "SELECT * FROM bookdata_book order by yourid asc,orderdate");
+} else if ($id == null && $status != 'ALL') {
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE bookstatus='$status' order by yourid asc,orderdate");
+} else if ($id >0 && $status != 'ALL') {
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' AND bookstatus='$status' order by yourid asc,orderdate");
+} else if ($id >0 && $status == 'ALL') {
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' order by yourid asc,orderdate");
+}else {
+    $result = pg_query($con, "SELECT * FROM bookdata_book order by yourid asc,orderdate");
+}
+
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -82,11 +96,37 @@ $resultArr = pg_fetch_all($result);
                     <span class="noticet" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
                 </div>
                 <section class="box" style="padding: 2%;">
+
+                    <form action="" method="POST">
+                        <div class="form-group" style="display: inline-block;">
+                            <div class="col2" style="display: inline-block;">
+                                <input name="get_bid" class="form-control" style="width:max-content; display:inline-block" placeholder="Borrowers ID" value="<?php echo $id ?>">
+                                <select name="get_status" class="form-control" style="width:max-content;display:inline-block" required>
+                                    <?php if ($status ==null) { ?>
+                                        <option value="" hidden selected>Select book status</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $status ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>Issued</option>
+                                    <option>Due</option>
+                                    <option>Returned</option>
+                                    <option>Canceled</option>
+                                    <option>ALL</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col2 left" style="display: inline-block;">
+                            <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
+                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                        </div>
+                    </form>
                     <?php echo '
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Associate ID</th>
+                                <th scope="col">Borrowers ID</th>
                                 <th scope="col">Order ID</th>
                                 <th scope="col">Order Date</th>
                                 <th scope="col">Book ID</th>

@@ -40,7 +40,7 @@
                     <a href="#"> <i class="fas fa-user-lock"></i></a>
                     <ul class="dropdown-menu profile fadeIn" style="right:unset">
                         <li style="height: unset;">
-                            <a style="font-size:13px;" href="faculty.php" target="_blank"><i class="fas fa-user-tie"></i>&nbsp;RSSI Volunteer</a>
+                            <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;RSSI Volunteer</a>
                         </li>
 
                         <li style="height: unset;">
