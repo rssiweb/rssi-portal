@@ -2,7 +2,7 @@
     <div class="logo-area"> </div>
     <div class="quick-area">
 
-        <ul class="pull-left info-menu  user-notify">
+        <ul class="pull-left info-menu  user-notify" id="menu">
             <button id="menu_icon"><i class="fa fa-bars" aria-hidden="true"></i></button>
             <li><a href="#"> <i class="fa fa-envelope"></i>
                     <!--<span class="badge">1</span>-->
