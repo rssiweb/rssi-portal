@@ -14,7 +14,7 @@
                     <a href="#"> <i class="fa fa-bell"></i><span class="badge">2</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
                         <li style="height: unset;">
-                            <a style="font-size:13px;font-family:Roboto;white-space:normal !important;word-wrap:break-word;" href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines have been published regarding invigilation duty.<br>Examination > Date Sheet/Info
+                            <a style="font-size:13px;font-family:Roboto;white-space:normal !important;word-wrap:break-word;" href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator.<br>Examination > Date Sheet/Info
                                 <span align="right" style="font-size: 12px; color: #909090;"><i class="fas fa-pen" style="font-size:10px;"></i>&nbsp;Jul 6, 2021</span>
                             </a>
                         </li>
