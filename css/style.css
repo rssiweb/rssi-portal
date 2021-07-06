@@ -504,9 +504,9 @@
             display: block;
         }
         li.profile img {
-            top: 15px;
+            /*top: 15px;*/
             right: 10px;
-            position: fixed;
+            /*position: fixed;*/
         }
         /* .page-topbar li .dropdown-menu.profile {
             max-width: 100%;
@@ -702,4 +702,11 @@ z-index: 5001;
         #noti {
             width: auto !important;
         }
+    }
+    
+    .notification {
+        font-size: 13px !important;
+        font-family: "Roboto" !important;
+        white-space: normal !important;
+        word-wrap: break-word;
     }

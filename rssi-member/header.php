@@ -14,20 +14,20 @@
                     <a href="#"> <i class="fa fa-bell"></i><span class="badge">2</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
                         <li style="height: unset;">
-                            <a style="font-size:13px;font-family:Roboto;white-space:normal !important;word-wrap:break-word;" href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator.<br>Examination > Date Sheet/Info
-                                <span align="right" style="font-size: 12px; color: #909090;"><i class="fas fa-pen" style="font-size:10px;"></i>&nbsp;Jul 6, 2021</span>
+                            <a class="notification" href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator.
+                                <span class="label label-info">Jul 6, 2021</span>
                             </a>
                         </li>
 
                         <li style="height: unset;">
-                            <a style="font-size:13px;font-family:Roboto;white-space:normal !important;word-wrap:break-word;" href="https://drive.google.com/file/d/1RR5MaWwSpogiRWjRK-REh-hXKfAbvttm/view" target="_blank">Invigilation Duty List for QT1/2021.<br>Examination > Date Sheet/Info
-                                <span align="right" style="font-size: 12px; color: #909090;"><i class="fas fa-pen" style="font-size:10px;"></i>&nbsp;Jul 3, 2021</span>
+                            <a class="notification" href="https://drive.google.com/file/d/1RR5MaWwSpogiRWjRK-REh-hXKfAbvttm/view" target="_blank">Invigilation Duty List for QT1/2021.
+                                <span class="label label-info">Jul 3, 2021</span>
                             </a>
                         </li>
 
                         <li style="height: unset;">
-                            <a style="font-size:13px;font-family:Roboto;white-space:normal !important;word-wrap:break-word;" href="medimate.php">Medimate Portal has been launched.
-                                <span align="right" style="font-size: 12px; color: #909090;"><i class="fas fa-pen" style="font-size:10px;"></i>&nbsp;Jul 2, 2021</span>
+                            <a class="notification" href="medimate.php">Medimate Portal has been launched.
+                            <span class="label label-info">Jul 2, 2021</span>
                             </a>
                         </li>
                     </ul>
