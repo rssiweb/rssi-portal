@@ -11,7 +11,7 @@
             <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#"> <i class="fa fa-bell"></i><span class="badge">2 New</span></a>
+                    <a href="#"> <i class="fa fa-bell"></i><span class="badge">2</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
                         <li style="height: unset;">
                             <a style="font-size:13px;font-family:Roboto;white-space:normal !important;word-wrap:break-word;" href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines have been published regarding invigilation duty.<br>Examination > Date Sheet/Info
