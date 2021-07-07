@@ -44,7 +44,7 @@
                         </li>
 
                         <li style="height: unset;">
-                            <a style="font-size:13px;" href="#"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
+                            <a style="font-size:13px;" href="student.php"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
                         </li>
 
                         <li style="height: unset;">
