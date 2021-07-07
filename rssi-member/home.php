@@ -70,7 +70,7 @@ include("member_data.php");
                             ?>
                                 <tr>
                                     <td style="line-height: 2;"><?php echo $class ?></td>
-                                    <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo $gm ?></a></span></td>
+                                    <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo substr($gm,-12) ?></a></span></td>
                                     <td style="line-height: 2;"><?php echo $attd ?></td>
                                 </tr>
                             <?php
