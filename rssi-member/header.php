@@ -29,7 +29,7 @@
             <?php
             } else { ?>
                 <li><a href="#"> <i class="fa fa-bell"></i>
-                <li>
+                </li>
                 <?php  }
                 ?>
 

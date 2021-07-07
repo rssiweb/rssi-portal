@@ -2,14 +2,29 @@
     <div class="logo-area"> </div>
     <div class="quick-area">
 
-        <ul class="pull-left info-menu  user-notify">
+        <ul class="pull-left info-menu  user-notify" id="menu">
             <button id="menu_icon"><i class="fa fa-bars" aria-hidden="true"></i></button>
             <li><a href="#"> <i class="fa fa-envelope"></i>
                     <!--<span class="badge">1</span>-->
                 </a></li>
-            <li><a href="#"> <i class="fa fa-bell"></i>
-                    <!--<span class="badge">1</span> title="1 new notification"-->
-                </a></li>
+                <?php if (@$filterstatus == 'Active') {
+            ?>
+                <li class="profile dropdown">
+                    <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">1</span></a>
+                    <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
+                        <li style="height: unset;">
+                            <a class="notification" href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Instructions to students during examination.
+                                <span class="label label-info">Jul 7, 2021</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            <?php
+            } else { ?>
+                <li><a href="#"> <i class="fa fa-bell"></i>
+                </li>
+                <?php  }
+                ?>
         </ul>
 
         <ul class="pull-right info-menu user-info">
