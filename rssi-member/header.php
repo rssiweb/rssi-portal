@@ -11,8 +11,14 @@
             <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">2</span></a>
+                    <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">1 New</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
+                    <li style="height: unset;">
+                            <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting.
+                                <span class="label label-info">Jul 7, 2021</span>
+                            </a>
+                        </li>
+
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator.
                                 <span class="label label-info">Jul 6, 2021</span>
@@ -24,6 +30,7 @@
                                 <span class="label label-info">Jul 3, 2021</span>
                             </a>
                         </li>
+                        <li></li>
                     </ul>
                 </li>
             <?php
