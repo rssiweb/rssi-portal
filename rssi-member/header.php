@@ -37,7 +37,7 @@
                 <?php if (@$role == 'Admin') {
                 ?>
                 <li class="profile dropdown">
-                    <a href="#"> <i class="fas fa-user-lock"></i></a>
+                    <a href="#"> <i class="fas fa-project-diagram"></i></a>
                     <ul class="dropdown-menu profile fadeIn" style="right:unset">
                         <li style="height: unset;">
                             <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;RSSI Volunteer</a>
