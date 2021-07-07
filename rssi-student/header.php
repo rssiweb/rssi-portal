@@ -10,7 +10,7 @@
                 <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">1 New</span></a>
+                    <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">1</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
                     <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting.
