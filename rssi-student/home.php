@@ -26,12 +26,14 @@ include("student_data.php");
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-    <style><?php include '../css/style.css'; ?></style>
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -50,7 +52,7 @@ include("student_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                
+
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -93,6 +95,105 @@ include("student_data.php");
 
         </section>
     </section>
+    <!--**************User confirmation2**************-->
+    <?php
+    if ($filterstatus == 'Active') {
+    ?>
+
+        <div id="thoverX" class="thover pop-up"></div>
+        <div id="tpopupX" class="tpopup pop-up">
+            <form name="submit-to-google-sheet" action="" method="POST">
+                <br>
+                <input type="hidden" class="form-control" name="membername1" type="text" value="<?php echo $studentname ?>" readonly>
+                <input type="hidden" class="form-control" name="memberid1" type="text" value="<?php echo $student_id ?>" readonly>
+                <input type="hidden" type="text" name="status1" id="count1" value="" readonly required>
+                <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $studentname ?>&nbsp;(<?php echo $student_id ?>), Please confirm whether the subject combination given below is correct.</p>
+                <b><?php echo $nameofthesubjects ?></b><br><br>
+                <!--<p>Yes, I know the process and I am working on it right now. I will share the question paper as per the stipulated time.</p>-->
+                <button type="submit" id="yes" class="close-button btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
+                    <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, Correct</button><br><br>
+                <button onclick='window.location.href="form.php"' type="submit" id="no" class="close-button btn btn-default" style="white-space:normal !important;word-wrap:break-word;">
+                    <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;No, I want to change my subject combination.
+                </button>
+                <br><br>
+            </form>
+        </div>
+        <script>
+            $('#yes').click(function() {
+                $('#count1').val('Yes, Correct');
+            });
+
+            $('#no').click(function() {
+                $('#count1').val('No, I want to change my subject combination.');
+            });
+        </script>
+        <script>
+            const scriptURL = 'https://script.google.com/macros/s/AKfycby2Ok3NM5WqWbv9cuF36Vx3ueboXsbT4PPiqzK43Cdz0o-OnGM/exec'
+            const form = document.forms['submit-to-google-sheet']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                if (Boolean(readCookie('sub'))) {
+                    $('.pop-up').hide();
+                    $('.pop-up').fadeOut(1000);
+                }
+                $('.close-button').click(function(e) {
+
+                    $('.pop-up').delay(10).fadeOut(700);
+                    e.stopPropagation();
+
+                    createCookie("sub", "30 days", 30);
+                    //return false;
+                });
+
+                function createCookie(name, value, days) {
+                    if (days) {
+                        var date = new Date();
+                        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                        var expires = "; expires=" + date.toGMTString();
+                    } else var expires = "";
+                    document.cookie = name + "=" + value + expires + "; path=/";
+                }
+
+
+
+                function readCookie(name) {
+                    var nameEQ = name + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                    }
+                    return null;
+                }
+
+                function eraseCookie(name) {
+                    createCookie(name, "", -1);
+                }
+
+            });
+        </script>
+    <?php
+    } else {
+    ?>
+    <?php } ?>
 </body>
 
 </html>
