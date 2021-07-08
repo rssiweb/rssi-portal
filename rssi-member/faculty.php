@@ -82,6 +82,11 @@ $resultArr = pg_fetch_all($result);
       table-layout: fixed;
       width: 100%
     }
+    @media (min-width:767px) {
+            .left {
+                margin-left: 2%;
+            }
+        }
   </style>
 
 </head>
@@ -93,7 +98,7 @@ $resultArr = pg_fetch_all($result);
       <div class="col-md-12">
         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
         <section class="box" style="padding: 2%;">
-          <form action="" method="POST" style="display: inline-block">
+          <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
                 <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>

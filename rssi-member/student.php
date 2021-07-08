@@ -95,6 +95,11 @@ $resultArr = pg_fetch_all($result);
       table-layout: fixed;
       width: 100%
     }
+    @media (min-width:767px) {
+            .left {
+                margin-left: 2%;
+            }
+        }
   </style>
 
 </head>
