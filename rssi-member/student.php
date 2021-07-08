@@ -23,15 +23,17 @@ include("database.php");
 @$id = $_POST['get_id'];
 @$category = $_POST['get_category'];
 
-if (($id == null || $id == 'ALL') && ($category == null || $category == 'ALL')) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student order by filterstatus asc, category asc");
-} else if (($id == null || $id =='ALL') && $category != 'ALL') {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE category='$category' order by filterstatus asc,category asc");
-}else if ($id >0 && $category != 'ALL') {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' AND category='$category' order by category asc");
-} else if ($id >0 && $category == 'ALL') {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' order by category asc");
-}else {}
+if ($id == 'ALL' && $category == 'ALL') {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student order by filterstatus asc, category asc");
+} else if ($id == 'ALL' && $category != 'ALL') {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE category='$category' order by filterstatus asc,category asc");
+} else if ($id > 0 && $category != 'ALL') {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' AND category='$category' order by category asc");
+} else if ($id > 0 && $category == 'ALL') {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' order by category asc");
+} else {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' order by category asc");
+}
 
 if (!$result) {
   echo "An error occurred.\n";
@@ -77,20 +79,22 @@ $resultArr = pg_fetch_all($result);
         width: 100%
       }
     }
+
     td {
 
-/* css-3 */
-white-space: -o-pre-wrap; 
-word-wrap: break-word;
-white-space: pre-wrap; 
-white-space: -moz-pre-wrap; 
-white-space: -pre-wrap; 
+      /* css-3 */
+      white-space: -o-pre-wrap;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      white-space: -moz-pre-wrap;
+      white-space: -pre-wrap;
 
-}
-table { 
-  table-layout: fixed;
-  width: 100%
-}
+    }
+
+    table {
+      table-layout: fixed;
+      width: 100%
+    }
   </style>
 
 </head>
@@ -104,7 +108,7 @@ table {
           <form action="" method="POST" style="display: inline-block">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
-                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
+                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
                   <?php if ($id == null) { ?>
                     <option value="" disabled selected hidden>Select Status</option>
                   <?php
@@ -116,7 +120,7 @@ table {
                   <option>Inactive</option>
                   <option>ALL</option>
                 </select>
-                <select name="get_category" class="form-control" style="width:max-content;display:inline-block" placeholder="Appraisal type">
+                <select name="get_category" class="form-control" style="width:max-content;display:inline-block" placeholder="Appraisal type" required>
                   <?php if ($category == null) { ?>
                     <option value="" disabled selected hidden>Select Category</option>
                   <?php
@@ -161,13 +165,13 @@ table {
             echo '<tr>
             <td><img src="' . $array['photourl'] . '" width=50px/></td>
             <td>Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>
-            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] .'</td>
-            <td>' . $array['class'] .'/'. $array['category'] .' </td>
-            <td>' . $array['contact'] . '<br>'. $array['emailaddress'] .'</td>
-            <td>' . $array['profilestatus'] . '<br><br>'. $array['remarks'] . '</td>
+            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
+            <td>' . $array['class'] . '/' . $array['category'] . ' </td>
+            <td>' . $array['contact'] . '<br>' . $array['emailaddress'] . '</td>
+            <td>' . $array['profilestatus'] . '<br><br>' . $array['remarks'] . '</td>
             <td>' . $array['colors'] . '</td>
-            <td>' . $array['nameofthesubjects'] .'<br><br>Attendance -&nbsp;'. $array['attd'] . '<br>'. $array['allocationdate'] .'</td>
-            <td>' . $array['medium'] .'</td>
+            <td>' . $array['nameofthesubjects'] . '<br><br>Attendance -&nbsp;' . $array['attd'] . '<br>' . $array['allocationdate'] . '</td>
+            <td>' . $array['medium'] . '</td>
             <td></td>
             </tr>';
           }
