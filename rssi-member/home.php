@@ -75,8 +75,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
                 ?>
                     <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                        Your question paper submission deadline will expire in&nbsp;<b>
-                            <span id="demo" style="display: inline-block;"></span></b>&nbsp;(<?php echo $date ?>)
+                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for question paper submission.
                     </div>
                     <script>
                         // Set the date we're counting down to
