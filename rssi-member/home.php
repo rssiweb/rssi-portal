@@ -13,6 +13,22 @@ if (!$_SESSION['aid']) {
 <?php
 include("member_data.php");
 ?>
+<?php
+include("database.php");
+$view_users_query = "select * from qpaper_qpaper WHERE associatenumber='$user_check'"; //select query for viewing users.  
+$run = pg_query($con, $view_users_query); //here run the sql query.  
+
+while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
+{
+    $name = $row[0];
+    $date = $row[1];
+    $qpaper = $row[2];
+    $__hevo_id = $row[3];
+    $__hevo__ingested_at = $row[4];
+    $__hevo__marked_deleted = $row[5];
+    $associatenumber = $row[6]
+?>
+<?php } ?>
 
 <!DOCTYPE html>
 <html>
@@ -53,7 +69,49 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;"><?php echo $badge ?></div>
+                <!--<div class=col style="text-align: right;"><?php //echo $badge 
+                                                                ?></div>-->
+                <?php
+                if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
+                ?>
+                    <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #F2545F;"></i></span>&nbsp;
+                        Your question paper submission deadline will expire in&nbsp;<b>
+                            <span id="demo" style="display: inline-block;"></span></b>&nbsp;(<?php echo $date ?>)
+                    </div>
+                    <script>
+                        // Set the date we're counting down to
+                        var countDownDate = new Date("<?php echo $qpaper ?>").getTime();
+
+                        // Update the count down every 1 second
+                        var x = setInterval(function() {
+
+                            // Get today's date and time
+                            var now = new Date().getTime();
+
+                            // Find the distance between now and the count down date
+                            var distance = countDownDate - now;
+
+                            // Time calculations for days, hours, minutes and seconds
+                            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                            // Output the result in an element with id="demo"
+                            document.getElementById("demo").innerHTML = days + "d " + hours + "h " +
+                                minutes + "m " + seconds + "s ";
+
+                            // If the count down is over, write some text 
+                            if (distance < 0) {
+                                clearInterval(x);
+                                document.getElementById("demo").innerHTML = "EXPIRED";
+                            }
+                        }, 1000);
+                    </script>
+                <?php
+                } else {
+                }
+                ?>
 
                 <section class="box" style="padding: 2%;">
 
@@ -70,7 +128,7 @@ include("member_data.php");
                             ?>
                                 <tr>
                                     <td style="line-height: 2;"><?php echo $class ?></td>
-                                    <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo substr($gm,-12) ?></a></span></td>
+                                    <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo substr($gm, -12) ?></a></span></td>
                                     <td style="line-height: 2;"><?php echo $attd ?></td>
                                 </tr>
                             <?php
@@ -107,9 +165,9 @@ include("member_data.php");
         </section>
     </section>
     <!--**************User confirmation**************-->
-    <?php 
-     $word = "Not vaccinated";
-    if ((@$vaccination == null || strpos(@$vaccination, $word) !== false) && $filterstatus=='Active') {
+    <?php
+    $word = "Not vaccinated";
+    if ((@$vaccination == null || strpos(@$vaccination, $word) !== false) && $filterstatus == 'Active') {
     ?>
 
         <div id="thoverX" class="thover pop-up"></div>
@@ -206,9 +264,8 @@ include("member_data.php");
     ?>
     <?php } ?>
     <!--**************User confirmation2**************-->
-    <?php 
-     $word = "Not vaccinated";
-    if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus=='Active') {
+    <?php
+    if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
     ?>
 
         <div id="thoverX" class="thover pop-up"></div>
@@ -309,6 +366,20 @@ include("member_data.php");
         .button:focus,
         [type="submit"]:focus {
             outline: none;
+        }
+
+        .alert {
+            padding: 10px 0px !important;
+        }
+
+        .blink_me {
+            animation: blinker 1s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% {
+                opacity: 0;
+            }
         }
     </style>
 </body>
