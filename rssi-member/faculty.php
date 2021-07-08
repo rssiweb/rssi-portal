@@ -145,12 +145,12 @@ $resultArr = pg_fetch_all($result);
             <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
             <td>' . $array['position'] . '</td>' ?>
               <?php if ($id == "Active") { ?>
-                <?php echo '<td><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</td>' ?>
+                <?php echo '<td><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>' ?>
               <?php } else { ?> <?php echo '<td></td>' ?>
               <?php } ?>
             <?php echo '<td>' . $array['astatus'] . '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
             <td>' . $array['colors'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '</td>
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticet"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</span></td>
             <td>' . $array['badge'] . '<br>' . $array['vaccination'] . '</td>
             </tr>';
             } ?>
