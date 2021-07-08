@@ -52,7 +52,7 @@ $resultArr = pg_fetch_all($result);
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Admin Corner</title>
+  <title>Student database</title>
   <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
   <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
   <!-- Main css -->
@@ -104,8 +104,9 @@ $resultArr = pg_fetch_all($result);
   <section id="main-content">
     <section class="wrapper main-wrapper row">
       <div class="col-md-12">
+        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
         <section class="box" style="padding: 2%;">
-          <form action="" method="POST" style="display: inline-block">
+          <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
                 <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
@@ -145,6 +146,7 @@ $resultArr = pg_fetch_all($result);
                 <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
             </div>
           </form>
+
           <?php
           echo '<table class="table">
           <thead>
@@ -159,10 +161,12 @@ $resultArr = pg_fetch_all($result);
           <th scope="col">Medium</th>
           <th scope="col">Badge</th>
         </tr>
-        </thead>
-        <tbody>';
-          foreach ($resultArr as $array) {
-            echo '<tr>
+        </thead>' ?>
+          <?php if (sizeof($resultArr) > 0) { ?>
+            <?php
+            echo '<tbody>';
+            foreach ($resultArr as $array) {
+              echo '<tr>
             <td><img src="' . $array['photourl'] . '" width=50px/></td>
             <td>Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
@@ -174,7 +178,21 @@ $resultArr = pg_fetch_all($result);
             <td>' . $array['medium'] . '</td>
             <td></td>
             </tr>';
-          }
+            } ?>
+          <?php
+          } else if ($id == "" && $category == "") {
+          ?>
+            <tr>
+              <td colspan="5">Please select Status and Category.</td>
+            </tr>
+          <?php
+          } else {
+          ?>
+            <tr>
+              <td colspan="5">No record found for <?php echo $id ?> and <?php echo $category ?></td>
+            </tr>
+          <?php }
+
           echo '</tbody>
                         </table>';
           ?>

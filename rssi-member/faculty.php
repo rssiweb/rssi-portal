@@ -39,7 +39,7 @@ $resultArr = pg_fetch_all($result);
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Admin Corner</title>
+  <title>Members database</title>
   <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
   <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
   <!-- Main css -->
@@ -66,20 +66,22 @@ $resultArr = pg_fetch_all($result);
         width: 100%
       }
     }
+
     td {
 
-/* css-3 */
-white-space: -o-pre-wrap; 
-word-wrap: break-word;
-white-space: pre-wrap; 
-white-space: -moz-pre-wrap; 
-white-space: -pre-wrap; 
+      /* css-3 */
+      white-space: -o-pre-wrap;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      white-space: -moz-pre-wrap;
+      white-space: -pre-wrap;
 
-}
-table { 
-  table-layout: fixed;
-  width: 100%
-}
+    }
+
+    table {
+      table-layout: fixed;
+      width: 100%
+    }
   </style>
 
 </head>
@@ -89,6 +91,7 @@ table {
   <section id="main-content">
     <section class="wrapper main-wrapper row">
       <div class="col-md-12">
+        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
         <section class="box" style="padding: 2%;">
           <form action="" method="POST" style="display: inline-block">
             <div class="form-group" style="display: inline-block;">
@@ -125,25 +128,41 @@ table {
           <th scope="col">Productivity</th>
           <th scope="col">Badge</th>
         </tr>
-        </thead>
-        <tbody>';
-          foreach ($resultArr as $array) {
-            echo '<tr>
+        </thead>' ?>
+          <?php if (sizeof($resultArr) > 0) { ?>
+            <?php
+            echo '<tbody>';
+            foreach ($resultArr as $array) {
+              echo '<tr>
             <td><img src="' . $array['photo'] . '" width=50px/></td>
             <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['doj'] . '<br>' . $array['yos'] . '</td>
-            <td>' . $array['phone'] . '<br>'. $array['email'] .'</td>
+            <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
             <td>' . $array['position'] . '</td>' ?>
-            <?php if ($id == "Active") { ?>
-              <?php echo '<td><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'],-12) . '</td>' ?>
-            <?php } else { ?>  <?php echo '<td></td>'?>
-            <?php } ?>
-          <?php echo '<td>' . $array['astatus'] . '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
+              <?php if ($id == "Active") { ?>
+                <?php echo '<td><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</td>' ?>
+              <?php } else { ?> <?php echo '<td></td>' ?>
+              <?php } ?>
+            <?php echo '<td>' . $array['astatus'] . '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
             <td>' . $array['colors'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '</td>
             <td>' . $array['badge'] . '<br>' . $array['vaccination'] . '</td>
             </tr>';
-          }
+            } ?>
+          <?php
+          } else if ($id == "") {
+          ?>
+            <tr>
+              <td colspan="5">Please select Status.</td>
+            </tr>
+          <?php
+          } else {
+          ?>
+            <tr>
+              <td colspan="5">No record found for <?php echo $id ?></td>
+            </tr>
+          <?php }
+
           echo '</tbody>
                         </table>';
           ?>

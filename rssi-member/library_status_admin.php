@@ -27,11 +27,11 @@ if ($id == null && $status == 'ALL') {
     $result = pg_query($con, "SELECT * FROM bookdata_book order by yourid asc,orderdate");
 } else if ($id == null && $status != 'ALL') {
     $result = pg_query($con, "SELECT * FROM bookdata_book WHERE bookstatus='$status' order by yourid asc,orderdate");
-} else if ($id >0 && $status != 'ALL') {
+} else if ($id > 0 && $status != 'ALL') {
     $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' AND bookstatus='$status' order by yourid asc,orderdate");
-} else if ($id >0 && $status == 'ALL') {
+} else if ($id > 0 && $status == 'ALL') {
     $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' order by yourid asc,orderdate");
-}else {
+} else {
     $result = pg_query($con, "SELECT * FROM bookdata_book order by yourid asc,orderdate");
 }
 
@@ -92,9 +92,10 @@ $resultArr = pg_fetch_all($result);
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;">
+                <!--<div class=col style="text-align: right;">
                     <span class="noticet" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
-                </div>
+                </div>-->
+                Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                 <section class="box" style="padding: 2%;">
 
                     <form action="" method="POST">
@@ -102,7 +103,7 @@ $resultArr = pg_fetch_all($result);
                             <div class="col2" style="display: inline-block;">
                                 <input name="get_bid" class="form-control" style="width:max-content; display:inline-block" placeholder="Borrowers ID" value="<?php echo $id ?>">
                                 <select name="get_status" class="form-control" style="width:max-content;display:inline-block" required>
-                                    <?php if ($status ==null) { ?>
+                                    <?php if ($status == null) { ?>
                                         <option value="" hidden selected>Select book status</option>
                                     <?php
                                     } else { ?>
@@ -118,7 +119,7 @@ $resultArr = pg_fetch_all($result);
                             </div>
                         </div>
                         <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
+                            <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
                                 <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
                         </div>
                     </form>

@@ -108,7 +108,13 @@ $resultArr = pg_fetch_all($result);
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
                                 <select name="get_id" class="form-control" style="width:max-content;" placeholder="Select policy year" required>
-                                    <option value="" disabled selected hidden>Select policy year</option>
+                                <?php if ($status ==null) { ?>
+                                        <option value="" hidden selected>Select policy year</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $status ?></option>
+                                    <?php }
+                                    ?>
                                     <option>FY 2021-2022</option>
                                     <option>FY 2020-2021</option>
                                 </select>
