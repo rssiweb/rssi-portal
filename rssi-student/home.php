@@ -207,7 +207,7 @@ include("student_data.php");
                 <input type="hidden" type="text" name="status3" id="count3" value="" readonly required>
                 <div style="padding-left:5%;padding-right:5%"><p>Hi&nbsp;<?php echo $studentname ?>&nbsp;(<?php echo $student_id ?>), Did you know that from August 1st all official communication will be in Google Chat? If you haven't joined the Google Chatroom yet, please join the <span class="noticet"><a href="https://mail.google.com/chat/u/0/#chat/space/AAAAgNqt55Q" target="_blank">RSSI Student</a></span> group now.</p></div>
 
-                <button type="submit" id="join" class="close-button3 btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
+                <button onclick='window.location.href="https://mail.google.com/chat/u/0/#chat/space/AAAAgNqt55Q"' type="submit" id="join" class="close-button3 btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
                     <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I have joined.</button>
                 <br><br>
             </form>
