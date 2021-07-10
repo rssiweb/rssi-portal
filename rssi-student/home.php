@@ -96,7 +96,7 @@ include("student_data.php");
         </section>
     </section>
     <!--**************User confirmation2**************-->
-    <?php
+    <!--<?php
     if ($filterstatus == 'Active') {
     ?>
 
@@ -109,7 +109,6 @@ include("student_data.php");
                 <input type="hidden" type="text" name="status1" id="count1" value="" readonly required>
                 <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $studentname ?>&nbsp;(<?php echo $student_id ?>), Please confirm whether the subject combination given below is correct.</p>
                 <b><?php echo $nameofthesubjects ?></b><br><br>
-                <!--<p>Yes, I know the process and I am working on it right now. I will share the question paper as per the stipulated time.</p>-->
                 <button type="submit" id="yes" class="close-button btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
                     <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, Correct</button><br><br>
                 <button onclick='window.location.href="form.php"' type="submit" id="no" class="close-button btn btn-default" style="white-space:normal !important;word-wrap:break-word;">
@@ -128,7 +127,7 @@ include("student_data.php");
             });
         </script>
         <script>
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbyiOP3O__HFeipBtF5EFnv1fID-VTMbnM8yt64P7qBtHmHgvi1R/exec'
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzRMd98T75iCUIe9ZwMYatPiJcmzzmgleL3epY7WwquEyyfRwg/exec'
             const form = document.forms['submit-to-google-sheet']
 
             form.addEventListener('submit', e => {
@@ -193,7 +192,96 @@ include("student_data.php");
     <?php
     } else {
     ?>
-    <?php } ?>
+    <?php } ?>-->
+    <!--**************User confirmation2**************-->
+    <?php
+    if ($filterstatus == 'Active') {
+    ?>
+
+        <div id="thoverX" class="thover pop-up3"></div>
+        <div id="tpopupX" class="tpopup pop-up3">
+            <form name="submit-to-google-sheet3" action="" method="POST">
+                <br>
+                <input type="hidden" class="form-control" name="membername3" type="text" value="<?php echo $studentname ?>" readonly>
+                <input type="hidden" class="form-control" name="memberid3" type="text" value="<?php echo $student_id ?>" readonly>
+                <input type="hidden" type="text" name="status3" id="count3" value="" readonly required>
+                <div style="padding-left:5%;padding-right:5%"><p>Hi&nbsp;<?php echo $studentname ?>&nbsp;(<?php echo $student_id ?>), Did you know that from August 1st all official communication will be in Google Chat? If you haven't joined the Google Chatroom yet, please join the <span class="noticet"><a href="https://mail.google.com/chat/u/0/#chat/space/AAAAgNqt55Q" target="_blank">RSSI Student</a></span> group now.</p></div>
+
+                <button type="submit" id="join" class="close-button3 btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
+                    <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I have joined.</button>
+                <br><br>
+            </form>
+        </div>
+        <script>
+            $('#join').click(function() {
+                $('#count3').val('Joined');
+            });
+        </script>
+        <script>
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzFxxBLaI4b_gQFpS7IPLZLSgmaQjQWSa7o-qGDRF8y_xIpLrde/exec'
+            const form = document.forms['submit-to-google-sheet3']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                if (Boolean(readCookie('googlechat'))) {
+                    $('.pop-up3').hide();
+                    $('.pop-up3').fadeOut(1000);
+                }
+                $('.close-button3').click(function(e) {
+
+                    $('.pop-up3').delay(10).fadeOut(700);
+                    e.stopPropagation();
+
+                    createCookie("googlechat", "2 days", 2);
+                    //return false;
+                });
+
+                function createCookie(name, value, days) {
+                    if (days) {
+                        var date = new Date();
+                        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                        var expires = "; expires=" + date.toGMTString();
+                    } else var expires = "";
+                    document.cookie = name + "=" + value + expires + "; path=/";
+                }
+
+
+
+                function readCookie(name) {
+                    var nameEQ = name + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                    }
+                    return null;
+                }
+
+                function eraseCookie(name) {
+                    createCookie(name, "", -1);
+                }
+
+            });
+        </script>
+    <?php } else {
+    } ?>
 </body>
 
 </html>
