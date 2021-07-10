@@ -72,7 +72,13 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <!--<div class=col style="text-align: right;"><?php //echo $badge 
                                                                 ?></div>-->
                 <?php
-                if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
+                if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
+                ?>
+                    <div class="alert alert-success" role="alert" style="text-align: -webkit-center;">Being on time is a wonderful thing. You have successfully submitted the QT1/2021 question paper.
+                    </div>
+
+                <?php
+                } else if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
                 ?>
                     <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                         <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for question paper submission.

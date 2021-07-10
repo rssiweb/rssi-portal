@@ -133,6 +133,10 @@ WHERE associatenumber='VLKO20016';
 UPDATE myappraisal_sheet1  
 SET appraisaltype = 'Quarterly 1/2021' 
 
+UPDATE rssimyaccount_members
+SET questionflag = 'Y'
+WHERE associatenumber='VLKO20016';
+
 CREATE TABLE Public. "userlog_member" (
   username varchar(255) NOT NULL,
   password varchar(255) NOT NULL,
