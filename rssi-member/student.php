@@ -6,7 +6,7 @@ $user_check = $_SESSION['aid'];
 if (!$_SESSION['aid']) {
 
   header("Location: index.php"); //redirect to the login page to secure the welcome page without login access.  
-} else if ($_SESSION['role'] != 'Admin') {
+} else if ($_SESSION['filterstatus'] != 'Active') {
 
   //header("Location: index.php"); //redirect to the login page to secure the welcome page without login access.
   echo '<script type="text/javascript">';
@@ -95,11 +95,12 @@ $resultArr = pg_fetch_all($result);
       table-layout: fixed;
       width: 100%
     }
+
     @media (min-width:767px) {
-            .left {
-                margin-left: 2%;
-            }
-        }
+      .left {
+        margin-left: 2%;
+      }
+    }
   </style>
 
 </head>
@@ -109,7 +110,14 @@ $resultArr = pg_fetch_all($result);
   <section id="main-content">
     <section class="wrapper main-wrapper row">
       <div class="col-md-12">
-        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+        <div class="row">
+          <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
+            Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+          </div>
+          <div class="col" style="display: inline-block; width:47%; text-align:right">
+            Home / RSSI Student
+          </div>
+        </div>
         <section class="box" style="padding: 2%;">
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
@@ -160,9 +168,14 @@ $resultArr = pg_fetch_all($result);
           <th scope="col" width="20%">Student Details</th>
           <th scope="col" width="8%">Class</th>
           <th scope="col" width="15%">Contact</th>
-          <th scope="col" width="10%">Status</th>
-          <th scope="col" width="7%">Password</th>
-          <th scope="col" width="20%">Subject</th>
+          <th scope="col" width="10%">Status</th>' ?>
+          <?php if ($role == 'Admin') { ?>
+            <?php
+            echo '<th scope="col" width="7%">Password</th>' ?>
+          <?php    } else {
+          } ?>
+          <?php
+          echo '<th scope="col" width="20%">Subject</th>
           <th scope="col">Medium</th>
           <th scope="col">Badge</th>
         </tr>
@@ -177,8 +190,16 @@ $resultArr = pg_fetch_all($result);
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
             <td>' . $array['class'] . '/' . $array['category'] . ' </td>
             <td>' . $array['contact'] . '<br>' . $array['emailaddress'] . '</td>
-            <td>' . $array['profilestatus'] . '<br><br>' . $array['remarks'] . '</td>
-            <td>' . $array['colors'] . '</td>
+            <td>' . $array['profilestatus'] ?>
+
+              <?php if ($role == 'Admin') { ?>
+
+                <?php echo '<br><br>' . $array['remarks'] . '</td>            
+            <td>' . $array['colors'] ?>
+              <?php    } else {
+              } ?>
+            <?php
+              echo '</td> 
             <td>' . $array['nameofthesubjects'] . '<br><br>Attendance -&nbsp;' . $array['attd'] . '<br>' . $array['allocationdate'] . '</td>
             <td>' . $array['medium'] . '</td>
             <td></td>
@@ -188,7 +209,7 @@ $resultArr = pg_fetch_all($result);
           } else if ($id == "" && $category == "") {
           ?>
             <tr>
-              <td colspan="5">Please select Status and Category.</td>
+              <td colspan="5">Please select Filter value.</td>
             </tr>
           <?php
           } else {

@@ -92,10 +92,14 @@ $resultArr = pg_fetch_all($result);
   <section id="main-content">
     <section class="wrapper main-wrapper row">
       <div class="col-md-12">
-        <!--<div class=col style="text-align: right;">
-                    <span class="noticet" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
-                </div>-->
-        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+        <div class="row">
+          <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
+            Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+          </div>
+          <div class="col" style="display: inline-block; width:47%; text-align:right">
+            Home / Medimate Status
+          </div>
+        </div>
         <section class="box" style="padding: 2%;">
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">

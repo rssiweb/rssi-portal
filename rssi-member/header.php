@@ -13,12 +13,12 @@
                 <li class="profile dropdown">
                     <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">2</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit?usp=sharing" target="_blank">Exam Attendance Tracker_QT1/2021
                                 <span class="label label-info">Jul 9, 2021</span>
                             </a>
                         </li>
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting.
                                 <span class="label label-info">Jul 7, 2021</span>
                             </a>
@@ -42,21 +42,23 @@
             } else { ?>
                 <li><a href="#"> <i class="fa fa-bell"></i>
                 </li>
-                <?php  }
-                ?>
+            <?php  }
+            ?>
 
-                <!------------------------------- ADMIN ---------------------------------->
-                <?php if (@$role == 'Admin') {
-                ?>
-                <li class="profile dropdown">
-                    <a href="#"> <i class="fas fa-project-diagram"></i></a>
-                    <ul class="dropdown-menu profile fadeIn" style="right:unset">
+            <!------------------------------- ADMIN ---------------------------------->
+            <li class="profile dropdown">
+                <a href="#"> <i class="fas fa-project-diagram"></i></a>
+                <ul class="dropdown-menu profile fadeIn" style="right:unset">
+
+                    <li style="height: unset;">
+                        <a style="font-size:13px;" href="student.php"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
+                    </li>
+
+                    <?php if (@$role == 'Admin') {
+                    ?>
+
                         <li style="height: unset;">
                             <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;RSSI Volunteer</a>
-                        </li>
-
-                        <li style="height: unset;">
-                            <a style="font-size:13px;" href="student.php"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
                         </li>
 
                         <li style="height: unset;">
@@ -68,12 +70,13 @@
                         <li style="height: unset;">
                             <a style="font-size:13px;" href="medistatus_admin.php"><i class="fas fa-hand-holding-medical"></i>&nbsp;Medistatus</a>
                         </li>
-                    </ul>
-                </li>
-            <?php
-                } else {
-                }
-            ?>
+                    <?php
+                    } else {
+                    }
+                    ?><li></li>
+                </ul>
+            </li>
+
 
         </ul>
         <!--<script>
