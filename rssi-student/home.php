@@ -128,7 +128,7 @@ include("student_data.php");
             });
         </script>
         <script>
-            const scriptURL = 'https://script.google.com/macros/s/AKfycby2Ok3NM5WqWbv9cuF36Vx3ueboXsbT4PPiqzK43Cdz0o-OnGM/exec'
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbyiOP3O__HFeipBtF5EFnv1fID-VTMbnM8yt64P7qBtHmHgvi1R/exec'
             const form = document.forms['submit-to-google-sheet']
 
             form.addEventListener('submit', e => {
