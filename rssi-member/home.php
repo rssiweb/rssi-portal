@@ -424,7 +424,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     $('.pop-up3').delay(10).fadeOut(700);
                     e.stopPropagation();
 
-                    createCookie("googlechat", "4 days", 4);
+                    createCookie("googlechat", "2 days", 2);
                     //return false;
                 });
 
