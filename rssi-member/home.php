@@ -381,7 +381,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <input type="hidden" class="form-control" name="membername3" type="text" value="<?php echo $fullname ?>" readonly>
                 <input type="hidden" class="form-control" name="memberid3" type="text" value="<?php echo $associatenumber ?>" readonly>
                 <input type="hidden" type="text" name="status3" id="count3" value="" readonly required>
-                <div style="padding-left:5%;padding-right:5%"><p>Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Did you know that from August 1st all official communication will be in Google Chat? If you haven't joined Google Chatroom yet, join now <span class="noticet"><a href="https://mail.google.com/chat/u/0/#chat/space/AAAA3h1BiX4" target="_blank">RSSI Faculty</a></span></p></div>
+                <div style="padding-left:5%;padding-right:5%"><p>Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Did you know that from August 1st all official communication will be in Google Chat? If you haven't joined the Google Chatroom yet, please join the <span class="noticet"><a href="https://mail.google.com/chat/u/0/#chat/space/AAAA3h1BiX4" target="_blank">RSSI Faculty</a></span> group now.</p></div>
 
                 <button type="submit" id="join" class="close-button3 btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
                     <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I have joined.</button>
