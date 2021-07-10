@@ -276,18 +276,18 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
     ?>
 
-        <div id="thoverX" class="thover pop-up"></div>
-        <div id="tpopupX" class="tpopup pop-up">
-            <form name="submit-to-google-sheet" action="" method="POST">
+        <div id="thoverX" class="thover pop-up2"></div>
+        <div id="tpopupX" class="tpopup pop-up2">
+            <form name="submit-to-google-sheet2" action="" method="POST">
                 <br>
-                <input type="hidden" class="form-control" name="membername1" type="text" value="<?php echo $fullname ?>" readonly>
-                <input type="hidden" class="form-control" name="memberid1" type="text" value="<?php echo $associatenumber ?>" readonly>
-                <input type="hidden" type="text" name="status1" id="count1" value="" readonly required>
+                <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $fullname ?>" readonly>
+                <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $associatenumber ?>" readonly>
+                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
                 <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Do you know how to submit QT1/2021 question paper? For more details please visit the <span class="noticet"><a href="exam.php" target="_blank">Examination Portal.</a></span></p><br>
                 <!--<p>Yes, I know the process and I am working on it right now. I will share the question paper as per the stipulated time.</p>-->
-                <button type="submit" id="yes" class="close-button btn btn-success" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
+                <button type="submit" id="yes" class="close-button2 btn btn-success" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
                     <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I know the process. I will share the question paper as per the stipulated time.</button><br><br>
-                <button type="submit" id="no" class="close-button btn btn-default" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
+                <button type="submit" id="no" class="close-button2 btn btn-default" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
                     <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;I have not been assigned any question paper for this quarter.
                 </button>
                 <br><br>
@@ -295,16 +295,16 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         </div>
         <script>
             $('#yes').click(function() {
-                $('#count1').val('Agree');
+                $('#count2').val('Agree');
             });
 
             $('#no').click(function() {
-                $('#count1').val('NA');
+                $('#count2').val('NA');
             });
         </script>
         <script>
             const scriptURL = 'https://script.google.com/macros/s/AKfycby2Ok3NM5WqWbv9cuF36Vx3ueboXsbT4PPiqzK43Cdz0o-OnGM/exec'
-            const form = document.forms['submit-to-google-sheet']
+            const form = document.forms['submit-to-google-sheet2']
 
             form.addEventListener('submit', e => {
                 e.preventDefault()
@@ -325,12 +325,12 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             $(document).ready(function() {
 
                 if (Boolean(readCookie('name1'))) {
-                    $('.pop-up').hide();
-                    $('.pop-up').fadeOut(1000);
+                    $('.pop-up2').hide();
+                    $('.pop-up2').fadeOut(1000);
                 }
-                $('.close-button').click(function(e) {
+                $('.close-button2').click(function(e) {
 
-                    $('.pop-up').delay(10).fadeOut(700);
+                    $('.pop-up2').delay(10).fadeOut(700);
                     e.stopPropagation();
 
                     createCookie("name1", "4 days", 4);
