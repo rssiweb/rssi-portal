@@ -5,7 +5,9 @@ $user_check = $_SESSION['sid'];
 
 if (!$_SESSION['sid']) {
 
-    header("Location: index.php"); //redirect to the login page to secure the welcome page without login access.  
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: index.php");
+    exit;  
 }
 ?>
 <?php

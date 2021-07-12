@@ -105,9 +105,17 @@ if (isset($_POST['login'])) {
 
     $run = pg_query($con, $check_user);
 
-    if (pg_num_rows($run)) {
+    //if (pg_num_rows($run)) {
 
-        header("Location: ../rssi-member/home.php");
+    // Do the login stuff...
+
+    if (pg_num_rows($run)) {
+       if (isset($_SESSION["login_redirect"])) {
+            header("Location: " . $_SESSION["login_redirect"]);
+           unset($_SESSION["login_redirect"]);
+        } else {
+           header("Location: ../rssi-member/home.php");
+       }
 
         $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
 
@@ -118,12 +126,13 @@ if (isset($_POST['login'])) {
         $_SESSION['role'] = $role;
         $_SESSION['filterstatus'] = $filterstatus;
         $uip = $_SERVER['REMOTE_ADDR'];
+        //$login_redirect=$_SESSION["login_redirect"];
 
         $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
         $result = pg_query($con, $query);
 
         //echo "<script>alert('";  
-        //echo $result;
+        //echo $login_redirect;
         //echo "')</script>";
 
     } else { ?>

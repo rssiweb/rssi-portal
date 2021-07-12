@@ -102,7 +102,12 @@ if (isset($_POST['login'])) {
     $run = pg_query($con, $check_user);
 
     if (pg_num_rows($run)) {
-        header("Location: ../rssi-student/home.php");
+        if (isset($_SESSION["login_redirect"])) {
+             header("Location: " . $_SESSION["login_redirect"]);
+            unset($_SESSION["login_redirect"]);
+         } else {
+            header("Location: ../rssi-student/home.php");
+        }
 
         $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
 
