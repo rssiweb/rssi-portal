@@ -4,10 +4,11 @@
 
         <ul class="pull-left info-menu  user-notify" id="menu">
             <button id="menu_icon"><i class="fa fa-bars" aria-hidden="true"></i></button>
-            <li><a href="#"> <i class="fa fa-envelope"></i>
+            <li>
+                <a href="#"> <i class="fa fa-envelope"></i>
                     <!--<span class="badge">1</span>-->
-                </a></li>
-
+                </a>
+            </li>
             <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
@@ -38,54 +39,48 @@
                         <li></li>
                     </ul>
                 </li>
-            <?php
-            } else { ?>
-                <li><a href="#"> <i class="fa fa-bell"></i>
+
+                <!------------------------------- ADMIN ---------------------------------->
+                <li class="profile dropdown">
+                    <a href="#"> <i class="fas fa-project-diagram"></i></a>
+                    <ul class="dropdown-menu profile fadeIn" style="right:unset">
+
+                        <li style="height: unset;">
+                            <a style="font-size:13px;" href="student.php"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
+                        </li>
+
+                        <?php if (@$role == 'Admin') {
+                        ?>
+
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;RSSI Volunteer</a>
+                            </li>
+
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="userlog.php"><i class="fas fa-server"></i>&nbsp;User log</a>
+                            </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="library_status_admin.php"><i class="fas fa-book-reader"></i>&nbsp;Library Status</a>
+                            </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="medistatus_admin.php"><i class="fas fa-hand-holding-medical"></i>&nbsp;Medistatus</a>
+                            </li>
+                        <?php
+                        } else {
+                        }
+                        ?>
+                        <li></li>
+                    </ul>
+                </li>
+            <?php } else { ?>
+
+                <li>
+                    <a href="#"> <i class="fa fa-bell"></i>
+                    <a href="#"> <i class="fas fa-project-diagram"></i>
                 </li>
             <?php  }
             ?>
-
-            <!------------------------------- ADMIN ---------------------------------->
-            <li class="profile dropdown">
-                <a href="#"> <i class="fas fa-project-diagram"></i></a>
-                <ul class="dropdown-menu profile fadeIn" style="right:unset">
-
-                    <li style="height: unset;">
-                        <a style="font-size:13px;" href="student.php"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
-                    </li>
-
-                    <?php if (@$role == 'Admin') {
-                    ?>
-
-                        <li style="height: unset;">
-                            <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;RSSI Volunteer</a>
-                        </li>
-
-                        <li style="height: unset;">
-                            <a style="font-size:13px;" href="userlog.php"><i class="fas fa-server"></i>&nbsp;User log</a>
-                        </li>
-                        <li style="height: unset;">
-                            <a style="font-size:13px;" href="library_status_admin.php"><i class="fas fa-book-reader"></i>&nbsp;Library Status</a>
-                        </li>
-                        <li style="height: unset;">
-                            <a style="font-size:13px;" href="medistatus_admin.php"><i class="fas fa-hand-holding-medical"></i>&nbsp;Medistatus</a>
-                        </li>
-                    <?php
-                    } else {
-                    }
-                    ?><li></li>
-                </ul>
-            </li>
-
-
         </ul>
-        <!--<script>
-            $('.close1').click(function(e) {
-
-                $('.badge').delay(10).fadeOut(700);
-                e.stopPropagation();
-            });
-        </script>-->
 
         <ul class="pull-right info-menu user-info">
             <li class="profile dropdown">
