@@ -57,6 +57,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $bookststus = $row[49];
         $status = $row[50];
         $remarks1 = $row[51];
+        $badge = $row[52];
 
 
 
