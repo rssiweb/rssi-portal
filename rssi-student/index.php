@@ -112,9 +112,11 @@ if (isset($_POST['login'])) {
         $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
 
         $row = pg_fetch_row($run);
-        $filterstatus= $row[27];
+        $filterstatus= $row[30];
+        $feesflag = $row[46];
 
        $_SESSION['filterstatus'] = $filterstatus;
+       $_SESSION['feesflag'] = $feesflag;
        $uip=$_SERVER['REMOTE_ADDR'];
 
        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";

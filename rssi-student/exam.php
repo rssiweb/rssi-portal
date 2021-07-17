@@ -7,7 +7,14 @@ if (!$_SESSION['sid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
+} else if ($_SESSION['feesflag'] == 'd') {
+
+    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+    echo '<script type="text/javascript">';
+    echo 'alert("Access Denied. You are not authorized to access this web page.");';
+    echo 'window.location.href = "profile.php";';
+    echo '</script>';
 }
 ?>
 
