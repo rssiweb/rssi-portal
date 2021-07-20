@@ -71,10 +71,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <!--<div class=col style="text-align: right;"><?php //echo $badge 
-                                                                ?></div>-->
-                <!--**************QUESTION PAPER SUBMISSION**************-->
-                <?php
+                <div class=col style="text-align: right;"><?php echo $badge ?></div>
+                <!--**************QUESTION PAPER SUBMISSION TIMER**************-->
+               <!--<?php
                 if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
                 ?>
                     <div class="alert alert-success" role="alert" style="text-align: -webkit-center;">Being on time is a wonderful thing. You have successfully submitted the QT1/2021 question paper.
@@ -121,7 +120,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <?php
                 } else {
                 }
-                ?>
+                ?>-->
                 <!--**************QUESTION PAPER SUBMISSION END**************-->
                 <section class="box" style="padding: 2%;">
 
@@ -174,7 +173,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <div class="clearfix"></div>
         </section>
     </section>
-    <!--**************User confirmation**************-->
+    <!--**************VACCINATION CONFIRMATION**************-->
     <!--<?php
     $word = "Not vaccinated";
     if ((@$vaccination == null || strpos(@$vaccination, $word) !== false) && $filterstatus == 'Active') {
@@ -273,8 +272,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     } else {
     ?>
     <?php } ?>-->
-    <!--**************User confirmation2**************
-    <?php
+    <!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
+    <!--<?php
     if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
     ?>
 
@@ -371,8 +370,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     ?>
     <?php } else {
     } ?>-->
-    <!--**************User confirmation2**************-->
-    <?php
+    <!--**************JOIN GOOGLE CHAT CONFIRMATION**************-->
+    <!--<?php
     if (@$googlechat == null && $filterstatus == 'Active') {
     ?>
 
@@ -459,7 +458,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             });
         </script>
     <?php } else {
-    } ?>
+    } ?>-->
     <style>
         .x-btn:focus,
         .button:focus,
