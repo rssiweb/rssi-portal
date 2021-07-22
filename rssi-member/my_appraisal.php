@@ -16,7 +16,7 @@ include("member_data.php");
 <?php
 include("database.php");
 @$id = $_POST['get_id'];
-$view_users_query = "select * from myappraisal_sheet1 WHERE associatenumber='$user_check' AND appraisaltype='$id'"; //select query for viewing users.  
+$view_users_query = "select * from myappraisal_myappraisal WHERE associatenumber='$user_check' AND appraisaltype='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
