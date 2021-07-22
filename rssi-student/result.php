@@ -21,12 +21,12 @@ include("student_data.php");
   
         while($row=pg_fetch_array($run))//while look to fetch the result and store in a array $row.  
         { 
-            $name=$row[0];
-            $studentid=$row[1];
-            $category=$row[2];
-            $class=$row[3];
-            $dob=$row[4];
-            $filename=$row[5];
+            $filename=$row[0];
+            $name=$row[1];
+            $studentid=$row[2];
+            $category=$row[3];
+            $class=$row[4];
+            $dob=$row[5];
             $result=$row[6];
             $examname=$row[7];
             $year=$row[8];

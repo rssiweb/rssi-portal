@@ -21,9 +21,9 @@ $run = pg_query($con, $view_users_query); //here run the sql query.
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
-    $associatenumber = $row[0];
-    $fullname = $row[1];
-    $appraisaltype = $row[2];
+    $appraisaltype = $row[0];
+    $associatenumber = $row[1];
+    $fullname = $row[2];
     $effectivestartdate = $row[3];
     $effectiveenddate = $row[4];
     $role = $row[5];
