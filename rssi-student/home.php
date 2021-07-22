@@ -205,7 +205,7 @@ include("student_data.php");
     ?>
     <?php } ?>-->
     <!--**************User confirmation2**************-->
-    <?php
+    <!--<?php
     if ($filterstatus == 'Active') {
     ?>
 
@@ -292,7 +292,7 @@ include("student_data.php");
             });
         </script>
     <?php } else {
-    } ?>
+    } ?>-->
 </body>
 
 </html>
