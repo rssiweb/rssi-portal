@@ -238,8 +238,10 @@ include("student_data.php");
                                 <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
                                 <select name="name1" id="name1" class="notranslate">
                                     <option value="--" selected>ALL</option>
-                                    <option>Hindi</option>
                                     <option>English</option>
+                                    <option>Hindi</option>
+                                    <option>Bengali</option>
+                                    <option>Sanskrit</option>
                                     <option>Physics</option>
                                     <option>Chemistry</option>
                                     <option>Mathematics</option>
@@ -247,8 +249,9 @@ include("student_data.php");
                                     <option>Science</option>
                                     <option>Social Science</option>
                                     <option>Computer</option>
-                                    <option>GK</option>
+                                    <option>GK/Current Affairs</option>
                                     <option>Accountancy</option>
+                                    <option>Business Studies</option>
                                     <option>Other</option>
                                 </select>
                             </div>
@@ -408,8 +411,8 @@ My Book</button></a>
                     if (records.length == 0) {
                         document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
                     } else {
-                        var order = ["Hindi", "English", "Physics", "Chemistry", "Mathematics", "Biology", "Science", "Social Science",
-                            "Computer", "GK", "Accountancy", "Other"
+                        var order = ["English", "Hindi", "Bengali", "Sanskrit", "Physics", "Chemistry", "Mathematics", "Biology",
+                            "Science", "Social Science", "Computer", "GK/Current Affairs", "Accountancy", "Business Studies", "Other"
                         ]
                         // var order = ["1/CT01", "1/CT02", "QT1", "2/CT01", "2/CT02", "QT2", "3/CT01", "3/CT02", "QT3"]
                         order.forEach(sub => {
