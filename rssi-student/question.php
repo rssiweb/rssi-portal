@@ -246,7 +246,7 @@ include("student_data.php");
                             </div>
 
                             <div class="col2">
-                                <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
+                                <button type="button1" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
                             </div>
 
@@ -304,6 +304,25 @@ include("student_data.php");
     <!-- =========================
      SCRIPTS   
 ============================== -->
+<script>
+        // Initiate an Ajax request on button click
+        $(document).on("click", "button1", function() {
+            // Adding timestamp to set cache false
+            $.get("question.php?v=" + $.now(), function(data) {
+                $("body").html(data);
+            });
+        });
+
+        // Add remove loading class on body element depending on Ajax request status
+        $(document).on({
+            ajaxStart: function() {
+                $("body").addClass("loading");
+            },
+            ajaxStop: function() {
+                $("body").removeClass("loading");
+            }
+        });
+    </script>
     <script type="text/javascript">
         var loaddata = function() {
             var category = document.getElementById('name').value
@@ -429,6 +448,7 @@ include("student_data.php");
         });
     </script>
     <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+    <div class="overlay"></div>
 </body>
 
 </html>

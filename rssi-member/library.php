@@ -346,7 +346,7 @@ add</button></a>';
         // Initiate an Ajax request on button click
         $(document).on("click", "button1", function() {
             // Adding timestamp to set cache false
-            $.get("viso.php?v=" + $.now(), function(data) {
+            $.get("libray.php?v=" + $.now(), function(data) {
                 $("body").html(data);
             });
         });
