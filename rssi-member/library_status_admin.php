@@ -28,15 +28,15 @@ include("database.php");
 @$status = $_POST['get_status'];
 
 if ($id == null && $status == 'ALL') {
-    $result = pg_query($con, "SELECT * FROM bookdata_book order by yourid asc,orderdate");
+    $result = pg_query($con, "SELECT * FROM bookdata_book order by timestamp desc");
 } else if ($id == null && $status != 'ALL') {
-    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE bookstatus='$status' order by yourid asc,orderdate");
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE bookstatus='$status' order by timestamp desc");
 } else if ($id > 0 && $status != 'ALL') {
-    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' AND bookstatus='$status' order by yourid asc,orderdate");
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' AND bookstatus='$status' order by timestamp desc");
 } else if ($id > 0 && $status == 'ALL') {
-    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' order by yourid asc,orderdate");
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' order by timestamp desc");
 } else {
-    $result = pg_query($con, "SELECT * FROM bookdata_book order by yourid asc,orderdate");
+    $result = pg_query($con, "SELECT * FROM bookdata_book order by timestamp desc");
 }
 
 if (!$result) {
@@ -135,7 +135,7 @@ $resultArr = pg_fetch_all($result);
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Borrowers ID</th>
+                                <th scope="col">Borrowers ID/F Name</th>
                                 <th scope="col">Order ID</th>
                                 <th scope="col">Order Date</th>
                                 <th scope="col">Book ID</th>
@@ -151,7 +151,7 @@ $resultArr = pg_fetch_all($result);
                     foreach ($resultArr as $array) {
                         echo '
                             <tr>
-                                <td style="line-height: 1.7;">' . $array['yourid'] . '</td>
+                                <td style="line-height: 1.7;">' . $array['yourid'] . '/'. strtok($array['yourname'],' ') .'</td>
                                 <td style="line-height: 1.7;">' . $array['orderid'] . '</td>
                                 <td style="line-height: 1.7;">' . $array['orderdate'] . '</td>
                                 <td style="line-height: 1.7;">' . $array['bookregno'] . '</td>
