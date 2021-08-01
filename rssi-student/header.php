@@ -10,8 +10,13 @@
                 <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">2</span></a>
-                    <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
+                    <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">1</span></a>
+                    <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; overflow-y: auto;">
+                    <li style="height: unset;">
+                            <a class="notification" href="https://drive.google.com/file/d/1GnFHc-WzcmKmLvXo3I1FOWZvio6ETDbX/view" target="_blank">RSSI Library User Guide
+                                <span class="label label-info">Aug 1, 2021</span>
+                            </a>
+                        </li>
                     <li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit?usp=sharing" target="_blank">Exam Attendance Tracker_QT1/2021
                                 <span class="label label-info">Jul 9, 2021</span>

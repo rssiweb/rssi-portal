@@ -13,7 +13,12 @@
             ?>
                 <li class="profile dropdown">
                     <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">1</span></a>
-                    <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;">
+                    <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; overflow-y: auto;">
+                    <li style="height: unset;">
+                            <a class="notification" href="https://drive.google.com/file/d/1GnFHc-WzcmKmLvXo3I1FOWZvio6ETDbX/view" target="_blank">RSSI Library User Guide
+                                <span class="label label-info">Aug 1, 2021</span>
+                            </a>
+                        </li>
                     <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/13cH8Rd4aPYHPe0ltzQzQDNFAH1GRTruY/view" target="_blank">QT1-2021_Examiner User Guide
                                 <span class="label label-info">Jul 20, 2021</span>

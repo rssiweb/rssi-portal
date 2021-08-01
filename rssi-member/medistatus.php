@@ -7,7 +7,7 @@ if (!$_SESSION['aid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 }
 ?>
 
@@ -90,6 +90,75 @@ $resultArr = pg_fetch_all($result);
             }
         }
     </style>
+    <!-- TEXT CLICK POPUP CSS and SCRIPT-->
+    <!--<style>
+        /* Popup container - can be anything you want */
+        .popup {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* The actual popup */
+        .popup .popuptext {
+            visibility: hidden;
+            width: 160px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -80px;
+        }
+
+        /* Popup arrow */
+        .popup .popuptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+
+        /* Toggle this class - hide and show the popup */
+        .popup .show {
+            visibility: visible;
+            -webkit-animation: fadeIn 1s;
+            animation: fadeIn 1s;
+        }
+
+        /* Add animation (fade in the popup) */
+        @-webkit-keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>-->
 </head>
 
 <!-- =========================
@@ -110,11 +179,11 @@ $resultArr = pg_fetch_all($result);
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
                                 <select name="get_id" class="form-control" style="width:max-content;" placeholder="Select policy year" required>
-                                <?php if ($status ==null) { ?>
+                                    <?php if ($id == null) { ?>
                                         <option value="" hidden selected>Select policy year</option>
                                     <?php
                                     } else { ?>
-                                        <option hidden selected><?php echo $status ?></option>
+                                        <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
                                     <option>FY 2021-2022</option>
@@ -130,28 +199,35 @@ $resultArr = pg_fetch_all($result);
                     <?php echo '
                     <table class="table">
                         <thead>
-                            <tr>
-                                <th scope="col">Claim ID</th>
-                                <th scope="col">Submission Date</th>
-                                <th scope="col">Beneficiary</th>
-                                <th scope="col">Account Number</th>
-                                <th scope="col">Claimed Amount (&#8377;)</th>
-                                <th scope="col">Approved Amount (&#8377;)</th>
-                                <th scope="col">Current Claim Status</th>
-                            </tr>
+                        <tr>    
+                        <th scope="col">Claim ID</th>
+                        <th scope="col">Submission Date</th>
+                        <th scope="col">Beneficiary</th>
+                        <th scope="col">Account Number</th>
+                        <th scope="col">Claimed Amount (&#8377;)</th>
+                        <th scope="col">Approved Amount (&#8377;)</th>
+                        <th scope="col">Current Claim Status</th>
+                        <th scope="col">Closed on</th>
+                        <th scope="col">Remarks</th>
+                    </tr>
                         </thead>' ?>
                     <?php if ($resultArr != null) {
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
                             echo '
-                                <tr>
-                                    <td>' . $array['claimid'] . '</td>
-                                    <td>' . $array['timestamp'] . '</td>
+                            <tr>
+                                <!--<td><div class="popup" onclick="myFunction()">' . $array['claimid'] . '
+                                    <span class="popuptext" id="myPopup">' . $array['billnumber'] . '</span>
+                                </div></td>-->
+                                  <td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>
+                                    <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td>' . $array['selectbeneficiary'] . '</td>
                                     <td>' . $array['accountnumber'] . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approved'] . '</td>
                                     <td>' . $array['currentclaimstatus'] . '</td>
+                                    <td>' . $array['closedon'] . '</td>
+                                    <td>' . $array['mediremarks'] . '</td>
                                     </tr>';
                         }
                     } else if ($id == null) {
@@ -197,6 +273,14 @@ $resultArr = pg_fetch_all($result);
             });
         });
     </script>
+    <!-- TEXT CLICK POPUP CSS and SCRIPT-->
+    <!--<script>
+        // When the user clicks on div, open the popup
+        function myFunction() {
+            var popup = document.getElementById("myPopup");
+            popup.classList.toggle("show");
+        }
+    </script>-->
     <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>
 

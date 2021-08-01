@@ -6,13 +6,13 @@ $user_check = $_SESSION['aid'];
 if (!$_SESSION['aid']) {
 
   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;  
+  header("Location: index.php");
+  exit;
 } else if ($_SESSION['role'] != 'Admin') {
 
   //$_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
+  header("Location: index.php");
+  exit;
   echo '<script type="text/javascript">';
   echo 'alert("Access Denied. You are not authorized to access this web page.");';
   echo 'window.location.href = "home.php";';
@@ -28,15 +28,15 @@ include("database.php");
 @$status = $_POST['get_id'];
 
 if ($id == null && $status == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate order by id asc,timestamp");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate order by timestamp desc");
 } else if ($id == null && $status != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE financialyear='$status' order by id asc,timestamp");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE financialyear='$status' order by timestamp desc");
 } else if ($id > 0 && $status != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE id='$id' AND financialyear='$status' order by id asc,timestamp");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE id='$id' AND financialyear='$status' order by timestamp desc");
 } else if ($id > 0 && $status == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE id='$id' order by id asc,timestamp");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE id='$id' order by timestamp desc");
 } else {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate order by id asc,timestamp");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate order by timestamp desc");
 }
 
 if (!$result) {
@@ -132,14 +132,16 @@ $resultArr = pg_fetch_all($result);
                     <table class="table">
                         <thead>
                             <tr>
-                            <th scope="col">Associate number</th>    
-                            <th scope="col">Claim ID</th>
+                                <th scope="col">Associate number/F Name</th>    
+                                <th scope="col">Claim ID</th>
                                 <th scope="col">Submission Date</th>
                                 <th scope="col">Beneficiary</th>
                                 <th scope="col">Account Number</th>
                                 <th scope="col">Claimed Amount (&#8377;)</th>
                                 <th scope="col">Approved Amount (&#8377;)</th>
                                 <th scope="col">Current Claim Status</th>
+                                <th scope="col">Closed on</th>
+                                <th scope="col">Remarks</th>
                             </tr>
                         </thead>' ?>
           <?php if ($resultArr != null) {
@@ -147,14 +149,16 @@ $resultArr = pg_fetch_all($result);
             foreach ($resultArr as $array) {
               echo '
                                 <tr>
-                                <td>' . $array['id'] . '</td>    
-                                <td>' . $array['claimid'] . '</td>
+                                <td>' . $array['id'] . '/' . strtok($array['name'], ' ') . '</td>   
+                                <td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>
                                     <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td>' . $array['selectbeneficiary'] . '</td>
                                     <td>' . $array['accountnumber'] . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approved'] . '</td>
                                     <td>' . $array['currentclaimstatus'] . '</td>
+                                    <td>' . $array['closedon'] . '</td>
+                                    <td>' . $array['mediremarks'] . '</td>
                                     </tr>';
             }
           } else if ($status == null) {
