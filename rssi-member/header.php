@@ -14,6 +14,12 @@
                 <li class="profile dropdown">
                     <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><span class="badge">1</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; overflow-y: auto;">
+                    
+                    <li style="height: unset;">
+                            <a class="notification" href="https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view" target="_blank">Responsibilities of the Teaching Intern
+                                <span class="label label-info">Aug 2, 2021</span>
+                            </a>
+                        </li>
                     <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1yDOMpaOaHatAaDBjRyuoaOpuDGCf9h9S/view" target="_blank">How to Accept a Google Meeting Invite
                                 <span class="label label-info">Aug 2, 2021</span>
@@ -25,7 +31,7 @@
                             </a>
                         </li>
                     <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/13cH8Rd4aPYHPe0ltzQzQDNFAH1GRTruY/view" target="_blank">QT1-2021_Examiner User Guide
+                            <a class="notification" href="https://drive.google.com/file/d/1YOhIKnOe1Ygt7wFS-Jh3Fe8Fm4qUKiXG/view?usp=sharing" target="_blank">Examiner & Reviewer User Guide
                                 <span class="label label-info">Jul 20, 2021</span>
                             </a>
                         </li>
@@ -35,13 +41,13 @@
                             </a>
                         </li>-->
                         <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting.
+                            <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting
                                 <span class="label label-info">Jul 7, 2021</span>
                             </a>
                         </li>
 
                         <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator.
+                            <a class="notification" href="https://drive.google.com/file/d/1no7KiM1Kqt9_elGZgNCzF2HAW8um85Un/view" target="_blank">Instructions to invigilators during examination
                                 <span class="label label-info">Jul 6, 2021</span>
                             </a>
                         </li>

@@ -28,12 +28,12 @@
                             </a>
                         </li>-->
                     <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting.
+                            <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting
                                 <span class="label label-info">Jul 7, 2021</span>
                             </a>
                         </li>
                         <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Instructions to students during examination.
+                            <a class="notification" href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Instructions to students during examination
                                 <span class="label label-info">Jul 7, 2021</span>
                             </a>
                         </li>
