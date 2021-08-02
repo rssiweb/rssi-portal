@@ -132,14 +132,14 @@ $resultArr = pg_fetch_all($result);
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Associate number/F Name</th>    
-                                <th scope="col">Claim ID</th>
-                                <th scope="col">Submission Date</th>
+                            <th scope="col">Claim ID</th>
+                            <th scope="col">Registered On</th>    
+                            <th scope="col">ID/F Name</th>    
                                 <th scope="col">Beneficiary</th>
                                 <th scope="col">Account Number</th>
-                                <th scope="col">Claimed Amount (&#8377;)</th>
-                                <th scope="col">Approved Amount (&#8377;)</th>
-                                <th scope="col">Current Claim Status</th>
+                                <th scope="col">Claimed(&#8377;)</th>
+                                <th scope="col">Approved(&#8377;)</th>
+                                <th scope="col">Claim Status</th>
                                 <th scope="col">Closed on</th>
                                 <th scope="col">Remarks</th>
                             </tr>
@@ -149,11 +149,12 @@ $resultArr = pg_fetch_all($result);
             foreach ($resultArr as $array) {
               echo '
                                 <tr>
-                                <td>' . $array['id'] . '/' . strtok($array['name'], ' ') . '</td>   
                                 <td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>
-                                    <td>' . substr($array['timestamp'], 0, 10) . '</td>
+                                <td>' . substr($array['timestamp'], 0, 10) . '</td>
+                                <td>' . $array['id'] . '<br>' . strtok($array['name'],' ') . '</td>   
+                                    
                                     <td>' . $array['selectbeneficiary'] . '</td>
-                                    <td>' . $array['accountnumber'] . '</td>
+                                    <td>' . $array['accountnumber'] . '<br>'. $array['bankname'] .'/'.$array['ifsccode'].'</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approved'] . '</td>
                                     <td>' . $array['currentclaimstatus'] . '</td>
