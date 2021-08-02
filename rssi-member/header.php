@@ -12,7 +12,7 @@
             <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#" class="close1"> <i class="fa fa-bell"></i><span class="badge">1</span></a>
+                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><span class="badge">1</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; overflow-y: auto;">
                     <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1yDOMpaOaHatAaDBjRyuoaOpuDGCf9h9S/view" target="_blank">How to Accept a Google Meeting Invite
@@ -29,11 +29,11 @@
                                 <span class="label label-info">Jul 20, 2021</span>
                             </a>
                         </li>
-                        <li style="height: unset;">
+                        <!--<li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit?usp=sharing" target="_blank">Exam Attendance Tracker_QT1/2021
                                 <span class="label label-info">Jul 9, 2021</span>
                             </a>
-                        </li>
+                        </li>-->
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting.
                                 <span class="label label-info">Jul 7, 2021</span>
@@ -46,11 +46,11 @@
                             </a>
                         </li>
 
-                        <li style="height: unset;">
+                        <!--<li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1RR5MaWwSpogiRWjRK-REh-hXKfAbvttm/view" target="_blank">Invigilation Duty List for QT1/2021.
                                 <span class="label label-info">Jul 3, 2021</span>
                             </a>
-                        </li>
+                        </li>-->
                         <li></li>
                     </ul>
                 </li>
