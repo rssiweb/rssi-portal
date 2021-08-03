@@ -14,7 +14,16 @@ if (!$_SESSION['aid']) {
 <?php
 include("member_data.php");
 include("database.php");
-$result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc"); //select query for viewing users.  
+@$id = $_POST['get_id'];
+if ($id == null) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
+} else if ($id == 'ALL') {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
+} else if ($id > 0 && $id != 'ALL') {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timeformat desc");
+} else {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
+}
 
 if (!$result) {
     echo "An error occurred.\n";
@@ -65,7 +74,7 @@ $resultArr = pg_fetch_all($result);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
-                        FY 2021-2022
+                    Academic year: 2021-2022
                         <!--<br>Opening balance is the balance carried forward from previous credit cycle and refers to the leave till the allocation end date.-->
                     </div>
                 </div>
@@ -85,12 +94,12 @@ $resultArr = pg_fetch_all($result);
                         <tbody>
                             <tr>
                                 <td style="line-height: 2;">Sick Leave - <?php echo (int)$sl ?><br>Casual Leave - <?php echo (int)$cl ?></td>
-                                <td style="line-height: 2;"><?php echo $sltaken + $cltaken +$othtaken +$adjustedleave ?>
+                                <td style="line-height: 2;"><?php echo $sltaken + $cltaken + $othtaken + $adjustedleave ?>
                                 </td>
                                 <td style="line-height: 2;"><?php echo $adjustedleave ?></td>
                                 <td style="line-height: 2;">Sick Leave - <?php echo $slbal ?>
-                                <br>Casual Leave - <?php echo $clbal ?> 
-                                <!--<br>Other Leave - <?php echo $elbal ?></td>-->
+                                    <br>Casual Leave - <?php echo $clbal ?>
+                                    <!--<br>Other Leave - <?php echo $elbal ?></td>-->
                                 <td style="line-height: 2;">
                                     <?php if (@$filterstatus == 'Active') {
                                     ?>
@@ -105,8 +114,32 @@ $resultArr = pg_fetch_all($result);
                         </tbody>
                     </table>
                     <hr>
-
+                    Leave Details<br><br>
+                    <form action="" method="POST">
+                        <div class="form-group" style="display: inline-block;">
+                            <div class="col2" style="display: inline-block;">
+                                <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                                    <?php if ($id == null) { ?>
+                                        <option value="" disabled selected hidden>Select Year</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $id ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>2021</option>
+                                    <option>2020</option>
+                                    <option>ALL</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col2 left" style="display: inline-block;">
+                            <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
+                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                        </div>
+                    </form>
+                    <div class="col" style="display: inline-block; width:99%; text-align:right">
                     Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                    </div>
 
                     <?php echo '
                        <table class="table">
