@@ -114,7 +114,7 @@ $resultArr = pg_fetch_all($result);
                         </tbody>
                     </table>
                     <hr>
-                    Leave Details<br><br>
+                    <b><span class="underline">Leave Details</span></b><br><br>
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
@@ -153,7 +153,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Type of Leave</th>
                                 <th scope="col">Certificate(s)</th>
                                 <th scope="col">Status</th>
-                                <th scope="col">Comment</th>
+                                <th scope="col">HR remarks</th>
                             </tr>
                         </thead>
                         <tbody>';
