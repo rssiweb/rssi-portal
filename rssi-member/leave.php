@@ -13,6 +13,15 @@ if (!$_SESSION['aid']) {
 
 <?php
 include("member_data.php");
+include("database.php");
+$result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc"); //select query for viewing users.  
+
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+$resultArr = pg_fetch_all($result);
 ?>
 
 <!DOCTYPE html>
@@ -54,6 +63,12 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
+                <div class="row">
+                    <div class="col" style="display: inline-block; width:99%; text-align:right">
+                        Current Allocation - <?php echo $allocationdate ?>
+                        <!--<br>Opening balance is the balance carried forward from previous credit cycle and refers to the leave till the allocation end date.-->
+                    </div>
+                </div>
 
                 <section class="box" style="padding: 2%;">
 
@@ -61,16 +76,21 @@ include("member_data.php");
                         <thead>
                             <tr>
                                 <th scope="col">Opening Leave Balance</th>
-                                <th scope="col">Leaves Approved</th>
+                                <th scope="col">Leave Taken</th>
+                                <th scope="col">Leave Adjusted<br>(Extra Class taken)</th>
                                 <th scope="col">Leave Balance</th>
                                 <th scope="col">Apply Leave</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;">Casual Leave - <?php echo $cl ?> <br>Sick Leave - <?php echo $sl ?> <br>Other Leave - </td>
-                                <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php echo $sltaken ?> <br>Other Leave - <?php echo $othtaken ?></td>
-                                <td style="line-height: 2;">Casual Leave - <?php echo $clbal ?> <br>Sick Leave - <?php echo $slbal ?> <br>Other Leave - <?php echo $elbal ?></td>
+                                <td style="line-height: 2;">Casual Leave - <?php echo $cl ?> <br>Sick Leave - <?php echo $sl ?></td>
+                                <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php echo $sltaken ?>
+                                <br>Other Leave - <?php echo $othtaken ?>
+                                </td>
+                                <td style="line-height: 2;"><?php echo $adjustedleave ?></td>
+                                <td style="line-height: 2;">Casual Leave - <?php echo $clbal ?> <br>Sick Leave - <?php echo $slbal ?>
+                                <br>Other Leave - <?php echo $elbal ?></td>
                                 <td style="line-height: 2;">
                                     <?php if (@$filterstatus == 'Active') {
                                     ?>
@@ -84,7 +104,43 @@ include("member_data.php");
                             </tr>
                         </tbody>
                     </table>
-                    #&nbsp;Opening balance is the balance carried forward from previous credit cycle and refers to the leave till the allocation end date.</b>
+                    <hr>
+
+                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+
+                    <?php echo '
+                       <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Leave ID</th>
+                                <th scope="col">Applied on</th>
+                                <th scope="col">From</th>
+                                <th scope="col">To</th>
+                                <th scope="col">Days count</th>
+                                <th scope="col">Type of Leave</th>
+                                <th scope="col">Certificate(s)</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>';
+                    foreach ($resultArr as $array) {
+                        echo '
+                            <tr>
+                                <td>' . $array['leaveid'] . '</td>
+                                <td>' . $array['timestamp'] . '</td>
+                                <td>' . $array['from'] . '</td>
+                                <td>' . $array['to'] . '</td>
+                                <td>' . $array['day'] . '</td>
+                                <td>' . $array['typeofleave'] . '</td>
+                                <td>' . $array['doc'] . '</td>
+                                <td>' . $array['status'] . '</td>
+                                <td>' . $array['comment'] . '</td>
+                            </tr>';
+                    }
+                    echo '</tbody>
+                            </table>';
+                    ?>
                 </section>
             </div>
 

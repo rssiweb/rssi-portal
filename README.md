@@ -165,3 +165,6 @@ ADD COLUMN val varchar;
 UPDATE d88k3j2m61uu9j.public.rssimyaccount_members
 SET allocationdate = '19/Apr/2021 - 30/Jun/2021' 
 WHERE associatenumber='VBKP20021';
+
+ALTER TABLE "d88k3j2m61uu9j"."public"."allocationdb_allocationdb"
+RENAME COLUMN applicantid TO associatenumber;

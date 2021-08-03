@@ -5,31 +5,23 @@ $user_check = $_SESSION['aid'];
 
 if (!$_SESSION['aid']) {
 
-  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 }
 ?>
-
 <?php
-include("database.php");
 include("member_data.php");
-$view_users_query = "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"; //select query for viewing users.  
-$run = pg_query($con, $view_users_query); //here run the sql query.  
+include("database.php");
+$result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"); //select query for viewing users.  
 
-while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
-{
-    $hallocationdate = $row[0];
-    $associatenumber = $row[1];
-    $hfullname = $row[2];
-    $hstatus = $row[3];
-    $hmaxclass = $row[4];
-    $hclasstaken = $row[5];
-    $__hevo_id = $row[6];
-    $__hevo__ingested_at = $row[7];
-    $__hevo__marked_deleted = $row[8]
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+$resultArr = pg_fetch_all($result);
 ?>
-<?php } ?>
 
 <!DOCTYPE html>
 <html>
@@ -44,12 +36,14 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-    <style><?php include '../css/style.css'; ?></style>
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -67,9 +61,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
     <section id="main-content">
         <section class="wrapper main-wrapper row">
-            <div class="col-md-12">  
+            <div class="col-md-12">
                 <section class="box" style="padding: 2%;">
-                Current Allocation
+                    Current Allocation
 
                     <table class="table">
                         <thead>
@@ -85,7 +79,13 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <tr>
                                 <td style="line-height: 2;"><?php echo $allocationdate ?></td>
                                 <td style="line-height: 2;"><?php echo $maxclass ?></td>
-                                <td style="line-height: 2;"><?php echo $classtaken ?>&nbsp;(<?php echo $ctp ?>)</td>
+                                <td style="line-height: 2;"><?php echo $classtaken ?>
+                                    <?php if (@$allocationdate != null) { ?>
+                                        &nbsp;(<?php echo $ctp ?>)
+                                    <?php
+                                    } else {
+                                    }
+                                    ?></td>
                                 <td style="line-height: 2;"><?php echo $leave ?></td>
                                 <td style="line-height: 2;"><?php echo $feedback ?></td>
                             </tr>
@@ -93,7 +93,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     </table>
                     <hr>
                     Historical Data
-                    <table class="table">
+                    <?php echo ' <table class="table">
                         <thead>
                             <tr>
                                 <th scope="col">Allocation Date</th>
@@ -101,15 +101,19 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <th scope="col">Class Taken<br>(Inc. Extra class)</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody>';
+                        foreach ($resultArr as $array) {
+                            echo '
                             <tr>
-                                <td style="line-height: 2;"><?php echo $hallocationdate ?></td>
-                                <td style="line-height: 2;"><?php echo $hmaxclass ?></td>
-                                <td style="line-height: 2;"><?php echo $hclasstaken ?>&nbsp;(<?php echo number_format(($hclasstaken/$hmaxclass)*100, 2, '.', '')?>%)</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
+                            <td style="line-height: 2;">' . $array['hallocationdate'] . '</td>
+                            <td style="line-height: 2;">' . $array['hmaxclass'] . '</td>
+                            <td style="line-height: 2;">' . $array['hclasstaken'] . '&nbsp;('.number_format($array['hclasstaken'] / $array['hmaxclass']*'100','2','.','').'%)</td>
+                            </tr>';
+                        }
+                        echo '</tbody>
+                                </table>';
+                        ?>
+                        </section>
             </div>
 
             <div class="clearfix"></div>
