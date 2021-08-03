@@ -12,8 +12,24 @@ if (!$_SESSION['aid']) {
 ?>
 
 <?php
+include("database.php");
 include("member_data.php");
+$view_users_query = "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"; //select query for viewing users.  
+$run = pg_query($con, $view_users_query); //here run the sql query.  
+
+while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
+{
+    $hallocationdate = $row[0];
+    $associatenumber = $row[1];
+    $hfullname = $row[2];
+    $hstatus = $row[3];
+    $hmaxclass = $row[4];
+    $hclasstaken = $row[5];
+    $__hevo_id = $row[6];
+    $__hevo__ingested_at = $row[7];
+    $__hevo__marked_deleted = $row[8]
 ?>
+<?php } ?>
 
 <!DOCTYPE html>
 <html>
@@ -53,6 +69,7 @@ include("member_data.php");
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">  
                 <section class="box" style="padding: 2%;">
+                Current Allocation
 
                     <table class="table">
                         <thead>
@@ -71,6 +88,24 @@ include("member_data.php");
                                 <td style="line-height: 2;"><?php echo $classtaken ?>&nbsp;(<?php echo $ctp ?>)</td>
                                 <td style="line-height: 2;"><?php echo $leave ?></td>
                                 <td style="line-height: 2;"><?php echo $feedback ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr>
+                    Historical Data
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Allocation Date</th>
+                                <th scope="col">Max. Class<br>(Allocation start date to end date)</th>
+                                <th scope="col">Class Taken<br>(Inc. Extra class)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="line-height: 2;"><?php echo $hallocationdate ?></td>
+                                <td style="line-height: 2;"><?php echo $hmaxclass ?></td>
+                                <td style="line-height: 2;"><?php echo $hclasstaken ?>&nbsp;(<?php echo number_format(($hclasstaken/$hmaxclass)*100, 2, '.', '')?>%)</td>
                             </tr>
                         </tbody>
                     </table>
