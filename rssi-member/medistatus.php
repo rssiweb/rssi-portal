@@ -153,7 +153,7 @@ $resultArr = pg_fetch_all($result);
                                   <td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>
                                     <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td>' . $array['selectbeneficiary'] . '</td>
-                                    <td>' . $array['accountnumber'] . '</td>
+                                    <td>' . substr($array['accountnumber'], 1, -1) . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approved'] . '</td>
                                     <td>' . $array['currentclaimstatus'] . '</td>

@@ -154,7 +154,7 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['id'] . '<br>' . strtok($array['name'],' ') . '</td>   
                                     
                                     <td>' . $array['selectbeneficiary'] . '</td>
-                                    <td>' . $array['accountnumber'] . '<br>'. $array['bankname'] .'/'.$array['ifsccode'].'</td>
+                                    <td>' . substr($array['accountnumber'], 1, -1) . '<br>'. $array['bankname'] .'/'.$array['ifsccode'].'</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approved'] . '</td>
                                     <td>' . $array['currentclaimstatus'] . '</td>

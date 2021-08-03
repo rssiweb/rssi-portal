@@ -126,7 +126,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <tr>
                                 <td style="line-height: 2; font-size:13px">
                                     <?php echo @$bankname ?><br>
-                                    Account Number:&nbsp;<b><?php echo @$accountnumber ?></b><br>
+                                    Account Number:&nbsp;<b><?php echo substr(@$accountnumber, 1, -1) ?></b><br>
                                     Account Holder Name:&nbsp;<?php echo @$acname ?><br>
                                     IFSC Code:&nbsp;<?php echo @$ifsccode ?>
                                 </td>
