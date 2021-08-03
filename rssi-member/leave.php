@@ -65,7 +65,7 @@ $resultArr = pg_fetch_all($result);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
-                        Current Allocation - <?php echo $allocationdate ?>
+                        FY 2021-2022
                         <!--<br>Opening balance is the balance carried forward from previous credit cycle and refers to the leave till the allocation end date.-->
                     </div>
                 </div>
@@ -116,7 +116,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Applied on</th>
                                 <th scope="col">From</th>
                                 <th scope="col">To</th>
-                                <th scope="col">Days count</th>
+                                <th scope="col">Day(s) count</th>
                                 <th scope="col">Type of Leave</th>
                                 <th scope="col">Certificate(s)</th>
                                 <th scope="col">Status</th>
