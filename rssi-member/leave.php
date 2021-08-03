@@ -75,22 +75,22 @@ $resultArr = pg_fetch_all($result);
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Opening Leave Balance</th>
-                                <th scope="col">Leave Taken</th>
-                                <th scope="col">Leave Adjusted<br>(Extra Class taken)</th>
-                                <th scope="col">Leave Balance</th>
+                                <th scope="col">Opening Leave Balance (A)</th>
+                                <th scope="col">Leave Approved (B)</th>
+                                <th scope="col">Leave Adjusted (C)</th>
+                                <th scope="col">Leave Balance (A-B)+C</th>
                                 <th scope="col">Apply Leave</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;">Casual Leave - <?php echo $cl ?> <br>Sick Leave - <?php echo $sl ?></td>
-                                <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php echo $sltaken ?>
-                                <br>Other Leave - <?php echo $othtaken ?>
+                                <td style="line-height: 2;">Sick Leave - <?php echo (int)$sl ?><br>Casual Leave - <?php echo (int)$cl ?></td>
+                                <td style="line-height: 2;"><?php echo $sltaken + $cltaken +$othtaken +$adjustedleave ?>
                                 </td>
                                 <td style="line-height: 2;"><?php echo $adjustedleave ?></td>
-                                <td style="line-height: 2;">Casual Leave - <?php echo $clbal ?> <br>Sick Leave - <?php echo $slbal ?>
-                                <br>Other Leave - <?php echo $elbal ?></td>
+                                <td style="line-height: 2;">Sick Leave - <?php echo $slbal ?>
+                                <br>Casual Leave - <?php echo $clbal ?> 
+                                <!--<br>Other Leave - <?php echo $elbal ?></td>-->
                                 <td style="line-height: 2;">
                                     <?php if (@$filterstatus == 'Active') {
                                     ?>
