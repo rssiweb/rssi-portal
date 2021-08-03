@@ -71,7 +71,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Allocation Date</th>
                                 <th scope="col">Max. Class<br>(Allocation start date to today)</th>
                                 <th scope="col">Class Taken<br>(Inc. Extra class)</th>
-                                <th scope="col">Leave</th>
+                                <th scope="col">Off Class</th>
                                 <th scope="col">Remarks</th>
                             </tr>
                         </thead>
