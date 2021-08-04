@@ -110,20 +110,22 @@ if (isset($_POST['login'])) {
     // Do the login stuff...
 
     if (pg_num_rows($run)) {
-       if (isset($_SESSION["login_redirect"])) {
+        if (isset($_SESSION["login_redirect"])) {
             header("Location: " . $_SESSION["login_redirect"]);
-           unset($_SESSION["login_redirect"]);
+            unset($_SESSION["login_redirect"]);
         } else {
-           header("Location: ../rssi-member/home.php");
-       }
+            header("Location: ../rssi-member/home.php");
+        }
 
         $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
 
         $row = pg_fetch_row($run);
         $role = $row[62];
+        $engagement = $row[42];
         $filterstatus = $row[31];
 
         $_SESSION['role'] = $role;
+        $_SESSION['engagement'] = $engagement;
         $_SESSION['filterstatus'] = $filterstatus;
         $uip = $_SERVER['REMOTE_ADDR'];
         //$login_redirect=$_SESSION["login_redirect"];
@@ -131,10 +133,9 @@ if (isset($_POST['login'])) {
         $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
         $result = pg_query($con, $query);
 
-        //echo "<script>alert('";  
-        //echo $login_redirect;
+        //echo "<script>alert('";
+        //echo $engagement;
         //echo "')</script>";
-
     } else { ?>
         <div class="container">
             <div class="row">
