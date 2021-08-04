@@ -15,13 +15,22 @@ if (!$_SESSION['aid']) {
 include("member_data.php");
 include("database.php");
 @$id = $_POST['get_id'];
+@$status = $_POST['get_status'];
 
-if ($id == 'ALL') {
+if (($id==null && $status==null) || (($status > 0 && $status != 'ALL')&&($id > 0 && $id != 'ALL'))) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' AND lyear='$id' order by timeformat desc");
+} else if (($id == 'ALL' && $status == null) || ($id == null && $status == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
-} else if ($id > 0 && $id != 'ALL') {
+} else if (($id > 0 && $id != 'ALL')&&($status==null)) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timeformat desc");
+} else if (($id > 0 && $id != 'ALL')&&($status=='ALL')) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timeformat desc");
+} else if (($status > 0 && $status != 'ALL')&&($id==null)) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' order by timeformat desc");
+} else if (($status > 0 && $status != 'ALL')&&($id=='ALL')) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' order by timeformat desc");
 } else {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timeformat desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
 }
 
 if (!$result) {
@@ -117,7 +126,7 @@ $resultArr = pg_fetch_all($result);
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
-                                <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
                                     <?php if ($id == null) { ?>
                                         <option value="" disabled selected hidden>Select Year</option>
                                     <?php
@@ -127,6 +136,18 @@ $resultArr = pg_fetch_all($result);
                                     ?>
                                     <option>2021</option>
                                     <option>2020</option>
+                                    <option>ALL</option>
+                                </select>&nbsp;
+                                <select name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
+                                    <?php if ($status == null) { ?>
+                                        <option value="" disabled selected hidden>Select Status</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $status ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>Approved</option>
+                                    <option>Rejected</option>
                                     <option>ALL</option>
                                 </select>
                             </div>

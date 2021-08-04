@@ -63,7 +63,7 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <section class="box" style="padding: 2%;">
-                    Current Allocation
+                <b><span class="underline">Current</span></b>
 
                     <table class="table">
                         <thead>
@@ -92,7 +92,7 @@ $resultArr = pg_fetch_all($result);
                         </tbody>
                     </table>
                     <hr>
-                    Historical Data
+                    <b><span class="underline">History</span></b>
                     <?php echo ' <table class="table">
                         <thead>
                             <tr>

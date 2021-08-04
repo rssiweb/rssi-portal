@@ -794,3 +794,9 @@ z-index: 5001;
         display: inline-block;
         line-height: 0.85;
     }
+    
+    @media (min-width:767px) {
+        .left {
+            margin-left: 2%;
+        }
+    }
