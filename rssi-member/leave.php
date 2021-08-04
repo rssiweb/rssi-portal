@@ -15,14 +15,13 @@ if (!$_SESSION['aid']) {
 include("member_data.php");
 include("database.php");
 @$id = $_POST['get_id'];
-if ($id == null) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
-} else if ($id == 'ALL') {
+
+if ($id == 'ALL') {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
 } else if ($id > 0 && $id != 'ALL') {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timeformat desc");
 } else {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timeformat desc");
 }
 
 if (!$result) {
