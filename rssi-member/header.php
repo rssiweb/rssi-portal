@@ -13,7 +13,7 @@
             ?>
                 <li class="profile dropdown">
                     <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><span class="badge">1</span></a>
-                    <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; /*overflow-y: auto;*/">
+                    <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
                     
                     <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view" target="_blank">Responsibilities of the Teaching Intern
@@ -35,6 +35,7 @@
                                 <span class="label label-info">Jul 20, 2021</span>
                             </a>
                         </li>
+                        
                         <!--<li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit?usp=sharing" target="_blank">Exam Attendance Tracker_QT1/2021
                                 <span class="label label-info">Jul 9, 2021</span>
@@ -49,6 +50,11 @@
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1no7KiM1Kqt9_elGZgNCzF2HAW8um85Un/view" target="_blank">Instructions to invigilators during examination
                                 <span class="label label-info">Jul 6, 2021</span>
+                            </a>
+                        </li>
+                        <li style="height: unset;">
+                            <a class="notification" href="https://drive.google.com/file/d/1u8iQR68_E0buYgkjvs3bmM_nONobKF-1/view" target="_blank">Document submission and Exit interview for Interns
+                                <span class="label label-info">Jun 30, 2021</span>
                             </a>
                         </li>
 
