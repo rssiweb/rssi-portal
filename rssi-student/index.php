@@ -112,8 +112,8 @@ if (isset($_POST['login'])) {
         $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
 
         $row = pg_fetch_row($run);
-        $filterstatus= $row[30];
-        $feesflag = $row[46];
+        $filterstatus= $row[39];
+        $feesflag = $row[50];
 
        $_SESSION['filterstatus'] = $filterstatus;
        $_SESSION['feesflag'] = $feesflag;

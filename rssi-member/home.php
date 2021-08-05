@@ -173,10 +173,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <div class="clearfix"></div>
         </section>
     </section>
-    <!--**************VACCINATION CONFIRMATION**************-->
-    <!--<?php
+    <!--**************VACCINATION CONFIRMATION************** || strpos(@$vaccination, $word) !== false)-->
+    <?php
     $word = "Not vaccinated";
-    if ((@$vaccination == null || strpos(@$vaccination, $word) !== false) && $filterstatus == 'Active') {
+    if (@$vaccination == null && $filterstatus == 'Active') {
     ?>
 
         <div id="thoverX" class="thover pop-up"></div>
@@ -185,18 +185,28 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <br>
                 <input type="hidden" class="form-control" name="membername" type="text" value="<?php echo $fullname ?>" readonly>
                 <input type="hidden" class="form-control" name="memberid" type="text" value="<?php echo $associatenumber ?>" readonly>
-                <input type="hidden" type="text" name="status" id="count" value="" readonly required>
-                <p>Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Please confirm whether you have taken Covid 19 vaccine?</p>
-                <button type="submit" id="vaccinated" class="close-button btn btn-success">
-                    <i class="fas fa-thumbs-up" aria-hidden="true"></i>&nbsp;Vaccinated
-                </button>&nbsp;
+                <!--<input type="hidden" type="text" name="status" id="count" value="" readonly required>-->
+                <p>Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Please select your COVID-19 vaccination status from the list below?</p>
+                <div class="center">
+                <select name="status" class="form-control cmb" style="width:max-content;" placeholder="" required>
+                <option value="" disabled selected hidden>Select Status</option>
+                  <option>I have taken both doses of the vaccine</option>
+                  <option>I have taken my first dose of vaccine</option>
+                  <option>I haven't taken any dose of vaccine yet, but will take it soon</option>
+                  <option>I haven't taken any dose of vaccine yet, also will not take it in future</option>
+                </select>
+                <div>
+                <br>
+                <button type="submit" id="vaccinated" class="close-button btn btn-success">Save
+                </button>
+                <!--&nbsp;
                 <button type="submit" id="notvaccinated" class="close-button btn btn-danger">
                     <i class="fas fa-thumbs-down" aria-hidden="true"></i>&nbsp;Not vaccinated
-                </button>
+                </button>-->
                 <br><br>
             </form>
         </div>
-        <script>
+        <!--<script>
             $('#vaccinated').click(function() {
                 $('#count').val('Vaccinated');
             });
@@ -204,7 +214,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             $('#notvaccinated').click(function() {
                 $('#count').val('Not vaccinated');
             });
-        </script>
+        </script>-->
         <script>
             const scriptURL = 'https://script.google.com/macros/s/AKfycbzRMd98T75iCUIe9ZwMYatPiJcmzzmgleL3epY7WwquEyyfRwg/exec'
             const form = document.forms['submit-to-google-sheet']
@@ -227,7 +237,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         <script>
             $(document).ready(function() {
 
-                if (Boolean(readCookie('name'))) {
+                if (Boolean(readCookie('vacc'))) {
                     $('.pop-up').hide();
                     $('.pop-up').fadeOut(1000);
                 }
@@ -236,7 +246,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     $('.pop-up').delay(10).fadeOut(700);
                     e.stopPropagation();
 
-                    createCookie("name", "30 days", 30);
+                    createCookie("vacc", "2 days", 2);
                     //return false;
                 });
 
@@ -271,7 +281,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <?php
     } else {
     ?>
-    <?php } ?>-->
+    <?php } ?>
     <!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
     <!--<?php
     if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {

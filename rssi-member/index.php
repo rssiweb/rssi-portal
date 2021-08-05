@@ -121,8 +121,8 @@ if (isset($_POST['login'])) {
 
         $row = pg_fetch_row($run);
         $role = $row[62];
-        $engagement = $row[42];
-        $filterstatus = $row[31];
+        $engagement = $row[48];
+        $filterstatus = $row[35];
 
         $_SESSION['role'] = $role;
         $_SESSION['engagement'] = $engagement;

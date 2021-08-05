@@ -800,3 +800,16 @@ z-index: 5001;
             margin-left: 2%;
         }
     }
+    
+    .center {
+        text-align: center;
+        /*These options are for the div to be visible in the example, the important is the first*/
+        /*border: 1px solid black;*/
+        width: auto;
+        /*height: 50px;*/
+    }
+    
+    .cmb {
+        display: block;
+        margin: 0 auto;
+    }
