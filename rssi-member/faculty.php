@@ -162,7 +162,7 @@ $resultArr = pg_fetch_all($result);
               <?php } ?>
             <?php echo '<td>' . $array['astatus'] . '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
             <td>' . $array['colors'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticet"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</span></td>
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticet"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-'. $array['slbal'] .',&nbsp;c-'. $array['clbal'] .'</td>
             <td>' . $array['badge'] . '<br>' . $array['vaccination'] . '</td>
             </tr>';
             } ?>

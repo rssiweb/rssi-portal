@@ -126,7 +126,7 @@ $resultArr = pg_fetch_all($result);
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
-                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
                                     <?php if ($id == null) { ?>
                                         <option value="" disabled selected hidden>Select Year</option>
                                     <?php
@@ -175,11 +175,12 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Status</th>
                                 <th scope="col">HR remarks</th>
                             </tr>
-                        </thead>
-                        <tbody>';
-                    foreach ($resultArr as $array) {
-                        echo '
-                            <tr>
+                        </thead>' ?>
+                        <?php if (sizeof($resultArr) > 0) { ?>
+                            <?php
+                            echo '<tbody>';
+                            foreach ($resultArr as $array) {
+                              echo '<tr>
                                 <td>' . $array['leaveid'] . '</td>
                                 <td>' . $array['timestamp'] . '</td>
                                 <td>' . $array['from'] . '</td>
@@ -190,10 +191,24 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['status'] . '</td>
                                 <td>' . $array['comment'] . '</td>
                             </tr>';
-                    }
-                    echo '</tbody>
-                            </table>';
-                    ?>
+                        } ?>
+                      <?php
+                      } else if ($id == null && $status==null) {
+                      ?>
+                        <tr>
+                          <td colspan="5">Please select Filter value.</td>
+                        </tr>
+                      <?php
+                      } else {
+                      ?>
+                        <tr>
+                          <td colspan="5">No record was found for the selected filter value.</td>
+                        </tr>
+                      <?php }
+            
+                      echo '</tbody>
+                                    </table>';
+                      ?>
                 </section>
             </div>
 
