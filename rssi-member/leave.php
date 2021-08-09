@@ -18,19 +18,19 @@ include("database.php");
 @$status = $_POST['get_status'];
 
 if (($id==null && $status==null) || (($status > 0 && $status != 'ALL')&&($id > 0 && $id != 'ALL'))) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' AND lyear='$id' order by timeformat desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' AND lyear='$id'");
 } else if (($id == 'ALL' && $status == null) || ($id == null && $status == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
 } else if (($id > 0 && $id != 'ALL')&&($status==null)) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timeformat desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
 } else if (($id > 0 && $id != 'ALL')&&($status=='ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timeformat desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
 } else if (($status > 0 && $status != 'ALL')&&($id==null)) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' order by timeformat desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
 } else if (($status > 0 && $status != 'ALL')&&($id=='ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' order by timeformat desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
 } else {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timeformat desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
 }
 
 if (!$result) {
