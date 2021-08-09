@@ -28,15 +28,15 @@ include("database.php");
 @$status = $_POST['get_status'];
 
 if ($id == null && $status == 'ALL') {
-    $result = pg_query($con, "SELECT * FROM bookdata_book order by timestamp desc");
+    $result = pg_query($con, "SELECT * FROM bookdata_book");
 } else if ($id == null && $status != 'ALL') {
-    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE bookstatus='$status' order by timestamp desc");
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE bookstatus='$status'");
 } else if ($id > 0 && $status != 'ALL') {
-    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' AND bookstatus='$status' order by timestamp desc");
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' AND bookstatus='$status'");
 } else if ($id > 0 && $status == 'ALL') {
-    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' order by timestamp desc");
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id'");
 } else {
-    $result = pg_query($con, "SELECT * FROM bookdata_book order by timestamp desc");
+    $result = pg_query($con, "SELECT * FROM bookdata_book");
 }
 
 if (!$result) {
