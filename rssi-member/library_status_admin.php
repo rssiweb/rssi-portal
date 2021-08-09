@@ -122,6 +122,7 @@ $resultArr = pg_fetch_all($result);
                                     <option>Due</option>
                                     <option>Returned</option>
                                     <option>Canceled</option>
+                                    <option>Duplicate-Canceled</option>
                                     <option>ALL</option>
                                 </select>
                             </div>
