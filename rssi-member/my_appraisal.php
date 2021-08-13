@@ -1,18 +1,5 @@
 <?php
-//session_start();
-// Storing Session
-//$user_check = $_SESSION['aid'];
-
-//if (!$_SESSION['aid']) {
-
-    //$_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    //header("Location: index.php");
-    //exit;  
-//}
-?>
-<?php
 session_start();
-// Storing Session
 $user_check = $_SESSION['aid'];
 
 if (!$_SESSION['aid']) {
@@ -20,14 +7,24 @@ if (!$_SESSION['aid']) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;  
-} else if ($_SESSION['engagement'] == 'Intern' && $_SESSION['filterstatus'] == 'Active') {
-
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-    echo '<script type="text/javascript">';
-    echo 'alert("You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
 }
+?>
+<?php
+//session_start();
+//$user_check = $_SESSION['aid'];
+
+//if (!$_SESSION['aid']) {
+
+  //  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    //header("Location: index.php");
+    //exit;  
+//} else if ($_SESSION['engagement'] == 'Intern' && $_SESSION['filterstatus'] == 'Active') {
+
+    //echo '<script type="text/javascript">';
+    //echo 'alert("You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.");';
+    //echo 'window.location.href = "home.php";';
+    //echo '</script>';
+//}
 ?>
 <?php
 include("member_data.php");
@@ -35,7 +32,7 @@ include("member_data.php");
 <?php
 include("database.php");
 @$id = $_POST['get_id'];
-$view_users_query = "select * from myappraisal_myappraisal WHERE associatenumber='$user_check' AND appraisaltype='$id'"; //select query for viewing users.  
+$view_users_query = "select * from myappraisal_myappraisal WHERE associatenumber='$user_check' AND filter='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
@@ -49,9 +46,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $feedback = $row[6];
     $scopeofimprovement = $row[7];
     $ipf = $row[8];
-    $__hevo_id = $row[9];
-    $__hevo__ingested_at = $row[10];
-    $__hevo__marked_deleted = $row[11]
+    $filter = $row[10];
 ?>
 <?php } ?>
 
@@ -144,8 +139,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
-                                    <option>Quarterly 2/2021</option>
-                                    <option>Quarterly 1/2021</option>
+                                    <!--<option>Quarterly 2/2021</option>-->
+                                    <option>QT1/2021</option>
                                 </select>
                             </div>
                         </div>
