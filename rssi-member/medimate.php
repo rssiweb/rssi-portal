@@ -49,11 +49,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $approved= $row[27];
     $currentclaimstatus= $row[28];
     $financialyear= $row[29];
-    $__hevo_id= $row[30];
-    $__hevo__ingested_at= $row[31];
-    $__hevo__marked_deleted= $row[32];
-    $mediremarks= $row[33];
-    $closedon= $row[34]    
+    $mediremarks= $row[30];
+    $closedon= $row[31]    
 
 ?>
 <?php } ?>
