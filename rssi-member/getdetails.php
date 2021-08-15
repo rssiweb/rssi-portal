@@ -69,7 +69,8 @@ echo '
 <section>
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-            <h5>Experience Report</h5>
+            <div style="font-family:Poppins; text-align:Center;font-size:20px;">Rina Shiksha Sahayak Foundation (RSSI)</div>
+            <div style="font-family:Roboto; text-align:Center;font-size:20px; line-height:2">Associate Details</div>
                 <section class="box" style="padding: 2%;">
 <table class="table">
 <thead>
@@ -79,7 +80,8 @@ echo '
          <th>Role</th>
          <th>Designation</th>
          <th>Service Period</th>
-         <th>Date of Relieving</th>
+         <th>IPF<br>(Individual Performance Factor)/5</th>
+         <!--<th>Date of Relieving</th>-->
          <th>Certificate Date</th>
          <th>Certifying Authority</th>
         </tr>
@@ -94,7 +96,7 @@ foreach ($resultArr as $array) {
             <td>' . $array['engagement'] . '</td>
             <td>' . $array['position'] . '</td>
             <td style="line-height:2">' . $array['doj'] . '&nbsp;to&nbsp;' . $array['effectivedate'] . '<br>' . $array['yos'] . '</td>
-            <td>' . $array['effectivedate'] . '</td>
+            <td>' . $array['ipfl'] . '</td>
             <td>' . $array['effectivedate'] . '</td>
             <td>' . $array['exitinterview'] . '</td>
             </tr>';
