@@ -85,6 +85,28 @@ $resultArr = pg_fetch_all($result);
                     Academic year: 2021-2022
                         <!--<br>Opening balance is the balance carried forward from previous credit cycle and refers to the leave till the allocation end date.-->
                     </div>
+                    <?php
+                if ((@$clbal == 0 || @$clbal < 0) && ($slbal == 0 || $slbal < 0) && $filterstatus == 'Active') {
+                ?>
+                    <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
+                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Inadequate SL and CL balance. You are not eligible to take leave. Please take a makeup class to enable the apply leave option.
+                    </div>
+                <?php
+                } else if ((@$clbal == 0 || @$clbal < 0) && $filterstatus == 'Active') {
+                ?>
+                <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
+                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient CL balance. You are not eligible for casual leave. Please take makeup class to increase CL balance.
+                    </div>
+                <?php
+                } else if ((@$slbal == 0 || @$slbal < 0) && $filterstatus == 'Active') {
+                ?>
+                    <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
+                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient SL balance. You are not eligible for sick leave. Please take makeup class to increase SL balance.
+                    </div>
+                    <?php
+                } else {
+                }
+                ?>
                 </div>
 
                 <section class="box" style="padding: 2%;">
@@ -109,12 +131,13 @@ $resultArr = pg_fetch_all($result);
                                     <br>Casual Leave - <?php echo $clbal ?>
                                     <!--<br>Other Leave - <?php echo $elbal ?></td>-->
                                 <td style="line-height: 2;">
-                                    <?php if (@$filterstatus == 'Active') {
+                                    <?php if ((@$slbal > 0 || @$clbal > 0) && @$filterstatus == 'Active') {
                                     ?>
                                         <span class="noticet"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span>
                                     <?php
-                                    } else {
-                                    }
+                                    } else {?>
+                                        <span class="noticet"><a href="//" onclick="return false;">Leave Request Form</a></span>
+                                        <?php }
                                     ?>
 
                                 </td>
