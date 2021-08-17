@@ -13,6 +13,32 @@ if (!$_SESSION['sid']) {
 
 <?php
 include("student_data.php");
+include("database.php");
+@$id = $_POST['get_id'];
+@$status = $_POST['get_status'];
+
+if (($id==null && $status==null) || (($status > 0 && $status != 'ALL')&&($id > 0 && $id != 'ALL'))) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' AND lyear='$id'");
+} else if (($id == 'ALL' && $status == null) || ($id == null && $status == 'ALL')) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
+} else if (($id > 0 && $id != 'ALL')&&($status==null)) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
+} else if (($id > 0 && $id != 'ALL')&&($status=='ALL')) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
+} else if (($status > 0 && $status != 'ALL')&&($id==null)) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
+} else if (($status > 0 && $status != 'ALL')&&($id=='ALL')) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
+} else {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
+}
+
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+$resultArr = pg_fetch_all($result);
 ?>
 
 <!DOCTYPE html>
@@ -65,12 +91,100 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php //echo $sltaken ?> <br>Other Leave - <?php echo $othtaken ?></td>
+                                <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php echo $sltaken ?> <br>Other Leave - <?php echo $othtaken ?></td>
                                 <td><span class="noticet"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span></td>
                                 <td></td>
                             </tr>
                         </tbody>
                     </table>
+                    <hr>
+                    <b><span class="underline">Leave Details</span></b><br><br>
+                    <form action="" method="POST">
+                        <div class="form-group" style="display: inline-block;">
+                            <div class="col2" style="display: inline-block;">
+                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
+                                    <?php if ($id == null) { ?>
+                                        <option value="" disabled selected hidden>Select Year</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $id ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>2021</option>
+                                    <option>2020</option>
+                                    <option>ALL</option>
+                                </select>&nbsp;
+                                <select name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
+                                    <?php if ($status == null) { ?>
+                                        <option value="" disabled selected hidden>Select Status</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $status ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>Approved</option>
+                                    <option>Rejected</option>
+                                    <option>ALL</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col2 left" style="display: inline-block;">
+                            <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
+                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                        </div>
+                    </form>
+                    <div class="col" style="display: inline-block; width:99%; text-align:right">
+                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                    </div>
+
+                    <?php echo '
+                       <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Leave ID</th>
+                                <th scope="col">Applied on</th>
+                                <th scope="col">From</th>
+                                <th scope="col">To</th>
+                                <th scope="col">Day(s) count</th>
+                                <th scope="col">Type of Leave</th>
+                                <th scope="col">Certificate(s)</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">HR remarks</th>
+                            </tr>
+                        </thead>' ?>
+                        <?php if (sizeof($resultArr) > 0) { ?>
+                            <?php
+                            echo '<tbody>';
+                            foreach ($resultArr as $array) {
+                              echo '<tr>
+                                <td>' . $array['leaveid'] . '</td>
+                                <td>' . $array['timestamp'] . '</td>
+                                <td>' . $array['from'] . '</td>
+                                <td>' . $array['to'] . '</td>
+                                <td>' . $array['day'] . '</td>
+                                <td>' . $array['typeofleave'] . '</td>
+                                <td>' . $array['doc'] . '</td>
+                                <td>' . $array['status'] . '</td>
+                                <td>' . $array['comment'] . '</td>
+                            </tr>';
+                        } ?>
+                      <?php
+                      } else if ($id == null && $status==null) {
+                      ?>
+                        <tr>
+                          <td colspan="5">Please select Filter value.</td>
+                        </tr>
+                      <?php
+                      } else {
+                      ?>
+                        <tr>
+                          <td colspan="5">No record was found for the selected filter value.</td>
+                        </tr>
+                      <?php }
+            
+                      echo '</tbody>
+                                    </table>';
+                      ?>
                 </section>
             </div>
 
