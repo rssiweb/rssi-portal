@@ -373,7 +373,6 @@ add</button></a>';
             $.getJSON("https://sheets.googleapis.com/v4/spreadsheets/1iwtUG3z5orDmOhgN_gIEIA7yf1waA3jrgMO9pDUHnbE/values/booklist?alt=json&key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o",
                 function(data) {
                     document.getElementById('demo').innerHTML = ""
-                    console.log(data);
                     var sheetData = data.values;
                     var i;
                     var records = []
@@ -387,8 +386,9 @@ add</button></a>';
                         var Class = sheetData[i][7];
                         var Board = sheetData[i][8];
                         var Language = sheetData[i][9];
-                        var Availability = sheetData[i][11];
                         var Status = sheetData[i][10];
+                        var Availability = sheetData[i][11];
+                        
 
                         if ((Class === class1 && Subject === subject && Language === language) ||
                             (Class === class1 && subject === '--' && language === '--') ||

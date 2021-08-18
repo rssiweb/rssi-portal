@@ -351,21 +351,22 @@ include("member_data.php");
             var year = document.getElementById('name2').value
             var examname = document.getElementById('name3').value
 
-            $.getJSON("https://spreadsheets.google.com/feeds/list/1I5WANuMzHDcb2m9-PoXIOV3aZIrABUGSfwPOPNh0HBY/2/public/values?alt=json",
+            $.getJSON("https://sheets.googleapis.com/v4/spreadsheets/1I5WANuMzHDcb2m9-PoXIOV3aZIrABUGSfwPOPNh0HBY/values/Question?alt=json&key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o",
                 function(data) {
                     document.getElementById('demo').innerHTML = ""
-                    var sheetData = data.feed.entry;
+                    var sheetData = data.values;
                     var i;
                     var records = []
                     for (i = 0; i < sheetData.length; i++) {
-                        var Category = data.feed.entry[i]['gsx$category']['$t'];
-                        var Subject = data.feed.entry[i]['gsx$subject']['$t'];
-                        var Topic = data.feed.entry[i]['gsx$topic']['$t'];
-                        var Fullmarks = data.feed.entry[i]['gsx$fullmarks']['$t'];
-                        var Year = data.feed.entry[i]['gsx$year']['$t'];
-                        var Examname = data.feed.entry[i]['gsx$examname']['$t'];
-                        var Url = data.feed.entry[i]['gsx$url']['$t'];
-                        var Testcode = data.feed.entry[i]['gsx$testcode']['$t'];
+                        var Category = sheetData[i][0];
+                        var Examname = sheetData[i][1];
+                        var Subject = sheetData[i][2];
+                        var Topic = sheetData[i][3];
+                        var Fullmarks = sheetData[i][4];
+                        var Year = sheetData[i][5];
+                        var Testcode = sheetData[i][6];
+                        var Url = sheetData[i][7];
+                        
 
                         if ((Category === category && Subject === subject && Year === year && Examname === examname) ||
                             (Category === category && subject === '--' && year === '--' && examname === '--') ||
