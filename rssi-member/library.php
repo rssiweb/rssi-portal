@@ -370,24 +370,25 @@ add</button></a>';
             var subject = document.getElementById('name1').value
             var language = document.getElementById('name2').value
 
-            $.getJSON("https://spreadsheets.google.com/feeds/list/1iwtUG3z5orDmOhgN_gIEIA7yf1waA3jrgMO9pDUHnbE/1/public/values?alt=json",
+            $.getJSON("https://sheets.googleapis.com/v4/spreadsheets/1iwtUG3z5orDmOhgN_gIEIA7yf1waA3jrgMO9pDUHnbE/values/booklist?alt=json&key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o",
                 function(data) {
                     document.getElementById('demo').innerHTML = ""
-                    var sheetData = data.feed.entry;
+                    console.log(data);
+                    var sheetData = data.values;
                     var i;
                     var records = []
                     for (i = 0; i < sheetData.length; i++) {
-                        var Bookregistrationnumber = data.feed.entry[i]['gsx$bookregistrationnumber']['$t'];
-                        var Nameofthebook = data.feed.entry[i]['gsx$nameofthebook']['$t'];
-                        var Author = data.feed.entry[i]['gsx$author']['$t'];
-                        var Isbn = data.feed.entry[i]['gsx$isbn']['$t'];
-                        var Price = data.feed.entry[i]['gsx$price']['$t'];
-                        var Subject = data.feed.entry[i]['gsx$subject']['$t'];
-                        var Class = data.feed.entry[i]['gsx$class1']['$t'];
-                        var Board = data.feed.entry[i]['gsx$board']['$t'];
-                        var Language = data.feed.entry[i]['gsx$language']['$t'];
-                        var Availability = data.feed.entry[i]['gsx$availability']['$t'];
-                        var Status = data.feed.entry[i]['gsx$status']['$t'];
+                        var Bookregistrationnumber = sheetData[i][1];
+                        var Nameofthebook = sheetData[i][2];
+                        var Author = sheetData[i][3];
+                        var Isbn = sheetData[i][4];
+                        var Price = sheetData[i][5];
+                        var Subject = sheetData[i][6];
+                        var Class = sheetData[i][7];
+                        var Board = sheetData[i][8];
+                        var Language = sheetData[i][9];
+                        var Availability = sheetData[i][11];
+                        var Status = sheetData[i][10];
 
                         if ((Class === class1 && Subject === subject && Language === language) ||
                             (Class === class1 && subject === '--' && language === '--') ||
