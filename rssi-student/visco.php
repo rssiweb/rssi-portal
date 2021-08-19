@@ -269,20 +269,20 @@ include("student_data.php");
             var category = document.getElementById('name').value
             var subject = document.getElementById('name1').value
 
-            $.getJSON("https://spreadsheets.google.com/feeds/list/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/1/public/values?alt=json",
+            $.getJSON("https://sheets.googleapis.com/v4/spreadsheets/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/values/videos?alt=json&key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o",
                 function(data) {
                     document.getElementById('demo').innerHTML = ""
-                    var sheetData = data.feed.entry;
+                    var sheetData = data.values;
                     var i;
                     var records = []
                     for (i = 0; i < sheetData.length; i++) {
-                        var Timestamp = data.feed.entry[i]['gsx$टाइमस्टैम्प']['$t'];
-                        var Subject = data.feed.entry[i]['gsx$subject']['$t'];
-                        var Category = data.feed.entry[i]['gsx$category']['$t'];
-                        var Fuploadvideo = data.feed.entry[i]['gsx$fuploadvideo']['$t'];
-                        var Class = data.feed.entry[i]['gsx$class']['$t'];
-                        var Uploadedby = data.feed.entry[i]['gsx$uploadedby']['$t'];
-                        var Topicofthevideo = data.feed.entry[i]['gsx$topicofthevideo']['$t'];
+                        var Timestamp = sheetData[i][0];
+                        var Subject = sheetData[i][1];
+                        var Category = sheetData[i][2];
+                        var Fuploadvideo = sheetData[i][8];
+                        var Class = sheetData[i][6];
+                        var Uploadedby = sheetData[i][4];
+                        var Topicofthevideo = sheetData[i][5];
 
 
                         if ((Category === category && Subject === subject) ||
