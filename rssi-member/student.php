@@ -205,7 +205,7 @@ $resultArr = pg_fetch_all($result);
             <?php
               echo '</td> 
             <td>' . $array['nameofthesubjects'] . '<br><br>Attendance -&nbsp;' . $array['attd'] . '<br>' . $array['allocationdate'] . '</td>
-            <td>' . $array['medium'] . '</td>
+            <td>' . $array['medium'] . '/'. $array['nameoftheboard'] .'</td>
             <td>' . $array['badge'] . '</td>
             </tr>';
             } ?>
