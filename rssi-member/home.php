@@ -485,8 +485,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <input type="hidden" class="form-control" name="flag" type="text" value="Y" readonly>
                 <p align="left" style="margin-left: 5%; margin-right: 5%;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),
                     Please confirm if the below details are up to date.</p>
-                <p align="left" style="margin-left: 5%; margin-right: 5%;">Educational Qualification:</p><?php echo $eduq ?></textarea>-->
-                <select name="status" class="form-control cmb" style="width:max-content;margin-left: 3.5%; display:inline" placeholder="" required>
+                <p align="left" style="margin-left: 5%; margin-right: 5%;">Educational Qualification:</p>
+                <select name="status" class="form-control cmb" style="width:max-content;margin-left: 5%; display:inline" placeholder="" required>
                     <option selected><?php echo $eduq ?></option>
                     <option>Bachelor Degree Regular</option>
                     <option>Bachelor Degree Correspondence</option>
@@ -495,6 +495,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     <option>Post Doctorate or 5 years experience</option>
                     <option>Culture, Art & Sports etc.</option>
                     <option>Class 12th Pass</option>
+                    <option hidden>I have taken both doses of the vaccine</option>
                 </select>
                 <p align="left" style="margin-left: 5%; margin-right: 5%;">Major subject or area of ​​specialization:</p>
                 <textarea name="sub" id="sub" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="2" cols="35" required></textarea>
