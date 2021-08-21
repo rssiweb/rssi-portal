@@ -491,7 +491,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     <span style="color:red">*&nbsp;</span>Company or organization name is optional, sector name is required.
                 </p>
                 <div class="center">
-                    <p style="margin-left: 5%; display:inline">Educational Qualification:</p>&nbsp;<textarea name="edu" id="edu" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="35" required><?php echo @$eduq ?></textarea><br>
+                    <p style="margin-left: 5%; display:inline">Educational Qualification:</p>&nbsp;<textarea name="edu" id="edu" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="35" required><?php echo $eduq ?></textarea><br>
                     <p style="margin-left: 5%; display:inline">Work experience:</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<textarea name="work" id="work" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="35" required><?php echo $workexperience ?></textarea>
                     <div>
                         <br>
