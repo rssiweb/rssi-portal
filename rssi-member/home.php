@@ -487,8 +487,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <p align="left" style="margin-left: 5%; margin-right: 5%;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),
                     Please update your educational qualification details and work experience. Example:<br><br>
 
-                    Educational Qualification:&nbsp;B.Tech (Electronics & Communication Engineering), M.Tech (Software Engineering)<br>
-                    Work experience:&nbsp;6+ years of IT experience in an MNC.<br><br>
+                    <b>Educational Qualification:</b>&nbsp;Name of the degree (major subject or subject combination or area of ​​specialization) i.e. M.Tech (Software Engineering), M.Sc. (Advanced Biochemistry)<br><br>
+                    <b>Work experience:</b>&nbsp;Years of experience (name of the sector), primary responsibility and any special achievement in the field in which you are working. i.e. 6+ years of IT experience in an MNC.<br><br>
                     <span style="color:red">*&nbsp;</span>Company or organization name is optional, sector name is required.
                 </p>
                 <div class="center">
