@@ -504,8 +504,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <br>
                 <button type="submit" id="sendButton" class="close-button btn btn-success">Save
                 </button><br>
-                <marquee style="margin-left: 5%; line-height:4" direction="left" height="100%" width="70%" onmouseover="this.stop();" onmouseout="this.start();">The information displayed in the input field is retrieved from the RSSI database. To enable the Save button, please update the major subject or area of ​​specialization.</marquee>
-                <br><br>
+                <!--<marquee style="margin-left: 5%; line-height:4" direction="left" height="100%" width="70%" onmouseover="this.stop();" onmouseout="this.start();">To enable the Save button, please update the major subject or area of ​​specialization.</marquee>-->
+                <br><p align="right" style="color:red; margin-right: 5%;">*&nbsp; <i>All fields are mandatory<i></p>
+                <br>
         </div>
         </div>
         </form>
