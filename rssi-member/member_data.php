@@ -75,7 +75,8 @@ $scode=$row[66];
 $exitinterview=$row[67];
 $questionflag=$row[68];
 $googlechat=$row[69];
-$adjustedleave=$row[70];               
+$adjustedleave=$row[70];
+$eduq=$row[72];               
                 
 ?>     
 <?php }?>    
