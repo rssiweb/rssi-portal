@@ -486,7 +486,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <p align="left" style="margin-left: 5%; margin-right: 5%;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),
                     Please confirm if the below details are up to date.</p>
                 <p align="left" style="margin-left: 5%; margin-right: 5%;">Educational Qualification:</p>
-                <select name="status" class="form-control cmb" style="width:max-content;margin-left: 5%; display:inline" placeholder="" required>
+                <select name="edu" class="form-control cmb" style="width:max-content;margin-left: 5%; display:inline" placeholder="" required>
                     <option selected><?php echo $eduq ?></option>
                     <option>Bachelor Degree Regular</option>
                     <option>Bachelor Degree Correspondence</option>
