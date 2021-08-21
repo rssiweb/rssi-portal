@@ -482,6 +482,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <br>
                 <input type="hidden" class="form-control" name="membername" type="text" value="<?php echo $fullname ?>" readonly>
                 <input type="hidden" class="form-control" name="memberid" type="text" value="<?php echo $associatenumber ?>" readonly>
+                <input type="hidden" class="form-control" name="flag" type="text" value="Y" readonly>
                 <!--<input type="hidden" type="text" name="status" id="count" value="" readonly required>-->
                 <p align="left" style="margin-left: 5%; margin-right: 5%;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),
                     Please update your educational qualification details and work experience. Example:<br><br>
