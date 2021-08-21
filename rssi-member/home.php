@@ -488,8 +488,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     Please update your educational qualification details and work experience. Example:<br><br>
 
                     <b>Educational Qualification:</b>&nbsp;Name of the degree (major subject or subject combination or area of ​​specialization) i.e. M.Tech (Software Engineering), M.Sc. (Advanced Biochemistry)<br><br>
-                    <b>Work experience:</b>&nbsp;Years of experience (name of the sector), primary responsibility and any special achievement in the field in which you are working. i.e. 6+ years of IT experience in an MNC.<br><br>
-                    <span style="color:red">*&nbsp;</span>Company or organization name is optional, sector name is required.
+                    <b>Work experience:</b>&nbsp;Years of experience, primary responsibility and any special achievement in the field in which you are working. i.e. 6+ years of IT experience in an MNC.<br><br>
+                    <span style="color:red">*&nbsp;</span>In case of more than one value, use a comma to separate each item in the series.
                 </p>
                 <div class="center">
                     <p style="margin-left: 5%; display:inline">Educational Qualification:</p>&nbsp;<textarea name="edu" id="edu" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="35" required><?php echo $eduq ?></textarea><br>
