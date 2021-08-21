@@ -8,7 +8,7 @@ if (!$_SESSION['aid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 }
 ?>
 
@@ -73,16 +73,16 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             <div class="col-md-12">
                 <div class=col style="text-align: right;"><?php echo $badge ?></div>
                 <!--**************QUESTION PAPER SUBMISSION TIMER**************-->
-               <!--<?php
-                if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
-                ?>
+                <!--<?php
+                    if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
+                    ?>
                     <div class="alert alert-success" role="alert" style="text-align: -webkit-center;">Being on time is a wonderful thing. You have successfully submitted the QT1/2021 question paper.
                     </div>
                 <?php
-                } else if ((@$questionflag == 'NA' || @$questionflag == 'YL') && $filterstatus == 'Active') {
+                    } else if ((@$questionflag == 'NA' || @$questionflag == 'YL') && $filterstatus == 'Active') {
                 ?>
                 <?php
-                } else if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
+                    } else if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
                 ?>
                     <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                         <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for question paper submission.
@@ -118,8 +118,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         }, 1000);
                     </script>
                 <?php
-                } else {
-                }
+                    } else {
+                    }
                 ?>-->
                 <!--**************QUESTION PAPER SUBMISSION END**************-->
                 <section class="box" style="padding: 2%;">
@@ -174,19 +174,19 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         </section>
     </section>
     <!--**************VACCINATION CONFIRMATION************** || strpos(@$vaccination, $word) !== false)-->
-    <?php
-    $word = "Not vaccinated";
-    if (@$vaccination == null && $filterstatus == 'Active') {
-    ?>
+    <!--<?php
+        $word = "Not vaccinated";
+        if (@$vaccination == null && $filterstatus == 'Active') {
+        ?>
 
         <div id="thoverX" class="thover pop-up"></div>
         <div id="tpopupX" class="tpopup pop-up">
             <form name="submit-to-google-sheet" action="" method="POST">
                 <br>
                 <input type="hidden" class="form-control" name="membername" type="text" value="<?php echo $fullname ?>" readonly>
-                <input type="hidden" class="form-control" name="memberid" type="text" value="<?php echo $associatenumber ?>" readonly>
-                <!--<input type="hidden" type="text" name="status" id="count" value="" readonly required>-->
-                <p>Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Please select your COVID-19 vaccination status from the list below?</p>
+                <input type="hidden" class="form-control" name="memberid" type="text" value="<?php echo $associatenumber ?>" readonly>-->
+    <!--<input type="hidden" type="text" name="status" id="count" value="" readonly required>-->
+    <!--<p>Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Please select your COVID-19 vaccination status from the list below?</p>
                 <div class="center">
                 <select name="status" class="form-control cmb" style="width:max-content;" placeholder="" required>
                 <option value="" disabled selected hidden>Select Status</option>
@@ -198,15 +198,15 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <div>
                 <br>
                 <button type="submit" id="vaccinated" class="close-button btn btn-success">Save
-                </button>
-                <!--&nbsp;
+                </button>-->
+    <!--&nbsp;
                 <button type="submit" id="notvaccinated" class="close-button btn btn-danger">
                     <i class="fas fa-thumbs-down" aria-hidden="true"></i>&nbsp;Not vaccinated
                 </button>-->
-                <br><br>
-            </form>
-        </div>
-        <!--<script>
+    <br><br>
+    </form>
+    </div>
+    <!--<script>
             $('#vaccinated').click(function() {
                 $('#count').val('Vaccinated');
             });
@@ -215,7 +215,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 $('#count').val('Not vaccinated');
             });
         </script>-->
-        <script>
+    <!--<script>
             const scriptURL = 'https://script.google.com/macros/s/AKfycbzRMd98T75iCUIe9ZwMYatPiJcmzzmgleL3epY7WwquEyyfRwg/exec'
             const form = document.forms['submit-to-google-sheet']
 
@@ -279,13 +279,13 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             });
         </script>
     <?php
-    } else {
+        } else {
     ?>
-    <?php } ?>
+    <?php } ?>-->
     <!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
     <!--<?php
-    if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
-    ?>
+        if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
+        ?>
 
         <div id="thoverX" class="thover pop-up2"></div>
         <div id="tpopupX" class="tpopup pop-up2">
@@ -376,14 +376,14 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             });
         </script>
     <?php
-    } else if (@$questionflag != 'NA' && $filterstatus == 'Active') {
+        } else if (@$questionflag != 'NA' && $filterstatus == 'Active') {
     ?>
     <?php } else {
-    } ?>-->
+        } ?>-->
     <!--**************JOIN GOOGLE CHAT CONFIRMATION**************-->
     <!--<?php
-    if (@$googlechat == null && $filterstatus == 'Active') {
-    ?>
+        if (@$googlechat == null && $filterstatus == 'Active') {
+        ?>
 
         <div id="thoverX" class="thover pop-up3"></div>
         <div id="tpopupX" class="tpopup pop-up3">
@@ -468,7 +468,126 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             });
         </script>
     <?php } else {
-    } ?>-->
+        } ?>-->
+
+    <!--**************VACCINATION CONFIRMATION************** || strpos(@$vaccination, $word) !== false)-->
+    <?php
+    $word = "Not vaccinated";
+    if (@$googlechat == null && $filterstatus == 'Active') {
+    ?>
+
+        <div id="thoverX" class="thover pop-up"></div>
+        <div id="tpopupX" class="tpopup pop-up">
+            <form name="submit-to-google-sheet" action="" method="POST">
+                <br>
+                <input type="hidden" class="form-control" name="membername" type="text" value="<?php echo $fullname ?>" readonly>
+                <input type="hidden" class="form-control" name="memberid" type="text" value="<?php echo $associatenumber ?>" readonly>
+                <!--<input type="hidden" type="text" name="status" id="count" value="" readonly required>-->
+                <p align="left" style="margin-left: 5%; margin-right: 5%;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),
+                    Please update your educational qualification details and work experience. Example:<br><br>
+
+                    Educational Qualification:&nbsp;B.Tech (Electronics & Communication Engineering), M.Tech (Software Engineering)<br>
+                    Work experience:&nbsp;6+ years of IT experience in an MNC.<br><br>
+                    <span style="color:red">*&nbsp;</span>Company or organization name is optional, sector name is required.
+                </p>
+                <div class="center">
+                    <p style="margin-left: 5%; display:inline">Educational Qualification:</p>&nbsp;<textarea name="edu" id="edu" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="50" required><?php echo @$eduq ?></textarea><br>
+                    <p style="margin-left: 5%; display:inline">Work experience:</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<textarea name="work" id="work" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="50" required><?php echo $workexperience ?></textarea>
+                    <div>
+                        <br>
+                        <button type="submit" id="sendButton" class="close-button btn btn-success">Save
+                        </button>
+                        <br><br>
+            </form>
+        </div>
+        <script>
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzFxxBLaI4b_gQFpS7IPLZLSgmaQjQWSa7o-qGDRF8y_xIpLrde/exec'
+            const form = document.forms['submit-to-google-sheet']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                if (Boolean(readCookie('profile'))) {
+                    $('.pop-up').hide();
+                    $('.pop-up').fadeOut(1000);
+                }
+                $('.close-button').click(function(e) {
+
+                    $('.pop-up').delay(10).fadeOut(700);
+                    e.stopPropagation();
+
+                    createCookie("profile", "2 days", 2);
+                    //return false;
+                });
+
+                function createCookie(name, value, days) {
+                    if (days) {
+                        var date = new Date();
+                        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                        var expires = "; expires=" + date.toGMTString();
+                    } else var expires = "";
+                    document.cookie = name + "=" + value + expires + "; path=/";
+                }
+
+
+
+                function readCookie(name) {
+                    var nameEQ = name + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                    }
+                    return null;
+                }
+
+                function eraseCookie(name) {
+                    createCookie(name, "", -1);
+                }
+
+            });
+        </script>
+        <!-- disable submit button if any required field is blank -->
+        <script>
+            $(document).ready(function() {
+                $('#sendButton').attr('disabled', true);
+
+                $('#edu').keyup(function() {
+                    if ($(this).val().length != 0) {
+                        $('#sendButton').attr('disabled', false);
+                    } else {
+                        $('#sendButton').attr('disabled', true);
+                    }
+                })
+                $('#work').keyup(function() {
+                    if ($(this).val().length != 0) {
+                        $('#sendButton').attr('disabled', false);
+                    } else {
+                        $('#sendButton').attr('disabled', true);
+                    }
+                })
+            });
+        </script>
+    <?php
+    } else {
+    ?>
+    <?php } ?>
     <style>
         .x-btn:focus,
         .button:focus,
