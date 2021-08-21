@@ -483,23 +483,31 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <input type="hidden" class="form-control" name="membername" type="text" value="<?php echo $fullname ?>" readonly>
                 <input type="hidden" class="form-control" name="memberid" type="text" value="<?php echo $associatenumber ?>" readonly>
                 <input type="hidden" class="form-control" name="flag" type="text" value="Y" readonly>
-                <!--<input type="hidden" type="text" name="status" id="count" value="" readonly required>-->
                 <p align="left" style="margin-left: 5%; margin-right: 5%;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),
-                    Please update your educational qualification details and work experience. Example:<br><br>
-
-                    <b>Educational Qualification:</b>&nbsp;Name of the degree (major subject or subject combination or area of ​​specialization)&nbsp;i.e. BA (Hons) Fine Arts, B.Com (Hons) Business Analytics, M.Tech (Software Engineering), M.Sc. (Advanced Biochemistry)<br><br>
-                    <b>Work experience:</b>&nbsp;Years of experience, primary responsibility and any special achievement in the field in which you are working.&nbsp;i.e. 6.5 years of IT experience in an MNC.<br><br>
-                    <span style="color:red">*&nbsp;</span>In case of more than one value, use a comma to separate each item in the series.
-                </p>
-                <div class="center">
-                    <p style="margin-left: 5%; display:inline">Educational Qualification:</p>&nbsp;<textarea name="edu" id="edu" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="35" required><?php echo $eduq ?></textarea><br>
-                    <p style="margin-left: 5%; display:inline">Work experience:</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<textarea name="work" id="work" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="35" required><?php echo $workexperience ?></textarea>
-                    <div>
-                        <br>
-                        <button type="submit" id="sendButton" class="close-button btn btn-success">Save
-                        </button><br><marquee style="margin-left: 5%; line-height:4" direction="left" height="100%" width="80%" onmouseover="this.stop();" onmouseout="this.start();">The information displayed in the input field is retrieved from the RSSI database. To enable the Save button, please update the data according to the example above.</marquee>
-                        <br><br>
-            </form>
+                    Please confirm if the below details are up to date.</p>
+                <p align="left" style="margin-left: 5%; margin-right: 5%;">Educational Qualification:</p><?php echo $eduq ?></textarea>-->
+                <select name="status" class="form-control cmb" style="width:max-content;margin-left: 3.5%; display:inline" placeholder="" required>
+                    <option selected><?php echo $eduq ?></option>
+                    <option>Bachelor Degree Regular</option>
+                    <option>Bachelor Degree Correspondence</option>
+                    <option>Master Degree</option>
+                    <option>PhD (Doctorate Degree)</option>
+                    <option>Post Doctorate or 5 years experience</option>
+                    <option>Culture, Art & Sports etc.</option>
+                    <option>Class 12th Pass</option>
+                </select>
+                <p align="left" style="margin-left: 5%; margin-right: 5%;">Major subject or area of ​​specialization:</p>
+                <textarea name="sub" id="sub" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="2" cols="35" required></textarea>
+                <p align="left" style="margin-left: 5%; margin-right: 5%;">Work experience:</p>
+                <textarea name="work" id="work" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="35" required><?php echo $workexperience ?></textarea>
+                <br>
+                <button type="submit" id="sendButton" class="close-button btn btn-success">Save
+                </button><br>
+                <marquee style="margin-left: 5%; line-height:4" direction="left" height="100%" width="70%" onmouseover="this.stop();" onmouseout="this.start();">The information displayed in the input field is retrieved from the RSSI database. To enable the Save button, please update the major subject or area of ​​specialization.</marquee>
+                <br><br>
+        </div>
+        </div>
+        </form>
         </div>
         <script>
             const scriptURL = 'https://script.google.com/macros/s/AKfycbzFxxBLaI4b_gQFpS7IPLZLSgmaQjQWSa7o-qGDRF8y_xIpLrde/exec'
@@ -569,14 +577,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             $(document).ready(function() {
                 $('#sendButton').attr('disabled', true);
 
-                $('#edu').keyup(function() {
-                    if ($(this).val().length != 0) {
-                        $('#sendButton').attr('disabled', false);
-                    } else {
-                        $('#sendButton').attr('disabled', true);
-                    }
-                })
-                $('#work').keyup(function() {
+                $('#sub').keyup(function() {
                     if ($(this).val().length != 0) {
                         $('#sendButton').attr('disabled', false);
                     } else {
