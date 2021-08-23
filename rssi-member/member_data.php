@@ -76,7 +76,9 @@ $exitinterview=$row[67];
 $questionflag=$row[68];
 $googlechat=$row[69];
 $adjustedleave=$row[70];
-$eduq=$row[72];               
+$eduq=$row[72];
+$mjorsub=$row[73];
+$disc=$row[74];               
                 
 ?>     
 <?php }?>    

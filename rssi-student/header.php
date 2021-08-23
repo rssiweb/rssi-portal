@@ -39,13 +39,33 @@
                         </li>
                         <li></li>
                     </ul>
+                </li><!------------------------------- ACTIVE STUDENT ---------------------------------->
+                <li class="profile dropdown">
+                    <a href="#"> <i class="fas fa-project-diagram"></i></a>
+                    <ul class="dropdown-menu profile fadeIn" style="right:unset">
+
+                        <?php if (@$filterstatus == 'Active') {
+                        ?>
+
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;Your Faculty</a>
+                            </li>
+
+                        <?php
+                        } else {
+                        }
+                        ?>
+                        <li></li>
+                    </ul>
                 </li>
-            <?php
-            } else { ?>
-                <li><a href="#"> <i class="fa fa-bell"></i>
+            <?php } else { ?>
+
+                <li>
+                    <a href="#"> <i class="fas fa-folder-plus"></i>
+                    <a href="#"> <i class="fas fa-project-diagram"></i>
                 </li>
-                <?php  }
-                ?>
+            <?php  }
+            ?>
         </ul>
 
         <ul class="pull-right info-menu user-info">
