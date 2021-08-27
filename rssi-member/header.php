@@ -82,6 +82,9 @@
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;RSSI Volunteer</a>
                             </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="facultyexp.php"><i class="fas fa-chalkboard-teacher"></i>&nbsp;Faculty Experience Dashboard</a>
+                            </li>
 
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="userlog.php"><i class="fas fa-server"></i>&nbsp;User log</a>

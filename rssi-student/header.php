@@ -48,7 +48,7 @@
                         ?>
 
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;Your Faculty</a>
+                                <a style="font-size:13px;" href="faculty.php"><i class="fas fa-chalkboard-teacher"></i>&nbsp;Your Faculty</a>
                             </li>
 
                         <?php
