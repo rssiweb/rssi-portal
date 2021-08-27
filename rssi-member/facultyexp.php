@@ -106,7 +106,7 @@ $resultArr = pg_fetch_all($result);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / RSSI Volunteer
+                        Home / Faculty Experience Dashboard
                     </div>
                 </div>
 
