@@ -48,7 +48,7 @@
                         ?>
 
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tag"></i>&nbsp;Your Faculty</a>
+                                <a style="font-size:13px;" href="facultyexp.php"><i class="fas fa-user-tag"></i>&nbsp;Your Faculty</a>
                             </li>
 
                         <?php
