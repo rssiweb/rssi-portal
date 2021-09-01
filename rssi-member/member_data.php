@@ -78,7 +78,8 @@ $googlechat=$row[69];
 $adjustedleave=$row[70];
 $eduq=$row[72];
 $mjorsub=$row[73];
-$disc=$row[74];               
+$disc=$row[74];
+$hbday=$row[75];               
                 
 ?>     
 <?php }?>    
