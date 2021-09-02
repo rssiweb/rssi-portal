@@ -86,7 +86,7 @@
                                 <a style="font-size:13px;" href="facultyexp.php"><i class="fas fa-user-tag"></i>&nbsp;Faculty Experience Dashboard</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="leve_admin.php"><i class="fas fa-plane-departure"></i>&nbsp;Leave Tracker</a>
+                                <a style="font-size:13px;" href="leave_admin.php"><i class="fas fa-plane-departure"></i>&nbsp;Leave Tracker</a>
                             </li>
 
                             <li style="height: unset;">
