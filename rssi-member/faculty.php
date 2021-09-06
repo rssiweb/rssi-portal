@@ -3,19 +3,18 @@ session_start();
 // Storing Session
 $user_check = $_SESSION['aid'];
 
-if(!$_SESSION['aid']) {
+if (!$_SESSION['aid']) {
 
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;  
-  }
-  else if ($_SESSION['role']!='Admin') {
+  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+  header("Location: index.php");
+  exit;
+} else if ($_SESSION['role'] != 'Admin') {
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-    echo '<script type="text/javascript">'; 
-    echo 'alert("Access Denied. You are not authorized to access this web page.");'; 
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
+  //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+  echo '<script type="text/javascript">';
+  echo 'alert("Access Denied. You are not authorized to access this web page.");';
+  echo 'window.location.href = "home.php";';
+  echo '</script>';
 }
 ?>
 <?php
@@ -159,9 +158,22 @@ $resultArr = pg_fetch_all($result);
                 <?php echo '<td><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>' ?>
               <?php } else { ?> <?php echo '<td></td>' ?>
               <?php } ?>
-            <?php echo '<td>' . $array['astatus'] . '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
-            <td>' . $array['colors'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticet"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-'. $array['slbal'] .',&nbsp;c-'. $array['clbal'] .'</td>
+
+              <?php echo '<td>' . $array['astatus'] ?>
+
+              <?php if ($array['on_leave'] != null) { ?>
+                <?php echo '<span class="label label-danger" style="display:-webkit-inline-box">on leave</span>'
+                ?>
+              <?php    } else {
+              } ?>
+              <?php if ($array['today'] != 0) { ?>
+                <?php echo '<span class="label label-warning" style="display:-webkit-inline-box">attd. pending</span>'
+                ?>
+              <?php    } else {
+              } ?>
+            <?php
+              echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td><td>' . $array['colors'] . '</td>
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticet"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td>' . $array['badge'] . '<br>' . $array['vaccination'] . '</td>
             </tr>';
             } ?>
