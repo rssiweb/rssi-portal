@@ -89,9 +89,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <td style="line-height: 2;"><?php echo $class ?></td>
                                     <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo substr($gm, -12) ?></a></span></td>
                                     <td style="line-height: 2;"><?php echo $attd ?>
-                                        <?php if (@$today != 0) {
+                                        <?php if (@$attd_pending != null) {
                                         ?>
-                                            <span class="label label-warning" style="display:-webkit-inline-box">pending</span>
+                                            <span class="label label-warning" style="display:-webkit-inline-box">pending&nbsp;<?php echo $attd_pending ?></span>
                                         <?php
                                         } else {
                                         }

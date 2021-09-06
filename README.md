@@ -159,8 +159,8 @@ SHOW TIMEZONE;
 ALTER TABLE table_name 
 DROP COLUMN column_name;
 
-ALTER TABLE bookdata_book
-ADD COLUMN val varchar;
+ALTER TABLE rssimyaccount_members
+ADD COLUMN attd_pending text;
 
 UPDATE d88k3j2m61uu9j.public.rssimyaccount_members
 SET allocationdate = '19/Apr/2021 - 30/Jun/2021' 
