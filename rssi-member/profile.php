@@ -168,6 +168,7 @@ include("member_data.php");
                             <tr>
                                 <th scope="col">Language Details</th>
                                 <th scope="col">Work Experience</th>
+                                <th scope="col">Area of specialization</th>
                                 <th scope="col">Account Approved by</th>
                             </tr>
                         </thead>
@@ -175,6 +176,7 @@ include("member_data.php");
                             <tr>
                                 <td style="line-height: 2;">English - <?php echo $languagedetailsenglish ?><br>Hindi - <?php echo $languagedetailshindi ?></td>
                                 <td><?php echo $workexperience ?></td>
+                                <td><?php echo $mjorsub ?></td>
                                 <td><?php echo $approvedby ?></td>
                             </tr>
                         </tbody>

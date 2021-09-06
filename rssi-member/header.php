@@ -14,28 +14,28 @@
                 <li class="profile dropdown">
                     <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><span class="badge">1</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
-                    
-                    <li style="height: unset;">
+
+                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view" target="_blank">Responsibilities of the Teaching Intern
                                 <span class="label label-info">Aug 2, 2021</span>
                             </a>
                         </li>
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1yDOMpaOaHatAaDBjRyuoaOpuDGCf9h9S/view" target="_blank">How to Accept a Google Meeting Invite
                                 <span class="label label-info">Aug 2, 2021</span>
                             </a>
                         </li>
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1GnFHc-WzcmKmLvXo3I1FOWZvio6ETDbX/view" target="_blank">RSSI Library User Guide
                                 <span class="label label-info">Aug 1, 2021</span>
                             </a>
                         </li>
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1YOhIKnOe1Ygt7wFS-Jh3Fe8Fm4qUKiXG/view?usp=sharing" target="_blank">Examiner & Reviewer User Guide
                                 <span class="label label-info">Jul 20, 2021</span>
                             </a>
                         </li>
-                        
+
                         <!--<li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit?usp=sharing" target="_blank">Exam Attendance Tracker_QT1/2021
                                 <span class="label label-info">Jul 9, 2021</span>
@@ -109,7 +109,7 @@
 
                 <li>
                     <a href="#"> <i class="fa fa-bell"></i>
-                    <a href="#"> <i class="fas fa-project-diagram"></i>
+                        <a href="#"> <i class="fas fa-project-diagram"></i>
                 </li>
             <?php  }
             ?>
@@ -183,7 +183,16 @@
                 <h3>
                     <a href="#"><?php echo $fullname ?></a>
                 </h3>
-                <p class="profile-title"><?php echo $associatenumber ?></p>
+                <p class="profile-title"><?php echo $associatenumber ?>
+
+                    <?php if (@$on_leave == 'on leave') {
+                    ?>
+                        <span class="label label-danger" style="display:-webkit-inline-box">on leave</span>
+                    <?php
+                    } else {
+                    }
+                    ?>
+                </p>
 
             </div>
         </div>
