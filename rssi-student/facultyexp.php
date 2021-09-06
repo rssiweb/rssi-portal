@@ -148,9 +148,16 @@ $resultArr = pg_fetch_all($result);
                                 <?php echo '<td><img src="' . $array['photo'] . '" width=50px/></td>' ?>
                             <?php } else { ?> <?php echo '<td><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" width=50px/></td>' ?>
                             <?php } ?>
-                        <?php echo '
-            <td>' . $array['fullname'] . '</td>
-            <td>' . $array['eduq'] . '</td>
+                            <?php echo '
+            <td>' . $array['fullname'] ?>
+
+                            <?php if ($array['on_leave'] != null) { ?>
+                                <?php echo '<br><span class="label label-danger">on leave</span>'
+                                ?>
+                            <?php    } else {
+                            } ?>
+                        <?php
+                            echo '</td><td>' . $array['eduq'] . '</td>
             <td>' . $array['mjorsub'] . '</td>
             <td>' . $array['workexperience'] . '</td>
             </tr>';
