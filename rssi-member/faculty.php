@@ -167,7 +167,7 @@ $resultArr = pg_fetch_all($result);
               <?php    } else {
               } ?>
               <?php if ($array['today'] != 0) { ?>
-                <?php echo '<span class="label label-warning" style="display:-webkit-inline-box">attd. pending</span>'
+                <?php echo '<span class="label label-warning" style="display:-webkit-inline-box">Attd. pending</span>'
                 ?>
               <?php    } else {
               } ?>
