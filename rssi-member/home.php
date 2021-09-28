@@ -228,7 +228,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
 <!--**************ADDRESS CONFIRMATION**************-->
     <?php
-    if ($filterstatus == 'Active') {
+    if (@$googlechat == null && $filterstatus == 'Active') {
         ?>
     
             <div id="thoverX" class="thover pop-up"></div>
@@ -238,6 +238,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     <input type="hidden" class="form-control" name="membername1" type="text" value="<?php echo $fullname ?>" readonly>
                     <input type="hidden" class="form-control" name="memberid1" type="text" value="<?php echo $associatenumber ?>" readonly>
                     <input type="hidden" type="text" name="status1" id="count1" value="" readonly required>
+                    <input type="hidden" class="form-control" name="flag" type="text" value="Y" readonly>
                     <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Please confirm whether the current address (You are currently residing here and you can receive any parcel sent from RSSI here) given below is correct.</p>
                     <b><?php echo $currentaddress ?></b><br><br>
                     <button type="submit" id="yes" class="close-button btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
