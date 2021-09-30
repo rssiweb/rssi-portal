@@ -131,7 +131,7 @@ $resultArr = pg_fetch_all($result);
                                     <br>Casual Leave - <?php echo $clbal ?>
                                     <!--<br>Other Leave - <?php echo $elbal ?></td>-->
                                 <td style="line-height: 2;">
-                                    <?php if ((@$slbal > 0 || @$clbal > 0) || (@$slbal = 0 && @$clbal = 0) && @$filterstatus == 'Active') {
+                                    <?php if ((@$slbal > 0 || @$clbal > 0) && @$filterstatus == 'Active') {
                                     ?>
                                         <span class="noticet"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span>
                                     <?php
