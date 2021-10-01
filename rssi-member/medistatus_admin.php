@@ -131,7 +131,7 @@ $resultArr = pg_fetch_all($result);
                     <table class="table">
                         <thead>
                             <tr>
-                            <th scope="col">Claim ID</th>
+                            <th scope="col">Claim ID (Click to see the document)</th>
                             <th scope="col">Registered On</th>    
                             <th scope="col">ID/F Name</th>    
                                 <th scope="col">Beneficiary</th>
@@ -147,8 +147,18 @@ $resultArr = pg_fetch_all($result);
             echo '<tbody>';
             foreach ($resultArr as $array) {
               echo '
-                                <tr>
-                                <td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>
+                                <tr>' ?>
+
+                                <?php if ($array['uploadeddocuments'] != null) { ?>
+                                    <?php
+                                    echo '<td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>'
+                                    ?>
+                                    <?php    } else { ?><?php
+                                                        echo '<td>' . $array['claimid'] . '</td>' ?>
+                                <?php } ?>
+                            <?php
+                                echo '
+
                                 <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                 <td>' . $array['id'] . '<br>' . strtok($array['name'],' ') . '</td>   
                                     

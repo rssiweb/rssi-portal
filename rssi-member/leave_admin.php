@@ -3,17 +3,16 @@ session_start();
 // Storing Session
 $user_check = $_SESSION['aid'];
 
-if(!$_SESSION['aid']) {
+if (!$_SESSION['aid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
-  }
-  else if ($_SESSION['role']!='Admin') {
+    exit;
+} else if ($_SESSION['role'] != 'Admin') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-    echo '<script type="text/javascript">'; 
-    echo 'alert("Access Denied. You are not authorized to access this web page.");'; 
+    echo '<script type="text/javascript">';
+    echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
@@ -29,16 +28,13 @@ include("database.php");
 
 if ($id == null && $status == null && $statuse == null && $appid == null) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE leaveid=''");
-}
-else if ($id != null && $status == 'ALL' && $statuse != null && $appid == null) {
+} else if ($id != null && $status == 'ALL' && $statuse != null && $appid == null) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id'AND organizationalengagement='$statuse'");
-}
-else if ($id != null && $status == 'ALL' && $statuse != null && $appid != null) {
+} else if ($id != null && $status == 'ALL' && $statuse != null && $appid != null) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id' AND organizationalengagement='$statuse'AND associatenumber='$appid'");
-}
-else if ($id != null && $status != 'ALL' && $status != null && $statuse != null && $appid == null) {
+} else if ($id != null && $status != 'ALL' && $status != null && $statuse != null && $appid == null) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id' AND status='$status' AND organizationalengagement='$statuse'");
-}else {
+} else {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id' AND status='$status' AND organizationalengagement='$statuse'AND associatenumber='$appid'");
 }
 
@@ -89,7 +85,7 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                <div class="col" style="display: inline-block; width:100%; text-align:right">
+                    <div class="col" style="display: inline-block; width:100%; text-align:right">
                         Home / Leave Tracker
                     </div>
                     <form action="" method="POST">
@@ -145,7 +141,7 @@ $resultArr = pg_fetch_all($result);
                        <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Leave ID</th>
+                                <th scope="col">Leave ID (Click to see the document)</th>
                                 <th scope="col">Applicant ID/F name</th>
                                 <th scope="col">Applied on</th>
                                 <th scope="col">From</th>
@@ -160,9 +156,18 @@ $resultArr = pg_fetch_all($result);
                         <?php
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
-                            echo '<tr>
-                                <td><span class="noticet"><a href="' . $array['doc'] . '" target="_blank">' . $array['leaveid'] . '</a></span></td>
-                                <td>' . $array['associatenumber'] . '/' . strtok($array['applicantname'], ' ') . '</td>
+                            echo '<tr>'
+                        ?>
+
+                            <?php if ($array['doc'] != null) { ?>
+                                <?php
+                                echo '<td><span class="noticet"><a href="' . $array['doc'] . '" target="_blank">' . $array['leaveid'] . '</a></span></td>'
+                                ?>
+                                <?php    } else { ?><?php
+                                                    echo '<td>' . $array['leaveid'] . '</td>' ?>
+                            <?php } ?>
+                        <?php
+                            echo '  <td>' . $array['associatenumber'] . '/' . strtok($array['applicantname'], ' ') . '</td>
                                 <td>' . $array['timestamp'] . '</td>
                                 <td>' . $array['from'] . '</td>
                                 <td>' . $array['to'] . '</td>
