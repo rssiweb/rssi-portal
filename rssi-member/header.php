@@ -221,7 +221,7 @@
                 <a href="exam.php" class="<?php echo $exam_active ?>">
                     <span class="sidebar-icon"><i class="fas fa-spell-check"></i>
                     </span>
-                    <span class="menu-title">Examination</span>
+                    <span class="menu-title">Examination</span>&nbsp;<span style="font-family:Arial, Helvetica, sans-serif" class="label label-warning">Update</span>
                 </a>
             </li>
 

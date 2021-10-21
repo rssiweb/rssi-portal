@@ -469,3 +469,103 @@
     } else {
     ?>
     <?php } ?>-->
+
+    <!--**************ADDRESS CONFIRMATION**************
+    <?php
+    if (@$googlechat == null && $filterstatus == 'Active') {
+        ?>
+    
+            <div id="thoverX" class="thover pop-up"></div>
+            <div id="tpopupX" class="tpopup pop-up">
+                <form name="submit-to-google-sheet" action="" method="POST">
+                    <br>
+                    <input type="hidden" class="form-control" name="membername1" type="text" value="<?php echo $fullname ?>" readonly>
+                    <input type="hidden" class="form-control" name="memberid1" type="text" value="<?php echo $associatenumber ?>" readonly>
+                    <input type="hidden" type="text" name="status1" id="count1" value="" readonly required>
+                    <input type="hidden" class="form-control" name="flag" type="text" value="Y" readonly>
+                    <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Please confirm whether the current address (You are currently residing here and you can receive any parcel sent from RSSI here) given below is correct.</p>
+                    <b><?php echo $currentaddress ?></b><br><br>
+                    <button type="submit" id="yes" class="close-button btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
+                        <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, Correct</button><br><br>
+                    <button onclick='window.location.href="form.php"' type="submit" id="no" class="close-button btn btn-default" style="white-space:normal !important;word-wrap:break-word;">
+                        <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;No, I want to change my address.
+                    </button>
+                    <br><br>
+                </form>
+            </div>
+            <script>
+                $('#yes').click(function() {
+                    $('#count1').val('Yes, Correct');
+                });
+    
+                $('#no').click(function() {
+                    $('#count1').val('No, I want to change my address.');
+                });
+            </script>
+            <script>
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbzExVHj1fLiSiERCCF5IVI73-Q7qJDaBDGNzdHJvOUuvyUX5Ig/exec'
+                const form = document.forms['submit-to-google-sheet']
+    
+                form.addEventListener('submit', e => {
+                    e.preventDefault()
+                    fetch(scriptURL, {
+                            method: 'POST',
+                            body: new FormData(form)
+                        })
+                        .then(response => console.log('Success!', response))
+                        .catch(error => console.error('Error!', error.message))
+                })
+            </script>
+            <script>
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, null, window.location.href);
+                }
+            </script>
+            <script>
+                $(document).ready(function() {
+    
+                    if (Boolean(readCookie('address'))) {
+                        $('.pop-up').hide();
+                        $('.pop-up').fadeOut(1000);
+                    }
+                    $('.close-button').click(function(e) {
+    
+                        $('.pop-up').delay(10).fadeOut(700);
+                        e.stopPropagation();
+    
+                        createCookie("address", "30 days", 30);
+                        //return false;
+                    });
+    
+                    function createCookie(name, value, days) {
+                        if (days) {
+                            var date = new Date();
+                            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                            var expires = "; expires=" + date.toGMTString();
+                        } else var expires = "";
+                        document.cookie = name + "=" + value + expires + "; path=/";
+                    }
+    
+    
+    
+                    function readCookie(name) {
+                        var nameEQ = name + "=";
+                        var ca = document.cookie.split(';');
+                        for (var i = 0; i < ca.length; i++) {
+                            var c = ca[i];
+                            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                        }
+                        return null;
+                    }
+    
+                    function eraseCookie(name) {
+                        createCookie(name, "", -1);
+                    }
+    
+                });
+            </script>
+        <?php
+        } else {
+        ?>
+        <?php } ?>-->

@@ -71,7 +71,59 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;"><?php echo $badge ?></div>
+                <!--<div class=col style="text-align: right;"><?php echo $badge ?></div>-->
+
+                <!--**************QUESTION PAPER SUBMISSION TIMER**************-->
+                <?php
+                    if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
+                        ?>
+                        <div class="alert alert-success" role="alert" style="text-align: -webkit-center;">Being on time is a wonderful thing. You have successfully submitted the QT2/2021 question paper.
+                        </div>
+                    <?php
+                        } else if ((@$questionflag == 'NA' || @$questionflag == 'YL') && $filterstatus == 'Active') {
+                    ?>
+                    <?php
+                        } else if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
+                    ?>
+                        <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
+                            <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for question paper submission.
+                        </div>
+                        <script>
+                            // Set the date we're counting down to
+                            var countDownDate = new Date("<?php echo $qpaper ?>").getTime();
+    
+                            // Update the count down every 1 second
+                            var x = setInterval(function() {
+    
+                                // Get today's date and time
+                                var now = new Date().getTime();
+    
+                                // Find the distance between now and the count down date
+                                var distance = countDownDate - now;
+    
+                                // Time calculations for days, hours, minutes and seconds
+                                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    
+                                // Output the result in an element with id="demo"
+                                document.getElementById("demo").innerHTML = days + "d " + hours + "h " +
+                                    minutes + "m " + seconds + "s ";
+    
+                                // If the count down is over, write some text 
+                                if (distance < 0) {
+                                    clearInterval(x);
+                                    document.getElementById("demo").innerHTML = "EXPIRED";
+                                }
+                            }, 1000);
+                        </script>
+                    <?php
+                        } else {
+                        }
+                    ?>
+                    <!--**************QUESTION PAPER SUBMISSION END**************-->
+
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -225,42 +277,39 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <?php } else {
     } ?>
 
-
-<!--**************ADDRESS CONFIRMATION**************-->
+<!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
     <?php
-    if (@$googlechat == null && $filterstatus == 'Active') {
-        ?>
+        if ((@$googlechat == null) && $filterstatus == 'Active') {
+            ?>
     
-            <div id="thoverX" class="thover pop-up"></div>
-            <div id="tpopupX" class="tpopup pop-up">
-                <form name="submit-to-google-sheet" action="" method="POST">
+            <div id="thoverX" class="thover pop-up2"></div>
+            <div id="tpopupX" class="tpopup pop-up2">
+                <form name="submit-to-google-sheet2" action="" method="POST">
                     <br>
-                    <input type="hidden" class="form-control" name="membername1" type="text" value="<?php echo $fullname ?>" readonly>
-                    <input type="hidden" class="form-control" name="memberid1" type="text" value="<?php echo $associatenumber ?>" readonly>
-                    <input type="hidden" type="text" name="status1" id="count1" value="" readonly required>
-                    <input type="hidden" class="form-control" name="flag" type="text" value="Y" readonly>
-                    <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Please confirm whether the current address (You are currently residing here and you can receive any parcel sent from RSSI here) given below is correct.</p>
-                    <b><?php echo $currentaddress ?></b><br><br>
-                    <button type="submit" id="yes" class="close-button btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
-                        <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, Correct</button><br><br>
-                    <button onclick='window.location.href="form.php"' type="submit" id="no" class="close-button btn btn-default" style="white-space:normal !important;word-wrap:break-word;">
-                        <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;No, I want to change my address.
+                    <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $fullname ?>" readonly>
+                    <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $associatenumber ?>" readonly>
+                    <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                    <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Do you know when and how to submit QT2/2021 question paper? For more details please visit the <span class="noticet"><a href="exam.php" target="_blank">Examination Portal.</a></span></p><br>
+                    <button type="submit" id="yes" class="close-button2 btn btn-success" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
+                        <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I know the process. I will share the question paper as per the stipulated time.</button><br><br>
+                    <button type="submit" id="no" class="close-button2 btn btn-default" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
+                        <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;I have not been assigned any question paper for this quarter.
                     </button>
                     <br><br>
                 </form>
             </div>
             <script>
                 $('#yes').click(function() {
-                    $('#count1').val('Yes, Correct');
+                    $('#count2').val('Yes, I know the process. I will share the question paper as per the stipulated time.');
                 });
     
                 $('#no').click(function() {
-                    $('#count1').val('No, I want to change my address.');
+                    $('#count2').val('I have not been assigned any question paper for this quarter.');
                 });
             </script>
             <script>
-                const scriptURL = 'https://script.google.com/macros/s/AKfycbzExVHj1fLiSiERCCF5IVI73-Q7qJDaBDGNzdHJvOUuvyUX5Ig/exec'
-                const form = document.forms['submit-to-google-sheet']
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbycsvlCllfvKdy257W77NyB05X5hbMpGilznY8n6x5VqL9xsTij/exec'
+                const form = document.forms['submit-to-google-sheet2']
     
                 form.addEventListener('submit', e => {
                     e.preventDefault()
@@ -280,16 +329,16 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             <script>
                 $(document).ready(function() {
     
-                    if (Boolean(readCookie('address'))) {
-                        $('.pop-up').hide();
-                        $('.pop-up').fadeOut(1000);
+                    if (Boolean(readCookie('qt2q'))) {
+                        $('.pop-up2').hide();
+                        $('.pop-up2').fadeOut(1000);
                     }
-                    $('.close-button').click(function(e) {
+                    $('.close-button2').click(function(e) {
     
-                        $('.pop-up').delay(10).fadeOut(700);
+                        $('.pop-up2').delay(10).fadeOut(700);
                         e.stopPropagation();
     
-                        createCookie("address", "30 days", 30);
+                        createCookie("qt2q", "4 days", 4);
                         //return false;
                     });
     
@@ -322,9 +371,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 });
             </script>
         <?php
-        } else {
+            } else if (@$questionflag != 'NA' && $filterstatus == 'Active') {
         ?>
-        <?php } ?>
+        <?php } else {
+            } ?>
 
     <style>
         .x-btn:focus,

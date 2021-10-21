@@ -103,8 +103,11 @@ include("member_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td>QT1/2021</td>
-                                <td id=cw>Descriptive written exam - Online, Full marks-50, Max. Time - 2 hours<br><br>
+                                <td>QT2/2021</td>
+                                <td id=cw>MCQ and Descriptive written exam - Online<br>
+                                    Full marks - 30<br>
+                                    Max. Time - 1.5 hours<br>
+                                    Project - 20 (Internal)<br><br>
 
                                     The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br><br>
 
@@ -113,11 +116,11 @@ include("member_data.php");
                                 <td><span class="noticet"><a href="https://drive.google.com/file/d/1tRelLLSOCxjC1TmbkdU4p2oSQ4RClAjs/view?usp=sharing" title="Download" target="_blank">Download</a></span></td>
 
                                 <td style="line-height: 2"><span class="noticet">
-                                        <a href="https://drive.google.com/file/d/15cgBw0nOYKKzY_LHZ7U6u-rj4AxWxE8O/view" target="_blank">Question paper submission date</i></a><br>
+                                        <a href="https://drive.google.com/file/d/1S5iE7baHY2i49EZgRSfVRLhnQGO7QGYZ/view" target="_blank">Question paper submission date</i></a><br>
 
-                                        <a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Examination Schedule</i></a><br>
+                                        <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
 
-                                        <a href="https://drive.google.com/file/d/1RR5MaWwSpogiRWjRK-REh-hXKfAbvttm/view" target="_blank">Invigilation duty list</i></a><br>
+                                        <a href="javascript:void(0)" target="_self">Invigilation duty list</i></a><br>
 
                                         <a href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator</i></a><br>
                                         <a href="https://drive.google.com/file/d/13cH8Rd4aPYHPe0ltzQzQDNFAH1GRTruY/view" target="_blank">Examiner User Guide</i></a>

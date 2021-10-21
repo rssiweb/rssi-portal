@@ -102,13 +102,16 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td>QT1/2021</td>
-                                <td id=cw>Descriptive written exam - Online, Full marks-50, Max. Time - 2 hours<br><br>
+                            <td>QT2/2021</td>
+                                <td id=cw>MCQ and Descriptive written exam - Online<br>
+                                    Full marks - 30<br>
+                                    Max. Time - 1.5 hours<br>
+                                    Project - 20 (Internal)<br><br>
 
                                     The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br></td>
 
                                 <td style="line-height: 2"><span class="noticet">
-                                        <a href="https://drive.google.com/file/d/1w580k9cXeJB3XTvh4i9E83aZhraxGDmz/view" target="_blank">Examination Schedule</i></a><br>
+                                        <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
                                         <a href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Guidelines for Student</i></a>
                                     </span>
                                 </td>
@@ -127,7 +130,7 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1k0m6y_xqg523v3S1HLJGBTGxVc1DGlZj/view" target="_blank">Download coverpage</i></a></span></td>
+                                <td><span class="noticet"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>
                                 <td><span class="noticet"><a href="question.php">Question paper</i></a></span></td>
                                 <td><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
                             </tr>
