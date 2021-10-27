@@ -130,7 +130,8 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span class="noticet"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>
+                                <!--<td><span class="noticet"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>-->
+                                <td><span class="noticet"><a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" target="_self">Download coverpage</i></a></span></td>
                                 <td><span class="noticet"><a href="question.php">Question paper</i></a></span></td>
                                 <td><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
                             </tr>
