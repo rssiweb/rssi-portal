@@ -75,54 +75,54 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
                 <!--**************QUESTION PAPER SUBMISSION TIMER**************-->
                 <?php
-                    if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
-                        ?>
-                        <div class="alert alert-success" role="alert" style="text-align: -webkit-center;">Being on time is a wonderful thing. You have successfully submitted the QT2/2021 question paper.
-                        </div>
-                    <?php
-                        } else if ((@$questionflag == 'NA' || @$questionflag == 'YL') && $filterstatus == 'Active') {
-                    ?>
-                    <?php
-                        } else if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
-                    ?>
-                        <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                            <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for question paper submission.
-                        </div>
-                        <script>
-                            // Set the date we're counting down to
-                            var countDownDate = new Date("<?php echo $qpaper ?>").getTime();
-    
-                            // Update the count down every 1 second
-                            var x = setInterval(function() {
-    
-                                // Get today's date and time
-                                var now = new Date().getTime();
-    
-                                // Find the distance between now and the count down date
-                                var distance = countDownDate - now;
-    
-                                // Time calculations for days, hours, minutes and seconds
-                                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    
-                                // Output the result in an element with id="demo"
-                                document.getElementById("demo").innerHTML = days + "d " + hours + "h " +
-                                    minutes + "m " + seconds + "s ";
-    
-                                // If the count down is over, write some text 
-                                if (distance < 0) {
-                                    clearInterval(x);
-                                    document.getElementById("demo").innerHTML = "EXPIRED";
-                                }
-                            }, 1000);
-                        </script>
-                    <?php
-                        } else {
-                        }
-                    ?>
-                    <!--**************QUESTION PAPER SUBMISSION END**************-->
+                if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
+                ?>
+                    <div class="alert alert-success" role="alert" style="text-align: -webkit-center;">Being on time is a wonderful thing. You have successfully submitted the QT2/2021 question paper.
+                    </div>
+                <?php
+                } else if ((@$questionflag == 'NA' || @$questionflag == 'YL') && $filterstatus == 'Active') {
+                ?>
+                <?php
+                } else if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
+                ?>
+                    <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
+                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for question paper submission.
+                    </div>
+                    <script>
+                        // Set the date we're counting down to
+                        var countDownDate = new Date("<?php echo $qpaper ?>").getTime();
+
+                        // Update the count down every 1 second
+                        var x = setInterval(function() {
+
+                            // Get today's date and time
+                            var now = new Date().getTime();
+
+                            // Find the distance between now and the count down date
+                            var distance = countDownDate - now;
+
+                            // Time calculations for days, hours, minutes and seconds
+                            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                            // Output the result in an element with id="demo"
+                            document.getElementById("demo").innerHTML = days + "d " + hours + "h " +
+                                minutes + "m " + seconds + "s ";
+
+                            // If the count down is over, write some text 
+                            if (distance < 0) {
+                                clearInterval(x);
+                                document.getElementById("demo").innerHTML = "EXPIRED";
+                            }
+                        }, 1000);
+                    </script>
+                <?php
+                } else {
+                }
+                ?>
+                <!--**************QUESTION PAPER SUBMISSION END**************-->
 
                 <section class="box" style="padding: 2%;">
 
@@ -277,104 +277,97 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <?php } else {
     } ?>
 
-<!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
+    <!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
     <?php
-        if ((@$googlechat == null) && $filterstatus == 'Active') {
-            ?>
-    
-            <div id="thoverX" class="thover pop-up2"></div>
-            <div id="tpopupX" class="tpopup pop-up2">
-                <form name="submit-to-google-sheet2" action="" method="POST">
-                    <br>
-                    <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $fullname ?>" readonly>
-                    <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $associatenumber ?>" readonly>
-                    <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
-                    <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Do you know when and how to submit QT2/2021 question paper? For more details please visit the <span class="noticet"><a href="exam.php" target="_blank">Examination Portal.</a></span></p><br>
-                    <button type="submit" id="yes" class="close-button2 btn btn-success" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
-                        <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I know the process. I will share the question paper as per the stipulated time.</button><br><br>
-                    <button type="submit" id="no" class="close-button2 btn btn-default" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
-                        <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;I have not been assigned any question paper for this quarter.
-                    </button>
-                    <br><br>
-                </form>
-            </div>
-            <script>
-                $('#yes').click(function() {
-                    $('#count2').val('Yes, I know the process. I will share the question paper as per the stipulated time.');
-                });
-    
-                $('#no').click(function() {
-                    $('#count2').val('I have not been assigned any question paper for this quarter.');
-                });
-            </script>
-            <script>
-                const scriptURL = 'https://script.google.com/macros/s/AKfycbycsvlCllfvKdy257W77NyB05X5hbMpGilznY8n6x5VqL9xsTij/exec'
-                const form = document.forms['submit-to-google-sheet2']
-    
-                form.addEventListener('submit', e => {
-                    e.preventDefault()
-                    fetch(scriptURL, {
-                            method: 'POST',
-                            body: new FormData(form)
-                        })
-                        .then(response => console.log('Success!', response))
-                        .catch(error => console.error('Error!', error.message))
-                })
-            </script>
-            <script>
-                if (window.history.replaceState) {
-                    window.history.replaceState(null, null, window.location.href);
+    if ($filterstatus == 'Active') {
+    ?>
+
+        <div id="thoverX" class="thover pop-up2"></div>
+        <div id="tpopupX" class="tpopup pop-up2" style="overflow-y: scroll; -webkit-overflow-scrolling: touch; height:570px; overflow-x: hidden;">
+            <form name="submit-to-google-sheet2" action="" method="POST">
+                <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $fullname ?>" readonly>
+                <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $associatenumber ?>" readonly>
+                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+
+                <script src="https://apps.elfsight.com/p/platform.js" defer></script>
+                <div class="elfsight-app-a29c0d34-63fe-4fd3-80d5-7205df6250b0"></div>
+
+                <button type="submit" id="no" class="close-button2 btn btn-danger" style="width: 20%; white-space:normal !important;word-wrap:break-word;">Close</button><br>
+            </form>
+        </div>
+        <script>
+            $('#no').click(function() {
+                $('#count2').val('I have not been assigned any question paper for this quarter.');
+            });
+        </script>
+        <script>
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbycsvlCllfvKdy257W77NyB05X5hbMpGilznY8n6x5VqL9xsTij/exec'
+            const form = document.forms['submit-to-google-sheet2']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                if (Boolean(readCookie('feedback'))) {
+                    $('.pop-up2').hide();
+                    $('.pop-up2').fadeOut(1000);
                 }
-            </script>
-            <script>
-                $(document).ready(function() {
-    
-                    if (Boolean(readCookie('qt2q'))) {
-                        $('.pop-up2').hide();
-                        $('.pop-up2').fadeOut(1000);
-                    }
-                    $('.close-button2').click(function(e) {
-    
-                        $('.pop-up2').delay(10).fadeOut(700);
-                        e.stopPropagation();
-    
-                        createCookie("qt2q", "4 days", 4);
-                        //return false;
-                    });
-    
-                    function createCookie(name, value, days) {
-                        if (days) {
-                            var date = new Date();
-                            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                            var expires = "; expires=" + date.toGMTString();
-                        } else var expires = "";
-                        document.cookie = name + "=" + value + expires + "; path=/";
-                    }
-    
-    
-    
-                    function readCookie(name) {
-                        var nameEQ = name + "=";
-                        var ca = document.cookie.split(';');
-                        for (var i = 0; i < ca.length; i++) {
-                            var c = ca[i];
-                            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-                            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-                        }
-                        return null;
-                    }
-    
-                    function eraseCookie(name) {
-                        createCookie(name, "", -1);
-                    }
-    
+                $('.close-button2').click(function(e) {
+
+                    $('.pop-up2').delay(10).fadeOut(700);
+                    e.stopPropagation();
+
+                    createCookie("feedback", "30 days", 30);
+                    //return false;
                 });
-            </script>
-        <?php
-            } else if (@$questionflag != 'NA' && $filterstatus == 'Active') {
-        ?>
-        <?php } else {
-            } ?>
+
+                function createCookie(name, value, days) {
+                    if (days) {
+                        var date = new Date();
+                        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                        var expires = "; expires=" + date.toGMTString();
+                    } else var expires = "";
+                    document.cookie = name + "=" + value + expires + "; path=/";
+                }
+
+
+
+                function readCookie(name) {
+                    var nameEQ = name + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                    }
+                    return null;
+                }
+
+                function eraseCookie(name) {
+                    createCookie(name, "", -1);
+                }
+
+            });
+        </script>
+    <?php
+    } else if (@$questionflag != 'NA' && $filterstatus == 'Active') {
+    ?>
+    <?php } else {
+    } ?>
 
     <style>
         .x-btn:focus,
