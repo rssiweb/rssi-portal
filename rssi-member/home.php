@@ -297,11 +297,11 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         </div>
         <script>
             $('#no').click(function() {
-                $('#count2').val('I have not been assigned any question paper for this quarter.');
+                $('#count2').val('checked feedback');
             });
         </script>
         <script>
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbycsvlCllfvKdy257W77NyB05X5hbMpGilznY8n6x5VqL9xsTij/exec'
+            const scriptURL = 'https://script.google.com/macros/s/AKfycby_0R2p9cBKr5ZQlpSJWKlyNVEdK25EWXaOevzT4lhVk7uqysM/exec'
             const form = document.forms['submit-to-google-sheet2']
 
             form.addEventListener('submit', e => {
