@@ -277,7 +277,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <?php } else {
     } ?>
 
-    <!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
+    <!--**************FEEDBACK**************-->
     <?php
     if ($filterstatus == 'Active') {
     ?>
@@ -364,7 +364,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             });
         </script>
     <?php
-    } else if (@$questionflag != 'NA' && $filterstatus == 'Active') {
+    } else if ($filterstatus == 'Inactive') {
     ?>
     <?php } else {
     } ?>

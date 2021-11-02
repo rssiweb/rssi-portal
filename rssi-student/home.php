@@ -293,6 +293,99 @@ include("student_data.php");
         </script>
     <?php } else {
     } ?>-->
+
+        <!--**************FEEDBACK**************-->
+        <?php
+    if ($filterstatus == 'Active') {
+    ?>
+
+        <div id="thoverX" class="thover pop-up2"></div>
+        <div id="tpopupX" class="tpopup pop-up2" style="overflow-y: scroll; -webkit-overflow-scrolling: touch; height:570px; overflow-x: hidden;">
+            <form name="submit-to-google-sheet2" action="" method="POST">
+                <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $studentname ?>" readonly>
+                <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $student_id ?>" readonly>
+                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+
+                <script src="https://apps.elfsight.com/p/platform.js" defer></script>
+                <div class="elfsight-app-a29c0d34-63fe-4fd3-80d5-7205df6250b0"></div>
+
+                <button type="submit" id="no" class="close-button2 btn btn-danger" style="width: 20%; white-space:normal !important;word-wrap:break-word;">Close</button><br>
+            </form>
+        </div>
+        <script>
+            $('#no').click(function() {
+                $('#count2').val('checked feedback');
+            });
+        </script>
+        <script>
+            const scriptURL = 'https://script.google.com/macros/s/AKfycby_0R2p9cBKr5ZQlpSJWKlyNVEdK25EWXaOevzT4lhVk7uqysM/exec'
+            const form = document.forms['submit-to-google-sheet2']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                if (Boolean(readCookie('feedback'))) {
+                    $('.pop-up2').hide();
+                    $('.pop-up2').fadeOut(1000);
+                }
+                $('.close-button2').click(function(e) {
+
+                    $('.pop-up2').delay(10).fadeOut(700);
+                    e.stopPropagation();
+
+                    createCookie("feedback", "30 days", 30);
+                    //return false;
+                });
+
+                function createCookie(name, value, days) {
+                    if (days) {
+                        var date = new Date();
+                        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                        var expires = "; expires=" + date.toGMTString();
+                    } else var expires = "";
+                    document.cookie = name + "=" + value + expires + "; path=/";
+                }
+
+
+
+                function readCookie(name) {
+                    var nameEQ = name + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                    }
+                    return null;
+                }
+
+                function eraseCookie(name) {
+                    createCookie(name, "", -1);
+                }
+
+            });
+        </script>
+    <?php
+    } else if ($filterstatus == 'Inactive') {
+    ?>
+    <?php } else {
+    } ?>
+
 </body>
 
 </html>
