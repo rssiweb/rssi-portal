@@ -59,31 +59,31 @@ include("student_data.php");
                         <label for="stid">Student ID:</label><br>
                         <input type="text" id="stid" name="stid" value="<?php echo $student_id ?>" readonly disable><br><br>
                         <label for="sub">Select subjects:</label><br>
-                        <input type="checkbox" id="sub1" name="sub1" value="English,">
+                        <input type="checkbox" disabled="disabled" checked="checked" id="sub1" name="sub1" value="English,">
                         <label for="sub1"> English</label><br>
-                        <input type="checkbox" id="sub2" name="sub2" value="Hindi,">
+                        <input type="checkbox" id="sub2" name="sub2" value=" Hindi,">
                         <label for="sub2"> Hindi</label><br>
-                        <input type="checkbox" id="sub3" name="sub3" value="Bengali,">
+                        <input type="checkbox" id="sub3" name="sub3" value=" Bengali,">
                         <label for="sub3"> Bengali</label><br>
-                        <input type="checkbox" id="sub4" name="sub4" value="Sanskrit,">
+                        <input type="checkbox" id="sub4" name="sub4" value=" Sanskrit,">
                         <label for="sub4"> Sanskrit</label><br>
-                        <input type="checkbox" id="sub5" name="sub5" value="Physics,">
+                        <input type="checkbox" id="sub5" name="sub5" value=" Physics,">
                         <label for="sub5"> Physics</label><br>
-                        <input type="checkbox" id="sub6" name="sub6" value="Chemistry,">
+                        <input type="checkbox" id="sub6" name="sub6" value=" Chemistry,">
                         <label for="sub6"> Chemistry</label><br>
-                        <input type="checkbox" id="sub7" name="sub7" value="Mathematics,">
+                        <input type="checkbox" id="sub7" name="sub7" value=" Mathematics,">
                         <label for="sub7"> Mathematics</label><br>
-                        <input type="checkbox" id="sub8" name="sub8" value="Biology,">
+                        <input type="checkbox" id="sub8" name="sub8" value=" Biology,">
                         <label for="sub8"> Biology</label><br>
-                        <input type="checkbox" id="sub9" name="sub9" value="Science,">
+                        <input type="checkbox" id="sub9" name="sub9" value=" Science,">
                         <label for="sub9"> Science</label><br>
-                        <input type="checkbox" id="sub10" name="sub10" value="Social Science,">
+                        <input type="checkbox" id="sub10" name="sub10" value=" Social Science,">
                         <label for="sub10"> Social Science</label><br>
-                        <input type="checkbox" id="sub11" name="sub11" value="Computer,">
+                        <input type="checkbox" id="sub11" name="sub11" value=" Computer,">
                         <label for="sub11"> Computer</label><br>
-                        <input type="checkbox" id="sub12" name="sub12" value="GK/Current Affairs,">
+                        <input type="checkbox" id="sub12" name="sub12" value=" GK/Current Affairs,">
                         <label for="sub12"> GK/Current Affairs</label><br>
-                        <input type="checkbox" id="sub13" name="sub13" value="Accountancy,">
+                        <input type="checkbox" id="sub13" name="sub13" value=" Accountancy,">
                         <label for="sub13"> Accountancy</label><br><br>
                         <input onclick='window.location.href="home.php"' type="submit" value="Submit">
                     </form>
@@ -101,7 +101,7 @@ include("student_data.php");
         });
     </script>
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycby2Ok3NM5WqWbv9cuF36Vx3ueboXsbT4PPiqzK43Cdz0o-OnGM/exec'
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzFxxBLaI4b_gQFpS7IPLZLSgmaQjQWSa7o-qGDRF8y_xIpLrde/exec'
         const form = document.forms['submit-to-google-sheet']
 
         form.addEventListener('submit', e => {

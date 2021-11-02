@@ -107,7 +107,7 @@ include("student_data.php");
         </section>
     </section>
     <!--**************User confirmation2**************-->
-    <!--<?php
+    <?php
     if ($filterstatus == 'Active') {
     ?>
 
@@ -118,7 +118,7 @@ include("student_data.php");
                 <input type="hidden" class="form-control" name="membername1" type="text" value="<?php echo $studentname ?>" readonly>
                 <input type="hidden" class="form-control" name="memberid1" type="text" value="<?php echo $student_id ?>" readonly>
                 <input type="hidden" type="text" name="status1" id="count1" value="" readonly required>
-                <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $studentname ?>&nbsp;(<?php echo $student_id ?>), Please confirm whether the subject combination given below is correct.</p>
+                <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $studentname ?>&nbsp;(<?php echo $student_id ?>), Please confirm whether the RSSI subject combination given below is correct or not. You have to write the below subject test in QT2-2021.</p>
                 <b><?php echo $nameofthesubjects ?></b><br><br>
                 <button type="submit" id="yes" class="close-button btn btn-success" style="white-space:normal !important;word-wrap:break-word;">
                     <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, Correct</button><br><br>
@@ -138,7 +138,7 @@ include("student_data.php");
             });
         </script>
         <script>
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbzRMd98T75iCUIe9ZwMYatPiJcmzzmgleL3epY7WwquEyyfRwg/exec'
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbyiOP3O__HFeipBtF5EFnv1fID-VTMbnM8yt64P7qBtHmHgvi1R/exec'
             const form = document.forms['submit-to-google-sheet']
 
             form.addEventListener('submit', e => {
@@ -159,7 +159,7 @@ include("student_data.php");
         <script>
             $(document).ready(function() {
 
-                if (Boolean(readCookie('sub'))) {
+                if (Boolean(readCookie('subqt2'))) {
                     $('.pop-up').hide();
                     $('.pop-up').fadeOut(1000);
                 }
@@ -168,7 +168,7 @@ include("student_data.php");
                     $('.pop-up').delay(10).fadeOut(700);
                     e.stopPropagation();
 
-                    createCookie("sub", "30 days", 30);
+                    createCookie("subqt2", "30 days", 30);
                     //return false;
                 });
 
@@ -203,7 +203,7 @@ include("student_data.php");
     <?php
     } else {
     ?>
-    <?php } ?>-->
+    <?php } ?>
     <!--**************User confirmation2**************-->
     <!--<?php
     if ($filterstatus == 'Active') {
