@@ -23,7 +23,7 @@ if (!$_SESSION['aid']) {
 <?php
 include("database.php");
 @$id = $_POST['get_id'];
-$result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' and engagement='Volunteer' and position LIKE '% - Faculty%' order by filterstatus asc,today desc");
+$result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' and position LIKE '%Volunteer-Faculty-%' order by filterstatus asc,today desc");
 if (!$result) {
     echo "An error occurred.\n";
     exit;

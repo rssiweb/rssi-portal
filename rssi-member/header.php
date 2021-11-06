@@ -5,14 +5,14 @@
         <ul class="pull-left info-menu  user-notify" id="menu">
             <button id="menu_icon"><i class="fa fa-bars" aria-hidden="true"></i></button>
             <li>
-                <a href="#"> <i class="fa fa-envelope"></i>
-                    <!--<span class="badge">1</span>-->
-                </a>
+                <!--<a href="#"> <i class="fa fa-envelope"></i>
+                    <span class="badge">1</span>
+                </a>-->
             </li>
             <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><span class="badge">1</span></a>
+                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><!--<span class="badge">1</span>--></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
 
                         <li style="height: unset;">
@@ -113,6 +113,11 @@
                 </li>
             <?php  }
             ?>
+
+            <li>
+                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt"></i><span class="badge" style="right:unset !important; left: 25px;">Rate us</span>
+                </a>
+            </li>
         </ul>
 
         <ul class="pull-right info-menu user-info">
