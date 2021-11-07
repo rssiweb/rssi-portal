@@ -25,17 +25,18 @@ include("member_data.php");
 include("database.php");
 @$id = $_POST['get_id'];
 @$category = $_POST['get_category'];
+@$module = $_POST['get_module'];
 
 if ($id == 'ALL' && $category == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student order by filterstatus asc, category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' order by filterstatus asc, category asc");
 } else if ($id == 'ALL' && $category != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE category='$category' order by filterstatus asc,category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND category='$category' order by filterstatus asc,category asc");
 } else if ($id > 0 && $category != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' AND category='$category' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
 } else if ($id > 0 && $category == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' order by category asc");
 } else {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' order by category asc");
 }
 
 if (!$result) {
@@ -125,6 +126,17 @@ $resultArr = pg_fetch_all($result);
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
+              <select name="get_module" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                  <?php if ($id == null) { ?>
+                    <option value="" disabled selected hidden>Select Module</option>
+                  <?php
+                  } else { ?>
+                    <option hidden selected><?php echo $module ?></option>
+                  <?php }
+                  ?>
+                  <option>National</option>
+                  <option>State</option>
+                </select>
                 <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
                   <?php if ($id == null) { ?>
                     <option value="" disabled selected hidden>Select Status</option>
