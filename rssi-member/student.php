@@ -230,7 +230,7 @@ $resultArr = pg_fetch_all($result);
           } else {
           ?>
             <tr>
-              <td colspan="5">No record found for <?php echo $id ?> and <?php echo $category ?></td>
+              <td colspan="5">No record found for <?php echo $module ?>, <?php echo $id ?> and <?php echo $category ?></td>
             </tr>
           <?php }
 
