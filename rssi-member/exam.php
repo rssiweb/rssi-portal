@@ -120,7 +120,8 @@ include("member_data.php");
 
                                         <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
 
-                                        <a href="javascript:void(0)" target="_self">Invigilation duty list</i></a><br>
+                                        <!--<a href="javascript:void(0)" target="_self">Invigilation duty list</i></a><br>-->
+                                        <a href="https://drive.google.com/file/d/11lvDT9mLHuQ7CQpSgrjO4QnaT4hfu6Zd/view" target="_blank">Invigilation duty list</i></a><br>
 
                                         <a href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator</i></a><br>
                                         <a href="https://drive.google.com/file/d/13cH8Rd4aPYHPe0ltzQzQDNFAH1GRTruY/view" target="_blank">Examiner User Guide</i></a>
