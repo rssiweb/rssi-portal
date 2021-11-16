@@ -124,10 +124,10 @@
                 <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i><!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
                 </a>
             </li>
-            <li>
-                <a href="https://www.youtube.com/channel/UC1gI7Hvsq90_QndfttoS6wA" target="_blank"> <i class="fab fa-youtube" title="Subscribe now"></i><!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
+            <!--<li>
+                <a href="https://www.youtube.com/channel/UC1gI7Hvsq90_QndfttoS6wA" target="_blank"> <i class="fab fa-youtube" title="Subscribe now"></i>
                 </a>
-            </li>
+            </li>-->
         </ul>
 
         <ul class="pull-right info-menu user-info">
@@ -236,7 +236,7 @@
                 <a href="exam.php" class="<?php echo $exam_active ?>">
                     <span class="sidebar-icon"><i class="fas fa-spell-check"></i>
                     </span>
-                    <span class="menu-title">Examination</span>&nbsp;<span style="font-family:Arial, Helvetica, sans-serif" class="label label-warning">Update</span>
+                    <span class="menu-title">Examination</span><!--&nbsp;<span style="font-family:Arial, Helvetica, sans-serif" class="label label-warning">Update</span>-->
                 </a>
             </li>
 
