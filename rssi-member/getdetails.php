@@ -94,11 +94,16 @@ foreach ($resultArr as $array) {
             <td><img src="' . $array['photo'] . '" width=100px/></td>
             <td style="line-height:2">Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b></td>
             <td>' . $array['engagement'] . '</td>
-            <td>' . $array['position'] . '</td>
+            <td>' . substr($array['position'], 0, strrpos($array['position'], '-')) . '</td>
             <td style="line-height:2">' . $array['doj'] . '&nbsp;to&nbsp;' . $array['effectivedate'] . '<br>' . $array['yos'] . '</td>
-            <td>' . $array['ipfl'] . '</td>
-            <td>' . $array['effectivedate'] . '</td>
-            <td>' . $array['exitinterview'] . '</td>
+            <td>' . $array['ipfl'] . '</td>' ?>
+
+            <?php if ($array['associationstatus'] != null) { ?>
+            <?php echo '<td>' . $array['effectivedate'] . '</td>' ?>
+            <?php } else { ?> <?php echo '<td>' . $today = date('d/m/Y') . '</td>' ?>
+            <?php } ?>
+
+            <?php echo '<td>' . $array['exitinterview'] . '</td>
             </tr>';
 }
 echo '</table>

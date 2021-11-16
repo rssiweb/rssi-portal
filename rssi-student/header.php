@@ -66,8 +66,12 @@
                 </li>
             <?php  }
             ?>
+                        <li>
+                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i><!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
+                </a>
+            </li>
             <li>
-                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt"></i><span class="badge" style="right:unset !important; left: 25px;">Rate us</span>
+                <a href="https://www.youtube.com/channel/UC1gI7Hvsq90_QndfttoS6wA" target="_blank"> <i class="fab fa-youtube" title="Subscribe now"></i><!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
                 </a>
             </li>
         </ul>

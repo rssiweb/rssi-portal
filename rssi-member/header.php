@@ -15,6 +15,12 @@
                     <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><!--<span class="badge">1</span>--></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
 
+                    <li style="height: unset;">
+                            <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit" target="_blank">Exam Attendance Tracker_QT2/2021
+                                <span class="label label-info">Nov 15, 2021</span>
+                            </a>
+                        </li>
+
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view" target="_blank">Responsibilities of the Teaching Intern
                                 <span class="label label-info">Aug 2, 2021</span>
@@ -115,7 +121,11 @@
             ?>
 
             <li>
-                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt"></i><span class="badge" style="right:unset !important; left: 25px;">Rate us</span>
+                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i><!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
+                </a>
+            </li>
+            <li>
+                <a href="https://www.youtube.com/channel/UC1gI7Hvsq90_QndfttoS6wA" target="_blank"> <i class="fab fa-youtube" title="Subscribe now"></i><!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
                 </a>
             </li>
         </ul>
