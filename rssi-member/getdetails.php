@@ -81,7 +81,7 @@ echo '
          <th>Designation</th>
          <th>Service Period</th>
          <th>IPF<br>(Individual Performance Factor)/5</th>
-         <!--<th>Date of Relieving</th>-->
+         <th>Current Status</th>
          <th>Certificate Date</th>
          <th>Certifying Authority</th>
         </tr>
@@ -96,7 +96,8 @@ foreach ($resultArr as $array) {
             <td>' . $array['engagement'] . '</td>
             <td>' . substr($array['position'], 0, strrpos($array['position'], '-')) . '</td>
             <td style="line-height:2">' . $array['doj'] . '&nbsp;to&nbsp;' . $array['effectivedate'] . '<br>' . $array['yos'] . '</td>
-            <td>' . $array['ipfl'] . '</td>' ?>
+            <td>' . $array['ipfl'] . '</td>
+            <td>' . $array['astatus'] . '</td>' ?>
 
             <?php if ($array['associationstatus'] != null) { ?>
             <?php echo '<td>' . $array['effectivedate'] . '</td>' ?>
