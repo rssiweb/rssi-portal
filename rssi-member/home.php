@@ -86,7 +86,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 } else if ((@$questionflag == null || @$questionflag != 'Y') && $filterstatus == 'Active') {
                 ?>
                     <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for question paper submission.
+                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for the completion of answer sheet evaluation.
+                        <!--left for question paper submission.-->
                     </div>
                     <script>
                         // Set the date we're counting down to
