@@ -7,7 +7,7 @@ if (!$_SESSION['sid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 } else if ($_SESSION['feesflag'] == 'd') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
@@ -61,8 +61,8 @@ include("student_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;"><?php echo @$badge 
-                                                                ?></div>
+                <div class=col style="text-align: right;"><?php echo @$badge
+                                                            ?></div>
 
                 <section class="box" style="padding: 2%;">
 
@@ -89,6 +89,34 @@ include("student_data.php");
 
         </section>
     </section>
+    <!-- Messenger Chat Plugin Code -->
+    <div id="fb-root"></div>
+
+    <!-- Your Chat Plugin code -->
+    <div id="fb-customer-chat" class="fb-customerchat">
+    </div>
+
+    <script>
+        var chatbox = document.getElementById('fb-customer-chat');
+        chatbox.setAttribute("page_id", "215632685291793");
+        chatbox.setAttribute("attribution", "biz_inbox");
+
+        window.fbAsyncInit = function() {
+            FB.init({
+                xfbml: true,
+                version: 'v12.0'
+            });
+        };
+
+        (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    </script>
 </body>
 
 </html>
