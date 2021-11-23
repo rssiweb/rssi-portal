@@ -140,7 +140,7 @@ include("member_data.php");
                                 <td><?php echo $applicationnumber ?></td>
                                 <td id=cw1><?php echo substr($position, 0, strrpos($position, "-")) ?></td>
                                 <td><?php echo $basebranch ?></td>
-                                <td>Lucknow, UP</td>
+                                <td><?php echo $depb ?></td>
                             </tr>
                         </tbody>
                     </table>
