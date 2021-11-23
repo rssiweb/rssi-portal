@@ -164,6 +164,8 @@ $resultArr = pg_fetch_all($result);
                   <option>LG4</option>
                   <option>LG4S1</option>
                   <option>LG4S2</option>
+                  <option>WLG3</option>
+                  <option>WLG4S1</option>
                   <option>Undefined</option>
                   <option>ALL</option>
                 </select>
