@@ -140,6 +140,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <?php }
                                     ?>
                                     <!--<option>Quarterly 2/2021</option>-->
+                                    <option>QT2/2021</option>
                                     <option>QT1/2021</option>
                                 </select>
                             </div>
