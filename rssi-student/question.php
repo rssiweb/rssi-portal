@@ -201,6 +201,7 @@ include("student_data.php");
                                     <option>LG4</option>
                                     <option>LG4S1</option>
                                     <option>LG4S2</option>
+                                    <option>WLG4S1</option>
                                 </select>
                             </div>
                             <div class="col2ass">
@@ -214,6 +215,8 @@ include("student_data.php");
                                     <option>Mathematics</option>
                                     <option>Biology</option>
                                     <option>Science</option>
+                                    <option>Life science</option>
+                                    <option>Physical science</option>
                                     <option>Social Science</option>
                                     <option>Computer</option>
                                     <option>GK</option>
