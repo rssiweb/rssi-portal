@@ -12,6 +12,12 @@
                 <li class="profile dropdown">
                     <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><!--<span class="badge">1</span>--></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; /*overflow-y: auto;*/">
+
+                    <li style="height: unset;">
+                            <a class="notification" href="https://drive.google.com/file/d/1BPcxYM3X9PgQZDoI_9aK5lpEwuvdXVby/view" target="_blank">How to join Google space
+                                <span class="label label-info">Dec 3, 2021</span>
+                            </a>
+                        </li>
                     <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1yDOMpaOaHatAaDBjRyuoaOpuDGCf9h9S/view" target="_blank">How to Accept a Google Meeting Invite
                                 <span class="label label-info">Aug 2, 2021</span>

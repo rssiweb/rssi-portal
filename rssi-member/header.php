@@ -16,6 +16,12 @@
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
 
                     <li style="height: unset;">
+                            <a class="notification" href="https://drive.google.com/file/d/1BPcxYM3X9PgQZDoI_9aK5lpEwuvdXVby/view" target="_blank">How to join Google space
+                                <span class="label label-info">Dec 3, 2021</span>
+                            </a>
+                        </li>
+
+                    <li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit" target="_blank">Exam Attendance Tracker_QT2/2021
                                 <span class="label label-info">Nov 15, 2021</span>
                             </a>
@@ -42,11 +48,7 @@
                             </a>
                         </li>
 
-                        <!--<li style="height: unset;">
-                            <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit?usp=sharing" target="_blank">Exam Attendance Tracker_QT1/2021
-                                <span class="label label-info">Jul 9, 2021</span>
-                            </a>
-                        </li>-->
+                       
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting
                                 <span class="label label-info">Jul 7, 2021</span>
