@@ -21,11 +21,11 @@
                             </a>
                         </li>
 
-                    <li style="height: unset;">
+                    <!--<li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit" target="_blank">Exam Attendance Tracker_QT2/2021
                                 <span class="label label-info">Nov 15, 2021</span>
                             </a>
-                        </li>
+                        </li>-->
 
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view" target="_blank">Responsibilities of the Teaching Intern
