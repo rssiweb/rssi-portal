@@ -6,7 +6,7 @@ if (!$_SESSION['aid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 }
 ?>
 <?php
@@ -15,15 +15,15 @@ if (!$_SESSION['aid']) {
 
 //if (!$_SESSION['aid']) {
 
-  //  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    //header("Location: index.php");
-    //exit;  
+//  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+//header("Location: index.php");
+//exit;  
 //} else if ($_SESSION['engagement'] == 'Intern' && $_SESSION['filterstatus'] == 'Active') {
 
-    //echo '<script type="text/javascript">';
-    //echo 'alert("You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.");';
-    //echo 'window.location.href = "home.php";';
-    //echo '</script>';
+//echo '<script type="text/javascript">';
+//echo 'alert("You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.");';
+//echo 'window.location.href = "home.php";';
+//echo '</script>';
 //}
 ?>
 <?php
@@ -106,7 +106,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         }
 
         #cw3 {
-            width: 20%;
+            width: 60%;
         }
 
         @media (min-width:767px) {
@@ -154,12 +154,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Associate details</th>
+                                <th scope="col" id="cw2">Associate details</th>
                                 <th scope="col">Appraisal type</th>
-                                <th scope="col">Appraisal cycle</th>
-                                <th scope="col">Feedback</th>
-                                <th scope="col">Scope of improvement</th>
-                                <th scope="col">IPF (Individual Performance Factor)</th>
+                                <th scope="col" id="cw1">Appraisal cycle</th>
+                                <th scope="col">IPF (Individual Performance Factor)/5</th>
                             </tr>
                         </thead>
                         <?php if (@$appraisaltype > 0) {
@@ -167,31 +165,45 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <tbody>
                                 <tr>
 
-                                    <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?></b><br>
-                                        Associate ID - <b><?php echo $associatenumber ?></b><br>
-                                        <span style="line-height: 3;"><?php echo $role ?></span>
+                                    <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br>
+                                        <span style="line-height: 3;"><?php echo $role ?>
                                     </td>
                                     <td style="line-height: 1.7;"><?php echo $appraisaltype ?></td>
                                     <td id="cw" style="line-height: 1.7;"><?php echo $effectivestartdate ?> to <?php echo $effectiveenddate ?></td>
-                                    <td style="line-height: 1.7;"><?php echo $feedback ?></td>
-                                    <td style="line-height: 1.7;"><?php echo $scopeofimprovement ?></td>
                                     <td style="line-height: 1.7;"><?php echo $ipf ?></td>
                                 </tr>
-                            <?php
-                        } else if ($id == "") {
-                            ?>
-                                <tr>
-                                    <td>Please select Appraisal type.</td>
-                                </tr>
-                            <?php
-                        } else {
-                            ?>
-                                <tr>
-                                    <td>No record found for <?php echo $id ?></td>
-                                </tr>
-                            <?php }
-                            ?>
                             </tbody>
+                    </table>
+
+
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col" id="cw3">Feedback<br>(5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied)</th>
+                                <th scope="col">Scope of improvement</th>
+                            </tr>
+                        </thead>
+                        <thead>
+                            <tr>
+                                <td style="line-height: 1.7;"><?php echo $feedback ?></td>
+                                <td style="line-height: 1.7;"><?php echo $scopeofimprovement ?></td>
+                            </tr>
+                        <?php
+                        } else if ($id == "") {
+                        ?>
+                            <tr>
+                                <td>Please select Appraisal type.</td>
+                            </tr>
+                        <?php
+                        } else {
+                        ?>
+                            <tr>
+                                <td>No record found for <?php echo $id ?></td>
+                            </tr>
+                        <?php }
+                        ?>
+                        </tbody>
                     </table>
 
 
