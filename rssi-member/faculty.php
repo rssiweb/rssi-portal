@@ -159,20 +159,16 @@ $resultArr = pg_fetch_all($result);
               <?php } else { ?> <?php echo '<td></td>' ?>
               <?php } ?>
 
-              <?php echo '<td>' . $array['astatus'] ?>
+              <?php echo '<td style="white-space:unset">' . $array['astatus'] ?><br>
 
               <?php if ($array['on_leave'] != null) { ?>
-                <?php echo '<span class="label label-danger" style="display:-webkit-inline-box">on leave</span>'
-                ?>
-              <?php    } else {
-              } ?>
+                <?php echo '<br><p class="label label-danger">on leave</p>' ?>
+              <?php } else {} ?>
               <?php if ($array['today'] != 0) { ?>
-                <?php echo '<span class="label label-warning" style="display:-webkit-inline-box">Attd. pending</span>'
-                ?>
+                <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
               <?php    } else {
               } ?>
-            <?php
-              echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td><td>' . $array['colors'] . '</td>
+            <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td><td>' . $array['colors'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticet"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td>' . $array['badge'] . '<br>' . $array['vaccination'] . '</td>
             </tr>';
