@@ -3,19 +3,18 @@ session_start();
 // Storing Session
 $user_check = $_SESSION['aid'];
 
-if(!$_SESSION['aid']) {
+if (!$_SESSION['aid']) {
 
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;  
-  }
-  else if ($_SESSION['filterstatus']!='Active') {
+  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+  header("Location: index.php");
+  exit;
+} else if ($_SESSION['filterstatus'] != 'Active') {
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-    echo '<script type="text/javascript">'; 
-    echo 'alert("Access Denied. You are not authorized to access this web page.");'; 
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
+  //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+  echo '<script type="text/javascript">';
+  echo 'alert("Access Denied. You are not authorized to access this web page.");';
+  echo 'window.location.href = "home.php";';
+  echo '</script>';
 }
 ?>
 <?php
@@ -26,17 +25,25 @@ include("database.php");
 @$id = $_POST['get_id'];
 @$category = $_POST['get_category'];
 @$module = $_POST['get_module'];
+@$class = $_POST['get_class'];
 
-if ($id == 'ALL' && $category == 'ALL') {
+
+if ($id == 'ALL' && $category == 'ALL' && $class == 'ALL') {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' order by filterstatus asc, category asc");
-} else if ($id == 'ALL' && $category != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND category='$category' order by filterstatus asc,category asc");
-} else if ($id > 0 && $category != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
-} else if ($id > 0 && $category == 'ALL') {
+} else if ($id =='ALL' && $category == 'ALL' && $class != 'ALL' && $class!=null) {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' order by category asc");
+} else if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class!=null) {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc");
+} else if ($id > 0 && $category != 'ALL' && $class != 'ALL' && $class!=null) {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
+} else if ($id > 0 && $category == 'ALL' && $class == 'ALL') {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' order by category asc");
+} else if ($id > 0 && $category == 'ALL' && $class != 'ALL' && $class!=null) {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc");
+} else if ($id > 0 && $category != 'ALL' && $class == 'ALL') {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc");
 } else {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
 }
 
 if (!$result) {
@@ -126,7 +133,7 @@ $resultArr = pg_fetch_all($result);
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
-              <select name="get_module" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                <select name="get_module" class="form-control" style="width:max-content; display:inline-block" required>
                   <?php if ($id == null) { ?>
                     <option value="" disabled selected hidden>Select Module</option>
                   <?php
@@ -137,7 +144,7 @@ $resultArr = pg_fetch_all($result);
                   <option>National</option>
                   <option>State</option>
                 </select>
-                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
                   <?php if ($id == null) { ?>
                     <option value="" disabled selected hidden>Select Status</option>
                   <?php
@@ -149,7 +156,7 @@ $resultArr = pg_fetch_all($result);
                   <option>Inactive</option>
                   <option>ALL</option>
                 </select>
-                <select name="get_category" class="form-control" style="width:max-content;display:inline-block" placeholder="Appraisal type" required>
+                <select name="get_category" class="form-control" style="width:max-content;display:inline-block" required>
                   <?php if ($category == null) { ?>
                     <option value="" disabled selected hidden>Select Category</option>
                   <?php
@@ -167,6 +174,29 @@ $resultArr = pg_fetch_all($result);
                   <option>WLG3</option>
                   <option>WLG4S1</option>
                   <option>Undefined</option>
+                  <option>ALL</option>
+                </select>
+                <select name="get_class" class="form-control" style="width:max-content; display:inline-block">
+                  <?php if ($class == null) { ?>
+                    <option value="" disabled selected hidden>Select Class</option>
+                  <?php
+                  } else { ?>
+                    <option hidden selected><?php echo $class ?></option>
+                  <?php }
+                  ?>
+                  <option>1</option>
+                  <option>2</option>
+                  <option>3</option>
+                  <option>4</option>
+                  <option>5</option>
+                  <option>6</option>
+                  <option>7</option>
+                  <option>8</option>
+                  <option>9</option>
+                  <option>10</option>
+                  <option>11</option>
+                  <option>12</option>
+                  <option>x</option>
                   <option>ALL</option>
                 </select>
               </div>
@@ -218,7 +248,7 @@ $resultArr = pg_fetch_all($result);
             <?php
               echo '</td> 
             <td>' . $array['nameofthesubjects'] . '<br><br>Attendance -&nbsp;' . $array['attd'] . '<br>' . $array['allocationdate'] . '</td>
-            <td>' . $array['medium'] . '/'. $array['nameoftheboard'] .'</td>
+            <td>' . $array['medium'] . '/' . $array['nameoftheboard'] . '</td>
             <td>' . $array['badge'] . '</td>
             </tr>';
             } ?>
