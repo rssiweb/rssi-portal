@@ -16,13 +16,18 @@
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
 
                     <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/1p-6Eg9PsJ0esyh_YpaI1ATRPZVXoKTu0/view" target="_blank">How to Evaluate Answer Sheet
+                            <a class="notification" href="https://youtu.be/W3sWtsuRlTM" target="_blank">User Guide My Account
+                                <span class="label label-info">Dec 8, 2021</span>
+                            </a>
+                        </li>
+                    <li style="height: unset;">
+                            <a class="notification" href="https://youtu.be/HuGmVkIW6vw" target="_blank">How to Evaluate Answer Sheet
                                 <span class="label label-info">Dec 5, 2021</span>
                             </a>
                         </li>
                     
                     <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/1BPcxYM3X9PgQZDoI_9aK5lpEwuvdXVby/view" target="_blank">How to join Google space
+                            <a class="notification" href="https://youtu.be/DFc97rQgqVc" target="_blank">How to join Google space
                                 <span class="label label-info">Dec 3, 2021</span>
                             </a>
                         </li>
