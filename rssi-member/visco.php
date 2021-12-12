@@ -306,7 +306,7 @@ include("member_data.php");
                     if (records.length == 0) {
                         document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
                     } else {
-                        var order = ["LG3", "LG4S1", "LG4", "LG4S2"]
+                        var order = ["LG3", "LG4S1", "LG4", "LG4S2", "WLG3", "WLG4S1"]
                         // var order = ["1/CT01", "1/CT02", "QT1", "2/CT01", "2/CT02", "QT2", "3/CT01", "3/CT02", "QT3"]
                         order.forEach(sub => {
                             records.forEach(item => {
