@@ -181,7 +181,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         <thead>
                             <tr>
                                 <th scope="col" id="cw3">Feedback<br>(5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied)</th>
-                                <th scope="col">Scope of improvement</th>
+                                <th scope="col">Remarks<br>(Based on general observations, system-generated reports, and student feedback)</th>
                             </tr>
                         </thead>
                         <thead>
