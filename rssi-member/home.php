@@ -73,7 +73,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             <div class="col-md-12">
                 <!--<div class=col style="text-align: right;"><?php echo $badge ?></div>-->
 
-                <!--**************QUESTION PAPER SUBMISSION TIMER**************-->
+                <!--**************QUESTION PAPER SUBMISSION TIMER**************
                 <?php
                 if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
                 ?>
@@ -87,7 +87,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 ?>
                     <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                         <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for the completion of answer sheet evaluation.
-                        <!--left for question paper submission.-->
+                        --left for question paper submission.--
                     </div>
                     <script>
                         // Set the date we're counting down to
@@ -122,7 +122,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <?php
                 } else {
                 }
-                ?>
+                ?>-->
                 <!--**************QUESTION PAPER SUBMISSION END**************-->
 
                 <section class="box" style="padding: 2%;">
@@ -280,7 +280,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
     <!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
     <?php
-    if ((@$googlechat == null) && $filterstatus == 'Active') {
+    if ((@$googlechat == null) && $filterstatus == 'Active' && @$ipfl != null) {
     ?>
 
         <div id="thoverX" class="thover pop-up2"></div>
@@ -290,25 +290,23 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $fullname ?>" readonly>
                 <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $associatenumber ?>" readonly>
                 <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
-                <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo strtok($fullname, ' ') ?>, Do you know when and how to upload the marks obtained in the grade summary sheet? check it out.<br><br>
-                    <span class="noticet"><a href="https://drive.google.com/file/d/1H3op_m9zK7HnmeAAir1XN91wP4O_xaFh/view" target="_blank">QT2-2021 Answer sheet allotment</a></span>
+                <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo strtok($fullname, ' ') ?>, Your IPF / Monthly Feedback has been released. For more details, please visit
+                    <span class="noticet"><a href="my_appraisal.php" target="_blank">My Appraisal</a> portal.</span>
                 </p>
-                <span class="noticet"><a href="https://drive.google.com/file/d/13cH8Rd4aPYHPe0ltzQzQDNFAH1GRTruY/view" target="_blank">Examiner and Reviewer User Guide</a></span></p><br>
-                <button type="submit" id="yes" class="close-button2 btn btn-success" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
-                    <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I know the process. I will upload the marks obtained as per the stipulated time.</button><br><br>
-                <button type="submit" id="no" class="close-button2 btn btn-default" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
-                    <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;I have not been assigned any answer sheet for this quarter.
+               <br>
+                <button type="submit" id="yes" class="close-button2 btn btn-success" style="width: 20%; white-space:normal !important;word-wrap:break-word;">I have checked my IPF and I accept it.</button>
+                <button type="submit" id="no" class="close-button2 btn btn-danger" style="width: 20%; white-space:normal !important;word-wrap:break-word;">I have checked my IPF and I reject it.
                 </button>
                 <br><br>
             </form>
         </div>
         <script>
             $('#yes').click(function() {
-                $('#count2').val('Yes, I know the process. I will upload the marks obtained as per the stipulated time.');
+                $('#count2').val('I have checked my IPF and I accept it.');
             });
 
             $('#no').click(function() {
-                $('#count2').val('I have not been assigned any answer sheet for this quarter.');
+                $('#count2').val('I have checked my IPF and I reject it.');
             });
         </script>
         <script>
@@ -333,7 +331,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         <script>
             $(document).ready(function() {
 
-                if (Boolean(readCookie('qt2q'))) {
+                if (Boolean(readCookie('Appraisal'))) {
                     $('.pop-up2').hide();
                     $('.pop-up2').fadeOut(1000);
                 }
@@ -342,7 +340,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     $('.pop-up2').delay(10).fadeOut(700);
                     e.stopPropagation();
 
-                    createCookie("qt2q", "4 days", 4);
+                    createCookie("Appraisal", "4 days", 4);
                     //return false;
                 });
 
