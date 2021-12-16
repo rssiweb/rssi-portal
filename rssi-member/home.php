@@ -71,7 +71,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <!--<div class=col style="text-align: right;"><?php echo $badge ?></div>-->
+                <div class=col style="text-align: right;"><?php echo $badge ?></div>
 
                 <!--**************QUESTION PAPER SUBMISSION TIMER**************
                 <?php
