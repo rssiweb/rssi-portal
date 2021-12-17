@@ -16,20 +16,40 @@ include("student_data.php");
 <?php
 include("database.php");
 @$id = $_POST['get_id'];
-$view_users_query = "select * from result_database_result WHERE studentid='$user_check' AND examname='$id'"; //select query for viewing users.  
+$view_users_query = "select * from new_result WHERE studentid='$user_check' AND examname='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
-    $filename = $row[0];
-    $name = $row[1];
-    $studentid = $row[2];
-    $category = $row[3];
-    $class = $row[4];
-    $dob = $row[5];
-    $result = $row[6];
-    $examname = $row[7];
-    $year = $row[8];
+    $name = $row[0];
+    $studentid = $row[1];
+    $category = $row[2];
+    $class = $row[3];
+    $dob = $row[4];
+    $hnd = $row[5];
+    $eng = $row[6];
+    $mth = $row[7];
+    $sce = $row[8];
+    $gka = $row[9];
+    $ssc = $row[10];
+    $phy = $row[11];
+    $chm = $row[12];
+    $bio = $row[13];
+    $com = $row[14];
+    $hd = $row[15];
+    $acc = $row[16];
+    $pt = $row[17];
+    $total = $row[18];
+    $mm = $row[19];
+    $op = $row[20];
+    $grade = $row[21];
+    $result = $row[22];
+    $position = $row[23];
+    $attd = $row[24];
+    $examname = $row[25];
+    $fullmarks = $row[26];
+    $month = $row[27];
+
 ?>
 <?php } ?>
 
@@ -42,32 +62,69 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <meta name="author" content="">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Result</title>
+    <title>RSSI_<?php echo $student_id ?>_<?php echo $examname ?></title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
     <style>
-        <?php include '../css/style.css'; ?>
-    </style>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <!------ Include the above in your HEAD tag ---------->
+        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Comfortaa');
 
-    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
-    <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
-        });
-    </script>
+        body {
+            background: #ffffff;
+            font-family: "Roboto";
+            font-style: normal;
+            font-weight: 400;
+            overflow-x: hidden;
+            margin: 0;
+            font-size: 14px;
+            /*line-height: 1.42857143;*/
+            color: #444;
+        }
+    </style>
+
+    <!------ Include the above in your HEAD tag ---------->
     <style>
         @media (min-width:767px) {
             .left {
                 margin-left: 2%;
             }
+        }
+
+        @media print {
+            .noprint {
+                visibility: hidden;
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+        }
+        /*---------------------------------------
+    CLASS NAME- NOTICET : URL DECORATION for table              
+-----------------------------------------*/
+        
+.noticet a:link {
+            text-decoration: none !important;
+            color: #F2545F !important;
+            font-size: 14px;
+        }
+        
+        .noticet a:visited {
+            text-decoration: none !important;
+            color: #F2545F !important;
+            font-size: 14px;
+        }
+        
+        .noticet a:hover {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 14px;
+        }
+        
+        .noticet a:active {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 14px;
         }
     </style>
 
@@ -78,17 +135,16 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 ============================== -->
 
 <body>
-    <?php $result_active = 'active'; ?>
-    <?php include 'header.php'; ?>
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <section class="box" style="padding: 2%;">
+                <div class="row">
+                    <div class="col noprint" style="display: inline-block; width:50%;margin-left:1.5%; margin-top:1.5%">
 
-                    <form action="" method="POST">
-                        <div class="form-group" style="display: inline-block;">
+                    <form action="" method="POST" id="formid">
+                        <div class="form-group" style="display: unset;">
                             <div class="col2" style="display: inline-block;">
-                                <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                                <select name="get_id" class="form-control" style="width:max-content;" required>
                                     <?php if ($id == null) { ?>
                                         <option value="" disabled selected hidden>Select Exam name</option>
                                     <?php
@@ -96,91 +152,186 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
-                                    <option>QT2/2021</option>
-                                    <option>QT1/2021</option>
-                                    <option>QT3/2021</option>
+                                    <option value="QT2/2021" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT2/2021') {
+                                                                    echo ('selected="QT2/2021"');
+                                                                } ?>>QT2/2021</option>
+                                    <option value="QT1/2021" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT1/2021') {
+                                                                    echo ('selected="QT1/2021"');
+                                                                } ?>>QT1/2021</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col2 left" style="display: inline-block;">
+                        <div class="col2 left noprint" style="display: inline;">
                             <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
                                 <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                            <button type="button" onclick="window.print()" name="print" class="btn btn-success" style="outline: none;">
+                                <span class="glyphicon glyphicon-save"></span>&nbsp;Save</button>
                         </div>
                     </form>
-
-
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Academic year</th>
-                                <th scope="col">Student ID</th>
-                                <th scope="col">Student Name</th>
-                                <th scope="col">Category</th>
-                                <th scope="col">Class</th>
-                                <th scope="col">Exam name</th>
-                                <th scope="col">Download report card</th>
-                            </tr>
-                        </thead>
+                    </div>
+                    <div class="col noprint" style="display: inline-block; width:47%; text-align:right">
+                    <button type="button" onclick="window.location.href='logout.php'" name="print" class="btn btn-danger" style="outline: none;">
+                                <span class="glyphicon glyphicon-log-out"></span>&nbsp;Sign out</button>
+                    </div>
+                </div>
+                <section class="box" style="padding: 2%;">
+                    <b>
+                        <h5 style="font-size: 20px; text-align:center">Rina Shiksha Sahayak Foundation (RSSI)
+                    </b></h5>
+                    <h5 style="text-align:center; line-height:2">C 1/117 (2nd Floor), Vishesh Khand 1, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
+                        CIN - U80101WB2020NPL237900</h5>
+                    <hr>
+                    <b>
+                        <h4 style="font-size: 20px; text-align:center"> Report Card
+                    </b></h4><br>
+                    <table class="table" border="0" align="center" style="width: 80%;">
                         <?php if (@$examname > 0) {
                         ?>
                             <tbody>
                                 <tr>
-
-                                    <td style="line-height: 1.7;"><?php echo $year ?></td>
-                                    <td style="line-height: 1.7;"><?php echo $studentid ?></td>
-                                    <td style="line-height: 1.7;"><?php echo $name ?></td>
-                                    <td style="line-height: 1.7;"><?php echo $category ?></td>
-                                    <td style="line-height: 1.7;"><?php echo $class ?></td>
-                                    <td style="line-height: 1.7;"><?php echo $examname ?></td>
-                                    <td style="line-height: 1.7;"><span class="noticet"><a href="<?php echo $result ?>" target="_blank"><?php echo $examname ?>/<?php echo $filename ?></a></span></td>
+                                    <td style="text-align:left"> Registration Number </td>
+                                    <th style="text-align:left"><?php echo $studentid ?></th>
+                                    <td style="text-align:left"> Learning Group/Class </td>
+                                    <th style="text-align:left"><?php echo $category ?>/<?php echo $class ?></th>
                                 </tr>
-                            <?php
-                        } else if ($id == "") {
-                            ?>
                                 <tr>
-                                    <td>Please select Exam name.</td>
+                                    <td style="text-align:left"> Name </th>
+                                    <th style="text-align:left"><?php echo $studentname ?></th>
+                                    <td style="text-align:left">Name of the examination</th>
+                                    <th style="text-align:left"><?php echo $examname ?></th>
                                 </tr>
-                            <?php
-                        } else {
-                            ?>
                                 <tr>
-                                    <td>No record found for <?php echo $id ?></td>
+                                    <td style="text-align:left"> Date Of Birth </th>
+                                    <th style="text-align:left"><?php echo $dob ?></th>
+                                    <td style="text-align:left">
+                                        </th>
+                                    <th style="text-align:left"></th>
                                 </tr>
-                            <?php }
-                            ?>
                             </tbody>
                     </table>
 
-
-            </div>
-            </div>
+                    <table class="table" border="0" align="center" style="width: 80%;">
+                        <tbody>
+                            <tr bgcolor="#428BCA" style="color: #fff;">
+                                <th style="text-align:left">Subject</th>
+                                <th style="text-align:left"> Full Marks </th>
+                                <th style="text-align:left"> Marks Obtained </th>
+                                <th style="text-align:left"> Positional grade </th>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Hindi </td>
+                                <td style="text-align:left"><?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $hnd ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> English </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $eng ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Mathematics </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                                <th style="text-align:left"> <?php echo $mth ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Science </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $sce ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Social Science </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $ssc ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> General Knowledge </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $gka ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Computer </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $com ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Biology </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $bio ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Physics </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $phy ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Chemistry </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $chm ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Accountancy </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $acc ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <tr bgcolor="#428BCA" style="color: #fff;">
+                                <th style="text-align:left"></th>
+                                <th style="text-align:left"> <?php echo $mm ?> </th>
+                                <th style="text-align:left"> <?php echo $total ?> (<?php echo $op ?>%) </th>
+                                <th style="text-align:left"> <?php echo $grade ?> </th>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table" border="0" align="center" style="width: 50%;">
+                        <tbody>
+                            <tr>
+                                <td style="text-align:left"> Result </td>
+                                <th style="text-align:left"><?php echo $result ?></th>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Overall ranking </th>
+                                <th style="text-align:left"><?php echo $position ?></th>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left"> Attendance (<?php echo $month ?>) </th>
+                                <th style="text-align:left"><?php echo $attd ?></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                <?php
+                        } else if ($id == "") {
+                ?>
+                    <tr>
+                        <td>Please select Exam name.</td>
+                    </tr>
+                <?php
+                        } else {
+                ?>
+                    <tr>
+                        <td>No record found for <?php echo $id ?></td>
+                    </tr>
+                <?php }
+                ?>
             </div>
         </section>
-        </div>
     </section>
-    </section>
-
-
-    <!-- Back top -->
     <script>
-        $(document).ready(function() {
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#back-to-top').fadeIn();
-                } else {
-                    $('#back-to-top').fadeOut();
-                }
-            });
-            // scroll body to 0px on click
-            $('#back-to-top').click(function() {
-                $('body,html').animate({
-                    scrollTop: 0
-                }, 400);
-                return false;
-            });
-        });
+        function submit() {
+            document.getElementById("formid").click(); // Simulates button click
+            document.lostpasswordform.submit(); // Submits the form without the button
+        }
     </script>
-    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+
 </body>
 
 </html>
