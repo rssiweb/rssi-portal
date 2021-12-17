@@ -56,7 +56,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $lastlogin=$row[48];
         $doa=$row[49];
         $feesflag=$row[50];
-        $feesflag=$row[51];
+        $module=$row[51];
 
 ?>     
 <?php } ?>    
