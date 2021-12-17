@@ -96,6 +96,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
+                                    <option>QT2/2021</option>
                                     <option>QT1/2021</option>
                                     <option>QT3/2021</option>
                                 </select>
