@@ -103,7 +103,7 @@ include("student_data.php");
                 <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $student_id ?>" readonly>
                 <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
                 <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo strtok($studentname, ' ') ?>, Your QT2/2021 report card has been published. For more details, please visit
-                    <span class="noticet"><a href="result.php" target="_blank">Result</a> portal.</span>
+                    <span class="noticet"><a href="result.php" target="_blank">Results</a> portal.</span>
                 </p>
                <br>
                 <button type="submit" id="yes" class="close-button2 btn btn-success" style="width: 20%; white-space:normal !important;word-wrap:break-word;">I have checked my report card</button>
