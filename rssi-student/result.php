@@ -218,72 +218,110 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <th style="text-align:left"> Marks Obtained </th>
                                 <th style="text-align:left"> Positional grade </th>
                             </tr>
+                            <?php if (@$hnd != null) {?>
                             <tr>
                                 <td style="text-align:left"> Hindi </td>
                                 <td style="text-align:left"><?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $hnd ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$eng != null) {?>
                             <tr>
                                 <td style="text-align:left"> English </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $eng ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$mth != null) {?>
                             <tr>
                                 <td style="text-align:left"> Mathematics </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?></td>
                                 <th style="text-align:left"> <?php echo $mth ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$sce != null) {?>
                             <tr>
                                 <td style="text-align:left"> Science </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $sce ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$ssc != null) {?>
                             <tr>
                                 <td style="text-align:left"> Social Science </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $ssc ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$gka != null) {?>
                             <tr>
                                 <td style="text-align:left"> General Knowledge </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $gka ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$com != null) {?>
                             <tr>
                                 <td style="text-align:left"> Computer </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $com ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$bio != null) {?>
                             <tr>
                                 <td style="text-align:left"> Biology </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $bio ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$phy != null) {?>
                             <tr>
                                 <td style="text-align:left"> Physics </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $phy ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$chm != null) {?>
                             <tr>
                                 <td style="text-align:left"> Chemistry </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $chm ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$acc != null) {?>
                             <tr>
                                 <td style="text-align:left"> Accountancy </td>
                                 <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                 <th style="text-align:left"> <?php echo $acc ?> </th>
                                 <td style="text-align:left"></td>
                             </tr>
+                            <?php } else {}?>
+                            <?php if (@$hd != null) {?>
+                            <tr>
+                                <td style="text-align:left"> Drawing + Handwriting  </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $hd ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <?php } else {}?>
+                            <?php if (@$pt != null) {?>
+                            <tr>
+                                <td style="text-align:left"> Physical Fitness </td>
+                                <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                                <th style="text-align:left"> <?php echo $pt ?> </th>
+                                <td style="text-align:left"></td>
+                            </tr>
+                            <?php } else {}?>
                             <tr bgcolor="#428BCA" style="color: #fff;">
                                 <th style="text-align:left"></th>
                                 <th style="text-align:left"> <?php echo $mm ?> </th>
