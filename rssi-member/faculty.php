@@ -153,7 +153,7 @@ $resultArr = pg_fetch_all($result);
             <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['doj'] . '<br>' . $array['yos'] . '</td>
             <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
-            <td>' . $array['position'] . '</td>' ?>
+            <td>' . substr($array['position'] , 0, strrpos($array['position'] , "-")) . '</td>' ?>
               <?php if ($id == "Active") { ?>
                 <?php echo '<td><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>' ?>
               <?php } else { ?> <?php echo '<td></td>' ?>
