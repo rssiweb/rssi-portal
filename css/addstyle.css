@@ -78,7 +78,6 @@ body {
 
 .box .inputBox input:focus {
     outline: none;
-    border: 2px solid grey;
 }
 
 .box input[type="submit"] {
