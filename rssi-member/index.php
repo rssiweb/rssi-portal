@@ -14,9 +14,9 @@ if ($_POST) {
     $Return = getCaptcha($_POST['g-recaptcha-response']);
     //var_dump($Return);
     if ($Return->success == true && $Return->score > 0.5) {
-        echo "Succes!";
+        //echo "Succes!";
     } else {
-        echo "You are a Robot!!";
+        //echo "You are a Robot!!";
     }
 }
 
@@ -33,56 +33,49 @@ $date = date('Y-m-d H:i:s');
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <link href="../css/addstyle.css" rel="stylesheet">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <title>My Account</title>
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 </head>
 <style>
-    .login-panel {
-        margin-top: 150px;
-    }
-
-    .x-btn:focus,
-    .button:focus,
-    [type="submit"]:focus {
-        outline: none;
-    }
-
     .prebanner {
         display: none;
+    }
+
+    .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+    }
+
+    .glow-banner-description {
+        font-size: .8em !important;
+    }
+
+    .cookie-consent-btn,
+    .cookie-consent-btn-secondary {
+        font-size: .7em !important;
     }
 </style>
 
 <body>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 col-md-offset-4">
-                <div class="login-panel panel panel-success">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Sign In</h3>
-                    </div>
-                    <div class="panel-body">
-                        <form role="form" method="post" name="login" action="index.php">
-                            <fieldset>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="Associate ID" name="aid" type="text" autofocus required>
-                                </div>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="Password" name="pass" type="password" value="" required>
-                                </div>
-                                <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input class="btn btn-lg btn-success btn-block" type="submit" value="Login" name="login">
-
-                                <!-- Change this to a button or input when using this as a form -->
-                                <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
-                            </fieldset>
-                        </form>
-                    </div>
-                </div>
+    <div class="box">
+        <img src="../images/phoenix.png" alt="Phoenix" style="width:50%;" class="center">
+        <form role="form" method="post" name="login" action="index.php"><br>
+            <div class="inputBox">
+                <input type="text" name="aid" required onkeyup="this.setAttribute('value', this.value);">
+                <label>Associate ID</label>
             </div>
-        </div>
+            <div class="inputBox">
+                <input type="password" name="pass" required onkeyup="this.setAttribute('value', this.value);">
+                <label>Password</label>
+            </div>
+            <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
+            <input type="submit" name="login" value="Login">
+        </form>
     </div>
     <script>
         if (window.history.replaceState) {
@@ -138,14 +131,10 @@ if (isset($_POST['login'])) {
         //echo "')</script>";
     } else { ?>
         <div class="container">
-            <div class="row">
-                <div class="col-md-4 col-md-offset-4" style="text-align: center;">
-                    <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
-                </div>
+            <div class="row" style="text-align: center; margin-top:7%">
+                <span style="color:red; font-size:14px">Error: Login failed. Please enter valid credentials.</span>
             </div>
         </div>
-
-
 <?php }
 }
 ?>
