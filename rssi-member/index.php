@@ -33,7 +33,6 @@ $date = date('Y-m-d H:i:s');
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href="..//css/addstyle.css" rel="stylesheet">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <title>My Account</title>
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
