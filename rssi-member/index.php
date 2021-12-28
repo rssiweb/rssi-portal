@@ -35,7 +35,7 @@ $date = date('Y-m-d H:i:s');
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link href="..//css/addstyle.css" rel="stylesheet">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <title>My Account</title>
+    <title>My Account1</title>
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 </head>
