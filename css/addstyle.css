@@ -68,7 +68,7 @@ body {
 .box .inputBox input:not([value=""])~label {
     top: -1.125rem;
     left: 10px;
-    color: #5F6380 !important;
+    color: grey;
     font-size: 0.75rem;
     background-color: white;
     height: 10px;
