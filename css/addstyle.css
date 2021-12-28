@@ -81,11 +81,11 @@ body {
     border: 2px solid grey;
 }
 
-#login {
+.box input[type="submit"] {
     border: none;
     outline: none;
     color: #fff;
-    background-color: grey;
+    background-color: #1a73e8;
     padding: 0.625rem 1.25rem;
     cursor: pointer;
     border-radius: 0.312rem;
