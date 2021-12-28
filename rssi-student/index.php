@@ -33,7 +33,7 @@ $date = date('Y-m-d H:i:s');
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href="../css/addstyle.css" rel="stylesheet">
+    <link href="..//css/addstyle.css" rel="stylesheet">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <title>My Profile</title>
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
@@ -63,7 +63,7 @@ $date = date('Y-m-d H:i:s');
 
 <body>
     <div class="box">
-        <img src="../images/phoenix.png" alt="Phoenix" style="width:50%;" class="center">
+        <img src="..//images/phoenix.png" alt="Phoenix" style="width:50%;" class="center">
         <form role="form" method="post" name="login" action="index.php"><br>
             <div class="inputBox">
                 <input type="text" name="sid" required onkeyup="this.setAttribute('value', this.value);">
