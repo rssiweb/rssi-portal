@@ -133,9 +133,6 @@ $date = date('Y-m-d H:i:s');
             <a href="https://drive.google.com/file/d/1xYdV32ft1q_lHEsUrPwLwlA4t4Ygj30F/view" target="_blank">Privacy Policy</a>
         </span>
     </div>
-</body>
-
-</html>
 
     <?php
 
