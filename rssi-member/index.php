@@ -73,29 +73,30 @@ $date = date('Y-m-d H:i:s');
         width: 100%;
         top: 10%;
     }
+
     .noticet a:link {
-            text-decoration: none !important;
-            color: #F2545F !important;
-            font-size: 14px;
-        }
-        
-        .noticet a:visited {
-            text-decoration: none !important;
-            color: #F2545F !important;
-            font-size: 14px;
-        }
-        
-        .noticet a:hover {
-            text-decoration: underline !important;
-            color: #F2545F !important;
-            font-size: 14px;
-        }
-        
-        .noticet a:active {
-            text-decoration: underline !important;
-            color: #F2545F !important;
-            font-size: 14px;
-        }
+        text-decoration: none !important;
+        color: #F2545F !important;
+        font-size: 13px;
+    }
+
+    .noticet a:visited {
+        text-decoration: none !important;
+        color: #F2545F !important;
+        font-size: 13px;
+    }
+
+    .noticet a:hover {
+        text-decoration: underline !important;
+        color: #F2545F !important;
+        font-size: 13px;
+    }
+
+    .noticet a:active {
+        text-decoration: underline !important;
+        color: #F2545F !important;
+        font-size: 13px;
+    }
 </style>
 
 <body>
@@ -201,8 +202,8 @@ $date = date('Y-m-d H:i:s');
     </script>
 
     <div class="row absolute" style="text-align: center;">
-        <span style="font-size:14px">Official Site of RSSI © 2020. All Rights Reserved. Site Contents owned, designed, developed, maintained and updated by the IT Department, RSSI.</span><br>
-        <span style="font-size:14px;line-height:3" class="noticet">
+        <span style="font-size:13px">Official Site of RSSI © 2020. All Rights Reserved. Site Contents owned, designed, developed, maintained and updated by the IT Department, RSSI.</span><br>
+        <span style="line-height:2" class="noticet">
             <a href="https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view" target="_blank">Disclaimer</a> |
             <a href="https://drive.google.com/file/d/1a_2IVIsphdwLXbyyqegA2H-Rowyx00H-/view" target="_blank">Terms & Conditions</a> |
             <a href="https://drive.google.com/file/d/1xYdV32ft1q_lHEsUrPwLwlA4t4Ygj30F/view" target="_blank">Privacy Policy</a>
