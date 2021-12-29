@@ -65,8 +65,10 @@ $date = date('Y-m-d H:i:s');
 
 <body>
     <div class="box">
-        <img src="..//images/phoenix.png" alt="Phoenix" style="width:50%;" class="center"><br>
-        <h2>Sign in</h2><br>
+        <img src="..//images/phoenix.png" alt="Phoenix" style="width:50%;" class="center">
+        <br>
+        <h2>Sign in</h2>
+        <br>
         <form role="form" method="post" name="login" action="index.php"><br>
             <div class="inputBox">
                 <input type="text" name="aid" required onkeyup="this.setAttribute('value', this.value);">
