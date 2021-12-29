@@ -14,9 +14,9 @@ if ($_POST) {
     $Return = getCaptcha($_POST['g-recaptcha-response']);
     //var_dump($Return);
     if ($Return->success == true && $Return->score > 0.5) {
-        //echo "Succes!";
+        echo "";
     } else {
-        //echo "You are a Robot!!";
+        echo "";
     }
 }
 
@@ -41,27 +41,6 @@ $date = date('Y-m-d H:i:s');
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 </head>
-<style>
-    .prebanner {
-        display: none;
-    }
-
-    .center {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        width: 50%;
-    }
-
-    .glow-banner-description {
-        font-size: .8em !important;
-    }
-
-    .cookie-consent-btn,
-    .cookie-consent-btn-secondary {
-        font-size: .7em !important;
-    }
-</style>
 
 <body>
     <div class="box">
@@ -87,7 +66,6 @@ $date = date('Y-m-d H:i:s');
             window.history.replaceState(null, null, window.location.href);
         }
     </script>
-
     <?php
 
     include("database.php");
@@ -164,3 +142,71 @@ $date = date('Y-m-d H:i:s');
             policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
         });
     </script>
+    <div class="row absolute" style="text-align: center;">
+        <span style="font-size:13px">Official Site of RSSI © 2020. All Rights Reserved. Site Contents owned, designed, developed, maintained and updated by the IT Department, RSSI.</span><br>
+        <span style="line-height:2" class="noticet">
+            <a href="https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view" target="_blank">Disclaimer</a> |
+            <a href="https://drive.google.com/file/d/1a_2IVIsphdwLXbyyqegA2H-Rowyx00H-/view" target="_blank">Terms & Conditions</a> |
+            <a href="https://drive.google.com/file/d/1xYdV32ft1q_lHEsUrPwLwlA4t4Ygj30F/view" target="_blank">Privacy Policy</a>
+        </span>
+    </div>
+    <style>
+        .prebanner {
+            display: none;
+        }
+
+        .center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+        }
+
+        .glow-banner-description {
+            font-size: .8em !important;
+        }
+
+        .cookie-consent-btn,
+        .cookie-consent-btn-secondary {
+            font-size: .7em !important;
+        }
+
+        div.absolute {
+            position: fixed;
+            width: 100%;
+            bottom: 5%;
+        }
+
+        div.absolutetop {
+            position: fixed;
+            width: 100%;
+            top: 10%;
+        }
+
+        .noticet a:link {
+            text-decoration: none !important;
+            color: #F2545F !important;
+            font-size: 13px;
+        }
+
+        .noticet a:visited {
+            text-decoration: none !important;
+            color: #F2545F !important;
+            font-size: 13px;
+        }
+
+        .noticet a:hover {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 13px;
+        }
+
+        .noticet a:active {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 13px;
+        }
+    </style>
+</body>
+
+</html>
