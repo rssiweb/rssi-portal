@@ -44,9 +44,8 @@ $date = date('Y-m-d H:i:s');
 
 <body>
     <div class="box">
-        <img src="..//images/phoenix.png" alt="Phoenix" style="width:50%;" class="center">
-        <br>
-        <h2>Sign in</h2>
+        <img src="..//images/phoenix.png" alt="Phoenix" style="width:30%;" class="center">
+        <h2>RSSI My Account</h2>
         <br>
         <form role="form" method="post" name="login" action="index.php"><br>
             <div class="inputBox">
@@ -112,7 +111,7 @@ $date = date('Y-m-d H:i:s');
         } else { ?>
             <div class="container">
                 <div class="row absolutetop" style="text-align: center;">
-                    <span style="color:red; font-size:14px">Error: Login failed. Please enter valid credentials.</span>
+                    <span style="color:red; font-size:13px">Error: Login failed. Please enter valid credentials.</span>
                 </div>
             </div>
     <?php }
@@ -142,13 +141,9 @@ $date = date('Y-m-d H:i:s');
             policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
         });
     </script>
-    <div class="row absolute" style="text-align: center;">
-        <span style="font-size:13px">Official Site of RSSI © 2020. All Rights Reserved. Site Contents owned, designed, developed, maintained and updated by the IT Department, RSSI.</span><br>
-        <span style="line-height:2" class="noticet">
-            <a href="https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view" target="_blank">Disclaimer</a> |
-            <a href="https://drive.google.com/file/d/1a_2IVIsphdwLXbyyqegA2H-Rowyx00H-/view" target="_blank">Terms & Conditions</a> |
-            <a href="https://drive.google.com/file/d/1xYdV32ft1q_lHEsUrPwLwlA4t4Ygj30F/view" target="_blank">Privacy Policy</a>
-        </span>
+    <script src="/css/pace.js"></script>
+    <div class="absolute" style="text-align: center;">
+        <span style="font-size:13px" class="noticet">Entry to this site is restricted to employees and affiliates. By clicking to sign in, you're agreeing to our <a href="https://drive.google.com/file/d/1a_2IVIsphdwLXbyyqegA2H-Rowyx00H-/view" target="_blank">terms of service</a>.</span><br>
     </div>
     <style>
         .prebanner {
@@ -171,11 +166,25 @@ $date = date('Y-m-d H:i:s');
             font-size: .7em !important;
         }
 
-        div.absolute {
+        .absolute {
             position: fixed;
-            width: 100%;
-            bottom: 5%;
+            width: 90%;
+            left: 50%;
+            bottom: 10%;
+            transform: translate(-50%, -50%);
+            margin: 0 auto;
         }
+
+        @media (max-width:767px) {
+            .absolute {
+            position: fixed;
+            width: 90%;
+            left: 50%;
+            bottom: 0%;
+            transform: translate(-50%, -50%);
+            margin: 0 auto;
+        }
+}
 
         div.absolutetop {
             position: fixed;
@@ -207,6 +216,10 @@ $date = date('Y-m-d H:i:s');
             font-size: 13px;
         }
     </style>
+        <style>
+        <?php include '../css/minimal.css'; ?>
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script>
 </body>
 
 </html>

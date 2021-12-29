@@ -1,8 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Google Sans');
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa');
 body {
     margin: 0;
     padding: 0;
     background-size: cover;
     font-family: sans-serif;
+    background: whitesmoke;
 }
 
 .box {
@@ -16,6 +20,13 @@ body {
     border: 1px solid #dadce0;
     -webkit-border-radius: 8px;
     border-radius: 8px;
+    background: #fff;
+}
+
+@media (max-width:767px) {
+    .box {
+        width: 80%;
+    }
 }
 
 .box h2 {
@@ -24,7 +35,7 @@ body {
     color: #fff;
     text-align: center;
     color: #202124;
-    font-family: 'Google Sans', 'Noto Sans Myanmar UI', arial, sans-serif;
+    font-family: sans-serif;
     font-size: 24px;
     font-weight: 400;
 }
@@ -89,6 +100,7 @@ body {
     cursor: pointer;
     border-radius: 0.312rem;
     font-size: 1rem;
+    font-family: 'Google Sans';
     float: right;
 }
 
