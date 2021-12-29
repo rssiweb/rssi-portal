@@ -61,6 +61,41 @@ $date = date('Y-m-d H:i:s');
     .cookie-consent-btn-secondary {
         font-size: .7em !important;
     }
+
+    div.absolute {
+        position: fixed;
+        width: 100%;
+        bottom: 5%;
+    }
+
+    div.absolutetop {
+        position: fixed;
+        width: 100%;
+        top: 10%;
+    }
+    .noticet a:link {
+            text-decoration: none !important;
+            color: #F2545F !important;
+            font-size: 14px;
+        }
+        
+        .noticet a:visited {
+            text-decoration: none !important;
+            color: #F2545F !important;
+            font-size: 14px;
+        }
+        
+        .noticet a:hover {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 14px;
+        }
+        
+        .noticet a:active {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 14px;
+        }
 </style>
 
 <body>
@@ -87,83 +122,92 @@ $date = date('Y-m-d H:i:s');
             window.history.replaceState(null, null, window.location.href);
         }
     </script>
+
+    <?php
+
+    include("database.php");
+
+    if (isset($_POST['login'])) {
+        $associatenumber = strtoupper($_POST['aid']);
+        $colors = $_POST['pass'];
+
+        $check_user = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'AND colors='$colors'";
+
+        $run = pg_query($con, $check_user);
+
+        //if (pg_num_rows($run)) {
+
+        // Do the login stuff...
+
+        if (pg_num_rows($run)) {
+            if (isset($_SESSION["login_redirect"])) {
+                header("Location: " . $_SESSION["login_redirect"]);
+                unset($_SESSION["login_redirect"]);
+            } else {
+                header("Location: ../rssi-member/home.php");
+            }
+
+            $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
+
+            $row = pg_fetch_row($run);
+            $role = $row[62];
+            $engagement = $row[48];
+            $filterstatus = $row[35];
+
+            $_SESSION['role'] = $role;
+            $_SESSION['engagement'] = $engagement;
+            $_SESSION['filterstatus'] = $filterstatus;
+            $uip = $_SERVER['REMOTE_ADDR'];
+            //$login_redirect=$_SESSION["login_redirect"];
+
+            $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
+            $result = pg_query($con, $query);
+
+            //echo "<script>alert('";
+            //echo $engagement;
+            //echo "')</script>";
+        } else { ?>
+            <div class="container">
+                <div class="row absolutetop" style="text-align: center;">
+                    <span style="color:red; font-size:14px">Error: Login failed. Please enter valid credentials.</span>
+                </div>
+            </div>
+    <?php }
+    }
+    ?>
+
+
+    <!--protected by reCAPTCHA-->
+    <script>
+        grecaptcha.ready(function() {
+            grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+                    action: 'homepage'
+                })
+                .then(function(token) {
+                    //console.log(token);
+                    document.getElementById('g-recaptcha-response').value = token;
+                });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+        });
+    </script>
+
+    <div class="row absolute" style="text-align: center;">
+        <span style="font-size:14px">Official Site of RSSI © 2020. All Rights Reserved. Site Contents owned, designed, developed, maintained and updated by the IT Department, RSSI.</span><br>
+        <span style="font-size:14px;line-height:3" class="noticet">
+            <a href="https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view" target="_blank">Disclaimer</a> |
+            <a href="https://drive.google.com/file/d/1a_2IVIsphdwLXbyyqegA2H-Rowyx00H-/view" target="_blank">Terms & Conditions</a> |
+            <a href="https://drive.google.com/file/d/1xYdV32ft1q_lHEsUrPwLwlA4t4Ygj30F/view" target="_blank">Privacy Policy</a>
+        </span>
+    </div>
 </body>
 
 </html>
-
-<?php
-
-include("database.php");
-
-if (isset($_POST['login'])) {
-    $associatenumber = strtoupper($_POST['aid']);
-    $colors = $_POST['pass'];
-
-    $check_user = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'AND colors='$colors'";
-
-    $run = pg_query($con, $check_user);
-
-    //if (pg_num_rows($run)) {
-
-    // Do the login stuff...
-
-    if (pg_num_rows($run)) {
-        if (isset($_SESSION["login_redirect"])) {
-            header("Location: " . $_SESSION["login_redirect"]);
-            unset($_SESSION["login_redirect"]);
-        } else {
-            header("Location: ../rssi-member/home.php");
-        }
-
-        $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
-
-        $row = pg_fetch_row($run);
-        $role = $row[62];
-        $engagement = $row[48];
-        $filterstatus = $row[35];
-
-        $_SESSION['role'] = $role;
-        $_SESSION['engagement'] = $engagement;
-        $_SESSION['filterstatus'] = $filterstatus;
-        $uip = $_SERVER['REMOTE_ADDR'];
-        //$login_redirect=$_SESSION["login_redirect"];
-
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
-        $result = pg_query($con, $query);
-
-        //echo "<script>alert('";
-        //echo $engagement;
-        //echo "')</script>";
-    } else { ?>
-        <div class="container">
-            <div class="row" style="text-align: center; margin-top:7%">
-                <span style="color:red; font-size:14px">Error: Login failed. Please enter valid credentials.</span>
-            </div>
-        </div>
-<?php }
-}
-?>
-
-
-<!--protected by reCAPTCHA-->
-<script>
-    grecaptcha.ready(function() {
-        grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                action: 'homepage'
-            })
-            .then(function(token) {
-                //console.log(token);
-                document.getElementById('g-recaptcha-response').value = token;
-            });
-    });
-</script>
-
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-<!-- Glow Cookies v3.0.1 -->
-<script>
-    glowCookies.start('en', {
-        analytics: 'G-S25QWTFJ2S',
-        //facebookPixel: '',
-        policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
-    });
-</script>
