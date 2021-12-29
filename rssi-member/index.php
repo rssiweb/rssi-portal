@@ -123,6 +123,18 @@ $date = date('Y-m-d H:i:s');
             window.history.replaceState(null, null, window.location.href);
         }
     </script>
+    
+    <div class="row absolute" style="text-align: center;">
+        <span style="font-size:13px">Official Site of RSSI © 2020. All Rights Reserved. Site Contents owned, designed, developed, maintained and updated by the IT Department, RSSI.</span><br>
+        <span style="line-height:2" class="noticet">
+            <a href="https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view" target="_blank">Disclaimer</a> |
+            <a href="https://drive.google.com/file/d/1a_2IVIsphdwLXbyyqegA2H-Rowyx00H-/view" target="_blank">Terms & Conditions</a> |
+            <a href="https://drive.google.com/file/d/1xYdV32ft1q_lHEsUrPwLwlA4t4Ygj30F/view" target="_blank">Privacy Policy</a>
+        </span>
+    </div>
+</body>
+
+</html>
 
     <?php
 
@@ -200,15 +212,3 @@ $date = date('Y-m-d H:i:s');
             policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
         });
     </script>
-
-    <div class="row absolute" style="text-align: center;">
-        <span style="font-size:13px">Official Site of RSSI © 2020. All Rights Reserved. Site Contents owned, designed, developed, maintained and updated by the IT Department, RSSI.</span><br>
-        <span style="line-height:2" class="noticet">
-            <a href="https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view" target="_blank">Disclaimer</a> |
-            <a href="https://drive.google.com/file/d/1a_2IVIsphdwLXbyyqegA2H-Rowyx00H-/view" target="_blank">Terms & Conditions</a> |
-            <a href="https://drive.google.com/file/d/1xYdV32ft1q_lHEsUrPwLwlA4t4Ygj30F/view" target="_blank">Privacy Policy</a>
-        </span>
-    </div>
-</body>
-
-</html>
