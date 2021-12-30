@@ -14,18 +14,18 @@ if ($_POST) {
     $Return = getCaptcha($_POST['g-recaptcha-response']);
     //var_dump($Return);
     if ($Return->success == true && $Return->score > 0.5) {
-        echo "";
+        echo "Succes!";
     } else {
-        echo "";
+        echo "You are a Robot!!";
     }
 }
 
 ?>
 <?php
-date_default_timezone_set('Asia/Kolkata');
-$date = date('Y-m-d H:i:s');
+      date_default_timezone_set('Asia/Kolkata');
+      $date = date('Y-m-d H:i:s'); 
 ?>
-<!DOCTYPE html>
+<html>
 
 <head lang="en">
     <meta name="description" content="">
@@ -33,96 +33,113 @@ $date = date('Y-m-d H:i:s');
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <style>
-        <?php include '../css/addstyle.css'; ?>
-    </style>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <title>My Profile</title>
+    <style>
+    <?php include '../css/addstyle.css'; ?>
+</style>
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 </head>
 
 <body>
-    <div class="box">
-        <img src="..//images/phoenix.png" alt="Phoenix" style="width:30%;" class="center">
-        <h2>RSSI My Profile</h2>
-        <br>
-        <form role="form" method="post" name="login" action="index.php"><br>
-            <div class="inputBox">
-                <input type="text" name="sid" required onkeyup="this.setAttribute('value', this.value);">
-                <label>Student ID</label>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <div class="login-panel panel panel-default">
+                    <div class="panel-heading">
+                        <img src="..//images/phoenix1b.png" alt="Phoenix" class="center">
+                    </div>
+                    <div class="panel-body">
+                        <form role="form" method="post" name="login" action="index.php">
+                            <fieldset>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Student ID" name="sid" type="text" autofocus required>
+                                </div>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Password" name="pass" type="password" value="" required>
+                                </div>
+                                <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
+                                <input style="font-family:'Google Sans';" class="btn btn-lg btn-info btn-block" type="submit" value="Sign in" name="login">
+
+                                <!-- Change this to a button or input when using this as a form -->
+                                <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="inputBox">
-                <input type="password" name="pass" required onkeyup="this.setAttribute('value', this.value);">
-                <label>Password</label>
-            </div>
-            <div class="inputBox">
-                <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-            </div>
-            <input type="submit" name="login" value="Sign in">
-        </form>
+        </div>
     </div>
     <script>
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
         }
     </script>
-    <?php
+</body>
 
-    include("database.php");
+</html>
 
-    if (isset($_POST['login'])) {
-        $student_id = strtoupper($_POST['sid']);
-        $colors = $_POST['pass'];
+<?php
 
-        $check_user = "select * from rssimyprofile_student WHERE student_id='$student_id'AND colors='$colors'";
+include("database.php");
 
-        $run = pg_query($con, $check_user);
+if (isset($_POST['login'])) {
+    $student_id = strtoupper($_POST['sid']);
+    $colors = $_POST['pass'];
 
-        if (pg_num_rows($run)) {
-            if (isset($_SESSION["login_redirect"])) {
-                header("Location: " . $_SESSION["login_redirect"]);
-                unset($_SESSION["login_redirect"]);
-            } else {
-                header("Location: ../rssi-student/home.php");
-            }
+    $check_user = "select * from rssimyprofile_student WHERE student_id='$student_id'AND colors='$colors'";
 
-            $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
+    $run = pg_query($con, $check_user);
 
-            $row = pg_fetch_row($run);
-            $filterstatus = $row[39];
-            $feesflag = $row[50];
+    if (pg_num_rows($run)) {
+        if (isset($_SESSION["login_redirect"])) {
+             header("Location: " . $_SESSION["login_redirect"]);
+            unset($_SESSION["login_redirect"]);
+         } else {
+            header("Location: ../rssi-student/home.php");
+        }
 
-            $_SESSION['filterstatus'] = $filterstatus;
-            $_SESSION['feesflag'] = $feesflag;
-            $uip = $_SERVER['REMOTE_ADDR'];
+        $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
 
-            $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
-            $result = pg_query($con, $query);
-        } else { ?>
-            <div class="container">
-                <div class="row absolutetop" style="text-align: center;">
-                    <span style="color:red; font-size:13px">Error: Login failed. Please enter valid credentials.</span>
-                </div>
-            </div>
-    <?php }
-    }
-    ?>
+        $row = pg_fetch_row($run);
+        $filterstatus= $row[39];
+        $feesflag = $row[50];
 
-    <!--protected by reCAPTCHA-->
-    <script>
-        grecaptcha.ready(function() {
-            grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                    action: 'homepage'
-                })
-                .then(function(token) {
-                    //console.log(token);
-                    document.getElementById('g-recaptcha-response').value = token;
-                });
-        });
-    </script>
+       $_SESSION['filterstatus'] = $filterstatus;
+       $_SESSION['feesflag'] = $feesflag;
+       $uip=$_SERVER['REMOTE_ADDR'];
 
-    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+       $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
+       $result = pg_query($con, $query); 
+
+    } else {?>
+        <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4" style="text-align: center;">
+            <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
+            </div></div></div>
+        
+        
+        <?php }
+}
+?>
+
+<!--protected by reCAPTCHA-->
+<script>
+    grecaptcha.ready(function() {
+        grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+                action: 'homepage'
+            })
+            .then(function(token) {
+                //console.log(token);
+                document.getElementById('g-recaptcha-response').value = token;
+            });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -131,84 +148,3 @@ $date = date('Y-m-d H:i:s');
             policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
         });
     </script>
-        <div class="absolute" style="text-align: center;">
-        <span style="font-size:13px" class="noticet">Entry to this site is restricted to students and affiliates. By clicking to sign in, you're agreeing to our <a href="https://drive.google.com/file/d/1a_2IVIsphdwLXbyyqegA2H-Rowyx00H-/view" target="_blank">terms of service</a>.</span><br>
-    </div>
-    <style>
-        .prebanner {
-            display: none;
-        }
-
-        .center {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
-        }
-
-        .glow-banner-description {
-            font-size: .8em !important;
-        }
-
-        .cookie-consent-btn,
-        .cookie-consent-btn-secondary {
-            font-size: .7em !important;
-        }
-
-        .absolute {
-            position: fixed;
-            width: 90%;
-            left: 50%;
-            bottom: 10%;
-            transform: translate(-50%, -50%);
-            margin: 0 auto;
-        }
-
-        @media (max-width:767px) {
-            .absolute {
-                position: fixed;
-                width: 90%;
-                left: 50%;
-                bottom: 0%;
-                transform: translate(-50%, -50%);
-                margin: 0 auto;
-            }
-        }
-
-        div.absolutetop {
-            position: fixed;
-            width: 100%;
-            top: 10%;
-        }
-
-        .noticet a:link {
-            text-decoration: none !important;
-            color: #F2545F !important;
-            font-size: 13px;
-        }
-
-        .noticet a:visited {
-            text-decoration: none !important;
-            color: #F2545F !important;
-            font-size: 13px;
-        }
-
-        .noticet a:hover {
-            text-decoration: underline !important;
-            color: #F2545F !important;
-            font-size: 13px;
-        }
-
-        .noticet a:active {
-            text-decoration: underline !important;
-            color: #F2545F !important;
-            font-size: 13px;
-        }
-    </style>
-    <style>
-        <?php include '../css/minimal.css'; ?>
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script>
-</body>
-
-</html>
