@@ -17,3 +17,21 @@
     display: block;
     width: 40%;
 }
+
+@media (max-width:767px) {
+    td {
+        width: 100%
+    }
+    .page-topbar .logo-area {
+        width: 240px !important;
+        margin-top: 2.5%;
+    }
+}
+
+.page-topbar,
+.logo-area {
+    -webkit-transition: 0ms;
+    -moz-transition: 0ms;
+    -o-transition: 0ms;
+    transition: 0ms;
+}
