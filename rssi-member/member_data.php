@@ -83,6 +83,7 @@ $hbday=$row[75];
 $on_leave=$row[76];
 $attd_pending=$row[77];
 $ipfl=$row[71];
+$approveddate = $row[78];
                 
 ?>     
 <?php }?>    

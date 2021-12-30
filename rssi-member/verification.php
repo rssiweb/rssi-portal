@@ -84,6 +84,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $on_leave = $row[76];
     $attd_pending = $row[77];
     $ipfl = $row[71];
+    $approveddate = $row[78];
 ?>
 <?php } ?>
 
@@ -178,7 +179,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <span style="line-height: 3;"><?php echo $engagement ?>
                                 </td>
                                 <td id="cw1" style="line-height: 1.7;"><?php echo $astatus ?></td>
-                                <td id="cw1" style="line-height: 1.7;"><?php echo $doj ?></td>
+                                <td id="cw1" style="line-height: 1.7;"><?php echo $approveddate ?></td>
                             </tr>
                         </tbody>
                 </table>
