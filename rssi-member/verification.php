@@ -164,6 +164,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         <tr>
                             <th scope="col">Photo</th>
                             <th scope="col" id="cw2">Associate details</th>
+                            <th scope="col" id="cw1">Current Status</th>
                             <th scope="col" id="cw1">Offer letter issued on</th>
                         </tr>
                     </thead>
@@ -173,11 +174,11 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <tr>
 
                                 <td style="line-height: 1.7;"><img src="<?php echo $photo ?>" width=100px /></td>
-                                <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br>
+                                <td id="cw2" style="line-height: 1.7;"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br>
                                     <span style="line-height: 3;"><?php echo $engagement ?>
                                 </td>
-
-                                <td id="cw" style="line-height: 1.7;"><?php echo $doj ?></td>
+                                <td id="cw1" style="line-height: 1.7;"><?php echo $astatus ?></td>
+                                <td id="cw1" style="line-height: 1.7;"><?php echo $doj ?></td>
                             </tr>
                         </tbody>
                 </table>

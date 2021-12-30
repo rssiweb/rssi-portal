@@ -61,7 +61,7 @@ $date = date('Y-m-d H:i:s');
                                     <input class="form-control" placeholder="Password" name="pass" type="password" value="" required>
                                 </div>
                                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input style="font-family:'Google Sans';" class="btn btn-lg btn-info btn-block" type="submit" value="Sign in" name="login">
+                                <input style="font-family:'Google Sans';" class="btn btn-lg btn-primary btn-block" type="submit" value="Sign in" name="login">
 
                                 <!-- Change this to a button or input when using this as a form -->
                                 <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
