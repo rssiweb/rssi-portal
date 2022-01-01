@@ -60,6 +60,9 @@ $date = date('Y-m-d H:i:s');
                                 </div>
                                 <div class="form-group">
                                     <input class="form-control" placeholder="Password" name="pass" type="password" value="" required>
+                                    <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
+                                        <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
+                                    </label>
                                 </div>
                                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                 <input style="font-family:'Google Sans';" class="btn btn-primary btn-block" type="submit" value="Sign in" name="login">
@@ -76,6 +79,26 @@ $date = date('Y-m-d H:i:s');
     <script>
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
+        }
+        var password = document.querySelector("#pass");
+        var toggle = document.querySelector("#show-password");
+        // I'm using the "(click)" event to make this works cross-browser.
+        toggle.addEventListener("click", handleToggleClick, false);
+        // I handle the toggle click, changing the TYPE of password input.
+        function handleToggleClick(event) {
+
+            if (this.checked) {
+
+                console.warn("Change input 'type' to: text");
+                password.type = "text";
+
+            } else {
+
+                console.warn("Change input 'type' to: password");
+                password.type = "password";
+
+            }
+
         }
     </script>
 </body>
@@ -152,4 +175,19 @@ if (isset($_POST['login'])) {
 </script>
 <style>
     <?php include '../css/style.css'; ?><?php include '../css/addstyle.css'; ?>
+    label {
+        display: block;
+        padding-left: 15px;
+        text-indent: -15px;
+    }
+
+    .checkbox {
+        padding: 0;
+        margin: 0;
+        vertical-align: bottom;
+        position: relative;
+        top: 0px;
+        overflow: hidden;
+    }
+    
 </style>
