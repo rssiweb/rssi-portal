@@ -376,7 +376,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             });
         </script>
     <?php
-    } else if (@$questionflag != 'NA' && $filterstatus == 'Active') {
+    } else if (@$googlechat != null && $filterstatus == 'Active') {
     ?>
     <?php } else {
     } ?>
