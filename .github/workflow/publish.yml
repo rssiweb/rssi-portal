@@ -1,0 +1,26 @@
+name: Deploy On Production
+on:
+  push:
+    branches: [ dockerize ]
+  workflow_dispatch:
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bump version and push tag
+      uses: anothrNick/github-tag-action@master
+      env:
+        RELEASE_BRANCHES: master,main,dockerize
+  deploy:
+    needs: tag
+    runs-on: ubuntu-latest
+    steps:
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: rssingo/portal
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
