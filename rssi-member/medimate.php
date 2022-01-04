@@ -14,43 +14,48 @@ if (!$_SESSION['aid']) {
 <?php
 include("member_data.php");
 include("database.php");
-$view_users_query = "select * from medimate_medimate WHERE id='$user_check'"; //select query for viewing users.  
+$view_users_query = "select * from medimate_medimate WHERE regid='$user_check'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
-    $claimid= $row[0];
-    $timestamp= $row[1];
-    $name= $row[2];
-    $id= $row[3];
-    $mobilenumber= $row[4];
-    $e_mail= $row[5];
-    $selectbeneficiary= $row[6];
-    $ageofbeneficiary= $row[7];
-    $bankname= $row[8];
-    $accountnumber= $row[9];
-    $acname= $row[10];
-    $ifsccode= $row[11];
-    $clinicname= $row[12];
-    $clinicpincode= $row[13];
-    $doctorregistrationno= $row[14];
-    $nameoftreatingdoctor= $row[15];
-    $natureofillnessdiseaseaccident= $row[16];
-    $treatmentstartdate= $row[17];
-    $treatmentenddate= $row[18];
-    $billtype= $row[19];
-    $billnumber= $row[20];
-    $totalbillamount= $row[21];
-    $gstdlno= $row[22];
-    $uploadeddocuments= $row[23];
-    $uploadeddocumentscheck= $row[24];
-    $ack= $row[25];
-    $termsofagreement= $row[26];
-    $approved= $row[27];
-    $currentclaimstatus= $row[28];
-    $financialyear= $row[29];
-    $mediremarks= $row[30];
-    $closedon= $row[31]    
+$id= $row[0];
+$timestamp= $row[1];
+$name= $row[2];
+$regid= $row[3];
+$mobilenumber= $row[4];
+$email= $row[5];
+$selectbeneficiary= $row[6];
+$ageofbeneficiary= $row[7];
+$bankname= $row[8];
+$accountnumber= $row[9];
+$accountholdername= $row[10];
+$ifccode= $row[11];
+$clinicname= $row[12];
+$clinicpincode= $row[13];
+$doctorregistrationno= $row[14];
+$nameoftreatingdoctor= $row[15];
+$natureofillnessdiseaseaccident= $row[16];
+$treatmentstartdate= $row[17];
+$treatmentenddate= $row[18];
+$billtype= $row[19];
+$billnumber= $row[20];
+$totalbillamount= $row[21];
+$gstdlno= $row[22];
+$uploadeddocuments= $row[23];
+$uploadeddocumentscheck= $row[24];
+$ack= $row[25];
+$termsofagreement= $row[26];
+$year= $row[27];
+$claimid= $row[28];
+$mergestatus= $row[29];
+$claimstatus= $row[30];
+$approvedamount= $row[31];
+$transactionid= $row[32];
+$transfereddate= $row[33];
+$closedon= $row[34];
+$mediremarks= $row[35];
+$profile= $row[36]    
 
 ?>
 <?php } ?>

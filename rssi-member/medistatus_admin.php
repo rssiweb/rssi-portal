@@ -3,19 +3,18 @@ session_start();
 // Storing Session
 $user_check = $_SESSION['aid'];
 
-if(!$_SESSION['aid']) {
+if (!$_SESSION['aid']) {
 
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;  
-  }
-  else if ($_SESSION['role']!='Admin') {
+  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+  header("Location: index.php");
+  exit;
+} else if ($_SESSION['role'] != 'Admin') {
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-    echo '<script type="text/javascript">'; 
-    echo 'alert("Access Denied. You are not authorized to access this web page.");'; 
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
+  //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+  echo '<script type="text/javascript">';
+  echo 'alert("Access Denied. You are not authorized to access this web page.");';
+  echo 'window.location.href = "home.php";';
+  echo '</script>';
 }
 ?>
 <?php
@@ -27,15 +26,15 @@ include("database.php");
 @$status = $_POST['get_id'];
 
 if ($id == null && $status == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate order by timestamp desc");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate order by id desc");
 } else if ($id == null && $status != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE financialyear='$status' order by timestamp desc");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE year='$status' order by id desc");
 } else if ($id > 0 && $status != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE id='$id' AND financialyear='$status' order by timestamp desc");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE regid='$id' AND year='$status' order by id desc");
 } else if ($id > 0 && $status == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE id='$id' order by timestamp desc");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE regid='$id' order by id desc");
 } else {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate order by timestamp desc");
+  $result = pg_query($con, "SELECT * FROM medimate_medimate order by id desc");
 }
 
 if (!$result) {
@@ -116,8 +115,8 @@ $resultArr = pg_fetch_all($result);
                     <option hidden selected><?php echo $status ?></option>
                   <?php }
                   ?>
-                  <option>FY 2021-2022</option>
-                  <option>FY 2020-2021</option>
+                  <option>2022</option>
+                  <option>2021</option>
                   <option>ALL</option>
                 </select>
               </div>
@@ -131,16 +130,18 @@ $resultArr = pg_fetch_all($result);
                     <table class="table">
                         <thead>
                             <tr>
-                            <th scope="col">Claim ID (Click to see the document)</th>
+                            <th scope="col">Claim Number (Click to see the document)</th>
                             <th scope="col">Registered On</th>    
                             <th scope="col">ID/F Name</th>    
                                 <th scope="col">Beneficiary</th>
                                 <th scope="col">Account Number</th>
-                                <th scope="col">Claimed(&#8377;)</th>
-                                <th scope="col">Approved(&#8377;)</th>
-                                <th scope="col">Claim Status</th>
-                                <th scope="col">Closed on</th>
-                                <th scope="col">Remarks</th>
+                                <th scope="col">Claimed Amount (&#8377;)</th>
+                        <th scope="col">Amount Transfered (&#8377;)</th>
+                        <th scope="col">Transaction Reference Number</th>
+                        <th scope="col">Transfered Date</th>
+                        <th scope="col">Claim Status</th>
+                        <th scope="col">Closed on</th>
+                        <th scope="col">Remarks</th>
                             </tr>
                         </thead>' ?>
           <?php if ($resultArr != null) {
@@ -149,24 +150,26 @@ $resultArr = pg_fetch_all($result);
               echo '
                                 <tr>' ?>
 
-                                <?php if ($array['uploadeddocuments'] != null) { ?>
-                                    <?php
-                                    echo '<td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>'
-                                    ?>
-                                    <?php    } else { ?><?php
-                                                        echo '<td>' . $array['claimid'] . '</td>' ?>
-                                <?php } ?>
-                            <?php
-                                echo '
+              <?php if ($array['uploadeddocuments'] != null) { ?>
+                <?php
+                echo '<td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>'
+                ?>
+                <?php    } else { ?><?php
+                                    echo '<td>' . $array['claimid'] . '</td>' ?>
+              <?php } ?>
+              <?php
+              echo '
 
                                 <td>' . substr($array['timestamp'], 0, 10) . '</td>
-                                <td>' . $array['id'] . '<br>' . strtok($array['name'],' ') . '</td>   
+                                <td>' . $array['id'] . '<br>' . strtok($array['name'], ' ') . '</td>   
                                     
                                     <td>' . $array['selectbeneficiary'] . '</td>
-                                    <td>' . substr($array['accountnumber'], 1, -1) . '<br>'. $array['bankname'] .'/'.$array['ifsccode'].'</td>
+                                    <td>' . substr($array['accountnumber'], 1, -1) . '<br>' . $array['bankname'] . '/' . $array['ifsccode'] . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
-                                    <td>' . $array['approved'] . '</td>
-                                    <td>' . $array['currentclaimstatus'] . '</td>
+                                    <td>' . $array['approvedamount'] .'</td>
+                                    <td>' . $array['transactionid'] . '</td>
+                                    <td>' . $array['transfereddate'] . '</td>
+                                    <td>' . $array['claimstatus'] . '</td>
                                     <td>' . $array['closedon'] . '</td>
                                     <td>' . $array['mediremarks'] . '</td>
                                     </tr>';
@@ -178,12 +181,12 @@ $resultArr = pg_fetch_all($result);
           } else {
             echo '<tr>
                         <td colspan="5">No record found for' ?>&nbsp;<?php echo $status ?>
-        <?php echo '</td>
+            <?php echo '</td>
                     </tr>';
           }
           echo '</tbody>
                      </table>';
-        ?>
+            ?>
       </div>
       <div class="col-md-12" style="text-align: right;">
         <span class="noticet" style="line-height: 2;"><a href="medimate.php">Back to Medimate</a></span>

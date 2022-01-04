@@ -17,7 +17,7 @@ include("member_data.php");
 <?php
 include("database.php");
 @$id = $_POST['get_id'];
-$result = pg_query($con, "SELECT * FROM medimate_medimate WHERE id='$user_check' AND financialyear='$id' order by timestamp desc");
+$result = pg_query($con, "SELECT * FROM medimate_medimate WHERE regid='$user_check' AND year='$id' order by id desc");
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -117,8 +117,8 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
-                                    <option>FY 2021-2022</option>
-                                    <option>FY 2020-2021</option>
+                                    <option>2022</option>
+                                    <option>2021</option>
                                 </select>
                             </div>
                         </div>
@@ -131,12 +131,15 @@ $resultArr = pg_fetch_all($result);
                     <table class="table">
                         <thead>
                         <tr>    
-                        <th scope="col">Claim ID</th>
+                        <th scope="col">Claim Number</th>
                         <th scope="col">Registered On</th>
                         <th scope="col">Beneficiary</th>
+                        <th scope="col">Bills</th>
                         <th scope="col">Account Number</th>
-                        <th scope="col">Claimed(&#8377;)</th>
-                        <th scope="col">Approved(&#8377;)</th>
+                        <th scope="col">Claimed Amount (&#8377;)</th>
+                        <th scope="col">Amount Transfered (&#8377;)</th>
+                        <th scope="col">Transaction Reference Number</th>
+                        <th scope="col">Transfered Date</th>
                         <th scope="col">Claim Status</th>
                         <th scope="col">Closed on</th>
                         <th scope="col">Remarks</th>
@@ -147,27 +150,27 @@ $resultArr = pg_fetch_all($result);
                         foreach ($resultArr as $array) {
                             echo '
                             <tr>
-                                <!--<td><div class="popup" onclick="myFunction()">' . $array['claimid'] . '
-                                    <span class="popuptext" id="myPopup">' . $array['billnumber'] . '</span>
-                                </div></td>-->
-                                  <td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>
+                                    <td>' . $array['claimid'] . '</td>
                                     <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td>' . $array['selectbeneficiary'] . '</td>
+                                    <td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #444;"></i></a></span></td>
                                     <td>' . substr($array['accountnumber'], 1, -1) . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
-                                    <td>' . $array['approved'] . '</td>
-                                    <td>' . $array['currentclaimstatus'] . '</td>
+                                    <td>' . $array['approvedamount'] .'</td>
+                                    <td>' . $array['transactionid'] . '</td>
+                                    <td>' . $array['transfereddate'] . '</td>
+                                    <td>' . $array['claimstatus'] . '</td>
                                     <td>' . $array['closedon'] . '</td>
                                     <td>' . $array['mediremarks'] . '</td>
                                     </tr>';
                         }
                     } else if ($id == null) {
                         echo '<tr>
-                            <td>Please select policy year.</td>
+                            <td  colspan="2">Please select policy year.</td>
                         </tr>';
                     } else {
                         echo '<tr>
-                        <td>No record found for' ?>&nbsp;<?php echo $id ?>
+                        <td  colspan="2">No record found for' ?>&nbsp;<?php echo $id ?>
                 <?php echo '</td>
                     </tr>';
                     }
