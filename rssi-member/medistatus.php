@@ -128,7 +128,7 @@ $resultArr = pg_fetch_all($result);
                     </form>
                     <?php echo '
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                         <tr>    
                         <th scope="col">Claim Number</th>
                         <th scope="col">Registered On</th>
@@ -145,7 +145,7 @@ $resultArr = pg_fetch_all($result);
                     </tr>
                         </thead>' ?>
                     <?php if ($resultArr != null) {
-                        echo '<tbody>';
+                        echo '<tbody style="font-size: 13px;">';
                         foreach ($resultArr as $array) {
                             echo '
                             <tr>
