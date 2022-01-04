@@ -117,6 +117,9 @@
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="medistatus_admin.php"><i class="fas fa-hand-holding-medical"></i>&nbsp;Medistatus</a>
                             </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="reimbursement_admin.php"><i class="fas fa-wallet"></i>&nbsp;Reimbursement</a>
+                            </li>
                         <?php
                         } else {
                         }
