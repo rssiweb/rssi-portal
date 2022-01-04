@@ -55,7 +55,8 @@ $transactionid= $row[32];
 $transfereddate= $row[33];
 $closedon= $row[34];
 $mediremarks= $row[35];
-$profile= $row[36]    
+$profile= $row[36];
+$mlastupdatedon= $row[37]     
 
 ?>
 <?php } ?>
