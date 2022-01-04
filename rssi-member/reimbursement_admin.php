@@ -150,7 +150,7 @@ $resultArr = pg_fetch_all($result);
 
               <?php if ($array['uploadeddocuments'] != null) { ?>
                 <?php
-                echo '<td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['reimbid'] . '</a></span></td>'
+                echo '<td><span class="noticea"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['reimbid'] . '</a></span></td>'
                 ?>
                 <?php    } else { ?><?php
                                     echo '<td>' . $array['reimbid'] . '</td>' ?>
@@ -160,7 +160,7 @@ $resultArr = pg_fetch_all($result);
 
                                 <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                 <td>' . $array['registrationid'] . '<br>' . strtok($array['name'], ' ') . '</td>   
-                                    <td>' . $array['accountnumber']. '<br>' . $array['bankname'] . '/' . $array['ifsccode'] . '</td>
+                                    <td>' . $array['accountnumber'] . '<br>' . $array['bankname'] . '/' . $array['ifsccode'] . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approvedamount'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>
@@ -198,7 +198,7 @@ $resultArr = pg_fetch_all($result);
             ?>
       </div>
       <div class="col-md-12" style="text-align: right;">
-        <span class="noticet" style="line-height: 2;"><a href="claim.php">Back to claim</a></span>
+        <span class="noticet" style="line-height: 2;"><a href="reimbursment.php">Back to Reimbursement</a></span>
       </div>
       </div>
     </section>

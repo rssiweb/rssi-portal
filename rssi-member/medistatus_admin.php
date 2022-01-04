@@ -151,7 +151,7 @@ $resultArr = pg_fetch_all($result);
 
               <?php if ($array['uploadeddocuments'] != null) { ?>
                 <?php
-                echo '<td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>'
+                echo '<td><span class="noticea"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>'
                 ?>
                 <?php    } else { ?><?php
                                     echo '<td>' . $array['claimid'] . '</td>' ?>
