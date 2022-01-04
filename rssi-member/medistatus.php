@@ -153,7 +153,7 @@ $resultArr = pg_fetch_all($result);
                                     <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td>' . $array['selectbeneficiary'] . '</td>
                                     <td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
-                                    <td>' . substr($array['accountnumber'], 1, -1) . '</td>
+                                    <td>' . $array['accountnumber']. '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approvedamount'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>

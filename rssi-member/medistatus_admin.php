@@ -163,7 +163,7 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['registrationid'] . '<br>' . strtok($array['name'], ' ') . '</td>   
                                     
                                     <td>' . $array['selectbeneficiary'] . '</td>
-                                    <td>' . substr($array['accountnumber'], 1, -1) . '<br>' . $array['bankname'] . '/' . $array['ifsccode'] . '</td>
+                                    <td>' . $array['accountnumber']. '<br>' . $array['bankname'] . '/' . $array['ifsccode'] . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approvedamount'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>
