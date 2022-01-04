@@ -118,7 +118,6 @@ $resultArr = pg_fetch_all($result);
                                     <?php }
                                     ?>
                                     <option>2022</option>
-                                    <option>2021</option>
                                 </select>
                             </div>
                         </div>
@@ -153,14 +152,27 @@ $resultArr = pg_fetch_all($result);
                                     <td>' . $array['claimid'] . '</td>
                                     <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td>' . $array['selectbeneficiary'] . '</td>
-                                    <td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #444;"></i></a></span></td>
+                                    <td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
                                     <td>' . substr($array['accountnumber'], 1, -1) . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
-                                    <td>' . $array['approvedamount'] .'</td>
+                                    <td>' . $array['approvedamount'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>
-                                    <td>' . $array['transfereddate'] . '</td>
-                                    <td>' . $array['claimstatus'] . '</td>
-                                    <td>' . $array['closedon'] . '</td>
+                                    <td>' . $array['transfereddate'] . '</td>'
+                    ?>
+                            <?php if ($array['claimstatus'] == 'review' || $array['claimstatus'] == 'in progress' || $array['claimstatus'] == 'withdrawn') { ?>
+                                <?php echo '<td> <p class="label label-warning">' . $array['claimstatus'] . '</p>' ?>
+
+                            <?php } else if ($array['claimstatus'] == 'approved' || $array['claimstatus'] == 'claim settled') { ?>
+                                <?php echo '<td><p class="label label-success">' . $array['claimstatus'] . '</p>' ?>
+                            <?php    } else if ($array['claimstatus'] == 'rejected' || $array['claimstatus'] == 'on hold') { ?>
+                                <?php echo '<td><p class="label label-danger">' . $array['claimstatus'] . '</p>' ?>
+                            <?php    } else { ?>
+                                <?php echo '<td><p class="label label-info">' . $array['claimstatus'] . '</p>' ?>
+                            <?php } ?>
+
+
+                            <?php echo
+                            '</td><td>' . $array['closedon'] . '</td>
                                     <td>' . $array['mediremarks'] . '</td>
                                     </tr>';
                         }
@@ -171,12 +183,12 @@ $resultArr = pg_fetch_all($result);
                     } else {
                         echo '<tr>
                         <td  colspan="2">No record found for' ?>&nbsp;<?php echo $id ?>
-                <?php echo '</td>
+                        <?php echo '</td>
                     </tr>';
                     }
                     echo '</tbody>
                      </table>';
-                ?>
+                        ?>
             </div>
             <div class="col-md-12" style="text-align: right;">
                 <span class="noticet" style="line-height: 2;"><a href="medimate.php">Back to Medimate</a></span>
