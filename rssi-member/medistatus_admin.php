@@ -129,7 +129,7 @@ $resultArr = pg_fetch_all($result);
                     <table class="table">
                         <thead style="font-size: 12px;">
                             <tr>
-                            <th scope="col">Claim Number (Click to see the document)</th>
+                            <th scope="col">Claim Number</th>
                             <th scope="col">Registered On</th>    
                             <th scope="col">ID/F Name</th>    
                                 <th scope="col">Beneficiary</th>
@@ -151,7 +151,7 @@ $resultArr = pg_fetch_all($result);
 
               <?php if ($array['uploadeddocuments'] != null) { ?>
                 <?php
-                echo '<td><span class="noticet"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>'
+                echo '<td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['claimid'] . '</a></span></td>'
                 ?>
                 <?php    } else { ?><?php
                                     echo '<td>' . $array['claimid'] . '</td>' ?>

@@ -97,6 +97,7 @@ $resultArr = pg_fetch_all($result);
 ============================== -->
 
 <body>
+    <?php $reimbursement_active = 'active'; ?>
     <?php include 'header.php'; ?>
     <section id="main-content">
         <section class="wrapper main-wrapper row">
@@ -151,7 +152,7 @@ $resultArr = pg_fetch_all($result);
                                     <td>' . $array['reimbid'] . '</td>
                                     <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
-                                    <td>' . $array['accountnumber']. '</td>
+                                    <td>' . $array['accountnumber'] . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approvedamount'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>
@@ -189,7 +190,7 @@ $resultArr = pg_fetch_all($result);
                         ?>
             </div>
             <div class="col-md-12" style="text-align: right;">
-                <span class="noticet" style="line-height: 2;"><a href="medimate.php">Back to Medimate</a></span>
+                <span class="noticet" style="line-height: 2;"><a href="medimate.php">Back to Reimbursement</a></span>
             </div>
             </div>
         </section>

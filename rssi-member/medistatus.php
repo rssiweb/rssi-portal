@@ -97,6 +97,7 @@ $resultArr = pg_fetch_all($result);
 ============================== -->
 
 <body>
+    <?php $medimate_active = 'active'; ?>
     <?php include 'header.php'; ?>
     <section id="main-content">
         <section class="wrapper main-wrapper row">
@@ -153,7 +154,7 @@ $resultArr = pg_fetch_all($result);
                                     <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td>' . $array['selectbeneficiary'] . '</td>
                                     <td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
-                                    <td>' . $array['accountnumber']. '</td>
+                                    <td>' . $array['accountnumber'] . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approvedamount'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>

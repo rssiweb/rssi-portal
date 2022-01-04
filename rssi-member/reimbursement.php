@@ -84,13 +84,13 @@ $rlastupdatedon=$row[27]
 </head>
 
 <body>
-    <?php $medimate_active = 'active'; ?>
+    <?php $reimbursement_active = 'active'; ?>
     <?php include 'header.php'; ?>
 
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;"><a href="medistatus.php"><button type="button" class="exam_btn"><i class="fas fa-child" style="font-size: 17px;"></i>
+                <div class=col style="text-align: right;"><a href="reimbursementstatus.php"><button type="button" class="exam_btn"><i class="fas fa-child" style="font-size: 17px;"></i>
                 Track Your Claim</button></a>
                 </div>
                 <section class="box" style="padding: 2%;">
