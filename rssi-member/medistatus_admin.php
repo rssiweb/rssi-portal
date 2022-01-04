@@ -26,15 +26,15 @@ include("database.php");
 @$status = $_POST['get_id'];
 
 if ($id == null && $status == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate order by id desc");
+  $result = pg_query($con, "SELECT * FROM medimate order by id desc");
 } else if ($id == null && $status != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE year='$status' order by id desc");
+  $result = pg_query($con, "SELECT * FROM medimate WHERE year='$status' order by id desc");
 } else if ($id > 0 && $status != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE regid='$id' AND year='$status' order by id desc");
+  $result = pg_query($con, "SELECT * FROM medimate WHERE registraionid='$id' AND year='$status' order by id desc");
 } else if ($id > 0 && $status == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate WHERE regid='$id' order by id desc");
+  $result = pg_query($con, "SELECT * FROM medimate WHERE registraionid='$id' order by id desc");
 } else {
-  $result = pg_query($con, "SELECT * FROM medimate_medimate order by id desc");
+  $result = pg_query($con, "SELECT * FROM medimate order by id desc");
 }
 
 if (!$result) {
@@ -160,7 +160,7 @@ $resultArr = pg_fetch_all($result);
               echo '
 
                                 <td>' . substr($array['timestamp'], 0, 10) . '</td>
-                                <td>' . $array['regid'] . '<br>' . strtok($array['name'], ' ') . '</td>   
+                                <td>' . $array['registraionid'] . '<br>' . strtok($array['name'], ' ') . '</td>   
                                     
                                     <td>' . $array['selectbeneficiary'] . '</td>
                                     <td>' . substr($array['accountnumber'], 1, -1) . '<br>' . $array['bankname'] . '/' . $array['ifsccode'] . '</td>

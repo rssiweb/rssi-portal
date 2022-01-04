@@ -17,7 +17,7 @@ include("member_data.php");
 <?php
 include("database.php");
 @$id = $_POST['get_id'];
-$result = pg_query($con, "SELECT * FROM medimate_medimate WHERE regid='$user_check' AND year='$id' order by id desc");
+$result = pg_query($con, "SELECT * FROM medimate WHERE registraionid='$user_check' AND year='$id' order by id desc");
 if (!$result) {
     echo "An error occurred.\n";
     exit;

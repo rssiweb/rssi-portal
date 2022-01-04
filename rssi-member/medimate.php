@@ -14,7 +14,7 @@ if (!$_SESSION['aid']) {
 <?php
 include("member_data.php");
 include("database.php");
-$view_users_query = "select * from medimate_medimate WHERE regid='$user_check'"; //select query for viewing users.  
+$view_users_query = "select * from medimate WHERE registraionid='$user_check'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
@@ -22,7 +22,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 $id= $row[0];
 $timestamp= $row[1];
 $name= $row[2];
-$regid= $row[3];
+$registraionid= $row[3];
 $mobilenumber= $row[4];
 $email= $row[5];
 $selectbeneficiary= $row[6];
