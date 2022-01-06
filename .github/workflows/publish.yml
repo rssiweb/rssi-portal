@@ -18,6 +18,7 @@ jobs:
     needs: tag
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: Publish to Registry
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
