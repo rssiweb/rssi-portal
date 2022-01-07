@@ -24,8 +24,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $youwantustospendyourdonationfor=$row[15];
     $code=$row[16];
     $increment=$row[17];
-    $filename=$row[18]    
-
+    $filename=$row[18];
 ?>
 <?php } ?>
 
