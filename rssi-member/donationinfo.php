@@ -127,7 +127,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <td>
 
                                     <?php if ($approvedby == "rejected") { ?>
-                                        <p class="label label-warning"><?php echo $approvedby ?></p>
+                                        <p class="label label-danger"><?php echo $approvedby ?></p>
 
                                     <?php } else if ($approvedby == "--") { ?>
                                         <p class="label label-info">on hold</p>
