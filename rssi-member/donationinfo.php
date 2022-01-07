@@ -1,7 +1,7 @@
 <?php
 include("database.php");
 @$id = strtoupper($_POST['get_id']);
-$view_users_query = "select * from donation WHERE filename='$id'"; //select query for viewing users.  
+$view_users_query = "select * from donation WHERE invoice='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
@@ -28,7 +28,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $lastname=$row[19];
     $youwantustospendyourdonationfor=$row[20];
     $code=$row[21];
-    $increment=$row[22];
+    $invoice=$row[22];
     $filename=$row[23];
     $dlastupdatedon=$row[24];
     
@@ -114,6 +114,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <th scope="col">PAN No</th>
                             <th scope="col">Donation Date</th>
                             <th scope="col">Donated Amount</th>
+                            <th scope="col">Invoice No</th>
                             <th scope="col">Status</th>
                         </tr>
                     </thead>
@@ -125,6 +126,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <td><?php echo $panno ?></td>
                                 <td><?php echo $timestamp ?></td>
                                 <td><?php echo $currencyofthedonatedamount ?> <?php echo $donatedamount ?></td>
+                                <td><?php echo $invoice ?></td>
                                 <td>
 
                                     <?php if ($approvedby == "rejected") { ?>
