@@ -30,6 +30,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $code=$row[21];
     $increment=$row[22];
     $filename=$row[23];
+    $dlastupdatedon=$row[24];
     
 ?>
 <?php } ?>
