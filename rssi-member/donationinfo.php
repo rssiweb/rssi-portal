@@ -6,30 +6,25 @@ $run = pg_query($con, $view_users_query); //here run the sql query.
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
-    $approvedby = $row[0];
-    $profile = $row[1];
-    $mergestatus = $row[2];
-    $timestamp = $row[3];
-    $firstname = $row[4];
-    $emailaddress = $row[5];
-    $mobilenumber = $row[6];
-    $transactionid = $row[7];
-    $currencyofthedonatedamount = $row[8];
-    $donatedamount = $row[9];
-    $additionalnote = $row[10];
-    $panno = $row[11];
-    $dateofbirth = $row[12];
-    $address = $row[13];
-    $ack = $row[14];
-    $modeofpayment = $row[15];
-    $cauthenticationcode = $row[16];
-    $nameofitemsyoushared = $row[17];
-    $sauthenticationcode = $row[18];
-    $lastname = $row[19];
-    $youwantustospendyourdonationfor = $row[20];
-    $code = $row[21];
-    $increment = $row[22];
-    $filename = $row[23];
+    $emailaddress=$row[0];
+    $mobilenumber=$row[1];
+    $transactionid=$row[2];
+    $currencyofthedonatedamount=$row[3];
+    $donatedamount=$row[4];
+    $additionalnote=$row[5];
+    $panno=$row[6];
+    $dateofbirth=$row[7];
+    $address=$row[8];
+    $ack=$row[9];
+    $modeofpayment=$row[10];
+    $cauthenticationcode=$row[11];
+    $nameofitemsyoushared=$row[12];
+    $sauthenticationcode=$row[13];
+    $lastname=$row[14];
+    $youwantustospendyourdonationfor=$row[15];
+    $code=$row[16];
+    $increment=$row[17];
+    $filename=$row[18]    
 
 ?>
 <?php } ?>
