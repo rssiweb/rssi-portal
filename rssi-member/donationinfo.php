@@ -126,7 +126,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <td><?php echo $currencyofthedonatedamount ?> <?php echo $donatedamount ?></td>
                                 <td>
 
-                                    <?php if ($donatedamount == "Rejected") { ?>
+                                    <?php if ($donatedamount == "rejected") { ?>
                                         <p class="label label-warning"><?php echo $approvedby ?></p>
 
                                     <?php } else if ($donatedamount == "--") { ?>
