@@ -41,7 +41,7 @@ $resultArr = pg_fetch_all($result);
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Members database</title>
+  <title>RSSI Faculty</title>
   <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
   <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
   <!-- Main css -->
@@ -90,6 +90,33 @@ $resultArr = pg_fetch_all($result);
         margin-left: 2%;
       }
     }
+
+    @media (max-width:767px) {
+
+      #cw,
+      #cw1,
+      #cw2,
+      #cw3 {
+        width: 100% !important;
+      }
+
+    }
+
+    #cw {
+      width: 7%;
+    }
+
+    #cw1 {
+      width: 17%;
+    }
+
+    #cw2 {
+      width: 15%;
+    }
+
+    #cw3 {
+      width: 25%;
+    }
   </style>
 
 </head>
@@ -104,7 +131,8 @@ $resultArr = pg_fetch_all($result);
             Record count:&nbsp;<?php echo sizeof($resultArr) ?>
           </div>
           <div class="col" style="display: inline-block; width:47%; text-align:right">
-            Home / RSSI Volunteer
+            <a href="facultyexp.php" target="_self" class="btn btn-danger btn-sm" role="button">Faculty Details</a>
+            <!--<span class="noticet"><a href="facultyexp.php" target="_self"></a></span>-->
           </div>
         </div>
         <section class="box" style="padding: 2%;">
@@ -131,45 +159,46 @@ $resultArr = pg_fetch_all($result);
           </form>
           <?php
           echo '<table class="table">
-          <thead>
+          <thead style="font-size: 12px;">
           <tr>
-          <th scope="col" width="7%">Photo</th>
-          <th scope="col" width="20%">Volunteer Details</th>
-          <th scope="col" width="15%">Contact</th>
+          <th scope="col" id="cw">Photo</th>
+          <th scope="col" id="cw1">Volunteer Details</th>
+          <th scope="col" id="cw2">Contact</th>
           <th scope="col">Designation</th>
           <th scope="col">Class URL</th>
-          <th scope="col" width="15%">Association Status</th>
-          <th scope="col" width="7%">Password</th>
+          <th scope="col" id="cw2">Association Status</th>
+          <th scope="col" id="cw">Password</th>
           <th scope="col">Productivity</th>
           <th scope="col">Badge</th>
         </tr>
         </thead>' ?>
           <?php if (sizeof($resultArr) > 0) { ?>
             <?php
-            echo '<tbody>';
+            echo '<tbody style="font-size: 13px;">';
             foreach ($resultArr as $array) {
               echo '<tr>
             <td><img src="' . $array['photo'] . '" width=50px/></td>
             <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['doj'] . '<br>' . $array['yos'] . '</td>
             <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
-            <td>' . substr($array['position'] , 0, strrpos($array['position'] , "-")) . '</td>' ?>
+            <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>' ?>
               <?php if ($id == "Active") { ?>
-                <?php echo '<td><span class="noticet"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>' ?>
+                <?php echo '<td><span class="noticea"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>' ?>
               <?php } else { ?> <?php echo '<td></td>' ?>
               <?php } ?>
 
               <?php echo '<td style="white-space:unset">' . $array['astatus'] ?><br>
 
-              <?php if ($array['on_leave'] != null) { ?>
+              <?php if ($array['on_leave'] != null && $array['filterstatus'] != 'Inactive') { ?>
                 <?php echo '<br><p class="label label-danger">on leave</p>' ?>
-              <?php } else {} ?>
-              <?php if ($array['today'] != 0) { ?>
+              <?php } else {
+              } ?>
+              <?php if ($array['today'] != 0 && $array['filterstatus'] != 'Inactive') { ?>
                 <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
               <?php    } else {
               } ?>
             <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td><td>' . $array['colors'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticet"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td>' . $array['badge'] . '<br>' . $array['googlechat'] . '</td>
             </tr>';
             } ?>

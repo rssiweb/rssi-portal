@@ -99,10 +99,7 @@
                         ?>
 
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;RSSI Volunteer</a>
-                            </li>
-                            <li style="height: unset;">
-                                <a style="font-size:13px;" href="facultyexp.php"><i class="fas fa-user-tag"></i>&nbsp;Faculty Experience Dashboard</a>
+                                <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;RSSI Faculty</a>
                             </li>
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="leave_admin.php"><i class="fas fa-plane-departure"></i>&nbsp;Leave Tracker</a>
@@ -118,7 +115,10 @@
                                 <a style="font-size:13px;" href="medistatus_admin.php"><i class="fas fa-hand-holding-medical"></i>&nbsp;Medistatus</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="reimbursement_admin.php"><i class="fas fa-wallet"></i>&nbsp;Reimbursement</a>
+                                <a style="font-size:13px;" href="reimbursement_admin.php"><i class="fas fa-rupee-sign"></i>&nbsp;Reimbursement</a>
+                            </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="donationinfo_admin.php"><i class="fas fa-hands-helping"></i>&nbsp;Donation</a>
                             </li>
                         <?php
                         } else {
@@ -265,7 +265,7 @@
 
             <li><a href="medimate.php" class="<?php echo $medimate_active ?>"><span class="sidebar-icon"><i class="fas fa-hand-holding-medical"></i></span> <span class="menu-title">Medimate</span></a></li>
 
-            <li><a href="reimbursement.php" class="<?php echo $reimbursement_active ?>"><span class="sidebar-icon"><i class="fas fa-wallet"></i></span> <span class="menu-title">Reimbursement</span></a></li>
+            <li><a href="reimbursement.php" class="<?php echo $reimbursement_active ?>"><span class="sidebar-icon"><i class="fas fa-rupee-sign"></i></span> <span class="menu-title">Reimbursement</span></a></li>
 
             <li><a href="profile.php" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa fa-user-circle"></i></span> <span class="menu-title">My Profile</span></a></li>
         </ul>
