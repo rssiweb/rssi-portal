@@ -190,7 +190,7 @@ $resultArr = pg_fetch_all($result);
                         ?>
             </div>
             <div class="col-md-12" style="text-align: right;">
-                <span class="noticet" style="line-height: 2;"><a href="medimate.php">Back to Reimbursement</a></span>
+                <span class="noticet" style="line-height: 2;"><a href="reimbursement.php">Back to Reimbursement</a></span>
             </div>
             </div>
         </section>
