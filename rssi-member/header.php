@@ -88,7 +88,7 @@
 
                 <!------------------------------- ADMIN ---------------------------------->
                 <li class="profile dropdown">
-                    <a href="#"> <i class="fas fa-project-diagram"></i></a>
+                    <a href="#"> <i class="fas fa-sitemap"></i></a>
                     <ul class="dropdown-menu profile fadeIn" style="right:unset">
 
                         <li style="height: unset;">
@@ -118,7 +118,7 @@
                                 <a style="font-size:13px;" href="reimbursement_admin.php"><i class="fas fa-rupee-sign"></i>&nbsp;Reimbursement</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="donationinfo_admin.php"><i class="fas fa-hands-helping"></i>&nbsp;Donation</a>
+                                <a style="font-size:13px;" href="donationinfo_admin.php"><i class="fas fa-hand-holding-heart"></i>&nbsp;Donation</a>
                             </li>
                         <?php
                         } else {

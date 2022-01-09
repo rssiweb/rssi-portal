@@ -99,6 +99,7 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
+                                    <option>2022</option>
                                     <option>2021</option>
                                     <option>2020</option>
                                 </select>&nbsp;

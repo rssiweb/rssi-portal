@@ -103,7 +103,7 @@ $resultArr = pg_fetch_all($result);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / Faculty Details
+                        Home / <span class="noticet"><a href="faculty.php" target="_self">Faculty</a></span> / Faculty Details
                     </div>
                 </div>
 
@@ -132,7 +132,7 @@ $resultArr = pg_fetch_all($result);
                     </form>
                     <?php
                     echo '<table class="table">
-          <thead>
+          <thead style="font-size: 12px;">
           <tr>
           <th scope="col" id="cw">Photo</th>
           <th scope="col" id="cw1">Name</th>
@@ -143,7 +143,7 @@ $resultArr = pg_fetch_all($result);
         </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
                         <?php
-                        echo '<tbody>';
+                        echo '<tbody style="font-size: 13px;">';
                         foreach ($resultArr as $array) {
                             echo '<tr>' ?>
                             <?php if ($array['disc'] == null) { ?>

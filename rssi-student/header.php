@@ -47,14 +47,14 @@
                     </ul>
                 </li><!------------------------------- ACTIVE STUDENT ---------------------------------->
                 <li class="profile dropdown">
-                    <a href="#"> <i class="fas fa-project-diagram"></i></a>
+                    <a href="#"> <i class="fas fa-sitemap"></i></a>
                     <ul class="dropdown-menu profile fadeIn" style="right:unset">
 
                         <?php if (@$filterstatus == 'Active') {
                         ?>
 
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="facultyexp.php"><i class="fas fa-user-tag"></i>&nbsp;Your Faculty</a>
+                                <a style="font-size:13px;" href="facultyexp.php"><i class="fas fa-user-tag"></i>&nbsp;My Faculty</a>
                             </li>
 
                         <?php

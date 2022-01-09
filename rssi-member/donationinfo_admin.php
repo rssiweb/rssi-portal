@@ -205,9 +205,9 @@ $resultArr = pg_fetch_all($result);
                      </table>';
             ?>
       </div>
-      <div class="col-md-12" style="text-align: right;">
+      <!--<div class="col-md-12" style="text-align: right;">
         <span class="noticet" style="line-height: 2;"><a href="reimbursement.php">Back to Reimbursement</a></span>
-      </div>
+      </div>-->
       </div>
     </section>
     </div>
