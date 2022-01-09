@@ -112,6 +112,35 @@ $resultArr = pg_fetch_all($result);
         margin-left: 2%;
       }
     }
+    @media (max-width:767px) {
+
+#cw,
+#cw1,
+#cw2,
+#cw3 {
+  width: 100% !important;
+}
+
+}
+
+#cw {
+width: 7%;
+}
+
+#cw1 {
+width: 20%;
+}
+
+#cw2 {
+width: 8%;
+}
+
+#cw3 {
+width: 15%;
+}
+#cw4 {
+width: 10%;
+}
   </style>
 
 </head>
@@ -209,27 +238,27 @@ $resultArr = pg_fetch_all($result);
 
           <?php
           echo '<table class="table">
-          <thead>
+          <thead style="font-size: 12px;">
           <tr>
-          <th scope="col" width="7%">Photo</th>
-          <th scope="col" width="20%">Student Details</th>
-          <th scope="col" width="8%">Class</th>
-          <th scope="col" width="15%">Contact</th>
-          <th scope="col" width="10%">Status</th>' ?>
+          <th scope="col" id="cw">Photo</th>
+          <th scope="col" id="cw1">Student Details</th>
+          <th scope="col" id="cw2">Class</th>
+          <th scope="col" id="cw3">Contact</th>
+          <th scope="col" id="cw4">Status</th>' ?>
           <?php if ($role == 'Admin') { ?>
             <?php
-            echo '<th scope="col" width="7%">Password</th>' ?>
+            echo '<th scope="col" id="cw">Password</th>' ?>
           <?php    } else {
           } ?>
           <?php
-          echo '<th scope="col" width="20%">Subject</th>
+          echo '<th scope="col" id="cw1">Subject</th>
           <th scope="col">Medium</th>
           <th scope="col">Badge</th>
         </tr>
         </thead>' ?>
           <?php if (sizeof($resultArr) > 0) { ?>
             <?php
-            echo '<tbody>';
+            echo '<tbody style="font-size: 13px;">';
             foreach ($resultArr as $array) {
               echo '<tr>
             <td><img src="' . $array['photourl'] . '" width=50px/></td>

@@ -131,8 +131,7 @@ $resultArr = pg_fetch_all($result);
             Record count:&nbsp;<?php echo sizeof($resultArr) ?>
           </div>
           <div class="col" style="display: inline-block; width:47%; text-align:right">
-            <a href="facultyexp.php" target="_self" class="btn btn-danger btn-sm" role="button">Faculty Details</a>
-            <!--<span class="noticet"><a href="facultyexp.php" target="_self"></a></span>-->
+          <a href="facultyexp.php" target="_self" class="btn btn-danger btn-sm" role="button">Faculty Details</a>
           </div>
         </div>
         <section class="box" style="padding: 2%;">
