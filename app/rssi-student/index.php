@@ -20,11 +20,46 @@ if ($_POST) {
     }
 }
 
-?>
-<?php
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
+$login_failed_dialog = false;
+
+include("database.php");
+
+if (isset($_POST['login'])) {
+    $student_id = strtoupper($_POST['sid']);
+    $colors = $_POST['pass'];
+
+    $check_user = "select * from rssimyprofile_student WHERE student_id='$student_id'AND colors='$colors'";
+
+    $run = pg_query($con, $check_user);
+
+    if (pg_num_rows($run)) {
+        if (isset($_SESSION["login_redirect"])) {
+            header("Location: " . $_SESSION["login_redirect"]);
+            unset($_SESSION["login_redirect"]);
+        } else {
+            header("Location: ../rssi-student/home.php");
+        }
+
+        $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
+
+        $row = pg_fetch_row($run);
+        $filterstatus = $row[39];
+        $feesflag = $row[50];
+
+        $_SESSION['filterstatus'] = $filterstatus;
+        $_SESSION['feesflag'] = $feesflag;
+        $uip = $_SERVER['REMOTE_ADDR'];
+
+        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
+        $result = pg_query($con, $query);
+    } else {
+        $login_failed_dialog = true;
+    }
+}
 ?>
+
 <html>
 
 <head lang="en">
@@ -105,51 +140,16 @@ $date = date('Y-m-d H:i:s');
 
 </html>
 
-<?php
+<?php if($login_failed_dialog) {?>
 
-include("database.php");
-
-if (isset($_POST['login'])) {
-    $student_id = strtoupper($_POST['sid']);
-    $colors = $_POST['pass'];
-
-    $check_user = "select * from rssimyprofile_student WHERE student_id='$student_id'AND colors='$colors'";
-
-    $run = pg_query($con, $check_user);
-
-    if (pg_num_rows($run)) {
-        if (isset($_SESSION["login_redirect"])) {
-            header("Location: " . $_SESSION["login_redirect"]);
-            unset($_SESSION["login_redirect"]);
-        } else {
-            header("Location: ../rssi-student/home.php");
-        }
-
-        $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
-
-        $row = pg_fetch_row($run);
-        $filterstatus = $row[39];
-        $feesflag = $row[50];
-
-        $_SESSION['filterstatus'] = $filterstatus;
-        $_SESSION['feesflag'] = $feesflag;
-        $uip = $_SERVER['REMOTE_ADDR'];
-
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
-        $result = pg_query($con, $query);
-    } else { ?>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 col-md-offset-4" style="text-align: center;">
-                    <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
-                </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4" style="text-align: center;">
+                <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
             </div>
         </div>
-
-
-<?php }
-}
-?>
+    </div>
+<?php } ?>
 
 <!--protected by reCAPTCHA-->
 <script>
