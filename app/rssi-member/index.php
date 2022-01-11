@@ -20,11 +20,57 @@ if ($_POST) {
     }
 }
 
-?>
-<?php
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
+$login_failed_dialog = false;
+
+include("database.php");
+
+if (isset($_POST['login'])) {
+    $associatenumber = strtoupper($_POST['aid']);
+    $colors = $_POST['pass'];
+
+    $check_user = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'AND colors='$colors'";
+
+    $run = pg_query($con, $check_user);
+
+    //if (pg_num_rows($run)) {
+
+    // Do the login stuff...
+
+    if (pg_num_rows($run)) {
+        if (isset($_SESSION["login_redirect"])) {
+            header("Location: " . $_SESSION["login_redirect"]);
+            unset($_SESSION["login_redirect"]);
+        } else {
+            header("Location: ../rssi-member/home.php");
+        }
+
+        $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
+
+        $row = pg_fetch_row($run);
+        $role = $row[62];
+        $engagement = $row[48];
+        $filterstatus = $row[35];
+
+        $_SESSION['role'] = $role;
+        $_SESSION['engagement'] = $engagement;
+        $_SESSION['filterstatus'] = $filterstatus;
+        $uip = $_SERVER['REMOTE_ADDR'];
+        //$login_redirect=$_SESSION["login_redirect"];
+
+        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
+        $result = pg_query($con, $query);
+
+        //echo "<script>alert('";
+        //echo $engagement;
+        //echo "')</script>";
+    } else {
+        $login_failed_dialog = true;
+    }
+}
 ?>
+
 <html>
 
 <head lang="en">
@@ -106,64 +152,15 @@ $date = date('Y-m-d H:i:s');
 
 </html>
 
-<?php
-
-include("database.php");
-
-if (isset($_POST['login'])) {
-    $associatenumber = strtoupper($_POST['aid']);
-    $colors = $_POST['pass'];
-
-    $check_user = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'AND colors='$colors'";
-
-    $run = pg_query($con, $check_user);
-
-    //if (pg_num_rows($run)) {
-
-    // Do the login stuff...
-
-    if (pg_num_rows($run)) {
-        if (isset($_SESSION["login_redirect"])) {
-            header("Location: " . $_SESSION["login_redirect"]);
-            unset($_SESSION["login_redirect"]);
-        } else {
-            header("Location: ../rssi-member/home.php");
-        }
-
-        $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
-
-        $row = pg_fetch_row($run);
-        $role = $row[62];
-        $engagement = $row[48];
-        $filterstatus = $row[35];
-
-        $_SESSION['role'] = $role;
-        $_SESSION['engagement'] = $engagement;
-        $_SESSION['filterstatus'] = $filterstatus;
-        $uip = $_SERVER['REMOTE_ADDR'];
-        //$login_redirect=$_SESSION["login_redirect"];
-
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
-        $result = pg_query($con, $query);
-
-        //echo "<script>alert('";
-        //echo $engagement;
-        //echo "')</script>";
-    } else { ?>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 col-md-offset-4" style="text-align: center;">
-                    <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
-                </div>
-            </div>
+<?php if($login_failed_dialog) {?>
+    <div class="container">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4" style="text-align: center;">
+            <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
         </div>
-
-
-<?php }
-}
-?>
-
-
+    </div>
+    </div>
+<?php } ?>
 <!--protected by reCAPTCHA-->
 <script>
     grecaptcha.ready(function() {
