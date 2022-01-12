@@ -4,6 +4,11 @@ session_start(); //session starts here
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
 
+if (isset($_SESSION['sid']) && $_SESSION['sid']) {
+    header("Location: home.php");
+    exit;
+}
+
 if ($_POST) {
     function getCaptcha($SecretKey)
     {
@@ -30,7 +35,7 @@ if (isset($_POST['login'])) {
     $student_id = strtoupper($_POST['sid']);
     $colors = $_POST['pass'];
 
-    $check_user = "select * from rssimyprofile_student WHERE student_id='$student_id'AND colors='$colors'";
+    $check_user = "select * from rssimyprofile_student WHERE student_id='$student_id' AND colors='$colors'";
 
     $run = pg_query($con, $check_user);
 
