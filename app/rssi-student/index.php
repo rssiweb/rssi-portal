@@ -57,7 +57,7 @@ if (isset($_POST['login'])) {
         $_SESSION['feesflag'] = $feesflag;
         $uip = $_SERVER['REMOTE_ADDR'];
 
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
+        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date') where $_SERVER[REMOTE_ADDR] != '172.18.0.1'";
         $result = pg_query($con, $query);
     } else {
         $login_failed_dialog = true;
