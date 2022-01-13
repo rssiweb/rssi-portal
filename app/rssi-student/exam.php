@@ -99,18 +99,19 @@ include("student_data.php");
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Exam Name</th>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Info</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                            <td>QT2/2021</td>
-                                <td id=cw>MCQ and Descriptive written exam - Online<br>
-                                    Full marks - 30<br>
-                                    Max. Time - 1.5 hours<br>
-                                    Project - 20 (Internal)<br><br>
+                                <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
+                                    <u><b>National module</b></u><br>
+                                    Written exam - 70<br>
+                                    Project/VIVA - 30<br><br>
+                                    <u><b>State module</b></u><br>
+                                    Written exam - 90<br>
+                                    Project/VIVA - 10<br><br>
 
                                     The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br></td>
 
@@ -135,7 +136,9 @@ include("student_data.php");
                         <tbody>
                             <tr>
                                 <!--<td><span class="noticet"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>-->
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" target="_blank">Download coverpage</i></a></span></td>
+                                <td><span class="noticet">
+                                    <a href="https://drive.google.com/file/d/1B0sONvc9bb5igUOo1gVO_INfIod9sfIW/view" title="Download" target="_blank">State module</a><br>
+                                    <a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" title="Download" target="_blank">National module</a><br></td>
                                 <td><span class="noticet"><a href="question.php">Question paper</i></a></span></td>
                                 <td><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
                             </tr>

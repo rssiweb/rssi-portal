@@ -78,8 +78,18 @@ include("student_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;"><?php echo @$badge
-                                                            ?></div>
+                <!--<div class=col style="text-align: right;"><?php echo @$badge
+                                                            ?></div>-->
+                                                            <?php
+                if ((@$category == 'WLG4S1' && $class == '10')||@$module='National') {
+                ?>
+                <div class="alert alert-info" role="alert" style="text-align: -webkit-center;">Please check your VIVA Schedule.&nbsp;<span class="noticet">
+                                        <a href="https://drive.google.com/file/d/1WUpyFeTYXKM4Yg3AOO-1zNJ_qHaVnL1P/view" target="_blank">Click Here</a>&nbsp;<span class="label label-danger">new</span></span>
+                        </div>
+                        <?php
+                } else {
+                }
+                ?>
 
                 <section class="box" style="padding: 2%;">
 
