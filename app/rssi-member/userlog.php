@@ -1,6 +1,11 @@
 <?php
 session_start();
 // Storing Session
+include("../util/login_util.php");
+
+if(! isLoggedIn("aid")){
+    header("Location: index.php");
+}
 $user_check = $_SESSION['aid'];
 
 if(!$_SESSION['aid']) {

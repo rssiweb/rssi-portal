@@ -1,6 +1,10 @@
 <?php
 session_start();
 // Storing Session
+if (! isset($_SESSION['sid']) || !$_SESSION['sid']) {
+  header("Location: index.php");
+  exit;
+}
 $user_check = $_SESSION['sid'];
 
 if (!$_SESSION['sid']) {
