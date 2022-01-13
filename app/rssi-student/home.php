@@ -84,7 +84,7 @@ include("student_data.php");
                 if ((@$category == 'WLG4S1' && $class == '10')||@$module='National') {
                 ?>
                 <div class="alert alert-info" role="alert" style="text-align: -webkit-center;">Please check your VIVA Schedule.&nbsp;<span class="noticet">
-                                        <a href="https://drive.google.com/file/d/1WUpyFeTYXKM4Yg3AOO-1zNJ_qHaVnL1P/view" target="_blank">Click Here</a>&nbsp;<span class="label label-danger">new</span></span>
+                                        <a href="https://drive.google.com/file/d/1WUpyFeTYXKM4Yg3AOO-1zNJ_qHaVnL1P/view" target="_blank">Click Here</a></span>&nbsp;&nbsp;<span class="label label-danger">14/1/2022</span>
                         </div>
                         <?php
                 } else {
