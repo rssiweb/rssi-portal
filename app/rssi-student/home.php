@@ -1,7 +1,7 @@
 <?php
 session_start();
 // Storing Session
-if (! isset($_SESSION['sid']) || !$_SESSION['sid']) {
+if (!isset($_SESSION['sid']) || !$_SESSION['sid']) {
     header("Location: index.php");
     exit;
 }
@@ -41,9 +41,7 @@ include("student_data.php");
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
     <style>
-        <?php include '../css/style.css'; ?>
-        
-        @media (max-width:767px) {
+        <?php include '../css/style.css'; ?>@media (max-width:767px) {
             .cw3 {
                 width: 80% !important;
                 margin-top: 2%;
@@ -79,14 +77,14 @@ include("student_data.php");
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <!--<div class=col style="text-align: right;"><?php echo @$badge
-                                                            ?></div>-->
-                                                            <?php
-                if ((@$category == 'WLG4S1' && $class == '10')||@$module='National') {
+                                                                ?></div>-->
+                <?php
+                if ((@$category == 'WLG4S1' && $class == '10') || @$module = 'National') {
                 ?>
-                <div class="alert alert-info" role="alert" style="text-align: -webkit-center;">Please check your VIVA Schedule.&nbsp;<span class="noticet">
-                                        <a href="https://drive.google.com/file/d/1WUpyFeTYXKM4Yg3AOO-1zNJ_qHaVnL1P/view" target="_blank">Click Here</a></span>&nbsp;&nbsp;<span class="label label-danger">14/1/2022</span>
-                        </div>
-                        <?php
+                    <div class="alert alert-info" role="alert" style="text-align: -webkit-center;">Viva Schedule has been published. Please check&nbsp;<span class="noticet">
+                            <a href="https://drive.google.com/file/d/1WUpyFeTYXKM4Yg3AOO-1zNJ_qHaVnL1P/view" target="_blank">here..</a></span>&nbsp;&nbsp;<span class="label label-warning blink_me">update</span>
+                    </div>
+                <?php
                 } else {
                 }
                 ?>
