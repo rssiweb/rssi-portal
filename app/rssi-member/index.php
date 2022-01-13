@@ -64,7 +64,7 @@ if (isset($_POST['login'])) {
         $uip = $_SERVER['REMOTE_ADDR'];
         //$login_redirect=$_SESSION["login_redirect"];
 
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date')";
+        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date') where $_SERVER[REMOTE_ADDR] != '172.18.0.1'";
         $result = pg_query($con, $query);
 
         //echo "<script>alert('";
