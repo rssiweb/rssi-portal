@@ -3,7 +3,7 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
-if(! isLoggedIn("aid")){
+if (!isLoggedIn("aid")) {
     header("Location: index.php");
 }
 $user_check = $_SESSION['aid'];
@@ -12,7 +12,7 @@ if (!$_SESSION['aid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 } else if ($_SESSION['filterstatus'] != 'Active') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
@@ -94,39 +94,49 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
+            <div class="alert alert-info" role="alert" style="text-align: -webkit-center;">Please download and install the Kalpurush.ttf file given here in the portal before opening or editing the question template of the State Module.
+                        </div>
 
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Exam Name</th>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Question paper Template</th>
+                                <th scope="col">Download Bengali font</th>
                                 <th scope="col">Info</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>QT2/2021</td>
-                                <td id=cw>MCQ and Descriptive written exam - Online<br>
-                                    Full marks - 30<br>
-                                    Max. Time - 1.5 hours<br>
-                                    Project - 20 (Internal)<br><br>
+                                <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
+                                    <u><b>National module</b></u><br>
+                                    Written exam - 70<br>
+                                    Project/VIVA - 30<br><br>
+                                    <u><b>State module</b></u><br>
+                                    Written exam - 90<br>
+                                    Project/VIVA - 10<br><br>
 
-                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br><br>
+                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br>
+                                    <img src="../images/qp.png" width=70%><br><br>
 
-                                    After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticet"><a href="mailto: info@rssi.in">info@rssi.in</a></span>.</td>
+                                    After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticet"><a href="mailto: info@rssi.in">info@rssi.in</a></span>.
+                                </td>
 
-                                <td><span class="noticet"><a href="https://drive.google.com/file/d/1tRelLLSOCxjC1TmbkdU4p2oSQ4RClAjs/view?usp=sharing" title="Download" target="_blank">Download</a></span></td>
+                                <td><span class="noticet">
+                                    <a href="https://drive.google.com/uc?id=1RMjfSsFNPaDQixvNPsO2ee5xgraRzhVt&export=download" title="Download" target="_blank">State module</a><br>
+                                    <a href="https://drive.google.com/uc?id=15yFD54mAJQzZN0l1sK3EuMRsCYSKR5ec&export=download" title="Download" target="_blank">National module</a><br></td>
+                                     
+                                    <td style="line-height: 2"><span class="noticet"><a href="https://drive.google.com/uc?id=15L-QSLklMZ1k3aWIdhPqsAeNhJL7ggFz&export=download" title="Download" target="_blank">Kalpurush.ttf</a></span></td>
 
                                 <td style="line-height: 2"><span class="noticet">
                                         <a href="https://drive.google.com/file/d/1S5iE7baHY2i49EZgRSfVRLhnQGO7QGYZ/view" target="_blank">Question paper submission date</i></a><br>
 
-                                        <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
+                                        <a href="javascript:void(0)" target="_self">Examination Schedule</i></a>&nbsp;<span class="label label-info">coming soon</span><br>
 
                                         <!--<a href="javascript:void(0)" target="_self">Invigilation duty list</i></a><br>-->
-                                        <a href="https://drive.google.com/file/d/11lvDT9mLHuQ7CQpSgrjO4QnaT4hfu6Zd/view" target="_blank">Invigilation duty list</i></a><br>
+                                        <a href="javascript:void(0)" target="_self">Invigilation duty list</i></a>&nbsp;<span class="label label-info">coming soon</span><br>
 
                                         <a href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator</i></a><br>
                                         <a href="https://drive.google.com/file/d/13cH8Rd4aPYHPe0ltzQzQDNFAH1GRTruY/view" target="_blank">Examiner User Guide</i></a>

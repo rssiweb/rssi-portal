@@ -79,11 +79,11 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             <div class="col-md-12">
                 <div class=col style="text-align: right;"><?php echo $badge ?></div>
 
-                <!--**************QUESTION PAPER SUBMISSION TIMER**************
+                <!--**************QUESTION PAPER SUBMISSION TIMER**************-->
                 <?php
                 if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
                 ?>
-                    <div class="alert alert-success" role="alert" style="text-align: -webkit-center;">Being on time is a wonderful thing. You have successfully submitted the QT2/2021 question paper.
+                    <div class="alert alert-success" role="alert" style="text-align: -webkit-center;">Being on time is a wonderful thing. You have successfully submitted the QT3/2022 question paper.
                     </div>
                 <?php
                 } else if ((@$questionflag == 'NA' || @$questionflag == 'YL') && $filterstatus == 'Active') {
@@ -93,7 +93,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 ?>
                     <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                         <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for the completion of answer sheet evaluation.
-                        --left for question paper submission.--
+                        <!--left for question paper submission.-->
                     </div>
                     <script>
                         // Set the date we're counting down to
@@ -128,7 +128,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <?php
                 } else {
                 }
-                ?>-->
+                ?>
                 <!--**************QUESTION PAPER SUBMISSION END**************-->
 
                 <section class="box" style="padding: 2%;">
@@ -284,7 +284,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <?php } else {
     } ?>
 
-     <!--**************Experience details************** || strpos(@$vaccination, $word) !== false)-->
+     <!--**************Experience details************** || strpos(@$vaccination, $word) !== false)
      <?php
     if (@$mjorsub == null && $filterstatus == 'Active' && $vaccination == null) {
     ?>
@@ -386,8 +386,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 }
 
             });
-        </script>
-        <!--disable submit button if any required field is blank -->
+        </script>-->
+        <!--disable submit button if any required field is blank
         <script>
             $(document).ready(function() {
                 $('#sendButton').attr('disabled', true);
@@ -404,7 +404,108 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <?php
     } else {
     ?>
-    <?php } ?>
+    <?php } ?>-->
+
+    <!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
+    <?php
+        if ((@$googlechat == null) && $filterstatus == 'Active') {
+            ?>
+    
+            <div id="thoverX" class="thover pop-up2"></div>
+            <div id="tpopupX" class="tpopup pop-up2">
+                <form name="submit-to-google-sheet2" action="" method="POST">
+                    <br>
+                    <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $fullname ?>" readonly>
+                    <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $associatenumber ?>" readonly>
+                    <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                    <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>), Do you know when and how to submit QT3/2022 question paper? For more details please visit the <span class="noticet"><a href="exam.php" target="_blank">Examination Portal.</a></span></p><br>
+                    <button type="submit" id="yes" class="close-button2 btn btn-success" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
+                        <i class="fas fa-smile" style="font-size:17px" aria-hidden="true"></i>&nbsp;Yes, I know the process. I will share the question paper as per the stipulated time.</button><br><br>
+                    <button type="submit" id="no" class="close-button2 btn btn-default" style="width: 90%; white-space:normal !important;word-wrap:break-word;">
+                        <i class="far fa-meh" style="font-size:17px" aria-hidden="true"></i>&nbsp;I have not been assigned any question paper for this quarter.
+                    </button>
+                    <br><br>
+                </form>
+            </div>
+            <script>
+                $('#yes').click(function() {
+                    $('#count2').val('Yes, I know the process. I will share the question paper as per the stipulated time.');
+                });
+    
+                $('#no').click(function() {
+                    $('#count2').val('I have not been assigned any question paper for this quarter.');
+                });
+            </script>
+            <script>
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbycsvlCllfvKdy257W77NyB05X5hbMpGilznY8n6x5VqL9xsTij/exec'
+                const form = document.forms['submit-to-google-sheet2']
+    
+                form.addEventListener('submit', e => {
+                    e.preventDefault()
+                    fetch(scriptURL, {
+                            method: 'POST',
+                            body: new FormData(form)
+                        })
+                        .then(response => console.log('Success!', response))
+                        .catch(error => console.error('Error!', error.message))
+                })
+            </script>
+            <script>
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, null, window.location.href);
+                }
+            </script>
+            <script>
+                $(document).ready(function() {
+    
+                    if (Boolean(readCookie('qt3q'))) {
+                        $('.pop-up2').hide();
+                        $('.pop-up2').fadeOut(1000);
+                    }
+                    $('.close-button2').click(function(e) {
+    
+                        $('.pop-up2').delay(10).fadeOut(700);
+                        e.stopPropagation();
+    
+                        createCookie("qt3q", "4 days", 4);
+                        //return false;
+                    });
+    
+                    function createCookie(name, value, days) {
+                        if (days) {
+                            var date = new Date();
+                            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                            var expires = "; expires=" + date.toGMTString();
+                        } else var expires = "";
+                        document.cookie = name + "=" + value + expires + "; path=/";
+                    }
+    
+    
+    
+                    function readCookie(name) {
+                        var nameEQ = name + "=";
+                        var ca = document.cookie.split(';');
+                        for (var i = 0; i < ca.length; i++) {
+                            var c = ca[i];
+                            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                        }
+                        return null;
+                    }
+    
+                    function eraseCookie(name) {
+                        createCookie(name, "", -1);
+                    }
+    
+                });
+            </script>
+        <?php
+            } else if (@$questionflag != 'NA' && $filterstatus == 'Active') {
+        ?>
+        <?php } else {
+            } ?>-->
+
+            <!--**************User confirmation2**************-->
 
     <style>
         .x-btn:focus,
