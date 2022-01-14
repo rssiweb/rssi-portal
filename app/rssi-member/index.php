@@ -93,6 +93,9 @@ if (isset($_POST['login'])) {
 </head>
 
 <body>
+    <div style="display: none">
+        <?php echo print_r($_SERVER)  ?>
+    </div>
     <div class="page-topbar">
         <div class="logo-area"> </div>
     </div>
