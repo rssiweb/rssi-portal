@@ -61,10 +61,10 @@ if (isset($_POST['login'])) {
         $_SESSION['role'] = $role;
         $_SESSION['engagement'] = $engagement;
         $_SESSION['filterstatus'] = $filterstatus;
-        $uip = $_SERVER['REMOTE_ADDR'];
+        $uip = $_SERVER['HTTP_X_REAL_IP'];
         //$login_redirect=$_SESSION["login_redirect"];
-
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[REMOTE_ADDR]','$date') where $_SERVER[REMOTE_ADDR] != '172.18.0.1'";
+        // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
+        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_POST[pass]','$_SERVER[HTTP_X_REAL_IP]','$date')";
         $result = pg_query($con, $query);
 
         //echo "<script>alert('";
@@ -93,9 +93,6 @@ if (isset($_POST['login'])) {
 </head>
 
 <body>
-    <div style="display: none">
-        <?php echo print_r($_SERVER)  ?>
-    </div>
     <div class="page-topbar">
         <div class="logo-area"> </div>
     </div>

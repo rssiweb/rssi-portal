@@ -172,3 +172,9 @@ RENAME COLUMN applicantid TO associatenumber;
 SELECT table_name 
 FROM information_schema.tables 
 WHERE table_schema='public' AND table_type='BASE TABLE'
+
+After 127.0.0.1 kubernetes.docker.internal put
+127.0.0.1 web.local
+127.0.0.1 portal.local
+
+C:\Windows\System32\drivers\etc\hosts
