@@ -96,7 +96,6 @@ $resultArr = pg_fetch_all($result);
                             <tr>
                                 <th scope="col">SL.No</th>
                                 <th scope="col">User name</th>
-                                <th scope="col">Password</th>
                                 <th scope="col">IP Address</th>
                                 <th scope="col">Login time</th>
                             </tr>
@@ -107,7 +106,6 @@ $resultArr = pg_fetch_all($result);
                             <tr>
                                 <td style="line-height: 1.7;">' . $array['id'] . '</td>
                                 <td style="line-height: 1.7;">' . $array['username'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['password'] . '</td>
                                 <td style="line-height: 1.7;">' . $array['ipaddress'] . '</td>
                                 <td style="line-height: 1.7;">' . $array['logintime'] . '</td>
                             </tr>';
