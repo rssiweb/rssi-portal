@@ -62,7 +62,7 @@ if (isset($_POST['login'])) {
         $_SESSION['engagement'] = $engagement;
         $_SESSION['filterstatus'] = $filterstatus;
         $uip = $_SERVER['HTTP_X_REAL_IP'];
-        //$login_redirect=$_SESSION["login_redirect"];
+
         // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
         $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
         $result = pg_query($con, $query);
