@@ -57,7 +57,7 @@ if (isset($_POST['login'])) {
         $_SESSION['feesflag'] = $feesflag;
         $uip = $_SERVER['HTTP_X_REAL_IP'];
 
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_POST[pass]','$_SERVER[HTTP_X_REAL_IP]','$date')";
+        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
         $result = pg_query($con, $query);
     } else {
         $login_failed_dialog = true;
