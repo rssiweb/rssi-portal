@@ -160,8 +160,7 @@ width: 10%;
             foreach ($resultArr as $array) {
               echo '<tr>
             <td><img src="' . $array['photourl'] . '" width=50px/></td>
-            <td>Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>
-            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
+            <td>Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b></td>
             <td>' . $array['class'] . '/' . $array['category'] . ' </td>
             <td style="white-space:unset">
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSdAk2s6tvvANlB08RAPqn_4cK31PN2VlCpWY5QpYmvgb0F21g/formResponse?usp=pp_url&entry.2105567962=' . $array['studentname'] . '&entry.988384435=Present" target="_blank" class="btn btn-success btn-sm" role="button">Present</a>
