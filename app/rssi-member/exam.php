@@ -133,7 +133,7 @@ include("member_data.php");
                                 <td style="line-height: 2"><span class="noticet">
                                         <a href="https://drive.google.com/file/d/1S5iE7baHY2i49EZgRSfVRLhnQGO7QGYZ/view" target="_blank">Question paper submission date</i></a><br>
 
-                                        <a href="javascript:void(0)" target="_self">Examination Schedule</i></a>&nbsp;<span class="label label-info">coming soon</span><br>
+                                        <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
 
                                         <!--<a href="javascript:void(0)" target="_self">Invigilation duty list</i></a><br>-->
                                         <a href="javascript:void(0)" target="_self">Invigilation duty list</i></a>&nbsp;<span class="label label-info">coming soon</span><br>

@@ -855,3 +855,11 @@ z-index: 5001;
         .alert {
             padding: 10px 0px !important;
         }
+        
+        .alert-dismissable .close,
+        .alert-dismissible .close {
+            position: relative;
+            top: -2px;
+            right: 10px;
+            color: inherit;
+        }
