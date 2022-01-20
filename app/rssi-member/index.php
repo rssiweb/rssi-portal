@@ -56,11 +56,12 @@ if (isset($_POST['login'])) {
         $row = pg_fetch_row($run);
         $role = $row[62];
         $engagement = $row[48];
+        $ipfl = $row[71];
         $filterstatus = $row[35];
 
         $_SESSION['role'] = $role;
         $_SESSION['engagement'] = $engagement;
-        $_SESSION['ipf'] = $ipf;
+        $_SESSION['ipfl'] = $ipfl;
         $_SESSION['filterstatus'] = $filterstatus;
         $uip = $_SERVER['HTTP_X_REAL_IP'];
 
