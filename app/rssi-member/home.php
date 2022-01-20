@@ -54,9 +54,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <style>
         <?php include '../css/style.css'; ?>
     </style>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -130,6 +130,12 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 }
                 ?>
                 <!--**************QUESTION PAPER SUBMISSION END**************-->
+                <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        Invigilation duty list has been published. Please check&nbsp;<span class="noticet">
+                            <a href="https://drive.google.com/file/d/1wrTxXQLzPPuJr0T8BnyfkNjkM00JpzLY/view" target="_blank">here..</a></span>
+                        &nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
+                    </div>
 
                 <section class="box" style="padding: 2%;">
 
