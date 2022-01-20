@@ -60,6 +60,7 @@ if (isset($_POST['login'])) {
 
         $_SESSION['role'] = $role;
         $_SESSION['engagement'] = $engagement;
+        $_SESSION['ipf'] = $ipf;
         $_SESSION['filterstatus'] = $filterstatus;
         $uip = $_SERVER['HTTP_X_REAL_IP'];
 

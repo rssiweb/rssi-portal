@@ -1,35 +1,35 @@
 <?php
-session_start();
-include("../util/login_util.php");
-
-if(! isLoggedIn("aid")){
-    header("Location: index.php");
-}
-$user_check = $_SESSION['aid'];
-
-if (!$_SESSION['aid']) {
-
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
-}
-?>
-<?php
 //session_start();
+//include("../util/login_util.php");
+
+//if(! isLoggedIn("aid")){
+    //header("Location: index.php");
+//}
 //$user_check = $_SESSION['aid'];
 
 //if (!$_SESSION['aid']) {
 
-//  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-//header("Location: index.php");
-//exit;  
-//} else if ($_SESSION['engagement'] == 'Intern' && $_SESSION['filterstatus'] == 'Active') {
+ //   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+ //   header("Location: index.php");
+ //   exit;
+//} You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.
+?>
+<?php
+session_start();
+$user_check = $_SESSION['aid'];
 
-//echo '<script type="text/javascript">';
-//echo 'alert("You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.");';
-//echo 'window.location.href = "home.php";';
-//echo '</script>';
-//}
+if (!$_SESSION['aid']) {
+
+  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+header("Location: index.php");
+exit;  
+} else if ($_SESSION['ipf'] == '-' && $_SESSION['filterstatus'] == 'Active') {
+
+echo '<script type="text/javascript">';
+echo 'alert("Your appraisal has been initiated in the system. You will no longer be able to access My appraisal portal.");';
+echo 'window.location.href = "home.php";';
+echo '</script>';
+}
 ?>
 <?php
 include("member_data.php");
