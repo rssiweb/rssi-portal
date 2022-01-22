@@ -95,7 +95,16 @@ foreach ($resultArr as $array) {
             <td style="line-height:2">Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b></td>
             <td>' . $array['engagement'] . '</td>
             <td>' . substr($array['position'], 0, strrpos($array['position'], '-')) . '</td>
-            <td style="line-height:2">' . $array['originaldoj'] . '&nbsp;to&nbsp;' . $array['effectivedate'] . '<br>' . $array['yos'] . '</td>
+            <td style="line-height:2">' . $array['originaldoj'] . '&nbsp;to&nbsp;'?>
+            
+            <?php if ($array['associationstatus'] != null) { ?>
+                <?php echo ''. $array['effectivedate'] . '' ?>
+                <?php } else { ?> <?php echo 'Present' ?>
+            <?php } ?>
+                
+                
+                
+            <?php echo  '<br>' . $array['yos'] . '</td>
             <td>' . $array['ipfl'] . '</td>
             <td>' . $array['astatus'] . '</td>' ?>
 
