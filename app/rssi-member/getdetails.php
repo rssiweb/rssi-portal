@@ -98,7 +98,7 @@ foreach ($resultArr as $array) {
             <td style="line-height:2">' . $array['originaldoj'] . '&nbsp;to&nbsp;'?>
             
             <?php if ($array['associationstatus'] != null) { ?>
-                <?php echo ''. $array['effectivedate'] . '' ?>
+                <?php echo $array['effectivedate'] ?>
                 <?php } else { ?> <?php echo 'Present' ?>
             <?php } ?>
                 
