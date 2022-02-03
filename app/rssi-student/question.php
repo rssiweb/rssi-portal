@@ -28,7 +28,7 @@ include("student_data.php");
 <?php
 // Set the new timezone
 date_default_timezone_set('Asia/Kolkata');
-$date = date('Y-d-m h:i:s');
+$date = date('Y-m-d H:i:s');
 //echo $date;
 ?>
 <?php
@@ -250,7 +250,7 @@ $resultArr = pg_fetch_all($result);
             <td>' . $array['examname'] . '</td>
             <td>' . $array['topic'] . '</td>'?>
 
-            <?php if ($array['flag'] < $date) { ?>
+            <?php if (strtotime($date)-strtotime($array['flag'])>0) { ?>
                 <?php echo '<td><a href="'. $array['url'] .'" target="_blank"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
             </tr>' ?>
               <?php } else {?>
