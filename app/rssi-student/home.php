@@ -80,12 +80,12 @@ include("student_data.php");
                 <?php
                 if (@$class == 10 || @$module == 'National') {
                 ?>
-                    <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                    <!--<div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         Viva Schedule has been published. Please check&nbsp;<span class="noticet">
                             <a href="https://drive.google.com/file/d/1WUpyFeTYXKM4Yg3AOO-1zNJ_qHaVnL1P/view" target="_blank">here..</a></span>
-                        <!--&nbsp;&nbsp;<span class="label label-warning blink_me">update</span>-->
-                    </div>
+                        //&nbsp;&nbsp;<span class="label label-warning blink_me">update</span>
+                    </div>-->
                     <div class="alert alert-warning alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         Written exam Schedule has been published. Please check&nbsp;<span class="noticet">
