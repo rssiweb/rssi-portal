@@ -79,7 +79,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             <div class="col-md-12">
                 <div class=col style="text-align: right;"><?php echo $badge ?></div>
 
-                <!--**************QUESTION PAPER SUBMISSION TIMER**************-->
+                <!--**************QUESTION PAPER SUBMISSION TIMER**************
                 <?php
                 if ((@$questionflag == 'Y') && $filterstatus == 'Active') {
                 ?>
@@ -93,7 +93,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 ?>
                     <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                         <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; left for question paper submission.
-                        <!--left for the completion of answer sheet evaluation.-->
+                        //left for the completion of answer sheet evaluation.
                     </div>
                     <script>
                         // Set the date we're counting down to
@@ -128,7 +128,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <?php
                 } else {
                 }
-                ?>
+                ?>-->
                 <!--**************QUESTION PAPER SUBMISSION END**************-->
                 <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
@@ -412,7 +412,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     ?>
     <?php } ?>-->
 
-    <!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************-->
+    <!--**************QUESTION PAPER SUBMISSION CONFIRMATION**************
     <?php
         if ((@$googlechat == null) && $filterstatus == 'Active') {
             ?>
