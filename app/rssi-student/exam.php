@@ -106,12 +106,18 @@ include("student_data.php");
                         <tbody>
                             <tr>
                                 <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
-                                    <u><b>National module</b></u><br>
-                                    Written exam - 70<br>
-                                    Project/VIVA - 30<br><br>
-                                    <u><b>State module</b></u><br>
-                                    Written exam - 90<br>
-                                    Project/VIVA - 10<br><br>
+                                
+                                <table style="border:1px solid black; width:80%">
+                                        <tr style="border:1px solid black">
+                                            <th style="border:1px solid black">National module</th>
+                                            <th style="border:1px solid black">State module</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="border:1px solid black">Written exam - 70<br>Project/VIVA - 30</td>
+                                            <td style="border:1px solid black">Written exam - 90<br>Project/VIVA - 10</td>
+                                        </tr>
+                                    </table>
+                                    <br>
 
                                     The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br></td>
 

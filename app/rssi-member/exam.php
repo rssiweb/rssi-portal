@@ -94,8 +94,8 @@ include("member_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-            <div class="alert alert-info" role="alert" style="text-align: -webkit-center;">Please download and install the Kalpurush.ttf file given here in the portal before opening or editing the question template of the State Module.
-                        </div>
+                <div class="alert alert-info" role="alert" style="text-align: -webkit-center;">Please download and install the Kalpurush.ttf file given here in the portal before opening or editing the question template of the State Module.
+                </div>
 
                 <section class="box" style="padding: 2%;">
 
@@ -111,24 +111,30 @@ include("member_data.php");
                         <tbody>
                             <tr>
                                 <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
-                                    <u><b>National module</b></u><br>
-                                    Written exam - 70<br>
-                                    Project/VIVA - 30<br><br>
-                                    <u><b>State module</b></u><br>
-                                    Written exam - 90<br>
-                                    Project/VIVA - 10<br><br>
 
-                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br>
-                                    <img src="../images/qp.png" width=70%><br><br>
+
+                                    <table style="border:1px solid black; width:80%">
+                                        <tr style="border:1px solid black">
+                                            <th style="border:1px solid black">National module</th>
+                                            <th style="border:1px solid black">State module</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="border:1px solid black">Written exam - 70<br>Project/VIVA - 30</td>
+                                            <td style="border:1px solid black">Written exam - 90<br>Project/VIVA - 10</td>
+                                        </tr>
+                                    </table>
+                                    <br>
+                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br><br>
+                                    <!--<img src="../images/qp.png" width=70%><br><br>-->
 
                                     After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticet"><a href="mailto: info@rssi.in">info@rssi.in</a></span>.
                                 </td>
 
                                 <td><span class="noticet">
-                                    <a href="https://drive.google.com/uc?id=1RMjfSsFNPaDQixvNPsO2ee5xgraRzhVt&export=download" title="Download" target="_blank">State module</a><br>
-                                    <a href="https://drive.google.com/uc?id=15yFD54mAJQzZN0l1sK3EuMRsCYSKR5ec&export=download" title="Download" target="_blank">National module</a><br></td>
-                                     
-                                    <td style="line-height: 2"><span class="noticet"><a href="https://drive.google.com/uc?id=15L-QSLklMZ1k3aWIdhPqsAeNhJL7ggFz&export=download" title="Download" target="_blank">Kalpurush.ttf</a></span></td>
+                                        <a href="https://drive.google.com/uc?id=1RMjfSsFNPaDQixvNPsO2ee5xgraRzhVt&export=download" title="Download" target="_blank">State module</a><br>
+                                        <a href="https://drive.google.com/uc?id=15yFD54mAJQzZN0l1sK3EuMRsCYSKR5ec&export=download" title="Download" target="_blank">National module</a><br></td>
+
+                                <td style="line-height: 2"><span class="noticet"><a href="https://drive.google.com/uc?id=15L-QSLklMZ1k3aWIdhPqsAeNhJL7ggFz&export=download" title="Download" target="_blank">Kalpurush.ttf</a></span></td>
 
                                 <td style="line-height: 2"><span class="noticet">
                                         <a href="https://drive.google.com/file/d/1S5iE7baHY2i49EZgRSfVRLhnQGO7QGYZ/view" target="_blank">Question paper submission date</i></a><br>
