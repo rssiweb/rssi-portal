@@ -139,7 +139,7 @@ $resultArr = pg_fetch_all($result);
                         <th scope="col">Claim Number</th>
                         <th scope="col">Registered On</th>
                         <th scope="col">Bills</th>
-                        <th scope="col">Account Number</th>
+                        <th scope="col">Purpose</th>
                         <th scope="col">Claimed Amount (&#8377;)</th>
                         <th scope="col">Amount Transfered (&#8377;)</th>
                         <th scope="col">Transaction Reference Number</th>
@@ -157,7 +157,7 @@ $resultArr = pg_fetch_all($result);
                                     <td>' . $array['reimbid'] . '</td>
                                     <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
-                                    <td>' . $array['accountnumber'] . '</td>
+                                    <td>' . $array['selectclaimheadfromthelistbelow'] . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approvedamount'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>

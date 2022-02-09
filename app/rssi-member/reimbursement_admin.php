@@ -138,6 +138,7 @@ $resultArr = pg_fetch_all($result);
                             <th scope="col">Registered On</th>    
                             <th scope="col">ID/F Name</th>
                                 <th scope="col">Account Number</th>
+                                <th scope="col">Purpose</th>
                                 <th scope="col">Claimed Amount (&#8377;)</th>
                         <th scope="col">Amount Transfered (&#8377;)</th>
                         <th scope="col">Transaction Reference Number</th>
@@ -166,6 +167,7 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                 <td>' . $array['registrationid'] . '<br>' . strtok($array['name'], ' ') . '</td>   
                                     <td>' . $array['accountnumber'] . '<br>' . $array['bankname'] . '/' . $array['ifsccode'] . '</td>
+                                    <td>' . $array['selectclaimheadfromthelistbelow'] . '</td>
                                     <td>' . $array['totalbillamount'] . '</td>
                                     <td>' . $array['approvedamount'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>
