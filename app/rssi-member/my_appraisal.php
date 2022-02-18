@@ -42,7 +42,8 @@ include("member_data.php");
 <?php
 include("database.php");
 @$id = $_POST['get_id'];
-$view_users_query = "select * from myappraisal_myappraisal WHERE associatenumber='$user_check' AND filter='$id'"; //select query for viewing users.  
+@$year = $_POST['get_year'];
+$view_users_query = "select * from myappraisal_myappraisal WHERE associatenumber='$user_check' AND appraisaltype='$id' AND filter='$year'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
@@ -141,7 +142,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
-                                <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
                                     <?php if ($id == null) { ?>
                                         <option value="" hidden selected>Select Appraisal type</option>
                                     <?php
@@ -150,8 +151,21 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <?php }
                                     ?>
                                     <!--<option>Quarterly 2/2021</option>-->
-                                    <option>QT2/2021</option>
-                                    <option>QT1/2021</option>
+                                    <option>Quarterly</option>
+                                    <option>Annual</option>
+                                    <option>Project end</option>
+                                </select>
+
+                                <select name="get_year" class="form-control" style="width:max-content; display:inline-block" placeholder="Year" required>
+                                    <?php if ($year == null) { ?>
+                                        <option value="" hidden selected>Select Year</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $year ?></option>
+                                    <?php }
+                                    ?>
+                                    <!--<option>Quarterly 2/2021</option>-->
+                                    <option>2021-2022</option>
                                 </select>
                             </div>
                         </div>
@@ -209,7 +223,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         } else {
                         ?>
                             <tr>
-                                <td>No record found for <?php echo $id ?></td>
+                                <td>No record found for <?php echo $id ?>&nbsp;<?php echo $year ?></td>
                             </tr>
                         <?php }
                         ?>
