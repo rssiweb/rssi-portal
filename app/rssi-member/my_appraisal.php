@@ -190,12 +190,12 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <tbody>
                                 <tr>
 
-                                    <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br>
-                                        <span style="line-height: 3;"><?php echo $role ?>
+                                    <td id="cw1"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br><br>
+                                    <span><?php echo $role ?>
                                     </td>
-                                    <td style="line-height: 1.7;"><?php echo $appraisaltype ?></td>
-                                    <td id="cw" style="line-height: 1.7;"><?php echo $effectivestartdate ?> to <?php echo $effectiveenddate ?></td>
-                                    <td style="line-height: 1.7;"><?php echo $ipf ?></td>
+                                    <td><?php echo $appraisaltype ?></td>
+                                    <td id="cw"><?php echo $effectivestartdate ?> to <?php echo $effectiveenddate ?></td>
+                                    <td><?php echo $ipf ?></td>
                                 </tr>
                             </tbody>
                     </table>
