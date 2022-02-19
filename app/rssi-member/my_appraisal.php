@@ -1,20 +1,4 @@
 <?php
-//session_start();
-//include("../util/login_util.php");
-
-//if(! isLoggedIn("aid")){
-    //header("Location: index.php");
-//}
-//$user_check = $_SESSION['aid'];
-
-//if (!$_SESSION['aid']) {
-
- //   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
- //   header("Location: index.php");
- //   exit;
-//} You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.
-?>
-<?php
 session_start();
 include("../util/login_util.php");
 
@@ -25,16 +9,32 @@ $user_check = $_SESSION['aid'];
 
 if (!$_SESSION['aid']) {
 
-  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-header("Location: index.php");
-exit;  
-} else if ($_SESSION['ipfl'] == '-' && $_SESSION['filterstatus'] == 'Active') {
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: index.php");
+    exit;
+} //You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.
+?>
+<?php
+//session_start();
+//include("../util/login_util.php");
 
-echo '<script type="text/javascript">';
-echo 'alert("Your appraisal has been initiated in the system. You will no longer be able to access My appraisal portal.");';
-echo 'window.location.href = "home.php";';
-echo '</script>';
-}
+//if(! isLoggedIn("aid")){
+//    header("Location: index.php");
+//}
+//$user_check = $_SESSION['aid'];
+
+//if (!$_SESSION['aid']) {
+
+//  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+//header("Location: index.php");
+//exit;  
+//} else if ($_SESSION['ipfl'] == '-') {
+
+//echo '<script type="text/javascript">';
+//echo 'alert("Your appraisal has been initiated in the system. You will no longer be able to access My appraisal portal.");';
+//echo 'window.location.href = "home.php";';
+//echo '</script>';
+//}
 ?>
 <?php
 include("member_data.php");
@@ -57,6 +57,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $feedback = $row[6];
     $scopeofimprovement = $row[7];
     $ipf = $row[8];
+    $flag = $row[9];
     $filter = $row[10];
 ?>
 <?php } ?>
@@ -184,7 +185,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <th scope="col">IPF (Individual Performance Factor)/5</th>
                             </tr>
                         </thead>
-                        <?php if (@$appraisaltype > 0) {
+                        <?php if (@$appraisaltype > 0 and @$flag != "R") {
                         ?>
                             <tbody>
                                 <tr>
@@ -214,10 +215,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <td style="line-height: 1.7;"><?php echo $scopeofimprovement ?></td>
                             </tr>
                         <?php
-                        } else if ($id == "") {
+                        } else if (@$flag == "R") {
                         ?>
                             <tr>
-                                <td>Please select Appraisal type.</td>
+                                <td colspan="3">Your appraisal has been initiated in the system. You can check your appraisal details once your IPF is released.</td>
                             </tr>
                         <?php
                         } else {
