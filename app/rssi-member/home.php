@@ -130,12 +130,12 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 }
                 ?>-->
                 <!--**************QUESTION PAPER SUBMISSION END**************-->
-                <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                <!--<div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         Invigilation duty list has been published. Please check&nbsp;<span class="noticet">
                             <a href="https://drive.google.com/file/d/1wrTxXQLzPPuJr0T8BnyfkNjkM00JpzLY/view" target="_blank">here..</a></span>
                         &nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
-                    </div>
+                    </div>-->
 
                 <section class="box" style="padding: 2%;">
 
