@@ -129,6 +129,8 @@ $resultArr = pg_fetch_all($result);
                                     <?php }
                                     ?>
                                     <option>Volunteer</option>
+                                    <option>Employee</option>
+                                    <option>Intern</option>
                                     <option>Student</option>
                                 </select>
                                 <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>">

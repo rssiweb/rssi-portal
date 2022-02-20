@@ -139,6 +139,22 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
+
+            <div class="row">
+                    <div class="col" style="display: inline-block; width:99%; text-align:right">
+                    Academic year: <?php echo @$year ?><br>
+                    <?php if (@$flag == "R") { ?>
+                        <p class="label label-danger">Reviewer Evaluation in Progress</p>
+                                    <?php
+                                    } else if (@$flag == "C") { ?>
+                                        <p class="label label-success">Process Closed</p>
+                                    <?php }
+                                    else { ?>
+                                    <?php }
+                                    ?>
+                    </div>
+
+
                 <section class="box" style="padding: 2%;">
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
@@ -221,7 +237,13 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <td colspan="3">Your appraisal has been initiated in the system. You can check your appraisal details once your IPF is released.</td>
                             </tr>
                         <?php
-                        } else {
+                        } else if (@$id=="") {
+                            ?>
+                                <tr>
+                                    <td colspan="3">Please select Filter value.</td>
+                                </tr>
+                            <?php
+                            } else {
                         ?>
                             <tr>
                                 <td>No record found for <?php echo $id ?>&nbsp;<?php echo $year ?></td>
