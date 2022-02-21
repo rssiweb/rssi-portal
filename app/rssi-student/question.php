@@ -198,6 +198,7 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $year ?></option>
                                     <?php }
                                     ?>
+                                    <option>2022-2023</option>
                                     <option>2021-2022</option>
                                     <option>2020-2021</option>
                                 </select>
@@ -209,8 +210,8 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $exam ?></option>
                                     <?php }
                                     ?>
-                                    <option> 1/CT02 </option>
                                     <option> 1/CT01 </option>
+                                    <option> 1/CT02 </option>
                                     <option> QT1 </option>
                                     <option> 2/CT01 </option>
                                     <option> 2/CT02 </option>
