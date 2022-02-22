@@ -183,7 +183,7 @@ $resultArr = pg_fetch_all($result);
               echo '<tr>
             <td><img src="' . $array['photo'] . '" width=50px/></td>
             <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
-            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['doj'] . '<br>' . $array['yos'] . '</td>
+            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['originaldoj'] . '<br>' . $array['yos'] . '</td>
             <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
             <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>' ?>
               <?php if ($id == "Active") { ?>
