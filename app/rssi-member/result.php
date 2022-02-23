@@ -160,7 +160,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <form action="" method="POST" id="formid">
                             <div class="form-group" style="display: unset;">
                                 <div class="col2" style="display: inline-block;">
-                                <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>">
+                                <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $stid ?>">
                                     <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
                                         <?php if ($id == null) { ?>
                                             <option value="" disabled selected hidden>Select Exam name</option>
