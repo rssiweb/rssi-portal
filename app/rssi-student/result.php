@@ -228,7 +228,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             </tr>
                             <?php if (@$hnd != null && @$hnd != "-") { ?>
                                 <tr>
-                                    <td style="text-align:left"> Hindi </td>
+                                    <td style="text-align:left"> Language I </td>
                                     <td style="text-align:left"><?php echo $fullmarks ?> </td>
                                     <th style="text-align:left"> <?php echo $hnd ?> </th>
                                     <td style="text-align:left"></td>
@@ -291,7 +291,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             } ?>
                             <?php if (@$bio != null && @$bio != '-') { ?>
                                 <tr>
-                                    <td style="text-align:left"> Biology </td>
+                                    <td style="text-align:left"> Biology/Life science </td>
                                     <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                     <th style="text-align:left"> <?php echo $bio ?> </th>
                                     <td style="text-align:left"></td>
@@ -300,7 +300,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             } ?>
                             <?php if (@$phy != null && @$phy != '-') { ?>
                                 <tr>
-                                    <td style="text-align:left"> Physics </td>
+                                    <td style="text-align:left"> Physics/Physical science </td>
                                     <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                     <th style="text-align:left"> <?php echo $phy ?> </th>
                                     <td style="text-align:left"></td>
@@ -327,7 +327,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             } ?>
                             <?php if (@$hd != null && @$hd != '-') { ?>
                                 <tr>
-                                    <td style="text-align:left"> Drawing + Handwriting </td>
+                                    <td style="text-align:left"> Arts & Crafts </td>
                                     <td style="text-align:left"> <?php echo $fullmarks ?> </td>
                                     <th style="text-align:left"> <?php echo $hd ?> </th>
                                     <td style="text-align:left"></td>
