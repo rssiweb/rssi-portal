@@ -157,6 +157,7 @@ include("member_data.php");
                                 <th scope="col">Question paper&nbsp;<i class="far fa-question-circle" title="The submitted question paper will appear on the portal after 24 hours of submission."></i></th>
                                 <th scope="col">Evaluation Path</th>
                                 <th scope="col">Marks upload</th>
+                                <th scope="col">Examination Results</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -164,6 +165,7 @@ include("member_data.php");
                                 <td id=cw1><span class="noticet"><a href="question.php">Question paper</i></a></span></td>
                                 <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
                                 <td><span class="noticet"><a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a></span></td>
+                                <td><span class="noticet"><a href="result.php" target="_blank">Results</a></span></td>
                             </tr>
                         </tbody>
                     </table>

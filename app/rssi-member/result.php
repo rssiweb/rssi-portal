@@ -1,13 +1,13 @@
 <?php
 session_start();
 // Storing Session
-if (!isset($_SESSION['sid']) || !$_SESSION['sid']) {
+if (!isset($_SESSION['aid']) || !$_SESSION['aid']) {
     header("Location: index.php");
     exit;
 }
-$user_check = $_SESSION['sid'];
+$user_check = $_SESSION['aid'];
 
-if (!$_SESSION['sid']) {
+if (!$_SESSION['aid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
@@ -15,13 +15,13 @@ if (!$_SESSION['sid']) {
 }
 ?>
 <?php
-include("student_data.php");
-?>
-<?php
 include("database.php");
 @$id = $_POST['get_id'];
-$view_users_query = "select * from new_result WHERE studentid='$user_check' AND examname='$id'"; //select query for viewing users.  
-$run = pg_query($con, $view_users_query); //here run the sql query.  
+@$stid = $_POST['get_stid'];
+$view_users_query = "select * from new_result WHERE studentid='$stid' AND examname='$id'"; //select query for viewing users.
+$view_users_queryy = "select * from rssimyprofile_student WHERE student_id='$stid'";  
+$run = pg_query($con, $view_users_query); //here run the sql query.
+$runn = pg_query($con, $view_users_queryy);  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
@@ -54,6 +54,15 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $fullmarks = $row[26];
     $month = $row[27];
     $language1 = $row[28];
+    ?>
+<?php } ?>
+<?php
+
+while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store in a array $row.  
+{
+    $student_id=$roww[1];
+    $studentname=$roww[3];
+    $photourl=$roww[25];
 
 ?>
 <?php } ?>
@@ -151,7 +160,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         <form action="" method="POST" id="formid">
                             <div class="form-group" style="display: unset;">
                                 <div class="col2" style="display: inline-block;">
-                                    <select name="get_id" class="form-control" style="width:max-content;" required>
+                                <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>">
+                                    <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
                                         <?php if ($id == null) { ?>
                                             <option value="" disabled selected hidden>Select Exam name</option>
                                         <?php
