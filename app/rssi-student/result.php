@@ -187,8 +187,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     <b>
                         <h5 style="font-size: 20px; text-align:center">Rina Shiksha Sahayak Foundation (RSSI)
                     </b></h5>
-                    <h5 style="text-align:center; line-height:2">C 1/117 (2nd Floor), Vishesh Khand 1, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
-                        CIN - U80101WB2020NPL237900</h5>
+                    <h5 style="text-align:center; line-height:2">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301<br>
+                    Registration Number - 237900</h5>
                     <hr>
                     <b>
                         <h4 style="font-size: 20px; text-align:center"> Report Card
@@ -204,17 +204,16 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <th style="text-align:left"><?php echo $category ?>/<?php echo $class ?></th>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:left"> Name </th>
+                                    <td style="text-align:left"> Name </td>
                                     <th style="text-align:left"><?php echo $studentname ?></th>
-                                    <td style="text-align:left">Name of the examination</th>
+                                    <td style="text-align:left">Name of the examination</td>
                                     <th style="text-align:left"><?php echo $examname ?></th>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:left"> Date Of Birth </th>
+                                    <td style="text-align:left"> Date Of Birth </td>
                                     <th style="text-align:left"><?php echo $dob ?></th>
-                                    <td style="text-align:left">
-                                        </th>
-                                    <th style="text-align:left"></th>
+                                    <td style="text-align:left"></td>
+                                    <th style="text-align:left"><img src=<?php echo $photourl ?> width=50px/></th>
                                 </tr>
                             </tbody>
                     </table>
