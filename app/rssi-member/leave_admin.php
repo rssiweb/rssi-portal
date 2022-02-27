@@ -147,7 +147,7 @@ $resultArr = pg_fetch_all($result);
 
                     <?php echo '
                        <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Leave ID (Click to see the document)</th>
                                 <th scope="col">Applicant ID/F name</th>
@@ -162,7 +162,7 @@ $resultArr = pg_fetch_all($result);
                         </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
                         <?php
-                        echo '<tbody>';
+                        echo '<tbody style="font-size: 13px;">';
                         foreach ($resultArr as $array) {
                             echo '<tr>'
                         ?>
