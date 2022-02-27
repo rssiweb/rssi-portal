@@ -169,7 +169,7 @@ $resultArr = pg_fetch_all($result);
 
                             <?php if ($array['doc'] != null) { ?>
                                 <?php
-                                echo '<td><span class="noticet"><a href="' . $array['doc'] . '" target="_blank">' . $array['leaveid'] . '</a></span></td>'
+                                echo '<td><span class="noticea"><a href="' . $array['doc'] . '" target="_blank">' . $array['leaveid'] . '</a></span></td>'
                                 ?>
                                 <?php    } else { ?><?php
                                                     echo '<td>' . $array['leaveid'] . '</td>' ?>
