@@ -103,7 +103,7 @@ foreach ($resultArr as $array) {
             <?php } ?>  
                 
             <?php '</td>
-            <td>' . $array['ipfl'] . '</td>
+            <td>' . $array['sipfl'] . '</td>
             <td>' . $array['profilestatus'] . '</td>' ?>
 
             <?php if ($array['status'] != null) { ?>
