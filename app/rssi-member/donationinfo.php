@@ -125,7 +125,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <td><b><?php echo $firstname ?> <?php echo $lastname ?></td>
                                 <td><?php echo $panno ?></td>
                                 <td><?php echo $timestamp ?></td>
-                                <td><?php echo $currencyofthedonatedamount ?> <?php echo $donatedamount ?></td>
+                                <td><?php echo $currencyofthedonatedamount ?> <?php echo $donatedamount ?> <?php echo $nameofitemsyoushared ?></td>
                                 <td><?php echo $invoice ?></td>
                                 <td>
 
