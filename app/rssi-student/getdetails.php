@@ -100,9 +100,9 @@ foreach ($resultArr as $array) {
             <?php if ($array['status'] != null) { ?>
                 <?php echo substr($array['remarks'],0,4) ?>
                 <?php } else { ?> <?php echo 'Present' ?>
-            <?php } ?>  
+            <?php } ?>
                 
-            <?php '</td>
+            <?php echo '</td>
             <td>' . $array['sipf'] . '</td>
             <td>' . $array['profilestatus'] . '</td>' ?>
 
