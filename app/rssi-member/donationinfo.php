@@ -113,7 +113,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <th scope="col">Name</th>
                             <th scope="col">PAN No</th>
                             <th scope="col">Donation Date</th>
-                            <th scope="col">Donated Amount</th>
+                            <th scope="col">Donated Amount/Item(s)</th>
                             <th scope="col">Invoice No</th>
                             <th scope="col">Status</th>
                         </tr>
@@ -125,7 +125,13 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <td><b><?php echo $firstname ?> <?php echo $lastname ?></td>
                                 <td><?php echo $panno ?></td>
                                 <td><?php echo $timestamp ?></td>
-                                <td><?php echo $currencyofthedonatedamount ?> <?php echo $donatedamount ?> <?php echo $nameofitemsyoushared ?></td>
+                                <td><?php echo $currencyofthedonatedamount ?> <?php echo $donatedamount ?> <?php echo $nameofitemsyoushared ?>
+                                
+                                <?php if ($nameofitemsyoushared != "") { ?>
+                                        <p>Quantity: <?php echo $code ?></p>
+
+                                    <?php } else{}?></td>
+
                                 <td><?php echo $invoice ?></td>
                                 <td>
 
