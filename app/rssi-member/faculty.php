@@ -203,7 +203,7 @@ $resultArr = pg_fetch_all($result);
               } ?>
             <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td><td>' . $array['colors'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
-            <td>' . $array['badge'] . '<br>' . $array['googlechat'] . '</td>
+            <td>' . $array['badge'] . '<br>' . $array['vaccination'] . '</td>
             </tr>';
             } ?>
           <?php
