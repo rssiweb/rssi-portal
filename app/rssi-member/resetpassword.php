@@ -25,8 +25,6 @@ if ($_POST) {
     }
 }
 
-
-
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = false;
@@ -35,56 +33,22 @@ include("database.php");
 
 if (isset($_POST['login'])) {
     $associatenumber = strtoupper($_POST['aid']);
-    $colors = $_POST['pass'];
+    $password = $_POST['oldpass'];
 
-    $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
-    echo $query;
-    $result = pg_query($con, $query);
-    $user = pg_fetch_row($result);
-    echo $user[0];
-    exit;
-    $existingHashFromDb = $user[0];
-    echo "<br/>";
-    echo $existingHashFromDb;
-    echo "<br/>";
+    $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $loginSuccess = password_verify($colors, $existingHashFromDb);
-    echo $loginSuccess;
+    $check_user = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'AND password='$password_hash'";
 
-    //if (pg_num_rows($run)) {
+    $run = pg_query($con, $check_user);
 
-    // Do the login stuff...
+    if (pg_num_rows($run)) {
+        $newpass = $_POST['newpass'];
+        $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
 
-    if ($loginSuccess) {
+        $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$associatenumber'";
+        $result = pg_query($con, $change_password_query);
 
-        if (isset($_SESSION["login_redirect"])) {
-            header("Location: " . $_SESSION["login_redirect"]);
-            unset($_SESSION["login_redirect"]);
-        } else {
-            header("Location: ../rssi-member/home.php");
-        }
-
-        $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
-
-        $row = pg_fetch_row($run);
-        $role = $row[62];
-        $engagement = $row[48];
-        $ipfl = $row[71];
-        $filterstatus = $row[35];
-
-        $_SESSION['role'] = $role;
-        $_SESSION['engagement'] = $engagement;
-        $_SESSION['ipfl'] = $ipfl;
-        $_SESSION['filterstatus'] = $filterstatus;
-        $uip = $_SERVER['HTTP_X_REAL_IP'];
-
-        // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
-        $result = pg_query($con, $query);
-
-        //echo "<script>alert('";
-        //echo $engagement;
-        //echo "')</script>";
+        header("Location: ../rssi-member/index.php");
     } else {
         $login_failed_dialog = true;
     }
@@ -117,22 +81,25 @@ if (isset($_POST['login'])) {
                 <div class="login-panel panel panel-default">
                     <div class="panel-heading">
                         <!--<img src="..//images/phoenix1b.png" alt="Phoenix" class="center">-->
-                        <b>Phoenix</b>
+                        <b>Reset password</b>
                     </div>
                     <div class="panel-body">
-                        <form role="form" method="post" name="login" action="index.php">
+                        <form role="form" method="post" name="login" action="resetpassword.php">
                             <fieldset>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="Associate ID" name="aid" type="text" autofocus required>
+                            <div class="form-group">
+                                    <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Password" name="pass" id="pass" type="password" value="" required>
+                                    <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required>
                                     <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
                                         <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
                                     </label>
                                 </div>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
+                                </div>
                                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Sign in" name="login">
+                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
 
                                 <!-- Change this to a button or input when using this as a form -->
                                 <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
@@ -147,7 +114,7 @@ if (isset($_POST['login'])) {
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
         }
-        var password = document.querySelector("#pass");
+        var password = document.querySelector("#newpass");
         var toggle = document.querySelector("#show-password");
         // I'm using the "(click)" event to make this works cross-browser.
         toggle.addEventListener("click", handleToggleClick, false);
