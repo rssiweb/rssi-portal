@@ -37,7 +37,11 @@ if ($id == 'ALL' && $category == 'ALL' && $class == 'ALL') {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' order by filterstatus asc, category asc");
 } else if ($id =='ALL' && $category == 'ALL' && $class != 'ALL' && $class!=null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' order by category asc");
-} else if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class!=null) {
+} else if ($id !='ALL' && $module !='ALL'&& $category == 'ALL' && ($class == null || $class == 'ALL')) {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' AND module='$module' order by category asc");
+} else if ($id !='ALL' && $category != 'ALL' && $module != 'ALL' && $class=='ALL') {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc");
+}else if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class!=null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc");
 } else if ($id > 0 && $category != 'ALL' && $class != 'ALL' && $class!=null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
@@ -230,6 +234,7 @@ width: 10%;
                   <option>10</option>
                   <option>11</option>
                   <option>12</option>
+                  <option>Vocational training</option>
                   <option>x</option>
                   <option>ALL</option>
                 </select>
