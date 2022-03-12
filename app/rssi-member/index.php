@@ -38,20 +38,11 @@ if (isset($_POST['login'])) {
     $colors = $_POST['pass'];
 
     $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
-    echo $query;
     $result = pg_query($con, $query);
     $user = pg_fetch_row($result);
-    echo $user[0];
-    exit;
     $existingHashFromDb = $user[0];
-    echo "<br/>";
-    echo $existingHashFromDb;
-    echo "<br/>";
 
     $loginSuccess = password_verify($colors, $existingHashFromDb);
-    echo $loginSuccess;
-
-    //if (pg_num_rows($run)) {
 
     // Do the login stuff...
 
@@ -123,16 +114,22 @@ if (isset($_POST['login'])) {
                         <form role="form" method="post" name="login" action="index.php">
                             <fieldset>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Associate ID" name="aid" type="text" autofocus required>
+                                    <input class="form-control" placeholder="Associate ID" name="aid" type="text"
+                                        autofocus required>
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Password" name="pass" id="pass" type="password" value="" required>
-                                    <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
-                                        <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
+                                    <input class="form-control" placeholder="Password" name="pass" id="pass"
+                                        type="password" value="" required>
+                                    <label for="show-password" class="field__toggle"
+                                        style="margin-top: 5px;font-weight: unset;">
+                                        <input type="checkbox" class="checkbox" id="show-password"
+                                            class="field__toggle-input" style="display: inline-block;" />&nbsp;Show
+                                        password
                                     </label>
                                 </div>
                                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Sign in" name="login">
+                                <input style="font-family:'Google Sans'; float: right;"
+                                    class="btn btn-primary btn-block" type="submit" value="Sign in" name="login">
 
                                 <!-- Change this to a button or input when using this as a form -->
                                 <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
@@ -144,79 +141,81 @@ if (isset($_POST['login'])) {
         </div>
     </div>
     <script>
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
-        var password = document.querySelector("#pass");
-        var toggle = document.querySelector("#show-password");
-        // I'm using the "(click)" event to make this works cross-browser.
-        toggle.addEventListener("click", handleToggleClick, false);
-        // I handle the toggle click, changing the TYPE of password input.
-        function handleToggleClick(event) {
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+    var password = document.querySelector("#pass");
+    var toggle = document.querySelector("#show-password");
+    // I'm using the "(click)" event to make this works cross-browser.
+    toggle.addEventListener("click", handleToggleClick, false);
+    // I handle the toggle click, changing the TYPE of password input.
+    function handleToggleClick(event) {
 
-            if (this.checked) {
+        if (this.checked) {
 
-                console.warn("Change input 'type' to: text");
-                password.type = "text";
+            console.warn("Change input 'type' to: text");
+            password.type = "text";
 
-            } else {
+        } else {
 
-                console.warn("Change input 'type' to: password");
-                password.type = "password";
-
-            }
+            console.warn("Change input 'type' to: password");
+            password.type = "password";
 
         }
+
+    }
     </script>
 </body>
 
 </html>
 
 <?php if($login_failed_dialog) {?>
-    <div class="container">
+<div class="container">
     <div class="row">
         <div class="col-md-4 col-md-offset-4" style="text-align: center;">
             <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
         </div>
     </div>
-    </div>
+</div>
 <?php } ?>
 <!--protected by reCAPTCHA-->
 <script>
-    grecaptcha.ready(function() {
-        grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                action: 'homepage'
-            })
-            .then(function(token) {
-                //console.log(token);
-                document.getElementById('g-recaptcha-response').value = token;
-            });
-    });
+grecaptcha.ready(function() {
+    grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+            action: 'homepage'
+        })
+        .then(function(token) {
+            //console.log(token);
+            document.getElementById('g-recaptcha-response').value = token;
+        });
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
 <!-- Glow Cookies v3.0.1 -->
 <script>
-    glowCookies.start('en', {
-        analytics: 'G-S25QWTFJ2S',
-        //facebookPixel: '',
-        policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
-    });
+glowCookies.start('en', {
+    analytics: 'G-S25QWTFJ2S',
+    //facebookPixel: '',
+    policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+});
 </script>
 <style>
-    <?php include '../css/style.css'; ?><?php include '../css/addstyle.css'; ?>
-    label {
-        display: block;
-        padding-left: 15px;
-        text-indent: -15px;
-    }
+<?php include '../css/style.css';
+?><?php include '../css/addstyle.css';
 
-    .checkbox {
-        padding: 0;
-        margin: 0;
-        vertical-align: bottom;
-        position: relative;
-        top: 0px;
-        overflow: hidden;
-    }
+?>label {
+    display: block;
+    padding-left: 15px;
+    text-indent: -15px;
+}
+
+.checkbox {
+    padding: 0;
+    margin: 0;
+    vertical-align: bottom;
+    position: relative;
+    top: 0px;
+    overflow: hidden;
+}
 </style>
