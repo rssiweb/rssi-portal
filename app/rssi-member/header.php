@@ -120,6 +120,9 @@
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="donationinfo_admin.php"><i class="fas fa-hand-holding-heart"></i>&nbsp;Donation</a>
                             </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="adminresetpass.php"><i class="fas fa-unlock-alt"></i>&nbsp;PMS</a>
+                            </li>
                         <?php
                         } else {
                         }

@@ -1,18 +1,26 @@
 <?php
 session_start();
+// Storing Session
 include("../util/login_util.php");
 
-if (!isLoggedIn("aid")) {
+if(! isLoggedIn("aid")){
     header("Location: index.php");
 }
 $user_check = $_SESSION['aid'];
 
 if (!$_SESSION['aid']) {
 
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
-} //You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.
+  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+  header("Location: index.php");
+  exit;
+} else if ($_SESSION['role'] != 'Admin') {
+
+  //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+  echo '<script type="text/javascript">';
+  echo 'alert("Access Denied. You are not authorized to access this web page.");';
+  echo 'window.location.href = "home.php";';
+  echo '</script>';
+}
 ?>
 <?php
 include("member_data.php");
