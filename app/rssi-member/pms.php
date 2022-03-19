@@ -33,10 +33,8 @@ if ($_POST) {
     if($type == "member"){
         $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$user_id'";
     }else{
-        $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash' where student_id='$$user_id'";
+        $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash' where student_id='$user_id'";
     }
-    
-
     $success = pg_query($con, $change_password_query);
     if ($success) {
         echo "sone success";
