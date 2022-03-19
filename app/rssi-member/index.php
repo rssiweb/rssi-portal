@@ -48,16 +48,12 @@ if (isset($_POST['login'])) {
 
     if ($loginSuccess) {
 
-        if (isset($_SESSION["login_redirect"])) {
-            header("Location: " . $_SESSION["login_redirect"]);
-            unset($_SESSION["login_redirect"]);
-        } else {
-            header("Location: ../rssi-member/home.php");
-        }
-
         $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
 
-        $row = pg_fetch_row($run);
+        $user_query = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'";
+        $result = pg_query($con, $user_query);
+
+        $row = pg_fetch_row($result);
         $role = $row[62];
         $engagement = $row[48];
         $ipfl = $row[71];
@@ -72,6 +68,13 @@ if (isset($_POST['login'])) {
         // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
         $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
         $result = pg_query($con, $query);
+
+        if (isset($_SESSION["login_redirect"])) {
+            header("Location: " . $_SESSION["login_redirect"]);
+            unset($_SESSION["login_redirect"]);
+        } else {
+            header("Location: ../rssi-member/home.php");
+        }
 
         //echo "<script>alert('";
         //echo $engagement;

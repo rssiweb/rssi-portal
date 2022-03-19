@@ -21,7 +21,7 @@ if ($_POST) {
     if ($Return->success == true && $Return->score > 0.5) {
         // echo "Succes!";
     } else {
-        echo "You are a Robot!!";
+        //echo "You are a Robot!!";
     }
 }
 
@@ -43,16 +43,12 @@ if (isset($_POST['login'])) {
     $loginSuccess = password_verify($colors, $existingHashFromDb);
 
     if ($loginSuccess) {
-        if (isset($_SESSION["login_redirect"])) {
-            header("Location: " . $_SESSION["login_redirect"]);
-            unset($_SESSION["login_redirect"]);
-        } else {
-            header("Location: ../rssi-student/home.php");
-        }
-
         $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
 
-        $row = pg_fetch_row($run);
+        $user_query = "select * from rssimyprofile_student WHERE student_id='$student_id'";
+        $result = pg_query($con, $user_query);
+    
+        $row = pg_fetch_row($result);
         $filterstatus = $row[39];
         $feesflag = $row[50];
 
@@ -62,6 +58,13 @@ if (isset($_POST['login'])) {
 
         $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
         $result = pg_query($con, $query);
+
+        if (isset($_SESSION["login_redirect"])) {
+            header("Location: " . $_SESSION["login_redirect"]);
+            unset($_SESSION["login_redirect"]);
+        } else {
+            header("Location: ../rssi-student/home.php");
+        }
     } else {
         $login_failed_dialog = true;
     }
