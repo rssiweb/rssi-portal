@@ -80,7 +80,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <div class=col style="text-align: right;"><?php echo $badge ?></div>
                 <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
                     <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                    <span class="noticet">Now you can download your ID card from your profile > My Document.<!--<a href="document.php" target="_self">My Document</a></span>-->&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
+                    <span class="noticet">Now you can download your ID card from your profile > My Document<!--<a href="document.php" target="_self">My Document</a></span>-->&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
                 </div>
                 <section class="box" style="padding: 2%;">
 

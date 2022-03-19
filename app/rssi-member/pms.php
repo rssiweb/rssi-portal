@@ -1,25 +1,48 @@
 <?php
 session_start();
 // Storing Session
+define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
+define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
 include("../util/login_util.php");
-
-if(! isLoggedIn("aid")){
+include("database.php");
+if (!isLoggedIn("aid")) {
     header("Location: index.php");
 }
 $user_check = $_SESSION['aid'];
 
 if (!$_SESSION['aid']) {
 
-  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-  header("Location: index.php");
-  exit;
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: index.php");
+    exit;
 } else if ($_SESSION['role'] != 'Admin') {
 
-  //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-  echo '<script type="text/javascript">';
-  echo 'alert("Access Denied. You are not authorized to access this web page.");';
-  echo 'window.location.href = "home.php";';
-  echo '</script>';
+    header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+    echo '<script type="text/javascript">';
+    echo 'alert("Access Denied. You are not authorized to access this web page.");';
+    echo 'window.location.href = "home.php";';
+    echo '</script>';
+    exit;
+}
+if ($_POST) {
+    $user_id = $_POST['userid'];
+    $password = $_POST['newpass'];
+
+    $newpass_hash = password_hash($password, PASSWORD_DEFAULT);
+
+    if($type == "member"){
+        $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$user_id'";
+    }else{
+        $change_password_query = "UPDATE stude SET password='$newpass_hash' where associatenumber='$user_id'";
+    }
+    
+
+    $success = pg_query($con, $change_password_query);
+    if ($success) {
+        echo "sone success";
+    } else {
+        echo "failed";
+    }
 }
 ?>
 <?php
@@ -56,25 +79,25 @@ include("member_data.php");
             policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
         });
     </script>
-   <style>
-    <?php include '../css/style.css';
-    ?><?php include '../css/addstyle.css';
+    <style>
+        <?php include '../css/style.css';
+        ?><?php include '../css/addstyle.css';
 
         ?>label {
-        display: block;
-        padding-left: 15px;
-        text-indent: -15px;
-    }
+            display: block;
+            padding-left: 15px;
+            text-indent: -15px;
+        }
 
-    .checkbox {
-        padding: 0;
-        margin: 0;
-        vertical-align: bottom;
-        position: relative;
-        top: 0px;
-        overflow: hidden;
-    }
-</style>
+        .checkbox {
+            padding: 0;
+            margin: 0;
+            vertical-align: bottom;
+            position: relative;
+            top: 0px;
+            overflow: hidden;
+        }
+    </style>
 </head>
 
 <!-- =========================
@@ -89,7 +112,7 @@ include("member_data.php");
                 <div class="row">
                     <section class="box" style="padding: 2%;">
                         <p>Please enter both the User ID and the new password to reset the user's password.</p><br><br>
-                        <form action="" method="POST">
+                        <form name="pms" action="pms.php" method="POST">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
                                     <input type="text" name="userid" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="" required>

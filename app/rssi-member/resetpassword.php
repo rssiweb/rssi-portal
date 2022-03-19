@@ -13,7 +13,7 @@ if (isset($_SESSION['aid']) && $_SESSION['aid']) {
     $row = pg_fetch_row($result);
     $associatenumber = $row[1];
     $fullname = $row[2];
-    
+
     $_SESSION['fullname'] = $fullname;
     $_SESSION['associatenumber'] = $associatenumber;
 }
@@ -40,24 +40,31 @@ $login_failed_dialog = false;
 
 if (isset($_POST['login'])) {
 
-    $password = $_POST['currentpass'];
+    $newpass = $_POST['newpass'];
+    $oldpass = $_POST['oldpass'];
+    if ($newpass == $oldpass) {
 
-    $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
-    $result = pg_query($con, $query);
-    $user = pg_fetch_row($result);
-    $existingHashFromDb = $user[0];
+        $password = $_POST['currentpass'];
 
-    $loginSuccess = password_verify($password, $existingHashFromDb);
-    if ($loginSuccess) {
-        $newpass = $_POST['newpass'];
-        $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
+        $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
+        $result = pg_query($con, $query);
+        $user = pg_fetch_row($result);
+        $existingHashFromDb = $user[0];
 
-        $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$associatenumber'";
-        $result = pg_query($con, $change_password_query);
+        $loginSuccess = password_verify($password, $existingHashFromDb);
+        if ($loginSuccess) {
+            $newpass = $_POST['newpass'];
 
-        header("Location: ../rssi-member/index.php");
+            $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
+
+            $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$associatenumber'";
+            $result = pg_query($con, $change_password_query);
+
+            header("Location: ../rssi-member/index.php");
+        } else {
+            $login_failed_dialog = true;
+        }
     } else {
-        $login_failed_dialog = true;
     }
 }
 ?>
@@ -109,7 +116,7 @@ if (isset($_POST['login'])) {
                                     <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
                                 </div>
                                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" onclick="matchPassword()" value="Update" name="login">
+                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" onclick="return Validate()" value="Update" name="login">
 
                                 <!-- Change this to a button or input when using this as a form -->
                                 <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
@@ -145,30 +152,22 @@ if (isset($_POST['login'])) {
 
         }
     </script>
-    <script>  
-function matchPassword() {  
-  var newpass = document.getElementById("newpass");  
-  var oldpass = document.getElementById("oldpass");  
-  if(newpass != oldpass)  
-  {   
-    alert("New password and confirm password fields do not match.");  
-  } else { 
-  }  
-}  
-</script>  
+    <script type="text/javascript">
+        function Validate() {
+            var password = document.getElementById("newpass").value;
+            var confirmPassword = document.getElementById("oldpass").value;
+            if (password != confirmPassword) {
+                alert("New password and confirm password don't match.");
+                return false;
+            }
+            alert("Your password has been changed successfully.");
+            return true;
+        }
+    </script>
 </body>
 
 </html>
 
-<?php if ($login_failed_dialog) { ?>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 col-md-offset-4" style="text-align: left;">
-                <span style="color:red">Error: Password reset failed. Either you have not entered the correct current password or new password and confirm password fields do not match.</span>
-            </div>
-        </div>
-    </div>
-<?php } ?>
 <!--protected by reCAPTCHA-->
 <script>
     grecaptcha.ready(function() {
