@@ -33,7 +33,7 @@ include("database.php");
 
 if (isset($_POST['login'])) {
 
-    $password = $_POST['oldpass'];
+    $password = $_POST['currentpass'];
 
     $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
     $result = pg_query($con, $query);
