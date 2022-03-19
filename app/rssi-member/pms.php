@@ -27,19 +27,19 @@ if (!$_SESSION['aid']) {
 if ($_POST) {
     $user_id = $_POST['userid'];
     $password = $_POST['newpass'];
-
+    $type = $_POST['type'];
     $newpass_hash = password_hash($password, PASSWORD_DEFAULT);
 
-    if($type == "member"){
+    if ($type == "Associate") {
         $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$user_id'";
-    }else{
+    } else {
         $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash' where student_id='$user_id'";
     }
     $success = pg_query($con, $change_password_query);
     if ($success) {
-        echo "sone success";
+        //echo "sone success";
     } else {
-        echo "failed";
+        //echo "failed";
     }
 }
 ?>
@@ -81,7 +81,7 @@ include("member_data.php");
         <?php include '../css/style.css';
         ?><?php include '../css/addstyle.css';
 
-        ?>label {
+            ?>label {
             display: block;
             padding-left: 15px;
             text-indent: -15px;
@@ -113,6 +113,17 @@ include("member_data.php");
                         <form name="pms" action="pms.php" method="POST">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
+                                    <select name="type" class="form-control" style="width:max-content; display:inline-block" required>
+                                        <?php if ($id == null) { ?>
+                                            <option value="" disabled selected hidden>Association Type</option>
+                                        <?php
+                                        } else { ?>
+                                            <option hidden selected><?php echo $type ?></option>
+                                        <?php }
+                                        ?>
+                                        <option>Associate</option>
+                                        <option>Student</option>
+                                    </select>
                                     <input type="text" name="userid" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="" required>
                                     <input type="password" name="newpass" id="newpass" class="form-control" style="width:max-content; display:inline-block" placeholder="New password" value="" required>
                                 </div>
