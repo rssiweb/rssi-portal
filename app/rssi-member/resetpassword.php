@@ -4,9 +4,9 @@ session_start(); //session starts here
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
 
+
 if (isset($_SESSION['aid']) && $_SESSION['aid']) {
-    header("Location: home.php");
-    exit;
+    $associatenumber = $_SESSION['aid'];
 }
 
 if ($_POST) {
@@ -32,16 +32,16 @@ $login_failed_dialog = false;
 include("database.php");
 
 if (isset($_POST['login'])) {
-    $associatenumber = strtoupper($_POST['aid']);
+
     $password = $_POST['oldpass'];
 
-    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+    $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
+    $result = pg_query($con, $query);
+    $user = pg_fetch_row($result);
+    $existingHashFromDb = $user[0];
 
-    $check_user = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'AND password='$password_hash'";
-
-    $run = pg_query($con, $check_user);
-
-    if (pg_num_rows($run)) {
+    $loginSuccess = password_verify($password, $existingHashFromDb);
+    if ($loginSuccess) {
         $newpass = $_POST['newpass'];
         $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
 
@@ -86,20 +86,27 @@ if (isset($_POST['login'])) {
                     <div class="panel-body">
                         <form role="form" method="post" name="login" action="resetpassword.php">
                             <fieldset>
-                            <div class="form-group">
-                                    <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Current password" name="currentpass"
+                                        id="currentpass" type="password" value="" required>
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required>
-                                    <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
-                                        <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
+                                    <input class="form-control" placeholder="New password" name="newpass" id="newpass"
+                                        type="password" value="" required>
+                                    <label for="show-password" class="field__toggle"
+                                        style="margin-top: 5px;font-weight: unset;">
+                                        <input type="checkbox" class="checkbox" id="show-password"
+                                            class="field__toggle-input" style="display: inline-block;" />&nbsp;Show
+                                        password
                                     </label>
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
+                                    <input class="form-control" placeholder="Confirm password" name="oldpass"
+                                        id="oldpass" type="password" value="" required>
                                 </div>
                                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
+                                <input style="font-family:'Google Sans'; float: right;"
+                                    class="btn btn-primary btn-block" type="submit" value="Update" name="login">
 
                                 <!-- Change this to a button or input when using this as a form -->
                                 <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
@@ -111,79 +118,81 @@ if (isset($_POST['login'])) {
         </div>
     </div>
     <script>
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
-        var password = document.querySelector("#newpass");
-        var toggle = document.querySelector("#show-password");
-        // I'm using the "(click)" event to make this works cross-browser.
-        toggle.addEventListener("click", handleToggleClick, false);
-        // I handle the toggle click, changing the TYPE of password input.
-        function handleToggleClick(event) {
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+    var password = document.querySelector("#newpass");
+    var toggle = document.querySelector("#show-password");
+    // I'm using the "(click)" event to make this works cross-browser.
+    toggle.addEventListener("click", handleToggleClick, false);
+    // I handle the toggle click, changing the TYPE of password input.
+    function handleToggleClick(event) {
 
-            if (this.checked) {
+        if (this.checked) {
 
-                console.warn("Change input 'type' to: text");
-                password.type = "text";
+            console.warn("Change input 'type' to: text");
+            password.type = "text";
 
-            } else {
+        } else {
 
-                console.warn("Change input 'type' to: password");
-                password.type = "password";
-
-            }
+            console.warn("Change input 'type' to: password");
+            password.type = "password";
 
         }
+
+    }
     </script>
 </body>
 
 </html>
 
 <?php if($login_failed_dialog) {?>
-    <div class="container">
+<div class="container">
     <div class="row">
         <div class="col-md-4 col-md-offset-4" style="text-align: center;">
             <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
         </div>
     </div>
-    </div>
+</div>
 <?php } ?>
 <!--protected by reCAPTCHA-->
 <script>
-    grecaptcha.ready(function() {
-        grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                action: 'homepage'
-            })
-            .then(function(token) {
-                //console.log(token);
-                document.getElementById('g-recaptcha-response').value = token;
-            });
-    });
+grecaptcha.ready(function() {
+    grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+            action: 'homepage'
+        })
+        .then(function(token) {
+            //console.log(token);
+            document.getElementById('g-recaptcha-response').value = token;
+        });
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
 <!-- Glow Cookies v3.0.1 -->
 <script>
-    glowCookies.start('en', {
-        analytics: 'G-S25QWTFJ2S',
-        //facebookPixel: '',
-        policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
-    });
+glowCookies.start('en', {
+    analytics: 'G-S25QWTFJ2S',
+    //facebookPixel: '',
+    policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+});
 </script>
 <style>
-    <?php include '../css/style.css'; ?><?php include '../css/addstyle.css'; ?>
-    label {
-        display: block;
-        padding-left: 15px;
-        text-indent: -15px;
-    }
+<?php include '../css/style.css';
+?><?php include '../css/addstyle.css';
 
-    .checkbox {
-        padding: 0;
-        margin: 0;
-        vertical-align: bottom;
-        position: relative;
-        top: 0px;
-        overflow: hidden;
-    }
+?>label {
+    display: block;
+    padding-left: 15px;
+    text-indent: -15px;
+}
+
+.checkbox {
+    padding: 0;
+    margin: 0;
+    vertical-align: bottom;
+    position: relative;
+    top: 0px;
+    overflow: hidden;
+}
 </style>

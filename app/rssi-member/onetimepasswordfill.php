@@ -16,11 +16,12 @@ while ($row_users = pg_fetch_array($results)) {
     $hash = password_hash($pass, PASSWORD_DEFAULT);
 
     $set_password_query = "UPDATE rssimyaccount_members SET password='$hash' where associatenumber='$associatenumber'";
-    
-    echo $set_password_query;
+
+  // echo $set_password_query;
     if(pg_query($con, $set_password_query) === FALSE)
     {
-       printf("<br/>Last PG error: %s<br />\n", pg_last_error($con));
+    printf("<br/>Last PG error: %s<br />\n", pg_last_error($con));
+    break;
     }
     else
     {
