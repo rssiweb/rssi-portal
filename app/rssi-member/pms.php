@@ -35,12 +35,11 @@ if ($_POST) {
     } else {
         $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash' where student_id='$user_id'";
     }
-    $success = pg_query($con, $change_password_query);
-    if ($success) {
-        //echo "sone success";
-    } else {
-        //echo "failed";
-    }
+    $result = pg_query($con, $change_password_query);
+    $cmdtuples = pg_affected_rows($result);
+    echo "<script>alert('";
+    echo $cmdtuples;
+    echo " row is affected.')</script>";
 }
 ?>
 <?php
@@ -132,7 +131,7 @@ include("member_data.php");
 
                             <div class="col2 left" style="display: inline-block;">
                                 <button type="submit" name="search_by_id" class="btn btn-danger" style="outline: none;">
-                                    <i class="fas fa-sync-alt"></i>&nbsp;Update password</button>
+                                    <i class="fas fa-sync-alt"></i>&nbsp;Update</button>
                             </div>
                             <br>
                             <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
