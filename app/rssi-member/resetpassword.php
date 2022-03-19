@@ -1,5 +1,27 @@
 <?php
-session_start(); //session starts here 
+session_start();
+// Storing Session
+include("../util/login_util.php");
+
+if(! isLoggedIn("aid")){
+    header("Location: index.php");
+}
+$user_check = $_SESSION['aid'];
+
+if(!$_SESSION['aid']) {
+
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: index.php");
+    exit;  
+  }
+  else if ($_SESSION['filterstatus']!='Active') {
+
+    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+    echo '<script type="text/javascript">'; 
+    echo 'alert("Access Denied. You are not authorized to access this web page.");'; 
+    echo 'window.location.href = "home.php";';
+    echo '</script>';
+}
 
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
