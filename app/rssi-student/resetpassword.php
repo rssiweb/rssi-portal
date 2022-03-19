@@ -82,7 +82,7 @@ if (isset($_POST['login'])) {
             $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash' where student_id='$student_id'";
             $result = pg_query($con, $change_password_query);
 
-            header("Location: ../rssi-member/index.php");
+            header("Location: ../rssi-student/index.php");
         } else {
             $login_failed_dialog = true;
         }
