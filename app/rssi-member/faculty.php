@@ -171,7 +171,6 @@ $resultArr = pg_fetch_all($result);
           <th scope="col">Designation</th>
           <th scope="col">Class URL</th>
           <th scope="col" id="cw2">Association Status</th>
-          <th scope="col" id="cw">Password</th>
           <th scope="col">Productivity</th>
           <th scope="col">Badge</th>
         </tr>
@@ -201,7 +200,7 @@ $resultArr = pg_fetch_all($result);
                 <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
               <?php    } else {
               } ?>
-            <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td><td>' . $array['colors'] . '</td>
+            <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td>' . $array['badge'] . '<br>' . $array['vaccination'] . '</td>
             </tr>';

@@ -3,8 +3,8 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
-if(! isLoggedIn("aid")){
-    header("Location: index.php");
+if (!isLoggedIn("aid")) {
+  header("Location: index.php");
 }
 $user_check = $_SESSION['aid'];
 
@@ -35,19 +35,19 @@ include("database.php");
 
 if ($id == 'ALL' && $category == 'ALL' && $class == 'ALL') {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' order by filterstatus asc, category asc");
-} else if ($id =='ALL' && $category == 'ALL' && $class != 'ALL' && $class!=null) {
+} else if ($id == 'ALL' && $category == 'ALL' && $class != 'ALL' && $class != null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' order by category asc");
-} else if ($id !='ALL' && $module !='ALL'&& $category == 'ALL' && ($class == null || $class == 'ALL')) {
+} else if ($id != 'ALL' && $module != 'ALL' && $category == 'ALL' && ($class == null || $class == 'ALL')) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' AND module='$module' order by category asc");
-} else if ($id !='ALL' && $category != 'ALL' && $module != 'ALL' && $class=='ALL') {
+} else if ($id != 'ALL' && $category != 'ALL' && $module != 'ALL' && $class == 'ALL') {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc");
-}else if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class!=null) {
+} else if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc");
-} else if ($id > 0 && $category != 'ALL' && $class != 'ALL' && $class!=null) {
+} else if ($id > 0 && $category != 'ALL' && $class != 'ALL' && $class != null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
 } else if ($id > 0 && $category == 'ALL' && $class == 'ALL') {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' order by category asc");
-} else if ($id > 0 && $category == 'ALL' && $class != 'ALL' && $class!=null) {
+} else if ($id > 0 && $category == 'ALL' && $class != 'ALL' && $class != null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc");
 } else if ($id > 0 && $category != 'ALL' && $class == 'ALL') {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc");
@@ -121,35 +121,37 @@ $resultArr = pg_fetch_all($result);
         margin-left: 2%;
       }
     }
+
     @media (max-width:767px) {
 
-#cw,
-#cw1,
-#cw2,
-#cw3 {
-  width: 100% !important;
-}
+      #cw,
+      #cw1,
+      #cw2,
+      #cw3 {
+        width: 100% !important;
+      }
 
-}
+    }
 
-#cw {
-width: 7%;
-}
+    #cw {
+      width: 7%;
+    }
 
-#cw1 {
-width: 20%;
-}
+    #cw1 {
+      width: 20%;
+    }
 
-#cw2 {
-width: 8%;
-}
+    #cw2 {
+      width: 8%;
+    }
 
-#cw3 {
-width: 15%;
-}
-#cw4 {
-width: 10%;
-}
+    #cw3 {
+      width: 15%;
+    }
+
+    #cw4 {
+      width: 10%;
+    }
   </style>
 
 </head>
@@ -254,14 +256,8 @@ width: 10%;
           <th scope="col" id="cw1">Student Details</th>
           <th scope="col" id="cw2">Class</th>
           <th scope="col" id="cw3">Contact</th>
-          <th scope="col" id="cw4">Status</th>' ?>
-          <?php if ($role == 'Admin') { ?>
-            <?php
-            echo '<th scope="col" id="cw">Password</th>' ?>
-          <?php    } else {
-          } ?>
-          <?php
-          echo '<th scope="col" id="cw1">Subject</th>
+          <th scope="col" id="cw4">Status</th>
+          <th scope="col" id="cw1">Subject</th>
           <th scope="col">Medium</th>
           <th scope="col">Badge</th>
         </tr>
@@ -274,14 +270,21 @@ width: 10%;
             <td><img src="' . $array['photourl'] . '" width=50px/></td>
             <td>Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
-            <td>' . $array['class'] . '/' . $array['category'] . ' </td>
-            <td>' . $array['contact'] . '<br>' . $array['emailaddress'] . '</td>
-            <td>' . $array['profilestatus'] ?>
+            <td>' . $array['class'] . '/' . $array['category'] . ' </td><td style="white-space: unset;">' ?>
 
               <?php if ($role == 'Admin') { ?>
 
-                <?php echo '<br><br>' . $array['remarks'] . '</td>            
-            <td>' . $array['colors'] ?>
+              <?php echo $array['contact'] ?>
+              <?php    } else { ?>
+
+                <?php echo "xxxxxx" . substr($array['contact'], 6) ?>
+
+              <?php   } ?>
+              <?php echo $array['emailaddress'] . '</td><td>' . $array['profilestatus'] ?>
+
+              <?php if ($role == 'Admin') { ?>
+
+                <?php echo '<br><br>' . $array['remarks'] ?>
               <?php    } else {
               } ?>
             <?php
