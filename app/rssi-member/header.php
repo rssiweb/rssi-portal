@@ -160,9 +160,9 @@
                     </li>
 
                     <li>
-                        <a href="#settings">
+                        <a href="resetpassword.php">
                             <i class="fa fa-wrench"></i>
-                            Settings
+                            Reset Password
                         </a>
                     </li>
                     <li>

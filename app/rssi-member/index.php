@@ -42,7 +42,7 @@ if (isset($_POST['login'])) {
     $user = pg_fetch_row($result);
     $existingHashFromDb = $user[0];
 
-    $loginSuccess = password_verify($colors, $existingHashFromDb);
+    @$loginSuccess = password_verify($colors, $existingHashFromDb);
 
     // Do the login stuff...
 

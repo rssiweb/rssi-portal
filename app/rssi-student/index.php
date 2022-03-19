@@ -40,7 +40,7 @@ if (isset($_POST['login'])) {
     $user = pg_fetch_row($result);
     $existingHashFromDb = $user[0];
 
-    $loginSuccess = password_verify($colors, $existingHashFromDb);
+    @$loginSuccess = password_verify($colors, $existingHashFromDb);
 
     if ($loginSuccess) {
         $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
