@@ -1,9 +1,10 @@
 <?php
 session_start();
 // Storing Session
-if (! isset($_SESSION['sid']) || !$_SESSION['sid']) {
-  header("Location: index.php");
-  exit;
+include("../util/login_util.php");
+
+if (!isLoggedIn("sid")) {
+    header("Location: index.php");
 }
 $user_check = $_SESSION['sid'];
 
