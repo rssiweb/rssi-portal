@@ -1,0 +1,198 @@
+<?php
+session_start(); //session starts here 
+
+define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
+define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
+
+
+if (isset($_SESSION['sid']) && $_SESSION['sid']) {
+    $student_id = $_SESSION['sid'];
+}
+
+if ($_POST) {
+    function getCaptcha($SecretKey)
+    {
+        $Response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" . SECRET_KEY . "&response={$SecretKey}");
+        $Return = json_decode($Response);
+        return $Return;
+    }
+    $Return = getCaptcha($_POST['g-recaptcha-response']);
+    //var_dump($Return);
+    if ($Return->success == true && $Return->score > 0.5) {
+        // echo "Succes!";
+    } else {
+        echo "You are a Robot!!";
+    }
+}
+
+date_default_timezone_set('Asia/Kolkata');
+$date = date('Y-m-d H:i:s');
+$login_failed_dialog = false;
+
+include("database.php");
+
+if (isset($_POST['login'])) {
+
+    $password = $_POST['currentpass'];
+
+    $query = "select password from rssimyprofile_student WHERE student_id='$student_id'";
+    $result = pg_query($con, $query);
+    $user = pg_fetch_row($result);
+    $existingHashFromDb = $user[0];
+
+    $loginSuccess = password_verify($password, $existingHashFromDb);
+    if ($loginSuccess) {
+        $newpass = $_POST['newpass'];
+        $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
+
+        $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash' where student_id='$student_id'";
+        $result = pg_query($con, $change_password_query);
+
+        header("Location: ../rssi-student/index.php");
+    } else {
+        $login_failed_dialog = true;
+    }
+}
+?>
+
+<html>
+
+<head lang="en">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
+    <title>My Account</title>
+    <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="page-topbar">
+        <div class="logo-area"> </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <div class="login-panel panel panel-default">
+                    <div class="panel-heading">
+                        <!--<img src="..//images/phoenix1b.png" alt="Phoenix" class="center">-->
+                        <b>Reset password</b>
+                    </div>
+                    <div class="panel-body">
+                        <form role="form" method="post" name="login" action="resetpassword.php">
+                            <fieldset>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Current password" name="currentpass"
+                                        id="currentpass" type="password" value="" required>
+                                </div>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="New password" name="newpass" id="newpass"
+                                        type="password" value="" required>
+                                    <label for="show-password" class="field__toggle"
+                                        style="margin-top: 5px;font-weight: unset;">
+                                        <input type="checkbox" class="checkbox" id="show-password"
+                                            class="field__toggle-input" style="display: inline-block;" />&nbsp;Show
+                                        password
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Confirm password" name="oldpass"
+                                        id="oldpass" type="password" value="" required>
+                                </div>
+                                <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
+                                <input style="font-family:'Google Sans'; float: right;"
+                                    class="btn btn-primary btn-block" type="submit" value="Update" name="login">
+
+                                <!-- Change this to a button or input when using this as a form -->
+                                <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+    var password = document.querySelector("#newpass");
+    var toggle = document.querySelector("#show-password");
+    // I'm using the "(click)" event to make this works cross-browser.
+    toggle.addEventListener("click", handleToggleClick, false);
+    // I handle the toggle click, changing the TYPE of password input.
+    function handleToggleClick(event) {
+
+        if (this.checked) {
+
+            console.warn("Change input 'type' to: text");
+            password.type = "text";
+
+        } else {
+
+            console.warn("Change input 'type' to: password");
+            password.type = "password";
+
+        }
+
+    }
+    </script>
+</body>
+
+</html>
+
+<?php if($login_failed_dialog) {?>
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4" style="text-align: center;">
+            <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
+        </div>
+    </div>
+</div>
+<?php } ?>
+<!--protected by reCAPTCHA-->
+<script>
+grecaptcha.ready(function() {
+    grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+            action: 'homepage'
+        })
+        .then(function(token) {
+            //console.log(token);
+            document.getElementById('g-recaptcha-response').value = token;
+        });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+<!-- Glow Cookies v3.0.1 -->
+<script>
+glowCookies.start('en', {
+    analytics: 'G-S25QWTFJ2S',
+    //facebookPixel: '',
+    policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+});
+</script>
+<style>
+<?php include '../css/style.css';
+?><?php include '../css/addstyle.css';
+
+?>label {
+    display: block;
+    padding-left: 15px;
+    text-indent: -15px;
+}
+
+.checkbox {
+    padding: 0;
+    margin: 0;
+    vertical-align: bottom;
+    position: relative;
+    top: 0px;
+    overflow: hidden;
+}
+</style>
