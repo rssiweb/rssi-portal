@@ -51,7 +51,7 @@ if ($_POST) {
     if ($Return->success == true && $Return->score > 0.5) {
         // echo "Succes!";
     } else {
-        echo "You are a Robot!!";
+        //echo "You are a Robot!!";
     }
 }
 
@@ -79,48 +79,62 @@ if (isset($_POST['login'])) {
             $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
 
             $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$associatenumber'";
-            $result = pg_query($con, $change_password_query);
+            $result = pg_query($con, $change_password_query); ?>
 
-            echo '<script type="text/javascript">';
-            echo 'alert("Your password has been changed successfully.");';
-            echo 'window.location.href = "resetpassword.php";';
-            echo '</script>';
-            exit;
+            <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <span class="blink_me"><i class="glyphicon glyphicon-ok"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
+            </div>
+        <?php  } else { ?>
 
-            header("Location: ../rssi-member/home.php");
-        } else {
-
-            echo '<script type="text/javascript">';
-            echo 'alert("ERROR: The current password you entered is incorrect.");';
-            echo 'window.location.href = "resetpassword.php";';
-            echo '</script>';
-            exit;
+            <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>The current password you entered is incorrect.</span>
+            </div>
+        <?php
             $login_failed_dialog = true;
         }
-    } else {
-        echo '<script type="text/javascript">';
-            echo 'alert("ERROR: New password and confirm password do not match.");';
-            echo 'window.location.href = "resetpassword.php";';
-            echo '</script>';
-            exit;
+    } else { ?>
+
+        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>New password does't match the confirm password.</span>
+        </div>
+<?php
     }
 }
 ?>
 
 <html>
 
-<head lang="en">
+<head>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Class details</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <title>My Account</title>
-    <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+    <!-- Main css -->
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <!------ Include the above in your HEAD tag ---------->
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+        });
+    </script>
+
 </head>
 
 <body>
@@ -128,7 +142,6 @@ if (isset($_POST['login'])) {
         <div class="logo-area">
         </div>
     </div>
-
     <div class="container">
         <div class="row">
             <div class="col-md-4 col-md-offset-4">
@@ -233,5 +246,14 @@ if (isset($_POST['login'])) {
         position: relative;
         top: 0px;
         overflow: hidden;
+    }
+
+    .alert {
+        padding: 10px 0px;
+        margin-bottom: 0%;
+        position: fixed;
+        top: 80%;
+        left: 10%;
+        width: 80%;
     }
 </style>
