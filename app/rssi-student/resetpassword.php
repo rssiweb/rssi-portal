@@ -51,7 +51,7 @@ if ($_POST) {
     if ($Return->success == true && $Return->score > 0.5) {
         // echo "Succes!";
     } else {
-        echo "You are a Robot!!";
+       // echo "You are a Robot!!";
     }
 }
 
