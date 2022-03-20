@@ -37,9 +37,24 @@ if ($_POST) {
     }
     $result = pg_query($con, $change_password_query);
     $cmdtuples = pg_affected_rows($result);
-    echo "<script>alert('";
-    echo $cmdtuples;
-    echo " row is affected.')</script>";
+    // echo "<script>alert('";
+    // echo $cmdtuples;
+    // echo " row is affected.')</script>";
+
+    if ($cmdtuples == 0) { ?>
+
+        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>Password has NOT been updated for <?php echo $user_id ?>.</span>
+        </div>
+    <?php
+    } else { ?>
+
+        <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            <span class="blink_me"><i class="glyphicon glyphicon-ok"></i></span>&nbsp;&nbsp;<span>Password has been updated successfully for <?php echo $user_id ?>.</span>
+        </div>
+<?php }
 }
 ?>
 <?php
@@ -77,10 +92,7 @@ include("member_data.php");
         });
     </script>
     <style>
-        <?php include '../css/style.css';
-        ?><?php include '../css/addstyle.css';
-
-            ?>label {
+        .label {
             display: block;
             padding-left: 15px;
             text-indent: -15px;
@@ -93,6 +105,16 @@ include("member_data.php");
             position: relative;
             top: 0px;
             overflow: hidden;
+        }
+
+        .alert {
+            padding: 10px 0px;
+            margin-bottom: 0%;
+            position: fixed;
+            top: 50%;
+            left: 20%;
+            width: 60%;
+            z-index: 100;
         }
     </style>
 </head>
