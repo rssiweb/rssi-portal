@@ -41,11 +41,10 @@ include("database.php");
     <title>ID Card_<?php echo $fullname ?></title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu&family=Ubuntu+Condensed&display=swap" rel="stylesheet">
     <!-- Main css -->
     <style>
-        <?php include '../css/style.css'; ?>
-
-        @media (min-width:767px) {
+        <?php include '../css/style.css'; ?>@media (min-width:767px) {
             .left {
                 margin-left: 2%;
             }
@@ -58,6 +57,53 @@ include("database.php");
                 left: 0;
                 top: 0;
             }
+        }
+
+        .first-txt {
+            position: absolute;
+            top: 70%;
+            width: 235px !important;
+            text-align: center;
+            font-family: "Ubuntu";
+            font-style: normal;
+            font-size: 14.5px;
+            font-weight: bold;
+            color: black;
+        }
+
+        .second-txt {
+            position: absolute;
+            top: 75%;
+            width: 235px !important;
+            text-align: center;
+            font-family: "Ubuntu";
+            font-size: 13.5px;
+            font-weight: bold;
+            color: black;
+        }
+
+        .third-txt {
+            position: absolute;
+            top: 80%;
+            width: 235px !important;
+            text-align: center;
+            font-family: "Ubuntu";
+            font-size: 12.5px;
+            font-weight: bold;
+            color: black;
+        }
+
+        .containerdiv {
+            border: 0;
+            float: left;
+            position: relative;
+        }
+
+        .cornerimage {
+            border: 0;
+            position: absolute;
+            top: 42%;
+            right: 37%;
         }
     </style>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
@@ -94,9 +140,13 @@ include("database.php");
     <div class="col2 left" style="display: inline;">
         <div class="col-md-12">
             <div class="row">
-                <div class="col" style="display: inline-block; width:100%;margin-left:10%; margin-top:2%">
+                <div class="col containerdiv" style="display: inline-block; width:246px;margin-left:10%; margin-top:2%">
 
-                    <img src=<?php echo $feedback ?> width=246px />
+                    <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1646890333/ID%20Card/ID_Card_FINAL.jpg" width="100%" />
+                    <img class="cornerimage" src=<?php echo $photo ?> width="75px" />
+                    <p class="first-txt"><?php echo $fullname ?></p>
+                    <p class="second-txt"><?php echo $associatenumber ?></p>
+                    <p class="third-txt"><?php echo strtok($position, ',') ?></p>
                 </div>
             </div>
         </div>
