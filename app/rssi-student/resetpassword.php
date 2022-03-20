@@ -34,9 +34,15 @@ if (isset($_SESSION['sid']) && $_SESSION['sid']) {
     $row = pg_fetch_row($result);
     $student_id = $row[1];
     $studentname = $row[3];
+    $lastupdatedon = $row[33];
+    $photourl = $row[25];
+    $filterstatus = $row[39];
 
     $_SESSION['studentname'] = $studentname;
     $_SESSION['student_id'] = $student_id;
+    $_SESSION['photourl'] = $photourl;
+    $_SESSION['lastupdatedon'] = $lastupdatedon;
+    $_SESSION['filterstatus'] = $filterstatus;
 }
 
 if ($_POST) {
@@ -51,7 +57,7 @@ if ($_POST) {
     if ($Return->success == true && $Return->score > 0.5) {
         // echo "Succes!";
     } else {
-       // echo "You are a Robot!!";
+        //echo "You are a Robot!!";
     }
 }
 
@@ -69,6 +75,7 @@ if (isset($_POST['login'])) {
 
         $query = "select password from rssimyprofile_student WHERE student_id='$student_id'";
         $result = pg_query($con, $query);
+        $rows = pg_num_rows($result); //Som added this line.
         $user = pg_fetch_row($result);
         $existingHashFromDb = $user[0];
 
@@ -79,35 +86,16 @@ if (isset($_POST['login'])) {
             $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
 
             $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash' where student_id='$student_id'";
-            $result = pg_query($con, $change_password_query); ?>
-
-            <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                <span class="blink_me"><i class="glyphicon glyphicon-ok"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
-            </div>
-        <?php
-
-        } else { ?>
-
-            <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>The current password you entered is incorrect.</span>
-            </div>
-        <?php
+            $result = pg_query($con, $change_password_query);
+            $cmdtuples = pg_affected_rows($result);
+        } else {
             $login_failed_dialog = true;
         }
     } else {
-        ?>
-
-        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>New password does't match the confirm password.</span>
-        </div>
-<?php
     }
 }
 ?>
-
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -116,7 +104,7 @@ if (isset($_POST['login'])) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Student-Reset Password</title>
+    <title>Associate-Reset Password</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -141,47 +129,66 @@ if (isset($_POST['login'])) {
 </head>
 
 <body>
-    <div class="page-topbar">
-        <div class="logo-area">
-        </div>
-    </div>
+    <?php include 'header.php'; ?>
+    <section id="main-content">
+        <section class="wrapper main-wrapper row">
+            <div class="col-md-12">
+                <?php if (@$newpass != @$oldpass) { ?>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 col-md-offset-4">
-                <div class="login-panel panel panel-default">
-                    <div class="panel-heading">
-                        <!--<img src="..//images/phoenix1b.png" alt="Phoenix" class="center">-->
-                        <b>Reset password</b>
-                    </div>
-                    <div class="panel-body">
-                        <form role="form" method="post" name="login" action="resetpassword.php">
-                            <p style="text-align: right;line-height: 2;font-size:small">Not <?php echo strtok($studentname, ' ') ?> (<?php echo @$student_id ?>)? <span class="noticea"><a href="logout.php" target="_self">Switch Account</a></span></p>
-                            <fieldset>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
-                                </div>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required>
-                                    <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
-                                        <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
-                                    </label>
-                                </div>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
-                                </div>
-                                <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
+                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
+                    </div> <?php } else if (@$cmdtuples == 1) { ?>
 
-                                <!-- Change this to a button or input when using this as a form -->
-                                <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
-                            </fieldset>
-                        </form>
+                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
                     </div>
-                </div>
+                <?php } else if (@$rows == 1) { ?>
+                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
+                    </div>
+
+                <?php } else { ?>
+                <?php } ?>
+
+                <section class="box" style="padding: 2%;">
+                    <div class="col-md-4 col-md-offset-4">
+                        <div class="login-panel panel panel-default" style="margin-top: unset;">
+                            <div class="panel-heading">
+                                <b>Reset password</b>
+                            </div>
+                            <div class="panel-body">
+                                <form role="form" method="post" name="login" action="resetpassword.php">
+                                    <fieldset>
+                                        <div class="form-group">
+                                            <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required>
+                                            <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
+                                                <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
+                                        </div>
+                                        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
+                                        <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
+
+                                    </fieldset>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
-        </div>
-    </div>
+            <div class="col-md-12">
+                <div class="clearfix"></div>
+        </section>
+    </section>
+
     <script>
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
@@ -207,51 +214,45 @@ if (isset($_POST['login'])) {
 
         }
     </script>
+
+    <!--protected by reCAPTCHA-->
+    <script>
+        grecaptcha.ready(function() {
+            grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+                    action: 'homepage'
+                })
+                .then(function(token) {
+                    //console.log(token);
+                    document.getElementById('g-recaptcha-response').value = token;
+                });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+        });
+    </script>
+    <style>
+        .checkbox {
+            padding: 0;
+            margin: 0;
+            vertical-align: bottom;
+            position: relative;
+            top: 0px;
+            overflow: hidden;
+        }
+
+        .x-btn:focus,
+        .button:focus,
+        [type="submit"]:focus {
+            outline: none;
+        }
+    </style>
 </body>
 
 </html>
-
-<!--protected by reCAPTCHA-->
-<script>
-    grecaptcha.ready(function() {
-        grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                action: 'homepage'
-            })
-            .then(function(token) {
-                //console.log(token);
-                document.getElementById('g-recaptcha-response').value = token;
-            });
-    });
-</script>
-
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-<!-- Glow Cookies v3.0.1 -->
-<script>
-    glowCookies.start('en', {
-        analytics: 'G-S25QWTFJ2S',
-        //facebookPixel: '',
-        policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
-    });
-</script>
-<style>
-    <?php include '../css/style.css';?>
-    <?php include '../css/addstyle.css';?>
-
-    .checkbox {
-        padding: 0;
-        margin: 0;
-        vertical-align: bottom;
-        position: relative;
-        top: 0px;
-        overflow: hidden;
-    }
-
-    .alert {
-        padding: 10px 0px;
-        margin-bottom: 0%;
-        position: fixed;
-        top: 80%;
-        left: 10%;
-        width: 80%;
-    }
-</style>

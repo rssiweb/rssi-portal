@@ -36,11 +36,13 @@ if (isset($_SESSION['aid']) && $_SESSION['aid']) {
     $fullname = $row[2];
     $lastupdatedon = $row[27];
     $photo = $row[28];
+    $filterstatus = $row[35];
 
     $_SESSION['fullname'] = $fullname;
     $_SESSION['associatenumber'] = $associatenumber;
     $_SESSION['photo'] = $photo;
     $_SESSION['lastupdatedon'] = $lastupdatedon;
+    $_SESSION['filterstatus'] = $filterstatus;
 }
 
 if ($_POST) {
@@ -73,6 +75,7 @@ if (isset($_POST['login'])) {
 
         $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
         $result = pg_query($con, $query);
+        $rows = pg_num_rows($result); //Som added this line.
         $user = pg_fetch_row($result);
         $existingHashFromDb = $user[0];
 
@@ -83,28 +86,12 @@ if (isset($_POST['login'])) {
             $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
 
             $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$associatenumber'";
-            $result = pg_query($con, $change_password_query); ?>
-
-            <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                <span class="blink_me"><i class="glyphicon glyphicon-ok"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
-            </div>
-        <?php  } else { ?>
-
-            <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>The current password you entered is incorrect.</span>
-            </div>
-        <?php
+            $result = pg_query($con, $change_password_query);
+            $cmdtuples = pg_affected_rows($result);
+        } else {
             $login_failed_dialog = true;
         }
-    } else { ?>
-
-        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>New password does't match the confirm password.</span>
-        </div>
-<?php
+    } else {
     }
 }
 ?>
@@ -146,6 +133,26 @@ if (isset($_POST['login'])) {
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
+                <?php if (@$newpass != @$oldpass) { ?>
+
+                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
+                    </div> <?php } else if (@$cmdtuples == 1) { ?>
+
+                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
+                    </div>
+                <?php } else if (@$rows == 1) { ?>
+                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
+                    </div>
+
+                <?php } else { ?>
+                <?php } ?>
+
                 <section class="box" style="padding: 2%;">
                     <div class="col-md-4 col-md-offset-4">
                         <div class="login-panel panel panel-default" style="margin-top: unset;">
@@ -178,7 +185,7 @@ if (isset($_POST['login'])) {
                 </section>
             </div>
             <div class="col-md-12">
-            <div class="clearfix"></div>
+                <div class="clearfix"></div>
         </section>
     </section>
 
@@ -240,13 +247,10 @@ if (isset($_POST['login'])) {
             overflow: hidden;
         }
 
-        .alert {
-            padding: 10px 0px;
-            margin-bottom: 0%;
-            position: fixed;
-            top: 80%;
-            left: 10%;
-            width: 80%;
+        .x-btn:focus,
+        .button:focus,
+        [type="submit"]:focus {
+            outline: none;
         }
     </style>
 </body>

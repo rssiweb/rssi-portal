@@ -133,8 +133,8 @@
             <?php } else { ?>
 
                 <li>
-                    <a href="#"> <i class="fa fa-bell"></i>
-                        <a href="#"> <i class="fas fa-project-diagram"></i>
+                    <a href="#"> <i class="fas fa-folder-plus"></i>
+                    <a href="#"> <i class="fas fa-sitemap"></i>
                 </li>
             <?php  }
             ?>
