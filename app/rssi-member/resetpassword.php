@@ -34,9 +34,13 @@ if (isset($_SESSION['aid']) && $_SESSION['aid']) {
     $row = pg_fetch_row($result);
     $associatenumber = $row[1];
     $fullname = $row[2];
+    $lastupdatedon = $row[27];
+    $photo = $row[28];
 
     $_SESSION['fullname'] = $fullname;
     $_SESSION['associatenumber'] = $associatenumber;
+    $_SESSION['photo'] = $photo;
+    $_SESSION['lastupdatedon'] = $lastupdatedon;
 }
 
 if ($_POST) {
@@ -104,7 +108,7 @@ if (isset($_POST['login'])) {
     }
 }
 ?>
-
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -138,46 +142,46 @@ if (isset($_POST['login'])) {
 </head>
 
 <body>
-    <div class="page-topbar">
-        <div class="logo-area">
-        </div>
-    </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 col-md-offset-4">
-                <div class="login-panel panel panel-default">
-                    <div class="panel-heading">
-                        <!--<img src="..//images/phoenix1b.png" alt="Phoenix" class="center">-->
-                        <b>Reset password</b>
-                    </div>
-                    <div class="panel-body">
-                        <form role="form" method="post" name="login" action="resetpassword.php">
-                            <p style="text-align: right;line-height: 2;font-size:small">Not <?php echo strtok($fullname, ' ') ?> (<?php echo @$associatenumber ?>)? <span class="noticea"><a href="logout.php" target="_self">Switch Account</a></span></p>
-                            <fieldset>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
-                                </div>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required>
-                                    <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
-                                        <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
-                                    </label>
-                                </div>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
-                                </div>
-                                <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
+    <?php include 'header.php'; ?>
+    <section id="main-content">
+        <section class="wrapper main-wrapper row">
+            <div class="col-md-12">
+                <section class="box" style="padding: 2%;">
+                    <div class="col-md-4 col-md-offset-4">
+                        <div class="login-panel panel panel-default" style="margin-top: unset;">
+                            <div class="panel-heading">
+                                <b>Reset password</b>
+                            </div>
+                            <div class="panel-body">
+                                <form role="form" method="post" name="login" action="resetpassword.php">
+                                    <fieldset>
+                                        <div class="form-group">
+                                            <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required>
+                                            <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
+                                                <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
+                                        </div>
+                                        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
+                                        <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
 
-                                <!-- Change this to a button or input when using this as a form -->
-                                <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
-                            </fieldset>
-                        </form>
+                                    </fieldset>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
             </div>
-        </div>
-    </div>
+            <div class="col-md-12">
+            <div class="clearfix"></div>
+        </section>
+    </section>
+
     <script>
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
@@ -203,51 +207,48 @@ if (isset($_POST['login'])) {
 
         }
     </script>
+
+    <!--protected by reCAPTCHA-->
+    <script>
+        grecaptcha.ready(function() {
+            grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+                    action: 'homepage'
+                })
+                .then(function(token) {
+                    //console.log(token);
+                    document.getElementById('g-recaptcha-response').value = token;
+                });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+        });
+    </script>
+    <style>
+        .checkbox {
+            padding: 0;
+            margin: 0;
+            vertical-align: bottom;
+            position: relative;
+            top: 0px;
+            overflow: hidden;
+        }
+
+        .alert {
+            padding: 10px 0px;
+            margin-bottom: 0%;
+            position: fixed;
+            top: 80%;
+            left: 10%;
+            width: 80%;
+        }
+    </style>
 </body>
 
 </html>
-
-<!--protected by reCAPTCHA-->
-<script>
-    grecaptcha.ready(function() {
-        grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                action: 'homepage'
-            })
-            .then(function(token) {
-                //console.log(token);
-                document.getElementById('g-recaptcha-response').value = token;
-            });
-    });
-</script>
-
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-<!-- Glow Cookies v3.0.1 -->
-<script>
-    glowCookies.start('en', {
-        analytics: 'G-S25QWTFJ2S',
-        //facebookPixel: '',
-        policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
-    });
-</script>
-<style>
-    <?php include '../css/style.css';?>
-    <?php include '../css/addstyle.css';?>
-
-    .checkbox {
-        padding: 0;
-        margin: 0;
-        vertical-align: bottom;
-        position: relative;
-        top: 0px;
-        overflow: hidden;
-    }
-
-    .alert {
-        padding: 10px 0px;
-        margin-bottom: 0%;
-        position: fixed;
-        top: 80%;
-        left: 10%;
-        width: 80%;
-    }
-</style>
