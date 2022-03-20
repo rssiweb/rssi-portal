@@ -3,22 +3,21 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
-if(! isLoggedIn("aid")){
+if (!isLoggedIn("aid")) {
     header("Location: index.php");
 }
 $user_check = $_SESSION['aid'];
 
-if(!$_SESSION['aid']) {
+if (!$_SESSION['aid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
-  }
-  else if ($_SESSION['filterstatus']!='Active') {
+    exit;
+} else if ($_SESSION['filterstatus'] != 'Active') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-    echo '<script type="text/javascript">'; 
-    echo 'alert("Access Denied. You are not authorized to access this web page.");'; 
+    echo '<script type="text/javascript">';
+    echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
@@ -82,11 +81,28 @@ if (isset($_POST['login'])) {
             $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$associatenumber'";
             $result = pg_query($con, $change_password_query);
 
-            header("Location: ../rssi-member/index.php");
+            echo '<script type="text/javascript">';
+            echo 'alert("Your password has been changed successfully.");';
+            echo 'window.location.href = "resetpassword.php";';
+            echo '</script>';
+            exit;
+
+            header("Location: ../rssi-member/home.php");
         } else {
+
+            echo '<script type="text/javascript">';
+            echo 'alert("ERROR: The current password you entered is incorrect.");';
+            echo 'window.location.href = "resetpassword.php";';
+            echo '</script>';
+            exit;
             $login_failed_dialog = true;
         }
     } else {
+        echo '<script type="text/javascript">';
+            echo 'alert("ERROR: New password and confirm password do not match.");';
+            echo 'window.location.href = "resetpassword.php";';
+            echo '</script>';
+            exit;
     }
 }
 ?>
@@ -138,7 +154,7 @@ if (isset($_POST['login'])) {
                                     <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
                                 </div>
                                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" onclick="return Validate()" value="Update" name="login">
+                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
 
                                 <!-- Change this to a button or input when using this as a form -->
                                 <!--  <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a> -->
@@ -172,18 +188,6 @@ if (isset($_POST['login'])) {
 
             }
 
-        }
-    </script>
-    <script type="text/javascript">
-        function Validate() {
-            var password = document.getElementById("newpass").value;
-            var confirmPassword = document.getElementById("oldpass").value;
-            if (password != confirmPassword) {
-                alert("New password and confirm password don't match.");
-                return false;
-            }
-            alert("Your password has been changed successfully.");
-            return true;
         }
     </script>
 </body>

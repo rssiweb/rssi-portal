@@ -25,7 +25,7 @@ if (!$_SESSION['aid']) {
     exit;
 }
 if ($_POST) {
-    $user_id = $_POST['userid'];
+    $user_id = strtoupper($_POST['userid']);
     $password = $_POST['newpass'];
     $type = $_POST['type'];
     $newpass_hash = password_hash($password, PASSWORD_DEFAULT);
@@ -108,8 +108,8 @@ include("member_data.php");
             <div class="col-md-12">
                 <div class="row">
                     <section class="box" style="padding: 2%;">
-                        <p>Please enter both the User ID and the new password to reset the user's password.</p><br><br>
-                        <form name="pms" action="pms.php" method="POST">
+                        <p>Home / PMS (Password management system)</p><br><br>
+                        <form autocomplete="off" name="pms" action="pms.php" method="POST">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
                                     <select name="type" class="form-control" style="width:max-content; display:inline-block" required>
