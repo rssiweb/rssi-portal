@@ -230,14 +230,8 @@ if (isset($_POST['login'])) {
     });
 </script>
 <style>
-    <?php include '../css/style.css';
-    ?><?php include '../css/addstyle.css';
-
-        ?>label {
-        display: block;
-        padding-left: 15px;
-        text-indent: -15px;
-    }
+    <?php include '../css/style.css';?>
+    <?php include '../css/addstyle.css';?>
 
     .checkbox {
         padding: 0;

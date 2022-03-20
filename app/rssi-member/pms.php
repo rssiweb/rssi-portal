@@ -93,12 +93,6 @@ include("member_data.php");
     </script>
     
     <style>
-        .label {
-            display: block;
-            padding-left: 15px;
-            text-indent: -15px;
-        }
-
         .checkbox {
             padding: 0;
             margin: 0;
