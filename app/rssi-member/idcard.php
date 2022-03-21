@@ -88,7 +88,7 @@ include("database.php");
             width: 235px !important;
             text-align: center;
             font-family: "Ubuntu";
-            font-size: 12.5px;
+            font-size: 13.5px;
             font-weight: bold;
             color: black;
         }
@@ -104,6 +104,13 @@ include("database.php");
             position: absolute;
             top: 42%;
             right: 37%;
+        }
+        .qrimage {
+            border: 0;
+            position: absolute;
+            top: 77%;
+            right: 1%;
+            z-index: 1;
         }
     </style>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
@@ -142,11 +149,12 @@ include("database.php");
             <div class="row">
                 <div class="col containerdiv" style="display: inline-block; width:246px;margin-left:10%; margin-top:2%">
 
-                    <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1646890333/ID%20Card/ID_Card_FINAL.jpg" width="100%" />
+                    <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1647837724/ID%20Card/ID_Card_FINAL_php.jpg" width="100%" />
                     <img class="cornerimage" src=<?php echo $photo ?> width="75px" />
                     <p class="first-txt"><?php echo $fullname ?></p>
                     <p class="second-txt"><?php echo $associatenumber ?></p>
-                    <p class="third-txt"><?php echo strtok($position, ',') ?></p>
+                    <p class="third-txt"><?php echo strtok($position, '-') ?></p>
+                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=74x74&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php%2F&choe=UTF-8" />
                 </div>
             </div>
         </div>

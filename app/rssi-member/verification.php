@@ -6,86 +6,12 @@ $run = pg_query($con, $view_users_query); //here run the sql query.
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
-    $doj = $row[0];
     $associatenumber = $row[1];
     $fullname = $row[2];
-    $email = $row[3];
-    $basebranch = $row[4];
-    $gender = $row[5];
-    $dateofbirth = $row[6];
-    $howyouwouldliketobeaddressed = $row[7];
-    $currentaddress = $row[8];
-    $permanentaddress = $row[9];
-    $languagedetailsenglish = $row[10];
-    $languagedetailshindi = $row[11];
-    $workexperience = $row[12];
-    $nationalidentifier = $row[13];
-    $yourthoughtabouttheworkyouareengagedwith = $row[14];
-    $applicationnumber = $row[15];
-    $position = $row[16];
-    $approvedby = $row[17];
-    $associationstatus = $row[18];
-    $effectivedate = $row[19];
-    $remarks = $row[20];
-    $phone = $row[21];
-    $identifier = $row[22];
-    $astatus = $row[23];
-    $badge = $row[24];
-    $colors = $row[25];
-    $gm = $row[26];
-    $lastupdatedon = $row[27];
     $photo = $row[28];
-    $mydoc = $row[29];
-    $class = $row[30];
-    $notification = $row[31];
-    $age = $row[32];
-    $depb = $row[33];
-    $attd = $row[34];
-    $filterstatus = $row[35];
-    $today = $row[36];
-    $allocationdate = $row[37];
-    $maxclass = $row[38];
-    $classtaken = $row[39];
-    $leave = $row[40];
-    $ctp = $row[41];
-    $feedback = $row[42];
-    $evaluationpath = $row[43];
-    $leaveapply = $row[44];
-    $cl = $row[45];
-    $sl = $row[46];
-    $el = $row[47];
+    $astatus = $row[23];
     $engagement = $row[48];
-    $cltaken = $row[49];
-    $sltaken = $row[50];
-    $eltaken = $row[51];
-    $othtaken = $row[52];
-    $clbal = $row[53];
-    $slbal = $row[54];
-    $elbal = $row[55];
-    $officialdoc = $row[56];
-    $profile = $row[57];
-    $filename = $row[58];
-    $fname = $row[59];
-    $quicklink = $row[60];
-    $yos = $row[61];
-    $role = $row[62];
-    $originaldoj = $row[63];
-    $iddoc = $row[64];
-    $vaccination = $row[65];
-    $scode = $row[66];
-    $exitinterview = $row[67];
-    $questionflag = $row[68];
-    $googlechat = $row[69];
-    $adjustedleave = $row[70];
-    $eduq = $row[72];
-    $mjorsub = $row[73];
-    $disc = $row[74];
-    $hbday = $row[75];
-    $on_leave = $row[76];
-    $attd_pending = $row[77];
-    $ipfl = $row[71];
-    $approveddate = $row[78];
-?>
+    $approveddate = $row[78];?>
 <?php } ?>
 
 <!DOCTYPE html>
@@ -207,28 +133,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     </section>
     </div>
     </section>
-
-
-    <!-- Back top -->
-    <script>
-        $(document).ready(function() {
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#back-to-top').fadeIn();
-                } else {
-                    $('#back-to-top').fadeOut();
-                }
-            });
-            // scroll body to 0px on click
-            $('#back-to-top').click(function() {
-                $('body,html').animate({
-                    scrollTop: 0
-                }, 400);
-                return false;
-            });
-        });
-    </script>
-    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>
 
 </html>
