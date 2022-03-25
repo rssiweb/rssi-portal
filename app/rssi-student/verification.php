@@ -1,6 +1,7 @@
 <?php
 include("database.php");
 @$id = strtoupper($_POST['get_id']);
+@$id = strtoupper($_GET['get_id']);
 $view_users_query = "select * from rssimyprofile_student WHERE student_id='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
@@ -121,7 +122,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section class="wrapper main-wrapper row">
         <div class="col-md-12">
             <section class="box" style="padding: 2%;">
-                <form action="" method="POST">
+                <form id="myform" action="" method="POST" onsubmit="process()">
                     <div class="form-group" style="display: inline-block;">
                         <div class="col2" style="display: inline-block;">
                         <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $id ?>">
@@ -200,6 +201,18 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 return false;
             });
         });
+    </script>
+    <script>
+        function process() {
+            var form = document.getElementById('myform');
+            var elements = form.elements;
+            var values = [];
+
+            for (var i = 0; i < elements.length; i++)
+                values.push(encodeURIComponent(elements[i].name) + '=' + encodeURIComponent(elements[i].value));
+
+            form.action += '?' + values.join('&');
+        }
     </script>
     <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>

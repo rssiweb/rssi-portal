@@ -1,6 +1,7 @@
 <?php
 include("database.php");
 @$id = strtoupper($_POST['get_id']);
+@$id = strtoupper($_GET['get_id']);
 $view_users_query = "select * from rssimyaccount_members WHERE associatenumber='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
@@ -11,7 +12,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $photo = $row[28];
     $astatus = $row[23];
     $engagement = $row[48];
-    $approveddate = $row[78];?>
+    $approveddate = $row[78]; ?>
 <?php } ?>
 
 <!DOCTYPE html>
@@ -74,10 +75,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section class="wrapper main-wrapper row">
         <div class="col-md-12">
             <section class="box" style="padding: 2%;">
-                <form action="" method="POST">
+                <form id="myform" action="" method="POST" onsubmit="process()">
                     <div class="form-group" style="display: inline-block;">
                         <div class="col2" style="display: inline-block;">
-                        <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate ID" value="<?php echo $id ?>">
+                            <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate ID" value="<?php echo $id ?>">
                         </div>
                     </div>
                     <div class="col2 left" style="display: inline-block;">
@@ -133,6 +134,18 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     </section>
     </div>
     </section>
+    <script>
+        function process() {
+            var form = document.getElementById('myform');
+            var elements = form.elements;
+            var values = [];
+
+            for (var i = 0; i < elements.length; i++)
+                values.push(encodeURIComponent(elements[i].name) + '=' + encodeURIComponent(elements[i].value));
+
+            form.action += '?' + values.join('&');
+        }
+    </script>
 </body>
 
 </html>

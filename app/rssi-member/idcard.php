@@ -154,7 +154,7 @@ include("database.php");
                     <p class="first-txt"><?php echo $fullname ?></p>
                     <p class="second-txt"><?php echo $associatenumber ?></p>
                     <p class="third-txt"><?php echo strtok($position, '-') ?></p>
-                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=74x74&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php%2F&choe=UTF-8" />
+                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>%2F&choe=UTF-8" width="74px"/>
                 </div>
             </div>
         </div>
