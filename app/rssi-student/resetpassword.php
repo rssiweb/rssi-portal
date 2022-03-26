@@ -84,8 +84,8 @@ if (isset($_POST['login'])) {
             $newpass = $_POST['newpass'];
 
             $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
-
-            $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash' where student_id='$student_id'";
+            $now=date('Y-m-d H:i:s');
+            $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash', password_updated_by='$associatenumber', password_updated_on='$now' where student_id='$student_id'";
             $result = pg_query($con, $change_password_query);
             $cmdtuples = pg_affected_rows($result);
         } else {

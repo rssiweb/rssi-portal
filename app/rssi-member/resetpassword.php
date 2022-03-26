@@ -64,7 +64,9 @@ if ($_POST) {
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = false;
-
+$newpass = "";
+$oldpass = "";
+$cmdtuples = 0;
 if (isset($_POST['login'])) {
 
     $newpass = $_POST['newpass'];
@@ -84,8 +86,8 @@ if (isset($_POST['login'])) {
             $newpass = $_POST['newpass'];
 
             $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
-
-            $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$associatenumber'";
+            $now=date('Y-m-d H:i:s');
+            $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', password_updated_by='$associatenumber', password_updated_on='$now' where associatenumber='$associatenumber'";
             $result = pg_query($con, $change_password_query);
             $cmdtuples = pg_affected_rows($result);
         } else {
@@ -138,20 +140,20 @@ if (isset($_POST['login'])) {
                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
-                    </div> <?php } else if (@$cmdtuples == 1) { ?>
+                    </div> 
+                <?php } if (@$cmdtuples == 1) { ?>
 
                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
                     </div>
-                <?php } else if (@$rows == 1) { ?>
+                <?php } if (@$login_failed_dialog) { ?>
                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
                     </div>
 
-                <?php } else { ?>
-                <?php } ?>
+                <?php }?>
 
                 <section class="box" style="padding: 2%;">
                     <div class="col-md-4 col-md-offset-4">

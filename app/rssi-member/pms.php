@@ -3,6 +3,7 @@ session_start();
 // Storing Session
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
+date_default_timezone_set('Asia/Kolkata');
 include("../util/login_util.php");
 include("database.php");
 if (!isLoggedIn("aid")) {
@@ -29,11 +30,11 @@ if ($_POST) {
     $password = $_POST['newpass'];
     $type = $_POST['type'];
     $newpass_hash = password_hash($password, PASSWORD_DEFAULT);
-
+    $now=date('Y-m-d H:i:s');
     if ($type == "Associate") {
-        $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash' where associatenumber='$user_id'";
+        $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', password_updated_by='$user_check', password_updated_on='$now' where associatenumber='$user_id'";
     } else {
-        $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash' where student_id='$user_id'";
+        $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash', password_updated_by='$user_check', password_updated_on='$now' where student_id='$user_id'";
     }
     $result = pg_query($con, $change_password_query);
     $cmdtuples = pg_affected_rows($result);
