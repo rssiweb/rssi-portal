@@ -26,10 +26,10 @@ if (!$_SESSION['aid']) {
     exit;
 }
 if ($_POST) {
-    $user_id = strtoupper($_POST['userid']);
-    $password = $_POST['newpass'];
-    $type = $_POST['type'];
-    $newpass_hash = password_hash($password, PASSWORD_DEFAULT);
+    @$user_id = strtoupper($_POST['userid']);
+    @$password = $_POST['newpass'];
+    @$type = $_POST['type'];
+    @$newpass_hash = password_hash($password, PASSWORD_DEFAULT);
     $now=date('Y-m-d H:i:s');
     if ($type == "Associate") {
         $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', password_updated_by='$user_check', password_updated_on='$now' where associatenumber='$user_id'";
@@ -45,6 +45,26 @@ if ($_POST) {
 ?>
 <?php
 include("member_data.php");
+?>
+
+<?php
+@$get_id = $_POST['get_id'];
+@$get_status = strtoupper($_POST['get_status']);
+
+if ($get_id == "Associate") {
+    $change_details = "SELECT * from rssimyaccount_members where associatenumber='$get_status'";
+} else {
+    $change_details = "SELECT * from rssimyprofile_student where student_id='$get_status'";
+}
+
+$result = pg_query($con, $change_details);
+
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+$resultArrr = pg_fetch_all($result);
 ?>
 
 <!DOCTYPE html>
@@ -125,11 +145,11 @@ include("member_data.php");
                 <div class="row">
                     <section class="box" style="padding: 2%;">
                         <p>Home / PMS (Password management system)</p><br><br>
-                        <form autocomplete="off" name="pms" action="pms.php" method="POST">
+                        <form autocomplete="off" name="pms" id= "pms" action="pms.php" method="POST">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
                                     <select name="type" class="form-control" style="width:max-content; display:inline-block" required>
-                                        <?php if ($id == null) { ?>
+                                        <?php if ($get_id == null) { ?>
                                             <option value="" disabled selected hidden>Association Type</option>
                                         <?php
                                         } else { ?>
@@ -154,6 +174,71 @@ include("member_data.php");
                                 <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
                             </label>
                         </form>
+
+                        <br><b><span class="underline">Password change details</span></b><br><br>
+                   
+                        <form name="changedetails" id="changedetails" action="" method="POST">
+                        <div class="form-group" style="display: inline-block;">
+                            <div class="col2" style="display: inline-block;">
+                            <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
+                                        <?php if ($get_id == null) { ?>
+                                            <option value="" disabled selected hidden>Association Type</option>
+                                        <?php
+                                        } else { ?>
+                                            <option hidden selected><?php echo $get_id ?></option>
+                                        <?php }
+                                        ?>
+                                        <option>Associate</option>
+                                        <option>Student</option>
+                                    </select>&nbsp;
+                                <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="" required>
+                            </div>
+                        </div>
+                        <div class="col2 left" style="display: inline-block;">
+                            <button type="submit" name="search_by_idd" class="btn btn-primary" style="outline: none;">
+                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                        </div>
+                    </form>
+                    <div class="col" style="display: inline-block; width:99%; text-align:right">
+                    Record count:&nbsp;<?php echo sizeof($resultArrr) ?>
+                    </div>
+
+                    <?php echo '
+                       <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">User ID</th>
+                                <th scope="col">Changed on</th>
+                                <th scope="col">Changed by</th>
+                            </tr>
+                        </thead>' ?>
+                        <?php if (sizeof($resultArrr) > 0) { ?>
+                            <?php
+                            echo '<tbody>';
+                            foreach ($resultArrr as $array) {
+                              echo '<tr>
+                                <td>' . @$array['associatenumber'] . @$array['student_id'] . '</td>
+                                <td>' . $array['password_updated_on'] . '</td>
+                                <td>' . $array['password_updated_by'] . '</td>
+                            </tr>';
+                        } ?>
+                      <?php
+                      } else if ($get_id == null && $get_status==null) {
+                      ?>
+                        <tr>
+                          <td colspan="5">Please select Filter value.</td>
+                        </tr>
+                      <?php
+                      } else {
+                      ?>
+                        <tr>
+                          <td colspan="5">No record was found for the selected filter value.</td>
+                        </tr>
+                      <?php }
+            
+                      echo '</tbody>
+                                    </table>';
+                      ?>
 
                 </div>
             </div>
