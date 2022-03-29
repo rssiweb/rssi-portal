@@ -37,12 +37,14 @@ if (isset($_SESSION['aid']) && $_SESSION['aid']) {
     $lastupdatedon = $row[27];
     $photo = $row[28];
     $filterstatus = $row[35];
+    $password_updated_on = $row[81];
 
     $_SESSION['fullname'] = $fullname;
     $_SESSION['associatenumber'] = $associatenumber;
     $_SESSION['photo'] = $photo;
     $_SESSION['lastupdatedon'] = $lastupdatedon;
     $_SESSION['filterstatus'] = $filterstatus;
+    $_SESSION['password_updated_on'] = $password_updated_on;
 }
 
 if ($_POST) {
@@ -154,7 +156,9 @@ if (isset($_POST['login'])) {
                     </div>
 
                 <?php }?>
-
+                <div class="col" style="display: inline-block; width:100%; text-align:right">
+                        Last password updated on: <?php echo @$password_updated_on?>
+                    </div>
                 <section class="box" style="padding: 2%;">
                     <div class="col-md-4 col-md-offset-4">
                         <div class="login-panel panel panel-default" style="margin-top: unset;">

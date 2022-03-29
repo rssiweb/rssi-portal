@@ -155,7 +155,9 @@ if (isset($_POST['login'])) {
                     </div>
 
                 <?php }?>
-
+                <div class="col" style="display: inline-block; width:100%; text-align:right">
+                        Last password updated on: <?php echo @$password_updated_on ?>
+                    </div>
                 <section class="box" style="padding: 2%;">
                     <div class="col-md-4 col-md-offset-4">
                         <div class="login-panel panel panel-default" style="margin-top: unset;">

@@ -51,10 +51,12 @@ if (isset($_POST['login'])) {
         $row = pg_fetch_row($result);
         $filterstatus = $row[39];
         $feesflag = $row[50];
+        $password_updated_by = $row[53];
 
         $_SESSION['filterstatus'] = $filterstatus;
         $_SESSION['feesflag'] = $feesflag;
         $uip = $_SERVER['HTTP_X_REAL_IP'];
+        $_SESSION['password_updated_by'] = $password_updated_by;
 
         $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
         $result = pg_query($con, $query);
