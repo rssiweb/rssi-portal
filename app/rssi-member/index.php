@@ -56,11 +56,13 @@ if (isset($_POST['login'])) {
         $engagement = $row[48];
         $ipfl = $row[71];
         $filterstatus = $row[35];
+        $password_updated_by = $row[80];
 
         $_SESSION['role'] = $role;
         $_SESSION['engagement'] = $engagement;
         $_SESSION['ipfl'] = $ipfl;
         $_SESSION['filterstatus'] = $filterstatus;
+        $_SESSION['password_updated_by'] = $password_updated_by;
         $uip = $_SERVER['HTTP_X_REAL_IP'];
 
         // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
@@ -70,6 +72,8 @@ if (isset($_POST['login'])) {
         if (isset($_SESSION["login_redirect"])) {
             header("Location: " . $_SESSION["login_redirect"]);
             unset($_SESSION["login_redirect"]);
+        } else if ($_SESSION['password_updated_by']==null) {
+            header("Location: ../rssi-member/resetpassword.php");
         } else {
             header("Location: ../rssi-member/home.php");
         }
