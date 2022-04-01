@@ -71,11 +71,11 @@
                                 <span class="label label-info">Jul 6, 2021</span>
                             </a>
                         </li>
-                        <li style="height: unset;">
+                        <!-- <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1u8iQR68_E0buYgkjvs3bmM_nONobKF-1/view" target="_blank">Document submission and Exit interview for Interns
                                 <span class="label label-info">Jun 30, 2021</span>
                             </a>
-                        </li>
+                        </li> -->
 
                         <!--<li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1RR5MaWwSpogiRWjRK-REh-hXKfAbvttm/view" target="_blank">Invigilation Duty List for QT1/2021.
