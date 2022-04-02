@@ -127,6 +127,8 @@ include("student_data.php");
         </section>
     </section>
 
+    <!-- Start of Async ProveSource Code --><script>!function(o,i){window.provesrc&&window.console&&console.error&&console.error("ProveSource is included twice in this page."),provesrc=window.provesrc={dq:[],display:function(){this.dq.push(arguments)}},o._provesrcAsyncInit=function(){provesrc.init({apiKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOiI2MjQ4Njc2ODMxY2YwODExZDU5OTVjNmIiLCJpYXQiOjE2NDg5MTIyMzJ9.6HuHEvBtmvfhXqTPrbGSTsd_L-6uLNIKai3lJfLpjd0",v:"0.0.4"})};var r=i.createElement("script");r.type="text/javascript",r.async=!0,r["ch"+"ar"+"set"]="UTF-8",r.src="https://cdn.provesrc.com/provesrc.js";var e=i.getElementsByTagName("script")[0];e.parentNode.insertBefore(r,e)}(window,document);</script><!-- End of Async ProveSource Code -->
+
     <!-- Messenger Chat Plugin Code -->
     <div id="fb-root"></div>
 
