@@ -350,7 +350,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $associatenumber ?>" readonly>
                 <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
                 <embed class="hidden-xs" src="https://drive.google.com/file/d/1DlBalR4kvQ6g3V5QYTDyWeoclTRbagZi/preview" width="700px" height="400px" /></embed>
-                <span class="noticet hidden-md hidden-sm hidden-lg"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span>
+                <span class="noticet hidden-md hidden-sm hidden-lg"><a href="https://drive.google.com/file/d/1DlBalR4kvQ6g3V5QYTDyWeoclTRbagZi/preview" target="_blank">Notice No. RS/2022-04/02</a></span>
                 <br><br>
 
                 <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;">Agree</button>
@@ -432,7 +432,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             });
         </script>
     <?php
-    } else if (@$googlechat != null && $filterstatus == 'Active') {
+    } else if (@$questionflag != null && $filterstatus == 'Active') {
     ?>
     <?php } else {
     } ?>
