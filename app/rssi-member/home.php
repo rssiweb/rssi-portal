@@ -337,7 +337,105 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     } ?>
 
 
+    <!--**************NOTICE Display**************-->
+    <?php
+    if ((@$questionflag == null) && $filterstatus == 'Active') {
+    ?>
 
+        <div id="thoverX" class="thover pop-up2"></div>
+        <div id="tpopupX" class="tpopup pop-up2">
+            <form name="submit-to-google-sheet2" action="" method="POST">
+                <br>
+                <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $fullname ?>" readonly>
+                <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $associatenumber ?>" readonly>
+                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                <embed class="hidden-xs" src="https://drive.google.com/file/d/1DlBalR4kvQ6g3V5QYTDyWeoclTRbagZi/preview" width="700px" height="400px" /></embed>
+                <span class="noticet hidden-md hidden-sm hidden-lg"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span>
+                <br><br>
+
+                <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;">Agree</button>
+                <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;">Disagree</button>
+
+                <br><br>
+            </form>
+        </div>
+        <script>
+            $('#yes').click(function() {
+                $('#count2').val('Agree');
+            });
+
+            $('#no').click(function() {
+                $('#count2').val('Disagree');
+            });
+        </script>
+        <script>
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbycsvlCllfvKdy257W77NyB05X5hbMpGilznY8n6x5VqL9xsTij/exec'
+            const form = document.forms['submit-to-google-sheet2']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                if (Boolean(readCookie('notice02'))) {
+                    $('.pop-up2').hide();
+                    $('.pop-up2').fadeOut(1000);
+                }
+                $('.close-button2').click(function(e) {
+
+                    $('.pop-up2').delay(10).fadeOut(700);
+                    e.stopPropagation();
+
+                    createCookie("notice02", "1 days", 1);
+                    //return false;
+                });
+
+                function createCookie(name, value, days) {
+                    if (days) {
+                        var date = new Date();
+                        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                        var expires = "; expires=" + date.toGMTString();
+                    } else var expires = "";
+                    document.cookie = name + "=" + value + expires + "; path=/";
+                }
+
+
+
+                function readCookie(name) {
+                    var nameEQ = name + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                    }
+                    return null;
+                }
+
+                function eraseCookie(name) {
+                    createCookie(name, "", -1);
+                }
+
+            });
+        </script>
+    <?php
+    } else if (@$googlechat != null && $filterstatus == 'Active') {
+    ?>
+    <?php } else {
+    } ?>
 
 
 
