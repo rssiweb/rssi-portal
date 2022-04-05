@@ -179,7 +179,7 @@ if (isset($_POST['login'])) {
                 <?php } if (@$newpass==null) { ?>
                     <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <span class="blink_me"><i class="glyphicon glyphicon-info-sign"></i></span>&nbsp;&nbsp;<span>Please change your default password</span>
+                        <span>Hi <?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),&nbsp;Please change your default password.</span>
                     </div>
 
                 <?php }?>
