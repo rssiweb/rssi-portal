@@ -33,18 +33,16 @@ if (isset($_SESSION['sid']) && $_SESSION['sid']) {
 
     $row = pg_fetch_row($result);
     $student_id = $row[1];
-    $fullname = $row[2];
-    $lastupdatedon = $row[27];
-    $photo = $row[28];
-    $filterstatus = $row[35];
-    $password_updated_on = $row[81];
+    $studentname = $row[3];
+    $password_updated_on = $row[57];
+    $photourl = $row[25];
+    $filterstatus = $row[39];
 
-    $_SESSION['fullname'] = $fullname;
+    $_SESSION['studentname'] = $studentname;
     $_SESSION['student_id'] = $student_id;
-    $_SESSION['photo'] = $photo;
-    $_SESSION['lastupdatedon'] = $lastupdatedon;
-    $_SESSION['filterstatus'] = $filterstatus;
+    $_SESSION['photourl'] = $photourl;
     $_SESSION['password_updated_on'] = $password_updated_on;
+    $_SESSION['filterstatus'] = $filterstatus;
 }
 
 if ($_POST) {

@@ -34,14 +34,14 @@ if (isset($_SESSION['sid']) && $_SESSION['sid']) {
     $row = pg_fetch_row($result);
     $student_id = $row[1];
     $studentname = $row[3];
-    $lastupdatedon = $row[33];
+    $password_updated_on = $row[57];
     $photourl = $row[25];
     $filterstatus = $row[39];
 
     $_SESSION['studentname'] = $studentname;
     $_SESSION['student_id'] = $student_id;
     $_SESSION['photourl'] = $photourl;
-    $_SESSION['lastupdatedon'] = $lastupdatedon;
+    $_SESSION['password_updated_on'] = $password_updated_on;
     $_SESSION['filterstatus'] = $filterstatus;
 }
 
@@ -107,7 +107,7 @@ if (isset($_POST['login'])) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Associate-Reset Password</title>
+    <title>Student-Reset Password</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
