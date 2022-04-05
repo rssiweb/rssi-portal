@@ -223,16 +223,15 @@ $resultArrr = pg_fetch_all($result);
                             echo '<tbody>';
                             foreach ($resultArrr as $array) {
                                 echo '<tr>
-                                <td>' . @$array['associatenumber'] . @$array['student_id'] . '</td>
-                                <td>' . $array['password_updated_on'] . '</td>
-                                <td>' . $array['password_updated_by'] ?>
+                                <td>' . @$array['associatenumber'] . @$array['student_id'] ?>
 
                                 <?php if ($array['password_updated_by'] == 'VTHN20008') { ?>
-                                    <?php echo '<p class="label label-warning">warning</p>' ?><?php } ?>
+                                    <?php echo '<p class="label label-warning">defaulter</p>' ?><?php } ?>
 
                                 <?php
                                 echo '</td>
-                            </tr>';
+                                <td>' . $array['password_updated_on'] . '</td>
+                                <td>' . $array['password_updated_by'] . '</td></tr>';
                             } ?>
                             <?php
                         } else if ($get_id == null && $get_status == null) {
