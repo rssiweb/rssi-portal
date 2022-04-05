@@ -22,8 +22,6 @@ if (!$_SESSION['sid']) {
     echo 'window.location.href = "profile.php";';
     echo '</script>';
 } else if ($_SESSION['password_updated_by'] == null || $_SESSION['password_updated_by']=='VTHN20008') {
-
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
     echo '<script type="text/javascript">';
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';

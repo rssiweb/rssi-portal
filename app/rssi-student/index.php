@@ -51,7 +51,7 @@ if (isset($_POST['login'])) {
         $row = pg_fetch_row($result);
         $filterstatus = $row[39];
         $feesflag = $row[50];
-        $password_updated_by = $row[53];
+        $password_updated_by = $row[56];
 
         $_SESSION['filterstatus'] = $filterstatus;
         $_SESSION['feesflag'] = $feesflag;
