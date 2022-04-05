@@ -73,7 +73,7 @@ if (isset($_POST['login'])) {
             header("Location: " . $_SESSION["login_redirect"]);
             unset($_SESSION["login_redirect"]);
         } else if ($_SESSION['password_updated_by']==null) {
-            header("Location: ../rssi-member/resetpassword.php");
+            header("Location: ../rssi-member/defaultpasswordreset.php");
         } else {
             header("Location: ../rssi-member/home.php");
         }
