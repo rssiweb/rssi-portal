@@ -10,8 +10,14 @@
                 <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><!--<span class="badge">1</span>--></a>
+                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><span class="badge">1</span></a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; /*overflow-y: auto;*/">
+                    
+                    <li style="height: unset;">
+                            <a class="notification" href="https://docs.google.com/document/d/1CpnFSbSjn7wB2ey9d-ZtikgC0WlhT86fO7k3gOSLTQE/edit" target="_blank">National Module Syllabus
+                                <span class="label label-info">Apr 5, 2022</span>&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
+                            </a>
+                        </li>
 
                     <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1BPcxYM3X9PgQZDoI_9aK5lpEwuvdXVby/view" target="_blank">How to join Google space
