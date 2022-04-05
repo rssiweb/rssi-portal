@@ -30,7 +30,7 @@ if ($_POST) {
     @$password = $_POST['newpass'];
     @$type = $_POST['type'];
     @$newpass_hash = password_hash($password, PASSWORD_DEFAULT);
-    $now=date('Y-m-d H:i:s');
+    $now = date('Y-m-d H:i:s');
     if ($type == "Associate") {
         $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', password_updated_by='$user_check', password_updated_on='$now' where associatenumber='$user_id'";
     } else {
@@ -51,14 +51,16 @@ include("member_data.php");
 @$get_id = $_POST['get_id'];
 @$get_status = strtoupper($_POST['get_status']);
 
-if ($get_id == "Associate" && $get_status!='ALL') {
+if ($get_id == "Associate" && $get_status != 'ALL') {
     $change_details = "SELECT * from rssimyaccount_members where associatenumber='$get_status'";
-} else if ($get_id == "Associate" && $get_status=='ALL') {
-    $change_details = "SELECT * from rssimyaccount_members";
-} else if ($get_id == "Student" && $get_status!='ALL') {
+} else if ($get_id == "Associate" && $get_status == 'ALL') {
+    $change_details = "SELECT * from rssimyaccount_members where filterstatus='Active'";
+} else if ($get_id == "Student" && $get_status != 'ALL') {
     $change_details = "SELECT * from rssimyprofile_student where student_id='$get_status'";
-}else if ($get_id == "Student" && $get_status=='ALL') {
-    $change_details = "SELECT * from rssimyprofile_student";
+} else if ($get_id == "Student" && $get_status == 'ALL') {
+    $change_details = "SELECT * from rssimyprofile_student where filterstatus='Active'";
+} else {
+    $change_details = "SELECT * from rssimyprofile_student where student_id=''";
 }
 
 $result = pg_query($con, $change_details);
@@ -149,7 +151,7 @@ $resultArrr = pg_fetch_all($result);
                 <div class="row">
                     <section class="box" style="padding: 2%;">
                         <p>Home / PMS (Password management system)</p><br><br>
-                        <form autocomplete="off" name="pms" id= "pms" action="pms.php" method="POST">
+                        <form autocomplete="off" name="pms" id="pms" action="pms.php" method="POST">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
                                     <select name="type" class="form-control" style="width:max-content; display:inline-block" required>
@@ -180,11 +182,11 @@ $resultArrr = pg_fetch_all($result);
                         </form>
 
                         <br><b><span class="underline">Password change details</span></b><br><br>
-                   
+
                         <form name="changedetails" id="changedetails" action="" method="POST">
-                        <div class="form-group" style="display: inline-block;">
-                            <div class="col2" style="display: inline-block;">
-                            <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
+                            <div class="form-group" style="display: inline-block;">
+                                <div class="col2" style="display: inline-block;">
+                                    <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
                                         <?php if ($get_id == null) { ?>
                                             <option value="" disabled selected hidden>Association Type</option>
                                         <?php
@@ -195,19 +197,19 @@ $resultArrr = pg_fetch_all($result);
                                         <option>Associate</option>
                                         <option>Student</option>
                                     </select>&nbsp;
-                                <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="" required>
+                                    <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="" required>
+                                </div>
                             </div>
+                            <div class="col2 left" style="display: inline-block;">
+                                <button type="submit" name="search_by_idd" class="btn btn-primary" style="outline: none;">
+                                    <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                            </div>
+                        </form>
+                        <div class="col" style="display: inline-block; width:99%; text-align:right">
+                            Record count:&nbsp;<?php echo sizeof($resultArrr) ?>
                         </div>
-                        <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_idd" class="btn btn-primary" style="outline: none;">
-                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
-                        </div>
-                    </form>
-                    <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    Record count:&nbsp;<?php echo sizeof($resultArrr) ?>
-                    </div>
 
-                    <?php echo '
+                        <?php echo '
                        <table class="table">
                         <thead>
                             <tr>
@@ -220,29 +222,35 @@ $resultArrr = pg_fetch_all($result);
                             <?php
                             echo '<tbody>';
                             foreach ($resultArrr as $array) {
-                              echo '<tr>
+                                echo '<tr>
                                 <td>' . @$array['associatenumber'] . @$array['student_id'] . '</td>
                                 <td>' . $array['password_updated_on'] . '</td>
-                                <td>' . $array['password_updated_by'] . '</td>
+                                <td>' . $array['password_updated_by'] ?>
+
+                                <?php if ($array['password_updated_by'] == 'VTHN20008') { ?>
+                                    <?php echo '<p class="label label-warning">warning</p>' ?><?php } ?>
+
+                                <?php
+                                echo '</td>
                             </tr>';
-                        } ?>
-                      <?php
-                      } else if ($get_id == null && $get_status==null) {
-                      ?>
-                        <tr>
-                          <td colspan="5">Please select Filter value.</td>
-                        </tr>
-                      <?php
-                      } else {
-                      ?>
-                        <tr>
-                          <td colspan="5">No record was found for the selected filter value.</td>
-                        </tr>
-                      <?php }
-            
-                      echo '</tbody>
+                            } ?>
+                            <?php
+                        } else if ($get_id == null && $get_status == null) {
+                            ?>
+                                <tr>
+                                    <td colspan="5">Please select Filter value.</td>
+                                </tr>
+                            <?php
+                        } else {
+                            ?>
+                                <tr>
+                                    <td colspan="5">No record was found for the selected filter value.</td>
+                                </tr>
+                            <?php }
+
+                        echo '</tbody>
                                     </table>';
-                      ?>
+                            ?>
 
                 </div>
             </div>
