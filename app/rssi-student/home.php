@@ -21,6 +21,12 @@ if (!$_SESSION['sid']) {
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "profile.php";';
     echo '</script>';
+} else if ($_SESSION['password_updated_by'] == null) {
+
+    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
 }
 ?>
 
