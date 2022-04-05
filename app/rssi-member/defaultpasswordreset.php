@@ -159,6 +159,8 @@ if (isset($_POST['login'])) {
     <section>
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
+            <div class="col" style="display: inline-block; width:100%; text-align:right">
+            <a href="logout.php" target="_self" class="btn btn-danger btn-sm" role="button"><i class="glyphicon glyphicon-log-out"></i>&nbsp;Sign Out</a></div>
                 <?php if (@$newpass != @$oldpass) { ?>
 
                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
@@ -168,7 +170,7 @@ if (isset($_POST['login'])) {
                 <?php } if (@$cmdtuples == 1) { ?>
 
                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                        <span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully. Please sign out and sign in using the new password.&nbsp; <a href="logout.php" target="_self" class="btn btn-danger btn-sm" role="button"><i class="glyphicon glyphicon-log-out"></i>&nbsp;Sign Out</a></span>
+                        <span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully. Please sign out and sign in using the new password.</span>
                     </div>
                 <?php } if (@$login_failed_dialog) { ?>
                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
