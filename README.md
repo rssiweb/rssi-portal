@@ -98,3 +98,5 @@ SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND
 docker-compose up --build -d
 http://web.local/generate-hash-for/2311 -> D:\services\.env
 http://rssi.in/generate-hash-for/2311 -> digital ocean
+
+git pull --rebase origin master

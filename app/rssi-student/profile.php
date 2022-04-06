@@ -87,7 +87,7 @@ include("student_data.php");
                                 <th scope="col">Class/Category</th>
                                 <th scope="col">Date of Birth</th>
                                 <th scope="col">Student Aadhaar</th>
-                                <th scope="col">Name of Vendor Foundation</th>
+                                <th scope="col">Aadhaar Card</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -97,7 +97,7 @@ include("student_data.php");
                                 <td><?php echo $class ?>/<?php echo $category ?></td>
                                 <td><?php echo $dateofbirth ?></td>
                                 <td><?php echo $studentaadhar ?></td>
-                                <td><?php //echo $nameofvendorfoundation ?></td>
+                                <td><iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/<?php echo substr($upload_aadhar_card, strpos($upload_aadhar_card, "=") + 1) ?>/preview" width="300px" height="200px" /></iframe></td>
                             </tr>
                         </tbody>
                     </table>

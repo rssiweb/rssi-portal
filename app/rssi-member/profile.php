@@ -124,7 +124,7 @@ include("member_data.php");
                             <tr>
                                 <td><?php echo $dateofbirth ?></td>
                                 <td>
-                                    <embed src="<?php echo $iddoc ?>" width="300px" height="200px" />
+                                <iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="<?php echo $iddoc ?>" width="300px" height="200px" /></iframe>
                                 </td>
                                 <td><?php echo $identifier ?></td>
                             </tr>
