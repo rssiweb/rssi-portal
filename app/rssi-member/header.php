@@ -128,6 +128,9 @@
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="pms.php"><i class="fas fa-unlock-alt"></i>&nbsp;PMS</a>
                             </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="asset-management.php"><i class="fa fa-desktop"></i>&nbsp;Asset Management</a>
+                            </li>
                         <?php
                         } else {
                         }

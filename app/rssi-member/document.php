@@ -75,7 +75,9 @@ include("member_data.php");
                                 <?php echo $officialdoc ?>
                                 </td>
                                 <td style="line-height: 2;"><?php echo $notification ?></td>
-                                <td style="line-height: 2;"><span class="noticet"><a href="idcard.php" target="_blank">RSSI Identity Card</a></span></td>
+                                <td style="line-height: 2;"><span class="noticet"><a href="idcard.php" target="_blank">RSSI Identity Card</a><br>
+                                <a href="myasset.php" target="_self">My Asset</a>
+                            </span></td>
                             </tr>
                         </tbody>
                     </table>

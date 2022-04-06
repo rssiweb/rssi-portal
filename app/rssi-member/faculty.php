@@ -3,8 +3,8 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
-if(! isLoggedIn("aid")){
-    header("Location: index.php");
+if (!isLoggedIn("aid")) {
+  header("Location: index.php");
 }
 $user_check = $_SESSION['aid'];
 
@@ -28,7 +28,7 @@ include("member_data.php");
 <?php
 include("database.php");
 @$id = $_POST['get_id'];
-$result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' order by filterstatus asc,today desc");
+$result = pg_query($con, "SELECT * FROM rssimyaccount_members left join asset ON asset.userid=rssimyaccount_members.associatenumber WHERE filterstatus='$id' order by filterstatus asc,today desc");
 if (!$result) {
   echo "An error occurred.\n";
   exit;
@@ -136,7 +136,7 @@ $resultArr = pg_fetch_all($result);
             Record count:&nbsp;<?php echo sizeof($resultArr) ?>
           </div>
           <div class="col" style="display: inline-block; width:47%; text-align:right">
-          <a href="facultyexp.php" target="_self" class="btn btn-danger btn-sm" role="button">Faculty Details</a>
+            <a href="facultyexp.php" target="_self" class="btn btn-danger btn-sm" role="button">Faculty Details</a>
           </div>
         </div>
         <section class="box" style="padding: 2%;">
@@ -198,8 +198,13 @@ $resultArr = pg_fetch_all($result);
               } ?>
               <?php if ($array['today'] != 0 && $array['filterstatus'] != 'Inactive') { ?>
                 <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
-              <?php    } else {
-              } ?>
+              <?php    } ?>
+              <?php if ($array['assetdetails'] != null && $array['status'] != 'Closed' && $array['category'] == 'Asset') { ?>
+                <?php echo '<br><p class="label label-danger">asset</p>' ?>
+              <?php } else if ($array['agreementname'] != null && $array['status'] != 'Closed' && $array['category'] != 'Asset') { ?>
+                <?php echo '<br><p class="label label-warning">agreement</p>' ?>
+              <?php } ?>
+
             <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td>' . $array['badge'] . '<br>' . $array['vaccination'] . '</td>
