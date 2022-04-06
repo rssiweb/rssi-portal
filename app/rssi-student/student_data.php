@@ -57,6 +57,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $doa=$row[49];
         $feesflag=$row[50];
         $module=$row[51];
+        $upload_aadhar_card=$row[58];
 
 ?>     
 <?php } ?>    
