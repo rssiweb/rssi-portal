@@ -214,6 +214,12 @@ if (isset($_POST['login'])) {
         top: 0px;
         overflow: hidden;
     }
+
+    .btn:focus,
+    .button:focus,
+    [type="submit"]:focus {
+        outline: none !important;
+    }
 </style>
 <!--------------- POP-UP BOX ------------
 -------------------------------------->
