@@ -92,7 +92,7 @@ $resultArr = pg_fetch_all($result);
                                     }
                                     ?></td>
                                 <td style="line-height: 2;"><?php echo $leave ?></td>
-                                <td style="line-height: 2;"><?php echo $feedback ?></td>
+                                <td style="line-height: 2;"></td>
                             </tr>
                         </tbody>
                     </table>

@@ -154,6 +154,11 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         </section>
     </section>
     <!-- Toasts Notification -->
+    <?php if (@$feedback == null) { ?>
+
+    <form name="submit-to-google-sheet-noti" action="" method="POST">
+    <input type="hidden" class="form-control" name="memberidnoti" type="text" value="<?php echo $associatenumber ?>" readonly>
+    <input type="hidden" type="text" name="statusnoti" id="countnoti" value="" readonly required>
     <div aria-live="polite" aria-atomic="true" style="position: relative; min-height: 200px;">
 
         <div class="toastmobile" style="position: fixed; top: 10%; right: 3%;z-index: 100;">
@@ -167,7 +172,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
                     <strong class="mr-auto" style="font-size: 12px;">Notification</strong>
                     <span class="label label-danger blink_me" style="font-size: 10px;">new</span>
-                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                    <button id="yesnoti" type="submit" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -177,12 +182,32 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             </div>
         </div>
     </div>
+    </form>
+    <script>
+            $('#yesnoti').click(function() {
+                $('#countnoti').val('Seen');
+            });
+        </script>
+        <script>
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzJP9-BI4bzwKNzXoyqymPgh2m0dFTreg-bHFELM_lyKW2XCoir/exec'
+            const form = document.forms['submit-to-google-sheet-noti']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
     <script>
         // $('.toast').toast({
         //   autohide: false
         // })
         $('.toast').toast("show")
-    </script>
+    </script> <?php }?>
 
 <!-- Toasts Notification End -->
 
