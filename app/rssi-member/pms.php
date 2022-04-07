@@ -51,13 +51,13 @@ include("member_data.php");
 @$get_id = $_POST['get_id'];
 @$get_status = strtoupper($_POST['get_status']);
 
-if ($get_id == "Associate" && $get_status != 'ALL') {
+if ($get_id == "Associate" && $get_status != null) {
     $change_details = "SELECT * from rssimyaccount_members where associatenumber='$get_status'";
-} else if ($get_id == "Associate" && $get_status == 'ALL') {
+} else if ($get_id == "Associate" && $get_status == null) {
     $change_details = "SELECT * from rssimyaccount_members where filterstatus='Active'";
-} else if ($get_id == "Student" && $get_status != 'ALL') {
+} else if ($get_id == "Student" && $get_status != null) {
     $change_details = "SELECT * from rssimyprofile_student where student_id='$get_status'";
-} else if ($get_id == "Student" && $get_status == 'ALL') {
+} else if ($get_id == "Student" && $get_status == null) {
     $change_details = "SELECT * from rssimyprofile_student where filterstatus='Active'";
 } else {
     $change_details = "SELECT * from rssimyprofile_student where student_id=''";
