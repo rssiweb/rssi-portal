@@ -863,3 +863,21 @@ z-index: 5001;
             right: 10px;
             color: inherit;
         }
+        
+        .icon-container {
+            width: 50px;
+            height: 50px;
+            position: relative;
+        }
+        /* Availibity status*/
+        
+        .status-circle {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: orange;
+            border: 2px solid white;
+            bottom: 0;
+            right: 0;
+            position: absolute;
+        }

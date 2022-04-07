@@ -180,7 +180,14 @@ $resultArr = pg_fetch_all($result);
             echo '<tbody style="font-size: 13px;">';
             foreach ($resultArr as $array) {
               echo '<tr>
-            <td><img src="' . $array['photo'] . '" width=50px/></td>
+            <td><div class="icon-container"><img src="' . $array['photo'] . '" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>'
+            ?>
+            <?php if ($array['today'] != 0 && $array['filterstatus'] != 'Inactive') { ?>
+              <?php echo '
+            <div class="status-circle" title="Attd. pending"></div>'?>
+
+<?php }
+            echo '</div></td>
             <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['originaldoj'] . '<br>' . $array['yos'] . '</td>
             <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
@@ -196,9 +203,9 @@ $resultArr = pg_fetch_all($result);
                 <?php echo '<br><p class="label label-danger">on leave</p>' ?>
               <?php } else {
               } ?>
-              <?php if ($array['today'] != 0 && $array['filterstatus'] != 'Inactive') { ?>
+              <!-- <?php if ($array['today'] != 0 && $array['filterstatus'] != 'Inactive') { ?>
                 <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
-              <?php    } ?>
+              <?php    } ?> -->
               <?php if ($array['assetdetails'] != null && $array['status'] != 'Closed' && $array['category'] == 'Asset') { ?>
                 <?php echo '<br><p class="label label-danger">asset</p>' ?>
               <?php } else if ($array['agreementname'] != null && $array['status'] != 'Closed' && $array['category'] != 'Asset') { ?>
