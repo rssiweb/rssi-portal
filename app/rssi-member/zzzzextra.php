@@ -1301,3 +1301,9 @@
 </script> <?php }?>
 
 <!-- Toasts Notification End -->
+
+@media only screen and (max-device-width: 480px) {
+            .toastmobile {
+                width: 60%;
+            }
+        }

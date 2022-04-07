@@ -59,11 +59,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <!-- Main css -->
     <style>
         <?php include '../css/style.css'; ?>
-        @media only screen and (max-device-width: 480px) {
-            .toastmobile {
-                width: 60%;
-            }
-        }
     </style>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
