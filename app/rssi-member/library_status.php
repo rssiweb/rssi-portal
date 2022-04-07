@@ -120,7 +120,7 @@ $resultArr = pg_fetch_all($result);
                     </form>
                     <?php echo '
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Associate ID</th>
                                 <th scope="col">Order ID</th>
@@ -134,7 +134,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody>';
+                        <tbody style="font-size: 13px;">';
                     foreach ($resultArr as $array) {
                         echo '
                             <tr>

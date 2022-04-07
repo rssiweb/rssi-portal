@@ -33,14 +33,14 @@ include("database.php");
 
 if ($id == null && $status == 'ALL') {
     $result = pg_query($con, "SELECT * FROM bookdata_book");
-} else if ($id == null && $status != 'ALL') {
+} if ($id == null && $status != 'ALL') {
     $result = pg_query($con, "SELECT * FROM bookdata_book WHERE bookstatus='$status'");
-} else if ($id > 0 && $status != 'ALL') {
+} if ($id > 0 && $status != 'ALL') {
     $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id' AND bookstatus='$status'");
-} else if ($id > 0 && $status == 'ALL') {
+} if ($id > 0 && $status == 'ALL') {
     $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$id'");
-} else {
-    $result = pg_query($con, "SELECT * FROM bookdata_book");
+} if ($id == null && $status == null) {
+    $result = pg_query($con, "SELECT * FROM bookdata_book WHERE orderid=''");
 }
 
 if (!$result) {
@@ -138,7 +138,7 @@ $resultArr = pg_fetch_all($result);
                     </form>
                     <?php echo '
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Borrowers ID/F Name</th>
                                 <th scope="col">Order ID</th>
@@ -152,7 +152,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody>';
+                        <tbody style="font-size: 13px;">';
                     foreach ($resultArr as $array) {
                         echo '
                             <tr>
@@ -167,7 +167,21 @@ $resultArr = pg_fetch_all($result);
                                 <td style="line-height: 1.7;">' . $array['bookstatus'] . '</td>
                                 <td style="line-height: 1.7;">' . $array['remarks'] . '</td>
                             </tr>';
-                    }
+                    }?>
+                    <?php
+                     if ($id == null && $status == null) {
+                    ?>
+                        <tr>
+                            <td colspan="5">Please select Filter value.</td>
+                        </tr>
+                    <?php
+                    } else {
+                    ?>
+                        <tr>
+                            <td colspan="5">No record was found for the selected filter value.</td>
+                        </tr>
+                    <?php }
+
                     echo '</tbody>
                         </table>';
                     ?>
