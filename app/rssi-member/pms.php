@@ -197,7 +197,7 @@ $resultArrr = pg_fetch_all($result);
                                         <option>Associate</option>
                                         <option>Student</option>
                                     </select>&nbsp;
-                                    <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="" required>
+                                    <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="">
                                 </div>
                             </div>
                             <div class="col2 left" style="display: inline-block;">
