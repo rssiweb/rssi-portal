@@ -54,8 +54,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>Class details</title>
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
     <style>
@@ -68,7 +67,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     </style>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -153,63 +152,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <div class="clearfix"></div>
         </section>
     </section>
-    <!-- Toasts Notification -->
-    <?php if (@$feedback == null) { ?>
-
-    <form name="submit-to-google-sheet-noti" action="" method="POST">
-    <input type="hidden" class="form-control" name="memberidnoti" type="text" value="<?php echo $associatenumber ?>" readonly>
-    <input type="hidden" type="text" name="statusnoti" id="countnoti" value="" readonly required>
-    <div aria-live="polite" aria-atomic="true" style="position: relative; min-height: 200px;">
-
-        <div class="toastmobile" style="position: fixed; top: 10%; right: 3%;z-index: 100;">
-
-            <div role="alert" aria-live="assertive" aria-atomic="true" class="toast" data-autohide="false">
-                <div class="toast-header">
-
-                    <svg max-width="20" height="20" class="mr-2" viewBox="0 0 30 24">
-                        <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z" fill="#ccc"></path>
-                    </svg>
-
-                    <strong class="mr-auto" style="font-size: 12px;">Notification</strong>
-                    <span class="label label-danger blink_me" style="font-size: 10px;">new</span>
-                    <button id="yesnoti" type="submit" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="toast-body" style="font-size: 12px;">
-                    Now you can check the tagged asset or agreement details from your profile > My Document > My Asset
-                </div>
-            </div>
-        </div>
-    </div>
-    </form>
-    <script>
-            $('#yesnoti').click(function() {
-                $('#countnoti').val('Seen');
-            });
-        </script>
-        <script>
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbzJP9-BI4bzwKNzXoyqymPgh2m0dFTreg-bHFELM_lyKW2XCoir/exec'
-            const form = document.forms['submit-to-google-sheet-noti']
-
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(form)
-                    })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
-        </script>
-    <script>
-        // $('.toast').toast({
-        //   autohide: false
-        // })
-        $('.toast').toast("show")
-    </script> <?php }?>
-
-<!-- Toasts Notification End -->
 
     <!--**************Birth Day**************-->
     <?php
