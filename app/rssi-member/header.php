@@ -12,32 +12,34 @@
             <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><!--<span class="badge">1</span>--></a>
+                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i>
+                        <!--<span class="badge">1</span>-->
+                    </a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
 
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/document/d/1CpnFSbSjn7wB2ey9d-ZtikgC0WlhT86fO7k3gOSLTQE/edit" target="_blank">National Module Syllabus
                                 <span class="label label-info">Apr 5, 2022</span>&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
                             </a>
                         </li>
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://youtu.be/W3sWtsuRlTM" target="_blank">User Guide My Account
                                 <span class="label label-info">Dec 8, 2021</span>
                             </a>
                         </li>
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://youtu.be/HuGmVkIW6vw" target="_blank">How to Evaluate Answer Sheet
                                 <span class="label label-info">Dec 5, 2021</span>
                             </a>
                         </li>
-                    
-                    <li style="height: unset;">
+
+                        <li style="height: unset;">
                             <a class="notification" href="https://youtu.be/DFc97rQgqVc" target="_blank">How to join Google space
                                 <span class="label label-info">Dec 3, 2021</span>
                             </a>
                         </li>
 
-                    <!--<li style="height: unset;">
+                        <!--<li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit" target="_blank">Exam Attendance Tracker_QT2/2021
                                 <span class="label label-info">Nov 15, 2021</span>
                             </a>
@@ -64,7 +66,7 @@
                             </a>
                         </li>
 
-                       
+
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting
                                 <span class="label label-info">Jul 7, 2021</span>
@@ -142,13 +144,14 @@
 
                 <li>
                     <a href="#"> <i class="fas fa-folder-plus"></i>
-                    <a href="#"> <i class="fas fa-sitemap"></i>
+                        <a href="#"> <i class="fas fa-sitemap"></i>
                 </li>
             <?php  }
             ?>
 
             <li>
-                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i><!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
+                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i>
+                    <!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
                 </a>
             </li>
             <!--<li>
@@ -216,7 +219,7 @@
 <div class="page-sidebar expandit">
     <div class="sidebar-inner" id="main-menu-wrapper">
         <div class="profile-info row ">
-            <div class="profile-image icon-container" style="height: 65px; width: 65px;">
+            <div class="profile-image icon-container">
                 <a href="#">
                     <img alt="" src="<?php echo $photo ?>" class="img-circle img-inline" class="img-responsive img-circle">
                     <div class="status-circle" style="background-color: green;" title="Available"></div>
@@ -264,7 +267,8 @@
                 <a href="exam.php" class="<?php echo $exam_active ?>">
                     <span class="sidebar-icon"><i class="fas fa-spell-check"></i>
                     </span>
-                    <span class="menu-title">Examination</span><!--&nbsp;<span style="font-family:Arial, Helvetica, sans-serif" class="label label-warning">Update</span>-->
+                    <span class="menu-title">Examination</span>
+                    <!--&nbsp;<span style="font-family:Arial, Helvetica, sans-serif" class="label label-warning">Update</span>-->
                 </a>
             </li>
 

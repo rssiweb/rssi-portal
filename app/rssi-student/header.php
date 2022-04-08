@@ -146,9 +146,10 @@
 <div class="page-sidebar expandit">
     <div class="sidebar-inner" id="main-menu-wrapper">
         <div class="profile-info row ">
-            <div class="profile-image ">
+            <div class="profile-image icon-container">
                 <a href="#">
-                    <img alt="" src="<?php echo $photourl ?>" class="img-circle img-inline class=" img-responsive img-circle">
+                    <img alt="" src="<?php echo $photourl ?>" class="img-circle img-inline" class="img-responsive img-circle">
+                    <div class="status-circle" style="background-color: green;" title="Available"></div>
                 </a>
             </div>
             <div class="profile-details">

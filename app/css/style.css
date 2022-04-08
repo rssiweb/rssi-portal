@@ -323,10 +323,22 @@
             position: relative;
         }
         
+        .profile-info .icon-container {
+            width: 65px;
+            height: 65px;
+            position: relative;
+        }
+        
         .short-profile img {
             height: 45px !important;
             width: 45px !important;
             left: 2px !important;
+        }
+        
+        .short-profile .icon-container {
+            width: 45px !important;
+            height: 45px !important;
+            position: relative;
         }
         
         .short-profile .profile-details {
@@ -863,13 +875,13 @@ z-index: 5001;
             right: 10px;
             color: inherit;
         }
+        /* Availibity status*/
         
         .icon-container {
             width: 50px;
             height: 50px;
             position: relative;
         }
-        /* Availibity status*/
         
         .status-circle {
             width: 15px;
