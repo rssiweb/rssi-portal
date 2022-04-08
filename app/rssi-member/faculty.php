@@ -361,9 +361,9 @@ $resultArr = pg_fetch_all($result);
 
                                     <?php echo '<div class="status-circle" title="Online"></div>' ?>
 
-                            <?php } else { ?> <?php echo '<div class="status-circle" style="background-color: grey;" title="Offline"></div>'?>
+                            <?php } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'?>
                             
-                            <?php } } else { ?> <?php echo '<div class="status-circle" style="background-color: grey;" title="Offline"></div>'?>
+                            <?php } } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'?>
                             
                             <?php } echo '</div></td>
             <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
