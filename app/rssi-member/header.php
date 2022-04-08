@@ -222,7 +222,7 @@
             <div class="profile-image icon-container">
                 <a href="#">
                     <img alt="" src="<?php echo $photo ?>" class="img-circle img-inline" class="img-responsive img-circle">
-                    <div class="status-circle" style="background-color: green;" title="Available"></div>
+                    <div class="status-circle" style="background-color: #92C353;" title="Available"></div>
                 </a>
             </div>
             <div class="profile-details">
