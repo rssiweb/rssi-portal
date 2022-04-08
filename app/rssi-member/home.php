@@ -84,10 +84,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class=col style="text-align: right;"><?php echo $badge ?></div>
-                <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                <!-- <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
                     <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                     <span class="noticet">Now you can check the tagged asset or agreement details from your profile > My Document > My Asset&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
-                </div>
+                </div> -->
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
