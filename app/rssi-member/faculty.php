@@ -385,9 +385,9 @@ $resultArr = pg_fetch_all($result);
                 <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
               <?php    } ?>
                             <?php if ($array['assetdetails'] != null && $array['status'] != 'Closed' && $array['category'] == 'Asset') { ?>
-                                <?php echo '<br><p class="label label-danger">asset</p>' ?>
+                                <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid='.$array['associatenumber'].'" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>' ?>
                             <?php } else if ($array['agreementname'] != null && $array['status'] != 'Closed' && $array['category'] != 'Asset') { ?>
-                                <?php echo '<br><p class="label label-warning">agreement</p>' ?>
+                                <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid='.$array['associatenumber'].'" target="_blank" style="text-decoration:none" title="click here"><p class="label label-warning">agreement</p></a>' ?>
                             <?php } ?>
 
                         <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>

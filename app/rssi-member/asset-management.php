@@ -28,6 +28,8 @@ include("member_data.php");
 include("database.php");
 @$statuse = $_POST['get_statuse'];
 @$appid = $_POST['get_appid'];
+@$statuse = $_GET['get_statuse'];
+@$appid = $_GET['get_appid'];
 
 if ($statuse == 'Associate' && $appid == null) {
     $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate'");
@@ -91,7 +93,7 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:100%; text-align:right">
                         Home / Asset Management
                     </div>
-                    <form action="" method="POST">
+                    <form id="myform" action="" method="POST" onsubmit="process()">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
                                 <select name="get_statuse" required class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
@@ -180,6 +182,18 @@ $resultArr = pg_fetch_all($result);
         <div class="clearfix"></div>
     </section>
     </section>
+    <script>
+        function process() {
+            var form = document.getElementById('myform');
+            var elements = form.elements;
+            var values = [];
+
+            for (var i = 0; i < elements.length; i++)
+                values.push(encodeURIComponent(elements[i].name) + '=' + encodeURIComponent(elements[i].value));
+
+            form.action += '?' + values.join('&');
+        }
+    </script>
 </body>
 
 </html>
