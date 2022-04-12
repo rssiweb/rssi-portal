@@ -445,8 +445,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
 
 
-<!--**************Experience details************** || strpos(@$vaccination, $word) !== false)-->
-<?php
+    <!--**************Experience details************** || strpos(@$vaccination, $word) !== false)-->
+    <?php
     if ($filterstatus == 'Active' && $vaccination == null) {
     ?>
 
@@ -476,11 +476,18 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <p align="left" style="margin-left: 5%; margin-right: 5%;">Work experience:</p>
                 <textarea name="work" id="work" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="35" required><?php echo $workexperience ?></textarea>
                 <br>
-                <button type="submit" id="sendButton" class="close-button btn btn-success">Save
-                </button>&nbsp;<button type="submit" class="close-button btn btn-info">No Change
+                <?php if ($workexperience == null) { ?>
+
+                    <button type="submit" id="sendButton" class="close-button btn btn-success">Save
+                    </button><?php } else { ?>
+                    <button type="submit" class="close-button btn btn-success">Save
+                    </button>
+                <?php } ?>
+                &nbsp;<button type="submit" class="close-button btn btn-info">No Change
                 </button><br>
-               <marquee style="margin-left: 5%; line-height:4" direction="left" height="100%" width="70%" onmouseover="this.stop();" onmouseout="this.start();">To enable the Save button, please update the major subject or area of ​​specialization.</marquee>
-                <br><p align="right" style="color:red; margin-right: 5%;">*&nbsp; <i>All fields are mandatory<i></p>
+                <marquee style="margin-left: 5%; line-height:4" direction="left" height="100%" width="70%" onmouseover="this.stop();" onmouseout="this.start();">For multiple entries in Major subject or area of ​​specialization or work experience, please use comma (,) as a delimiter.</marquee>
+                <br>
+                <p align="right" style="color:red; margin-right: 5%;">*&nbsp; <i>All fields are mandatory<i></p>
                 <br>
         </div>
         </div>
