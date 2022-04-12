@@ -241,7 +241,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <?php } else {
     } ?>
 
-    <!--**************IPF CHECK CONFIRMATION**************-->
+    <!--**************IPF CHECK CONFIRMATION**************
     <?php
     if ((@$vaccination == null) && @$googlechat != '') {
     ?>
@@ -340,7 +340,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     } else if (@$googlechat != null && $filterstatus == 'Active') {
     ?>
     <?php } else {
-    } ?>
+    } ?>-->
 
 
     <!--**************NOTICE Display**************
