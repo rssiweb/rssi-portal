@@ -343,7 +343,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     } ?>
 
 
-    <!--**************NOTICE Display**************-->
+    <!--**************NOTICE Display**************
     <?php
     if ((@$questionflag == null) && $filterstatus == 'Active') {
     ?>
@@ -441,7 +441,133 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     } else if (@$questionflag != null && $filterstatus == 'Active') {
     ?>
     <?php } else {
-    } ?>
+    } ?>-->
+
+
+
+<!--**************Experience details************** || strpos(@$vaccination, $word) !== false)-->
+<?php
+    if ($filterstatus == 'Active' && $vaccination == null) {
+    ?>
+
+        <div id="thoverX" class="thover pop-up"></div>
+        <div id="tpopupX" class="tpopup pop-up">
+            <form name="submit-to-google-sheet" action="" method="POST">
+                <br>
+                <input type="hidden" class="form-control" name="membername" type="text" value="<?php echo $fullname ?>" readonly>
+                <input type="hidden" class="form-control" name="memberid" type="text" value="<?php echo $associatenumber ?>" readonly>
+                <input type="hidden" class="form-control" name="flag" type="text" value="Y" readonly>
+                <p align="left" style="margin-left: 5%; margin-right: 5%;">Hi&nbsp;<?php echo strtok($fullname, ' ') ?>&nbsp;(<?php echo $associatenumber ?>),
+                    Please confirm if the below details are up to date.</p>
+                <p align="left" style="margin-left: 5%; margin-right: 5%;">Educational Qualification:</p>
+                <select name="edu" class="form-control cmb" style="width:max-content;margin-left: 5%; display:inline" placeholder="" required>
+                    <option selected><?php echo $eduq ?></option>
+                    <option>Bachelor Degree Regular</option>
+                    <option>Bachelor Degree Correspondence</option>
+                    <option>Master Degree</option>
+                    <option>PhD (Doctorate Degree)</option>
+                    <option>Post Doctorate or 5 years experience</option>
+                    <option>Culture, Art & Sports etc.</option>
+                    <option>Class 12th Pass</option>
+                    <option hidden>I have taken both doses of the vaccine</option>
+                </select>
+                <p align="left" style="margin-left: 5%; margin-right: 5%;">Major subject or area of ​​specialization:</p>
+                <textarea name="sub" id="sub" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="2" cols="35" required><?php echo $mjorsub ?></textarea>
+                <p align="left" style="margin-left: 5%; margin-right: 5%;">Work experience:</p>
+                <textarea name="work" id="work" class="form-control cmb" style="width:max-content; margin-left: 5%; display:inline" rows="4" cols="35" required><?php echo $workexperience ?></textarea>
+                <br>
+                <button type="submit" id="sendButton" class="close-button btn btn-success">Save
+                </button>&nbsp;<button type="submit" class="close-button btn btn-info">No Change
+                </button><br>
+               <marquee style="margin-left: 5%; line-height:4" direction="left" height="100%" width="70%" onmouseover="this.stop();" onmouseout="this.start();">To enable the Save button, please update the major subject or area of ​​specialization.</marquee>
+                <br><p align="right" style="color:red; margin-right: 5%;">*&nbsp; <i>All fields are mandatory<i></p>
+                <br>
+        </div>
+        </div>
+        </form>
+        </div>
+        <script>
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbyl_OmmyKhdyfAYW4O-pLQZs6ZmFAfkJ_yP3wYe4-Ry9UkiFiQ/exec'
+            const form = document.forms['submit-to-google-sheet']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                if (Boolean(readCookie('majorsub'))) {
+                    $('.pop-up').hide();
+                    $('.pop-up').fadeOut(1000);
+                }
+                $('.close-button').click(function(e) {
+
+                    $('.pop-up').delay(10).fadeOut(700);
+                    e.stopPropagation();
+
+                    createCookie("majorsub", "1 day", 1);
+                    //return false;
+                });
+
+                function createCookie(name, value, days) {
+                    if (days) {
+                        var date = new Date();
+                        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                        var expires = "; expires=" + date.toGMTString();
+                    } else var expires = "";
+                    document.cookie = name + "=" + value + expires + "; path=/";
+                }
+
+
+
+                function readCookie(name) {
+                    var nameEQ = name + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                    }
+                    return null;
+                }
+
+                function eraseCookie(name) {
+                    createCookie(name, "", -1);
+                }
+
+            });
+        </script>
+        <!--disable submit button if any required field is blank-->
+        <script>
+            $(document).ready(function() {
+                $('#sendButton').attr('disabled', true);
+
+                $('#sub').keyup(function() {
+                    if ($(this).val().length != 0) {
+                        $('#sendButton').attr('disabled', false);
+                    } else {
+                        $('#sendButton').attr('disabled', true);
+                    }
+                })
+            });
+        </script>
+    <?php
+    } else {
+    ?>
+    <?php } ?>
+
 
 
 
