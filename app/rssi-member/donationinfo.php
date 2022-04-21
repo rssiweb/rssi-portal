@@ -103,7 +103,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         </div>
                     </div>
                     <div class="col2 left" style="display: inline-block;">
-                        <button type="submit" name="search_by_id" class="btn btn-primary" style="outline: none;">
+                        <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
                             <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                     </div>
                 </form>

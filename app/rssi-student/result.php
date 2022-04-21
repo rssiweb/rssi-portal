@@ -180,7 +180,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         </form>
                     </div>
                     <!--<div class="col noprint" style="display: inline-block; width:47%; text-align:right">
-                    <button type="button" onclick="window.location.href='logout.php'" name="print" class="btn btn-danger" style="outline: none;">
+                    <button type="button" onclick="window.location.href='logout.php'" name="print" class="btn btn-danger btn-sm" style="outline: none;">
                                 <span class="glyphicon glyphicon-log-out"></span>&nbsp;Sign out</button>
                     </div>-->
                 </div>
