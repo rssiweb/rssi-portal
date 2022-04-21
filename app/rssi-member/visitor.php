@@ -28,7 +28,7 @@ if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
 include("member_data.php");
 include("database.php");
 @$appid = $_POST['get_appid'];
-@$appid = $_GET['get_appid'];
+// @$appid = $_GET['get_appid'];
 
 if ($appid == null) {
     $result = pg_query($con, "select * from visitor WHERE visitorid is null");
@@ -86,7 +86,7 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:100%; text-align:right">
                         Home / Visitor pass
                     </div>
-                    <form id="myform" action="" method="POST" onsubmit="process()">
+                    <form id="myform" action="" method="POST"><!--onsubmit="process()-->
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
                                 <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Visitor ID" value="<?php echo $appid ?>" required>
