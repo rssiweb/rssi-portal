@@ -101,6 +101,9 @@
                         <li style="height: unset;">
                             <a style="font-size:13px;" href="student.php"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
                         </li>
+                        <li style="height: unset;">
+                            <a style="font-size:13px;" href="visitor.php"><i class="fas fa-ticket-alt"></i>&nbsp;Visitor pass</a>
+                        </li>
 
                         <?php if (@$role == 'Admin') {
                         ?>
