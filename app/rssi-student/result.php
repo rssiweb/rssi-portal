@@ -173,7 +173,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             </div>
                             <div class="col2 left noprint" style="display: inline;">
                                 <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                    <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                                 <button type="button" onclick="window.print()" name="print" class="btn btn-success btn-sm" style="outline: none;">
                                     <span class="glyphicon glyphicon-save"></span>&nbsp;Save</button>
                             </div>

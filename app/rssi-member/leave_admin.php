@@ -139,7 +139,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
-                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                         </div>
                     </form>
                     <div class="col" style="display: inline-block; width:99%; text-align:right">

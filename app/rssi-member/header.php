@@ -102,7 +102,7 @@
                             <a style="font-size:13px;" href="student.php"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
                         </li>
                         <li style="height: unset;">
-                            <a style="font-size:13px;" href="visitor.php"><i class="fas fa-ticket-alt"></i>&nbsp;Visitor pass</a>
+                            <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-ticket"></i>&nbsp;Visitor pass</a>
                         </li>
 
                         <?php if (@$role == 'Admin') {
@@ -125,7 +125,7 @@
                                 <a style="font-size:13px;" href="medistatus_admin.php"><i class="fas fa-hand-holding-medical"></i>&nbsp;Medistatus</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="reimbursement_admin.php"><i class="fas fa-rupee-sign"></i>&nbsp;Reimbursement</a>
+                                <a style="font-size:13px;" href="reimbursement_admin.php"><i class="fa-solid fa-indian-rupee-sign"></i>&nbsp;Reimbursement</a>
                             </li>
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="donationinfo_admin.php"><i class="fas fa-hand-holding-heart"></i>&nbsp;Donation</a>
@@ -284,7 +284,7 @@
 
             <li><a href="medimate.php" class="<?php echo $medimate_active ?>"><span class="sidebar-icon"><i class="fas fa-hand-holding-medical"></i></span> <span class="menu-title">Medimate</span></a></li>
 
-            <li><a href="reimbursement.php" class="<?php echo $reimbursement_active ?>"><span class="sidebar-icon"><i class="fas fa-rupee-sign"></i></span> <span class="menu-title">Reimbursement</span></a></li>
+            <li><a href="reimbursement.php" class="<?php echo $reimbursement_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span> <span class="menu-title">Reimbursement</span></a></li>
 
             <li><a href="profile.php" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa fa-user-circle"></i></span> <span class="menu-title">My Profile</span></a></li>
         </ul>

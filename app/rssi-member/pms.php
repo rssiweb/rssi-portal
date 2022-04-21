@@ -174,7 +174,7 @@ $resultArrr = pg_fetch_all($result);
 
                             <div class="col2 left" style="display: inline-block;">
                                 <button type="submit" name="search_by_id" class="btn btn-danger" style="outline: none;">
-                                    <i class="fas fa-sync-alt"></i>&nbsp;&nbsp;Update</button>
+                                <i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
                             </div>
                             <br>
                             <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
@@ -203,7 +203,7 @@ $resultArrr = pg_fetch_all($result);
                             </div>
                             <div class="col2 left" style="display: inline-block;">
                                 <button type="submit" name="search_by_idd" class="btn btn-primary" style="outline: none;">
-                                    <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>
+                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                             </div>
                         </form>
                         <div class="col" style="display: inline-block; width:99%; text-align:right">
