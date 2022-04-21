@@ -241,4 +241,4 @@
         }
     });
     </script>
-<script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" data-auto-replace-svg="nest"></script>
+<script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>

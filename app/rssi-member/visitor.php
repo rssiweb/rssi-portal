@@ -62,6 +62,7 @@ $resultArr = pg_fetch_all($result);
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -94,7 +95,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
-                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLSfGLdHHjI8J5b238SMAmf7LMkVVRJPAKnk1SjHcBUZSXATFQA/viewform" target="_blank" class="btn btn-info" role="button">Registration</a>
+                                <span class="glyphicon glyphicon-search"></span>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLSfGLdHHjI8J5b238SMAmf7LMkVVRJPAKnk1SjHcBUZSXATFQA/viewform" target="_blank" class="btn btn-info" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Registration</a>
                         </div>
                     </form>
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
