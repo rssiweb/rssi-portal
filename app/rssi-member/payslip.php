@@ -19,7 +19,7 @@ if (!$_SESSION['aid']) {
 include("member_data.php");
 include("database.php");
 
-$result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber where associatenumber='$user_check'");
+$result = pg_query($con, "select * from payslip where associatenumber='$user_check' ORDER BY slno DESC;");
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -69,7 +69,7 @@ $resultArr = pg_fetch_all($result);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    <p style="font-size:small"><span class="noticea" style="line-height: 2;"><a href="document.php">My Document</a></span> / My Asset</p>
+                    <p style="font-size:small"><span class="noticea" style="line-height: 2;"><a href="document.php">My Document</a></span> / Payslip</p>
                     </div>
 
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
@@ -82,13 +82,10 @@ $resultArr = pg_fetch_all($result);
                         <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Reference number</th>
-                                <th scope="col">Asset/Agreement details</th>
-                                <th scope="col">Issued on</th>
-                                <th scope="col">Agreement</th>
-                                <th scope="col">Returned on</th>
-                                <th scope="col">Received on</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">HR remarks</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Class count</th>
+                                <th scope="col">Transaction ID</th>
+                                <th scope="col">Payslip</th>
                             </tr>
                         </thead>' ?>
                 <?php if (sizeof($resultArr) > 0) { ?>
@@ -96,30 +93,19 @@ $resultArr = pg_fetch_all($result);
                     echo '<tbody style="font-size: 13px;">';
                     foreach ($resultArr as $array) {
                         echo '<tr>
-                                <td>' . $array['submissionid'] . '</td>
-                                <td>' . $array['assetdetails'] . $array['agreementname'] ?>
-
-                        <?php if ($array['category'] == 'Asset') { ?>
-                            <?php echo '<p class="label label-danger">asset</p>' ?>
-                        <?php } else {
-                        } ?>
-
-                    <?php echo '</td>
-                                <td>' . $array['issuedon'] . '</td>
-                                <td><span class="noticea"><a href="' . $array['agreement'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span>
+                                <td>' . $array['payslipid'] . '</td>
+                                <td>' . $array['date'] . '</td>
+                                <td>' . $array['classcount'] . '</td>
+                                <td>' . $array['transaction_id'].'</td>
+                                <td><span class="noticea"><a href="' . $array['profile'] . '" target="_blank" title="' . $array['filename'] . '"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
                                 
-                                </td>
-                                <td>' . $array['returnedon'] . '</td>
-                                <td>' . $array['receivedon'] . '</td>
-                                <td>' . $array['status'] . '</td>
-                                <td>' . $array['comment'] . '</td>
-                            </tr>';
+                                </tr>';
                     } ?>
                 <?php
                 } else {
                 ?>
                     <tr>
-                        <td colspan="5">No record was found for you.</td>
+                        <td colspan="5">No record found or you are not eligible to withdraw salary from the organization.</td>
                     </tr>
                 <?php }
 
