@@ -893,3 +893,7 @@ z-index: 5001;
             right: 0;
             position: absolute;
         }
+        
+        .btn {
+            border: none !important;
+        }
