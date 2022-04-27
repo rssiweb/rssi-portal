@@ -3,8 +3,8 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
-if(! isLoggedIn("aid")){
-    header("Location: index.php");
+if (!isLoggedIn("aid")) {
+  header("Location: index.php");
 }
 $user_check = $_SESSION['aid'];
 
@@ -34,8 +34,10 @@ if ($id == null && $status == 'ALL') {
   $result = pg_query($con, "SELECT * FROM claim order by id desc");
 } else if ($id == null && $status != 'ALL') {
   $result = pg_query($con, "SELECT * FROM claim WHERE year='$status' order by id desc");
+  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
 } else if ($id > 0 && $status != 'ALL') {
   $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' AND year='$status' order by id desc");
+  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id' AND year='$status'");
 } else if ($id > 0 && $status == 'ALL') {
   $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' order by id desc");
 } else {
@@ -48,6 +50,7 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
+$resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
 ?>
 
 
@@ -69,7 +72,7 @@ $resultArr = pg_fetch_all($result);
   </style>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+  <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
   <!------ Include the above in your HEAD tag ---------->
 
   <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -101,12 +104,12 @@ $resultArr = pg_fetch_all($result);
     <section class="wrapper main-wrapper row">
       <div class="col-md-12">
         <div class="row">
-          <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
-            Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+          <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
+            Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total Approved amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
           </div>
-          <div class="col" style="display: inline-block; width:47%; text-align:right">
+          <!-- <div class="col" style="display: inline-block; width:47%; text-align:right; font-size:small">
             Home / Reimbursement Status
-          </div>
+          </div> -->
         </div>
         <section class="box" style="padding: 2%;">
           <form action="" method="POST">
@@ -132,47 +135,41 @@ $resultArr = pg_fetch_all($result);
             </div>
           </form>
           <?php echo '
-                    <table class="table">
-                        <thead style="font-size: 12px;">
-                            <tr>
-                            <th scope="col">Claim Number</th>
-                            <th scope="col">Registered On</th>    
-                            <th scope="col">ID/F Name</th>
-                                <th scope="col">Account Number</th>
+                        <table class="table">
+                            <thead style="font-size: 12px;">
+                                <tr>
+                                <th scope="col">Claim Number</th>
+                                <th scope="col">Registered On</th>    
+                                <th scope="col">ID/F Name</th>
                                 <th scope="col">Purpose</th>
                                 <th scope="col">Claimed Amount (&#8377;)</th>
-                        <th scope="col">Amount Transfered (&#8377;)</th>
-                        <th scope="col">Transaction Reference Number</th>
-                        <th scope="col">Transfered Date</th>
-                        <th scope="col">Claim Status</th>
-                        <th scope="col">Closed on</th>
-                        <th scope="col">Remarks</th>
-                            </tr>
-                        </thead>' ?>
+                                <th scope="col">Amount Transfered (&#8377;)</th>
+                                <th scope="col">Transaction Reference Number</th>
+                                <th scope="col">Transfered Date</th>
+                                <th scope="col">Claim Status</th>
+                                <th scope="col">Closed on</th>
+                                <th scope="col">Remarks</th>
+                                </tr>
+                            </thead>' ?>
           <?php if ($resultArr != null) {
             echo '<tbody style="font-size: 13px;">';
             foreach ($resultArr as $array) {
-              echo '
-                                <tr>' ?>
-
+              echo '<tr>' ?>
               <?php if ($array['uploadeddocuments'] != null) { ?>
                 <?php
                 echo '<td><span class="noticea"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['reimbid'] . '</a></span></td>'
                 ?>
-                <?php    } else { ?><?php
-                                    echo '<td>' . $array['reimbid'] . '</td>' ?>
+                <?php } else { ?><?php
+                                  echo '<td>' . $array['reimbid'] . '</td>' ?>
               <?php } ?>
               <?php
-              echo '
-
-                                <td>' . substr($array['timestamp'], 0, 10) . '</td>
-                                <td>' . $array['registrationid'] . '<br>' . strtok($array['name'], ' ') . '</td>   
-                                    <td>' . $array['accountnumber'] . '<br>' . $array['bankname'] . '/' . $array['ifsccode'] . '</td>
-                                    <td>' . $array['selectclaimheadfromthelistbelow'] . '</td>
-                                    <td>' . $array['totalbillamount'] . '</td>
-                                    <td>' . $array['approvedamount'] . '</td>
-                                    <td>' . $array['transactionid'] . '</td>
-                                    <td>' . $array['transfereddate'] . '</td>'
+              echo '<td>' . substr($array['timestamp'], 0, 10) . '</td>
+                        <td>' . $array['registrationid'] . '/' . strtok($array['name'], ' ') . '</td>   
+                        <td>' . $array['selectclaimheadfromthelistbelow'] . '</td>
+                        <td>' . $array['totalbillamount'] . '</td>
+                        <td>' . $array['approvedamount'] . '</td>
+                        <td>' . $array['transactionid'] . '</td>
+                        <td>' . $array['transfereddate'] . '</td>'
               ?>
               <?php if ($array['claimstatus'] == 'review' || $array['claimstatus'] == 'in progress' || $array['claimstatus'] == 'withdrawn') { ?>
                 <?php echo '<td> <p class="label label-warning">' . $array['claimstatus'] . '</p>' ?>
@@ -185,33 +182,27 @@ $resultArr = pg_fetch_all($result);
                 <?php echo '<td><p class="label label-info">' . $array['claimstatus'] . '</p>' ?>
               <?php } ?>
 
-
               <?php echo
               '</td><td>' . $array['closedon'] . '</td>
-                                    <td>' . $array['mediremarks'] . '</td>
-                                    </tr>';
+                  <td>' . $array['mediremarks'] . '</td>
+                  </tr>';
             }
           } else if ($status == null) {
             echo '<tr>
-                            <td colspan="5">Please select policy year.</td>
-                        </tr>';
+                                <td colspan="5">Please select policy year.</td>
+                            </tr>';
           } else {
             echo '<tr>
-                        <td colspan="5">No record found for' ?>&nbsp;<?php echo $status ?>
+                            <td colspan="5">No record found for' ?>&nbsp;<?php echo $status ?>
             <?php echo '</td>
-                    </tr>';
+                        </tr>';
           }
           echo '</tbody>
-                     </table>';
+                        </table>';
             ?>
-      </div>
-      <div class="col-md-12" style="text-align: right;">
-        <span class="noticet" style="line-height: 2;"><a href="reimbursement.php">Back to Reimbursement</a></span>
-      </div>
+        </section>
       </div>
     </section>
-    </div>
-  </section>
   </section>
 
 
