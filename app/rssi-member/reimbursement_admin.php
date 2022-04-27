@@ -70,8 +70,9 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
   <style>
     <?php include '../css/style.css'; ?>
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  
   <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
   <!------ Include the above in your HEAD tag ---------->
 
@@ -90,6 +91,10 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
         margin-left: 2%;
       }
     }
+    #btn {
+            border: none !important;
+        }
+    
   </style>
 
 </head>
@@ -144,11 +149,9 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                                 <th scope="col">Purpose</th>
                                 <th scope="col">Claimed Amount (&#8377;)</th>
                                 <th scope="col">Amount Transfered (&#8377;)</th>
-                                <th scope="col">Transaction Reference Number</th>
                                 <th scope="col">Transfered Date</th>
                                 <th scope="col">Claim Status</th>
-                                <th scope="col">Closed on</th>
-                                <th scope="col">Remarks</th>
+                                <th scope="col"></th>
                                 </tr>
                             </thead>' ?>
           <?php if ($resultArr != null) {
@@ -168,7 +171,6 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                         <td>' . $array['selectclaimheadfromthelistbelow'] . '</td>
                         <td>' . $array['totalbillamount'] . '</td>
                         <td>' . $array['approvedamount'] . '</td>
-                        <td>' . $array['transactionid'] . '</td>
                         <td>' . $array['transfereddate'] . '</td>'
               ?>
               <?php if ($array['claimstatus'] == 'review' || $array['claimstatus'] == 'in progress' || $array['claimstatus'] == 'withdrawn') { ?>
@@ -183,9 +185,11 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
               <?php } ?>
 
               <?php echo
-              '</td><td>' . $array['closedon'] . '</td>
-                  <td>' . $array['mediremarks'] . '</td>
-                  </tr>';
+
+
+'<td><a href="javascript:void(0)" onclick="showDetails(\'' . $array['reimbid'] . '\')"><button type="button" id="btn" class="btn btn-info btn-sm" style="outline: none"><i class="fa-solid fa-eye"></i>&nbsp;Details</button></a></td></tr>';
+              
+              
             }
           } else if ($status == null) {
             echo '<tr>
@@ -204,7 +208,6 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
       </div>
     </section>
   </section>
-
 
   <!-- Back top -->
   <script>
@@ -226,6 +229,125 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
     });
   </script>
   <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+
+
+  <!--------------- POP-UP BOX ------------
+-------------------------------------->
+  <style>
+    .modal {
+      display: none;
+      /* Hidden by default */
+      position: fixed;
+      /* Stay in place */
+      z-index: 1;
+      /* Sit on top */
+      padding-top: 100px;
+      /* Location of the box */
+      left: 0;
+      top: 0;
+      width: 100%;
+      /* Full width */
+      height: 100%;
+      /* Full height */
+      overflow: auto;
+      /* Enable scroll if needed */
+      background-color: rgb(0, 0, 0);
+      /* Fallback color */
+      background-color: rgba(0, 0, 0, 0.4);
+      /* Black w/ opacity */
+    }
+
+    /* Modal Content */
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 100vh;
+    }
+
+    @media (max-width:767px) {
+      .modal-content {
+        width: 50vh;
+      }
+    }
+
+    /* The Close Button */
+
+    .close {
+      color: #aaaaaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+  <div id="myModal" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <p style="font-size: small;">
+      Claim Number: <span class="reimbid"></span><br/>
+      Transaction Reference Number: <span class="transactionid"></span><br/><br>
+      Bank Account Details:<br><span class="bankname"></span><br/>Account Number: <span class="accountnumber"></span><br/>Account Holder Name: <span class="accountholdername"></span><br/>IFSC Code: <span class="ifsccode"></span><br>
+      <br>Remarks: <span class="remarks"></span><br>
+      <br>Closed on: <span class="closedon"></span></p>
+    </div>
+
+  </div>
+  <script>
+
+    
+    var data = <?php echo json_encode($resultArr) ?>
+
+    // Get the modal
+    var modal = document.getElementById("myModal");
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+    function showDetails(id) {
+      // console.log(modal)
+      // console.log(modal.getElementsByClassName("data"))
+      var mydata = undefined
+      data.forEach(item=>{
+        if (item["reimbid"]==id){
+          mydata = item;
+        }
+      })
+      
+      var keys = Object.keys(mydata)
+      keys.forEach(key=>{
+        var span = modal.getElementsByClassName(key)
+        if (span.length > 0)
+          span[0].innerHTML = mydata[key];
+      })
+      modal.style.display = "block";
+    }
+    // When the user clicks the button, open the modal 
+    
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+  </script>
+
+
+
 </body>
 
 </html>
