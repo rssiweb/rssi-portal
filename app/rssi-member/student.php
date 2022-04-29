@@ -402,6 +402,7 @@ $resultArr = pg_fetch_all($result);
     <form name="payment" action="" method="POST">
       <input type="hidden" class="form-control student_id" name="sname" type="text" Value="<span class=student_id></span>" readonly>
       <input type="hidden" class="form-control" name="sid" type="text" value="" readonly>
+      <input type="hidden" class="form-control" name="collectedby" type="text" value="<php? echo $user_check ?>" readonly>
       <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
       <select type="text" name="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
         <option value="" disabled selected hidden>Select Month</option>
