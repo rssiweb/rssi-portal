@@ -382,15 +382,15 @@ $resultArr = pg_fetch_all($result);
     <div class="modal-content">
       <span class="close">&times;</span>
 
-      <div style="display: inline; width:30%"><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1650380232/students/Shiva.jpg" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50" /></div>&nbsp;
+      <div style="display: inline; width:30%"><img id="profileimage" src="#" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50" /></div>&nbsp;
 
       <b>
         <div style="display: inline; width:50%"> <span class="studentname"></span>&nbsp;(<span class="student_id"></span>)
       </b>
     </div>
-
-    <p class="label label-success" style="display: inline !important;"><span class="filterstatus"></span></p>
+      <p id="status" class="label " style="display: inline !important;"><span class="filterstatus"></span></p>
     <br><br>
+    <p id="laddu"></p>
     <p style="font-size: small; line-height:2">
       Subject: <span class="nameofthesubjects"></span><br>
       Attendance: <span class="attd"></span><br>
@@ -400,9 +400,9 @@ $resultArr = pg_fetch_all($result);
       <p style="font-size: small;">Fee</p>
     </b>
     <form name="payment" action="" method="POST">
-      <input type="hidden" class="form-control student_id" name="sname" type="text" Value="<span class=student_id></span>" readonly>
-      <input type="hidden" class="form-control" name="sid" type="text" value="" readonly>
-      <input type="hidden" class="form-control" name="collectedby" type="text" value="<php? echo $user_check ?>" readonly>
+      <input type="hidden" class="form-control" name="sname" id="sname" type="text"  readonly>
+      <input type="hidden" class="form-control" name="sid" id="sid" type="text" value="" readonly>
+      <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" readonly>
       <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
       <select type="text" name="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
         <option value="" disabled selected hidden>Select Month</option>
@@ -419,7 +419,7 @@ $resultArr = pg_fetch_all($result);
         <option>November</option>
         <option>December</option>
       </select>
-      <input type="number" name="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required>
+      <input type="number" name="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
       <button type="submit" id="yes" class="btn btn-danger btn-sm" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
     </form><br>
     <script>
@@ -445,8 +445,9 @@ $resultArr = pg_fetch_all($result);
 
   </div>
   <script>
-    var data = <?php echo json_encode($resultArr) ?>
-
+    var data = <?php echo json_encode($resultArr) ?>;
+    var aid = <?php echo "'".$_SESSION['aid'] . "'" ?>;
+    
     // Get the modal
     var modal = document.getElementById("myModal");
     // Get the <span> element that closes the modal
@@ -469,7 +470,34 @@ $resultArr = pg_fetch_all($result);
           span[0].innerHTML = mydata[key];
       })
       modal.style.display = "block";
+     //class add 
+      var status = document.getElementById("status")
+
+      if(mydata["filterstatus"] === "Active"){
+        status.classList.add("label-success")
+        status.classList.remove("label-danger")
+      }
+      else{
+        status.classList.remove("label-success")
+        status.classList.add("label-danger")
+      }
+      //class add end
+
+      var laddu = document.getElementById("laddu")
+      laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
+
+      var profileimage = document.getElementById("profileimage")
+      profileimage.src=mydata["photourl"]
+
+      var sname = document.getElementById("sname")
+      sname.value=mydata["studentname"]
+      var sid = document.getElementById("sid")
+      sid.value=mydata["student_id"]
+      var collectedby = document.getElementById("collectedby")
+      collectedby.value=aid
+
     }
+    
     // When the user clicks the button, open the modal 
 
     // When the user clicks on <span> (x), close the modal
