@@ -388,9 +388,9 @@ $resultArr = pg_fetch_all($result);
         <div style="display: inline; width:50%"> <span class="studentname"></span>&nbsp;(<span class="student_id"></span>)
       </b>
     </div>
-      <p id="status" class="label " style="display: inline !important;"><span class="filterstatus"></span></p>
+    <p id="status" class="label " style="display: inline !important;"><span class="filterstatus"></span></p>
     <br><br>
-    <p id="laddu"></p>
+    <!-- <p id="laddu"></p> -->
     <p style="font-size: small; line-height:2">
       Subject: <span class="nameofthesubjects"></span><br>
       Attendance: <span class="attd"></span><br>
@@ -400,9 +400,9 @@ $resultArr = pg_fetch_all($result);
       <p style="font-size: small;">Fee</p>
     </b>
     <form name="payment" action="" method="POST">
-      <input type="hidden" class="form-control" name="sname" id="sname" type="text"  readonly>
-      <input type="hidden" class="form-control" name="sid" id="sid" type="text" value="" readonly>
-      <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" readonly>
+      <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
+      <input type="hidden" class="form-control" name="studentid" id="sid" type="text" value="">
+      <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
       <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
       <select type="text" name="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
         <option value="" disabled selected hidden>Select Month</option>
@@ -435,7 +435,7 @@ $resultArr = pg_fetch_all($result);
         e.preventDefault()
         fetch(scriptURL, {
             method: 'POST',
-            body: new FormData(form)
+            body: new FormData(document.forms['payment'])
           })
           .then(response => console.log('Success!', response))
           .catch(error => console.error('Error!', error.message))
@@ -446,8 +446,8 @@ $resultArr = pg_fetch_all($result);
   </div>
   <script>
     var data = <?php echo json_encode($resultArr) ?>;
-    var aid = <?php echo "'".$_SESSION['aid'] . "'" ?>;
-    
+    var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
+
     // Get the modal
     var modal = document.getElementById("myModal");
     // Get the <span> element that closes the modal
@@ -470,34 +470,37 @@ $resultArr = pg_fetch_all($result);
           span[0].innerHTML = mydata[key];
       })
       modal.style.display = "block";
-     //class add 
+      //class add 
       var status = document.getElementById("status")
 
-      if(mydata["filterstatus"] === "Active"){
+      if (mydata["filterstatus"] === "Active") {
         status.classList.add("label-success")
         status.classList.remove("label-danger")
-      }
-      else{
+      } else {
         status.classList.remove("label-success")
         status.classList.add("label-danger")
       }
       //class add end
 
-      var laddu = document.getElementById("laddu")
-      laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
+      //Print something start
+
+      // var laddu = document.getElementById("laddu")
+      // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
+      //Print something END
 
       var profileimage = document.getElementById("profileimage")
-      profileimage.src=mydata["photourl"]
+      profileimage.src = mydata["photourl"]
 
       var sname = document.getElementById("sname")
-      sname.value=mydata["studentname"]
+      sname.value = mydata["studentname"]
       var sid = document.getElementById("sid")
-      sid.value=mydata["student_id"]
+
+      sid.value = mydata["student_id"]
       var collectedby = document.getElementById("collectedby")
-      collectedby.value=aid
+      collectedby.value = aid
 
     }
-    
+
     // When the user clicks the button, open the modal 
 
     // When the user clicks on <span> (x), close the modal
