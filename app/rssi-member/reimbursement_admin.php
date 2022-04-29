@@ -239,7 +239,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
       /* Hidden by default */
       position: fixed;
       /* Stay in place */
-      z-index: 1;
+      z-index: 100;
       /* Sit on top */
       padding-top: 100px;
       /* Location of the box */
