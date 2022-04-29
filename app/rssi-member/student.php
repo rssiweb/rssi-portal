@@ -79,9 +79,9 @@ $resultArr = pg_fetch_all($result);
   <style>
     <?php include '../css/style.css'; ?>
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
   <!------ Include the above in your HEAD tag ---------->
 
   <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -151,6 +151,10 @@ $resultArr = pg_fetch_all($result);
 
     #cw4 {
       width: 10%;
+    }
+
+    #yes {
+      border: none !important;
     }
   </style>
 
@@ -254,12 +258,11 @@ $resultArr = pg_fetch_all($result);
           <tr>
           <th scope="col" id="cw">Photo</th>
           <th scope="col" id="cw1">Student Details</th>
-          <th scope="col" id="cw2">Class</th>
-          <th scope="col" id="cw3">Contact</th>
-          <th scope="col" id="cw4">Status</th>
-          <th scope="col" id="cw1">Subject</th>
+          <th scope="col">Class</th>
+          <th scope="col">Contact</th>
           <th scope="col">Medium</th>
           <th scope="col">Badge</th>
+          <th scope="col"></th>
         </tr>
         </thead>' ?>
           <?php if (sizeof($resultArr) > 0) { ?>
@@ -274,25 +277,21 @@ $resultArr = pg_fetch_all($result);
 
               <?php if ($role == 'Admin') { ?>
 
-              <?php echo $array['contact'] ?>
+                <?php echo $array['contact'] ?>
               <?php    } else { ?>
 
                 <?php echo "xxxxxx" . substr($array['contact'], 6) ?>
 
               <?php   } ?>
-              <?php echo $array['emailaddress'] . '</td><td>' . $array['profilestatus'] ?>
-
-              <?php if ($role == 'Admin') { ?>
-
-                <?php echo '<br><br>' . $array['remarks'] ?>
-              <?php    } else {
-              } ?>
-            <?php
-              echo '</td> 
-            <td>' . $array['nameofthesubjects'] . '<br><br>Attendance -&nbsp;' . $array['attd'] . '<br>' . $array['allocationdate'] . '</td>
+            <?php echo $array['emailaddress'] . '</td>
             <td>' . $array['medium'] . '/' . $array['nameoftheboard'] . '</td>
-            <td>' . $array['badge'] . '</td>
-            </tr>';
+            <td style="white-space: unset">' . $array['badge'] . '</td>
+
+            <td><a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')"><button type="button" id="btn" class="btn btn-info btn-sm" style="outline: none"><i class="fa-solid fa-eye"></i>&nbsp;Details</button></a>
+            
+            
+            </td>
+        </tr>';
             } ?>
           <?php
           } else if ($id == "" && $category == "") {
@@ -318,6 +317,172 @@ $resultArr = pg_fetch_all($result);
     </div>
   </section>
   </section>
+  <!--------------- POP-UP BOX ------------
+-------------------------------------->
+  <style>
+    .modal {
+      display: none;
+      /* Hidden by default */
+      position: fixed;
+      /* Stay in place */
+      z-index: 100;
+      /* Sit on top */
+      padding-top: 100px;
+      /* Location of the box */
+      left: 0;
+      top: 0;
+      width: 100%;
+      /* Full width */
+      height: 100%;
+      /* Full height */
+      overflow: auto;
+      /* Enable scroll if needed */
+      background-color: rgb(0, 0, 0);
+      /* Fallback color */
+      background-color: rgba(0, 0, 0, 0.4);
+      /* Black w/ opacity */
+    }
+
+    /* Modal Content */
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 100vh;
+    }
+
+    @media (max-width:767px) {
+      .modal-content {
+        width: 50vh;
+      }
+    }
+
+    /* The Close Button */
+
+    .close {
+      color: #aaaaaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+  <div id="myModal" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+      <span class="close">&times;</span>
+
+      <div style="display: inline; width:30%"><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1650380232/students/Shiva.jpg" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50" /></div>&nbsp;
+
+      <b>
+        <div style="display: inline; width:50%"> <span class="studentname"></span>&nbsp;(<span class="student_id"></span>)
+      </b>
+    </div>
+
+    <p class="label label-success" style="display: inline !important;"><span class="filterstatus"></span></p>
+    <br><br>
+    <p style="font-size: small; line-height:2">
+      Subject: <span class="nameofthesubjects"></span><br>
+      Attendance: <span class="attd"></span><br>
+      Remarks:&nbsp;<span class="remarks"></span><br />
+    </p>
+    <b>
+      <p style="font-size: small;">Fee</p>
+    </b>
+    <form name="payment" action="" method="POST">
+      <input type="hidden" class="form-control student_id" name="sname" type="text" Value="<span class=student_id></span>" readonly>
+      <input type="hidden" class="form-control" name="sid" type="text" value="" readonly>
+      <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+      <select type="text" name="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+        <option value="" disabled selected hidden>Select Month</option>
+        <option>January</option>
+        <option>February</option>
+        <option>March</option>
+        <option>April</option>
+        <option>May</option>
+        <option>June</option>
+        <option>July</option>
+        <option>August</option>
+        <option>September</option>
+        <option>October</option>
+        <option>November</option>
+        <option>December</option>
+      </select>
+      <input type="number" name="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required>
+      <button type="submit" id="yes" class="btn btn-danger btn-sm" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
+    </form><br>
+    <script>
+      $('#yes').click(function() {
+        $('#count2').val('Paid');
+      });
+    </script>
+    <script>
+      const scriptURL = 'https://script.google.com/macros/s/AKfycbyqKmKCoGgW7OdOhYjRrVKYDMof_Vex70xzWbkqP-Bixby7VVE/exec'
+      const form = document.forms['payment']
+
+      form.addEventListener('submit', e => {
+        e.preventDefault()
+        fetch(scriptURL, {
+            method: 'POST',
+            body: new FormData(form)
+          })
+          .then(response => console.log('Success!', response))
+          .catch(error => console.error('Error!', error.message))
+      })
+    </script>
+  </div>
+
+  </div>
+  <script>
+    var data = <?php echo json_encode($resultArr) ?>
+
+    // Get the modal
+    var modal = document.getElementById("myModal");
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    function showDetails(id) {
+      // console.log(modal)
+      // console.log(modal.getElementsByClassName("data"))
+      var mydata = undefined
+      data.forEach(item => {
+        if (item["student_id"] == id) {
+          mydata = item;
+        }
+      })
+
+      var keys = Object.keys(mydata)
+      keys.forEach(key => {
+        var span = modal.getElementsByClassName(key)
+        if (span.length > 0)
+          span[0].innerHTML = mydata[key];
+      })
+      modal.style.display = "block";
+    }
+    // When the user clicks the button, open the modal 
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+  </script>
 </body>
 
 </html>
