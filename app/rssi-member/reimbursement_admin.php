@@ -299,7 +299,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
       Claim Number: <span class="reimbid"></span><br/>
       Transaction Reference Number: <span class="transactionid"></span><br/><br>
       Bank Account Details:<br><span class="bankname"></span><br/>Account Number: <span class="accountnumber"></span><br/>Account Holder Name: <span class="accountholdername"></span><br/>IFSC Code: <span class="ifsccode"></span><br>
-      <br>Remarks: <span class="remarks"></span><br>
+      <br>Remarks: <span class="mediremarks"></span><br>
       <br>Closed on: <span class="closedon"></span></p>
     </div>
 
