@@ -399,12 +399,12 @@ $resultArr = pg_fetch_all($result);
     <b>
       <p style="font-size: small;">Fee</p>
     </b>
-    <form name="payment" action="" method="POST">
+    <form name="payment" action="" method="POST" onsubmit="myFunction()">
       <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
       <input type="hidden" class="form-control" name="studentid" id="sid" type="text" value="">
       <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
       <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
-      <select type="text" name="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+      <select name="month" id="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
         <option value="" disabled selected hidden>Select Month</option>
         <option>January</option>
         <option>February</option>
@@ -419,13 +419,18 @@ $resultArr = pg_fetch_all($result);
         <option>November</option>
         <option>December</option>
       </select>
-      <input type="number" name="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
+      <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
       <button type="submit" id="yes" class="btn btn-danger btn-sm" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
     </form><br>
     <script>
       $('#yes').click(function() {
         $('#count2').val('Paid');
       });
+    </script>
+    <script>
+      function myFunction() {
+        alert("Fee has been deposited successfully.");
+      }
     </script>
     <script>
       const scriptURL = 'https://script.google.com/macros/s/AKfycbyqKmKCoGgW7OdOhYjRrVKYDMof_Vex70xzWbkqP-Bixby7VVE/exec'
