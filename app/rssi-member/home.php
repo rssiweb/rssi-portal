@@ -92,7 +92,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Class Allotment</th>
                                 <th scope="col">Class URL</th>
@@ -102,9 +102,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         <tbody>
                             <?php if (@$filterstatus == 'Active') {
                             ?>
-                                <tr>
+                                <tr style="font-size: 13px;">
                                     <td style="line-height: 2;"><?php echo $class ?></td>
-                                    <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $gm ?>" target="_blank"><?php echo substr($gm, -12) ?></a></span></td>
+                                    <td style="line-height: 2;"><span class="noticea"><a href="<?php echo $gm ?>" target="_blank"><?php echo substr($gm, -12) ?></a></span></td>
                                     <td style="line-height: 2;"><?php echo $attd ?>
                                         <?php if (@$attd_pending != null) {
                                         ?>
@@ -122,7 +122,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         </tbody>
                     </table>
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Evaluation path</th>
                                 <th scope="col">Quick Link</th>

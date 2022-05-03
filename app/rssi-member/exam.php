@@ -101,7 +101,7 @@ include("member_data.php");
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Question paper Template</th>
@@ -110,7 +110,7 @@ include("member_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
 
 
@@ -128,16 +128,16 @@ include("member_data.php");
                                     The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br><br>
                                     <!--<img src="../images/qp.png" width=70%><br><br>-->
 
-                                    After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticet"><a href="mailto: info@rssi.in">info@rssi.in</a></span>.
+                                    After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticea"><a href="mailto: info@rssi.in">info@rssi.in</a></span>.
                                 </td>
 
-                                <td><span class="noticet">
+                                <td><span class="noticea">
                                         <a href="https://drive.google.com/uc?id=1RMjfSsFNPaDQixvNPsO2ee5xgraRzhVt&export=download" title="Download" target="_blank">State module</a><br>
                                         <a href="https://drive.google.com/uc?id=15yFD54mAJQzZN0l1sK3EuMRsCYSKR5ec&export=download" title="Download" target="_blank">National module</a><br></td>
 
-                                <td style="line-height: 2"><span class="noticet"><a href="https://drive.google.com/uc?id=15L-QSLklMZ1k3aWIdhPqsAeNhJL7ggFz&export=download" title="Download" target="_blank">Kalpurush.ttf</a></span></td>
+                                <td style="line-height: 2"><span class="noticea"><a href="https://drive.google.com/uc?id=15L-QSLklMZ1k3aWIdhPqsAeNhJL7ggFz&export=download" title="Download" target="_blank">Kalpurush.ttf</a></span></td>
 
-                                <td style="line-height: 2"><span class="noticet">
+                                <td style="line-height: 2"><span class="noticea">
                                         <a href="https://drive.google.com/file/d/1S5iE7baHY2i49EZgRSfVRLhnQGO7QGYZ/view" target="_blank">Question paper submission date</i></a><br>
 
                                         <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
@@ -153,7 +153,7 @@ include("member_data.php");
                         </tbody>
                     </table>
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Question paper&nbsp;<i class="far fa-question-circle" title="The submitted question paper will appear on the portal after 24 hours of submission."></i></th>
                                 <th scope="col">Evaluation Path</th>
@@ -162,11 +162,11 @@ include("member_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td id=cw1><span class="noticet"><a href="question.php">Question paper</i></a></span></td>
+                            <tr style="font-size: 13px;">
+                                <td id=cw1><span class="noticea"><a href="question.php">Question paper</i></a></span></td>
                                 <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
-                                <td><span class="noticet"><a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a></span></td>
-                                <td><span class="noticet"><a href="result.php" target="_blank">Results</a></span></td>
+                                <td><span class="noticea"><a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a></span></td>
+                                <td><span class="noticea"><a href="result.php" target="_blank">Results</a></span></td>
                             </tr>
                         </tbody>
                     </table>

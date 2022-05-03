@@ -118,7 +118,7 @@ $resultArr = pg_fetch_all($result);
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Opening Leave Balance (A)</th>
                                 <th scope="col">Leave Approved (B)</th>
@@ -128,7 +128,7 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td style="line-height: 2;">Sick Leave - <?php echo (int)$sl ?><br>Casual Leave - <?php echo (int)$cl ?></td>
                                 <td style="line-height: 2;"><?php echo $sltaken + $cltaken + $othtaken + $adjustedleave ?>
                                 </td>
@@ -139,10 +139,10 @@ $resultArr = pg_fetch_all($result);
                                 <td style="line-height: 2;">
                                     <?php if ((@$slbal > 0 || @$clbal > 0) && @$filterstatus == 'Active') {
                                     ?>
-                                        <span class="noticet"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span>
+                                        <span class="noticea"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span>
                                     <?php
                                     } else {?>
-                                        <span class="noticet"><a href="//" onclick="return false;">Leave Request Form</a></span>
+                                        <span class="noticea"><a href="//" onclick="return false;">Leave Request Form</a></span>
                                         <?php }
                                     ?>
 
@@ -193,7 +193,7 @@ $resultArr = pg_fetch_all($result);
 
                     <?php echo '
                        <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Leave ID</th>
                                 <th scope="col">Applied on</th>
@@ -210,7 +210,7 @@ $resultArr = pg_fetch_all($result);
                             <?php
                             echo '<tbody>';
                             foreach ($resultArr as $array) {
-                              echo '<tr>
+                              echo '<tr style="font-size: 13px;">
                                 <td>' . $array['leaveid'] . '</td>
                                 <td>' . $array['timestamp'] . '</td>
                                 <td>' . $array['from'] . '</td>

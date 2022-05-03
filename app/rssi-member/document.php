@@ -62,7 +62,7 @@ include("member_data.php");
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Official Letter</th>
                                 <th scope="col">Payslip/Reimbursement</th>
@@ -72,11 +72,11 @@ include("member_data.php");
                         <tbody>
                             <tr>
                               
-                                <td style="line-height: 2;"><span class="noticet"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span>
+                                <td style="line-height: 2;"><span class="noticea"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span>
                                 <?php echo $officialdoc ?>
                                 </td>
-                                <td style="line-height: 2;"><span class="noticet"><a href="payslip.php" target="_self">Payslip</a></span></td>
-                                <td style="line-height: 2;"><span class="noticet"><a href="idcard.php" target="_blank">RSSI Identity Card</a><br>
+                                <td style="line-height: 2;"><span class="noticea"><a href="payslip.php" target="_self">Payslip</a></span></td>
+                                <td style="line-height: 2;"><span class="noticea"><a href="idcard.php" target="_blank">RSSI Identity Card</a><br>
                                 <a href="myasset.php" target="_self">My Asset</a>
                             </span></td>
                             </tr>

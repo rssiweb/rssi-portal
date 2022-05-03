@@ -3,7 +3,7 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
-if(! isLoggedIn("aid")){
+if (!isLoggedIn("aid")) {
     header("Location: index.php");
 }
 $user_check = $_SESSION['aid'];
@@ -69,10 +69,10 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <section class="box" style="padding: 2%;">
-                <b><span class="underline">Current</span></b>
+                    <b><span class="underline">Current</span></b>
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Allocation Date</th>
                                 <th scope="col">Max. Class<br>(Allocation start date to today)</th>
@@ -82,7 +82,7 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td style="line-height: 2;"><?php echo $allocationdate ?></td>
                                 <td style="line-height: 2;"><?php echo $maxclass ?></td>
                                 <td style="line-height: 2;"><?php echo $classtaken ?>
@@ -100,7 +100,7 @@ $resultArr = pg_fetch_all($result);
                     <hr>
                     <b><span class="underline">History</span></b>
                     <?php echo ' <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Allocation Date</th>
                                 <th scope="col">Max. Class<br>(Allocation start date to end date)</th>
@@ -108,18 +108,24 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>
                         <tbody>';
-                        foreach ($resultArr as $array) {
-                            echo '
-                            <tr>
+                    foreach ($resultArr as $array) {
+                        echo '
+                            <tr style="font-size: 13px;">
                             <td style="line-height: 2;">' . $array['hallocationdate'] . '</td>
                             <td style="line-height: 2;">' . $array['hmaxclass'] . '</td>
-                            <td style="line-height: 2;">' . $array['hclasstaken'] . '&nbsp;('.number_format($array['hclasstaken'] / $array['hmaxclass']*'100','2','.','').'%)</td>
-                            </tr>';
+                            <td style="line-height: 2;">' . $array['hclasstaken'] ?>
+                        <?php if ($array['hmaxclass'] != "Unallocated") { ?>
+                            <?php echo   '&nbsp;(' . number_format($array['hclasstaken'] / $array['hmaxclass'] * '100', '2', '.', '') . '%)' ?>
+                            <?php
+                        } else {
                         }
-                        echo '</tbody>
+                            ?><?php echo '</td>
+                            </tr>';
+                                    }
+                                    echo '</tbody>
                                 </table>';
-                        ?>
-                        </section>
+                                        ?>
+                </section>
             </div>
 
             <div class="clearfix"></div>

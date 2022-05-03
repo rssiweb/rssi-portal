@@ -110,8 +110,8 @@ $rlastupdatedon=$row[27]
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="line-height: 2;"><span class="noticet"><a href="javascript:void(0)" target="_self">RSSI reimbursement policy</a></span></td>
-                                <td style="line-height: 2;"><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSeJvl1DPzvAHpEfGLdPhnjK1ojTcRNnLR_w1WCCswDxJTZxlg/viewform?usp=pp_url&entry.1268051974=<?php echo @$fullname ?>&entry.288127209=<?php echo @$associatenumber ?>&entry.995125243=<?php echo @$phone ?>&entry.605633398=<?php echo @$email ?>&entry.1867197840=<?php echo @$bankname ?>&entry.1288695359=<?php echo @$accountnumber ?>&entry.1236133419=<?php echo @$accountholdername ?>&entry.1547933107=<?php echo @$ifsccode ?>" target="_blank">Claim form</a></span></td>
+                                <td style="line-height: 2;"><span class="noticea"><a href="javascript:void(0)" target="_self">RSSI reimbursement policy</a></span></td>
+                                <td style="line-height: 2;"><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSeJvl1DPzvAHpEfGLdPhnjK1ojTcRNnLR_w1WCCswDxJTZxlg/viewform?usp=pp_url&entry.1268051974=<?php echo @$fullname ?>&entry.288127209=<?php echo @$associatenumber ?>&entry.995125243=<?php echo @$phone ?>&entry.605633398=<?php echo @$email ?>&entry.1867197840=<?php echo @$bankname ?>&entry.1288695359=<?php echo @$accountnumber ?>&entry.1236133419=<?php echo @$accountholdername ?>&entry.1547933107=<?php echo @$ifsccode ?>" target="_blank">Claim form</a></span></td>
                             </tr>
                         </tbody>
                     </table>

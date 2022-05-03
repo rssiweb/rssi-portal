@@ -91,7 +91,7 @@ include("member_data.php");
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Associate Details</th>
                                 <th scope="col">Date of Join</th>
@@ -99,8 +99,7 @@ include("member_data.php");
                                 <th scope="col">Badge</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
+                        <tbody><tr style="font-size: 13px;">
 
                                 <td id="cw1" style="line-height: 1.7;"><b><?php echo $fullname ?></b><br>
                                     Associate ID - <b><?php echo $associatenumber ?></b><br>
@@ -114,15 +113,14 @@ include("member_data.php");
                         </tbody>
                     </table>
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Date of Birth</th>
                                 <th scope="col">National Identifier</th>
                                 <th scope="col">Last 4 digits of Identifier</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
+                        <tbody><tr style="font-size: 13px;">
                                 <td><?php echo $dateofbirth ?></td>
                                 <td>
                                 <iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="<?php echo $iddoc ?>" width="300px" height="200px" /></iframe>
@@ -133,7 +131,7 @@ include("member_data.php");
                     </table>
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Application Number</th>
                                 <th scope="col">Designation</th>
@@ -141,8 +139,7 @@ include("member_data.php");
                                 <th scope="col">Deputed Branch</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
+                        <tbody><tr style="font-size: 13px;">
                                 <td><?php echo $applicationnumber ?></td>
                                 <td id=cw1><?php echo substr($position, 0, strrpos($position, "-")) ?></td>
                                 <td><?php echo $basebranch ?></td>
@@ -154,15 +151,14 @@ include("member_data.php");
 
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Current Address</th>
                                 <th scope="col">Permanent Address</th>
                                 <th scope="col">Contact/Email Address</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
+                        <tbody><tr style="font-size: 13px;">
                                 <td><?php echo $currentaddress ?></td>
                                 <td><?php echo $permanentaddress ?></td>
                                 <td style="line-height: 1.5;"><?php echo $phone ?><br><?php echo $email ?></td>
@@ -170,7 +166,7 @@ include("member_data.php");
                         </tbody>
                     </table>
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Language Details</th>
                                 <th scope="col">Educational qualifications</th>
@@ -179,8 +175,7 @@ include("member_data.php");
                                 <th scope="col">Account Approved by</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
+                        <tbody><tr style="font-size: 13px;">
                                 <td style="line-height: 2;">English - <?php echo $languagedetailsenglish ?><br>Hindi - <?php echo $languagedetailshindi ?></td>
                                 <td><?php echo $eduq ?></td>
                                 <td><?php echo $mjorsub ?></td>
