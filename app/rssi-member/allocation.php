@@ -82,7 +82,7 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
                                 <td style="line-height: 2;"><?php echo $allocationdate ?></td>
                                 <td style="line-height: 2;"><?php echo $maxclass ?></td>
                                 <td style="line-height: 2;"><?php echo $classtaken ?>
@@ -110,7 +110,7 @@ $resultArr = pg_fetch_all($result);
                         <tbody>';
                     foreach ($resultArr as $array) {
                         echo '
-                            <tr style="font-size: 13px;">
+                            <tr>
                             <td style="line-height: 2;">' . $array['hallocationdate'] . '</td>
                             <td style="line-height: 2;">' . $array['hmaxclass'] . '</td>
                             <td style="line-height: 2;">' . $array['hclasstaken'] ?>

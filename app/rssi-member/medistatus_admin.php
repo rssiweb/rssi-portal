@@ -150,7 +150,7 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>' ?>
           <?php if ($resultArr != null) {
-            echo '<tbody style="font-size: 13px;">';
+            echo '<tbody>';
             foreach ($resultArr as $array) {
               echo '
                                 <tr>' ?>

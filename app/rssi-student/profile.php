@@ -70,7 +70,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
 
                                 <td style="line-height: 1.7;"><b><?php echo $studentname ?></b><br>Student ID - <b><?php echo $student_id ?></b>, Roll No - <b><?php echo $roll_number ?></b><br>
                                 <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?> Years)</span></td>
@@ -92,7 +92,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
                                 <td><?php echo $doa ?></td>
                                 <td><?php echo $preferredbranch ?></td>
                                 <td><?php echo $class ?>/<?php echo $category ?></td>
@@ -115,7 +115,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
                                 <td><?php echo $guardiansname ?> - <?php echo $relationwithstudent ?></td>
                                 <td><?php echo $guardianaadhar ?></td>
                                 <td><?php echo $postaladdress ?></td>
@@ -137,7 +137,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
                                 <td><?php echo $schooladmissionrequired ?></td>
                                 <td><?php echo $nameofthesubjects ?></td>
                                 <td><?php echo $nameoftheschool ?></td>

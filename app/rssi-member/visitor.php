@@ -118,7 +118,7 @@ $resultArr = pg_fetch_all($result);
                         </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
                         <?php
-                        echo '<tbody style="font-size: 13px;">';
+                        echo '<tbody>';
                         foreach ($resultArr as $array) {
                             echo '<tr><td>' ?>
 

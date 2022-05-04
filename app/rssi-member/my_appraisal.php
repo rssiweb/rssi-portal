@@ -205,7 +205,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         <?php if (@$appraisaltype > 0 and @$flag != "R") {
                         ?>
                             <tbody>
-                                <tr style="font-size: 13px;">
+                                <tr>
 
                                     <td id="cw1"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br><br>
                                     <span><?php echo $role ?>

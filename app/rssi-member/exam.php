@@ -110,7 +110,7 @@ include("member_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
                                 <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
 
 
@@ -162,7 +162,7 @@ include("member_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
                                 <td id=cw1><span class="noticea"><a href="question.php">Question paper</i></a></span></td>
                                 <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
                                 <td><span class="noticea"><a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a></span></td>

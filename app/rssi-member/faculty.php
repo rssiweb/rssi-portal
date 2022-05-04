@@ -350,7 +350,7 @@ $resultArr = pg_fetch_all($result);
         </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
                         <?php
-                        echo '<tbody style="font-size: 13px;">';
+                        echo '<tbody>';
                         foreach ($resultArr as $array) {
                             echo '<tr>
             <td><div class="icon-container"><img src="' . $array['photo'] . '" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>'

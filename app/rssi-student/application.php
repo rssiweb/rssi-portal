@@ -68,7 +68,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
                                 <td style="line-height: 2;"><?php echo $mydocument ?></td>
                             </tr>
                         </tbody>

@@ -102,7 +102,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         <tbody>
                             <?php if (@$filterstatus == 'Active') {
                             ?>
-                                <tr style="font-size: 13px;">
+                                <tr>
                                     <td style="line-height: 2;"><?php echo $class ?></td>
                                     <td style="line-height: 2;"><span class="noticea"><a href="<?php echo $gm ?>" target="_blank"><?php echo substr($gm, -12) ?></a></span></td>
                                     <td style="line-height: 2;"><?php echo $attd ?>

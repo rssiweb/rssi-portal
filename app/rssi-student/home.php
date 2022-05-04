@@ -117,7 +117,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
                                 <td style="line-height: 2;"><?php echo $classurl ?></td>
                                 <td style="line-height: 2;"><?php echo $lastlogin ?></td>
                                 <td style="line-height: 2;"><?php echo $fees ?></td>

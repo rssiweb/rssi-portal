@@ -128,7 +128,7 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style="font-size: 13px;">
+                            <tr>
                                 <td style="line-height: 2;">Sick Leave - <?php echo (int)$sl ?><br>Casual Leave - <?php echo (int)$cl ?></td>
                                 <td style="line-height: 2;"><?php echo $sltaken + $cltaken + $othtaken + $adjustedleave ?>
                                 </td>
@@ -210,7 +210,7 @@ $resultArr = pg_fetch_all($result);
                             <?php
                             echo '<tbody>';
                             foreach ($resultArr as $array) {
-                              echo '<tr style="font-size: 13px;">
+                              echo '<tr>
                                 <td>' . $array['leaveid'] . '</td>
                                 <td>' . $array['timestamp'] . '</td>
                                 <td>' . $array['from'] . '</td>

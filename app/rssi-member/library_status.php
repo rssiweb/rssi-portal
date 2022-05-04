@@ -135,7 +135,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody style="font-size: 13px;">';
+                        <tbody>';
                     foreach ($resultArr as $array) {
                         echo '
                             <tr>

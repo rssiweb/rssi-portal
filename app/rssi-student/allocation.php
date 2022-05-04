@@ -71,7 +71,7 @@ include("student_data.php");
               </tr>
             </thead>
             <tbody>
-              <tr style="font-size: 13px;">
+              <tr>
                 <td><?php echo $allocationdate ?></td>
                 <td><?php echo $maxclass ?></td>
                 <td><?php echo $attd ?></td>

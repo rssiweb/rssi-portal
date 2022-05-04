@@ -155,7 +155,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                                 </tr>
                             </thead>' ?>
           <?php if ($resultArr != null) {
-            echo '<tbody style="font-size: 13px;">';
+            echo '<tbody>';
             foreach ($resultArr as $array) {
               echo '<tr>' ?>
               <?php if ($array['uploadeddocuments'] != null) { ?>
