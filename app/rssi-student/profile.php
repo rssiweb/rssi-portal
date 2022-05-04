@@ -62,7 +62,7 @@ include("student_data.php");
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Student Details</th>
                                 <th scope="col">Profile Status</th>
@@ -70,7 +70,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
 
                                 <td style="line-height: 1.7;"><b><?php echo $studentname ?></b><br>Student ID - <b><?php echo $student_id ?></b>, Roll No - <b><?php echo $roll_number ?></b><br>
                                 <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?> Years)</span></td>
@@ -81,7 +81,7 @@ include("student_data.php");
                     </table>
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Admission Date</th>
                                 <th scope="col">Preferred Branch of RSSI</th>
@@ -92,7 +92,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td><?php echo $doa ?></td>
                                 <td><?php echo $preferredbranch ?></td>
                                 <td><?php echo $class ?>/<?php echo $category ?></td>
@@ -104,7 +104,7 @@ include("student_data.php");
                     </table>
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Guardian's Name</th>
                                 <th scope="col">Guardian Aadhaar</th>
@@ -115,7 +115,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td><?php echo $guardiansname ?> - <?php echo $relationwithstudent ?></td>
                                 <td><?php echo $guardianaadhar ?></td>
                                 <td><?php echo $postaladdress ?></td>
@@ -126,7 +126,7 @@ include("student_data.php");
                         </tbody>
                     </table>
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">School Admission Required</th>
                                 <th scope="col">Name Of The Subjects</th>
@@ -137,13 +137,13 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td><?php echo $schooladmissionrequired ?></td>
                                 <td><?php echo $nameofthesubjects ?></td>
                                 <td><?php echo $nameoftheschool ?></td>
                                 <td><?php echo $nameoftheboard ?></td>
                                 <td><?php echo $medium ?></td>
-                                <td><span class="noticet"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span></td>
+                                <td><span class="noticea"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span></td>
                             </tr>
                         </tbody>
                     </table>

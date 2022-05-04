@@ -62,7 +62,7 @@ include("student_data.php");
                 <section class="box" style="padding: 2%;">
 
           <table class="table">
-            <thead>
+            <thead style="font-size: 12px;">
               <tr>
                 <th scope="col">Academic session</th>
                 <th scope="col">Class allotted<br>(Academic session start date to today)</th>
@@ -71,7 +71,7 @@ include("student_data.php");
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr style="font-size: 13px;">
                 <td><?php echo $allocationdate ?></td>
                 <td><?php echo $maxclass ?></td>
                 <td><?php echo $attd ?></td>

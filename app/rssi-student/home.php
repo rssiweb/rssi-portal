@@ -109,7 +109,7 @@ include("student_data.php");
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Class URL</th>
                                 <th scope="col">Quick link</th>
@@ -117,7 +117,7 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td style="line-height: 2;"><?php echo $classurl ?></td>
                                 <td style="line-height: 2;"><?php echo $lastlogin ?></td>
                                 <td style="line-height: 2;"><?php echo $fees ?></td>

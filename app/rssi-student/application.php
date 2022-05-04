@@ -62,13 +62,13 @@ include("student_data.php");
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Applications</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td style="line-height: 2;"><?php echo $mydocument ?></td>
                             </tr>
                         </tbody>

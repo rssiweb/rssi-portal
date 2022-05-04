@@ -88,7 +88,7 @@ $resultArr = pg_fetch_all($result);
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Leaves Approved</th>
                                 <th scope="col">Apply Leave</th>
@@ -96,9 +96,9 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php echo $sltaken ?> <br>Other Leave - <?php echo $othtaken ?></td>
-                                <td><span class="noticet"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span></td>
+                                <td><span class="noticea"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span></td>
                                 <td></td>
                             </tr>
                         </tbody>
@@ -146,7 +146,7 @@ $resultArr = pg_fetch_all($result);
 
                     <?php echo '
                        <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Leave ID</th>
                                 <th scope="col">Applied on</th>
@@ -163,7 +163,7 @@ $resultArr = pg_fetch_all($result);
                             <?php
                             echo '<tbody>';
                             foreach ($resultArr as $array) {
-                              echo '<tr>
+                              echo '<tr style="font-size: 13px;">
                                 <td>' . $array['leaveid'] . '</td>
                                 <td>' . $array['timestamp'] . '</td>
                                 <td>' . $array['from'] . '</td>

@@ -99,14 +99,14 @@ include("student_data.php");
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Info</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                                 <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
                                 
                                 <table style="border:1px solid black; width:80%">
@@ -123,7 +123,7 @@ include("student_data.php");
 
                                     The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br></td>
 
-                                <td style="line-height: 2"><span class="noticet">
+                                <td style="line-height: 2"><span class="noticea">
                                         <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
                                         <a href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Guidelines for Student</i></a>
                                     </span>
@@ -134,7 +134,7 @@ include("student_data.php");
 
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Answersheet (Cover page)</th>
                                 <th scope="col">Question paper</th>
@@ -142,13 +142,13 @@ include("student_data.php");
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <!--<td><span class="noticet"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>-->
-                                <td><span class="noticet">
+                            <tr style="font-size: 13px;">
+                                <!--<td><span class="noticea"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>-->
+                                <td><span class="noticea">
                                     <a href="https://drive.google.com/file/d/1B0sONvc9bb5igUOo1gVO_INfIod9sfIW/view" title="Download" target="_blank">State module</a><br>
                                     <a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" title="Download" target="_blank">National module</a><br></td>
-                                <td><span class="noticet"><a href="question.php">Question paper</i></a></span></td>
-                                <td><span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
+                                <td><span class="noticea"><a href="question.php">Question paper</i></a></span></td>
+                                <td><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
                             </tr>
                         </tbody>
                     </table>

@@ -62,17 +62,17 @@ include("student_data.php");
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead>
+                        <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Official Document</th>
                                 <th scope="col">Miscellaneous</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr style="font-size: 13px;">
                               
                             <td style="line-height: 2;"></td>    
-                            <td style="line-height: 2;"><span class="noticet"><a href="idcard.php" target="_blank">	RSSI Identity Card</a></span></td>
+                            <td style="line-height: 2;"><span class="noticea"><a href="idcard.php" target="_blank">	RSSI Identity Card</a></span></td>
                                 
                             </tr>
                         </tbody>
