@@ -32,6 +32,7 @@ include("database.php");
 
 if ($id == null && $status == 'ALL') {
   $result = pg_query($con, "SELECT * FROM claim order by id desc");
+  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim");
 } else if ($id == null && $status != 'ALL') {
   $result = pg_query($con, "SELECT * FROM claim WHERE year='$status' order by id desc");
   $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
