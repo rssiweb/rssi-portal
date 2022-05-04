@@ -117,7 +117,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                 <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
                     Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total Approved amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
                 </div>
-               <!-- <div class=col style="text-align: right;">
+                <!-- <div class=col style="text-align: right;">
                     <span class="noticet" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span><br>
                     Policy year: <?php echo $id ?>
                 </div>-->
@@ -166,10 +166,15 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                                     <td>' . substr($array['timestamp'], 0, 10) . '</td>
                                     <td><span><a href="' . $array['uploadeddocuments'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
                                     <td>' . $array['selectclaimheadfromthelistbelow'] . '</td>
-                                    <td>' . $array['totalbillamount'] . '</td>
-                                    <td>' . $array['approvedamount'] . '</td>
-                                    <td>' . $array['transfereddate'] . '</td>'
-                    ?>
+                                    <td>' . $array['totalbillamount'] . '</td>' ?>
+
+                            <?php if ($array['claimstatus'] ==null) { ?>
+                                <?php echo '<td></td>' ?> <?php } else { ?>
+
+                                <?php echo '<td>' . $array['approvedamount'] . '</td>' ?>
+                            <?php  } ?>
+                            <?php echo '<td>' . $array['transfereddate'] . '</td>'
+                            ?>
                             <?php if ($array['claimstatus'] == 'review' || $array['claimstatus'] == 'in progress' || $array['claimstatus'] == 'withdrawn') { ?>
                                 <?php echo '<td> <p class="label label-warning">' . $array['claimstatus'] . '</p>' ?>
 

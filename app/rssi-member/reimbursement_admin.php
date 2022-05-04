@@ -72,7 +72,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
   </style>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-  
+
   <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
   <!------ Include the above in your HEAD tag ---------->
 
@@ -91,10 +91,10 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
         margin-left: 2%;
       }
     }
+
     #btn {
-            border: none !important;
-        }
-    
+      border: none !important;
+    }
   </style>
 
 </head>
@@ -169,8 +169,14 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
               echo '<td>' . substr($array['timestamp'], 0, 10) . '</td>
                         <td>' . $array['registrationid'] . '/' . strtok($array['name'], ' ') . '</td>   
                         <td>' . $array['selectclaimheadfromthelistbelow'] . '</td>
-                        <td>' . $array['totalbillamount'] . '</td>
-                        <td>' . $array['approvedamount'] . '</td>
+                        <td>' . $array['totalbillamount'] . '</td>' ?>
+
+              <?php if ($array['claimstatus'] == null) { ?>
+                <?php echo '<td></td>' ?> <?php } else { ?>
+
+                <?php echo '<td>' . $array['approvedamount'] . '</td>' ?>
+              <?php  } ?>
+              <?php echo '
                         <td>' . $array['transfereddate'] . '</td>'
               ?>
               <?php if ($array['claimstatus'] == 'review' || $array['claimstatus'] == 'in progress' || $array['claimstatus'] == 'withdrawn') { ?>
@@ -187,9 +193,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
               <?php echo
 
 
-'<td><a href="javascript:void(0)" onclick="showDetails(\'' . $array['reimbid'] . '\')"><button type="button" id="btn" class="btn btn-info btn-sm" style="outline: none"><i class="fa-solid fa-eye"></i>&nbsp;Details</button></a></td></tr>';
-              
-              
+              '<td><a href="javascript:void(0)" onclick="showDetails(\'' . $array['reimbid'] . '\')"><button type="button" id="btn" class="btn btn-info btn-sm" style="outline: none"><i class="fa-solid fa-eye"></i>&nbsp;Details</button></a></td></tr>';
             }
           } else if ($status == null) {
             echo '<tr>
@@ -296,35 +300,35 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
     <div class="modal-content">
       <span class="close">&times;</span>
       <p style="font-size: small;">
-      Claim Number: <span class="reimbid"></span><br/>
-      Transaction Reference Number: <span class="transactionid"></span><br/><br>
-      Bank Account Details:<br><span class="bankname"></span><br/>Account Number: <span class="accountnumber"></span><br/>Account Holder Name: <span class="accountholdername"></span><br/>IFSC Code: <span class="ifsccode"></span><br>
-      <br>Remarks: <span class="mediremarks"></span><br>
-      <br>Closed on: <span class="closedon"></span></p>
+        Claim Number: <span class="reimbid"></span><br />
+        Transaction Reference Number: <span class="transactionid"></span><br /><br>
+        Bank Account Details:<br><span class="bankname"></span><br />Account Number: <span class="accountnumber"></span><br />Account Holder Name: <span class="accountholdername"></span><br />IFSC Code: <span class="ifsccode"></span><br>
+        <br>Remarks: <span class="mediremarks"></span><br>
+        <br>Closed on: <span class="closedon"></span>
+      </p>
     </div>
 
   </div>
   <script>
-
-    
     var data = <?php echo json_encode($resultArr) ?>
 
     // Get the modal
     var modal = document.getElementById("myModal");
     // Get the <span> element that closes the modal
     var span = document.getElementsByClassName("close")[0];
+
     function showDetails(id) {
       // console.log(modal)
       // console.log(modal.getElementsByClassName("data"))
       var mydata = undefined
-      data.forEach(item=>{
-        if (item["reimbid"]==id){
+      data.forEach(item => {
+        if (item["reimbid"] == id) {
           mydata = item;
         }
       })
-      
+
       var keys = Object.keys(mydata)
-      keys.forEach(key=>{
+      keys.forEach(key => {
         var span = modal.getElementsByClassName(key)
         if (span.length > 0)
           span[0].innerHTML = mydata[key];
@@ -332,7 +336,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
       modal.style.display = "block";
     }
     // When the user clicks the button, open the modal 
-    
+
     // When the user clicks on <span> (x), close the modal
     span.onclick = function() {
       modal.style.display = "none";
