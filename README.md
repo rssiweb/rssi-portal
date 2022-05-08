@@ -96,7 +96,18 @@ SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND
 
 ***** TO CHECK OFFLINE
 docker-compose up --build -d
+git stash
 http://web.local/generate-hash-for/2311 -> D:\services\.env
 http://rssi.in/generate-hash-for/2311 -> digital ocean
 
 git pull --rebase origin master
+
+CREATE SEQUENCE public.fees_feesid_seq
+    INCREMENT 1
+    START 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    CACHE 1;
+	
+	ALTER SEQUENCE public.fees_feesid_seq
+    OWNER TO web;

@@ -177,6 +177,7 @@ $resultArr = pg_fetch_all($result);
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
+                <input type="hidden" name="form-type" type="text" value="search">
                 <select name="get_module" class="form-control" style="width:max-content; display:inline-block" required>
                   <?php if ($id == null) { ?>
                     <option value="" disabled selected hidden>Select Module</option>
@@ -399,11 +400,12 @@ $resultArr = pg_fetch_all($result);
     <b>
       <p style="font-size: small;">Fee</p>
     </b>
-    <form name="payment" action="" method="POST" onsubmit="myFunction()">
+    <form name="payment" action="#" method="POST" onsubmit="myFunction()">
+      <input type="hidden" name="form-type" type="text" value="payment">
       <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
-      <input type="hidden" class="form-control" name="studentid" id="sid" type="text" value="">
+      <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
       <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
-      <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+      <!-- <input type="hidden" type="text" name="status2" id="count2" value="" readonly required> -->
       <select name="month" id="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
         <option value="" disabled selected hidden>Select Month</option>
         <option>January</option>
@@ -422,18 +424,18 @@ $resultArr = pg_fetch_all($result);
       <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
       <button type="submit" id="yes" class="btn btn-danger btn-sm" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
     </form><br>
-    <script>
+    <!-- <script>
       $('#yes').click(function() {
         $('#count2').val('Paid');
       });
-    </script>
+    </script> -->
     <script>
       function myFunction() {
         alert("Fee has been deposited successfully.");
       }
     </script>
     <script>
-      const scriptURL = 'https://script.google.com/macros/s/AKfycbyqKmKCoGgW7OdOhYjRrVKYDMof_Vex70xzWbkqP-Bixby7VVE/exec'
+      const scriptURL = 'payment-api.php'
       const form = document.forms['payment']
 
       form.addEventListener('submit', e => {
@@ -446,6 +448,8 @@ $resultArr = pg_fetch_all($result);
           .catch(error => console.error('Error!', error.message))
       })
     </script>
+
+    
   </div>
 
   </div>
@@ -498,9 +502,9 @@ $resultArr = pg_fetch_all($result);
 
       var sname = document.getElementById("sname")
       sname.value = mydata["studentname"]
-      var sid = document.getElementById("sid")
+      var studentid = document.getElementById("studentid")
 
-      sid.value = mydata["student_id"]
+      studentid.value = mydata["student_id"]
       var collectedby = document.getElementById("collectedby")
       collectedby.value = aid
 
