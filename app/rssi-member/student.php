@@ -297,17 +297,22 @@ $resultArr = pg_fetch_all($result);
             <td><img src="' . $array['photourl'] . '" width=50px/></td>
             <td>Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
-            <td>' . $array['class'] . '/' . $array['category'] . ' </td><td style="white-space: unset;">' ?>
+            <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] ?>
 
-              <?php if ($role == 'Admin') { ?>
+              <?php if ($array['maxmonth'] != null) { ?>
 
-                <?php echo $array['contact'] ?>
-              <?php    } else { ?>
+                <?php echo '&nbsp;&nbsp;<p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;' . $array['maxmonth'] . '</p></td><td style="white-space: unset;">' ?>
+                <?php    } else { ?><?php echo '</td><td style="white-space: unset;">' ?><?php   } ?>
 
-                <?php echo "xxxxxx" . substr($array['contact'], 6) ?>
+                <?php if ($role == 'Admin') { ?>
 
-              <?php   } ?>
-            <?php echo $array['emailaddress'] . '</td>
+                  <?php echo $array['contact'] ?>
+                <?php    } else { ?>
+
+                  <?php echo "xxxxxx" . substr($array['contact'], 6) ?>
+
+                <?php   } ?>
+              <?php echo $array['emailaddress'] . '</td>
             <td>' . $array['medium'] . '/' . $array['nameoftheboard'] . '</td>
             <td style="white-space: unset">' . $array['badge'] . '</td>
 
@@ -317,23 +322,23 @@ $resultArr = pg_fetch_all($result);
             </td>
         </tr>';
             } ?>
-          <?php
+            <?php
           } else if ($id == "" && $category == "") {
-          ?>
-            <tr>
-              <td colspan="5">Please select Filter value.</td>
-            </tr>
-          <?php
+            ?>
+              <tr>
+                <td colspan="5">Please select Filter value.</td>
+              </tr>
+            <?php
           } else {
-          ?>
-            <tr>
-              <td colspan="5">No record found for <?php echo $module ?>, <?php echo $id ?> and <?php echo $category ?>&nbsp;<?php echo $class ?></td>
-            </tr>
-          <?php }
+            ?>
+              <tr>
+                <td colspan="5">No record found for <?php echo $module ?>, <?php echo $id ?> and <?php echo $category ?>&nbsp;<?php echo $class ?></td>
+              </tr>
+            <?php }
 
           echo '</tbody>
                         </table>';
-          ?>
+            ?>
       </div>
       </div>
       </div>
@@ -537,7 +542,7 @@ $resultArr = pg_fetch_all($result);
       // var yyyy = d.getFullYear();
       // document.write("The date is : " + monthNames[d.getMonth()]);
 
-      if (mydata["maxmonth"] === monthNames[d.getMonth()-1]) {
+      if (mydata["maxmonth"] === monthNames[d.getMonth() - 1]) {
         yes.disabled = true; //button remains disabled
       } else {
         yes.disabled = false; //button is enabled
