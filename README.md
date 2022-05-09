@@ -114,3 +114,5 @@ select * from fees
 	month int,
 	collectedby text
 	)
+
+	ALTER TABLE fees ALTER COLUMN fees TYPE numeric USING (fees::numeric);

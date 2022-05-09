@@ -41,8 +41,10 @@ if ($id == null && $status == 'ALL') {
   $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id' AND year='$status'");
 } else if ($id > 0 && $status == 'ALL') {
   $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' order by id desc");
+  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
 } else {
   $result = pg_query($con, "SELECT * FROM claim order by id desc");
+  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
 }
 
 if (!$result) {
