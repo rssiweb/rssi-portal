@@ -101,9 +101,16 @@
                         <li style="height: unset;">
                             <a style="font-size:13px;" href="student.php"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
                         </li>
+                        <?php if (@$role == 'Offline Manager' || @$role == 'Admin') {
+                        ?>
+                         <li style="height: unset;">
+                            <a style="font-size:13px;" href="fees.php"><i class="fa-solid fa-leaf"></i>&nbsp;Fees</a>
+                        </li>
                         <li style="height: unset;">
                             <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-ticket"></i>&nbsp;Visitor pass</a>
                         </li>
+                        <?php }
+                        ?>
 
                         <?php if (@$role == 'Admin') {
                         ?>
