@@ -34,25 +34,48 @@ include("database.php");
 
 
 if ($id == 'ALL' && $category == 'ALL' && $class == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' order by filterstatus asc, category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
+  left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE module='$module' order by filterstatus asc, category asc");
 } else if ($id == 'ALL' && $category == 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student
+  left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE class='$class' AND module='$module' order by category asc");
 } else if ($id != 'ALL' && $module != 'ALL' && $category == 'ALL' && ($class == null || $class == 'ALL')) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' AND module='$module' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
+  left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE filterstatus='$id' AND module='$module' order by category asc");
 } else if ($id != 'ALL' && $category != 'ALL' && $module != 'ALL' && $class == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc");
 } else if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc");
 } else if ($id > 0 && $category != 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
 } else if ($id > 0 && $category == 'ALL' && $class == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE module='$module' AND filterstatus='$id' order by category asc");
 } else if ($id > 0 && $category == 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc");
 } else if ($id > 0 && $category != 'ALL' && $class == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc");
 } else {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
 }
 
 if (!$result) {
@@ -398,8 +421,9 @@ $resultArr = pg_fetch_all($result);
       Remarks:&nbsp;<span class="remarks"></span><br />
     </p>
     <b>
-      <p style="font-size: small;">Fee</p>
-    </b>
+      <p style="display: inline; font-size: small;">Fee</p>&nbsp;
+      <p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></p>
+    </b><br><br>
     <form name="payment" action="#" method="POST" onsubmit="myFunction()">
       <input type="hidden" name="form-type" type="text" value="payment">
       <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
@@ -408,27 +432,22 @@ $resultArr = pg_fetch_all($result);
       <!-- <input type="hidden" type="text" name="status2" id="count2" value="" readonly required> -->
       <select name="month" id="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
         <option value="" disabled selected hidden>Select Month</option>
-        <option>January</option>
-        <option>February</option>
-        <option>March</option>
-        <option>April</option>
-        <option>May</option>
-        <option>June</option>
-        <option>July</option>
-        <option>August</option>
-        <option>September</option>
-        <option>October</option>
-        <option>November</option>
-        <option>December</option>
+        <option value="1">January</option>
+        <option value="2">February</option>
+        <option value="3">March</option>
+        <option value="4">April</option>
+        <option value="5">May</option>
+        <option value="6">June</option>
+        <option value="7">July</option>
+        <option value="8">August</option>
+        <option value="9">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
       </select>
       <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
-      <button type="submit" id="yes" class="btn btn-danger btn-sm" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
+      <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
     </form><br>
-    <!-- <script>
-      $('#yes').click(function() {
-        $('#count2').val('Paid');
-      });
-    </script> -->
     <script>
       function myFunction() {
         alert("Fee has been deposited successfully.");
@@ -449,7 +468,7 @@ $resultArr = pg_fetch_all($result);
       })
     </script>
 
-    
+
   </div>
 
   </div>
@@ -481,7 +500,6 @@ $resultArr = pg_fetch_all($result);
       modal.style.display = "block";
       //class add 
       var status = document.getElementById("status")
-
       if (mydata["filterstatus"] === "Active") {
         status.classList.add("label-success")
         status.classList.remove("label-danger")
@@ -502,12 +520,28 @@ $resultArr = pg_fetch_all($result);
 
       var sname = document.getElementById("sname")
       sname.value = mydata["studentname"]
-      var studentid = document.getElementById("studentid")
 
+      var studentid = document.getElementById("studentid")
       studentid.value = mydata["student_id"]
+
       var collectedby = document.getElementById("collectedby")
       collectedby.value = aid
 
+      //Program to disable or enable a button using javascript
+
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+      const d = new Date();
+      // var dd = String(d.getDate()).padStart(2, '0');
+      // var mm = String(d.getMonth() + 1).padStart(2, '0');
+      // var yyyy = d.getFullYear();
+      // document.write("The date is : " + monthNames[d.getMonth()]);
+
+      if (mydata["maxmonth"] === monthNames[d.getMonth()-1]) {
+        yes.disabled = true; //button remains disabled
+      } else {
+        yes.disabled = false; //button is enabled
+      }
     }
 
     // When the user clicks the button, open the modal 

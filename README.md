@@ -102,12 +102,15 @@ http://rssi.in/generate-hash-for/2311 -> digital ocean
 
 git pull --rebase origin master
 
-CREATE SEQUENCE public.fees_feesid_seq
-    INCREMENT 1
-    START 1
-    MINVALUE 1
-    MAXVALUE 9223372036854775807
-    CACHE 1;
-	
-	ALTER SEQUENCE public.fees_feesid_seq
-    OWNER TO web;
+ALTER TABLE fees
+ADD COLUMN id SERIAL PRIMARY KEY;
+select * from fees
+
+	CREATE TABLE fees (
+	date timestamp,
+	sname text,
+	studentid text,
+	fees text,
+	month int,
+	collectedby text
+	)
