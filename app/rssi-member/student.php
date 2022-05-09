@@ -299,7 +299,7 @@ $resultArr = pg_fetch_all($result);
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
             <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] ?>
 
-              <?php if ($array['maxmonth'] != null && $role == 'Admin' || $role == 'Offline Manager') { ?>
+              <?php if ($array['maxmonth'] != null && ($role == 'Admin' || $role == 'Offline Manager')) { ?>
 
                 <?php echo '&nbsp;&nbsp;<p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;' . $array['maxmonth'] . '</p></td><td style="white-space: unset;">' ?>
                 <?php    } else { ?><?php echo '</td><td style="white-space: unset;">' ?><?php   } ?>
