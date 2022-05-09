@@ -299,7 +299,7 @@ $resultArr = pg_fetch_all($result);
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
             <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] ?>
 
-              <?php if ($array['maxmonth'] != null) { ?>
+              <?php if ($array['maxmonth'] != null && $role == 'Admin' || $role == 'Offline Manager') { ?>
 
                 <?php echo '&nbsp;&nbsp;<p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;' . $array['maxmonth'] . '</p></td><td style="white-space: unset;">' ?>
                 <?php    } else { ?><?php echo '</td><td style="white-space: unset;">' ?><?php   } ?>
@@ -422,147 +422,150 @@ $resultArr = pg_fetch_all($result);
     <!-- <p id="laddu"></p> -->
     <p style="font-size: small; line-height:2">
       Subject: <span class="nameofthesubjects"></span><br>
-      Attendance: <span class="attd"></span><br>
-      Remarks:&nbsp;<span class="remarks"></span><br />
-    </p>
-    <b>
-      <p style="display: inline; font-size: small;">Fee</p>&nbsp;
-      <p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></p>
-    </b><br><br>
-    <form name="payment" action="#" method="POST" onsubmit="myFunction()">
-      <input type="hidden" name="form-type" type="text" value="payment">
-      <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
-      <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
-      <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
-      <!-- <input type="hidden" type="text" name="status2" id="count2" value="" readonly required> -->
-      <select name="month" id="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-        <option value="" disabled selected hidden>Select Month</option>
-        <option value="1">January</option>
-        <option value="2">February</option>
-        <option value="3">March</option>
-        <option value="4">April</option>
-        <option value="5">May</option>
-        <option value="6">June</option>
-        <option value="7">July</option>
-        <option value="8">August</option>
-        <option value="9">September</option>
-        <option value="10">October</option>
-        <option value="11">November</option>
-        <option value="12">December</option>
-      </select>
-      <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
-      <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
-    </form><br>
-    <script>
-      function myFunction() {
-        alert("Fee has been deposited successfully.");
-      }
-    </script>
-    <script>
-      const scriptURL = 'payment-api.php'
-      const form = document.forms['payment']
+      Attendance: <span class="attd"></span></p>
+      Remarks:&nbsp;<span class="remarks"></span><br>
+    
+    <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
 
-      form.addEventListener('submit', e => {
-        e.preventDefault()
-        fetch(scriptURL, {
-            method: 'POST',
-            body: new FormData(document.forms['payment'])
-          })
-          .then(response => console.log('Success!', response))
-          .catch(error => console.error('Error!', error.message))
-      })
-    </script>
-
-
-  </div>
-
-  </div>
-  <script>
-    var data = <?php echo json_encode($resultArr) ?>;
-    var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
-
-    // Get the modal
-    var modal = document.getElementById("myModal");
-    // Get the <span> element that closes the modal
-    var span = document.getElementsByClassName("close")[0];
-
-    function showDetails(id) {
-      // console.log(modal)
-      // console.log(modal.getElementsByClassName("data"))
-      var mydata = undefined
-      data.forEach(item => {
-        if (item["student_id"] == id) {
-          mydata = item;
+      <b>
+        <p style="display: inline; font-size: small;">Fee</p>&nbsp;
+        <p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></p>
+      </b><br><br>
+      <form name="payment" action="#" method="POST" onsubmit="myFunction()">
+        <input type="hidden" name="form-type" type="text" value="payment">
+        <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
+        <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
+        <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
+        <!-- <input type="hidden" type="text" name="status2" id="count2" value="" readonly required> -->
+        <select name="month" id="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+          <option value="" disabled selected hidden>Select Month</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+        <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
+        <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
+      </form><br>
+      <script>
+        function myFunction() {
+          alert("Fee has been deposited successfully.");
         }
-      })
+      </script>
+      <script>
+        const scriptURL = 'payment-api.php'
+        const form = document.forms['payment']
 
-      var keys = Object.keys(mydata)
-      keys.forEach(key => {
-        var span = modal.getElementsByClassName(key)
-        if (span.length > 0)
-          span[0].innerHTML = mydata[key];
-      })
-      modal.style.display = "block";
-      //class add 
-      var status = document.getElementById("status")
-      if (mydata["filterstatus"] === "Active") {
-        status.classList.add("label-success")
-        status.classList.remove("label-danger")
-      } else {
-        status.classList.remove("label-success")
-        status.classList.add("label-danger")
+        form.addEventListener('submit', e => {
+          e.preventDefault()
+          fetch(scriptURL, {
+              method: 'POST',
+              body: new FormData(document.forms['payment'])
+            })
+            .then(response => console.log('Success!', response))
+            .catch(error => console.error('Error!', error.message))
+        })
+      </script>
+
+
+  </div>
+
+  </div>
+<?php } ?>
+<script>
+  var data = <?php echo json_encode($resultArr) ?>;
+  var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
+
+  // Get the modal
+  var modal = document.getElementById("myModal");
+  // Get the <span> element that closes the modal
+  var span = document.getElementsByClassName("close")[0];
+
+  function showDetails(id) {
+    // console.log(modal)
+    // console.log(modal.getElementsByClassName("data"))
+    var mydata = undefined
+    data.forEach(item => {
+      if (item["student_id"] == id) {
+        mydata = item;
       }
-      //class add end
+    })
 
-      //Print something start
-
-      // var laddu = document.getElementById("laddu")
-      // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
-      //Print something END
-
-      var profileimage = document.getElementById("profileimage")
-      profileimage.src = mydata["photourl"]
-
-      var sname = document.getElementById("sname")
-      sname.value = mydata["studentname"]
-
-      var studentid = document.getElementById("studentid")
-      studentid.value = mydata["student_id"]
-
-      var collectedby = document.getElementById("collectedby")
-      collectedby.value = aid
-
-      //Program to disable or enable a button using javascript
-
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-      const d = new Date();
-      // var dd = String(d.getDate()).padStart(2, '0');
-      // var mm = String(d.getMonth() + 1).padStart(2, '0');
-      // var yyyy = d.getFullYear();
-      // document.write("The date is : " + monthNames[d.getMonth()]);
-
-      if (mydata["maxmonth"] === monthNames[d.getMonth() - 1]) {
-        yes.disabled = true; //button remains disabled
-      } else {
-        yes.disabled = false; //button is enabled
-      }
+    var keys = Object.keys(mydata)
+    keys.forEach(key => {
+      var span = modal.getElementsByClassName(key)
+      if (span.length > 0)
+        span[0].innerHTML = mydata[key];
+    })
+    modal.style.display = "block";
+    //class add 
+    var status = document.getElementById("status")
+    if (mydata["filterstatus"] === "Active") {
+      status.classList.add("label-success")
+      status.classList.remove("label-danger")
+    } else {
+      status.classList.remove("label-success")
+      status.classList.add("label-danger")
     }
+    //class add end
 
-    // When the user clicks the button, open the modal 
+    //Print something start
 
-    // When the user clicks on <span> (x), close the modal
-    span.onclick = function() {
+    // var laddu = document.getElementById("laddu")
+    // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
+    //Print something END
+
+    var profileimage = document.getElementById("profileimage")
+    profileimage.src = mydata["photourl"]
+
+    var sname = document.getElementById("sname")
+    sname.value = mydata["studentname"]
+
+    var studentid = document.getElementById("studentid")
+    studentid.value = mydata["student_id"]
+
+    var collectedby = document.getElementById("collectedby")
+    collectedby.value = aid
+
+    //Program to disable or enable a button using javascript
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const d = new Date();
+    // var dd = String(d.getDate()).padStart(2, '0');
+    // var mm = String(d.getMonth() + 1).padStart(2, '0');
+    // var yyyy = d.getFullYear();
+    // document.write("The date is : " + monthNames[d.getMonth()]);
+
+    if (mydata["maxmonth"] === monthNames[d.getMonth() - 1]) {
+      yes.disabled = true; //button remains disabled
+    } else {
+      yes.disabled = false; //button is enabled
+    }
+  }
+
+  // When the user clicks the button, open the modal 
+
+  // When the user clicks on <span> (x), close the modal
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+
+  // When the user clicks anywhere outside of the modal, close it
+  window.onclick = function(event) {
+    if (event.target == modal) {
       modal.style.display = "none";
     }
-
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-      if (event.target == modal) {
-        modal.style.display = "none";
-      }
-    }
-  </script>
+  }
+</script>
 </body>
 
 </html>
