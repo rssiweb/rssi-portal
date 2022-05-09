@@ -423,7 +423,7 @@ $resultArr = pg_fetch_all($result);
     <p style="font-size: small; line-height:2">
       Subject: <span class="nameofthesubjects"></span><br>
       Attendance: <span class="attd"></span></p>
-      Remarks:&nbsp;<span class="remarks"></span><br>
+      Remarks:&nbsp;<span class="remarks"></span><br><br>
     
     <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
 
