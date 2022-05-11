@@ -99,15 +99,15 @@
                     <ul class="dropdown-menu profile fadeIn" style="right:unset">
 
                         <li style="height: unset;">
-                            <a style="font-size:13px;" href="student.php"><i class="fas fa-user-graduate"></i>&nbsp;RSSI Student</a>
+                            <a style="font-size:13px;" href="student.php"><i class="fa-solid fa-user-graduate"></i>&nbsp;RSSI Student</a>
                         </li>
                         <?php if (@$role == 'Offline Manager' || @$role == 'Admin') {
                         ?>
                          <li style="height: unset;">
-                            <a style="font-size:13px;" href="fees.php"><i class="fa-solid fa-leaf"></i>&nbsp;Fees</a>
+                            <a style="font-size:13px;" href="fees.php"><i class="fa-solid fa-file-invoice"></i>&nbsp;Fees</a>
                         </li>
                         <li style="height: unset;">
-                            <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-ticket"></i>&nbsp;Visitor pass</a>
+                            <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-fingerprint"></i>&nbsp;Visitor pass</a>
                         </li>
                         <?php }
                         ?>
@@ -257,7 +257,7 @@
             <!--          <li class="menusection">Main</li>-->
             <li>
                 <a href="home.php" class="<?php echo $home_active ?>">
-                    <span class="sidebar-icon"><i class="fas fa-chalkboard-teacher"></i>
+                    <span class="sidebar-icon"><i class="fa-solid fa-person-chalkboard"></i>
                     </span>
                     <span class="menu-title">Class Details</span>
                 </a>
@@ -265,13 +265,13 @@
 
             <li>
                 <a href="application.php" class="<?php echo $application_active ?>">
-                    <span class="sidebar-icon"><i class="fa fa-desktop"></i>
+                    <span class="sidebar-icon"><i class="fa-solid fa-computer"></i>
                     </span>
                     <span class="menu-title">Applications</span>
                 </a>
             </li>
 
-            <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fas fa-book-reader"></i></span> <span class="menu-title">Library</span></a></li>
+            <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-book-open-reader"></i></i></span> <span class="menu-title">Library</span></a></li>
 
             <li>
                 <a href="exam.php" class="<?php echo $exam_active ?>">
@@ -283,9 +283,9 @@
             </li>
 
             <li><a href="leave.php" class="<?php echo $leave_active ?>"><span class="sidebar-icon"><i class="fas fa-plane-departure"></i></span> <span class="menu-title">Leave</span></a></li>
-            <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa fa-calendar"></i></span> <span class="menu-title">My Allocation</span></a></li>
+            <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-calendar-check"></i></span> <span class="menu-title">My Allocation</span></a></li>
 
-            <li><a href="my_appraisal.php" class="<?php echo $appraisal_active ?>"><span class="sidebar-icon"><i class="fas fa-chart-line"></i></span> <span class="menu-title">My Appraisal</span></a></li>
+            <li><a href="my_appraisal.php" class="<?php echo $appraisal_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-chart-column"></i></span> <span class="menu-title">My Appraisal</span></a></li>
 
             <li><a href="document.php" class="<?php echo $document_active ?>"><span class="sidebar-icon"><i class="fas fa-folder-open"></i></i></span> <span class="menu-title">My Document</span></a></li>
 
@@ -293,7 +293,7 @@
 
             <li><a href="reimbursement.php" class="<?php echo $reimbursement_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span> <span class="menu-title">Reimbursement</span></a></li>
 
-            <li><a href="profile.php" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa fa-user-circle"></i></span> <span class="menu-title">My Profile</span></a></li>
+            <li><a href="profile.php" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-user"></i></span> <span class="menu-title">My Profile</span></a></li>
         </ul>
     </div>
 </div>
