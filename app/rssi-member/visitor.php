@@ -4,16 +4,12 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
 }
 $user_check = $_SESSION['aid'];
 
-if (!$_SESSION['aid']) {
-
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
-} else 
 if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.

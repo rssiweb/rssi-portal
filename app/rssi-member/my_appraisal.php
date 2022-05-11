@@ -2,17 +2,12 @@
 session_start();
 include("../util/login_util.php");
 
-if(! isLoggedIn("aid")){
-    header("Location: index.php");
-}
-$user_check = $_SESSION['aid'];
-
-if (!$_SESSION['aid']) {
-
+if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
-} //You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.
+}
+ //You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.
 ?>
 <?php
 //session_start();

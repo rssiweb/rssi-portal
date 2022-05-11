@@ -3,8 +3,10 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
-if(! isLoggedIn("aid")){
+if (!isLoggedIn("aid")) {
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
+    exit;
 }
 $user_check = $_SESSION['aid'];
 

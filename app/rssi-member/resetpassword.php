@@ -4,16 +4,11 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['aid'];
-
-if (!$_SESSION['aid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
 }
+
 
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');

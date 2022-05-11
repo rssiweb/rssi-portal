@@ -70,7 +70,14 @@ if (isset($_POST['login'])) {
         $result = pg_query($con, $query);
 
         if (isset($_SESSION["login_redirect"])) {
-            header("Location: " . $_SESSION["login_redirect"]);
+            $params = "";
+            if(isset($_SESSION["login_redirect_params"])){
+                foreach ($_SESSION["login_redirect_params"] as $key => $value) {
+                    $params = $params . "$key=$value&";
+                }
+                unset($_SESSION["login_redirect_params"]);
+            }
+            header("Location: " . $_SESSION["login_redirect"].'?'.$params);
             unset($_SESSION["login_redirect"]);
         } else {
             header("Location: ../rssi-member/home.php");
@@ -131,7 +138,6 @@ if (isset($_POST['login'])) {
                                 <br><br>
                                 <p style="text-align: right;"><a id="myBtn" href="javascript:void(0)">Forgot password?</a></p>
                             </fieldset>
-                            IP address:&nbsp;<?php echo $_SERVER['HTTP_X_REAL_IP']; ?><br>
                         </form>
                     </div>
                 </div>
