@@ -131,8 +131,8 @@ if (isset($_POST['login'])) {
                                 <br><br>
                                 <p style="text-align: right;"><a id="myBtn" href="javascript:void(0)">Forgot password?</a></p>
                             </fieldset>
-                            <?php echo $_SERVER['HTTP_HOST']; ?><br>
-                            <?php echo @$_SERVER['HTTP_REFERER']; ?>
+                            IP address:&nbsp;<?php echo $_SERVER['HTTP_X_REAL_IP']; ?><br>
+                            <?php echo file_get_contents('http://ipinfo.io/8.8.8.8/country') ?>
                         </form>
                     </div>
                 </div>
