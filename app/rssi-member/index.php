@@ -131,6 +131,8 @@ if (isset($_POST['login'])) {
                                 <br><br>
                                 <p style="text-align: right;"><a id="myBtn" href="javascript:void(0)">Forgot password?</a></p>
                             </fieldset>
+                            <?php echo $_SERVER['HTTP_HOST']; ?><br>
+                            <?php echo @$_SERVER['HTTP_REFERER']; ?>
                         </form>
                     </div>
                 </div>
