@@ -27,12 +27,13 @@ if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
 <?php
 include("member_data.php");
 include("database.php");
-@$appid = $_POST['get_appid'];
-// @$appid = $_GET['get_appid'];
+// @$appid = $_POST['get_appid'];
+@$appid = $_GET['get_appid'];
 
 if ($appid == null) {
     $result = pg_query($con, "select * from visitor WHERE visitorid is null");
-} if ($appid != null) {
+}
+if ($appid != null) {
     $result = pg_query($con, "select * from visitor WHERE visitorid='$appid' or existingid='$appid'");
 }
 
@@ -87,14 +88,15 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:100%; text-align:right">
                         Home / Visitor pass
                     </div>
-                    <form id="myform" action="" method="POST"><!--onsubmit="process()-->
+                    <form id="myform" action="" method="GET">
+                        <!--onsubmit="process()-->
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
                                 <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Visitor ID" value="<?php echo $appid ?>" required>
                             </div>
                         </div>
                         <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                            <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                 <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLSfGLdHHjI8J5b238SMAmf7LMkVVRJPAKnk1SjHcBUZSXATFQA/viewform" target="_blank" class="btn btn-info btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Registration</a>
                         </div>
                     </form>
@@ -164,13 +166,13 @@ $resultArr = pg_fetch_all($result);
                             <?php echo '</tr>';
                         } ?>
                         <?php
-                        } else if ($appid == null) {
+                    } else if ($appid == null) {
                         ?>
                             <tr>
                                 <td colspan="5">Please enter Visitor Id.</td>
                             </tr>
                         <?php
-                        } else {
+                    } else {
                         ?>
                             <tr>
                                 <td colspan="5">No record was found for the selected filter value.</td>
@@ -186,7 +188,7 @@ $resultArr = pg_fetch_all($result);
         <div class="clearfix"></div>
     </section>
     </section>
-    <script>
+    <!-- <script>
         function process() {
             var form = document.getElementById('myform');
             var elements = form.elements;
@@ -197,7 +199,7 @@ $resultArr = pg_fetch_all($result);
 
             form.action += '?' + values.join('&');
         }
-    </script>
+    </script> -->
 </body>
 
 </html>
