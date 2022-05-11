@@ -104,7 +104,7 @@
                         <?php if (@$role == 'Offline Manager' || @$role == 'Admin') {
                         ?>
                          <li style="height: unset;">
-                            <a style="font-size:13px;" href="fees.php"><i class="fa-solid fa-file-invoice"></i>&nbsp;Fees</a>
+                            <a style="font-size:13px;" href="fees.php"><i class="fa-solid fa-wallet"></i>&nbsp;Fees</a>
                         </li>
                         <li style="height: unset;">
                             <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-fingerprint"></i>&nbsp;Visitor pass</a>
