@@ -192,9 +192,18 @@ $resultArr = pg_fetch_all($result);
           <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
             Record count:&nbsp;<?php echo sizeof($resultArr) ?>
           </div>
-          <div class="col" style="display: inline-block; width:47%; text-align:right">
+          <!-- <div class="col" style="display: inline-block; width:47%; text-align:right">
             Home / RSSI Student
-          </div>
+          </div> -->
+          <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
+          <div class="col" style="display: inline-block; width:47%; text-align:right">
+                        <a href="fees.php" target="_self" class="btn btn-danger btn-sm" role="button">Fees Details</a>
+                    </div>
+                    <?php } else { ?>
+                      <div class="col" style="display: inline-block; width:47%; text-align:right">
+                        <a href="javascript:void(0);" target="_self" class="btn btn-danger btn-sm disabled" role="button">Fees Details</a>
+                    </div>
+                    <?php } ?>
         </div>
         <section class="box" style="padding: 2%;">
           <form action="" method="POST">

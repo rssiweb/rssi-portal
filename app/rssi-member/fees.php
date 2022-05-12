@@ -109,9 +109,9 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
                     </div>
-                    <div class="col" style="display: inline-block; width:47%; text-align:right; font-size:small">
-            Home / Fees
-          </div>
+                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+                        Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details
+                    </div>
                 </div>
                 <section class="box" style="padding: 2%;">
                     <form action="" method="POST">

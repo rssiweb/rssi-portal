@@ -103,11 +103,8 @@
                         </li>
                         <?php if (@$role == 'Offline Manager' || @$role == 'Admin') {
                         ?>
-                         <li style="height: unset;">
-                            <a style="font-size:13px;" href="fees.php"><i class="fa-solid fa-wallet"></i>&nbsp;Fees</a>
-                        </li>
                         <li style="height: unset;">
-                            <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-fingerprint"></i>&nbsp;Visitor pass</a>
+                            <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-building-user"></i>&nbsp;Visitor pass</a>
                         </li>
                         <?php }
                         ?>
@@ -123,7 +120,7 @@
                             </li>
 
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="userlog.php"><i class="fas fa-server"></i>&nbsp;User log</a>
+                                <a style="font-size:13px;" href="userlog.php"><i class="fa-solid fa-users"></i>&nbsp;User log</a>
                             </li>
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="library_status_admin.php"><i class="fas fa-book-reader"></i>&nbsp;Library Status</a>
@@ -257,7 +254,7 @@
             <!--          <li class="menusection">Main</li>-->
             <li>
                 <a href="home.php" class="<?php echo $home_active ?>">
-                    <span class="sidebar-icon"><i class="fa-solid fa-person-chalkboard"></i>
+                    <span class="sidebar-icon"><i class="fa-solid fa-chalkboard-user"></i>
                     </span>
                     <span class="menu-title">Class Details</span>
                 </a>

@@ -1,31 +1,31 @@
 <?php
 session_start();
 // Storing Session
-define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
-define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
-date_default_timezone_set('Asia/Kolkata');
 include("../util/login_util.php");
-include("database.php");
+
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
 }
  if ($_SESSION['role'] != 'Admin') {
-
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
-    exit;
 }
+?>
+<?php
+date_default_timezone_set('Asia/Kolkata');
+include("member_data.php");
+
 if ($_POST) {
     @$user_id = strtoupper($_POST['userid']);
     @$password = $_POST['newpass'];
     @$type = $_POST['type'];
     @$newpass_hash = password_hash($password, PASSWORD_DEFAULT);
     $now = date('Y-m-d H:i:s');
+
     if ($type == "Associate") {
         $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', password_updated_by='$user_check', password_updated_on='$now' where associatenumber='$user_id'";
     } else {
@@ -33,13 +33,7 @@ if ($_POST) {
     }
     $result = pg_query($con, $change_password_query);
     $cmdtuples = pg_affected_rows($result);
-    // echo "<script>alert('";
-    // echo $cmdtuples;
-    // echo " row is affected.')</script>";
 }
-?>
-<?php
-include("member_data.php");
 ?>
 
 <?php
@@ -151,7 +145,7 @@ $resultArrr = pg_fetch_all($result);
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
                                     <select name="type" class="form-control" style="width:max-content; display:inline-block" required>
-                                        <?php if ($get_id == null) { ?>
+                                        <?php if ($type == null) { ?>
                                             <option value="" disabled selected hidden>Association Type</option>
                                         <?php
                                         } else { ?>
@@ -169,7 +163,7 @@ $resultArrr = pg_fetch_all($result);
 
                             <div class="col2 left" style="display: inline-block;">
                                 <button type="submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
+                                    <i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
                             </div>
                             <br>
                             <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
