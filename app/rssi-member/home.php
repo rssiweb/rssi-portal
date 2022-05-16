@@ -244,7 +244,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <?php } else {
     } ?>
 
-    <!--**************IPF CHECK CONFIRMATION**************
+    <!--**************IPF CHECK CONFIRMATION**************-->
     <?php
     if ((@$vaccination == null) && @$googlechat != '') {
     ?>
@@ -343,7 +343,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     } else if (@$googlechat != null && $filterstatus == 'Active') {
     ?>
     <?php } else {
-    } ?>-->
+    } ?>
 
 
     <!--**************NOTICE Display**************
@@ -448,7 +448,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
 
 
-    <!--**************Experience details************** || strpos(@$vaccination, $word) !== false)-->
+    <!--**************Experience details************** || strpos(@$vaccination, $word) !== false)
     <?php
     if ($filterstatus == 'Active' && $vaccination == null) {
     ?>
@@ -558,8 +558,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 }
 
             });
-        </script>
-        <!--disable submit button if any required field is blank-->
+        </script>-->
+        <!--disable submit button if any required field is blank
         <script>
             $(document).ready(function() {
                 $('#sendButton').attr('disabled', true);
@@ -572,7 +572,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     }
                 })
             });
-        </script>
+        </script>-->
     <?php
     } else {
     ?>
