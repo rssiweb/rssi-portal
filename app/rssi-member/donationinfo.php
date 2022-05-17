@@ -1,6 +1,6 @@
 <?php
 include("database.php");
-@$id = strtoupper($_POST['get_id']);
+@$id = strtoupper($_GET['get_id']);
 $view_users_query = "select * from donation WHERE invoice='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
@@ -96,7 +96,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section class="wrapper main-wrapper row">
         <div class="col-md-12">
             <section class="box" style="padding: 2%;">
-                <form action="" method="POST">
+                <form action="" method="GET">
                     <div class="form-group" style="display: inline-block;">
                         <div class="col2" style="display: inline-block;">
                             <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Invoice number" value="<?php echo $id ?>">
