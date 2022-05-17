@@ -1,6 +1,6 @@
 <?php
 include("database.php");
-@$id = strtoupper($_POST['get_id']);
+// @$id = strtoupper($_POST['get_id']);
 @$id = strtoupper($_GET['get_id']);
 $view_users_query = "select * from rssimyprofile_student WHERE student_id='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
@@ -123,7 +123,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section class="wrapper main-wrapper row">
         <div class="col-md-12">
             <section class="box" style="padding: 2%;">
-                <form id="myform" action="" method="POST" onsubmit="process()">
+                <form id="myform" action="" method="GET" onsubmit="process()">
                     <div class="form-group" style="display: inline-block;">
                         <div class="col2" style="display: inline-block;">
                         <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $id ?>">
@@ -183,26 +183,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     </div>
     </section>
 
-
-    <!-- Back top -->
-    <script>
-        $(document).ready(function() {
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#back-to-top').fadeIn();
-                } else {
-                    $('#back-to-top').fadeOut();
-                }
-            });
-            // scroll body to 0px on click
-            $('#back-to-top').click(function() {
-                $('body,html').animate({
-                    scrollTop: 0
-                }, 400);
-                return false;
-            });
-        });
-    </script>
     <script>
         function process() {
             var form = document.getElementById('myform');
@@ -215,7 +195,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             form.action += '?' + values.join('&');
         }
     </script>
-    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>
 
 </html>
