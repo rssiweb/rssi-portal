@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    
+
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -86,40 +86,39 @@ echo '
          <th>Certificate Date</th>
          <th>Certifying Authority</th>
         </tr>
-        </thead>
-        <tbody>';
+        </thead>' ?>
 
+<?php if (@$id > 0) {
 
-foreach ($resultArr as $array) {
-    echo '<tr>
+    foreach ($resultArr as $array) {
+        echo '<tbody><tr>
             <td><img src="' . $array['photo'] . '" width=100px/></td>
             <td style="line-height:2">Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b></td>
             <td>' . $array['engagement'] . '</td>
             <td>' . substr($array['position'], 0, strrpos($array['position'], '-')) . '</td>
-            <td style="line-height:2">' . $array['originaldoj'] . '&nbsp;to&nbsp;'?>
-            
-            <?php if ($array['associationstatus'] != null) { ?>
-                <?php echo $array['effectivedate'] ?>
-                <?php } else { ?> <?php echo 'Present' ?>
-            <?php } ?>
-                
-                
-                
-            <?php echo  '<br>' . $array['yos'] . '</td>
+            <td style="line-height:2">' . $array['originaldoj'] . '&nbsp;to&nbsp;' ?>
+
+        <?php if ($array['associationstatus'] != null) { ?>
+            <?php echo $array['effectivedate'] ?>
+        <?php } else { ?> <?php echo 'Present' ?>
+        <?php } ?>
+
+
+
+        <?php echo  '<br>' . $array['yos'] . '</td>
             <td>' . $array['ipfl'] . '</td>
             <td>' . $array['astatus'] . '</td>' ?>
 
-            <?php if ($array['associationstatus'] != null) { ?>
+        <?php if ($array['associationstatus'] != null) { ?>
             <?php echo '<td>' . $array['effectivedate'] . '</td>' ?>
-            <?php } else { ?> <?php echo '<td>' . $today = date('d/m/Y') . '</td>' ?>
-            <?php } ?>
+        <?php } else { ?> <?php echo '<td>' . $today = date('d/m/Y') . '</td>' ?>
+        <?php } ?>
 
-            <?php echo '<td>' . $array['exitinterview'] . '</td>
+<?php echo '<td>' . $array['exitinterview'] . '</td>
             </tr>';
-}
-echo '</table>
+    }
+} ?>
 </section>
 </div>
 </section>
-</section>'
-?>
+</section>
