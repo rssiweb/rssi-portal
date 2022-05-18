@@ -15,7 +15,7 @@
                     
                     <li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/document/d/1CpnFSbSjn7wB2ey9d-ZtikgC0WlhT86fO7k3gOSLTQE/edit" target="_blank">National Module Syllabus
-                                <span class="label label-info">Apr 5, 2022</span>&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
+                               <span class="label label-info">Apr 5, 2022</span> <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>-->
                             </a>
                         </li>
 
@@ -60,7 +60,7 @@
                         ?>
 
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="facultyexp.php"><i class="fas fa-user-tag"></i>&nbsp;My Faculty</a>
+                                <a style="font-size:13px;" href="facultyexp.php"><i class="fas fa-user-tie"></i>&nbsp;My Faculty</a>
                             </li>
 
                         <?php
@@ -165,7 +165,7 @@
             <!--          <li class="menusection">Main</li>-->
             <li>
                 <a href="home.php" class="<?php echo $home_active ?>">
-                    <span class="sidebar-icon"><i class="fas fa-chalkboard-teacher"></i>
+                    <span class="sidebar-icon"><i class="fa-solid fa-chalkboard-user"></i>
                     </span>
                     <span class="menu-title">Classroom</span>
                 </a>
@@ -173,7 +173,7 @@
 
             <li>
                 <a href="application.php" class="<?php echo $application_active ?>">
-                    <span class="sidebar-icon"><i class="fa fa-desktop"></i>
+                    <span class="sidebar-icon"><i class="fa-solid fa-computer"></i>
                     </span>
                     <span class="menu-title">Applications</span>
                 </a>
@@ -190,7 +190,7 @@
 
             <li>
                 <a href="result.php" target="_blank" class="<?php echo $result_active ?>">
-                    <span class="sidebar-icon"><i class="fas fa-chart-line"></i>
+                    <span class="sidebar-icon"><i class="fa-solid fa-chart-column"></i>
                     </span>
                     <span class="menu-title">Results</span>
                 </a>
@@ -198,7 +198,7 @@
 
             <li><a href="leave.php" class="<?php echo $leave_active ?>"><span class="sidebar-icon"><i class="fas fa-plane-departure"></i></span> <span class="menu-title">Leave</span></a></li>
 
-            <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa fa-calendar"></i></span> <span class="menu-title">My Allocation</span></a></li>
+            <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-calendar-check"></i></span> <span class="menu-title">My Allocation</span></a></li>
             <li><a href="document.php" class="<?php echo $document_active ?>"><span class="sidebar-icon"><i class="fas fa-folder-open"></i></i></span> <span class="menu-title">My Document</span></a></li>
 
             <li><a href="profile.php" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa fa-user-circle"></i></span> <span class="menu-title">My Profile</span></a></li>

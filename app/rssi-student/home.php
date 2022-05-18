@@ -113,14 +113,14 @@ include("student_data.php");
                             <tr>
                                 <th scope="col">Class URL</th>
                                 <th scope="col">Quick link</th>
-                                <th scope="col">Annual Fee</th>
+                                <th scope="col">Fee Details</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td style="line-height: 2;"><?php echo $classurl ?></td>
                                 <td style="line-height: 2;"><?php echo $lastlogin ?></td>
-                                <td style="line-height: 2;"><?php echo $fees ?></td>
+                                <td style="line-height: 2;"><span class="noticea"><a href="myfees.php" target="_self">My fees</a></span></td>
                             </tr>
                         </tbody>
                     </table>
