@@ -70,8 +70,7 @@ include("student_data.php");
                         </thead>
                         <tbody>
                             <tr>
-                              
-                            <td style="line-height: 2;"></td>    
+                            <td style="line-height: 2;"><?php echo $mydocument ?></td>    
                             <td style="line-height: 2;"><span class="noticea"><a href="idcard.php" target="_blank">	RSSI Identity Card</a></span></td>
                                 
                             </tr>

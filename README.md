@@ -104,15 +104,5 @@ git pull --rebase origin master
 
 ALTER TABLE fees
 ADD COLUMN id SERIAL PRIMARY KEY;
-select * from fees
 
-	CREATE TABLE fees (
-	date timestamp,
-	sname text,
-	studentid text,
-	fees text,
-	month int,
-	collectedby text
-	)
-
-	ALTER TABLE fees ALTER COLUMN fees TYPE numeric USING (fees::numeric);
+ALTER TABLE fees ALTER COLUMN fees TYPE numeric USING (fees::numeric);
