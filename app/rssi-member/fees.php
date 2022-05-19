@@ -8,7 +8,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
- if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
+if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
     echo '<script type="text/javascript">';
@@ -19,6 +19,7 @@ if (!isLoggedIn("aid")) {
 ?>
 <?php
 include("member_data.php");
+setlocale(LC_TIME, 'fr_FR.UTF-8');
 ?>
 <?php
 include("database.php");
@@ -26,7 +27,7 @@ include("database.php");
 @$status = $_POST['get_id'];
 
 
-if ($id != null && $status != null) {
+if (($id != null && $id != 'ALL') && ($status != null && $status != 'ALL')) {
 
     $result = pg_query($con, "SELECT * FROM fees 
     
@@ -36,10 +37,55 @@ if ($id != null && $status != null) {
     WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id order by id desc");
 
     $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id");
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id AND pstatus='transferred'");
 }
+
+
+if ($id == 'ALL' && ($status != null && $status != 'ALL')) {
+
+    $result = pg_query($con, "SELECT * FROM fees 
+    
+    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
+    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    
+    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) order by id desc");
+
+    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))");
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND pstatus='transferred'");
+}
+
+if (($id != null && $id != 'ALL') && $status == 'ALL') {
+
+    $result = pg_query($con, "SELECT * FROM fees 
+    
+    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
+    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    
+    WHERE DATE_PART('year', date::date)=$id order by id desc");
+
+    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE DATE_PART('year', date::date)=$id");
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE DATE_PART('year', date::date)=$id AND pstatus='transferred'");
+}
+
+if (($id == 'ALL') && $status == 'ALL') {
+
+    $result = pg_query($con, "SELECT * FROM fees 
+    
+    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
+    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    
+    order by id desc");
+
+    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees");
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE pstatus='transferred'");
+}
+
+
+
 if ($id == null && $status == null) {
     $result = pg_query($con, "SELECT * FROM fees WHERE month='0'");
     $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
 }
 if (!$result) {
     echo "An error occurred.\n";
@@ -48,6 +94,7 @@ if (!$result) {
 
 $resultArr = pg_fetch_all($result);
 $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
+$resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
 ?>
 
 
@@ -107,7 +154,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
+                        Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr-$resultArrrr) ?></p> / <p class="label label-success"><?php echo ($resultArrrr) ?></p> = <p class="label label-info"><?php echo ($resultArrr) ?></p>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details
@@ -118,7 +165,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
 
-                                <select name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
+                                <select name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
                                     <?php if ($id == null) { ?>
                                         <option value="" hidden selected>Select year</option>
                                     <?php
@@ -127,10 +174,10 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                                     <?php }
                                     ?>
                                     <option>2022</option>
-                                    <option>2021</option>
+                                    <option>ALL</option>
                                 </select>
 
-                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
+                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
                                     <?php if ($status == null) { ?>
                                         <option value="" hidden selected>Select month</option>
                                     <?php
@@ -150,6 +197,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                                     <option>October</option>
                                     <option>November</option>
                                     <option>December</option>
+                                    <option>ALL</option>
                                 </select>
                             </div>
                         </div>
@@ -165,8 +213,10 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                                 <th scope="col">Fees collection date</th>
                                 <th scope="col">ID/F Name</th>    
                                 <th scope="col">Category</th>
+                                <th scope="col">Month</th>
                                 <th scope="col">Amount (&#8377;)</th>
                                 <th scope="col">Collected by</th>
+                                <th scope="col"></th>
                                 </tr>
                             </thead>' ?>
                     <?php if ($resultArr != null) {
@@ -175,8 +225,22 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                             echo '<tr><td>' . substr($array['date'], 0, 10) . '</td>
                         <td>' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . '</td>
                         <td>' . $array['category'] . '</td>   
+                        <td>' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . '</td>  
                         <td>' . $array['fees'] . '</td>
-                        <td>' . $array['fullname'] . '</td>' ?>
+                        <td>' . $array['fullname'] . '</td>
+                        <td>
+                        <form name="transfer' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()">
+                        <input type="hidden" name="form-type" type="text" value="transfer">
+                        <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">' ?>
+
+                            <?php if ($array['pstatus'] != 'transferred') { ?>
+
+                                <?php echo '<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="Transfer"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>' ?>
+                            <?php } ?>
+                            <?php echo ' </form>
+      </td>' ?>
                             <?php  }
                     } else if ($status == null) {
                         echo '<tr>
@@ -195,6 +259,34 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
             </div>
         </section>
     </section>
+
+
+
+    <script>
+        function myFunction() {
+            alert("Fee has been transferred.");
+        }
+    </script>
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>;
+        var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
+
+        var pid = document.getElementById("pid")
+        pid.value = mydata["pid"]
+
+        const scriptURL = 'payment-api.php'
+        const form = document.forms['transfer' + pid]
+
+        form.addEventListener('submit', e => {
+            e.preventDefault()
+            fetch(scriptURL, {
+                    method: 'POST',
+                    body: new FormData(document.forms['transfer' + pid])
+                })
+                .then(response => console.log('Success!', response))
+                .catch(error => console.error('Error!', error.message))
+        })
+    </script>
 
     <!-- Back top -->
     <script>

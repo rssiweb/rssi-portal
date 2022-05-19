@@ -12,3 +12,11 @@
       $feesupdate = "INSERT INTO fees VALUES ('$now','$sname','$studentid','$fees','$month','$collectedby')";
       $result = pg_query($con, $feesupdate);
     } ?>
+
+<?php
+    include("database.php");
+    if ($_POST['form-type'] == "transfer") {
+      @$refid = $_POST['pid'];
+      $pstatus = "UPDATE fees SET  pstatus = 'transferred' WHERE id = $refid";
+      $result = pg_query($con, $pstatus);
+    } ?>
