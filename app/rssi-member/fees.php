@@ -107,7 +107,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Reimbursement Admin</title>
+    <title>Fees Details</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -154,7 +154,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr-$resultArrrr) ?></p> / <p class="label label-success"><?php echo ($resultArrrr) ?></p> = <p class="label label-info"><?php echo ($resultArrr) ?></p>
+                        Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr - $resultArrrr) ?></p> / <p class="label label-success"><?php echo ($resultArrrr) ?></p> = <p class="label label-info"><?php echo ($resultArrr) ?></p>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details
@@ -229,11 +229,11 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         <td>' . $array['fees'] . '</td>
                         <td>' . $array['fullname'] . '</td>
                         <td>
-                        <form name="transfer' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()">
+                        <form name="transfer_' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()">
                         <input type="hidden" name="form-type" type="text" value="transfer">
                         <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">' ?>
 
-                            <?php if ($array['pstatus'] != 'transferred') { ?>
+                            <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') { ?>
 
                                 <?php echo '<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
@@ -271,20 +271,24 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
         var data = <?php echo json_encode($resultArr) ?>;
         var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
 
-        var pid = document.getElementById("pid")
-        pid.value = mydata["pid"]
+        //var pid = document.getElementById("pid")
+        //pid.value = mydata["pid"]
 
         const scriptURL = 'payment-api.php'
-        const form = document.forms['transfer' + pid]
 
-        form.addEventListener('submit', e => {
-            e.preventDefault()
-            fetch(scriptURL, {
-                    method: 'POST',
-                    body: new FormData(document.forms['transfer' + pid])
-                })
-                .then(response => console.log('Success!', response))
-                .catch(error => console.error('Error!', error.message))
+        data.forEach(item => {
+            const form = document.forms['transfer_' + item.id]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['transfer_' + item.id])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
         })
     </script>
 
