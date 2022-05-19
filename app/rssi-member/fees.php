@@ -25,9 +25,29 @@ setlocale(LC_TIME, 'fr_FR.UTF-8');
 include("database.php");
 @$id = $_POST['get_aid'];
 @$status = $_POST['get_id'];
+@$section = $_POST['get_category'];
 
 
-if (($id != null && $id != 'ALL') && ($status != null && $status != 'ALL')) {
+if (($section != null && $section != 'ALL') && ($status != null && $status != 'ALL')) {
+
+    $result = pg_query($con, "SELECT * FROM fees 
+    
+    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    
+    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id AND student.category='$section' order by id desc");
+
+    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id AND student.category='$section'");
+
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id AND student.category='$section' AND pstatus='transferred'");
+}
+
+
+if (($section == 'ALL' || $section == null) && ($status != null && $status != 'ALL')) {
 
     $result = pg_query($con, "SELECT * FROM fees 
     
@@ -36,25 +56,32 @@ if (($id != null && $id != 'ALL') && ($status != null && $status != 'ALL')) {
     
     WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id order by id desc");
 
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id AND pstatus='transferred'");
+    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id");
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id AND pstatus='transferred'");
 }
 
-
-if ($id == 'ALL' && ($status != null && $status != 'ALL')) {
+if (($section != null && $section != 'ALL') && $status == 'ALL') {
 
     $result = pg_query($con, "SELECT * FROM fees 
     
     left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
     left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
     
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) order by id desc");
+    WHERE DATE_PART('year', date::date)=$id AND student.category='$section' order by id desc");
 
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND pstatus='transferred'");
+    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE DATE_PART('year', date::date)=$id AND student.category='$section'");
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE DATE_PART('year', date::date)=$id AND student.category='$section' AND pstatus='transferred'");
 }
 
-if (($id != null && $id != 'ALL') && $status == 'ALL') {
+if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == null) && $id != null) {
 
     $result = pg_query($con, "SELECT * FROM fees 
     
@@ -63,26 +90,16 @@ if (($id != null && $id != 'ALL') && $status == 'ALL') {
     
     WHERE DATE_PART('year', date::date)=$id order by id desc");
 
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE DATE_PART('year', date::date)=$id");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE DATE_PART('year', date::date)=$id AND pstatus='transferred'");
-}
-
-if (($id == 'ALL') && $status == 'ALL') {
-
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE pstatus='transferred'");
+    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE DATE_PART('year', date::date)=$id");
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE DATE_PART('year', date::date)=$id AND pstatus='transferred'");
 }
 
 
-
-if ($id == null && $status == null) {
+if ($id == null) {
     $result = pg_query($con, "SELECT * FROM fees WHERE month='0'");
     $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
     $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
@@ -154,7 +171,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr - $resultArrrr) ?></p> / <p class="label label-success"><?php echo ($resultArrrr) ?></p> = <p class="label label-info"><?php echo ($resultArrr) ?></p>
+                        Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr - $resultArrrr) ?></p> + <p class="label label-success"><?php echo ($resultArrrr) ?></p> = <p class="label label-info"><?php echo ($resultArrr) ?></p>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details
@@ -165,7 +182,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
 
-                                <select name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
+                                <select name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
                                     <?php if ($id == null) { ?>
                                         <option value="" hidden selected>Select year</option>
                                     <?php
@@ -174,7 +191,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                                     <?php }
                                     ?>
                                     <option>2022</option>
-                                    <option>ALL</option>
+                                    <option>2021</option>
                                 </select>
 
                                 <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
@@ -199,6 +216,28 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                                     <option>December</option>
                                     <option>ALL</option>
                                 </select>
+
+                                <select name="get_category" class="form-control" style="width:max-content;display:inline-block">
+                                    <?php if ($section == null) { ?>
+                                        <option value="" disabled selected hidden>Select Category</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $section ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>LG2-A</option>
+                                    <option>LG2-B</option>
+                                    <option>LG2-C</option>
+                                    <option>LG3</option>
+                                    <option>LG4</option>
+                                    <option>LG4S1</option>
+                                    <option>LG4S2</option>
+                                    <option>WLG3</option>
+                                    <option>WLG4S1</option>
+                                    <option>Undefined</option>
+                                    <option>ALL</option>
+                                </select>
+
                             </div>
                         </div>
                         <div class="col2 left" style="display: inline-block;">
