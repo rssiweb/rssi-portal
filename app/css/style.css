@@ -532,7 +532,7 @@
         
         @media (max-width:767px) {
             .hidden-xs {
-                display: none!important
+                display: none !important
             }
         }
         
@@ -558,10 +558,10 @@
                 height: 0px;
             }
             .page-topbar .logo-icon {
-                width: 0px!important;
+                width: 0px !important;
             }
             .page-topbar .logo-area {
-                width: 0px!important;
+                width: 0px !important;
             }
             .page-topbar li .dropdown-menu.profile {
                 width: max-content;
@@ -896,4 +896,11 @@ z-index: 5001;
         
         .btn {
             border: none !important;
+        }
+        
+        @media print {
+            .no-print,
+            .no-print * {
+                display: none !important;
+            }
         }

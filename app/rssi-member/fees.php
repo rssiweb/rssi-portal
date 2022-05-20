@@ -5,6 +5,7 @@ include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    
     header("Location: index.php");
     exit;
 }
@@ -20,6 +21,9 @@ if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
 <?php
 include("member_data.php");
 setlocale(LC_TIME, 'fr_FR.UTF-8');
+@$_SESSION["get_aid"] = $_POST["get_aid"];
+@$_SESSION["get_id"] = $_POST["get_id"];
+@$_SESSION["get_category"] = $_POST["get_category"];
 ?>
 <?php
 include("database.php");
@@ -165,7 +169,8 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
 ============================== -->
 
 <body>
-    <?php include 'header.php'; ?>
+
+    <?php include 'header.php';?>
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
@@ -174,7 +179,13 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr - $resultArrrr) ?></p> + <p class="label label-success"><?php echo ($resultArrrr) ?></p> = <p class="label label-info"><?php echo ($resultArrr) ?></p>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details
+                        Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details<br><br>
+                        <form method="post" action="export.php">
+
+                        <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="Export"><i class="fa-solid fa-file-excel" style="font-size:large;"></i></button>
+                        </form>
                     </div>
                 </div>
                 <section class="box" style="padding: 2%;">
