@@ -1,15 +1,17 @@
 <?php
 session_start();
-header("Content-type: application/csv");
-header("Content-Disposition: attachment; filename=fees.csv");
-header("Pragma: no-cache");
-header("Expires: 0");
-
 include("database.php");
 
 @$id = $_SESSION['get_aid'];
 @$status = $_SESSION['get_id'];
 @$section = $_SESSION['get_category'];
+date_default_timezone_set('Asia/Kolkata');
+$today = date("YmdHis");
+
+header("Content-type: application/csv");
+header("Content-Disposition: attachment; filename=fees_$today.csv");
+header("Pragma: no-cache");
+header("Expires: 0");
 
 if (($section != null && $section != 'ALL') && ($status != null && $status != 'ALL')) {
 

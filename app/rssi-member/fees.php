@@ -180,7 +180,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details<br><br>
-                        <form method="post" action="export.php">
+                        <form method="post" action="fees_export.php">
 
                         <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
