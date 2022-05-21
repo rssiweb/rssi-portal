@@ -34,14 +34,19 @@ include("database.php");
 
 if ($id == null && $status == 'ALL') {
   $result = pg_query($con, "SELECT * FROM donation order by id desc");
+  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
 } else if ($id == null && $status != 'ALL') {
   $result = pg_query($con, "SELECT * FROM donation WHERE year='$status' order by id desc");
+  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE year='$status'");
 } else if ($id > 0 && $status != 'ALL') {
   $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' AND year='$status' order by id desc");
+  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id' AND year='$status'");
 } else if ($id > 0 && $status == 'ALL') {
   $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' order by id desc");
+  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id'");
 } else {
   $result = pg_query($con, "SELECT * FROM donation order by id desc");
+  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
 }
 
 if (!$result) {
@@ -50,6 +55,7 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
+$resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
 ?>
 
 
@@ -104,7 +110,7 @@ $resultArr = pg_fetch_all($result);
       <div class="col-md-12">
         <div class="row">
           <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
-            Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+            Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total donated amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
           </div>
           <div class="col" style="display: inline-block; width:47%; text-align:right">
             Home / Donation Status
@@ -117,13 +123,14 @@ $resultArr = pg_fetch_all($result);
                 <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Invoice number" value="<?php echo $id ?>">
                 <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select year" required>
                   <?php if ($status == null) { ?>
-                    <option value="" hidden selected>Select year</option>
+                    <option value="" hidden selected>Select financial year</option>
                   <?php
                   } else { ?>
                     <option hidden selected><?php echo $status ?></option>
                   <?php }
                   ?>
-                  <option>2022</option>
+                  <option>2022-2023</option>
+                  <option>2021-2022</option>
                   <option>ALL</option>
                 </select>
               </div>

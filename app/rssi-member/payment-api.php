@@ -2,10 +2,12 @@
 <?php
     include("database.php");
     date_default_timezone_set('Asia/Kolkata');
+    echo json_encode($_POST);
     if ($_POST['form-type'] == "payment") {
       @$sname = strtoupper($_POST['sname']);
       @$studentid = $_POST['studentid'];
       @$fees = $_POST['fees'];
+      // @$month = join(',', $_POST['month']);
       @$month = $_POST['month'];
       @$collectedby = $_POST['collectedby'];
       $now = date('Y-m-d H:i:s');

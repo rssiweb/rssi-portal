@@ -21,16 +21,16 @@ if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
 <?php
 include("member_data.php");
 setlocale(LC_TIME, 'fr_FR.UTF-8');
-@$_SESSION["get_aid"] = $_POST["get_aid"];
-@$_SESSION["get_id"] = $_POST["get_id"];
-@$_SESSION["get_category"] = $_POST["get_category"];
+// @$_SESSION["get_aid"] = $_POST["get_aid"];
+// @$_SESSION["get_id"] = $_POST["get_id"];
+// @$_SESSION["get_category"] = $_POST["get_category"];
 ?>
 <?php
 include("database.php");
+
 @$id = $_POST['get_aid'];
 @$status = $_POST['get_id'];
 @$section = $_POST['get_category'];
-
 
 if (($section != null && $section != 'ALL') && ($status != null && $status != 'ALL')) {
 
@@ -180,7 +180,11 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details<br><br>
-                        <form method="post" action="fees_export.php">
+                        <form method="POST" action="export_function.php">
+                        <input type="hidden" value="fees" name="export_type"/>
+                        <input type="hidden" value="<?php echo $id ?>" name="id"/>
+                        <input type="hidden" value="<?php echo $status ?>" name="status"/>
+                        <input type="hidden" value="<?php echo $section ?>" name="section"/>
 
                         <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
