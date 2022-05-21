@@ -68,7 +68,7 @@ if (($section == 'ALL' || $section == null) && ($status != null && $status != 'A
     WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id AND pstatus='transferred'");
 }
 
-if (($section != null && $section != 'ALL') && $status == 'ALL') {
+if (($section != null && $section != 'ALL') && ($status == 'ALL' || $status == null)) {
 
     $result = pg_query($con, "SELECT * FROM fees 
     
