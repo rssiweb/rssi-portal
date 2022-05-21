@@ -33,31 +33,31 @@ include("database.php");
 @$class = $_POST['get_class'];
 // $categories = "'".implode("','", $category)."'";
 
-if ($id == 'ALL' && $category == 'ALL' && $class == 'ALL') {
+if ($id == 'ALL' && $category == 'ALL' && ($class == 'ALL' || $class==null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
   left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE module='$module' order by filterstatus asc, category asc");
 } 
 
-if ($id == 'ALL' && $category == 'ALL' && $class != 'ALL' && $class != null) {
+if ($id == 'ALL' && $category == 'ALL' && ($class != 'ALL' && $class != null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student
   left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE class='$class' AND module='$module' order by category asc");
 } 
 
-if ($id != 'ALL' && $module != 'ALL' && $category == 'ALL' && ($class == null || $class == 'ALL')) {
+if ($id != 'ALL' && $category == 'ALL' && ($class == null || $class == 'ALL')) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
   left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE filterstatus='$id' AND module='$module' order by category asc");
 } 
 
-if ($id != 'ALL' && $category != 'ALL' && $module != 'ALL' && $class == 'ALL') {
+if ($id != 'ALL' && $category != 'ALL' && ($class != 'ALL' && $class != null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE filterstatus='$id' AND module='$module' AND category in ($categories) order by category asc");
+  WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc");
 } 
 
 if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
@@ -66,36 +66,36 @@ if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
   WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc");
 }
 
-if ($id > 0 && $category != 'ALL' && $class != 'ALL' && $class != null) {
+if ($id != 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
 }
 
-if ($id > 0 && $category == 'ALL' && $class == 'ALL') {
+if ($id != 'ALL' && $category == 'ALL' && $class == 'ALL') {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE module='$module' AND filterstatus='$id' order by category asc");
 }
 
-if ($id > 0 && $category == 'ALL' && $class != 'ALL' && $class != null) {
+if ($id != 'ALL' && $category == 'ALL' && $class != 'ALL' && $class != null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc");
 }
 
-if ($id > 0 && $category != 'ALL' && $class == 'ALL') {
-  echo "yaha";
+if ($id != 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class==null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE category in $category AND module='$module' AND filterstatus='$id' order by category asc");
+  WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc");
 }
 
-{
+if ($id == 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class==null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
+  WHERE module='$module' AND category='$category' order by category asc");
 }
+
 
 if (!$result) {
   echo "An error occurred.\n";
@@ -351,7 +351,7 @@ $resultArr = pg_fetch_all($result);
         </tr>';
             } ?>
             <?php
-          } else if ($id == "" && $category == "") {
+          } else if ($module == "") {
             ?>
               <tr>
                 <td colspan="5">Please select Filter value.</td>
