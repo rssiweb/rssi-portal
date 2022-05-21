@@ -12,13 +12,14 @@ header("Content-Disposition: attachment; filename={$export_type}_$today.csv");
 header("Pragma: no-cache");
 header("Expires: 0");
 
-if($export_type == "fees"){
+if ($export_type == "fees") {
     fees_export();
-} else if ($export_type == "donation"){
+} else if ($export_type == "donation") {
     donation_export();
 }
 
-function fees_export(){
+function fees_export()
+{
     include("database.php");
     @$id = $_POST['id'];
     @$status = $_POST['status'];
@@ -77,18 +78,52 @@ function fees_export(){
 
     $resultArr = pg_fetch_all($result);
 
-    echo 'Fees collection date,ID/F Name,Category,Month,Amount,Collected by'."\n";
+    echo 'Fees collection date,ID/F Name,Category,Month,Amount,Collected by' . "\n";
 
     foreach ($resultArr as $array) {
 
-        echo substr($array['date'], 0, 10) . ',' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . ',' . $array['category'] . ',' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . ',' . $array['fees'] . ',' . $array['fullname']."\n";
-        
+        echo substr($array['date'], 0, 10) . ',' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . ',' . $array['category'] . ',' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . ',' . $array['fees'] . ',' . $array['fullname'] . "\n";
     }
 }
 
-function donation_export(){
+function donation_export()
+{
 
-    echo "haha";
-}
 
+    include("database.php");
+    @$id = $_POST['invoice'];
+    @$status = $_POST['fyear'];
+
+
+    if ($id == null && $status == 'ALL') {
+        $result = pg_query($con, "SELECT * FROM donation order by id desc");
+        $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
+    } else if ($id == null && $status != 'ALL') {
+        $result = pg_query($con, "SELECT * FROM donation WHERE year='$status' order by id desc");
+        $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE year='$status'");
+    } else if ($id > 0 && $status != 'ALL') {
+        $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' AND year='$status' order by id desc");
+        $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id' AND year='$status'");
+    } else if ($id > 0 && $status == 'ALL') {
+        $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' order by id desc");
+        $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id'");
+    } else {
+        $result = pg_query($con, "SELECT * FROM donation order by id desc");
+        $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
+    }
+
+    if (!$result) {
+        echo "An error occurred.\n";
+        exit;
+    }
+
+    $resultArr = pg_fetch_all($result);
+
+    echo 'Date,Name,Contact,Transaction id,Amount,PAN,Mode of payment,Invoice,URL,Status,By' . "\n";
+
+    foreach ($resultArr as $array) {
+
+        echo substr($array['timestamp'], 0, 10) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',' . $array['mobilenumber'] . ',' . $array['transactionid'] . ',' . $array['currencyofthedonatedamount'] . ' ' . $array['donatedamount'] . ',' . $array['panno'] . ',' . $array['modeofpayment'] . ',' . $array['invoice'] . ',' . $array['profile'] . ',' ?><?php if ($array['approvedby'] != '--' && $array['approvedby'] != 'rejected') { ?><?php echo 'accepted' ?><?php } else if ($array['approvedby'] == 'rejected') { echo 'rejected' ?><?php } else {echo 'on hold' ?><?php }echo ',' . $array['approvedby'] . "\n";
+        }
+    }
 ?>

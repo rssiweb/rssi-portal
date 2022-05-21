@@ -113,7 +113,16 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
             Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total donated amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
           </div>
           <div class="col" style="display: inline-block; width:47%; text-align:right">
-            Home / Donation Status
+            Home / Donation Status<br><br>
+            <form method="POST" action="export_function.php">
+                        <input type="hidden" value="donation" name="export_type"/>
+                        <input type="hidden" value="<?php echo $id ?>" name="invoice"/>
+                        <input type="hidden" value="<?php echo $status ?>" name="fyear"/>
+
+                        <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="Export CSV"><i class="fa-regular fa-file-excel" style="font-size:large;"></i></button>
+                        </form>
           </div>
         </div>
         <section class="box" style="padding: 2%;">
