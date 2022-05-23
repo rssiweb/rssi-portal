@@ -86,12 +86,14 @@ echo '
          <th>Certificate Date</th>
          <th>Certifying Authority</th>
         </tr>
-        </thead>
-        <tbody>';
+        </thead>'?>
+
+
+<?php if (@$id > 0) {
 
 
 foreach ($resultArr as $array) {
-    echo '<tr>
+    echo '<tbody><tr>
             <td><img src="' . $array['photourl'] . '" width=100px/></td>
             <td style="line-height:2">Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b></td>
             <td>' . $array['class'] . '</td>
@@ -114,7 +116,7 @@ foreach ($resultArr as $array) {
 
             <?php echo '<td>' . $array['exitinterview'] . '</td>
             </tr>';
-}
+}}
 echo '</table>
 </section>
 </div>
