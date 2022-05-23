@@ -107,6 +107,7 @@ ADD COLUMN id SERIAL PRIMARY KEY;
 
 ALTER TABLE fees ALTER COLUMN fees TYPE numeric USING (fees::numeric);
 
+set datestyle to DMY;
 ALTER TABLE donation ADD COLUMN timestamp_new TIMESTAMP without time zone NULL;
 UPDATE donation SET timestamp_new = timestamp::TIMESTAMP;
 ALTER TABLE donation ALTER COLUMN timestamp TYPE TIMESTAMP without time zone USING timestamp_new;

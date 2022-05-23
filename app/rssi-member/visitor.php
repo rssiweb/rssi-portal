@@ -27,12 +27,23 @@ date_default_timezone_set('Asia/Kolkata');
 $today = date("dd/mm/yyyy");
 // @$appid = $_POST['get_appid'];
 @$appid = $_GET['get_appid'];
+@$status = $_GET['get_id'];
 
-if ($appid == null) {
+if ($appid == null && $status == null) {
     $result = pg_query($con, "select * from visitor WHERE visitorid is null");
 }
-if ($appid != null) {
+if ($appid != null && ($status == null || $status == 'ALL')) {
     $result = pg_query($con, "select * from visitor WHERE visitorid='$appid' or existingid='$appid'");
+}
+if ($appid != null && $status != null && $status != 'ALL') {
+    $result = pg_query($con, "select * from visitor WHERE (visitorid='$appid' or existingid='$appid') AND EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))=EXTRACT(MONTH FROM visitdatefrom)");
+}
+if ($appid == null && $status != null && $status != 'ALL') {
+    $result = pg_query($con, "select * from visitor WHERE EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))=EXTRACT(MONTH FROM visitdatefrom)");
+}
+
+if ($appid == null && $status == 'ALL') {
+    $result = pg_query($con, "select * from visitor");
 }
 
 if (!$result) {
@@ -90,8 +101,32 @@ $resultArr = pg_fetch_all($result);
                         <!--onsubmit="process()-->
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
-                                <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Visitor ID" value="<?php echo $appid ?>" required>
+                                <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Visitor ID" value="<?php echo $appid ?>">
                             </div>
+                            <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
+                                    <?php if ($status == null) { ?>
+                                        <option value="" hidden selected>Select month</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $status ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>January</option>
+                                    <option>February</option>
+                                    <option>March</option>
+                                    <option>April</option>
+                                    <option>May</option>
+                                    <option>June</option>
+                                    <option>July</option>
+                                    <option>August</option>
+                                    <option>September</option>
+                                    <option>October</option>
+                                    <option>November</option>
+                                    <option>December</option>
+                                    <option>ALL</option>
+                                </select>
+
+
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
@@ -131,7 +166,7 @@ $resultArr = pg_fetch_all($result);
 
                             <?php echo '</td>
                                 <td>' . $array['visitorname'] . '<br>' . $array['contact'] . '<br>' . $array['email'] . '</td>
-                                <td>' . $array['visitdatefrom'] . '-' . $array['visitdateto'] . '</td><td> ' ?>
+                                <td>' . substr($array['visitdatefrom'], 0, 16) . '-' . substr($array['visitdateto'], 0, 10) . '</td><td> ' ?>
 
                             <?php if ($array['existingid'] != null) { ?><?php } ?>
 
@@ -171,7 +206,7 @@ $resultArr = pg_fetch_all($result);
                         <?php } else if ($appid == null) {
                         ?>
                             <tr>
-                                <td colspan="5">Please enter Visitor Id.</td>
+                                <td colspan="5">Please enter filter value.</td>
                             </tr>
                         <?php
                     } else {
