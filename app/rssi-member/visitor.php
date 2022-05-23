@@ -23,6 +23,8 @@ if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
 <?php
 include("member_data.php");
 include("database.php");
+date_default_timezone_set('Asia/Kolkata');
+$today = date("dd/mm/yyyy");
 // @$appid = $_POST['get_appid'];
 @$appid = $_GET['get_appid'];
 
@@ -149,20 +151,24 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['branch'] . '</td>' ?>
 
 
-                                <?php if ($array['status'] == 'Approved') { ?>
+                                <?php if ($array['status'] == 'Approved' && $array['visitdateto'] > $today) { ?>
                                     <?php echo '<td><p class="label label-success">approved</p></td>' ?>
                                 <?php }
-                                if ($array['status'] == 'Rejected') { ?>
+                                if ($array['status'] == 'Rejected' && $array['visitdateto'] > $today) { ?>
                                     <?php echo '<td><p class="label label-danger">rejected</p></td>' ?>
                                 <?php }
-                                if ($array['status'] == null) { ?>
+                                if ($array['status'] == null && $array['visitdateto'] > $today) { ?>
                                     <?php echo '<td><p class="label label-default">under review</p></td>' ?>
                                 <?php } ?>
 
+                                <?php
+                                if ($array['visitdateto'] < $today) { ?>
+                                    <?php echo '<td><p class="label label-default">expired</p></td>' ?>
+                                <?php } ?>    
+
                             <?php echo '</tr>';
                         } ?>
-                        <?php
-                    } else if ($appid == null) {
+                        <?php } else if ($appid == null) {
                         ?>
                             <tr>
                                 <td colspan="5">Please enter Visitor Id.</td>
