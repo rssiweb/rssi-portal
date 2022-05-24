@@ -100,7 +100,7 @@ $resultArr = pg_fetch_all($result);
                         <?php echo '
                                 <td><b>' . $array['firstname'] . '&nbsp;' . $array['lastname'] . '</b></td>
                                 <td>' . $array['panno'] . '</td>
-                                <td>' . substr($array['timestamp'], 0, 10) . '</td><td>' ?>
+                                <td>' . date("d/m/Y H:i", strtotime($array['timestamp'])) . '</td><td>' ?>
 
                         <?php if ($array['nameofitemsyoushared'] != "") { ?>
 

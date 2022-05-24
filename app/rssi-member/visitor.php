@@ -98,7 +98,7 @@ $resultArr = pg_fetch_all($result);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details
+                        Home / Visitor pass
                     </div>
                     <section class="box" style="padding: 2%;">
                         <form id="myform" action="" method="GET">
