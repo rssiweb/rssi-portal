@@ -94,16 +94,20 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                    <div class="col" style="display: inline-block; width:100%; text-align:right">
-                        Home / Visitor pass
+                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
+                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
-                    <form id="myform" action="" method="GET">
-                        <!--onsubmit="process()-->
-                        <div class="form-group" style="display: inline-block;">
-                            <div class="col2" style="display: inline-block;">
-                                <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Visitor ID" value="<?php echo $appid ?>">
-                            </div>
-                            <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
+                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+                        Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details
+                    </div>
+                    <section class="box" style="padding: 2%;">
+                        <form id="myform" action="" method="GET">
+                            <!--onsubmit="process()-->
+                            <div class="form-group" style="display: inline-block;">
+                                <div class="col2" style="display: inline-block;">
+                                    <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Visitor ID" value="<?php echo $appid ?>">
+                                </div>
+                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
                                     <?php if ($status == null) { ?>
                                         <option value="" hidden selected>Select month</option>
                                     <?php
@@ -127,103 +131,103 @@ $resultArr = pg_fetch_all($result);
                                 </select>
 
 
-                        </div>
-                        <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLSfGLdHHjI8J5b238SMAmf7LMkVVRJPAKnk1SjHcBUZSXATFQA/viewform" target="_blank" class="btn btn-info btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Registration</a>
-                        </div>
-                    </form>
-                    <div class="col" style="display: inline-block; width:99%; text-align:right">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                    </div>
+                            </div>
+                            <div class="col2 left" style="display: inline-block;">
+                                <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLSfGLdHHjI8J5b238SMAmf7LMkVVRJPAKnk1SjHcBUZSXATFQA/viewform" target="_blank" class="btn btn-info btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Registration</a>
+                            </div>
+                        </form>
 
-                    <?php echo '
+                        <?php echo '
                        <table class="table">
                         <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Visitor ID</th>
                                 <th scope="col">Visitor details</th>
-                                <th scope="col">Visit date from-to</th>
-                                <th scope="col">Aadhar card</th>
+                                <th scope="col">Visit date from</th>
+                                <th scope="col">Visit date to</th>
+                                <th scope="col">Identity proof</th>
                                 <th scope="col">Photo</th>
                                 <th scope="col">Purpose of visit</th>
                                 <th scope="col">Branch name</th>
                                 <th scope="col">HR remarks</th>
                             </tr>
                         </thead>' ?>
-                    <?php if (sizeof($resultArr) > 0) { ?>
-                        <?php
-                        echo '<tbody>';
-                        foreach ($resultArr as $array) {
-                            echo '<tr><td>' ?>
+                        <?php if (sizeof($resultArr) > 0) { ?>
+                            <?php
+                            echo '<tbody>';
+                            foreach ($resultArr as $array) {
+                                echo '<tr><td>' ?>
 
-                            <?php if ($array['existingid'] == null) { ?>
-                                <?php echo $array['visitorid'] ?>
-                            <?php }
-                            if ($array['existingid'] != null) { ?>
-                                <?php echo $array['existingid'] ?>
-                            <?php } ?>
+                                <?php if ($array['existingid'] == null) { ?>
+                                    <?php echo $array['visitorid'] ?>
+                                <?php }
+                                if ($array['existingid'] != null) { ?>
+                                    <?php echo $array['existingid'] ?>
+                                <?php } ?>
 
-                            <?php echo '</td>
+                                <?php echo '</td>
                                 <td>' . $array['visitorname'] . '<br>' . $array['contact'] . '<br>' . $array['email'] . '</td>
-                                <td>' . substr($array['visitdatefrom'], 0, 16) . '-' . substr($array['visitdateto'], 0, 10) . '</td><td> ' ?>
+                                <td>' . date("d/m/Y H:i", strtotime($array['visitdatefrom'])). '</td> 
+                                
+                                <td>' . date("d/m/Y", strtotime($array['visitdateto'])) . '</td><td> ' ?>
 
-                            <?php if ($array['existingid'] != null) { ?><?php } ?>
+                                <?php if ($array['existingid'] != null) { ?><?php } ?>
 
-                            <?php if ($array['existingid'] == null) { ?>
-                                <?php echo
-                                '<span class="noticea"><a href="' . $array['aadharcard'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span>' ?> <?php } ?>
+                                <?php if ($array['existingid'] == null) { ?>
+                                    <?php echo
+                                    '<span class="noticea"><a href="' . $array['aadharcard'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span>' ?> <?php } ?>
 
-                            <?php if ($array['existingid'] == null) { ?>
-                                <?php echo
-                                '</td><td><img src="' . str_replace("open", "uc", $array['photo']) . '" width="50" height="50"/></td>'
+                                <?php if ($array['existingid'] == null) { ?>
+                                    <?php echo
+                                    '</td><td><img src="' . str_replace("open", "uc", $array['photo']) . '" width="50" height="50"/></td>'
 
-                                ?><?php } else { ?><?php echo
+                                    ?><?php } else { ?><?php echo
                                                     '</td><td></td>' ?><?php } ?>
 
-                                <?php echo
-                                '<td>' . $array['purposeofvisit'] . '</td>
+                                    <?php echo
+                                    '<td>' . $array['purposeofvisit'] . '</td>
                                 <td>' . $array['branch'] . '</td>' ?>
 
 
-                                <?php if ($array['status'] == 'Approved' && $array['visitdateto'] > $today) { ?>
-                                    <?php echo '<td><p class="label label-success">approved</p></td>' ?>
-                                <?php }
-                                if ($array['status'] == 'Rejected' && $array['visitdateto'] > $today) { ?>
-                                    <?php echo '<td><p class="label label-danger">rejected</p></td>' ?>
-                                <?php }
-                                if ($array['status'] == null && $array['visitdateto'] > $today) { ?>
-                                    <?php echo '<td><p class="label label-default">under review</p></td>' ?>
-                                <?php } ?>
+                                    <?php if ($array['status'] == 'Approved' && $array['visitdateto'] > $today) { ?>
+                                        <?php echo '<td><p class="label label-success">approved</p></td>' ?>
+                                    <?php }
+                                    if ($array['status'] == 'Rejected' && $array['visitdateto'] > $today) { ?>
+                                        <?php echo '<td><p class="label label-danger">rejected</p></td>' ?>
+                                    <?php }
+                                    if ($array['status'] == null && $array['visitdateto'] > $today) { ?>
+                                        <?php echo '<td><p class="label label-default">under review</p></td>' ?>
+                                    <?php } ?>
 
-                                <?php
-                                if ($array['visitdateto'] < $today) { ?>
-                                    <?php echo '<td><p class="label label-default">expired</p></td>' ?>
-                                <?php } ?>    
+                                    <?php
+                                    if ($array['visitdateto'] < $today) { ?>
+                                        <?php echo '<td><p class="label label-default">expired</p></td>' ?>
+                                    <?php } ?>
 
-                            <?php echo '</tr>';
-                        } ?>
-                        <?php } else if ($appid == null) {
-                        ?>
-                            <tr>
-                                <td colspan="5">Please enter filter value.</td>
-                            </tr>
-                        <?php
-                    } else {
-                        ?>
-                            <tr>
-                                <td colspan="5">No record was found for the selected filter value.</td>
-                            </tr>
-                        <?php }
+                                <?php echo '</tr>';
+                            } ?>
+                            <?php } else if ($appid == null) {
+                            ?>
+                                <tr>
+                                    <td colspan="5">Please enter filter value.</td>
+                                </tr>
+                            <?php
+                        } else {
+                            ?>
+                                <tr>
+                                    <td colspan="5">No record was found for the selected filter value.</td>
+                                </tr>
+                            <?php }
 
-                    echo '</tbody>
+                        echo '</tbody>
                                     </table>';
-                        ?>
-        </section>
-        </div>
+                            ?>
+                    </section>
+                </div>
 
-        <div class="clearfix"></div>
-    </section>
+                <div class="clearfix"></div>
+        </section>
     </section>
     <!-- <script>
         function process() {
