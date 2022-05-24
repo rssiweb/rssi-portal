@@ -123,7 +123,7 @@ function donation_export()
 
     foreach ($resultArr as $array) {
 
-        echo substr($array['timestamp'], 0, 10) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',' . $array['mobilenumber'] . ',' . $array['transactionid'] . ',' . $array['currencyofthedonatedamount'] . ' ' . $array['donatedamount'] . ',' . $array['panno'] . ',' . $array['modeofpayment'] . ',' . $array['invoice'] . ',' . $array['profile'] . ',' ?><?php if ($array['approvedby'] != '--' && $array['approvedby'] != 'rejected') { ?><?php echo 'accepted' ?><?php } else if ($array['approvedby'] == 'rejected') { echo 'rejected' ?><?php } else {echo 'on hold' ?><?php }echo ',' . $array['approvedby'] . "\n";
+        echo date("d/m/Y H:i", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',' . $array['mobilenumber'] . ',' . $array['transactionid'] . ',' . $array['currencyofthedonatedamount'] . ' ' . $array['donatedamount'] . ',' . $array['panno'] . ',' . $array['modeofpayment'] . ',' . $array['invoice'] . ',' . $array['profile'] . ',' ?><?php if ($array['approvedby'] != '--' && $array['approvedby'] != 'rejected') { ?><?php echo 'accepted' ?><?php } else if ($array['approvedby'] == 'rejected') { echo 'rejected' ?><?php } else {echo 'on hold' ?><?php }echo ',' . $array['approvedby'] . "\n";
         }
     }
 ?>
