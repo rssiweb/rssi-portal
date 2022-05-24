@@ -1,39 +1,13 @@
 <?php
 include("database.php");
 @$id = strtoupper($_GET['get_id']);
-$view_users_query = "select * from donation WHERE invoice='$id'"; //select query for viewing users.  
-$run = pg_query($con, $view_users_query); //here run the sql query.  
-
-while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
-{
-    $approvedby=$row[0];
-    $profile=$row[1];
-    $mergestatus=$row[2];
-    $timestamp=$row[3];
-    $firstname=$row[4];
-    $emailaddress=$row[5];
-    $mobilenumber=$row[6];
-    $transactionid=$row[7];
-    $currencyofthedonatedamount=$row[8];
-    $donatedamount=$row[9];
-    $additionalnote=$row[10];
-    $panno=$row[11];
-    $dateofbirth=$row[12];
-    $address=$row[13];
-    $ack=$row[14];
-    $modeofpayment=$row[15];
-    $cauthenticationcode=$row[16];
-    $nameofitemsyoushared=$row[17];
-    $sauthenticationcode=$row[18];
-    $lastname=$row[19];
-    $youwantustospendyourdonationfor=$row[20];
-    $code=$row[21];
-    $invoice=$row[22];
-    $filename=$row[23];
-    $dlastupdatedon=$row[24];
-    
+$result = pg_query($con, "select * from donation WHERE invoice='$id'"); //select query for viewing users.  
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+$resultArr = pg_fetch_all($result);
 ?>
-<?php } ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -108,7 +82,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     </div>
                 </form>
 
-                <table class="table">
+                <?php echo '<table class="table">
                     <thead>
                         <tr>
                             <th scope="col">Name</th>
@@ -118,52 +92,60 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <th scope="col">Invoice No</th>
                             <th scope="col">Status</th>
                         </tr>
-                    </thead>
-                    <?php if (@$firstname > 0) {
-                    ?>
-                        <tbody>
-                            <tr>
-                                <td><b><?php echo $firstname ?> <?php echo $lastname ?></td>
-                                <td><?php echo $panno ?></td>
-                                <td><?php echo $timestamp ?></td>
-                                <td><?php echo $currencyofthedonatedamount ?> <?php echo $donatedamount ?> <?php echo $nameofitemsyoushared ?>
-                                
-                                <?php if ($nameofitemsyoushared != "") { ?>
-                                        <p>Quantity: <?php echo $code ?></p>
+                    </thead>' ?>
+                <?php if ($resultArr != null) {
+                    echo '<tbody>';
+                    foreach ($resultArr as $array) {
+                        echo '<tr>' ?>
+                        <?php echo '
+                                <td><b>' . $array['firstname'] . '&nbsp;' . $array['lastname'] . '</b></td>
+                                <td>' . $array['panno'] . '</td>
+                                <td>' . substr($array['timestamp'], 0, 10) . '</td><td>' ?>
 
-                                    <?php } else{}?></td>
+                        <?php if ($array['nameofitemsyoushared'] != "") { ?>
 
-                                <td><?php echo $invoice ?></td>
-                                <td>
+                            <?php echo   $array['nameofitemsyoushared']. '<br>' . 'Quantity: ' . $array['code'] . '</td>' ?> <?php } ?>
 
-                                    <?php if ($approvedby == "rejected") { ?>
-                                        <p class="label label-danger"><?php echo $approvedby ?></p>
+                        <?php if ($array['nameofitemsyoushared'] == null) { ?>
 
-                                    <?php } else if ($approvedby == "--") { ?>
-                                        <p class="label label-info">on hold</p>
+                            <?php echo  $array['currencyofthedonatedamount'] . '&nbsp;' . $array['donatedamount'] . '</td>' ?> <?php } ?>
 
-                                    <?php } else { ?>
-                                        <p class="label label-success">accepted</p> <?php } ?>
-                                </td>
+                        <?php echo '<td>' . $array['invoice'] . '</td><td>' ?>
+
+                        <?php if ($array['approvedby'] == "rejected") { ?>
+                            <?php echo '<p class="label label-danger"><?php echo $approvedby ?></p>' ?>
+
+                        <?php } else if ($array['approvedby'] == "--") { ?>
+
+                            <?php echo '<p class="label label-info">on hold</p>' ?>
+
+                        <?php } else { ?>
+
+                            <?php echo  '<p class="label label-success">accepted</p>' ?> <?php } ?>
+
+                        <?php echo '</td>
                             </tr>
                         </tbody>
+                </table>' ?>
+
+                    <?php
+                    }
+                }
+                else if ($id == "") {
+                    ?>
+                    <tr>
+                        <td>Please enter Invoice number.</td>
+                    </tr>
+                <?php
+                } else {
+                ?>
+                    <tr>
+                        <td>No record found for <?php echo $id ?></td>
+                    </tr>
+                <?php }
+                ?>
+                </tbody>
                 </table>
-            <?php
-                    } else if ($id == "") {
-            ?>
-                <tr>
-                    <td>Please enter Invoice number.</td>
-                </tr>
-            <?php
-                    } else {
-            ?>
-                <tr>
-                    <td>No record found for <?php echo $id ?></td>
-                </tr>
-            <?php }
-            ?>
-            </tbody>
-            </table>
 
 
         </div>
