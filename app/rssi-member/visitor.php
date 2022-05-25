@@ -24,7 +24,7 @@ if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
 include("member_data.php");
 include("database.php");
 date_default_timezone_set('Asia/Kolkata');
-$today = date("dd/mm/yyyy");
+$today = date("Y-m-d");
 // @$appid = $_POST['get_appid'];
 @$appid = $_GET['get_appid'];
 @$status = $_GET['get_id'];
@@ -187,16 +187,16 @@ $resultArr = pg_fetch_all($result);
 
                                     <?php echo
                                     '<td>' . $array['purposeofvisit'] . '</td>
-                                <td>' . $array['branch'] . '</td>' ?>
+                                <td>' . $array['branch'] . '</td>'  ?>
 
 
-                                    <?php if ($array['status'] == 'Approved' && $array['visitdateto'] > $today) { ?>
+                                    <?php if ($array['status'] == 'Approved' && $array['visitdateto'] >= $today) { ?>
                                         <?php echo '<td><p class="label label-success">approved</p></td>' ?>
                                     <?php }
-                                    if ($array['status'] == 'Rejected' && $array['visitdateto'] > $today) { ?>
+                                    if ($array['status'] == 'Rejected' && $array['visitdateto'] >= $today) { ?>
                                         <?php echo '<td><p class="label label-danger">rejected</p></td>' ?>
                                     <?php }
-                                    if ($array['status'] == null && $array['visitdateto'] > $today) { ?>
+                                    if ($array['status'] == null && $array['visitdateto'] >= $today) { ?>
                                         <?php echo '<td><p class="label label-default">under review</p></td>' ?>
                                     <?php } ?>
 
