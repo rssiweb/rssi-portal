@@ -201,8 +201,12 @@ $resultArr = pg_fetch_all($result);
                                     <?php } ?>
 
                                     <?php
-                                    if ($array['visitdateto'] < $today) { ?>
+                                    if ($array['status'] != 'Visited' && $array['visitdateto'] < $today) { ?>
                                         <?php echo '<td><p class="label label-default">expired</p></td>' ?>
+                                    <?php } ?>
+                                    <?php
+                                    if ($array['status'] == 'Visited') { ?>
+                                        <?php echo '<td><p class="label label-default">visited</p></td>' ?>
                                     <?php } ?>
 
                                 <?php echo '</tr>';
