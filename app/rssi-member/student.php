@@ -452,6 +452,8 @@ $resultArr = pg_fetch_all($result);
     <div class="modal-content">
       <span class="close">&times;</span>
 
+      <div class="col" style="display: inline-block; width:85%; text-align:left">
+
       <div style="display: inline; width:30%"><img id="profileimage" src="#" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50" /></div>&nbsp;
 
       <b>
@@ -459,6 +461,15 @@ $resultArr = pg_fetch_all($result);
       </b>
     </div>
     <p id="status" class="label " style="display: inline !important;"><span class="filterstatus"></span></p>
+
+    </div>
+
+    <div class="col" style="display: inline-block; width:10%; text-align:right">
+
+    <a id="profile" href="#" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 20px ;color:#777777" title="Profile"></i></a>
+
+    </div>
+
     <br><br>
     <!-- <p id="laddu"></p> -->
     <p style="font-size: small; line-height:2">
@@ -566,6 +577,10 @@ $resultArr = pg_fetch_all($result);
 
     var profileimage = document.getElementById("profileimage")
     profileimage.src = mydata["photourl"]
+
+
+    var profile = document.getElementById("profile")
+    profile.href = "/rssi-member/student-profile.php?get_id="+mydata["student_id"]
 
     var sname = document.getElementById("sname")
     sname.value = mydata["studentname"]

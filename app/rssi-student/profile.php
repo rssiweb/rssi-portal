@@ -143,7 +143,7 @@ include("student_data.php");
                                 <td><?php echo $nameoftheschool ?></td>
                                 <td><?php echo $nameoftheboard ?></td>
                                 <td><?php echo $medium ?></td>
-                                <td><span class="noticea"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span></td>
+                                <td><span class="noticea"><a href="myprofile.php" target="_blank"><?php echo $studentname ?>_<?php echo $student_id ?></a></span></td>
                             </tr>
                         </tbody>
                     </table>
