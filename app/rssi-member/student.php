@@ -217,6 +217,19 @@ $resultArr = pg_fetch_all($result);
           <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
           <div class="col" style="display: inline-block; width:47%; text-align:right">
                         <a href="fees.php" target="_self" class="btn btn-danger btn-sm" role="button">Fees Details</a>
+                   
+                    <br><br>
+                        <form method="POST" action="export_function.php">
+                        <input type="hidden" value="student" name="export_type"/>
+                        <input type="hidden" value="<?php echo $module ?>" name="module"/>
+                        <input type="hidden" value="<?php echo $id ?>" name="id"/>
+                        <input type="hidden" value="<?php echo $category ?>" name="category"/>
+                        <input type="hidden" value="<?php echo $class ?>" name="class"/>
+
+                        <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="Export CSV"><i class="fa-regular fa-file-excel" style="font-size:large;"></i></button>
+                        </form>
                     </div>
                     <?php } else { ?>
                       <div class="col" style="display: inline-block; width:47%; text-align:right">

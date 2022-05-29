@@ -17,6 +17,9 @@ if ($export_type == "fees") {
 } else if ($export_type == "donation") {
     donation_export();
 }
+else if ($export_type == "student") {
+    student_export();
+}
 
 function fees_export()
 {
@@ -124,6 +127,95 @@ function donation_export()
     foreach ($resultArr as $array) {
 
         echo date("d/m/Y H:i", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',' . $array['mobilenumber'] . ',' . $array['transactionid'] . ',' . $array['currencyofthedonatedamount'] . ' ' . $array['donatedamount'] . ',' . $array['panno'] . ',' . $array['modeofpayment'] . ',' . $array['invoice'] . ',' . $array['profile'] . ',' ?><?php if ($array['approvedby'] != '--' && $array['approvedby'] != 'rejected') { ?><?php echo 'accepted' ?><?php } else if ($array['approvedby'] == 'rejected') { echo 'rejected' ?><?php } else {echo 'on hold' ?><?php }echo ',' . $array['approvedby'] . "\n";
+        }
+    }
+
+    function student_export()
+{
+
+
+    include("database.php");
+    @$module = $_POST['module'];
+    @$id = $_POST['id'];
+    @$category = $_POST['category'];
+    @$class = $_POST['class'];
+
+
+    if ($id == 'ALL' && $category == 'ALL' && ($class == 'ALL' || $class==null)) {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
+        left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE module='$module' order by filterstatus asc, category asc");
+      } 
+      
+      if ($id == 'ALL' && $category == 'ALL' && ($class != 'ALL' && $class != null)) {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student
+        left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE class='$class' AND module='$module' order by category asc");
+      } 
+      
+      if ($id != 'ALL' && $category == 'ALL' && ($class == null || $class == 'ALL')) {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
+        left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE filterstatus='$id' AND module='$module' order by category asc");
+      } 
+      
+      if ($id != 'ALL' && $category != 'ALL' && ($class != 'ALL' && $class != null)) {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc");
+      } 
+      
+      if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc");
+      }
+      
+      if ($id != 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
+      }
+      
+      if ($id != 'ALL' && $category == 'ALL' && $class == 'ALL') {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE module='$module' AND filterstatus='$id' order by category asc");
+      }
+      
+      if ($id != 'ALL' && $category == 'ALL' && $class != 'ALL' && $class != null) {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc");
+      }
+      
+      if ($id != 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class==null)) {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc");
+      }
+      
+      if ($id == 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class==null)) {
+        $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE module='$module' AND category='$category' order by category asc");
+      }      
+
+    if (!$result) {
+        echo "An error occurred.\n";
+        exit;
+    }
+
+    $resultArr = pg_fetch_all($result);
+
+    echo 'Student Id,Name,Category,Class,DOA,Paid month' . "\n";
+
+    foreach ($resultArr as $array) {
+
+        echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['doa'] . ',' . $array['maxmonth'] ."\n";
         }
     }
 ?>
