@@ -8,7 +8,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-    if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
+if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
@@ -49,10 +49,14 @@ if (!$result) {
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
     <style>
-        <?php include '../css/style.css'; ?>@media print {
-            @page {
-                size: A4 landscape;
-            }
+        <?php include '../css/style.css'; ?>;
+
+        @page {
+            size: A4 landscape;
+        }
+
+        table {
+            page-break-inside: avoid
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
