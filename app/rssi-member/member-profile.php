@@ -8,7 +8,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-    if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
+if ($_SESSION['role'] != 'Admin') {
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
@@ -25,7 +25,7 @@ $date = date('Y-m-d H:i:s');
 
 <?php
 include("database.php");
-$result = pg_query($con, "select * from rssimyprofile_student WHERE student_id='$id'"); //select query for viewing users.    
+$result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'"); //select query for viewing users.    
 $resultArr = pg_fetch_all($result);
 
 if (!$result) {
@@ -81,7 +81,7 @@ if (!$result) {
                 <div class="form-group" style="display: inline-block;">
                     <div class="col2" style="display: inline-block;">
 
-                        <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Student Id" value="<?php echo $id ?>" required>
+                        <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate Id" value="<?php echo $id ?>" required>
                     </div>
                 </div>
                 <div class="col2 left" style="display: inline-block;">
@@ -97,7 +97,7 @@ if (!$result) {
                     <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
                 </div>
                 <div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
-                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-student/verification.php?get_id=<?php echo $id ?>" width="74px" />
+                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $id ?>" width="74px" />
                 </div>
 
                 <?php foreach ($resultArr as $array) {
@@ -105,19 +105,20 @@ if (!$result) {
                     echo '<table class="table">
                     <thead style="font-size: 12px;">
                         <tr>
-                            <th scope="col">Photo</th>
-                            <th scope="col">Student Details</th>
-                            <th scope="col">Profile Status</th>
+                            <th scope="col">Photo</th>    
+                            <th scope="col">Associate Details</th>
+                            <th scope="col">Date of Join</th>
+                            <th scope="col">Association Status</th>
                             <th scope="col" class="no-print">Badge</th>
                         </tr>
                     </thead>
                     <tbody>
                     <tr>
-                            <td><img src= ' . $array['photourl'] . ' width=75px /></td>
-                            <td style="line-height: 1.7;"><b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>, Roll No - <b>' . $array['roll_number'] . '</b><br>
-                                <span style="line-height: 3;">' . $array['gender'] . '(' . $array['age'] . 'Years)</span>
+                            <td><img src= ' . $array['photo'] . ' width=75px /></td>
+                            <td style="line-height: 1.7;"><b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b><br><span style="line-height: 3;">' . $array['engagement'] . ',&nbsp;' . $array['gender'] . '&nbsp;(' . $array['age'] . 'Years)</span>
                             </td>
-                            <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks1'] . '</td>
+                            <td>' . $array['doj'] . '</td>
+                            <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks'] . '</td>
                             <td class="no-print">' . $array['badge'] . '</td>
                         </tr>
                     </tbody>
@@ -126,79 +127,93 @@ if (!$result) {
                 <table class="table">
                     <thead style="font-size: 12px;">
                         <tr>
-                            <th scope="col">Admission Date</th>
-                            <th scope="col">Preferred Branch of RSSI</th>
-                            <th scope="col">Class/Category</th>
                             <th scope="col">Date of Birth</th>
-                            <th scope="col">Student Aadhaar</th>
-                            <th scope="col" class="no-print">Aadhaar Card</th>
+                            <th scope="col" class="no-print">National Identifier</th>
+                            <th scope="col">Last 4 digits of Identifier</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>' . $array['doa'] . '</td>
-                            <td>' . $array['preferredbranch'] . '</td>
-                            <td>' . $array['class'] . '/' . $array['category'] . '</td>
-                            <td>' . $array['dateofbirth'] . '</td>
-                            <td>' . $array['studentaadhar'] . '</td>' ?>
+                            <td>' . $array['dateofbirth'] . '</td>' ?>
 
-                    <?php if ($array['upload_aadhar_card'] != null) {
+                    <?php if ($array['iddoc'] != null) {
 
-                        echo '<td class="no-print"><iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px" /></iframe></td>' ?>
+                        echo '<td class="no-print">
+                        <iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="' . $array['iddoc'] . '" width="300px" height="200px" /></iframe></td>' ?>
                         <?php  } else {
                         echo '<td class="no-print">No document uploaded.</td>'
                         ?><?php }
-                        echo '</tr></tbody>
+                        echo '
+                            <td>' . $array['identifier'] . '</td>' ?>
+
+                        <?php echo '</tr></tbody>
                 </table>
 
                 <table class="table">
                     <thead style="font-size: 12px;">
                         <tr>
-                            <th scope="col">Guardians Name</th>
-                            <th scope="col">Guardian Aadhaar</th>
-                            <th scope="col">Postal Address</th>
+                            <th scope="col">Application Number</th>
+                            <th scope="col">Designation</th>
+                            <th scope="col">Base Branch</th>
+                            <th scope="col">Deputed Branch</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>' . $array['applicationnumber'] . '</td>
+                            <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>
+                            <td>' . $array['basebranch'] . '</td>
+                            <td>' . $array['depb'] . '</td>
+                        </tr>
+                    </tbody>
+                </table>
+               <table class="table">
+                    <thead style="font-size: 12px;">
+                        <tr>
+                            <th scope="col">Current Address</th>
+                            <th scope="col">Permanent Address</th>
                             <th scope="col">Contact/Email Address</th>
-                            <th scope="col">Family monthly income</th>
-                            <th scope="col">Total number of family members</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>' . $array['guardiansname'] . ' - ' . $array['relationwithstudent'] . '</td>
-                            <td>' . $array['guardianaadhar'] . '</td>
-                            <td>' . $array['postaladdress'] . '</td>
-                            <td style="line-height: 1.5;">' . $array['contact'] . '<br>' . $array['emailaddress'] . '</td>
-                            <td>' . $array['familymonthlyincome'] . '</td>
-                            <td>' . $array['totalnumberoffamilymembers'] . '</td>
+                            <td>' . $array['currentaddress'] . '</td>
+                            <td>' . $array['permanentaddress'] . '</td>
+                            <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
                         </tr>
                     </tbody>
                 </table>
+                
                 <table class="table">
                     <thead style="font-size: 12px;">
                         <tr>
-                            <th scope="col">School Admission Required</th>
-                            <th scope="col">Name Of The Subjects</th>
-                            <th scope="col">Name Of The School</th>
-                            <th scope="col">Name Of The Board</th>
-                            <th scope="col">Medium</th>
+                            <th scope="col">Language Details</th>
+                            <th scope="col">Educational qualifications</th>
+                            <th scope="col">Area of specialization</th>
+                            <th scope="col">Work Experience</th>
+                            <th scope="col">Account Approved by</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>' . $array['schooladmissionrequired'] . '</td>
-                            <td>' . $array['nameofthesubjects'] . '</td>
-                            <td>' . $array['nameoftheschool'] . '</td>
-                            <td>' . $array['nameoftheboard'] . '</td>
-                            <td>' . $array['medium'] . '</td>
+                            <td>English - ' . $array['languagedetailsenglish'] . '<br>Hindi - ' . $array['languagedetailshindi'] . '</td>
+                            <td>' . $array['eduq'] . '</td>
+                            <td>' . $array['mjorsub'] . '</td>
+                            <td>' . $array['workexperience'] . '</td>
+                            <td>' . $array['approvedby'] . '</td>
                         </tr>
                     </tbody>
-                </table><br>
+                </table>
+                
+                
+                
+                <br>
 
-                <p style="text-align:right;">Admission form generated:' ?><?php echo $date ?><?php echo '</p>' ?>
+                <p style="text-align:right;">Document generated:' ?><?php echo $date ?><?php echo '</p>' ?>
 
                     <?php }
             } else { ?>
-                    <p class="no-print">Please enter student ID.</p> <?php } ?>
+                    <p class="no-print">Please enter Associate ID.</p> <?php } ?>
         </section>
     </div>
 </body>
