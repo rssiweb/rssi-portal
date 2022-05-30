@@ -119,7 +119,7 @@ if (!$result) {
                     <tbody>
                     <tr>
                             <td><img src= ' . $array['photo'] . ' width=75px /></td>
-                            <td style="line-height: 1.7;"><b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b><br><span style="line-height: 3;">' . $array['engagement'] . ',&nbsp;' . $array['gender'] . '&nbsp;(' . $array['age'] . 'Years)</span>
+                            <td style="line-height: 1.7;"><b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b><br><span style="line-height: 3;">' . $array['engagement'] . ',&nbsp;' . $array['gender'] . '&nbsp;(' . $array['age'] . '&nbsp;Years)</span>
                             </td>
                             <td>' . $array['doj'] . '</td>
                             <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks'] . '</td>

@@ -340,7 +340,7 @@ $resultArr = pg_fetch_all($result);
           <th scope="col">Class URL</th>
           <th scope="col" id="cw2">Association Status</th>
           <th scope="col">Productivity</th>
-          <th scope="col">Misc.</th>
+          <th scope="col">Profile</th>
         </tr>
         </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
