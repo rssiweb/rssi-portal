@@ -103,6 +103,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <!-- Main css -->
     <style>
         <?php include '../css/style.css'; ?>
+        @media print {
+        @page {size: A4 landscape; }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -141,10 +144,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             </form>
             <?php if ($resultArr != null) { ?>
                 <div class="col" style="display: inline-block; width:55%; text-align:left">
-                    <b>
-                        <h5>Rina Shiksha Sahayak Foundation (RSSI)
-                    </b></h5>
-                    <p style="line-height:2;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
+                    
+                    <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
+                    <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
                 </div>
                 <div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
                     <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-student/verification.php?get_id=<?php echo $student_id ?>" width="74px" />

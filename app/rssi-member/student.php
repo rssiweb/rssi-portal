@@ -33,32 +33,32 @@ include("database.php");
 @$class = $_POST['get_class'];
 // $categories = "'".implode("','", $category)."'";
 
-if ($id == 'ALL' && $category == 'ALL' && ($class == 'ALL' || $class==null)) {
+if ($id == 'ALL' && $category == 'ALL' && ($class == 'ALL' || $class == null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
   left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE module='$module' order by filterstatus asc, category asc");
-} 
+}
 
 if ($id == 'ALL' && $category == 'ALL' && ($class != 'ALL' && $class != null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student
   left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE class='$class' AND module='$module' order by category asc");
-} 
+}
 
 if ($id != 'ALL' && $category == 'ALL' && ($class == null || $class == 'ALL')) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
   left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE filterstatus='$id' AND module='$module' order by category asc");
-} 
+}
 
 if ($id != 'ALL' && $category != 'ALL' && ($class != 'ALL' && $class != null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc");
-} 
+}
 
 if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
@@ -84,13 +84,13 @@ if ($id != 'ALL' && $category == 'ALL' && $class != 'ALL' && $class != null) {
   WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc");
 }
 
-if ($id != 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class==null)) {
+if ($id != 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class == null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc");
 }
 
-if ($id == 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class==null)) {
+if ($id == 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class == null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE module='$module' AND category='$category' order by category asc");
@@ -215,27 +215,27 @@ $resultArr = pg_fetch_all($result);
             Home / RSSI Student
           </div> -->
           <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
-          <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        <a href="fees.php" target="_self" class="btn btn-danger btn-sm" role="button">Fees Details</a>
-                   
-                    <br><br>
-                        <form method="POST" action="export_function.php">
-                        <input type="hidden" value="student" name="export_type"/>
-                        <input type="hidden" value="<?php echo $module ?>" name="module"/>
-                        <input type="hidden" value="<?php echo $id ?>" name="id"/>
-                        <input type="hidden" value="<?php echo $category ?>" name="category"/>
-                        <input type="hidden" value="<?php echo $class ?>" name="class"/>
+            <div class="col" style="display: inline-block; width:47%; text-align:right">
+              <a href="fees.php" target="_self" class="btn btn-danger btn-sm" role="button">Fees Details</a>
 
-                        <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+              <br><br>
+              <form method="POST" action="export_function.php">
+                <input type="hidden" value="student" name="export_type" />
+                <input type="hidden" value="<?php echo $module ?>" name="module" />
+                <input type="hidden" value="<?php echo $id ?>" name="id" />
+                <input type="hidden" value="<?php echo $category ?>" name="category" />
+                <input type="hidden" value="<?php echo $class ?>" name="class" />
+
+                <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
                         border: none;" title="Export CSV"><i class="fa-regular fa-file-excel" style="font-size:large;"></i></button>
-                        </form>
-                    </div>
-                    <?php } else { ?>
-                      <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        <a href="javascript:void(0);" target="_self" class="btn btn-danger btn-sm disabled" role="button">Fees Details</a>
-                    </div>
-                    <?php } ?>
+              </form>
+            </div>
+          <?php } else { ?>
+            <div class="col" style="display: inline-block; width:47%; text-align:right">
+              <a href="javascript:void(0);" target="_self" class="btn btn-danger btn-sm disabled" role="button">Fees Details</a>
+            </div>
+          <?php } ?>
         </div>
         <section class="box" style="padding: 2%;">
           <form action="" method="POST">
@@ -452,83 +452,74 @@ $resultArr = pg_fetch_all($result);
     <div class="modal-content">
       <span class="close">&times;</span>
 
-      <div class="col" style="display: inline-block; width:85%; text-align:left">
 
-      <div style="display: inline; width:30%"><img id="profileimage" src="#" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50" /></div>&nbsp;
+      <img id="profileimage" src="#" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50" style="display: inline;" />&nbsp;
 
-      <b>
-        <div style="display: inline; width:50%"> <span class="studentname"></span>&nbsp;(<span class="student_id"></span>)
-      </b>
-    </div>
-    <p id="status" class="label " style="display: inline !important;"><span class="filterstatus"></span></p>
+      <b><span class="studentname"></span>&nbsp;(<span class="student_id"></span>)</b>
 
-    </div>
+      <p id="status" class="label " style="display: inline !important;"><span class="filterstatus"></span></p>
 
-    <div class="col" style="display: inline-block; width:10%; text-align:right">
+      <div class="col" style="display: inline-block; width:50%; text-align:right"><a id="profile" href="#" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 20px ;color:#777777" title="Profile"></i></a></div>
 
-    <a id="profile" href="#" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 20px ;color:#777777" title="Profile"></i></a>
-
-    </div>
-
-    <br><br>
-    <!-- <p id="laddu"></p> -->
-    <p style="font-size: small; line-height:2">
-      Subject: <span class="nameofthesubjects"></span><br>
-      Attendance: <span class="attd"></span></p>
+      <br><br>
+      <!-- <p id="laddu"></p> -->
+      <p style="font-size: small; line-height:2">
+        Subject: <span class="nameofthesubjects"></span><br>
+        Attendance: <span class="attd"></span></p>
       Remarks:&nbsp;<span class="remarks"></span><br><br>
-    
-    <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
 
-      <b>
-        <p style="display: inline; font-size: small;">Fee</p>&nbsp;
-        <p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></p>
-      </b><br><br>
-      <form name="payment" action="#" method="POST" onsubmit="myFunction()">
-        <input type="hidden" name="form-type" type="text" value="payment">
-        <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
-        <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
-        <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
-        <!-- <input type="hidden" type="text" name="status2" id="count2" value="" readonly required> -->
-        <select name="month" id="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-          <option value="" disabled selected hidden>Select Month</option>
-          <option value="1">January</option>
-          <option value="2">February</option>
-          <option value="3">March</option>
-          <option value="4">April</option>
-          <option value="5">May</option>
-          <option value="6">June</option>
-          <option value="7">July</option>
-          <option value="8">August</option>
-          <option value="9">September</option>
-          <option value="10">October</option>
-          <option value="11">November</option>
-          <option value="12">December</option>
-        </select>
-        <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
-        <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
-      </form><br>
-      <script>
-        function myFunction() {
-          alert("Fee has been deposited successfully.");
-        }
-      </script>
-      <script>
-        const scriptURL = 'payment-api.php'
-        const form = document.forms['payment']
+      <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
 
-        form.addEventListener('submit', e => {
-          e.preventDefault()
-          fetch(scriptURL, {
-              method: 'POST',
-              body: new FormData(document.forms['payment'])
-            })
-            .then(response => console.log('Success!', response))
-            .catch(error => console.error('Error!', error.message))
-        })
-      </script>
+        <b>
+          <p style="display: inline; font-size: small;">Fee</p>&nbsp;
+          <p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></p>
+        </b><br><br>
+        <form name="payment" action="#" method="POST" onsubmit="myFunction()">
+          <input type="hidden" name="form-type" type="text" value="payment">
+          <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
+          <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
+          <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
+          <!-- <input type="hidden" type="text" name="status2" id="count2" value="" readonly required> -->
+          <select name="month" id="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+            <option value="" disabled selected hidden>Select Month</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+          <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
+          <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
+        </form><br>
+        <script>
+          function myFunction() {
+            alert("Fee has been deposited successfully.");
+          }
+        </script>
+        <script>
+          const scriptURL = 'payment-api.php'
+          const form = document.forms['payment']
+
+          form.addEventListener('submit', e => {
+            e.preventDefault()
+            fetch(scriptURL, {
+                method: 'POST',
+                body: new FormData(document.forms['payment'])
+              })
+              .then(response => console.log('Success!', response))
+              .catch(error => console.error('Error!', error.message))
+          })
+        </script>
 
 
-  </div>
+    </div>
 
   </div>
 <?php } ?>
@@ -580,7 +571,7 @@ $resultArr = pg_fetch_all($result);
 
 
     var profile = document.getElementById("profile")
-    profile.href = "/rssi-member/student-profile.php?get_id="+mydata["student_id"]
+    profile.href = "/rssi-member/student-profile.php?get_id=" + mydata["student_id"]
 
     var sname = document.getElementById("sname")
     sname.value = mydata["studentname"]
