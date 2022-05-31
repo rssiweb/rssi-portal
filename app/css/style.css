@@ -544,15 +544,8 @@
                 display: block;
             }
             li.profile img {
-                /*top: 15px;*/
                 right: 10px;
-                /*position: fixed;*/
             }
-            /* .page-topbar li .dropdown-menu.profile {
-            max-width: 100%;
-            position: relative;
-            right: 20%;
-        }*/
             .page-topbar .quick-area .info-menu {
                 padding: 0px;
                 height: 0px;
@@ -902,5 +895,11 @@ z-index: 5001;
             .no-print,
             .no-print * {
                 display: none !important;
+            }
+            td {
+                display: table-cell;
+            }
+            th {
+                display: table-cell;
             }
         }

@@ -51,12 +51,26 @@ if (!$result) {
     <style>
         <?php include '../css/style.css'; ?>;
 
-        @page {
-            size: A4 landscape;
+        table {
+            page-break-inside: avoid;
         }
 
-        table {
-            page-break-inside: avoid
+        @media screen {
+            .no-display {
+                display: none;
+            }
+        }
+
+        @media print {
+            .footer {
+                position: fixed;
+                bottom: 0;
+            }
+
+            .no-print,
+            .no-print * {
+                display: none !important;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
@@ -76,7 +90,7 @@ if (!$result) {
 
 </head>
 
-<body style="margin: 0mm;">
+<body>
     <div class="col-md-12">
 
         <section class="box" style="padding: 2%;">
@@ -95,110 +109,97 @@ if (!$result) {
                 </div><br><br>
             </form>
             <?php if ($resultArr != null) { ?>
-                <div class="col" style="display: inline-block; width:55%; text-align:left">
-
-                    <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
-                    <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
-                </div>
-                <div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
-                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $id ?>" width="74px" />
-                </div>
 
                 <?php foreach ($resultArr as $array) {
 
-                    echo '<table class="table">
-                    <thead style="font-size: 12px;">
+                    echo '
+                    <table class="table" border="0">
+                        <thead style="font-size: 12px;" class="no-display">
+                            <tr>
+                            <td colspan=5>
+                            <div class="col" style="display: inline-block; width:55%; text-align:left;">
+
+                            <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
+                            <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
+                            </div>
+                            <div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
+                                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $id ?>" width="74px" />
+                            </div>
+                            </td>
+                            </tr>
+                        </thead>
+
                         <tr>
-                            <th scope="col">Photo</th>    
-                            <th scope="col">Associate Details</th>
-                            <th scope="col">Date of Join</th>
-                            <th scope="col">Association Status</th>
-                            <th scope="col" class="no-print">Badge</th>
+                            <th>Photo</th>    
+                            <th>Associate Details</th>
+                            <th>Date of Join</th>
+                            <th>Association Status</th>
+                            <th>Badge</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
+
+                        <tr>
                             <td><img src= ' . $array['photo'] . ' width=75px /></td>
                             <td style="line-height: 1.7;"><b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b><br><span style="line-height: 3;">' . $array['engagement'] . ',&nbsp;' . $array['gender'] . '&nbsp;(' . $array['age'] . '&nbsp;Years)</span>
                             </td>
-                            <td>' . $array['doj'] . '</td>
+                            <td style="line-height: 2;">' . $array['originaldoj'] . '<br>('. $array['yos'] .')</td>
                             <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks'] . '</td>
-                            <td class="no-print">' . $array['badge'] . '</td>
+                            <td>' . $array['badge'] . '</td>
                         </tr>
-                    </tbody>
-                </table>
 
-                <table class="table">
-                    <thead style="font-size: 12px;">
                         <tr>
-                            <th scope="col">Date of Birth</th>
-                            <th scope="col" class="no-print">National Identifier</th>
-                            <th scope="col">Last 4 digits of Identifier</th>
+                            <th >Date of Birth</th>
+                            <th colspan=2>National Identifier</th>
+                            <th  colspan=2>Last 4 digits of Identifier</th>
                         </tr>
-                    </thead>
-                    <tbody>
+
                         <tr>
                             <td>' . $array['dateofbirth'] . '</td>' ?>
 
                     <?php if ($array['iddoc'] != null) {
 
-                        echo '<td class="no-print">
-                        <iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="' . $array['iddoc'] . '" width="300px" height="200px" /></iframe></td>' ?>
+                        echo '<td colspan=2>
+                            <iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="' . $array['iddoc'] . '" width="300px" height="200px" /></iframe></td>' ?>
                         <?php  } else {
-                        echo '<td class="no-print">No document uploaded.</td>'
+                        echo '<td colspan=2>No document uploaded.</td>'
                         ?><?php }
                         echo '
-                            <td>' . $array['identifier'] . '</td>' ?>
-
-                        <?php echo '</tr></tbody>
-                </table>
-
-                <table class="table">
-                    <thead style="font-size: 12px;">
-                        <tr>
-                            <th scope="col">Application Number</th>
-                            <th scope="col">Designation</th>
-                            <th scope="col">Base Branch</th>
-                            <th scope="col">Deputed Branch</th>
+                                <td colspan=2>' . $array['identifier'] . '</td>
                         </tr>
-                    </thead>
-                    <tbody>
+
+                        <tr>
+                            <th >Application Number</th>
+                            <th  colspan=2>Designation</th>
+                            <th >Base Branch</th>
+                            <th >Deputed Branch</th>
+                        </tr>
+                    
                         <tr>
                             <td>' . $array['applicationnumber'] . '</td>
-                            <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>
+                            <td colspan=2>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>
                             <td>' . $array['basebranch'] . '</td>
                             <td>' . $array['depb'] . '</td>
                         </tr>
-                    </tbody>
-                </table>
-               <table class="table">
-                    <thead style="font-size: 12px;">
+                        
                         <tr>
-                            <th scope="col">Current Address</th>
-                            <th scope="col">Permanent Address</th>
-                            <th scope="col">Contact/Email Address</th>
+                            <th  colspan=2>Current Address</th>
+                            <th >Permanent Address</th>
+                            <th  colspan=2>Contact/Email Address</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        
                         <tr>
-                            <td>' . $array['currentaddress'] . '</td>
+                            <td colspan=2>' . $array['currentaddress'] . '</td>
                             <td>' . $array['permanentaddress'] . '</td>
-                            <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
+                            <td colspan=2>' . $array['phone'] . '<br>' . $array['email'] . '</td>
                         </tr>
-                    </tbody>
-                </table>
-                
-                <table class="table">
-                    <thead style="font-size: 12px;">
+
                         <tr>
-                            <th scope="col">Language Details</th>
-                            <th scope="col">Educational qualifications</th>
-                            <th scope="col">Area of specialization</th>
-                            <th scope="col">Work Experience</th>
-                            <th scope="col">Account Approved by</th>
+                            <th >Language Details</th>
+                            <th >Educational qualifications</th>
+                            <th >Area of specialization</th>
+                            <th >Work Experience</th>
+                            <th >Account Approved by</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        
                         <tr>
                             <td>English - ' . $array['languagedetailsenglish'] . '<br>Hindi - ' . $array['languagedetailshindi'] . '</td>
                             <td>' . $array['eduq'] . '</td>
@@ -206,15 +207,11 @@ if (!$result) {
                             <td>' . $array['workexperience'] . '</td>
                             <td>' . $array['approvedby'] . '</td>
                         </tr>
-                    </tbody>
-                </table>
-                
-                
-                
-                <br>
-
-                <p style="text-align:right;">Document generated:' ?><?php echo $date ?><?php echo '</p>' ?>
-
+                    </table>
+                         
+                    <div class="footer no-display">
+                    <p style="text-align:right;">Document generated:&nbsp;' ?><?php echo $date ?><?php echo '</p>
+                    </div>' ?>
                     <?php }
             } else { ?>
                     <p class="no-print">Please enter Associate ID.</p> <?php } ?>

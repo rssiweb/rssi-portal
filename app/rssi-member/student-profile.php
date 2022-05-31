@@ -51,12 +51,26 @@ if (!$result) {
     <style>
         <?php include '../css/style.css'; ?>;
 
-        @page {
-            size: A4 landscape;
+        table {
+            page-break-inside: avoid;
         }
 
-        table {
-            page-break-inside: avoid
+        @media screen {
+            .no-display {
+                display: none;
+            }
+        }
+
+        @media print {
+            .footer {
+                position: fixed;
+                bottom: 0;
+            }
+
+            .no-print,
+            .no-print * {
+                display: none !important;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
@@ -76,7 +90,7 @@ if (!$result) {
 
 </head>
 
-<body style="margin: 0mm;">
+<body>
     <div class="col-md-12">
 
         <section class="box" style="padding: 2%;">
@@ -95,50 +109,51 @@ if (!$result) {
                 </div><br><br>
             </form>
             <?php if ($resultArr != null) { ?>
-                <div class="col" style="display: inline-block; width:55%; text-align:left">
-
-                    <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
-                    <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
-                </div>
-                <div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
-                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-student/verification.php?get_id=<?php echo $id ?>" width="74px" />
-                </div>
 
                 <?php foreach ($resultArr as $array) {
 
-                    echo '<table class="table">
-                    <thead style="font-size: 12px;">
+                    echo '
+    <table class="table" border="0">
+        <thead style="font-size: 12px;" class="no-display">
+            <tr>
+            <td colspan=8>
+            <div class="col" style="display: inline-block; width:55%; text-align:left;">
+
+            <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
+            <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
+            </div>
+            <div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
+                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $id ?>" width="74px" />
+            </div>
+            </td>
+            </tr>
+        </thead>
                         <tr>
-                            <th scope="col">Photo</th>
-                            <th scope="col">Student Details</th>
-                            <th scope="col">Profile Status</th>
-                            <th scope="col" class="no-print">Badge</th>
+                            <th >Photo</th>
+                            <th  colspan=4>Student Details</th>
+                            <th>Profile Status</th>
+                            <th colspan=2>Badge</th>
                         </tr>
                     </thead>
                     <tbody>
                     <tr>
                             <td><img src= ' . $array['photourl'] . ' width=75px /></td>
-                            <td style="line-height: 1.7;"><b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>, Roll No - <b>' . $array['roll_number'] . '</b><br>
-                                <span style="line-height: 3;">' . $array['gender'] . '(' . $array['age'] . 'Years)</span>
+                            <td colspan=4 style="line-height: 1.7;"><b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>, Roll No - <b>' . $array['roll_number'] . '</b><br>
+                                <span style="line-height: 3;">' . $array['gender'] . '&nbsp;(' . $array['age'] . '&nbsp;Years)</span>
                             </td>
                             <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks1'] . '</td>
-                            <td class="no-print">' . $array['badge'] . '</td>
+                            <td colspan=2>' . $array['badge'] . '</td>
                         </tr>
-                    </tbody>
-                </table>
-
-                <table class="table">
-                    <thead style="font-size: 12px;">
+                    
                         <tr>
-                            <th scope="col">Admission Date</th>
-                            <th scope="col">Preferred Branch of RSSI</th>
-                            <th scope="col">Class/Category</th>
-                            <th scope="col">Date of Birth</th>
-                            <th scope="col">Student Aadhaar</th>
-                            <th scope="col" class="no-print">Aadhaar Card</th>
+                            <th >Admission Date</th>
+                            <th>Preferred Branch</th>
+                            <th>Class/Category</th>
+                            <th >Date of Birth</th>
+                            <th>Student Aadhaar</th>
+                            <th colspan=3>Aadhaar Card</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                    
                         <tr>
                             <td>' . $array['doa'] . '</td>
                             <td>' . $array['preferredbranch'] . '</td>
@@ -148,61 +163,56 @@ if (!$result) {
 
                     <?php if ($array['upload_aadhar_card'] != null) {
 
-                        echo '<td class="no-print"><iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px" /></iframe></td>' ?>
+                        echo '<td  colspan=3><iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px"/></iframe></td>' ?>
                         <?php  } else {
-                        echo '<td class="no-print">No document uploaded.</td>'
+                        echo '<td colspan=3>No document uploaded.</td>'
                         ?><?php }
                         echo '</tr></tbody>
-                </table>
-
-                <table class="table">
-                    <thead style="font-size: 12px;">
+                
                         <tr>
-                            <th scope="col">Guardians Name</th>
-                            <th scope="col">Guardian Aadhaar</th>
-                            <th scope="col">Postal Address</th>
-                            <th scope="col">Contact/Email Address</th>
-                            <th scope="col">Family monthly income</th>
-                            <th scope="col">Total number of family members</th>
+                            <th colspan=2>Guardians Details</th>
+                            <th colspan=3>Postal Address</th>
+                            <th >Contact/Email Address</th>
+                            <th>Family monthly income</th>
+                            <th >Family members</th>
                         </tr>
-                    </thead>
-                    <tbody>
+
                         <tr>
-                            <td>' . $array['guardiansname'] . ' - ' . $array['relationwithstudent'] . '</td>
-                            <td>' . $array['guardianaadhar'] . '</td>
-                            <td>' . $array['postaladdress'] . '</td>
+                            <td colspan=2>' . $array['guardiansname'] . ' - ' . $array['relationwithstudent'] . '<br>' . $array['guardianaadhar'] . '</td>
+                            <td colspan=3>' . $array['postaladdress'] . '</td>
                             <td style="line-height: 1.5;">' . $array['contact'] . '<br>' . $array['emailaddress'] . '</td>
                             <td>' . $array['familymonthlyincome'] . '</td>
                             <td>' . $array['totalnumberoffamilymembers'] . '</td>
                         </tr>
-                    </tbody>
-                </table>
-                <table class="table">
-                    <thead style="font-size: 12px;">
+
                         <tr>
-                            <th scope="col">School Admission Required</th>
-                            <th scope="col">Name Of The Subjects</th>
-                            <th scope="col">Name Of The School</th>
-                            <th scope="col">Name Of The Board</th>
-                            <th scope="col">Medium</th>
+                            <th  colspan=5>Name Of The Subjects</th>
+                            <th  colspan=3>School Admission Required</th>    
                         </tr>
-                    </thead>
-                    <tbody>
+                
                         <tr>
-                            <td>' . $array['schooladmissionrequired'] . '</td>
-                            <td>' . $array['nameofthesubjects'] . '</td>
-                            <td>' . $array['nameoftheschool'] . '</td>
-                            <td>' . $array['nameoftheboard'] . '</td>
+                            <td colspan=5>' . $array['nameofthesubjects'] . '</td>
+                            <td colspan=3>' . $array['schooladmissionrequired'] . '</td>    
+                        </tr>
+
+                        <tr>    
+                            <th  colspan=5>School Name</th>
+                            <th  colspan=2>Name Of The Board</th>
+                            <th >Medium</th>
+                        </tr>
+                    
+                        <tr> 
+                            <td colspan=5>' . $array['nameoftheschool'] . '</td>
+                            <td colspan=2>' . $array['nameoftheboard'] . '</td>
                             <td>' . $array['medium'] . '</td>
                         </tr>
-                    </tbody>
-                </table><br>
-
-                <p style="text-align:right;">Admission form generated:' ?><?php echo $date ?><?php echo '</p>' ?>
-
+                        </table>
+                         
+                        <div class="footer no-display">
+                        <p style="text-align:right;">Admission form generated:&nbsp;' ?><?php echo $date ?><?php echo '</p>
+                        </div>' ?>
                     <?php }
-            } else { ?>
-                    <p class="no-print">Please enter student ID.</p> <?php } ?>
+            } else { ?> <p class="no-print">Please enter Student ID.</p> <?php } ?>
         </section>
     </div>
 </body>
