@@ -1,6 +1,6 @@
 <div class="page-topbar">
     <div class="logo-area"> </div>
-    <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1654034999/PRIDE_RSSI_bxdnlu.gif" width="50" class="over" />
+    <!-- <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1654034999/PRIDE_RSSI_bxdnlu.gif" width="50" class="over" /> -->
     <div class="quick-area">
 
         <ul class="pull-left info-menu  user-notify" id="menu">
