@@ -2,7 +2,7 @@
 session_start();
 include("../util/login_util.php");
 
-if(! isLoggedIn("sid")){
+if (!isLoggedIn("sid")) {
     header("Location: index.php");
 }
 $user_check = $_SESSION['sid'];
@@ -19,6 +19,8 @@ include("student_data.php");
 ?>
 <?php
 include("database.php");
+date_default_timezone_set('Asia/Kolkata');
+$date = date('Y-m-d H:i:s');
 @$id = $_POST['get_id'];
 $view_users_query = "select * from new_result WHERE studentid='$user_check' AND examname='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
@@ -68,7 +70,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title><?php echo $student_id ?>_<?php echo $examname ?></title>
+    <title><?php echo $student_id ?>_<?php echo $id ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <style>
@@ -104,6 +106,11 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 left: 0;
                 top: 0;
             }
+
+            .footer {
+                position: fixed;
+                bottom: 0;
+            }
         }
 
         /*---------------------------------------
@@ -134,7 +141,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             font-size: 14px;
         }
     </style>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
 </head>
 
 <!-- =========================
@@ -175,7 +184,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
                                     <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                                 <button type="button" onclick="window.print()" name="print" class="btn btn-success btn-sm" style="outline: none;">
-                                    <span class="glyphicon glyphicon-save"></span>&nbsp;Save</button>
+                                    <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
                             </div>
                         </form>
                     </div>
@@ -378,6 +387,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             </tr>
                         </tbody>
                     </table>
+
+                    <div class="footer no-display">
+                        <p style="text-align:right;">Admission form generated:&nbsp;<?php echo $date ?></p>
+                    </div>
                 <?php
                         } else if ($id == "") {
                 ?>

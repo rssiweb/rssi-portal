@@ -11,12 +11,14 @@ if (!isLoggedIn("aid")) {
 ?>
 <?php
 include("database.php");
+date_default_timezone_set('Asia/Kolkata');
+$date = date('Y-m-d H:i:s');
 @$id = $_POST['get_id'];
 @$stid = $_POST['get_stid'];
 $view_users_query = "select * from new_result WHERE studentid='$stid' AND examname='$id'"; //select query for viewing users.
-$view_users_queryy = "select * from rssimyprofile_student WHERE student_id='$stid'";  
+$view_users_queryy = "select * from rssimyprofile_student WHERE student_id='$stid'";
 $run = pg_query($con, $view_users_query); //here run the sql query.
-$runn = pg_query($con, $view_users_queryy);  
+$runn = pg_query($con, $view_users_queryy);
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
@@ -49,15 +51,15 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $fullmarks = $row[26];
     $month = $row[27];
     $language1 = $row[28];
-    ?>
+?>
 <?php } ?>
 <?php
 
 while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store in a array $row.  
 {
-    $student_id=$roww[1];
-    $studentname=$roww[3];
-    $photourl=$roww[25];
+    $student_id = $roww[1];
+    $studentname = $roww[3];
+    $photourl = $roww[25];
 
 ?>
 <?php } ?>
@@ -72,7 +74,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title><?php echo $student_id ?>_<?php echo $examname ?></title>
+    <title><?php echo $student_id ?>_<?php echo $id ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <style>
@@ -108,6 +110,11 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                 left: 0;
                 top: 0;
             }
+
+            .footer {
+                position: fixed;
+                bottom: 0;
+            }
         }
 
         /*---------------------------------------
@@ -138,7 +145,9 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
             font-size: 14px;
         }
     </style>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
 </head>
 
 <!-- =========================
@@ -155,7 +164,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <form action="" method="POST" id="formid">
                             <div class="form-group" style="display: unset;">
                                 <div class="col2" style="display: inline-block;">
-                                <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $stid ?>">
+                                    <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $stid ?>">
                                     <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
                                         <?php if ($id == null) { ?>
                                             <option value="" disabled selected hidden>Select Exam name</option>
@@ -180,7 +189,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
                                     <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                                 <button type="button" onclick="window.print()" name="print" class="btn btn-success btn-sm" style="outline: none;">
-                                    <span class="glyphicon glyphicon-save"></span>&nbsp;Save</button>
+                                    <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
                             </div>
                         </form>
                     </div>
@@ -383,6 +392,9 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                             </tr>
                         </tbody>
                     </table>
+                    <div class="footer no-display">
+                        <p>Report card generated:&nbsp;<?php echo $date ?></p>
+                    </div>
                 <?php
                         } else if ($id == "") {
                 ?>
