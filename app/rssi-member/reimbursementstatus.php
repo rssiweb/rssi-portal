@@ -128,7 +128,8 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
-                                    <option>2022</option>
+                                    <option>2022-2023</option>
+                                    <option>2021-2022</option>
                                 </select>
                             </div>
                         </div>
