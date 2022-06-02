@@ -108,7 +108,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLScLENQKgw2bEDuhZFRLDuxcmwuXIh-6H7zXm8NbCSv6x63fNw/viewform" target="_blank" class="btn btn-danger btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Asset</a>
+                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLScLENQKgw2bEDuhZFRLDuxcmwuXIh-6H7zXm8NbCSv6x63fNw/viewform" target="_blank" class="btn btn-info btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Asset</a>
                         </div>
                     </form>
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
