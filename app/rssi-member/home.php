@@ -44,9 +44,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $ipf = $row[3];
     $ipfinitiate = $row[4];
     $status2 = $row[5];
-    $ipfstatus = $row[6];
-    $closedon = $row[7];
-    $id = $row[8]
+    $respondedon = $row[6];
+    $ipfstatus = $row[7];
+    $closedon = $row[8];
+    $id = $row[9]
 ?>
 <?php } ?>
 

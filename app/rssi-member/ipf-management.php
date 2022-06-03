@@ -151,9 +151,10 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Ref. number</th>
                                 <th scope="col">Associate details</th>    
                                 <th scope="col">Appraisal type</th>
+                                <th scope="col">Initiated on</th>
                                 <th scope="col">IPF</th>
                                 <th scope="col">Status</th>
-                                <th scope="col">Timestamp</th>
+                                <th scope="col">Responded on</th>
                                 <th scope="col">Closed on</th>
                                 </tr>
                             </thead>' ?>
@@ -162,10 +163,11 @@ $resultArr = pg_fetch_all($result);
                         foreach ($resultArr as $array) {
                             echo '<tr><td>' . $array['id'] . '</td>
                         <td>' . $array['memberid2'] . '/' . strtok($array['membername2'], ' ') . '</td>
-                        <td>' . $array['ipf'] . '</td> 
+                        <td>' . $array['ipf'] . '</td>
+                        <td>'. $array['timestamp'] .'</td> 
                         <td>' . $array['ipfl'] . '</td>     
                         <td>' . $array['status2'] . '</td>
-                        <td>' . $array['timestamp'] . '</td>
+                        <td>' . $array['respondedon'] . '</td>
                         <td>
 
                         <form name="ipfclose' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()">

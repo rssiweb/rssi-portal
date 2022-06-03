@@ -39,10 +39,12 @@ if ($_POST['form-type'] == "ipfpush") {
 
 <?php
 include("database.php");
+date_default_timezone_set('Asia/Kolkata');
 if ($_POST['form-type'] == "ipfsubmission") {
   @$ipfid = $_POST['ipfid'];
   @$status2 = $_POST['status2'];
-  $ipfclose = "UPDATE ipfsubmission SET  status2 = '$status2' WHERE id = $ipfid";
+  $now = date('Y-m-d H:i:s');
+  $ipfclose = "UPDATE ipfsubmission SET  status2 = '$status2', respondedon = '$now' WHERE id = $ipfid";
   $result = pg_query($con, $ipfclose);
 } ?>
 
