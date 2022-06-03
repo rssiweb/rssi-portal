@@ -15,28 +15,43 @@ include("member_data.php");
 include("database.php");
 @$type = $_POST['get_id'];
 @$year = $_POST['get_year'];
-$view_users_query = "select * from myappraisal_myappraisal
+$view_users_query = "select * from myappraisal_myappraisal WHERE associatenumber='$user_check' AND appraisaltype='$type' AND filter='$year'";
+$run = pg_query($con, $view_users_query);
 
-left join (SELECT id,memberid2, ipfinitiate, status2, ipfstatus FROM ipfsubmission) ipfsubmit ON ipfsubmit.memberid2=myappraisal_myappraisal.associatenumber
-
-WHERE associatenumber='$user_check' AND appraisaltype='$type' AND filter='$year'"; //select query for viewing users.  
-$run = pg_query($con, $view_users_query); //here run the sql query.  
-
-while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
-{
+while ($row = pg_fetch_array($run)) {
     $appraisaltype = $row[0];
     $associatenumber = $row[1];
     $fullname = $row[2];
     $effectivestartdate = $row[3];
     $effectiveenddate = $row[4];
-    $role = $row[5];
+    $rolea = $row[5];
     $feedback = $row[6];
     $scopeofimprovement = $row[7];
-    $ipf = $row[8];
+    $ipfc = $row[8];
     $flag = $row[9];
     $filter = $row[10];
+
+    $view_users_queryy = "select * from ipfsubmission WHERE memberid2='$user_check'"; //select query for viewing users.  
+    $runn = pg_query($con, $view_users_queryy); //here run the sql query.  
+
+    while ($row = pg_fetch_array($runn)) //while look to fetch the result and store in a array $row.  
+    {
+
+        $timestamp = $row[0];
+        $memberid2 = $row[1];
+        $membername2 = $row[2];
+        $ipf = $row[3];
+        $ipfinitiate = $row[4];
+        $status2 = $row[5];
+        $respondedon = $row[6];
+        $ipfstatus = $row[7];
+        $closedon = $row[8];
+        $id = $row[9]
+
+
 ?>
-<?php } ?>
+<?php }
+} ?>
 
 
 <!DOCTYPE html>
@@ -56,8 +71,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <style>
         <?php include '../css/style.css'; ?>
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -142,18 +157,32 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <div class="row">
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
                         Academic year: <?php echo @$year ?><br>
-                        <?php if (@$ipfstatus == null && @$status2 == null) { ?>
+
+                        <?php if (@$ipfstatus == null && @$status2 == null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
                             <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-danger">in progress</p>
                             </a>
-                        <?php
-                        } else if (@$ipfstatus != null && @$status2 != null) { ?>
+                        <?php } ?>
+
+                        <?php if (@$ipfstatus == null && @$status2 == 'IPF Accepted' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
+                            <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+                                <p class="label label-success"><?php echo $status2 ?></p>
+                            </a>
+                        <?php } ?>
+
+                        <?php if (@$ipfstatus == null && @$status2 == 'IPF Rejected' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
+                            <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+                                <p class="label label-danger"><?php echo $status2 ?></p>
+                            </a>
+                        <?php } ?>
+
+
+                        <?php if (@$ipfstatus != null && @$status2 != null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
                             <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-success">process closed</p>
                             </a>
-                        <?php } else { ?>
-                        <?php }
-                        ?>
+                        <?php } ?>
+
                     </div>
 
 
@@ -210,11 +239,11 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <tr>
 
                                         <td id="cw1"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br><br>
-                                            <span><?php echo $role ?>
+                                            <span><?php echo $rolea ?>
                                         </td>
                                         <td><?php echo $appraisaltype ?></td>
                                         <td id="cw"><?php echo $effectivestartdate ?> to <?php echo $effectiveenddate ?></td>
-                                        <td><?php echo $ipf ?></td>
+                                        <td><?php echo $ipfc ?></td>
                                     </tr>
                                 </tbody>
                         </table>
@@ -262,20 +291,21 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             </div>
         </section>
         </div>
-        <?php if (@$status2 == null && @$appraisaltype !=null && @$type !=null ) { ?>
-        <div id="footer">
-            <form name="ipfsubmission" action="#" method="POST" onsubmit="myFunction()">
-                <span id='close'>x</span>
-                <input type="hidden" name="form-type" type="text" value="ipfsubmission">
-                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
-                <input type="" type="text" name="ipfid" id="ipfid" value="<?php echo $id ?>" readonly required>
-                <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team.</p>
-                <div style="margin-left:5%;">
-                    <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
-                    <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-times" style="font-size: 17px;"></i> Reject</button>
-                </div><br>
-            </form>
-        </div>
+
+        <?php if (@$status2 == null && @$appraisaltype != null && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
+            <div id="footer">
+                <form name="ipfsubmission" action="#" method="POST" onsubmit="myFunction()">
+                    <span id='close'>x</span>
+                    <input type="hidden" name="form-type" type="text" value="ipfsubmission">
+                    <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                    <input type="hidden" type="text" name="ipfid" id="ipfid" value="<?php echo $id ?>" readonly required>
+                    <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team.</p>
+                    <div style="margin-left:5%;">
+                        <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
+                        <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-times" style="font-size: 17px;"></i> Reject</button>
+                    </div><br>
+                </form>
+            </div>
         <?php } ?>
         <script>
             $('#yes').click(function() {

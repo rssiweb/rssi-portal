@@ -266,7 +266,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             <div>
                 <p style="white-space:normal !important;word-wrap:break-word; margin-left: 5%;">Hi&nbsp;<?php echo strtok($fullname, ' ') ?>,Your IPF has been issued. If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team. You can check your IPF from <span class="noticea"><a href="my_appraisal.php" target="_blank">My Appraisal</a></span> portal.</p>
 
-                Appraisal type - <?php echo substr($googlechat, strpos($googlechat, "-") + 1) ?>
+                Appraisal type - <?php echo str_replace("(","&nbsp;(",$googlechat)?>
             </div>
             <br><br>
         </div>

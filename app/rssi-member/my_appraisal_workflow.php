@@ -151,7 +151,7 @@ $resultArr = pg_fetch_all($result);
                         foreach ($resultArr as $array) {
                             echo '<tr><td>' . $array['id'] . '</td>
                         <td>' . $array['memberid2'] . '/' . strtok($array['membername2'], ' ') . '</td>
-                        <td>' . $array['ipf'] . '</td>
+                        <td>' . str_replace("(","&nbsp;(",$array['ipf']) . '</td>
                         <td>' . $array['timestamp'] . '</td> 
                         <td>' . $array['ipfl'] . '</td>     
                         <td>' . $array['status2'] . '</td>
