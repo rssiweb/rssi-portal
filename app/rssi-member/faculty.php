@@ -388,7 +388,25 @@ $resultArr = pg_fetch_all($result);
 
                         <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
-            <td><a id="profile" href="member-profile.php?get_id='. $array['associatenumber'] .'" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 20px ;color:#777777" title="Profile"></i></a></td>
+            <td style="white-space: unset;">
+            
+            <a id="profile" href="member-profile.php?get_id='. $array['associatenumber'] .'" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 20px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
+
+                        <form name="ipfpush' . $array['associatenumber'] . '" action="#" method="POST" onsubmit="myFunction()" style="display:inline;">
+                        <input type="hidden" name="form-type" type="text" value="ipfpush">
+                        <input type="hidden" name="membername2" type="text" value="'. $array['fullname'] .'" readonly>
+                        <input type="hidden" name="memberid2" type="text" value="'. $array['associatenumber'] .'" readonly>
+                        <input type="hidden" type="text" name="ipf" id="ipf" value="'. $array['googlechat'] .'" readonly required>
+                        <input type="hidden" name="flag" type="text" value="initiated" readonly>' ?>
+
+                            <?php if ($role == 'Admin') { ?>
+
+                                <?php echo '<button type="submit" id="yes" style=" outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="IPF Initiate"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 20px ; color:#777777""></i></button>' ?>
+                            <?php } ?>
+                            <?php echo ' </form>
+      </td>
             </tr>';
                         } ?>
                     <?php
@@ -415,6 +433,32 @@ $resultArr = pg_fetch_all($result);
         </div>
     </section>
     </section>
+    <script>
+        function myFunction() {
+            alert("IPF has been initiated in the system.");
+        }
+    </script>
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>;
+        var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
+
+        const scriptURL = 'payment-api.php'
+
+        data.forEach(item => {
+            const form = document.forms['ipfpush' + item.associatenumber]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['ipfpush' + item.associatenumber])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
+        })
+    </script>
 </body>
 
 </html>

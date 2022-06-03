@@ -112,3 +112,6 @@ ALTER TABLE donation ADD COLUMN timestamp_new TIMESTAMP without time zone NULL;
 UPDATE donation SET timestamp_new = timestamp::TIMESTAMP;
 ALTER TABLE donation ALTER COLUMN timestamp TYPE TIMESTAMP without time zone USING timestamp_new;
 ALTER TABLE donation DROP COLUMN timestamp_new;
+
+ALTER TABLE ipfsubmission 
+RENAME ipfststus TO ipfstatus;
