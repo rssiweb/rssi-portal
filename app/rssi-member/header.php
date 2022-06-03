@@ -142,7 +142,8 @@
                                 <a style="font-size:13px;" href="asset-management.php"><i class="fa fa-desktop"></i>&nbsp;Asset Management</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="ipf-management.php"><i class="fa-solid fa-infinity"></i>&nbsp;PTM</a>
+                                <a style="font-size:13px;" href="ipf-management.php"><i class="fa-solid fa-chart-column"></i>&nbsp;Performance Management Tool
+</a>
                             </li>
                         <?php
                         } else {
