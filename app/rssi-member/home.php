@@ -256,6 +256,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $fullname ?>" readonly>
                 <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $associatenumber ?>" readonly>
                 <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                <input type="hidden" type="text" name="ipf" id="ipf" value="<?php echo $googlechat ?>" readonly required>
                 <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo strtok($fullname, ' ') ?>,Your IPF has been issued. If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team. You can check your IPF from <span class="noticet"><a href="my_appraisal.php" target="_blank">My Appraisal</a></span> portal.</p>
 
                 Appraisal type - <?php echo substr($googlechat, strpos($googlechat, "-") + 1) ?>
@@ -269,11 +270,11 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         </div>
         <script>
             $('#yes').click(function() {
-                $('#count2').val('Accepted');
+                $('#count2').val('IPF Accepted');
             });
 
             $('#no').click(function() {
-                $('#count2').val('Rejected');
+                $('#count2').val('IPF Rejected');
             });
         </script>
         <script>
@@ -307,7 +308,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     $('.pop-up2').delay(10).fadeOut(700);
                     e.stopPropagation();
 
-                    createCookie("ipf22", "15 days", 15);
+                    createCookie("ipf22", "1 day", 1);
                     //return false;
                 });
 
