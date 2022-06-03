@@ -66,12 +66,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <style>
         <?php include '../css/style.css'; ?>;
 
-        .x-btn:focus,
-        .button:focus,
-        [type="submit"]:focus {
-            outline: none;
-        }
-
         .alert {
             padding: 10px 0px !important;
         }
@@ -276,7 +270,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 Appraisal type - <?php echo substr($googlechat, strpos($googlechat, "-") + 1) ?>
                 <br><br>
 
-                <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
+                <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
                 <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-times" style="font-size: 17px;"></i> Reject</button>
 
                 <br><br>
@@ -322,7 +316,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             });
         </script>
     <?php
-    } else {}
+    } else {
+    }
     ?>
 
 
