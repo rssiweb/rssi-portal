@@ -67,7 +67,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Fees Details</title>
+    <title>PTM-Performance Management Tool</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -118,7 +118,7 @@ $resultArr = pg_fetch_all($result);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details<br><br>
+                        Home / Performance Management Tool<br><br>
                     </div>
                 </div>
                 <section class="box" style="padding: 2%;">
@@ -154,7 +154,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">IPF</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Timestamp</th>
-                                <th scope="col"></th>
+                                <th scope="col">Closed on</th>
                                 </tr>
                             </thead>' ?>
                     <?php if ($resultArr != null) {
@@ -180,6 +180,8 @@ $resultArr = pg_fetch_all($result);
                         border: none;" title="Closed"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>' ?>
                             <?php } ?>
                             <?php echo ' </form>
+
+' . $array['closedon'] . '
       </td>' ?>
                             <?php  }
                     } else if ($id == null) {
