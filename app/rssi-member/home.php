@@ -261,55 +261,20 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
         <div id="thoverX" class="thover pop-up2"></div>
         <div id="tpopupX" class="tpopup pop-up2">
-            <form name="ipfsubmission" action="#" method="POST" onsubmit="myFunction()">
-                <br>
-                <input type="hidden" name="form-type" type="text" value="ipfsubmission">
-                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
-                <input type="hidden" type="text" name="ipfid" id="ipfid" value="<?php echo $id ?>" readonly required>
-                <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo strtok($fullname, ' ') ?>,Your IPF has been issued. If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team. You can check your IPF from <span class="noticea"><a href="my_appraisal.php" target="_blank">My Appraisal</a></span> portal.</p>
+            <div class="close" style="margin-right: 5%;">&times;</div>
+            <br>
+            <div>
+                <p style="white-space:normal !important;word-wrap:break-word; margin-left: 5%;">Hi&nbsp;<?php echo strtok($fullname, ' ') ?>,Your IPF has been issued. If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team. You can check your IPF from <span class="noticea"><a href="my_appraisal.php" target="_blank">My Appraisal</a></span> portal.</p>
 
                 Appraisal type - <?php echo substr($googlechat, strpos($googlechat, "-") + 1) ?>
-                <br><br>
-
-                <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
-                <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-times" style="font-size: 17px;"></i> Reject</button>
-
-                <br><br>
-            </form>
+            </div>
+            <br><br>
         </div>
-        <script>
-            $('#yes').click(function() {
-                $('#count2').val('IPF Accepted');
-            });
-
-            $('#no').click(function() {
-                $('#count2').val('IPF Rejected');
-            });
-        </script>
-        <script>
-            function myFunction() {
-                alert("Your response has been recorded.");
-            }
-        </script>
-        <script>
-            const scriptURL = 'payment-api.php'
-            const form = document.forms['ipfsubmission']
-
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['ipfsubmission'])
-                    })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
-        </script>
 
         <script>
             $(document).ready(function() {
 
-                $('.close-button2').click(function(e) {
+                $('.close').click(function(e) {
 
                     $('.pop-up2').delay(10).fadeOut(700);
                     e.stopPropagation();

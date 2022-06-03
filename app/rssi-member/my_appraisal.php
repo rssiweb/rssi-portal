@@ -7,38 +7,19 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
- //You are almost there! Your IPF (Individual Performance Factor) will be released on August 14, 2021.
-?>
-<?php
-//session_start();
-//include("../util/login_util.php");
-
-//if(! isLoggedIn("aid")){
-//    header("Location: index.php");
-//}
-//$user_check = $_SESSION['aid'];
-
-//if (!$_SESSION['aid']) {
-
-//  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-//header("Location: index.php");
-//exit;  
-//} else if ($_SESSION['ipfl'] == '-') {
-
-//echo '<script type="text/javascript">';
-//echo 'alert("Your appraisal has been initiated in the system. You will no longer be able to access My appraisal portal.");';
-//echo 'window.location.href = "home.php";';
-//echo '</script>';
-//}
 ?>
 <?php
 include("member_data.php");
 ?>
 <?php
 include("database.php");
-@$id = $_POST['get_id'];
+@$type = $_POST['get_id'];
 @$year = $_POST['get_year'];
-$view_users_query = "select * from myappraisal_myappraisal WHERE associatenumber='$user_check' AND appraisaltype='$id' AND filter='$year'"; //select query for viewing users.  
+$view_users_query = "select * from myappraisal_myappraisal
+
+left join (SELECT id,memberid2, ipfinitiate, status2, ipfstatus FROM ipfsubmission) ipfsubmit ON ipfsubmit.memberid2=myappraisal_myappraisal.associatenumber
+
+WHERE associatenumber='$user_check' AND appraisaltype='$type' AND filter='$year'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
@@ -122,6 +103,28 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 margin-left: 2%;
             }
         }
+
+        #footer {
+            position: fixed;
+            bottom: 0;
+            width: 83%;
+            background-color: #f9f9f9;
+        }
+
+        #close {
+            float: right;
+            display: inline-block;
+            padding: 2px 5px;
+            background: #ccc;
+        }
+
+        #close:hover {
+            float: right;
+            display: inline-block;
+            padding: 2px 5px;
+            background: #ccc;
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -136,126 +139,193 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
 
-            <div class="row">
+                <div class="row">
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    Academic year: <?php echo @$year ?><br>
-                    <?php if (@$flag == "R") { ?>
-                        <p class="label label-danger">Reviewer Evaluation in Progress</p>
-                                    <?php
-                                    } else if (@$flag == "C") { ?>
-                                        <p class="label label-success">Process Closed</p>
-                                    <?php }
-                                    else { ?>
-                                    <?php }
-                                    ?>
+                        Academic year: <?php echo @$year ?><br>
+                        <?php if (@$ipfstatus == null && @$status2 == null) { ?>
+                            <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+                                <p class="label label-danger">in progress</p>
+                            </a>
+                        <?php
+                        } else if (@$ipfstatus != null && @$status2 != null) { ?>
+                            <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+                                <p class="label label-success">process closed</p>
+                            </a>
+                        <?php } else { ?>
+                        <?php }
+                        ?>
                     </div>
 
 
-                <section class="box" style="padding: 2%;">
-                    <form action="" method="POST">
-                        <div class="form-group" style="display: inline-block;">
-                            <div class="col2" style="display: inline-block;">
-                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
-                                    <?php if ($id == null) { ?>
-                                        <option value="" hidden selected>Select Appraisal type</option>
-                                    <?php
-                                    } else { ?>
-                                        <option hidden selected><?php echo $id ?></option>
-                                    <?php }
-                                    ?>
-                                    <!--<option>Quarterly 2/2021</option>-->
-                                    <option>Quarterly</option>
-                                    <option>Annual</option>
-                                    <option>Project end</option>
-                                </select>
+                    <section class="box" style="padding: 2%;">
+                        <form action="" method="POST">
+                            <div class="form-group" style="display: inline-block;">
+                                <div class="col2" style="display: inline-block;">
+                                    <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                                        <?php if ($type == null) { ?>
+                                            <option value="" hidden selected>Select Appraisal type</option>
+                                        <?php
+                                        } else { ?>
+                                            <option hidden selected><?php echo $type ?></option>
+                                        <?php }
+                                        ?>
+                                        <!--<option>Quarterly 2/2021</option>-->
+                                        <option>Quarterly</option>
+                                        <option>Annual</option>
+                                        <option>Project end</option>
+                                    </select>
 
-                                <select name="get_year" class="form-control" style="width:max-content; display:inline-block" placeholder="Year" required>
-                                    <?php if ($year == null) { ?>
-                                        <option value="" hidden selected>Select Year</option>
-                                    <?php
-                                    } else { ?>
-                                        <option hidden selected><?php echo $year ?></option>
-                                    <?php }
-                                    ?>
-                                    <!--<option>Quarterly 2/2021</option>-->
-                                    <option>2022-2023</option>
-                                    <option>2021-2022</option>
-                                </select>
+                                    <select name="get_year" class="form-control" style="width:max-content; display:inline-block" placeholder="Year" required>
+                                        <?php if ($year == null) { ?>
+                                            <option value="" hidden selected>Select Year</option>
+                                        <?php
+                                        } else { ?>
+                                            <option hidden selected><?php echo $year ?></option>
+                                        <?php }
+                                        ?>
+                                        <!--<option>Quarterly 2/2021</option>-->
+                                        <option>2022-2023</option>
+                                        <option>2021-2022</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                        </div>
-                    </form>
+                            <div class="col2 left" style="display: inline-block;">
+                                <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
+                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                            </div>
+                        </form>
 
-                    <table class="table">
-                        <thead style="font-size: 12px;">
-                            <tr>
-                                <th scope="col" id="cw2">Associate details</th>
-                                <th scope="col">Appraisal type</th>
-                                <th scope="col" id="cw1">Appraisal cycle</th>
-                                <th scope="col">IPF (Individual Performance Factor)/5</th>
-                            </tr>
-                        </thead>
-                        <?php if (@$appraisaltype > 0 and @$flag != "R") {
-                        ?>
-                            <tbody>
+                        <table class="table">
+                            <thead style="font-size: 12px;">
                                 <tr>
-
-                                    <td id="cw1"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br><br>
-                                    <span><?php echo $role ?>
-                                    </td>
-                                    <td><?php echo $appraisaltype ?></td>
-                                    <td id="cw"><?php echo $effectivestartdate ?> to <?php echo $effectiveenddate ?></td>
-                                    <td><?php echo $ipf ?></td>
+                                    <th scope="col" id="cw2">Associate details</th>
+                                    <th scope="col">Appraisal type</th>
+                                    <th scope="col" id="cw1">Appraisal cycle</th>
+                                    <th scope="col">IPF (Individual Performance Factor)/5</th>
                                 </tr>
-                            </tbody>
-                    </table>
+                            </thead>
+                            <?php if (@$appraisaltype > 0 and @$flag != "R") {
+                            ?>
+                                <tbody>
+                                    <tr>
+
+                                        <td id="cw1"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br><br>
+                                            <span><?php echo $role ?>
+                                        </td>
+                                        <td><?php echo $appraisaltype ?></td>
+                                        <td id="cw"><?php echo $effectivestartdate ?> to <?php echo $effectiveenddate ?></td>
+                                        <td><?php echo $ipf ?></td>
+                                    </tr>
+                                </tbody>
+                        </table>
 
 
 
-                    <table class="table">
-                        <thead style="font-size: 12px;">
-                            <tr>
-                                <th scope="col" id="cw3">Feedback<br>(5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied)</th>
-                                <th scope="col">Remarks<br>(Based on general observations, system-generated reports, and student feedback)</th>
-                            </tr>
-                        </thead>
-                        <thead style="font-size: 12px;">
-                            <tr>
-                                <td style="line-height: 1.7;"><?php echo $feedback ?></td>
-                                <td style="line-height: 1.7;"><?php echo $scopeofimprovement ?></td>
-                            </tr>
-                        <?php
-                        } else if (@$flag == "R") {
-                        ?>
-                            <tr>
-                                <td colspan="3">Your appraisal has been initiated in the system. You can check your appraisal details once your IPF is released.</td>
-                            </tr>
-                        <?php
-                        } else if (@$id=="") {
+                        <table class="table">
+                            <thead style="font-size: 12px;">
+                                <tr>
+                                    <th scope="col" id="cw3">Feedback<br>(5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied)</th>
+                                    <th scope="col">Remarks<br>(Based on general observations, system-generated reports, and student feedback)</th>
+                                </tr>
+                            </thead>
+                            <thead style="font-size: 12px;">
+                                <tr>
+                                    <td style="line-height: 1.7;"><?php echo $feedback ?></td>
+                                    <td style="line-height: 1.7;"><?php echo $scopeofimprovement ?></td>
+                                </tr>
+                            <?php
+                            } else if (@$flag == "R") {
+                            ?>
+                                <tr>
+                                    <td colspan="3">Your appraisal has been initiated in the system. You can check your appraisal details once your IPF is released.</td>
+                                </tr>
+                            <?php
+                            } else if (@$type == "") {
                             ?>
                                 <tr>
                                     <td colspan="3">Please select Filter value.</td>
                                 </tr>
                             <?php
                             } else {
-                        ?>
-                            <tr>
-                                <td>No record found for <?php echo $id ?>&nbsp;<?php echo $year ?></td>
-                            </tr>
-                        <?php }
-                        ?>
-                        </tbody>
-                    </table>
+                            ?>
+                                <tr>
+                                    <td>No record found for <?php echo $type ?>&nbsp;<?php echo $year ?></td>
+                                </tr>
+                            <?php }
+                            ?>
+                            </tbody>
+                        </table>
 
 
-            </div>
+                </div>
             </div>
             </div>
         </section>
         </div>
+        <?php if (@$status2 == null && @$appraisaltype !=null && @$type !=null ) { ?>
+        <div id="footer">
+            <form name="ipfsubmission" action="#" method="POST" onsubmit="myFunction()">
+                <span id='close'>x</span>
+                <input type="hidden" name="form-type" type="text" value="ipfsubmission">
+                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                <input type="" type="text" name="ipfid" id="ipfid" value="<?php echo $id ?>" readonly required>
+                <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team.</p>
+                <div style="margin-left:5%;">
+                    <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
+                    <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-times" style="font-size: 17px;"></i> Reject</button>
+                </div><br>
+            </form>
+        </div>
+        <?php } ?>
+        <script>
+            $('#yes').click(function() {
+                $('#count2').val('IPF Accepted');
+            });
+
+            $('#no').click(function() {
+                $('#count2').val('IPF Rejected');
+            });
+        </script>
+        <script>
+            function myFunction() {
+                alert("Your response has been recorded.");
+            }
+        </script>
+        <script>
+            const scriptURL = 'payment-api.php'
+            const form = document.forms['ipfsubmission']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['ipfsubmission'])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                $('.close-button2').click(function(e) {
+
+                    $('#footer').delay(10).fadeOut(700);
+                    e.stopPropagation();
+                });
+            });
+        </script>
+        <script>
+            window.onload = function() {
+                document.getElementById('close').onclick = function() {
+                    this.parentNode.parentNode.parentNode
+                        .removeChild(this.parentNode.parentNode);
+                    return false;
+                };
+            };
+        </script>
+
+
     </section>
     </section>
 
