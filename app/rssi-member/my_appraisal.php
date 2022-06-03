@@ -122,20 +122,18 @@ while ($row = pg_fetch_array($run)) {
         #footer {
             position: fixed;
             bottom: 0;
-            width: 83%;
+            width: 81%;
             background-color: #f9f9f9;
         }
 
         #close {
             float: right;
-            display: inline-block;
             padding: 2px 5px;
             background: #ccc;
         }
 
         #close:hover {
             float: right;
-            display: inline-block;
             padding: 2px 5px;
             background: #ccc;
             color: #fff;
@@ -158,26 +156,26 @@ while ($row = pg_fetch_array($run)) {
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
                         Academic year: <?php echo @$year ?><br>
 
-                        <?php if (@$ipfstatus == null && @$status2 == null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
+                        <?php if (@$ipfstatus == null && @$status2 == null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
                             <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-danger">in progress</p>
                             </a>
                         <?php } ?>
 
-                        <?php if (@$ipfstatus == null && @$status2 == 'IPF Accepted' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
+                        <?php if (@$ipfstatus == null && @$status2 == 'IPF Accepted' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
                             <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-success"><?php echo $status2 ?></p>
                             </a>
                         <?php } ?>
 
-                        <?php if (@$ipfstatus == null && @$status2 == 'IPF Rejected' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
+                        <?php if (@$ipfstatus == null && @$status2 == 'IPF Rejected' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
                             <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-danger"><?php echo $status2 ?></p>
                             </a>
                         <?php } ?>
 
 
-                        <?php if (@$ipfstatus != null && @$status2 != null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
+                        <?php if (@$ipfstatus != null && @$status2 != null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
                             <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-success">process closed</p>
                             </a>
@@ -288,77 +286,74 @@ while ($row = pg_fetch_array($run)) {
 
                 </div>
             </div>
-            </div>
-        </section>
-        </div>
 
-        <?php if (@$status2 == null && @$appraisaltype != null && @$type == strtok(@$ipf,  '(') && @$year==explode(')', (explode('(', $ipf)[1]))[0]) { ?>
-            <div id="footer">
-                <form name="ipfsubmission" action="#" method="POST" onsubmit="myFunction()">
-                    <span id='close'>x</span>
-                    <input type="hidden" name="form-type" type="text" value="ipfsubmission">
-                    <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
-                    <input type="hidden" type="text" name="ipfid" id="ipfid" value="<?php echo $id ?>" readonly required>
-                    <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team.</p>
-                    <div style="margin-left:5%;">
-                        <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
-                        <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-times" style="font-size: 17px;"></i> Reject</button>
-                    </div><br>
-                </form>
-            </div>
-        <?php } ?>
-        <script>
-            $('#yes').click(function() {
-                $('#count2').val('IPF Accepted');
-            });
 
-            $('#no').click(function() {
-                $('#count2').val('IPF Rejected');
-            });
-        </script>
-        <script>
-            function myFunction() {
-                alert("Your response has been recorded.");
-            }
-        </script>
-        <script>
-            const scriptURL = 'payment-api.php'
-            const form = document.forms['ipfsubmission']
-
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['ipfsubmission'])
-                    })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
-        </script>
-        <script>
-            $(document).ready(function() {
-
-                $('.close-button2').click(function(e) {
-
-                    $('#footer').delay(10).fadeOut(700);
-                    e.stopPropagation();
+            <?php if (@$status2 == null && @$appraisaltype != null && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
+                <div id="footer">
+                    <form name="ipfsubmission" action="#" method="POST" onsubmit="myFunction()">
+                        <span id='close'>x</span>
+                        <input type="hidden" name="form-type" type="text" value="ipfsubmission">
+                        <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                        <input type="hidden" type="text" name="ipfid" id="ipfid" value="<?php echo $id ?>" readonly required>
+                        <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team.</p>
+                        <div style="margin-left:5%;">
+                            <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
+                            <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-times" style="font-size: 17px;"></i> Reject</button>
+                        </div><br>
+                    </form>
+                </div>
+            <?php } ?>
+            <script>
+                $('#yes').click(function() {
+                    $('#count2').val('IPF Accepted');
                 });
-            });
-        </script>
-        <script>
-            window.onload = function() {
-                document.getElementById('close').onclick = function() {
-                    this.parentNode.parentNode.parentNode
-                        .removeChild(this.parentNode.parentNode);
-                    return false;
+
+                $('#no').click(function() {
+                    $('#count2').val('IPF Rejected');
+                });
+            </script>
+            <script>
+                function myFunction() {
+                    alert("Your response has been recorded.");
+                }
+            </script>
+            <script>
+                const scriptURL = 'payment-api.php'
+                const form = document.forms['ipfsubmission']
+
+                form.addEventListener('submit', e => {
+                    e.preventDefault()
+                    fetch(scriptURL, {
+                            method: 'POST',
+                            body: new FormData(document.forms['ipfsubmission'])
+                        })
+                        .then(response => console.log('Success!', response))
+                        .catch(error => console.error('Error!', error.message))
+                })
+            </script>
+            <script>
+                $(document).ready(function() {
+
+                    $('.close-button2').click(function(e) {
+
+                        $('#footer').delay(10).fadeOut(700);
+                        e.stopPropagation();
+                    });
+                });
+            </script>
+            <script>
+                window.onload = function() {
+                    document.getElementById('close').onclick = function() {
+                        this.parentNode.parentNode.parentNode
+                            .removeChild(this.parentNode.parentNode);
+                        return false;
+                    };
                 };
-            };
-        </script>
+            </script>
 
 
+        </section>
     </section>
-    </section>
-
 
     <!-- Back top -->
     <script>
