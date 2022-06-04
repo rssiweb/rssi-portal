@@ -139,10 +139,10 @@
                                 <a style="font-size:13px;" href="pms.php"><i class="fas fa-unlock-alt"></i>&nbsp;PMS</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="asset-management.php"><i class="fa fa-desktop"></i>&nbsp;Asset Management</a>
+                                <a style="font-size:13px;" href="asset-management.php"><i class="fa-solid fa-truck-fast"></i>&nbsp;Asset Management</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="ipf-management.php"><i class="fa-solid fa-arrow-trend-up"></i>&nbsp;Inspire</a>
+                                <a style="font-size:13px;" href="ipf-management.php"><i class="fa-solid fa-circle-nodes"></i>&nbsp;Appraisal Management</a>
                             </li>
                         <?php
                         } else {
@@ -278,7 +278,7 @@
             <li><a href="leave.php" class="<?php echo $leave_active ?>"><span class="sidebar-icon"><i class="fas fa-plane-departure"></i></span> <span class="menu-title">Leave</span></a></li>
             <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-calendar-check"></i></span> <span class="menu-title">My Allocation</span></a></li>
 
-            <li><a href="my_appraisal.php" class="<?php echo $appraisal_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-chart-column"></i></span> <span class="menu-title">My Appraisal</span></a></li>
+            <li><a href="my_appraisal.php" class="<?php echo $appraisal_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-circle-nodes"></i></span> <span class="menu-title">My Appraisal</span></a></li>
 
             <li><a href="document.php" class="<?php echo $document_active ?>"><span class="sidebar-icon"><i class="fas fa-folder-open"></i></i></span> <span class="menu-title">My Document</span></a></li>
 

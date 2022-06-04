@@ -390,7 +390,7 @@ $resultArr = pg_fetch_all($result);
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td style="white-space: unset;">
             
-            <a id="profile" href="member-profile.php?get_id='. $array['associatenumber'] .'" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 20px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
+            <a id="profile" href="member-profile.php?get_id='. $array['associatenumber'] .'" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
 
                         <form name="ipfpush' . $array['associatenumber'] . '" action="#" method="POST" onsubmit="myFunction()" style="display:inline;">
                         <input type="hidden" name="form-type" type="text" value="ipfpush">
@@ -403,7 +403,7 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php echo '<button type="submit" id="yes" style=" outline: none;background: none;
                         padding: 0px;
-                        border: none;" title="IPF Initiate"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 20px ; color:#777777""></i></button>' ?>
+                        border: none;" title="Release IPF"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777""></i></button>' ?>
                             <?php } ?>
                             <?php echo ' </form>
       </td>

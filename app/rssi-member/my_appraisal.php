@@ -4,6 +4,7 @@ include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -13,8 +14,8 @@ include("member_data.php");
 ?>
 <?php
 include("database.php");
-@$type = $_POST['get_id'];
-@$year = $_POST['get_year'];
+@$type = $_GET['get_id'];
+@$year = $_GET['get_year'];
 $view_users_query = "select * from myappraisal_myappraisal WHERE associatenumber='$user_check' AND appraisaltype='$type' AND filter='$year'";
 $run = pg_query($con, $view_users_query);
 
@@ -158,7 +159,7 @@ while ($row = pg_fetch_array($run)) {
 
                         <?php if (@$ipfstatus == null && @$status2 == null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
                             <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
-                                <p class="label label-danger">in progress</p>
+                                <p class="label label-danger">In Progress</p>
                             </a>
                         <?php } ?>
 
@@ -177,7 +178,7 @@ while ($row = pg_fetch_array($run)) {
 
                         <?php if (@$ipfstatus != null && @$status2 != null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
                             <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
-                                <p class="label label-success">process closed</p>
+                                <p class="label label-success">Process Closed</p>
                             </a>
                         <?php } ?>
 
@@ -185,7 +186,7 @@ while ($row = pg_fetch_array($run)) {
 
 
                     <section class="box" style="padding: 2%;">
-                        <form action="" method="POST">
+                        <form action="" method="GET">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
                                     <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
