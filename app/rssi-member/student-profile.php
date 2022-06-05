@@ -5,6 +5,7 @@ include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -161,12 +162,21 @@ if (!$result) {
                             <td>' . $array['dateofbirth'] . '</td>
                             <td>' . $array['studentaadhar'] . '</td>' ?>
 
-                    <?php if ($array['upload_aadhar_card'] != null) {
+                    <?php if ($array['upload_aadhar_card'] != null && $_SESSION['role'] != 'Admin') {
 
-                        echo '<td  colspan=3><iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px"/></iframe></td>' ?>
-                        <?php  } else {
+                        echo '<td  colspan=3><iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px"/></iframe></td>' ?><?php } ?>
+
+
+                        <?php if ($array['upload_aadhar_card'] != null && $_SESSION['role'] == 'Admin') {
+
+                        echo '<td  colspan=3><iframe src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px"/></iframe></td>' ?><?php } ?>
+                        
+                        
+                        <?php if ($array['upload_aadhar_card'] == null) {
                         echo '<td colspan=3>No document uploaded.</td>'
-                        ?><?php }
+                        ?>
+                        
+                        <?php }
                         echo '</tr></tbody>
                 
                         <tr>

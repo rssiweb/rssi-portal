@@ -158,7 +158,7 @@ if (!$result) {
                     <?php if ($array['iddoc'] != null) {
 
                         echo '<td colspan=2>
-                            <iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="' . $array['iddoc'] . '" width="300px" height="200px" /></iframe></td>' ?>
+                            <iframe src="' . $array['iddoc'] . '" width="300px" height="200px" /></iframe></td>' ?>
                         <?php  } else {
                         echo '<td colspan=2>No document uploaded.</td>'
                         ?><?php }

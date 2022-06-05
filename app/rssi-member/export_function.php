@@ -211,11 +211,11 @@ function donation_export()
 
     $resultArr = pg_fetch_all($result);
 
-    echo 'Student Id,Name,Category,Class,DOA,Paid month' . "\n";
+    echo 'Student Id,Name,Category,Class,DOA,Paid month,Special Service' . "\n";
 
     foreach ($resultArr as $array) {
 
-        echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['doa'] . ',' . $array['maxmonth'] ."\n";
+        echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['doa'] . ',' . $array['maxmonth'] .',' . $array['special_service'] ."\n";
         }
     }
 ?>
