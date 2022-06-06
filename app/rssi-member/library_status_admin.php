@@ -172,13 +172,13 @@ $resultArr = pg_fetch_all($result);
                             </tr>';
                     }?>
                     <?php
-                     if ($id == null && $status == null) {
+                     if ($status == null) {
                     ?>
                         <tr>
                             <td colspan="5">Please select Filter value.</td>
                         </tr>
                     <?php
-                    } else {
+                    } if ($status != null && sizeof($resultArr)==0) {
                     ?>
                         <tr>
                             <td colspan="5">No record was found for the selected filter value.</td>
