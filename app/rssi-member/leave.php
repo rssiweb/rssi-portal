@@ -134,7 +134,7 @@ $resultArr = pg_fetch_all($result);
                                 <td style="line-height: 2;">
                                     <?php if ((@$slbal > 0 || @$clbal > 0) && @$filterstatus == 'Active') {
                                     ?>
-                                        <span class="noticea"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span>
+                                        <span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=<?php echo $associatenumber ?>&entry.593057865=<?php echo $fullname ?>&entry.1085056032=<?php echo $email ?>&entry.1932332750=<?php echo strtok($position,  '-') ?>" target="_blank">Leave Request Form</a></span>
                                     <?php
                                     } else {?>
                                         <span class="noticea"><a href="//" onclick="return false;">Leave Request Form</a></span>

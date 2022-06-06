@@ -143,7 +143,7 @@ include("database.php");
                 <div class="col noprint" style="display: inline-block; width:100%;margin-left:10%; margin-top:2%">
 
                     <button type="button" onclick="window.print()" name="print" class="btn btn-success btn-sm" style="outline: none;">
-                        <span class="glyphicon glyphicon-save"></span>&nbsp;Save</button>
+                    <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
                 </div>
             </div>
         </div>

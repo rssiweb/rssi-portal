@@ -117,7 +117,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <tr>
                                     <td style="line-height: 2;"><?php echo $class ?></td>
                                     <td style="line-height: 2;"><span class="noticea"><a href="<?php echo $gm ?>" target="_blank"><?php echo substr($gm, -12) ?></a></span></td>
-                                    <td style="line-height: 2;"><?php echo $attd ?>
+                                    <td style="line-height: 2;"><span class=noticea><a href=https://docs.google.com/spreadsheets/d/1ufn8vcA5tcpoVvbTgGBO9NsXmiYgjmz54Qqg_L2GZxI/edit#gid=311270786 target=_blank>Attendance sheet</a></span>
                                         <?php if (@$attd_pending != null) {
                                         ?>
                                             <span class="label label-warning" style="display:-webkit-inline-box">pending&nbsp;<?php echo $attd_pending ?></span>
@@ -144,8 +144,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <?php if (@$filterstatus == 'Active') {
                             ?>
                                 <tr>
-                                    <td style="line-height: 2;"><?php echo $evaluationpath ?></td>
-                                    <td style="line-height: 2;"><?php echo $quicklink ?></td>
+                                    <td style="line-height: 2;"><span class=noticea><a href="https://docs.google.com/spreadsheets/d/1d1dfSWWh_aM7Eq2rZc3ZxXJ2uMpqKfchy0ciNSF4KxU/edit?usp=sharing" target=_blank>Homework, QT Exam</a><br><a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vS7xMLLw8oFxfw9x8PSjCyB_-D-vdE_zVfgeHqXsE74QIdoEh60jiybeKVNT9XeBFDXqZB0Fe0cVmrQ/pubhtml?gid=1995146093&single=true" target=_blank>Online Exam</a></span></td>
+                                    <td style="line-height: 2;"><span class=noticea><a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br><a href=visco.php>Visco</a><br>
+                                            <a href="https://drive.google.com/file/d/1b3AcN68TJa7gIai_RTyJ5989Te-TXCbq/view" target=_blank>Online Class schedule</a><br>
+                                            <a href="https://drive.google.com/file/d/1t0AIguvsd1plCLSuis5gDNcozvTdlKoQ/view" target=_blank>Offline Class schedule</a></span></td>
                                 </tr>
                             <?php
                             } else {
@@ -264,9 +266,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             <div class="close" style="margin-right: 5%;">&times;</div>
             <br>
             <div>
-                <p style="white-space:normal !important;word-wrap:break-word; margin-left: 5%;">Hi&nbsp;<?php echo strtok($fullname, ' ') ?>,Your IPF has been issued. If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team. You can check your IPF from <span class="noticea"><a href="my_appraisal.php?get_id=<?php echo strtok($ipf, '(') ?>&get_year=<?php echo explode(')', (explode('(', $ipf)[1]))[0]?>" target="_blank">My Appraisal</a></span> portal.</p>
+                <p style="white-space:normal !important;word-wrap:break-word; margin-left: 5%;">Hi&nbsp;<?php echo strtok($fullname, ' ') ?>,Your IPF has been issued. If you are not satisfied with your appraisal discussion and IPF then you can reject your IPF. In case of rejection, another round of discussion will be set up with the concerned team. You can check your IPF from <span class="noticea"><a href="my_appraisal.php?get_id=<?php echo strtok($ipf, '(') ?>&get_year=<?php echo explode(')', (explode('(', $ipf)[1]))[0] ?>" target="_blank">My Appraisal</a></span> portal.</p>
 
-                Appraisal type - <?php echo str_replace("(","&nbsp;(",$googlechat)?>
+                Appraisal type - <?php echo str_replace("(", "&nbsp;(", $googlechat) ?>
             </div>
             <br><br>
         </div>

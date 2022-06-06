@@ -79,7 +79,11 @@ include("member_data.php");
                         </thead>
                         <tbody>
                         <tr>
-                                <td style="line-height: 2;"><?php echo $mydoc ?></td>
+                            <td style="line-height: 2;">
+                                <span class=noticea><a href=https://www.rssi.in/digital-library target=_blank>Digital Library</a><br>
+                                <a href=visco.php>Visco</a><br>
+                                <a href=https://drive.google.com/drive/folders/1ZvYykh9BMv0ajDelsrEtskCPNdF5lmaQ target=_blank>Member's area</a></span>
+                            </td>
                             </tr>
                         </tbody>
                     </table>

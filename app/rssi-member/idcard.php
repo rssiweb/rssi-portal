@@ -134,7 +134,7 @@ include("database.php");
                 <div class="col noprint" style="display: inline-block; width:100%;margin-left:10%; margin-top:2%">
 
                     <button type="button" onclick="window.print()" name="print" class="btn btn-success btn-sm" style="outline: none;">
-                        <span class="glyphicon glyphicon-save"></span>&nbsp;Save</button>
+                    <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
                 </div>
             </div>
         </div>
@@ -149,7 +149,7 @@ include("database.php");
                     <img class="cornerimage" src=<?php echo $photo ?> width="75px" />
                     <p class="first-txt"><?php echo $fullname ?></p>
                     <p class="second-txt"><?php echo $associatenumber ?></p>
-                    <p class="third-txt"><?php echo strtok($position, '-') ?></p>
+                    <p class="third-txt"><?php echo $engagement ?></p>
                     <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>" width="74px"/>
                 </div>
             </div>

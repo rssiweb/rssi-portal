@@ -9,6 +9,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 {
     $associatenumber = $row[1];
     $fullname = $row[2];
+    $position = $row[16];
     $photo = $row[28];
     $astatus = $row[23];
     $engagement = $row[48];
@@ -104,7 +105,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
                                 <td style="line-height: 1.7;"><img src="<?php echo $photo ?>" width=100px /></td>
                                 <td id="cw2" style="line-height: 1.7;"><b><?php echo $fullname ?> (<?php echo $associatenumber ?>)</b><br>
-                                    <span style="line-height: 3;"><?php echo $engagement ?>
+                                    <span style="line-height: 3;"><?php echo $engagement ?></span><br>
+                                    <?php echo substr($position, 0, strrpos($position, "-")) ?>
                                 </td>
                                 <td id="cw1" style="line-height: 1.7;"><?php echo $astatus ?></td>
                                 <td id="cw1" style="line-height: 1.7;"><?php echo $approveddate ?></td>

@@ -377,7 +377,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php echo '<br><p class="label label-danger">on leave</p>' ?>
                             <?php } else {
                             } ?>
-                            <?php if ($array['today'] != 0 && $array['filterstatus'] != 'Inactive') { ?>
+                            <?php if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') { ?>
                 <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
               <?php    } ?>
                             <?php if ($array['assetdetails'] != null && $array['status'] != 'Closed' && $array['category'] == 'Asset') { ?>
@@ -387,7 +387,7 @@ $resultArr = pg_fetch_all($result);
                             <?php } ?>
 
                         <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="' . $array['leaveapply'] . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td style="white-space: unset;">
             
             <a id="profile" href="member-profile.php?get_id='. $array['associatenumber'] .'" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;

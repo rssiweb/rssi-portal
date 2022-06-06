@@ -125,7 +125,7 @@ include("member_data.php");
                         <tbody><tr>
                                 <td><?php echo $dateofbirth ?></td>
                                 <td>
-                                <iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="<?php echo $iddoc ?>" width="300px" height="200px" /></iframe>
+                                <iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="<?php echo $iddoc ?>" width="300px" height="200px"></iframe>
                                 </td>
                                 <td><?php echo $identifier ?></td>
                             </tr>
@@ -136,7 +136,7 @@ include("member_data.php");
                         <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Application Number</th>
-                                <th scope="col">Designation</th>
+                                <th scope="col">Responsibility</th>
                                 <th scope="col">Base Branch</th>
                                 <th scope="col">Deputed Branch</th>
                             </tr>

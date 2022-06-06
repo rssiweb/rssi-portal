@@ -168,7 +168,7 @@ if (!$result) {
 
                         <tr>
                             <th >Application Number</th>
-                            <th  colspan=2>Designation</th>
+                            <th  colspan=2>Responsibility</th>
                             <th >Base Branch</th>
                             <th >Deputed Branch</th>
                         </tr>
