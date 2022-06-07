@@ -98,7 +98,7 @@ $resultArr = pg_fetch_all($result);
                         <tbody>
                             <tr>
                                 <td style="line-height: 2;">Casual Leave - <?php echo $cltaken ?> <br>Sick Leave - <?php echo $sltaken ?> <br>Other Leave - <?php echo $othtaken ?></td>
-                                <td><span class="noticea"><a href="<?php echo $leaveapply ?>" target="_blank">Leave Request Form</a></span></td>
+                                <td><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=<?php echo $student_id ?>&entry.593057865=<?php echo $studentname ?>&entry.1085056032=<?php echo $emailaddress ?>&entry.1932332750=Student" target="_blank">Leave Request Form</a></span></td>
                                 <td></td>
                             </tr>
                         </tbody>

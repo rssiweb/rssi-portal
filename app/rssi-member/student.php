@@ -592,7 +592,7 @@ $resultArr = pg_fetch_all($result);
     // var yyyy = d.getFullYear();
     // document.write("The date is : " + monthNames[d.getMonth()]);
 
-    if (mydata["maxmonth"] === monthNames[d.getMonth() - 1]) {
+    if (mydata["maxmonth"] === monthNames[d.getMonth() - 1] && mydata["leaveapply"] !=="A") {
       yes.disabled = true; //button remains disabled
     } else {
       yes.disabled = false; //button is enabled
