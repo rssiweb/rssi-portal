@@ -79,7 +79,7 @@ include("member_data.php");
                                 </td>
                                 <td style="line-height: 2;"><span class="noticea"><a href="payslip.php" target="_self">Payslip</a></span></td>
                                 <td style="line-height: 2;"><span class="noticea"><a href="idcard.php" target="_blank">RSSI Identity Card</a><br>
-                                <a href="myasset.php" target="_self">My Asset</a>
+                                <a href="asset-management.php" target="_self">My Asset</a>
                             </span></td>
                             </tr>
                         </tbody>

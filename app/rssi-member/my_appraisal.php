@@ -158,26 +158,26 @@ while ($row = pg_fetch_array($run)) {
                         Academic year: <?php echo @$year ?><br>
 
                         <?php if (@$ipfstatus == null && @$status2 == null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
-                            <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+                            <a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-danger">In Progress</p>
                             </a>
                         <?php } ?>
 
                         <?php if (@$ipfstatus == null && @$status2 == 'IPF Accepted' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
-                            <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+                            <a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-success"><?php echo $status2 ?></p>
                             </a>
                         <?php } ?>
 
                         <?php if (@$ipfstatus == null && @$status2 == 'IPF Rejected' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
-                            <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+                            <a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-danger"><?php echo $status2 ?></p>
                             </a>
                         <?php } ?>
 
 
                         <?php if (@$ipfstatus != null && @$status2 != null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
-                            <a href="my_appraisal_workflow.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+                            <a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-success">Process Closed</p>
                             </a>
                         <?php } ?>

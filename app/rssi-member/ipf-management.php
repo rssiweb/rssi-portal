@@ -9,45 +9,52 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-if ($_SESSION['role'] != 'Admin') {
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
 ?>
 <?php
 include("member_data.php");
-setlocale(LC_TIME, 'fr_FR.UTF-8');
-// @$_SESSION["get_aid"] = $_POST["get_aid"];
-// @$_SESSION["get_id"] = $_POST["get_id"];
-// @$_SESSION["get_category"] = $_POST["get_category"];
-?>
-<?php
 include("database.php");
+@$id = $_GET['get_aid'];
 
-@$id = $_POST['get_aid'];
+if ($_SESSION['role'] == 'Admin') {
+    if ($id != null) {
 
-if ($id != null) {
-
-    $result = pg_query($con, "SELECT * FROM ipfsubmission 
+        $result = pg_query($con, "SELECT * FROM ipfsubmission 
     
     left join (SELECT associatenumber, ipfl FROM rssimyaccount_members) faculty ON ipfsubmission.memberid2=faculty.associatenumber
     
     WHERE substring(ipfsubmission.ipf, '\((.+)\)')='$id' order by id desc");
-}
+    }
 
-if ($id == null) {
+    if ($id == null) {
 
-    $result = pg_query($con, "SELECT * FROM ipfsubmission 
+        $result = pg_query($con, "SELECT * FROM ipfsubmission 
     
     left join (SELECT associatenumber,ipfl FROM rssimyaccount_members) faculty ON ipfsubmission.memberid2=faculty.associatenumber
     
     WHERE substring(ipfsubmission.ipf, '\((.+)\)')=null order by id desc");
+    }
 }
+if ($_SESSION['role'] != 'Admin') {
 
+    if ($id != null) {
+
+        $result = pg_query($con, "SELECT * FROM ipfsubmission 
+        
+        left join (SELECT associatenumber, ipfl FROM rssimyaccount_members) faculty ON ipfsubmission.memberid2=faculty.associatenumber
+        
+        WHERE substring(ipfsubmission.ipf, '\((.+)\)')='$id' AND memberid2='$user_check' order by id desc");
+    }
+
+    if ($id == null) {
+
+        $result = pg_query($con, "SELECT * FROM ipfsubmission 
+        
+        left join (SELECT associatenumber,ipfl FROM rssimyaccount_members) faculty ON ipfsubmission.memberid2=faculty.associatenumber
+        
+        WHERE substring(ipfsubmission.ipf, '\((.+)\)')=null AND memberid2='$user_check' order by id desc");
+    }
+}
 
 if (!$result) {
     echo "An error occurred.\n";
@@ -117,12 +124,21 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
-                    <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / Appraisal Management System<br><br>
-                    </div>
+                    <?php if ($_SESSION['role'] == 'Admin') { ?>
+                        <div class="col" style="display: inline-block; width:47%; text-align:right">
+                            Home / Appraisal Management System<br><br>
+                        </div>
+                    <?php } ?>
+                    <?php if ($_SESSION['role'] != 'Admin') { ?>
+                        <div class="col" style="display: inline-block; width:47%; text-align:right">
+                            <span class="noticea" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
+                        </div>
+                    <?php } ?>
+
+
                 </div>
                 <section class="box" style="padding: 2%;">
-                    <form action="" method="POST">
+                    <form action="" method="GET">
                         <div class="form-group">
                             <div class="col2" style="display: inline-block;">
 
@@ -163,8 +179,8 @@ $resultArr = pg_fetch_all($result);
                         foreach ($resultArr as $array) {
                             echo '<tr><td>' . $array['id'] . '</td>
                         <td>' . $array['memberid2'] . '/' . strtok($array['membername2'], ' ') . '</td>
-                        <td>' . str_replace("(","&nbsp;(",$array['ipf']) . '</td>
-                        <td>'. $array['timestamp'] .'</td> 
+                        <td>' . str_replace("(", "&nbsp;(", $array['ipf']) . '</td>
+                        <td>' . $array['timestamp'] . '</td> 
                         <td>' . $array['ipfl'] . '</td>     
                         <td>' . $array['status2'] . '</td>
                         <td>' . $array['respondedon'] . '</td>
@@ -186,13 +202,13 @@ $resultArr = pg_fetch_all($result);
 ' . $array['closedon'] . '
       </td>' ?>
                             <?php  }
-                    } else if ($id == null) {
+                    } else if (@$id == null) {
                         echo '<tr>
                                 <td colspan="6">Please select Filter value.</td>
                             </tr>';
                     } else {
                         echo '<tr>
-                            <td colspan="6">No record found for' ?>&nbsp;<?php echo $id ?>
+                            <td colspan="6">No record found for' ?>&nbsp;<?php echo @$id ?>
                         <?php echo '</td>
                         </tr>';
                     }

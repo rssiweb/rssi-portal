@@ -8,36 +8,34 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
- if ($_SESSION['role'] != 'Admin') {
-
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
 ?>
 
 <?php
 include("member_data.php");
 include("database.php");
-@$statuse = $_POST['get_statuse'];
-@$appid = $_POST['get_appid'];
-@$statuse = $_GET['get_statuse'];
-@$appid = $_GET['get_appid'];
 
-if ($statuse == 'Associate' && $appid == null) {
-    $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate'");
-} else if ($statuse == 'Associate' && $appid != null) {
-    $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate' AND userid='$appid'");
-} else if ($statuse == 'Student' && $appid == null) {
-    $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student'");
-} else if ($statuse == 'Student' && $appid != null) {
-    $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student' AND userid='$appid'");
-} else {
-    $result = pg_query($con, "select * from asset WHERE usertype=''");
+if ($_SESSION['role'] == 'Admin') {
+
+    @$statuse = $_POST['get_statuse'];
+    @$appid = $_POST['get_appid'];
+    @$statuse = $_GET['get_statuse'];
+    @$appid = $_GET['get_appid'];
+
+    if ($statuse == 'Associate' && $appid == null) {
+        $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate'");
+    } else if ($statuse == 'Associate' && $appid != null) {
+        $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate' AND userid='$appid'");
+    } else if ($statuse == 'Student' && $appid == null) {
+        $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student'");
+    } else if ($statuse == 'Student' && $appid != null) {
+        $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student' AND userid='$appid'");
+    } else {
+        $result = pg_query($con, "select * from asset WHERE usertype=''");
+    }
 }
-
+if ($_SESSION['role'] != 'Admin') {
+    $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber where associatenumber='$user_check'");
+}
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -86,31 +84,38 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                    <div class="col" style="display: inline-block; width:100%; text-align:right">
-                        Home / Asset Management
-                    </div>
-                    <form id="myform" action="" method="POST" onsubmit="process()">
-                        <div class="form-group" style="display: inline-block;">
-                            <div class="col2" style="display: inline-block;">
-                                <select name="get_statuse" required class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
-                                    <?php if ($statuse == null) { ?>
-                                        <option value="" disabled selected hidden>Select Engagement</option>
-                                    <?php
-                                    } else { ?>
-                                        <option hidden selected><?php echo $statuse ?></option>
-                                    <?php }
-                                    ?>
-                                    <option>Associate</option>
-                                    <option>Student</option>
-                                </select>
-                                <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="<?php echo $appid ?>">
+                    <?php if ($_SESSION['role'] == 'Admin') { ?>
+                        <div class="col" style="display: inline-block; width:100%; text-align:right">
+                            Home / Asset Management
+                        </div>
+                        <form id="myform" action="" method="POST" onsubmit="process()">
+                            <div class="form-group" style="display: inline-block;">
+                                <div class="col2" style="display: inline-block;">
+                                    <select name="get_statuse" required class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
+                                        <?php if ($statuse == null) { ?>
+                                            <option value="" disabled selected hidden>Select Engagement</option>
+                                        <?php
+                                        } else { ?>
+                                            <option hidden selected><?php echo $statuse ?></option>
+                                        <?php }
+                                        ?>
+                                        <option>Associate</option>
+                                        <option>Student</option>
+                                    </select>
+                                    <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="<?php echo $appid ?>">
+                                </div>
                             </div>
+                            <div class="col2 left" style="display: inline-block;">
+                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLScLENQKgw2bEDuhZFRLDuxcmwuXIh-6H7zXm8NbCSv6x63fNw/viewform" target="_blank" class="btn btn-info btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Asset</a>
+                            </div>
+                        </form>
+                    <?php } ?>
+                    <?php if ($_SESSION['role'] != 'Admin') { ?>
+                        <div class="col" style="display: inline-block; width:99%; text-align:right">
+                            <p style="font-size:small"><span class="noticea" style="line-height: 2;"><a href="document.php">My Document</a></span> / My Asset</p>
                         </div>
-                        <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLScLENQKgw2bEDuhZFRLDuxcmwuXIh-6H7zXm8NbCSv6x63fNw/viewform" target="_blank" class="btn btn-info btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Asset</a>
-                        </div>
-                    </form>
+                    <?php } ?>
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
@@ -135,16 +140,16 @@ $resultArr = pg_fetch_all($result);
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
                             echo '<tr>
-                                <td>' . $array['submissionid'] .'</td>
-                                <td>' . $array['associatenumber']. '<br>' .$array['fullname']. '</td>
-                                <td>' . $array['assetdetails'] . $array['agreementname']?>
-                                
-                                <?php if ($array['category'] == 'Asset') { ?>
-                                    <?php echo '<p class="label label-danger">asset</p>' ?>
-                                  <?php } else {
-                                  } ?>
-                                
-                                  <?php echo '</td>
+                                <td>' . $array['submissionid'] . '</td>
+                                <td>' . $array['associatenumber'] . '<br>' . $array['fullname'] . '</td>
+                                <td>' . $array['assetdetails'] . $array['agreementname'] ?>
+
+                            <?php if ($array['category'] == 'Asset') { ?>
+                                <?php echo '<p class="label label-danger">asset</p>' ?>
+                            <?php } else {
+                            } ?>
+
+                        <?php echo '</td>
                                 <td>' . $array['issuedon'] . '</td>
                                 <td><span class="noticea"><a href="' . $array['agreement'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span>
                                 
@@ -156,7 +161,7 @@ $resultArr = pg_fetch_all($result);
                             </tr>';
                         } ?>
                     <?php
-                    } else if ($statuse == null && $appid == null) {
+                    } else if (@$statuse == null && @$appid == null) {
                     ?>
                         <tr>
                             <td colspan="5">Please select Filter value.</td>
