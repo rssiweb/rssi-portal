@@ -124,7 +124,7 @@
                                 <a style="font-size:13px;" href="userlog.php"><i class="fa-solid fa-users"></i>&nbsp;User log</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="library_status_admin.php"><i class="fas fa-book-reader"></i>&nbsp;Library Status</a>
+                                <a style="font-size:13px;" href="my_book.php"><i class="fas fa-book-reader"></i>&nbsp;Library Status</a>
                             </li>
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="medistatus_admin.php"><i class="fas fa-hand-holding-medical"></i>&nbsp;Medistatus</a>

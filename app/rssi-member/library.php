@@ -14,7 +14,7 @@ if (!$_SESSION['aid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 } else if ($_SESSION['filterstatus'] != 'Active') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
@@ -103,6 +103,7 @@ include("member_data.php");
     select:focus {
         outline: none;
     }
+
     .columnExam2 {
         float: left;
         width: unset !important;
@@ -209,17 +210,11 @@ include("member_data.php");
 
     <section id="main-content">
         <section class="wrapper main-wrapper row">
-        
+
             <div class="col-md-12">
                 <section class="box" style="padding: 2%;">
-                    <div class=col style="text-align: right;"><a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
+                    <div class=col style="text-align: right;"><a href="my_book.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
                                 My Book</button></a>
-                        <?php
-                        if ($role == 'Admin') {
-                            echo '<a href="library_status_admin.php"><button type="button" class="exam_btn"><i class="fas fa-tags"></i>
-                                    all orders</button></a>';
-                        }
-                        ?>
                     </div><br>
                     <div class="container">
                         <div class="row" style="background-color: rgb(255, 245,
@@ -396,7 +391,7 @@ add</button></a>';
                         var Language = sheetData[i][9];
                         var Status = sheetData[i][10];
                         var Availability = sheetData[i][11];
-                        
+
 
                         if ((Class === class1 && Subject === subject && Language === language) ||
                             (Class === class1 && subject === '--' && language === '--') ||
