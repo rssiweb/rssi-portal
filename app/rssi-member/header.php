@@ -20,7 +20,8 @@
 
                         <li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/document/d/1CpnFSbSjn7wB2ey9d-ZtikgC0WlhT86fO7k3gOSLTQE/edit" target="_blank">National Module Syllabus
-                                <span class="label label-info">Apr 5, 2022</span><!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span> -->
+                                <span class="label label-info">Apr 5, 2022</span>
+                                <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span> -->
                             </a>
                         </li>
                         <li style="height: unset;">
@@ -104,9 +105,9 @@
                         </li>
                         <?php if (@$role == 'Offline Manager' || @$role == 'Admin') {
                         ?>
-                        <li style="height: unset;">
-                            <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-building-user"></i>&nbsp;Visitor pass</a>
-                        </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-building-user"></i>&nbsp;Visitor pass</a>
+                            </li>
                         <?php }
                         ?>
 
@@ -120,9 +121,9 @@
                                 <a style="font-size:13px;" href="leave_admin.php"><i class="fas fa-plane-departure"></i>&nbsp;Leave Tracker</a>
                             </li>
 
-                            <li style="height: unset;">
+                            <!-- <li style="height: unset;">
                                 <a style="font-size:13px;" href="userlog.php"><i class="fa-solid fa-users"></i>&nbsp;User log</a>
-                            </li>
+                            </li> -->
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="my_book.php"><i class="fas fa-book-reader"></i>&nbsp;Library Status</a>
                             </li>
@@ -334,4 +335,31 @@
         }
     });
 </script>
+<script>
+        var inactivityTime = function() {
+            var time;
+            document.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onmousedown = resetTimer; // touchscreen presses
+            document.ontouchstart = resetTimer;
+            document.onclick = resetTimer; // touchpad clicks
+            document.onkeydown = resetTimer; // onkeypress is deprectaed
+            document.addEventListener('scroll', resetTimer, true); // improved; see comments
+
+            function logout() {
+                alert("Your session has expired, please login again.")
+                location.href = 'logout.php'
+                window.close()
+            }
+
+            function resetTimer() {
+                clearTimeout(time);
+                time = setTimeout(logout, 1800000)
+                    // 1000 milliseconds = 1 second
+            }
+        };
+        window.onload = function() {
+            inactivityTime();
+        }
+    </script>
 <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>

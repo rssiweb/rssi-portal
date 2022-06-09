@@ -28,8 +28,6 @@ if (!$_SESSION['aid']) {
 
 <?php
 include("member_data.php");
-?>
-<?php
 include("database.php");
 
 $view_users_query = "select * from ipfsubmission WHERE memberid2='$user_check'"; //select query for viewing users.  
@@ -87,7 +85,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
 </head>
 
 <body>
