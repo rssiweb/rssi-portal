@@ -324,3 +324,19 @@ if (isset($_POST['login'])) {
         }
     }
 </script>
+
+<div id="thoverX" class="thover"></div>
+<div id="tpopupX" class="tpopup">
+    <img src="/images/pride3.jpg" class="img-fluid img-responsive" style="display: block;margin-left: auto;margin-right: auto;">
+    <p>This Pride Month, RSSI launches #AgarTumSaathHo, to bring together LGBTQ Community and their straight allies.</p>
+    <!--<div class="embed-responsive embed-responsive-16by9">
+        <iframe class="embed-responsive-item" src="/images/imp.mp4" allowfullscreen></iframe>
+    </div>-->
+    <div id="tcloseX" class="tclose notranslate">X</div>
+    <script>
+        $("#tcloseX").click(function() {
+            $("#tpopupX").toggleClass('hidden');
+            $("#thoverX").toggleClass('hidden');
+        });
+    </script>
+</div>

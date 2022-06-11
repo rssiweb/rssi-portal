@@ -154,9 +154,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     </table>
                 </section>
             </div>
-            <div class="col-md-12">
-
-                <div class="clearfix"></div>
         </section>
     </section>
 
