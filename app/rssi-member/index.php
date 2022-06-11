@@ -340,5 +340,10 @@ if (isset($_POST['login'])) {
             $("#tpopupX").toggleClass('hidden');
             $("#thoverX").toggleClass('hidden');
         });
+
+        $("#thoverX").click(function() {
+            $("#tpopupX").toggleClass('hidden');
+            $("#thoverX").toggleClass('hidden');
+        });
     </script>
 </div>
