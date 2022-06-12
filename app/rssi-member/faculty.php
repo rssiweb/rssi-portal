@@ -390,7 +390,7 @@ $resultArr = pg_fetch_all($result);
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td style="white-space: unset;">
             
-            <a id="profile" href="member-profile.php?get_id='. $array['associatenumber'] .'" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
+            <a id="profile" href="myprofile.php?get_id='. $array['associatenumber'] .'" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
 
                         <form name="ipfpush' . $array['associatenumber'] . '" action="#" method="POST" onsubmit="myFunction()" style="display:inline;">
                         <input type="hidden" name="form-type" type="text" value="ipfpush">

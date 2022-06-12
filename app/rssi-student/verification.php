@@ -148,7 +148,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 
                                 <td style="line-height: 1.7;"><img src="<?php echo $photourl ?>" width=100px /></td>
                                 <td id="cw2" style="line-height: 1.7;"><b><?php echo $studentname ?> (<?php echo $student_id ?>)</b><br>
-                                    <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?>)
+                                    <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?>&nbsp;Years)
                                 </td>
                                 <td id="cw1" style="line-height: 1.7;"><?php echo $filterstatus ?></td>
                                 <td id="cw1" style="line-height: 1.7;"><?php echo $doa ?></td>

@@ -8,25 +8,28 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-if ($_SESSION['role'] != 'Admin') {
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
-?>
-
-<?php
-include("member_data.php");
-@$id = strtoupper($_GET['get_id']);
-date_default_timezone_set('Asia/Kolkata');
-$date = date('Y-m-d H:i:s');
 ?>
 
 <?php
 include("database.php");
-$result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'"); //select query for viewing users.    
+include("member_data.php");
+date_default_timezone_set('Asia/Kolkata');
+$date = date('Y-m-d H:i:s');
+
+
+if ($_SESSION['role'] == 'Admin') {
+    @$id = strtoupper($_GET['get_id']);
+    $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'"); //select query for viewing users.
+}
+
+if ($_SESSION['role'] != 'Admin') {
+
+    $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$user_check'"); //select query for viewing users.
+}
+
+
 $resultArr = pg_fetch_all($result);
+
 
 if (!$result) {
     echo "An error occurred.\n";
@@ -44,7 +47,12 @@ if (!$result) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title><?php echo $id ?></title>
+    <?php if ($_SESSION['role'] != 'Admin') { ?>
+        <title><?php echo $user_check ?></title>
+    <?php } ?>
+    <?php if ($_SESSION['role'] == 'Admin') { ?>
+        <title><?php echo $id ?></title>
+    <?php } ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -95,19 +103,29 @@ if (!$result) {
 
         <section class="box" style="padding: 2%;">
 
-            <form action="" method="GET" class="no-print">
-                <div class="form-group" style="display: inline-block;">
-                    <div class="col2" style="display: inline-block;">
+            <?php if ($_SESSION['role'] == 'Admin') { ?>
+                <form action="" method="GET" class="no-print">
+                    <div class="form-group" style="display: inline-block;">
+                        <div class="col2" style="display: inline-block;">
 
-                        <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate Id" value="<?php echo $id ?>" required>
+                            <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate Id" value="<?php echo $id ?>" required>
+                        </div>
                     </div>
+
+                    <div class="col2 left" style="display: inline-block;">
+                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                            <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                        <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
+                    </div>
+                </form>
+            <?php } ?>
+
+            <?php if ($_SESSION['role'] != 'Admin') { ?>
+                <div class="col no-print" style="width:99%;margin-left:1.5%;text-align:right;">
+                    <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button><br><br>
                 </div>
-                <div class="col2 left" style="display: inline-block;">
-                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                        <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                    <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
-                </div><br><br>
-            </form>
+            <?php } ?>
+
             <?php if ($resultArr != null) { ?>
 
                 <?php foreach ($resultArr as $array) {
@@ -121,11 +139,19 @@ if (!$result) {
 
                             <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
                             <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
-                            </div>
-                            <div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
-                                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $id ?>" width="74px" />
-                            </div>
-                            </td>
+                            </div>' ?>
+                    <?php if ($_SESSION['role'] != 'Admin') {
+                        echo '<div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
+                                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=' . $array['associatenumber'] . '" width="74px" />
+                            </div>' ?><?php } ?>
+
+                    <?php if ($_SESSION['role'] == 'Admin') {
+                        echo '<div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
+                                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=' ?><?php echo $id ?><?php echo '" width="74px" />
+                            </div>' ?><?php } ?>
+
+                    <?php echo
+                    '</td>
                             </tr>
                         </thead>
 
@@ -141,7 +167,7 @@ if (!$result) {
                             <td><img src= ' . $array['photo'] . ' width=75px /></td>
                             <td style="line-height: 1.7;"><b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b><br><span style="line-height: 3;">' . $array['engagement'] . ',&nbsp;' . $array['gender'] . '&nbsp;(' . $array['age'] . '&nbsp;Years)</span>
                             </td>
-                            <td style="line-height: 2;">' . $array['originaldoj'] . '<br>('. $array['yos'] .')</td>
+                            <td style="line-height: 2;">' . $array['originaldoj'] . '<br>(' . $array['yos'] . ')</td>
                             <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks'] . '</td>
                             <td>' . $array['badge'] . '</td>
                         </tr>
