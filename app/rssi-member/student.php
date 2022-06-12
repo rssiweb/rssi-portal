@@ -592,11 +592,13 @@ $resultArr = pg_fetch_all($result);
     // var yyyy = d.getFullYear();
     // document.write("The date is : " + monthNames[d.getMonth()]);
 
-    if (mydata["maxmonth"] === monthNames[d.getMonth() - 1] && mydata["feecycle"] !=="A") {
+    if (mydata["maxmonth"] === monthNames[d.getMonth() - 1] && mydata["feecycle"] !== "A") {
       yes.disabled = true; //button remains disabled
+    } else if (mydata["maxmonth"] === monthNames[d.getMonth()] && mydata["feecycle"] === "A") {
+      yes.disabled = true;
     } else {
-      yes.disabled = false; //button is enabled
-    }
+      yes.disabled = false;
+    } //button is enabled
   }
 
   // When the user clicks the button, open the modal 

@@ -53,9 +53,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $scode = $row[43];
     $exitinterview = $row[44];
     $sipf = $row[45];
-    $upload_aadhar_card = $row[46];
-    $special_service = $row[47];
-    $feecycle = $row[48]
+    $upload_aadhar_card = $row[49];
+    $special_service = $row[50];
+    $feecycle = $row[51]
 ?>
 <?php } ?>
 
@@ -150,7 +150,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 <td id="cw2" style="line-height: 1.7;"><b><?php echo $studentname ?> (<?php echo $student_id ?>)</b><br>
                                     <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?>)
                                 </td>
-                                <td id="cw1" style="line-height: 1.7;"><?php echo $profilestatus ?></td>
+                                <td id="cw1" style="line-height: 1.7;"><?php echo $filterstatus ?></td>
                                 <td id="cw1" style="line-height: 1.7;"><?php echo $doa ?></td>
                             </tr>
                         </tbody>

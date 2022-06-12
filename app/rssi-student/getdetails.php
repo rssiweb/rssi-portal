@@ -107,7 +107,7 @@ foreach ($resultArr as $array) {
                 
             <?php echo '</td>
             <td>' . $array['sipf'] . '</td>
-            <td>' . $array['profilestatus'] . '</td>' ?>
+            <td>' . $array['filterstatus'] . '</td>' ?>
 
             <?php if ($array['status'] != null) { ?>
             <?php echo '<td>' . substr($array['remarks'],0,4). '</td>' ?>

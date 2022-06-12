@@ -12,7 +12,7 @@ if (!$_SESSION['sid']) {
 
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 }
 ?>
 
@@ -24,7 +24,7 @@ include("student_data.php");
 <html>
 
 <head>
-<meta name="description" content="">
+    <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
@@ -33,13 +33,15 @@ include("student_data.php");
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-    <style><?php include '../css/style.css'; ?></style>
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -58,7 +60,7 @@ include("student_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                
+
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -73,8 +75,9 @@ include("student_data.php");
                             <tr>
 
                                 <td style="line-height: 1.7;"><b><?php echo $studentname ?></b><br>Student ID - <b><?php echo $student_id ?></b>, Roll No - <b><?php echo $roll_number ?></b><br>
-                                <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?> Years)</span></td>
-                                <td><?php echo $profilestatus ?><br><br><?php echo $remarks1 ?></td>
+                                    <span style="line-height: 3;"><?php echo $gender ?> (<?php echo $age ?> Years)</span>
+                                </td>
+                                <td><?php echo $filterstatus ?><br><br><?php echo $remarks ?></td>
                                 <td><?php echo @$badge ?></td>
                             </tr>
                         </tbody>
@@ -97,8 +100,17 @@ include("student_data.php");
                                 <td><?php echo $preferredbranch ?></td>
                                 <td><?php echo $class ?>/<?php echo $category ?></td>
                                 <td><?php echo $dateofbirth ?></td>
-                                <td><?php echo $studentaadhar ?></td>
-                                <td><iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/<?php echo substr($upload_aadhar_card, strpos($upload_aadhar_card, "=") + 1) ?>/preview" width="300px" height="200px" /></iframe></td>
+                                <td><?php echo substr_replace($studentaadhar, str_repeat("X", 4), 4, 4) ?></td>
+                                <td>
+
+                                    <?php if ($upload_aadhar_card != null) { ?>
+
+                                        <iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/<?php echo substr($upload_aadhar_card, strpos($upload_aadhar_card, "=") + 1) ?>/preview" width="300px" height="200px" /></iframe><?php } ?>
+
+                                    <?php if ($upload_aadhar_card == null) { ?>No document uploaded.
+
+                                <?php } ?>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -117,7 +129,10 @@ include("student_data.php");
                         <tbody>
                             <tr>
                                 <td><?php echo $guardiansname ?> - <?php echo $relationwithstudent ?></td>
-                                <td><?php echo $guardianaadhar ?></td>
+                                <td><?php if ($guardianaadhar != null) { ?>
+                                        <?php echo substr_replace($guardianaadhar, str_repeat("X", 4), 4, 4) ?>
+                                    <?php } else {
+                                    } ?></td>
                                 <td><?php echo $postaladdress ?></td>
                                 <td style="line-height: 1.5;"><?php echo $contact ?><br><?php echo $emailaddress ?></td>
                                 <td><?php echo $familymonthlyincome ?></td>

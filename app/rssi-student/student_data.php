@@ -52,9 +52,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $scode = $row[43];
         $exitinterview = $row[44];
         $sipf = $row[45];
-        $upload_aadhar_card = $row[46];
-        $special_service = $row[47];
-        $feecycle = $row[48]
+        $upload_aadhar_card = $row[49];
+        $special_service = $row[50];
+        $feecycle = $row[51]
 
 ?>     
 <?php } ?>    

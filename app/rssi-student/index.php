@@ -49,9 +49,9 @@ if (isset($_POST['login'])) {
         $result = pg_query($con, $user_query);
 
         $row = pg_fetch_row($result);
-        $filterstatus = $row[39];
-        $feesflag = $row[50];
-        $password_updated_by = $row[56];
+        $filterstatus = $row[33];
+        $feesflag = $row[41];
+        $password_updated_by = $row[47];
 
         $_SESSION['filterstatus'] = $filterstatus;
         $_SESSION['feesflag'] = $feesflag;

@@ -142,7 +142,7 @@ if (!$result) {
                             <td colspan=4 style="line-height: 1.7;"><b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>, Roll No - <b>' . $array['roll_number'] . '</b><br>
                                 <span style="line-height: 3;">' . $array['gender'] . '&nbsp;(' . $array['age'] . '&nbsp;Years)</span>
                             </td>
-                            <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks1'] . '</td>
+                            <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks'] . '</td>
                             <td colspan=2>' . $array['badge'] . '</td>
                         </tr>
                     
@@ -160,24 +160,24 @@ if (!$result) {
                             <td>' . $array['preferredbranch'] . '</td>
                             <td>' . $array['class'] . '/' . $array['category'] . '</td>
                             <td>' . $array['dateofbirth'] . '</td>
-                            <td>' . $array['studentaadhar'] . '</td>' ?>
+                            <td>' . substr_replace($array['studentaadhar'], str_repeat("X", 4), 4, 4) . '</td>' ?>
 
                     <?php if ($array['upload_aadhar_card'] != null && $_SESSION['role'] != 'Admin') {
 
                         echo '<td  colspan=3><iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px"/></iframe></td>' ?><?php } ?>
 
 
-                        <?php if ($array['upload_aadhar_card'] != null && $_SESSION['role'] == 'Admin') {
+                    <?php if ($array['upload_aadhar_card'] != null && $_SESSION['role'] == 'Admin') {
 
                         echo '<td  colspan=3><iframe src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px"/></iframe></td>' ?><?php } ?>
-                        
-                        
-                        <?php if ($array['upload_aadhar_card'] == null) {
+
+
+                    <?php if ($array['upload_aadhar_card'] == null) {
                         echo '<td colspan=3>No document uploaded.</td>'
-                        ?>
-                        
-                        <?php }
-                        echo '</tr></tbody>
+                    ?>
+
+                    <?php }
+                    echo '</tr></tbody>
                 
                         <tr>
                             <th colspan=2>Guardians Details</th>
@@ -188,8 +188,14 @@ if (!$result) {
                         </tr>
 
                         <tr>
-                            <td colspan=2>' . $array['guardiansname'] . ' - ' . $array['relationwithstudent'] . '<br>' . $array['guardianaadhar'] . '</td>
-                            <td colspan=3>' . $array['postaladdress'] . '</td>
+                            <td colspan=2>' . $array['guardiansname'] . ' - ' . $array['relationwithstudent'] ?>
+                    <?php if ($array['guardianaadhar'] != null) {
+                        echo '<br>' . substr_replace($array['guardianaadhar'], str_repeat("X", 4), 4, 4) ?>
+                    <?php  } else {
+                    } ?>
+
+                    <?php echo '</td>
+                    <td colspan=3>' . $array['postaladdress'] . '</td>
                             <td style="line-height: 1.5;">' . $array['contact'] . '<br>' . $array['emailaddress'] . '</td>
                             <td>' . $array['familymonthlyincome'] . '</td>
                             <td>' . $array['totalnumberoffamilymembers'] . '</td>
@@ -221,7 +227,7 @@ if (!$result) {
                         <div class="footer no-display">
                         <p style="text-align:right;">Admission form generated:&nbsp;' ?><?php echo $date ?><?php echo '</p>
                         </div>' ?>
-                    <?php }
+                <?php }
             } else { ?> <p class="no-print">Please enter Student ID.</p> <?php } ?>
         </section>
     </div>

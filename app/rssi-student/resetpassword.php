@@ -27,9 +27,9 @@ if (isset($_SESSION['sid']) && $_SESSION['sid']) {
     $row = pg_fetch_row($result);
     $student_id = $row[1];
     $studentname = $row[3];
-    $password_updated_on = $row[57];
-    $photourl = $row[25];
-    $filterstatus = $row[39];
+    $password_updated_on = $row[48];
+    $photourl = $row[24];
+    $filterstatus = $row[33];
 
     $_SESSION['studentname'] = $studentname;
     $_SESSION['student_id'] = $student_id;

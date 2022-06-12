@@ -118,7 +118,7 @@ if (!$result) {
                             <td colspan=4 style="line-height: 1.7;"><b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>, Roll No - <b>' . $array['roll_number'] . '</b><br>
                                 <span style="line-height: 3;">' . $array['gender'] . '&nbsp;(' . $array['age'] . '&nbsp;Years)</span>
                             </td>
-                            <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks1'] . '</td>
+                            <td>' . $array['filterstatus'] . '<br><br>' . $array['remarks'] . '</td>
                             <td colspan=2>' . $array['badge'] . '</td>
                         </tr>
                     
@@ -136,7 +136,7 @@ if (!$result) {
                             <td>' . $array['preferredbranch'] . '</td>
                             <td>' . $array['class'] . '/' . $array['category'] . '</td>
                             <td>' . $array['dateofbirth'] . '</td>
-                            <td>' . $array['studentaadhar'] . '</td>' ?>
+                            <td>' . substr_replace($array['studentaadhar'], str_repeat("X", 4), 4, 4) . '</td>' ?>
 
                 <?php if ($array['upload_aadhar_card'] != null) {
 
@@ -144,7 +144,7 @@ if (!$result) {
                     <?php  } else {
                     echo '<td colspan=3>No document uploaded.</td>'
                     ?><?php }
-                        echo '</tr></tbody>
+                    echo '</tr></tbody>
                 
                         <tr>
                             <th colspan=2>Guardians Details</th>
@@ -155,7 +155,13 @@ if (!$result) {
                         </tr>
 
                         <tr>
-                            <td colspan=2>' . $array['guardiansname'] . ' - ' . $array['relationwithstudent'] . '<br>' . $array['guardianaadhar'] . '</td>
+                            <td colspan=2>' . $array['guardiansname'] . ' - ' . $array['relationwithstudent'] ?>
+                    <?php if ($array['guardianaadhar'] != null) {
+                        echo '<br>' . substr_replace($array['guardianaadhar'], str_repeat("X", 4), 4, 4) ?>
+                    <?php  } else {
+                    } ?>
+
+                    <?php echo '</td>
                             <td colspan=3>' . $array['postaladdress'] . '</td>
                             <td style="line-height: 1.5;">' . $array['contact'] . '<br>' . $array['emailaddress'] . '</td>
                             <td>' . $array['familymonthlyincome'] . '</td>

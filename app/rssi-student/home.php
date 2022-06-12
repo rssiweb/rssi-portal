@@ -21,7 +21,7 @@ if (!$_SESSION['sid']) {
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "profile.php";';
     echo '</script>';
-} else if ($_SESSION['password_updated_by'] == null || $_SESSION['password_updated_by']=='VTHN20008') {
+} else if ($_SESSION['password_updated_by'] == null || $_SESSION['password_updated_by'] == 'VTHN20008') {
     echo '<script type="text/javascript">';
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';
@@ -81,7 +81,7 @@ include("student_data.php");
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class=col style="text-align: right;"><?php echo @$badge?></div>
+                <div class=col style="text-align: right;"><?php echo @$badge ?></div>
                 <!--<div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
                     <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                     <span class="noticet">Now you can download your ID card from your profile > My Document&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
@@ -119,7 +119,8 @@ include("student_data.php");
                         <tbody>
                             <tr>
                                 <td style="line-height: 2;"><?php echo $classurl ?></td>
-                                <td style="line-height: 2;"><?php echo $lastlogin ?></td>
+                                <td style="line-height: 2;"><span class=noticea><a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br><a href="visco.php">Visco</a><br><a href="https://drive.google.com/file/d/1b3AcN68TJa7gIai_RTyJ5989Te-TXCbq/view" target=_blank>Class schedule</a></span>
+                                </td>
                                 <td style="line-height: 2;"><span class="noticea"><a href="myfees.php" target="_self">My fees</a></span></td>
                             </tr>
                         </tbody>
