@@ -96,11 +96,11 @@
                     <span class="hidden-xs"><?php echo $studentname ?> <i class="fa fa-angle-down"></i></span>
                 </a>
                 <ul class="dropdown-menu profile fadeIn">
-                <li>
+                <!-- <li>
                         <a>
                             Last synced: <?php echo $lastupdatedon ?>
                         </a>
-                    </li>
+                    </li> -->
                     <li>
                     <a href="resetpassword.php">
                             <i class="fa fa-wrench"></i>
@@ -195,7 +195,7 @@
             <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-calendar-check"></i></span> <span class="menu-title">My Allocation</span></a></li>
             <li><a href="document.php" class="<?php echo $document_active ?>"><span class="sidebar-icon"><i class="fas fa-folder-open"></i></i></span> <span class="menu-title">My Document</span></a></li>
 
-            <li><a href="profile.php" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa fa-user-circle"></i></span> <span class="menu-title">My Profile</span></a></li>
+            <li><a href="myprofile.php" target="_blank" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa fa-user-circle"></i></span> <span class="menu-title">My Profile</span></a></li>
 
             <li>
                 <a href="application.php" class="<?php echo $application_active ?>">

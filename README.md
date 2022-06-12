@@ -115,3 +115,5 @@ ALTER TABLE donation DROP COLUMN timestamp_new;
 
 ALTER TABLE ipfsubmission 
 RENAME ipfststus TO ipfstatus;
+
+SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'rssimyprofile_student';
