@@ -55,7 +55,7 @@
     <div class="logo-area"> </div>
 </div>
 <?php
-
+include("database.php");
 @$id = $_GET['scode'];
 $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE scode='$id'");
 if (!$result) {
