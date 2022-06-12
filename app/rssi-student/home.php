@@ -131,10 +131,8 @@ if (!$_SESSION['sid']) {
         </section>
     </section>
 
-    <!-- Messenger Chat Plugin Code -->
+    <!-- Messenger Chat Plugin Code 
     <div id="fb-root"></div>
-
-    <!-- Your Chat Plugin code -->
     <div id="fb-customer-chat" class="fb-customerchat">
     </div>
 
@@ -158,7 +156,7 @@ if (!$_SESSION['sid']) {
             js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
             fjs.parentNode.insertBefore(js, fjs);
         }(document, 'script', 'facebook-jssdk'));
-    </script>
+    </script>-->
 </body>
 
 </html>
