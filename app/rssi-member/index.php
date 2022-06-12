@@ -1,5 +1,6 @@
 <?php
-session_start(); //session starts here 
+session_start(); //session starts here
+include("database.php");
 
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
