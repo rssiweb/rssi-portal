@@ -12,7 +12,7 @@ if (!isLoggedIn("aid")) {
 
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
-include("database.php");
+
 
 if (isset($_SESSION['aid']) && $_SESSION['aid']) {
     $associatenumber = $_SESSION['aid'];

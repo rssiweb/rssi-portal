@@ -1,6 +1,6 @@
 <!-- This API has been used in student.php file for fees collection -->
 <?php
-include("database.php");
+
 date_default_timezone_set('Asia/Kolkata');
 echo json_encode($_POST);
 if ($_POST['form-type'] == "payment") {
@@ -16,7 +16,7 @@ if ($_POST['form-type'] == "payment") {
 } ?>
 
 <?php
-include("database.php");
+
 if ($_POST['form-type'] == "transfer") {
   @$refid = $_POST['pid'];
   $pstatus = "UPDATE fees SET  pstatus = 'transferred' WHERE id = $refid";
@@ -24,7 +24,7 @@ if ($_POST['form-type'] == "transfer") {
 } ?>
 
 <?php
-include("database.php");
+
 date_default_timezone_set('Asia/Kolkata');
 echo json_encode($_POST);
 if ($_POST['form-type'] == "ipfpush") {
@@ -38,7 +38,7 @@ if ($_POST['form-type'] == "ipfpush") {
 } ?>
 
 <?php
-include("database.php");
+
 date_default_timezone_set('Asia/Kolkata');
 if ($_POST['form-type'] == "ipfsubmission") {
   @$ipfid = $_POST['ipfid'];
@@ -49,7 +49,7 @@ if ($_POST['form-type'] == "ipfsubmission") {
 } ?>
 
 <?php
-include("database.php");
+
 if ($_POST['form-type'] == "ipfclose") {
   @$ipfid = $_POST['ipfid'];
   @$ipfstatus = $_POST['ipfstatus'];

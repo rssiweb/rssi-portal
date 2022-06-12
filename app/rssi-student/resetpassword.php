@@ -17,7 +17,7 @@ if (!$_SESSION['sid']) {
 
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
-include("database.php");
+
 
 if (isset($_SESSION['sid']) && $_SESSION['sid']) {
     $student_id = $_SESSION['sid'];

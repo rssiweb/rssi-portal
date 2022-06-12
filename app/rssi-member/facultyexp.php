@@ -17,11 +17,9 @@ if (!isLoggedIn("aid")) {
     echo '</script>';
 }
 ?>
+
 <?php
-@include("member_data.php");
-?>
-<?php
-include("database.php");
+
 @$id = $_POST['get_id'];
 $result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' and position LIKE '%-Faculty%' order by filterstatus asc,today desc");
 if (!$result) {

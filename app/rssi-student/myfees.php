@@ -11,8 +11,8 @@ if (!isLoggedIn("sid")) {
 ?>
 
 <?php
-include("student_data.php");
-include("database.php");
+
+
 setlocale(LC_TIME, 'fr_FR.UTF-8');
 
 $result = pg_query($con, "SELECT * FROM fees

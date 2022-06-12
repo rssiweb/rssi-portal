@@ -11,8 +11,8 @@ if (!isLoggedIn("aid")) {
  ?>
 
 <?php
-include("member_data.php");
-include("database.php");
+
+
 
 $result = pg_query($con, "select * from payslip where associatenumber='$user_check' ORDER BY slno DESC;");
 if (!$result) {

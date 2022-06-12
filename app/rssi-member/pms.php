@@ -3,6 +3,7 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
+
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
@@ -17,8 +18,6 @@ if (!isLoggedIn("aid")) {
 ?>
 <?php
 date_default_timezone_set('Asia/Kolkata');
-include("member_data.php");
-
 if ($_POST) {
     @$user_id = strtoupper($_POST['userid']);
     @$password = $_POST['newpass'];

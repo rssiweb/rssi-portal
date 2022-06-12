@@ -12,8 +12,8 @@ if (!isLoggedIn("aid")) {
 
 ?>
 <?php
-include("member_data.php");
-include("database.php");
+
+
 @$id = $_GET['get_aid'];
 
 if ($role == 'Admin') {

@@ -21,9 +21,7 @@ if (!$_SESSION['sid']) {
     echo '</script>';
 }
 ?>
-<?php
-include("student_data.php");
-?>
+
 
 
 <!DOCTYPE html>

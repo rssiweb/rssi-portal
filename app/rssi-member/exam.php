@@ -20,7 +20,7 @@ if ($_SESSION['filterstatus'] != 'Active') {
 ?>
 
 <?php
-include("member_data.php");
+
 ?>
 
 <!DOCTYPE html>

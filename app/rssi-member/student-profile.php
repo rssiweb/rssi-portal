@@ -18,14 +18,14 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 ?>
 
 <?php
-include("member_data.php");
+
 @$id = strtoupper($_GET['get_id']);
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 ?>
 
 <?php
-include("database.php");
+
 $result = pg_query($con, "select * from rssimyprofile_student WHERE student_id='$id'"); //select query for viewing users.    
 $resultArr = pg_fetch_all($result);
 

@@ -15,11 +15,9 @@ if (!$_SESSION['sid']) {
     exit;  
 }
 ?>
+
 <?php
-include("student_data.php");
-?>
-<?php
-include("database.php");
+
 @$status = $_POST['get_status'];
 
 if ($status == null) {

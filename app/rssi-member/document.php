@@ -19,7 +19,7 @@ if (!$_SESSION['aid']) {
 ?>
 
 <?php
-include("member_data.php");
+
 ?>
 
 <!DOCTYPE html>

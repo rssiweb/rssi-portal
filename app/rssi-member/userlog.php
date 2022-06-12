@@ -26,10 +26,10 @@ if(!$_SESSION['aid']) {
 }
 ?>
 <?php
-include("member_data.php");
+
 ?>
 <?php
-include("database.php");
+
 $result = pg_query($con, "SELECT * FROM userlog_member order by logintime desc");
 if (!$result) {
     echo "An error occurred.\n";

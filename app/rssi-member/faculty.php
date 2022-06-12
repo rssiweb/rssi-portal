@@ -3,6 +3,7 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
+
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
@@ -18,12 +19,9 @@ if (!isLoggedIn("aid")) {
 }
 ?>
 <?php
-include("member_data.php");
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
-?>
-<?php
-include("database.php");
+
 @$id = $_POST['get_id'];
 
 $result = pg_query($con, "SELECT rssimyaccount_members.doj,

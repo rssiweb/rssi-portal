@@ -23,7 +23,7 @@ else if ($export_type == "student") {
 
 function fees_export()
 {
-    include("database.php");
+    
     @$id = $_POST['id'];
     @$status = $_POST['status'];
     @$section = $_POST['section'];
@@ -93,7 +93,7 @@ function donation_export()
 {
 
 
-    include("database.php");
+    
     @$id = $_POST['invoice'];
     @$status = $_POST['fyear'];
 
@@ -134,7 +134,7 @@ function donation_export()
 {
 
 
-    include("database.php");
+    
     @$module = $_POST['module'];
     @$id = $_POST['id'];
     @$category = $_POST['category'];

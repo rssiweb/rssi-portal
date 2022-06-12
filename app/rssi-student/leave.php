@@ -17,8 +17,8 @@ if (!$_SESSION['sid']) {
 ?>
 
 <?php
-include("student_data.php");
-include("database.php");
+
+
 @$id = $_POST['get_id'];
 @$status = $_POST['get_status'];
 

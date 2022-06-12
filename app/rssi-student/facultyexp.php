@@ -16,9 +16,7 @@ if (!$_SESSION['sid']) {
 }
 ?>
 
-<?php
-include("student_data.php");
-?>
+
 <?php
 @include("../rssi-member/member_data.php");
 ?>

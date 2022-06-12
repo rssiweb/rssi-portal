@@ -23,10 +23,10 @@ if (!$_SESSION['aid']) {
 }
 ?>
 <?php
-include("member_data.php");
+
 ?>
 <?php
-include("database.php");
+
 @$module = $_POST['get_module'];
 @$id = $_POST['get_id'];
 @$category = $_POST['get_category'];

@@ -14,11 +14,9 @@ if (!$_SESSION['sid']) {
     exit;
 }
 ?>
+
 <?php
-include("student_data.php");
-?>
-<?php
-include("database.php");
+
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 @$id = $_POST['get_id'];

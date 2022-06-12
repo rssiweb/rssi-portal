@@ -2,7 +2,6 @@
 session_start();
 // Storing Session
 include("../util/login_util.php");
-
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
@@ -11,8 +10,6 @@ if (!isLoggedIn("aid")) {
 
 ?>
 <?php
-include("member_data.php");
-include("database.php");
 $result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"); //select query for viewing users.  
 
 if (!$result) {

@@ -10,10 +10,10 @@ if (!isLoggedIn("aid")) {
 }
 ?>
 <?php
-include("member_data.php");
+
 ?>
 <?php
-include("database.php");
+
 @$type = $_GET['get_id'];
 @$year = $_GET['get_year'];
 $view_users_query = "select * from myappraisal_myappraisal WHERE associatenumber='$user_check' AND appraisaltype='$type' AND filter='$year'";

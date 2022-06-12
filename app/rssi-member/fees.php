@@ -3,6 +3,7 @@ session_start();
 // Storing Session
 include("../util/login_util.php");
 
+
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     
@@ -19,14 +20,8 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 }
 ?>
 <?php
-include("member_data.php");
 setlocale(LC_TIME, 'fr_FR.UTF-8');
-// @$_SESSION["get_aid"] = $_POST["get_aid"];
-// @$_SESSION["get_id"] = $_POST["get_id"];
-// @$_SESSION["get_category"] = $_POST["get_category"];
-?>
-<?php
-include("database.php");
+
 
 @$id = $_POST['get_aid'];
 @$status = $_POST['get_id'];

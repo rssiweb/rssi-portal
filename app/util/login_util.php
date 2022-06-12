@@ -5,4 +5,6 @@ function isLoggedIn(string $key) {
     }
     return true;
 }
+@include("member_data.php");
+@include("student_data.php");
 ?>

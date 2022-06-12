@@ -29,7 +29,7 @@ date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = false;
 
-include("database.php");
+
 
 if (isset($_POST['login'])) {
     $associatenumber = strtoupper($_POST['aid']);

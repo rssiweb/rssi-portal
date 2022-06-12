@@ -1,5 +1,5 @@
 <?php
-include("database.php");
+
 // @$id = strtoupper($_POST['get_id']);
 @$id = strtoupper($_GET['get_id']);
 $view_users_query = "select * from rssimyprofile_student WHERE student_id='$id'"; //select query for viewing users.  

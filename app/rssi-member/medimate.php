@@ -19,8 +19,8 @@ if (!$_SESSION['aid']) {
 ?>
 
 <?php
-include("member_data.php");
-include("database.php");
+
+
 $view_users_query = "select * from medimate WHERE registrationid='$user_check'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 

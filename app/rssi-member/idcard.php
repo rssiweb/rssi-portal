@@ -18,10 +18,10 @@ if (!isLoggedIn("aid")) {
 }
 ?>
 <?php
-include("member_data.php");
+
 ?>
 <?php
-include("database.php");
+
 ?>
 
 <!DOCTYPE html>

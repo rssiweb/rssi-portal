@@ -21,8 +21,8 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 ?>
 
 <?php
-include("member_data.php");
-include("database.php");
+
+
 date_default_timezone_set('Asia/Kolkata');
 $today = date("Y-m-d");
 // @$appid = $_POST['get_appid'];

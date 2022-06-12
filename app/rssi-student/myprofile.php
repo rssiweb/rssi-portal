@@ -17,7 +17,7 @@ $date = date('Y-m-d H:i:s');
 ?>
 
 <?php
-include("database.php");
+
 $result = pg_query($con, "select * from rssimyprofile_student WHERE student_id='$user_check'"); //select query for viewing users.    
 $resultArr = pg_fetch_all($result);
 

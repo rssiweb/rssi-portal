@@ -22,9 +22,7 @@ if (!$_SESSION['sid']) {
     echo '</script>';
 }
 ?>
-<?php
-include("student_data.php");
-?>
+
 <?php
 // Set the new timezone
 date_default_timezone_set('Asia/Kolkata');
@@ -32,7 +30,7 @@ $date = date('Y-m-d H:i:s');
 //echo $date;
 ?>
 <?php
-include("database.php");
+
 @$category = $_POST['get_category'];
 @$subject = $_POST['get_subject'];
 @$year = $_POST['get_year'];

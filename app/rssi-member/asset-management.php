@@ -2,7 +2,6 @@
 session_start();
 // Storing Session
 include("../util/login_util.php");
-
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
@@ -11,8 +10,8 @@ if (!isLoggedIn("aid")) {
 ?>
 
 <?php
-include("member_data.php");
-include("database.php");
+
+
 
 if ($role == 'Admin') {
 

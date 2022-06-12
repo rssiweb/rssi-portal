@@ -18,7 +18,7 @@ if (!isLoggedIn("aid")) {
 }
 ?>
 <?php
-include("member_data.php");
+
 ?>
 <?php
 // Set the new timezone
@@ -27,7 +27,7 @@ $date = date('Y-d-m h:i:s');
 //echo $date;
 ?>
 <?php
-include("database.php");
+
 @$category = $_POST['get_category'];
 @$subject = $_POST['get_subject'];
 @$year = $_POST['get_year'];

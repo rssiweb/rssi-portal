@@ -12,8 +12,8 @@ if (!isLoggedIn("aid")) {
 ?>
 
 <?php
-include("member_data.php");
-include("database.php");
+
+
 @$id = $_POST['get_id'];
 @$status = $_POST['get_status'];
 

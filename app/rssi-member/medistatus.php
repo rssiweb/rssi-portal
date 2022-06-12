@@ -18,8 +18,8 @@ if (!$_SESSION['aid']) {
 }
 ?>
 <?php
-include("member_data.php");
-include("database.php");
+
+
 @$status = $_POST['get_id'];
 
 if ($role == 'Admin') {
