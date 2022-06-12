@@ -22,7 +22,7 @@ include("member_data.php");
 include("database.php");
 @$status = $_POST['get_id'];
 
-if ($_SESSION['role'] == 'Admin') {
+if ($role == 'Admin') {
   @$id = $_POST['get_aid'];
 
 
@@ -38,7 +38,7 @@ if ($_SESSION['role'] == 'Admin') {
     $result = pg_query($con, "SELECT * FROM medimate order by id desc");
   }
 }
-if ($_SESSION['role'] != 'Admin') {
+if ($role != 'Admin') {
   $result = pg_query($con, "SELECT * FROM medimate WHERE registrationid='$user_check' AND year='$status' order by id desc");
 }
 if (!$result) {
@@ -111,7 +111,7 @@ $resultArr = pg_fetch_all($result);
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
-                <?php if ($_SESSION['role'] == 'Admin') { ?>
+                <?php if ($role == 'Admin') { ?>
                   <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
                 <?php } ?>
                 <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>

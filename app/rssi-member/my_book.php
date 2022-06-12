@@ -22,7 +22,7 @@ include("member_data.php");
 include("database.php");
 @$status = $_POST['get_status'];
 
-if ($_SESSION['role'] == 'Admin') {
+if ($role == 'Admin') {
     @$id = $_POST['get_bid'];
 
     if ($id == null && $status == 'ALL') {
@@ -42,7 +42,7 @@ if ($_SESSION['role'] == 'Admin') {
     }
 }
 
-if ($_SESSION['role'] != 'Admin') {
+if ($role != 'Admin') {
     if ($status == null) {
         $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$user_check' order by timestamp desc");
     } else if ($status == 'ALL') {
@@ -116,12 +116,12 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
-                    <?php if ($_SESSION['role'] == 'Admin') { ?>
+                    <?php if ($role == 'Admin') { ?>
                         <div class="col" style="display: inline-block; width:47%; text-align:right">
                             Home / Library Status
                         </div>
                     <?php } ?>
-                    <?php if ($_SESSION['role'] != 'Admin') { ?>
+                    <?php if ($role != 'Admin') { ?>
                         <div class=col style="text-align: right;">
                             <span class="noticea" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
                         </div>
@@ -133,7 +133,7 @@ $resultArr = pg_fetch_all($result);
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
-                                <?php if ($_SESSION['role'] == 'Admin') { ?>
+                                <?php if ($role == 'Admin') { ?>
                                     <input name="get_bid" class="form-control" style="width:max-content; display:inline-block" placeholder="Borrowers ID" value="<?php echo $id ?>">
                                 <?php } ?>
                                 <select name="get_status" class="form-control" style="width:max-content;display:inline-block" required>

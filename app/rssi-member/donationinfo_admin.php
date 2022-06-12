@@ -15,7 +15,7 @@ if (!$_SESSION['aid']) {
   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
   header("Location: index.php");
   exit;
-} else if ($_SESSION['role'] != 'Admin') {
+} else if ($role != 'Admin') {
 
   //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
   echo '<script type="text/javascript">';

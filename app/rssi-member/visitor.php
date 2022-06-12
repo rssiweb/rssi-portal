@@ -10,7 +10,7 @@ if (!isLoggedIn("aid")) {
 }
 $user_check = $_SESSION['aid'];
 
-if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
+if ($role != 'Admin' && $role != 'Offline Manager') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
     echo '<script type="text/javascript">';

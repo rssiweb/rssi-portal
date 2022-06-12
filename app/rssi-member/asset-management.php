@@ -14,7 +14,7 @@ if (!isLoggedIn("aid")) {
 include("member_data.php");
 include("database.php");
 
-if ($_SESSION['role'] == 'Admin') {
+if ($role == 'Admin') {
 
     @$statuse = $_POST['get_statuse'];
     @$appid = $_POST['get_appid'];
@@ -33,7 +33,7 @@ if ($_SESSION['role'] == 'Admin') {
         $result = pg_query($con, "select * from asset WHERE usertype=''");
     }
 }
-if ($_SESSION['role'] != 'Admin') {
+if ($role != 'Admin') {
     $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber where associatenumber='$user_check'");
 }
 if (!$result) {
@@ -84,7 +84,7 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                    <?php if ($_SESSION['role'] == 'Admin') { ?>
+                    <?php if ($role == 'Admin') { ?>
                         <div class="col" style="display: inline-block; width:100%; text-align:right">
                             Home / Asset Management
                         </div>
@@ -111,7 +111,7 @@ $resultArr = pg_fetch_all($result);
                             </div>
                         </form>
                     <?php } ?>
-                    <?php if ($_SESSION['role'] != 'Admin') { ?>
+                    <?php if ($role != 'Admin') { ?>
                         <div class="col" style="display: inline-block; width:99%; text-align:right">
                             <p style="font-size:small"><span class="noticea" style="line-height: 2;"><a href="document.php">My Document</a></span> / My Asset</p>
                         </div>

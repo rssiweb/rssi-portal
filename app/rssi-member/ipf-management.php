@@ -16,7 +16,7 @@ include("member_data.php");
 include("database.php");
 @$id = $_GET['get_aid'];
 
-if ($_SESSION['role'] == 'Admin') {
+if ($role == 'Admin') {
     if ($id != null) {
 
         $result = pg_query($con, "SELECT * FROM ipfsubmission 
@@ -35,7 +35,7 @@ if ($_SESSION['role'] == 'Admin') {
     WHERE substring(ipfsubmission.ipf, '\((.+)\)')=null order by id desc");
     }
 }
-if ($_SESSION['role'] != 'Admin') {
+if ($role != 'Admin') {
 
     if ($id != null) {
 
@@ -124,12 +124,12 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
-                    <?php if ($_SESSION['role'] == 'Admin') { ?>
+                    <?php if ($role == 'Admin') { ?>
                         <div class="col" style="display: inline-block; width:47%; text-align:right">
                             Home / Appraisal Management System<br><br>
                         </div>
                     <?php } ?>
-                    <?php if ($_SESSION['role'] != 'Admin') { ?>
+                    <?php if ($role != 'Admin') { ?>
                         <div class="col" style="display: inline-block; width:47%; text-align:right">
                             <span class="noticea" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
                         </div>

@@ -9,7 +9,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-if ($_SESSION['role'] != 'Admin' && $_SESSION['role'] != 'Offline Manager') {
+if ($role != 'Admin' && $role != 'Offline Manager') {
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
@@ -162,12 +162,12 @@ if (!$result) {
                             <td>' . $array['dateofbirth'] . '</td>
                             <td>' . substr_replace($array['studentaadhar'], str_repeat("X", 4), 4, 4) . '</td>' ?>
 
-                    <?php if ($array['upload_aadhar_card'] != null && $_SESSION['role'] != 'Admin') {
+                    <?php if ($array['upload_aadhar_card'] != null && $role != 'Admin') {
 
                         echo '<td  colspan=3><iframe sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px"/></iframe></td>' ?><?php } ?>
 
 
-                    <?php if ($array['upload_aadhar_card'] != null && $_SESSION['role'] == 'Admin') {
+                    <?php if ($array['upload_aadhar_card'] != null && $role == 'Admin') {
 
                         echo '<td  colspan=3><iframe src="https://drive.google.com/file/d/' . substr(@$array['upload_aadhar_card'], strpos(@$array['upload_aadhar_card'], "=") + 1) . '/preview" width="300px" height="200px"/></iframe></td>' ?><?php } ?>
 

@@ -17,12 +17,12 @@ date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 
 
-if ($_SESSION['role'] == 'Admin') {
+if ($role == 'Admin') {
     @$id = strtoupper($_GET['get_id']);
     $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'"); //select query for viewing users.
 }
 
-if ($_SESSION['role'] != 'Admin') {
+if ($role != 'Admin') {
 
     $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$user_check'"); //select query for viewing users.
 }
@@ -47,10 +47,10 @@ if (!$result) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <?php if ($_SESSION['role'] != 'Admin') { ?>
+    <?php if ($role != 'Admin') { ?>
         <title><?php echo $user_check ?></title>
     <?php } ?>
-    <?php if ($_SESSION['role'] == 'Admin') { ?>
+    <?php if ($role == 'Admin') { ?>
         <title><?php echo $id ?></title>
     <?php } ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -103,7 +103,7 @@ if (!$result) {
 
         <section class="box" style="padding: 2%;">
 
-            <?php if ($_SESSION['role'] == 'Admin') { ?>
+            <?php if ($role == 'Admin') { ?>
                 <form action="" method="GET" class="no-print">
                     <div class="form-group" style="display: inline-block;">
                         <div class="col2" style="display: inline-block;">
@@ -120,7 +120,7 @@ if (!$result) {
                 </form>
             <?php } ?>
 
-            <?php if ($_SESSION['role'] != 'Admin') { ?>
+            <?php if ($role != 'Admin') { ?>
                 <div class="col no-print" style="width:99%;margin-left:1.5%;text-align:right;">
                     <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button><br><br>
                 </div>
@@ -140,12 +140,12 @@ if (!$result) {
                             <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
                             <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
                             </div>' ?>
-                    <?php if ($_SESSION['role'] != 'Admin') {
+                    <?php if ($role != 'Admin') {
                         echo '<div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
                                 <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=' . $array['associatenumber'] . '" width="74px" />
                             </div>' ?><?php } ?>
 
-                    <?php if ($_SESSION['role'] == 'Admin') {
+                    <?php if ($role == 'Admin') {
                         echo '<div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
                                 <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=' ?><?php echo $id ?><?php echo '" width="74px" />
                             </div>' ?><?php } ?>
