@@ -6,7 +6,7 @@ include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    
+
     header("Location: index.php");
     exit;
 }
@@ -165,7 +165,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
 
 <body>
 
-    <?php include 'header.php';?>
+    <?php include 'header.php'; ?>
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
@@ -176,12 +176,12 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details<br><br>
                         <form method="POST" action="export_function.php">
-                        <input type="hidden" value="fees" name="export_type"/>
-                        <input type="hidden" value="<?php echo $id ?>" name="id"/>
-                        <input type="hidden" value="<?php echo $status ?>" name="status"/>
-                        <input type="hidden" value="<?php echo $section ?>" name="section"/>
+                            <input type="hidden" value="fees" name="export_type" />
+                            <input type="hidden" value="<?php echo $id ?>" name="id" />
+                            <input type="hidden" value="<?php echo $status ?>" name="status" />
+                            <input type="hidden" value="<?php echo $section ?>" name="section" />
 
-                        <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                            <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
                         border: none;" title="Export CSV"><i class="fa-regular fa-file-excel" style="font-size:large;"></i></button>
                         </form>
@@ -259,6 +259,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         <table class="table">
                             <thead style="font-size: 12px;">
                                 <tr>
+                                <th scope="col">Ref.</th>
                                 <th scope="col">Fees collection date</th>
                                 <th scope="col">ID/F Name</th>    
                                 <th scope="col">Category</th>
@@ -271,7 +272,9 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                     <?php if ($resultArr != null) {
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
-                            echo '<tr><td>' . substr($array['date'], 0, 10) . '</td>
+                            echo '<tr>
+                            <td>' . $array['id'] . '</td>
+                            <td>' . substr($array['date'], 0, 10) . '</td>
                         <td>' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . '</td>
                         <td>' . $array['category'] . '</td>   
                         <td>' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . '</td>  
