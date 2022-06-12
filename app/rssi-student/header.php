@@ -96,11 +96,11 @@
                     <span class="hidden-xs"><?php echo $studentname ?> <i class="fa fa-angle-down"></i></span>
                 </a>
                 <ul class="dropdown-menu profile fadeIn">
-                <!-- <li>
+                <li>
                         <a>
-                            Last synced: <?php echo $lastupdatedon ?>
+                            Last synced: <?php echo $extracolumn ?>
                         </a>
-                    </li> -->
+                    </li>
                     <li>
                     <a href="resetpassword.php">
                             <i class="fa fa-wrench"></i>
