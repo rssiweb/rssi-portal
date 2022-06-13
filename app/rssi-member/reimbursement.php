@@ -8,52 +8,40 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-$user_check = $_SESSION['aid'];
-
-if (!$_SESSION['aid']) {
-
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;  
-}
-?>
-
-<?php
-
 
 $view_users_query = "select * from claim WHERE registrationid='$user_check'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
-$id=$row[0];
-$timestamp=$row[1];
-$name=$row[2];
-$registrationid=$row[3];
-$mobilenumber=$row[4];
-$email=$row[5];
-$bankname=$row[6];
-$accountnumber=$row[7];
-$accountholdername=$row[8];
-$ifsccode=$row[9];
-$selectclaimheadfromthelistbelow=$row[10];
-$billno=$row[11];
-$currency=$row[12];
-$totalbillamount=$row[13];
-$uploadeddocuments=$row[14];
-$ack=$row[15];
-$termsofagreement=$row[16];
-$year=$row[17];
-$reimbid=$row[18];
-$mergestatus=$row[19];
-$claimstatus=$row[20];
-$approvedamount=$row[21];
-$transactionid=$row[22];
-$transfereddate=$row[23];
-$closedon=$row[24];
-$mediremarks=$row[25];
-$profile=$row[26];
-$rlastupdatedon=$row[27]      
+    $id = $row[0];
+    $timestamp = $row[1];
+    $name = $row[2];
+    $registrationid = $row[3];
+    $mobilenumber = $row[4];
+    $email = $row[5];
+    $bankname = $row[6];
+    $accountnumber = $row[7];
+    $accountholdername = $row[8];
+    $ifsccode = $row[9];
+    $selectclaimheadfromthelistbelow = $row[10];
+    $billno = $row[11];
+    $currency = $row[12];
+    $totalbillamount = $row[13];
+    $uploadeddocuments = $row[14];
+    $ack = $row[15];
+    $termsofagreement = $row[16];
+    $year = $row[17];
+    $reimbid = $row[18];
+    $mergestatus = $row[19];
+    $claimstatus = $row[20];
+    $approvedamount = $row[21];
+    $transactionid = $row[22];
+    $transfereddate = $row[23];
+    $closedon = $row[24];
+    $mediremarks = $row[25];
+    $profile = $row[26];
+    $rlastupdatedon = $row[27]
 
 ?>
 <?php } ?>
@@ -75,7 +63,7 @@ $rlastupdatedon=$row[27]
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -99,7 +87,7 @@ $rlastupdatedon=$row[27]
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class=col style="text-align: right;"><a href="reimbursementstatus.php"><button type="button" class="exam_btn"><i class="fas fa-child" style="font-size: 17px;"></i>
-                Track Your Claim</button></a>
+                            Track Your Claim</button></a>
                 </div>
                 <section class="box" style="padding: 2%;">
 
@@ -136,20 +124,12 @@ $rlastupdatedon=$row[27]
                     </table>
                 </section>
                 <div style="font-size: 13px;">
-                <p><b>Note:</b></p>
+                    <p><b>Note:</b></p>
                     Once the claim is settled, amount will be credited to applicant's account within 5 to 6 working days from date of Settlement.</p>
                     <p>For the first time you have to fill the complete Domiciliary Claim Form. From the second time onwards your bank account details will be automatically updated based on your previous information.</p>
                     <br>Last updated on: <?php echo @$rlastupdatedon ?>
-                    </div>
+                </div>
             </div>
-
-            <div class="clearfix"></div>
-            <!--**************clearfix**************
-
-           <div class="col-md-12">
-                <section class="box">cccccccccccee33</section>
-            </div>-->
-
         </section>
     </section>
 </body>

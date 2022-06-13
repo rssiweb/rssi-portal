@@ -8,11 +8,6 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-?>
-<?php
-
-?>
-<?php
 
 @$type = $_GET['get_id'];
 @$year = $_GET['get_year'];

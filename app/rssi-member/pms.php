@@ -9,15 +9,15 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
- if ($role != 'Admin') {
+if ($role != 'Admin') {
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
-?>
-<?php
+
 date_default_timezone_set('Asia/Kolkata');
+
 if ($_POST) {
     @$user_id = strtoupper($_POST['userid']);
     @$password = $_POST['newpass'];
@@ -33,9 +33,7 @@ if ($_POST) {
     $result = pg_query($con, $change_password_query);
     $cmdtuples = pg_affected_rows($result);
 }
-?>
 
-<?php
 @$get_id = $_POST['get_id'];
 @$get_status = strtoupper($_POST['get_status']);
 

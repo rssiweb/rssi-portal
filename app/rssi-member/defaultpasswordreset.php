@@ -9,48 +9,6 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-
-define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
-define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
-
-
-if (isset($_SESSION['aid']) && $_SESSION['aid']) {
-    $associatenumber = $_SESSION['aid'];
-    $user_query = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'";
-    $result = pg_query($con, $user_query);
-
-    $row = pg_fetch_row($result);
-    $associatenumber = $row[1];
-    $fullname = $row[2];
-    $lastupdatedon = $row[27];
-    $photo = $row[28];
-    $filterstatus = $row[35];
-    $password_updated_on = $row[81];
-
-    $_SESSION['fullname'] = $fullname;
-    $_SESSION['associatenumber'] = $associatenumber;
-    $_SESSION['photo'] = $photo;
-    $_SESSION['lastupdatedon'] = $lastupdatedon;
-    $_SESSION['filterstatus'] = $filterstatus;
-    $_SESSION['password_updated_on'] = $password_updated_on;
-}
-
-if ($_POST) {
-    function getCaptcha($SecretKey)
-    {
-        $Response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" . SECRET_KEY . "&response={$SecretKey}");
-        $Return = json_decode($Response);
-        return $Return;
-    }
-    $Return = getCaptcha($_POST['g-recaptcha-response']);
-    //var_dump($Return);
-    if ($Return->success == true && $Return->score > 0.5) {
-        // echo "Succes!";
-    } else {
-        //echo "You are a Robot!!";
-    }
-}
-
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = false;
@@ -108,16 +66,6 @@ if (isset($_POST['login'])) {
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
-
-    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
-    <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
-        });
-    </script>
     <style>
         @media (max-width:767px) {
             td {
@@ -234,19 +182,6 @@ if (isset($_POST['login'])) {
             }
 
         }
-    </script>
-
-    <!--protected by reCAPTCHA-->
-    <script>
-        grecaptcha.ready(function() {
-            grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                    action: 'homepage'
-                })
-                .then(function(token) {
-                    //console.log(token);
-                    document.getElementById('g-recaptcha-response').value = token;
-                });
-        });
     </script>
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>

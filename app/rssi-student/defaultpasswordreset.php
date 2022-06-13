@@ -35,7 +35,7 @@ if (isset($_SESSION['sid']) && $_SESSION['sid']) {
     $_SESSION['student_id'] = $student_id;
     $_SESSION['photourl'] = $photourl;
     $_SESSION['password_updated_on'] = $password_updated_on;
-    $_SESSION['filterstatus'] = $filterstatus;
+    $filterstatus = $filterstatus;
 }
 
 if ($_POST) {

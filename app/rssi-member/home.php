@@ -9,27 +9,6 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-$user_check = $_SESSION['aid'];
-@$uip = $_SERVER['REMOTE_ADDR'];
-
-if (!$_SESSION['aid']) {
-
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
-} else if ($_SESSION['password_updated_by'] == null || ($_SESSION['password_updated_by'] == 'VTHN20008' && $_SESSION['aid'] != 'VTHN20008')) {
-
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
-?>
-
-<?php
-
-
-
 $view_users_query = "select * from ipfsubmission WHERE memberid2='$user_check'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 

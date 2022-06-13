@@ -9,9 +9,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
- if ($role != 'Admin') {
-
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+if ($role != 'Admin') {
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
@@ -219,9 +217,9 @@ $resultArr = pg_fetch_all($result);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    
+
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -355,11 +353,13 @@ $resultArr = pg_fetch_all($result);
 
                                     <?php echo '<div class="status-circle" title="Online"></div>' ?>
 
-                            <?php } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'?>
-                            
-                            <?php } } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'?>
-                            
-                            <?php } echo '</div></td>
+                                <?php } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>' ?>
+
+                                <?php }
+                            } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>' ?>
+
+                            <?php }
+                            echo '</div></td>
             <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['originaldoj'] . '<br>' . $array['yos'] . '</td>
             <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
@@ -376,25 +376,25 @@ $resultArr = pg_fetch_all($result);
                             <?php } else {
                             } ?>
                             <?php if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') { ?>
-                <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
-              <?php    } ?>
+                                <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
+                            <?php    } ?>
                             <?php if ($array['assetdetails'] != null && $array['status'] != 'Closed' && $array['category'] == 'Asset') { ?>
-                                <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid='.$array['associatenumber'].'" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>' ?>
+                                <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>' ?>
                             <?php } else if ($array['agreementname'] != null && $array['status'] != 'Closed' && $array['category'] != 'Asset') { ?>
-                                <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid='.$array['associatenumber'].'" target="_blank" style="text-decoration:none" title="click here"><p class="label label-warning">agreement</p></a>' ?>
+                                <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-warning">agreement</p></a>' ?>
                             <?php } ?>
 
-                        <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
+                            <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td style="white-space: unset;">
             
-            <a id="profile" href="myprofile.php?get_id='. $array['associatenumber'] .'" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
+            <a id="profile" href="myprofile.php?get_id=' . $array['associatenumber'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
 
                         <form name="ipfpush' . $array['associatenumber'] . '" action="#" method="POST" onsubmit="myFunction()" style="display:inline;">
                         <input type="hidden" name="form-type" type="text" value="ipfpush">
-                        <input type="hidden" name="membername2" type="text" value="'. $array['fullname'] .'" readonly>
-                        <input type="hidden" name="memberid2" type="text" value="'. $array['associatenumber'] .'" readonly>
-                        <input type="hidden" type="text" name="ipf" id="ipf" value="'. $array['googlechat'] .'" readonly required>
+                        <input type="hidden" name="membername2" type="text" value="' . $array['fullname'] . '" readonly>
+                        <input type="hidden" name="memberid2" type="text" value="' . $array['associatenumber'] . '" readonly>
+                        <input type="hidden" type="text" name="ipf" id="ipf" value="' . $array['googlechat'] . '" readonly required>
                         <input type="hidden" name="flag" type="text" value="initiated" readonly>' ?>
 
                             <?php if ($role == 'Admin') { ?>
@@ -403,7 +403,7 @@ $resultArr = pg_fetch_all($result);
                         padding: 0px;
                         border: none;" title="Release IPF"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777""></i></button>' ?>
                             <?php } ?>
-                            <?php echo ' </form>
+                        <?php echo ' </form>
       </td>
             </tr>';
                         } ?>
@@ -457,6 +457,26 @@ $resultArr = pg_fetch_all($result);
             console.log(item)
         })
     </script>
+    <!-- Back top -->
+    <script>
+        $(document).ready(function() {
+            $(window).scroll(function() {
+                if ($(this).scrollTop() > 50) {
+                    $('#back-to-top').fadeIn();
+                } else {
+                    $('#back-to-top').fadeOut();
+                }
+            });
+            // scroll body to 0px on click
+            $('#back-to-top').click(function() {
+                $('body,html').animate({
+                    scrollTop: 0
+                }, 400);
+                return false;
+            });
+        });
+    </script>
+    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>
 
 </html>

@@ -5,11 +5,6 @@ include("database.php");
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
 
-if (isset($_SESSION['aid']) && $_SESSION['aid']) {
-    header("Location: home.php");
-    exit;
-}
-
 if ($_POST) {
     function getCaptcha($SecretKey)
     {
@@ -53,22 +48,19 @@ if (isset($_POST['login'])) {
         $result = pg_query($con, $user_query);
 
         $row = pg_fetch_row($result);
-        $role = $row[62];
-        $engagement = $row[48];
-        $ipfl = $row[71];
-        $filterstatus = $row[35];
         $password_updated_by = $row[80];
 
-        $_SESSION['role'] = $role;
-        $_SESSION['engagement'] = $engagement;
-        $_SESSION['ipfl'] = $ipfl;
-        $_SESSION['filterstatus'] = $filterstatus;
         $_SESSION['password_updated_by'] = $password_updated_by;
-        $uip = $_SERVER['HTTP_X_REAL_IP'];
 
         // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
         $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
         $result = pg_query($con, $query);
+
+        if ($_SESSION['password_updated_by'] == null || ($_SESSION['password_updated_by'] == 'VTHN20008' && $_SESSION['aid'] != 'VTHN20008')) {
+            echo '<script type="text/javascript">';
+            echo 'window.location.href = "defaultpasswordreset.php";';
+            echo '</script>';
+        }
 
         if (isset($_SESSION["login_redirect"])) {
             $params = "";
@@ -81,12 +73,8 @@ if (isset($_POST['login'])) {
             header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
             unset($_SESSION["login_redirect"]);
         } else {
-            header("Location: ../rssi-member/home.php");
+            header("Location: home.php");
         }
-
-        //echo "<script>alert('";
-        //echo $engagement;
-        //echo "')</script>";
     } else {
         $login_failed_dialog = true;
     }

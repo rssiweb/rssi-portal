@@ -9,18 +9,12 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-if ($_SESSION['filterstatus'] != 'Active') {
-
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+if ($filterstatus != 'Active') {
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
-?>
-
-<?php
-
 ?>
 
 <!DOCTYPE html>
@@ -40,7 +34,7 @@ if ($_SESSION['filterstatus'] != 'Active') {
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 

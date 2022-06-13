@@ -9,8 +9,6 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-?>
-<?php
 $result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"); //select query for viewing users.  
 
 if (!$result) {
@@ -38,7 +36,7 @@ $resultArr = pg_fetch_all($result);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -114,19 +112,12 @@ $resultArr = pg_fetch_all($result);
                         }
                             ?><?php echo '</td>
                             </tr>';
-                                    }
-                                    echo '</tbody>
+                            }
+                            echo '</tbody>
                                 </table>';
-                                        ?>
+                                ?>
                 </section>
             </div>
-
-            <div class="clearfix"></div>
-            <!--**************clearfix**************
-
-           <div class="col-md-12">
-                <section class="box">cccccccccccee33</section>
-            </div>-->
 
         </section>
     </section>

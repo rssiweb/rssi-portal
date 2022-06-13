@@ -8,20 +8,13 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
- if ($_SESSION['filterstatus'] != 'Active') {
+ if ($filterstatus != 'Active') {
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
-?>
-<?php
-
-?>
-<?php
-
 ?>
 
 <!DOCTYPE html>

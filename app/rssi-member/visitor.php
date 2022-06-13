@@ -11,21 +11,14 @@ if (!isLoggedIn("aid")) {
 $user_check = $_SESSION['aid'];
 
 if ($role != 'Admin' && $role != 'Offline Manager') {
-
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
-?>
-
-<?php
-
 
 date_default_timezone_set('Asia/Kolkata');
 $today = date("Y-m-d");
-// @$appid = $_POST['get_appid'];
 @$appid = $_GET['get_appid'];
 @$status = $_GET['get_id'];
 
@@ -71,7 +64,7 @@ $resultArr = pg_fetch_all($result);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -102,7 +95,6 @@ $resultArr = pg_fetch_all($result);
                     </div>
                     <section class="box" style="padding: 2%;">
                         <form id="myform" action="" method="GET">
-                            <!--onsubmit="process()-->
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
                                     <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Visitor ID" value="<?php echo $appid ?>">
@@ -168,7 +160,7 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php echo '</td>
                                 <td>' . $array['visitorname'] . '<br>' . $array['contact'] . '<br>' . $array['email'] . '</td>
-                                <td>' . date("d/m/Y H:i", strtotime($array['visitdatefrom'])). '</td> 
+                                <td>' . date("d/m/Y H:i", strtotime($array['visitdatefrom'])) . '</td> 
                                 
                                 <td>' . date("d/m/Y", strtotime($array['visitdateto'])) . '</td><td> ' ?>
 
@@ -183,7 +175,7 @@ $resultArr = pg_fetch_all($result);
                                     '</td><td><img src="' . str_replace("open", "uc", $array['photo']) . '" width="50" height="50"/></td>'
 
                                     ?><?php } else { ?><?php echo
-                                                    '</td><td></td>' ?><?php } ?>
+                                                        '</td><td></td>' ?><?php } ?>
 
                                     <?php echo
                                     '<td>' . $array['purposeofvisit'] . '</td>
@@ -229,22 +221,8 @@ $resultArr = pg_fetch_all($result);
                             ?>
                     </section>
                 </div>
-
-                <div class="clearfix"></div>
         </section>
     </section>
-    <!-- <script>
-        function process() {
-            var form = document.getElementById('myform');
-            var elements = form.elements;
-            var values = [];
-
-            for (var i = 0; i < elements.length; i++)
-                values.push(encodeURIComponent(elements[i].name) + '=' + encodeURIComponent(elements[i].value));
-
-            form.action += '?' + values.join('&');
-        }
-    </script> -->
 </body>
 
 </html>

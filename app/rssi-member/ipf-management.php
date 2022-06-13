@@ -10,10 +10,6 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-?>
-<?php
-
-
 @$id = $_GET['get_aid'];
 
 if ($role == 'Admin') {

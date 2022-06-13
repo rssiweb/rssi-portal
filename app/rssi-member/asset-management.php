@@ -8,11 +8,6 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-?>
-
-<?php
-
-
 
 if ($role == 'Admin') {
 

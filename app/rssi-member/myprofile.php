@@ -8,10 +8,6 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-?>
-
-<?php
-
 
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
@@ -50,8 +46,11 @@ if (!$result) {
     <?php if ($role != 'Admin') { ?>
         <title><?php echo $user_check ?></title>
     <?php } ?>
-    <?php if ($role == 'Admin') { ?>
+    <?php if ($role == 'Admin' && $id != null) { ?>
         <title><?php echo $id ?></title>
+    <?php } ?>
+    <?php if ($role == 'Admin' && $id == null) { ?>
+        <title>My Profile</title>
     <?php } ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
@@ -82,7 +81,7 @@ if (!$result) {
         }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 

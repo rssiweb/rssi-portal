@@ -8,62 +8,50 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-$user_check = $_SESSION['aid'];
-
-if (!$_SESSION['aid']) {
-
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;  
-}
-?>
-
-<?php
-
 
 $view_users_query = "select * from medimate WHERE registrationid='$user_check'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
-$id= $row[0];
-$timestamp= $row[1];
-$name= $row[2];
-$registrationid= $row[3];
-$mobilenumber= $row[4];
-$email= $row[5];
-$selectbeneficiary= $row[6];
-$ageofbeneficiary= $row[7];
-$bankname= $row[8];
-$accountnumber= $row[9];
-$accountholdername= $row[10];
-$ifsccode= $row[11];
-$clinicname= $row[12];
-$clinicpincode= $row[13];
-$doctorregistrationno= $row[14];
-$nameoftreatingdoctor= $row[15];
-$natureofillnessdiseaseaccident= $row[16];
-$treatmentstartdate= $row[17];
-$treatmentenddate= $row[18];
-$billtype= $row[19];
-$billnumber= $row[20];
-$totalbillamount= $row[21];
-$gstdlno= $row[22];
-$uploadeddocuments= $row[23];
-$uploadeddocumentscheck= $row[24];
-$ack= $row[25];
-$termsofagreement= $row[26];
-$year= $row[27];
-$claimid= $row[28];
-$mergestatus= $row[29];
-$claimstatus= $row[30];
-$approvedamount= $row[31];
-$transactionid= $row[32];
-$transfereddate= $row[33];
-$closedon= $row[34];
-$mediremarks= $row[35];
-$profile= $row[36];
-$mlastupdatedon= $row[37]     
+    $id = $row[0];
+    $timestamp = $row[1];
+    $name = $row[2];
+    $registrationid = $row[3];
+    $mobilenumber = $row[4];
+    $email = $row[5];
+    $selectbeneficiary = $row[6];
+    $ageofbeneficiary = $row[7];
+    $bankname = $row[8];
+    $accountnumber = $row[9];
+    $accountholdername = $row[10];
+    $ifsccode = $row[11];
+    $clinicname = $row[12];
+    $clinicpincode = $row[13];
+    $doctorregistrationno = $row[14];
+    $nameoftreatingdoctor = $row[15];
+    $natureofillnessdiseaseaccident = $row[16];
+    $treatmentstartdate = $row[17];
+    $treatmentenddate = $row[18];
+    $billtype = $row[19];
+    $billnumber = $row[20];
+    $totalbillamount = $row[21];
+    $gstdlno = $row[22];
+    $uploadeddocuments = $row[23];
+    $uploadeddocumentscheck = $row[24];
+    $ack = $row[25];
+    $termsofagreement = $row[26];
+    $year = $row[27];
+    $claimid = $row[28];
+    $mergestatus = $row[29];
+    $claimstatus = $row[30];
+    $approvedamount = $row[31];
+    $transactionid = $row[32];
+    $transfereddate = $row[33];
+    $closedon = $row[34];
+    $mediremarks = $row[35];
+    $profile = $row[36];
+    $mlastupdatedon = $row[37]
 
 ?>
 <?php } ?>
@@ -85,7 +73,7 @@ $mlastupdatedon= $row[37]
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -109,7 +97,7 @@ $mlastupdatedon= $row[37]
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class=col style="text-align: right;"><a href="medistatus.php"><button type="button" class="exam_btn"><i class="fas fa-child" style="font-size: 17px;"></i>
-                Track Your Claim</button></a>
+                            Track Your Claim</button></a>
                 </div>
                 <section class="box" style="padding: 2%;">
 
@@ -146,20 +134,12 @@ $mlastupdatedon= $row[37]
                     </table>
                 </section>
                 <div style="font-size: 13px;">
-                <p><b>Note:</b></p>
+                    <p><b>Note:</b></p>
                     Once the claim is settled, amount will be credited to applicant's account within 5 to 6 working days from date of Settlement.</p>
                     <p>For the first time you have to fill the complete Domiciliary Claim Form. From the second time onwards your bank account details will be automatically updated based on your previous information.</p>
                     <br>Last updated on: <?php echo @$mlastupdatedon ?>
-                    </div>
+                </div>
             </div>
-
-            <div class="clearfix"></div>
-            <!--**************clearfix**************
-
-           <div class="col-md-12">
-                <section class="box">cccccccccccee33</section>
-            </div>-->
-
         </section>
     </section>
 </body>

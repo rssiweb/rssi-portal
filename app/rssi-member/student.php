@@ -4,28 +4,17 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
-  header("Location: index.php");
-}
-$user_check = $_SESSION['aid'];
-
-if (!$_SESSION['aid']) {
-
   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
   header("Location: index.php");
   exit;
-} else if ($_SESSION['filterstatus'] != 'Active') {
+}
+if ($filterstatus != 'Active') {
 
-  //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
   echo '<script type="text/javascript">';
   echo 'alert("Access Denied. You are not authorized to access this web page.");';
   echo 'window.location.href = "home.php";';
   echo '</script>';
 }
-?>
-<?php
-
-?>
-<?php
 
 @$module = $_POST['get_module'];
 @$id = $_POST['get_id'];
@@ -615,6 +604,27 @@ $resultArr = pg_fetch_all($result);
     }
   }
 </script>
+
+<!-- Back top -->
+<script>
+  $(document).ready(function() {
+    $(window).scroll(function() {
+      if ($(this).scrollTop() > 50) {
+        $('#back-to-top').fadeIn();
+      } else {
+        $('#back-to-top').fadeOut();
+      }
+    });
+    // scroll body to 0px on click
+    $('#back-to-top').click(function() {
+      $('body,html').animate({
+        scrollTop: 0
+      }, 400);
+      return false;
+    });
+  });
+</script>
+<a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>
 
 </html>

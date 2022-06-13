@@ -8,11 +8,6 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
- ?>
-
-<?php
-
-
 
 $result = pg_query($con, "select * from payslip where associatenumber='$user_check' ORDER BY slno DESC;");
 if (!$result) {
@@ -40,7 +35,7 @@ $resultArr = pg_fetch_all($result);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -64,7 +59,7 @@ $resultArr = pg_fetch_all($result);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    <p style="font-size:small"><span class="noticea" style="line-height: 2;"><a href="document.php">My Document</a></span> / Payslip</p>
+                        <p style="font-size:small"><span class="noticea" style="line-height: 2;"><a href="document.php">My Document</a></span> / Payslip</p>
                     </div>
 
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
@@ -91,7 +86,7 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['payslipid'] . '</td>
                                 <td>' . $array['date'] . '</td>
                                 <td>' . $array['classcount'] . '</td>
-                                <td>' . $array['transaction_id'].'</td>
+                                <td>' . $array['transaction_id'] . '</td>
                                 <td><span class="noticea"><a href="' . $array['profile'] . '" target="_blank" title="' . $array['filename'] . '"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
                                 
                                 </tr>';
@@ -107,11 +102,8 @@ $resultArr = pg_fetch_all($result);
                 echo '</tbody>
                                     </table>';
                 ?>
+            </div>
         </section>
-        </div>
-
-        <div class="clearfix"></div>
-    </section>
     </section>
 </body>
 

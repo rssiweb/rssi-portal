@@ -8,18 +8,6 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-$user_check = $_SESSION['aid'];
-
-if (!$_SESSION['aid']) {
-
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;  
-}
-?>
-
-<?php
-
 ?>
 
 <!DOCTYPE html>

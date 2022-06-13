@@ -8,7 +8,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
- if ($_SESSION['filterstatus'] != 'Active') {
+if ($filterstatus != 'Active') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
     echo '<script type="text/javascript">';
@@ -16,17 +16,11 @@ if (!isLoggedIn("aid")) {
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
-?>
-<?php
 
-?>
-<?php
 // Set the new timezone
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-d-m h:i:s');
 //echo $date;
-?>
-<?php
 
 @$category = $_POST['get_category'];
 @$subject = $_POST['get_subject'];
@@ -66,7 +60,7 @@ $resultArr = pg_fetch_all($result);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -241,11 +235,11 @@ $resultArr = pg_fetch_all($result);
                             echo '<tr>
               <td>' . $array['category'] . '</td>
             <td>' . $array['subject'] . '</td>
-            <td>' . $array['testcode'] . '&nbsp; <p class="label label-default">'. $array['class'] .'</p></td>
+            <td>' . $array['testcode'] . '&nbsp; <p class="label label-default">' . $array['class'] . '</p></td>
             <td>' . $array['fullmarks'] . '</td>
             <td>' . $array['examname'] . '</td>
             <td>' . $array['topic'] . '</td>
-            <td><a href="'. $array['url'] .'" target="_blank"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
+            <td><a href="' . $array['url'] . '" target="_blank"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
             </tr>';
                         } ?>
                     <?php
@@ -267,14 +261,6 @@ $resultArr = pg_fetch_all($result);
                     ?>
                 </section>
             </div>
-
-            <div class="clearfix"></div>
-            <!--**************clearfix**************
-
-           <div class="col-md-12">
-                <section class="box">cccccccccccee33</section>
-            </div>-->
-
         </section>
     </section>
 </body>

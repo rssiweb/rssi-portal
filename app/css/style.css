@@ -925,3 +925,25 @@ z-index: 5001;
         [type="submit"] {
             outline: none !important;
         }
+        
+        .go-top {
+            background-color: #777777;
+            bottom: 2em;
+            right: 2em;
+            color: #ffffff !important;
+            font-size: 32px;
+            display: none;
+            position: fixed;
+            text-decoration: none;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            transition: all 0.4s ease-in-out;
+            z-index: 3;
+        }
+        
+        .go-top:hover {
+            background: #f2545f;
+            color: #ffffff;
+        }

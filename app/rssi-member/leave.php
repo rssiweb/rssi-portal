@@ -9,25 +9,20 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-?>
-
-<?php
-
-
 @$id = $_POST['get_id'];
 @$status = $_POST['get_status'];
 
-if (($id==null && $status==null) || (($status > 0 && $status != 'ALL')&&($id > 0 && $id != 'ALL'))) {
+if (($id == null && $status == null) || (($status > 0 && $status != 'ALL') && ($id > 0 && $id != 'ALL'))) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' AND lyear='$id'");
 } else if (($id == 'ALL' && $status == null) || ($id == null && $status == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
-} else if (($id > 0 && $id != 'ALL')&&($status==null)) {
+} else if (($id > 0 && $id != 'ALL') && ($status == null)) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
-} else if (($id > 0 && $id != 'ALL')&&($status=='ALL')) {
+} else if (($id > 0 && $id != 'ALL') && ($status == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
-} else if (($status > 0 && $status != 'ALL')&&($id==null)) {
+} else if (($status > 0 && $status != 'ALL') && ($id == null)) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
-} else if (($status > 0 && $status != 'ALL')&&($id=='ALL')) {
+} else if (($status > 0 && $status != 'ALL') && ($id == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
 } else {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
@@ -58,7 +53,7 @@ $resultArr = pg_fetch_all($result);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -83,31 +78,31 @@ $resultArr = pg_fetch_all($result);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    Academic year: 2022-2023
+                        Academic year: 2022-2023
                         <!--<br>Opening balance is the balance carried forward from previous credit cycle and refers to the leave till the allocation end date.-->
                     </div>
                     <?php
-                if ((@$clbal == 0 || @$clbal < 0) && ($slbal == 0 || $slbal < 0) && $filterstatus == 'Active') {
-                ?>
-                    <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Inadequate SL and CL balance. You are not eligible to take leave. Please take a makeup class to enable the apply leave option.
-                    </div>
-                <?php
-                } else if ((@$clbal == 0 || @$clbal < 0) && $filterstatus == 'Active') {
-                ?>
-                <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient CL balance. You are not eligible for casual leave. Please take makeup class to increase CL balance.
-                    </div>
-                <?php
-                } else if ((@$slbal == 0 || @$slbal < 0) && $filterstatus == 'Active') {
-                ?>
-                    <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient SL balance. You are not eligible for sick leave. Please take makeup class to increase SL balance.
-                    </div>
+                    if ((@$clbal == 0 || @$clbal < 0) && ($slbal == 0 || $slbal < 0) && $filterstatus == 'Active') {
+                    ?>
+                        <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
+                            <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Inadequate SL and CL balance. You are not eligible to take leave. Please take a makeup class to enable the apply leave option.
+                        </div>
                     <?php
-                } else {
-                }
-                ?>
+                    } else if ((@$clbal == 0 || @$clbal < 0) && $filterstatus == 'Active') {
+                    ?>
+                        <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
+                            <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient CL balance. You are not eligible for casual leave. Please take makeup class to increase CL balance.
+                        </div>
+                    <?php
+                    } else if ((@$slbal == 0 || @$slbal < 0) && $filterstatus == 'Active') {
+                    ?>
+                        <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
+                            <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient SL balance. You are not eligible for sick leave. Please take makeup class to increase SL balance.
+                        </div>
+                    <?php
+                    } else {
+                    }
+                    ?>
                 </div>
 
                 <section class="box" style="padding: 2%;">
@@ -136,9 +131,9 @@ $resultArr = pg_fetch_all($result);
                                     ?>
                                         <span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=<?php echo $associatenumber ?>&entry.593057865=<?php echo $fullname ?>&entry.1085056032=<?php echo $email ?>&entry.1932332750=<?php echo strtok($position,  '-') ?>" target="_blank">Leave Request Form</a></span>
                                     <?php
-                                    } else {?>
+                                    } else { ?>
                                         <span class="noticea"><a href="//" onclick="return false;">Leave Request Form</a></span>
-                                        <?php }
+                                    <?php }
                                     ?>
 
                                 </td>
@@ -183,7 +178,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
                     </form>
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
 
                     <?php echo '
@@ -201,11 +196,11 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">HR remarks</th>
                             </tr>
                         </thead>' ?>
-                        <?php if (sizeof($resultArr) > 0) { ?>
-                            <?php
-                            echo '<tbody>';
-                            foreach ($resultArr as $array) {
-                              echo '<tr>
+                    <?php if (sizeof($resultArr) > 0) { ?>
+                        <?php
+                        echo '<tbody>';
+                        foreach ($resultArr as $array) {
+                            echo '<tr>
                                 <td>' . $array['leaveid'] . '</td>
                                 <td>' . $array['timestamp'] . '</td>
                                 <td>' . $array['from'] . '</td>
@@ -217,33 +212,25 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['comment'] . '</td>
                             </tr>';
                         } ?>
-                      <?php
-                      } else if ($id == null && $status==null) {
-                      ?>
+                    <?php
+                    } else if ($id == null && $status == null) {
+                    ?>
                         <tr>
-                          <td colspan="5">Please select Filter value.</td>
+                            <td colspan="5">Please select Filter value.</td>
                         </tr>
-                      <?php
-                      } else {
-                      ?>
+                    <?php
+                    } else {
+                    ?>
                         <tr>
-                          <td colspan="5">No record was found for the selected filter value.</td>
+                            <td colspan="5">No record was found for the selected filter value.</td>
                         </tr>
-                      <?php }
-            
-                      echo '</tbody>
+                    <?php }
+
+                    echo '</tbody>
                                     </table>';
-                      ?>
+                    ?>
                 </section>
             </div>
-
-            <div class="clearfix"></div>
-            <!--**************clearfix**************
-
-           <div class="col-md-12">
-                <section class="box">cccccccccccee33</section>
-            </div>-->
-
         </section>
     </section>
 </body>

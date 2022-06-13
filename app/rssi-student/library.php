@@ -13,7 +13,7 @@ if (!$_SESSION['sid']) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;  
-} else if ($_SESSION['filterstatus'] != 'Active') {
+} else if ($filterstatus != 'Active') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
     echo '<script type="text/javascript">';

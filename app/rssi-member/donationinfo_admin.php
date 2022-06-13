@@ -5,27 +5,17 @@ include("../util/login_util.php");
 
 
 if (!isLoggedIn("aid")) {
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
-}
-$user_check = $_SESSION['aid'];
-
-if (!$_SESSION['aid']) {
-
   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
   header("Location: index.php");
   exit;
-} else if ($role != 'Admin') {
+}
 
-  //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+if ($role != 'Admin') {
   echo '<script type="text/javascript">';
   echo 'alert("Access Denied. You are not authorized to access this web page.");';
   echo 'window.location.href = "home.php";';
   echo '</script>';
 }
-?>
-<?php
 
 @$id = $_POST['get_aid'];
 @$status = $_POST['get_id'];
@@ -75,7 +65,7 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
   </style>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+  <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
   <!------ Include the above in your HEAD tag ---------->
 
   <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -113,14 +103,14 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
           <div class="col" style="display: inline-block; width:47%; text-align:right">
             Home / Donation Status<br><br>
             <form method="POST" action="export_function.php">
-                        <input type="hidden" value="donation" name="export_type"/>
-                        <input type="hidden" value="<?php echo $id ?>" name="invoice"/>
-                        <input type="hidden" value="<?php echo $status ?>" name="fyear"/>
+              <input type="hidden" value="donation" name="export_type" />
+              <input type="hidden" value="<?php echo $id ?>" name="invoice" />
+              <input type="hidden" value="<?php echo $status ?>" name="fyear" />
 
-                        <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+              <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
                         border: none;" title="Export CSV"><i class="fa-regular fa-file-excel" style="font-size:large;"></i></button>
-                        </form>
+            </form>
           </div>
         </div>
         <section class="box" style="padding: 2%;">

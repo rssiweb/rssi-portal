@@ -53,7 +53,7 @@ if (isset($_POST['login'])) {
         $feesflag = $row[41];
         $password_updated_by = $row[47];
 
-        $_SESSION['filterstatus'] = $filterstatus;
+        $filterstatus = $filterstatus;
         $_SESSION['feesflag'] = $feesflag;
         $uip = $_SERVER['HTTP_X_REAL_IP'];
         $_SESSION['password_updated_by'] = $password_updated_by;
