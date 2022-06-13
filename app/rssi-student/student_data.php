@@ -57,4 +57,4 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $feecycle = $row[51]
 
 ?>     
-<?php } ?>    
+<?php } ?>

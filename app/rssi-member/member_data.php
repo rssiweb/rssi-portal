@@ -87,4 +87,4 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $approveddate = $row[78];
 
 ?>     
-<?php } ?>    
+<?php } ?>
