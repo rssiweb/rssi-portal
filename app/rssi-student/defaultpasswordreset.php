@@ -4,54 +4,9 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("sid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['sid'];
-
-if (!$_SESSION['sid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
-}
-
-define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
-define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
-
-
-if (isset($_SESSION['sid']) && $_SESSION['sid']) {
-    $student_id = $_SESSION['sid'];
-    $user_query = "select * from rssimyprofile_student WHERE student_id='$student_id'";
-    $result = pg_query($con, $user_query);
-
-    $row = pg_fetch_row($result);
-    $student_id = $row[1];
-    $studentname = $row[3];
-    $password_updated_on = $row[57];
-    $photourl = $row[25];
-    $filterstatus = $row[39];
-
-    $_SESSION['studentname'] = $studentname;
-    $_SESSION['student_id'] = $student_id;
-    $_SESSION['photourl'] = $photourl;
-    $_SESSION['password_updated_on'] = $password_updated_on;
-    $filterstatus = $filterstatus;
-}
-
-if ($_POST) {
-    function getCaptcha($SecretKey)
-    {
-        $Response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" . SECRET_KEY . "&response={$SecretKey}");
-        $Return = json_decode($Response);
-        return $Return;
-    }
-    $Return = getCaptcha($_POST['g-recaptcha-response']);
-    //var_dump($Return);
-    if ($Return->success == true && $Return->score > 0.5) {
-        // echo "Succes!";
-    } else {
-        //echo "You are a Robot!!";
-    }
 }
 
 date_default_timezone_set('Asia/Kolkata');
@@ -79,7 +34,7 @@ if (isset($_POST['login'])) {
             $newpass = $_POST['newpass'];
 
             $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
-            $now=date('Y-m-d H:i:s');
+            $now = date('Y-m-d H:i:s');
             $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash', password_updated_by='$student_id', password_updated_on='$now' where student_id='$student_id'";
             $result = pg_query($con, $change_password_query);
             $cmdtuples = pg_affected_rows($result);
@@ -145,38 +100,42 @@ if (isset($_POST['login'])) {
 </head>
 
 <body>
-<div class="page-topbar">
-    <div class="logo-area"> </div>
-</div>
+    <div class="page-topbar">
+        <div class="logo-area"> </div>
+    </div>
     <section>
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-            <div class="col" style="display: inline-block; width:100%; text-align:right">
-            <a href="logout.php" target="_self" class="btn btn-danger btn-sm" role="button"><i class="glyphicon glyphicon-log-out"></i>&nbsp;Sign Out</a></div>
+                <div class="col" style="display: inline-block; width:100%; text-align:right">
+                    <a href="logout.php" target="_self" class="btn btn-danger btn-sm" role="button"><i class="glyphicon glyphicon-log-out"></i>&nbsp;Sign Out</a>
+                </div>
                 <?php if (@$newpass != @$oldpass) { ?>
 
                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
-                    </div> 
-                <?php } if (@$cmdtuples == 1) { ?>
+                    </div>
+                <?php }
+                if (@$cmdtuples == 1) { ?>
 
                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully. Please sign out and sign in using the new password.</span>
                     </div>
-                <?php } if (@$login_failed_dialog) { ?>
+                <?php }
+                if (@$login_failed_dialog) { ?>
                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
                     </div>
 
-                <?php } if (@$newpass==null) { ?>
+                <?php }
+                if (@$newpass == null) { ?>
                     <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <span>Hi <?php echo $studentname ?>&nbsp;(<?php echo $student_id ?>),&nbsp;Please change your default password.</span>
                     </div>
 
-                <?php }?>
+                <?php } ?>
                 <section class="box" style="padding: 2%;">
                     <div class="col-md-4 col-md-offset-4">
                         <div class="login-panel panel panel-default" style="margin-top: unset;">
@@ -237,19 +196,6 @@ if (isset($_POST['login'])) {
             }
 
         }
-    </script>
-
-    <!--protected by reCAPTCHA-->
-    <script>
-        grecaptcha.ready(function() {
-            grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                    action: 'homepage'
-                })
-                .then(function(token) {
-                    //console.log(token);
-                    document.getElementById('g-recaptcha-response').value = token;
-                });
-        });
     </script>
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>

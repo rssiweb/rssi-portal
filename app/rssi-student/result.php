@@ -3,19 +3,10 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("sid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['sid'];
-
-if (!$_SESSION['sid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
 }
-?>
-
-<?php
 
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
@@ -54,9 +45,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $fullmarks = $row[26];
     $month = $row[27];
     $language1 = $row[28];
-
-?>
-<?php } ?>
+} ?>
 
 
 <!DOCTYPE html>
@@ -140,7 +129,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
 </head>
 
@@ -186,10 +175,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             </div>
                         </form>
                     </div>
-                    <!--<div class="col noprint" style="display: inline-block; width:47%; text-align:right">
-                    <button type="button" onclick="window.location.href='logout.php'" name="print" class="btn btn-danger btn-sm" style="outline: none;">
-                                <span class="glyphicon glyphicon-log-out"></span>&nbsp;Sign out</button>
-                    </div>-->
                 </div>
                 <section class="box" style="padding: 2%;">
                     <b>
@@ -406,13 +391,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             </div>
         </section>
     </section>
-    <script>
-        function submit() {
-            document.getElementById("formid").click(); // Simulates button click
-            document.lostpasswordform.submit(); // Submits the form without the button
-        }
-    </script>
-
 </body>
 
 </html>

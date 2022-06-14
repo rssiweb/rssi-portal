@@ -4,35 +4,25 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("sid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['sid'];
-
-if (!$_SESSION['sid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 }
-?>
-
-<?php
-
 
 @$id = $_POST['get_id'];
 @$status = $_POST['get_status'];
 
-if (($id==null && $status==null) || (($status > 0 && $status != 'ALL')&&($id > 0 && $id != 'ALL'))) {
+if (($id == null && $status == null) || (($status > 0 && $status != 'ALL') && ($id > 0 && $id != 'ALL'))) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' AND lyear='$id'");
 } else if (($id == 'ALL' && $status == null) || ($id == null && $status == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
-} else if (($id > 0 && $id != 'ALL')&&($status==null)) {
+} else if (($id > 0 && $id != 'ALL') && ($status == null)) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
-} else if (($id > 0 && $id != 'ALL')&&($status=='ALL')) {
+} else if (($id > 0 && $id != 'ALL') && ($status == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
-} else if (($status > 0 && $status != 'ALL')&&($id==null)) {
+} else if (($status > 0 && $status != 'ALL') && ($id == null)) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
-} else if (($status > 0 && $status != 'ALL')&&($id=='ALL')) {
+} else if (($status > 0 && $status != 'ALL') && ($id == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
 } else {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
@@ -50,7 +40,7 @@ $resultArr = pg_fetch_all($result);
 <html>
 
 <head>
-<meta name="description" content="">
+    <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
@@ -59,13 +49,15 @@ $resultArr = pg_fetch_all($result);
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <title>Leave</title>
     <!-- Main css -->
-    <style><?php include '../css/style.css'; ?></style>
+    <style>
+        <?php include '../css/style.css'; ?>
+    </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
         glowCookies.start('en', {
@@ -84,7 +76,7 @@ $resultArr = pg_fetch_all($result);
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                
+
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -141,7 +133,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
                     </form>
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
 
                     <?php echo '
@@ -159,11 +151,11 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">HR remarks</th>
                             </tr>
                         </thead>' ?>
-                        <?php if (sizeof($resultArr) > 0) { ?>
-                            <?php
-                            echo '<tbody>';
-                            foreach ($resultArr as $array) {
-                              echo '<tr>
+                    <?php if (sizeof($resultArr) > 0) { ?>
+                        <?php
+                        echo '<tbody>';
+                        foreach ($resultArr as $array) {
+                            echo '<tr>
                                 <td>' . $array['leaveid'] . '</td>
                                 <td>' . $array['timestamp'] . '</td>
                                 <td>' . $array['from'] . '</td>
@@ -175,33 +167,25 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['comment'] . '</td>
                             </tr>';
                         } ?>
-                      <?php
-                      } else if ($id == null && $status==null) {
-                      ?>
+                    <?php
+                    } else if ($id == null && $status == null) {
+                    ?>
                         <tr>
-                          <td colspan="5">Please select Filter value.</td>
+                            <td colspan="5">Please select Filter value.</td>
                         </tr>
-                      <?php
-                      } else {
-                      ?>
+                    <?php
+                    } else {
+                    ?>
                         <tr>
-                          <td colspan="5">No record was found for the selected filter value.</td>
+                            <td colspan="5">No record was found for the selected filter value.</td>
                         </tr>
-                      <?php }
-            
-                      echo '</tbody>
+                    <?php }
+
+                    echo '</tbody>
                                     </table>';
-                      ?>
+                    ?>
                 </section>
             </div>
-
-            <div class="clearfix"></div>
-            <!--**************clearfix**************
-
-           <div class="col-md-12">
-                <section class="box">cccccccccccee33</section>
-            </div>-->
-
         </section>
     </section>
 </body>

@@ -8,15 +8,9 @@ if (!isLoggedIn("sid")) {
     header("Location: index.php");
     exit;
 }
-?>
 
-<?php
-$user_check = $_SESSION['sid'];
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
-?>
-
-<?php
 
 $result = pg_query($con, "select * from rssimyprofile_student WHERE student_id='$user_check'"); //select query for viewing users.    
 $resultArr = pg_fetch_all($result);
@@ -62,7 +56,7 @@ if (!$result) {
         }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 

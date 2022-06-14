@@ -53,6 +53,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $scode = $row[43];
     $exitinterview = $row[44];
     $sipf = $row[45];
+    $password_updated_by = $row[47];
+    $password_updated_on = $row[48];
     $upload_aadhar_card = $row[49];
     $special_service = $row[50];
     $feecycle = $row[51]
@@ -77,7 +79,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 

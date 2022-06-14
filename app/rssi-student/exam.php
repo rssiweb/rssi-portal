@@ -4,18 +4,13 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("sid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['sid'];
-
-if (!$_SESSION['sid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
-} else if ($_SESSION['feesflag'] == 'd') {
+}
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+if ($feesflag == 'd') {
+
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "profile.php";';
@@ -104,8 +99,8 @@ if (!$_SESSION['sid']) {
                         <tbody>
                             <tr>
                                 <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
-                                
-                                <table style="border:1px solid black; width:80%">
+
+                                    <table style="border:1px solid black; width:80%">
                                         <tr style="border:1px solid black">
                                             <th style="border:1px solid black">National module</th>
                                             <th style="border:1px solid black">State module</th>
@@ -117,7 +112,8 @@ if (!$_SESSION['sid']) {
                                     </table>
                                     <br>
 
-                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br></td>
+                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br>
+                                </td>
 
                                 <td style="line-height: 2"><span class="noticea">
                                         <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
@@ -141,8 +137,8 @@ if (!$_SESSION['sid']) {
                             <tr>
                                 <!--<td><span class="noticea"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>-->
                                 <td><span class="noticea">
-                                    <a href="https://drive.google.com/file/d/1B0sONvc9bb5igUOo1gVO_INfIod9sfIW/view" title="Download" target="_blank">State module</a><br>
-                                    <a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" title="Download" target="_blank">National module</a><br></td>
+                                        <a href="https://drive.google.com/file/d/1B0sONvc9bb5igUOo1gVO_INfIod9sfIW/view" title="Download" target="_blank">State module</a><br>
+                                        <a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" title="Download" target="_blank">National module</a><br></td>
                                 <td><span class="noticea"><a href="question.php">Question paper</i></a></span></td>
                                 <td><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
                             </tr>
@@ -150,14 +146,6 @@ if (!$_SESSION['sid']) {
                     </table>
                 </section>
             </div>
-
-            <div class="clearfix"></div>
-            <!--**************clearfix**************
-
-           <div class="col-md-12">
-                <section class="box">cccccccccccee33</section>
-            </div>-->
-
         </section>
     </section>
 </body>

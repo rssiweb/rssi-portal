@@ -15,9 +15,9 @@
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    
+
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -86,37 +86,38 @@ echo '
          <th>Certificate Date</th>
          <th>Certifying Authority</th>
         </tr>
-        </thead>'?>
+        </thead>' ?>
 
 
 <?php if (@$id > 0) {
 
 
-foreach ($resultArr as $array) {
-    echo '<tbody><tr>
+    foreach ($resultArr as $array) {
+        echo '<tbody><tr>
             <td><img src="' . $array['photourl'] . '" width=100px/></td>
             <td style="line-height:2">Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b></td>
             <td>' . $array['class'] . '</td>
             <td>' . $array['nameofthesubjects'] . '</td>
-            <td style="line-height:2">' . $array['doa'] . '&nbsp;to&nbsp;'?>
-            
-            <?php if ($array['status'] != null) { ?>
-                <?php echo substr($array['remarks'],0,4) ?>
-                <?php } else { ?> <?php echo 'Present' ?>
-            <?php } ?>
-                
-            <?php echo '</td>
+            <td style="line-height:2">' . $array['doa'] . '&nbsp;to&nbsp;' ?>
+
+        <?php if ($array['status'] != null) { ?>
+            <?php echo substr($array['remarks'], 0, 4) ?>
+        <?php } else { ?> <?php echo 'Present' ?>
+        <?php } ?>
+
+        <?php echo '</td>
             <td>' . $array['sipf'] . '</td>
             <td>' . $array['filterstatus'] . '</td>' ?>
 
-            <?php if ($array['status'] != null) { ?>
-            <?php echo '<td>' . substr($array['remarks'],0,4). '</td>' ?>
-            <?php } else { ?> <?php echo '<td>' . $today = date('d/m/Y') . '</td>' ?>
-            <?php } ?>
+        <?php if ($array['status'] != null) { ?>
+            <?php echo '<td>' . substr($array['remarks'], 0, 4) . '</td>' ?>
+        <?php } else { ?> <?php echo '<td>' . $today = date('d/m/Y') . '</td>' ?>
+        <?php } ?>
 
-            <?php echo '<td>' . $array['exitinterview'] . '</td>
+<?php echo '<td>' . $array['exitinterview'] . '</td>
             </tr>';
-}}
+    }
+}
 echo '</table>
 </section>
 </div>

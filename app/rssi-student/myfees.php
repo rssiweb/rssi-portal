@@ -8,10 +8,6 @@ if (!isLoggedIn("sid")) {
     header("Location: index.php");
     exit;
 }
-?>
-
-<?php
-
 
 setlocale(LC_TIME, 'fr_FR.UTF-8');
 
@@ -49,7 +45,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -76,7 +72,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total fees submitted:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                    <span class="noticea"><a href="home.php" target="_self">Home</a></span> / My Fees
+                        <span class="noticea"><a href="home.php" target="_self">Home</a></span> / My Fees
                     </div>
                 </div><br>
 
@@ -114,11 +110,8 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                 echo '</tbody>
                                     </table>';
                 ?>
+            </div>
         </section>
-        </div>
-
-        <div class="clearfix"></div>
-    </section>
     </section>
 </body>
 

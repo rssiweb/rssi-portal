@@ -4,26 +4,19 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("sid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['sid'];
-
-if (!$_SESSION['sid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
-} else if ($filterstatus != 'Active') {
+    exit;
+}
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+if ($filterstatus != 'Active') {
+
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -43,7 +36,7 @@ if (!$_SESSION['sid']) {
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -208,7 +201,7 @@ if (!$_SESSION['sid']) {
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                
+
                 <section class="box" style="padding: 2%;">
 
                     <div class="container">
@@ -271,8 +264,8 @@ if (!$_SESSION['sid']) {
                             <div class="col2">
                                 <button id=search type="button1" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
                                     search</button>
-                                    <a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
-My Book</button></a>
+                                <a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
+                                        My Book</button></a>
                             </div>
 
 
@@ -366,7 +359,7 @@ My Book</button></a>
             var language = document.getElementById('name2').value
 
             $.getJSON("https://sheets.googleapis.com/v4/spreadsheets/1iwtUG3z5orDmOhgN_gIEIA7yf1waA3jrgMO9pDUHnbE/values/booklist?alt=json&key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o",
-            function(data) {
+                function(data) {
                     document.getElementById('demo').innerHTML = ""
                     var sheetData = data.values;
                     var i;
@@ -383,7 +376,7 @@ My Book</button></a>
                         var Language = sheetData[i][9];
                         var Status = sheetData[i][10];
                         var Availability = sheetData[i][11];
-                        
+
 
                         if ((Class === class1 && Subject === subject && Language === language) ||
                             (Class === class1 && subject === '--' && language === '--') ||

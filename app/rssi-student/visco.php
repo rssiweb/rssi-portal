@@ -4,26 +4,19 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("sid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['sid'];
-
-if (!$_SESSION['sid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
-} else if (($filterstatus != 'Active') || ($_SESSION['feesflag'] == 'd')){
+    exit;
+}
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+if (($filterstatus != 'Active') || ($feesflag == 'd')) {
+
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "profile.php";';
     echo '</script>';
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -58,9 +51,6 @@ if (!$_SESSION['sid']) {
     </script>
 
 </head>
-
-
-
 
 <style>
     body {
@@ -175,7 +165,7 @@ if (!$_SESSION['sid']) {
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                
+
                 <section class="box" style="padding: 2%;">
 
                     <div class="container">

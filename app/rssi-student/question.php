@@ -4,32 +4,21 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("sid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['sid'];
-
-if (!$_SESSION['sid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
-} else if ($filterstatus != 'Active') {
+}
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+if ($filterstatus != 'Active') {
+
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
-?>
 
-<?php
-// Set the new timezone
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
-//echo $date;
-?>
-<?php
 
 @$category = $_POST['get_category'];
 @$subject = $_POST['get_subject'];
@@ -69,7 +58,7 @@ $resultArr = pg_fetch_all($result);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -126,7 +115,7 @@ $resultArr = pg_fetch_all($result);
             background-color: #90BAA4;
         }
 
-       a.disabled {
+        a.disabled {
             pointer-events: none;
             cursor: default;
             opacity: 0.5;
@@ -245,20 +234,20 @@ $resultArr = pg_fetch_all($result);
                             echo '<tr>
               <td>' . $array['category'] . '</td>
             <td>' . $array['subject'] . '</td>
-            <td>' . $array['testcode'] . '&nbsp; <p class="label label-default">'. $array['class'] .'</p></td>
+            <td>' . $array['testcode'] . '&nbsp; <p class="label label-default">' . $array['class'] . '</p></td>
             <td>' . $array['fullmarks'] . '</td>
             <td>' . $array['examname'] . '</td>
-            <td>' . $array['topic'] . '</td>'?>
+            <td>' . $array['topic'] . '</td>' ?>
 
-            <?php if (strtotime($date)-strtotime($array['flag'])>0) { ?>
-                <?php echo '<td><a href="'. $array['url'] .'" target="_blank"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
+                            <?php if (strtotime($date) - strtotime($array['flag']) > 0) { ?>
+                                <?php echo '<td><a href="' . $array['url'] . '" target="_blank"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
             </tr>' ?>
-              <?php } else {?>
-                <?php echo '<td><a href="'. $array['url'] .'" target="_blank" class="disabled"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
-            </tr>'?>
-            <?php } ?>
+                            <?php } else { ?>
+                                <?php echo '<td><a href="' . $array['url'] . '" target="_blank" class="disabled"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
+            </tr>' ?>
+                            <?php } ?>
 
-<?php } ?>
+                        <?php } ?>
                     <?php
                     } else if ($category == "") {
                     ?>
@@ -278,13 +267,6 @@ $resultArr = pg_fetch_all($result);
                     ?>
                 </section>
             </div>
-
-            <div class="clearfix"></div>
-            <!--**************clearfix**************
-
-           <div class="col-md-12">
-                <section class="box">cccccccccccee33</section>
-            </div>-->
 
         </section>
     </section>

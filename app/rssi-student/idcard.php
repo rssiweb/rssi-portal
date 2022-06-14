@@ -4,27 +4,18 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("sid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['sid'];
-
-if (!$_SESSION['sid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
-} else if ($filterstatus != 'Active') {
+}
 
-    //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.
+if ($filterstatus != 'Active') {
+
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
-?>
-
-<?php
-
 ?>
 
 <!DOCTYPE html>
@@ -141,7 +132,7 @@ if (!$_SESSION['sid']) {
                 <div class="col noprint" style="display: inline-block; width:100%;margin-left:10%; margin-top:2%">
 
                     <button type="button" onclick="window.print()" name="print" class="btn btn-success btn-sm" style="outline: none;">
-                    <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
+                        <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
                 </div>
             </div>
         </div>
@@ -157,7 +148,7 @@ if (!$_SESSION['sid']) {
                     <p class="first-txt"><?php echo $studentname ?></p>
                     <p class="second-txt"><?php echo $student_id ?></p>
                     <p class="third-txt">Student</p>
-                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-student/verification.php?get_id=<?php echo $student_id ?>" width="74px"/>
+                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-student/verification.php?get_id=<?php echo $student_id ?>" width="74px" />
                 </div>
             </div>
         </div>

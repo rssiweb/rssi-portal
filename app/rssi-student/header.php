@@ -83,10 +83,10 @@
                 <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i><!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
                 </a>
             </li>
-            <!--<li>
-                <a href="https://www.youtube.com/channel/UC1gI7Hvsq90_QndfttoS6wA" target="_blank"> <i class="fab fa-youtube" title="Subscribe now"></i>
+            <li>
+                <a href="https://www.youtube.com/c/RSSINGO" target="_blank"> <i class="fab fa-youtube" title="Watch now"></i>
                 </a>
-            </li>-->
+            </li>
         </ul>
 
         <ul class="pull-right info-menu user-info">

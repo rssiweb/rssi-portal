@@ -4,10 +4,6 @@ include("database.php");
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
 
-if (isset($_SESSION['sid']) && $_SESSION['sid']) {
-    header("Location: home.php");
-    exit;
-}
 
 if ($_POST) {
     function getCaptcha($SecretKey)
@@ -49,23 +45,31 @@ if (isset($_POST['login'])) {
         $result = pg_query($con, $user_query);
 
         $row = pg_fetch_row($result);
-        $filterstatus = $row[33];
-        $feesflag = $row[41];
         $password_updated_by = $row[47];
 
-        $filterstatus = $filterstatus;
-        $_SESSION['feesflag'] = $feesflag;
-        $uip = $_SERVER['HTTP_X_REAL_IP'];
+
         $_SESSION['password_updated_by'] = $password_updated_by;
 
         $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
         $result = pg_query($con, $query);
 
+        if ($_SESSION['password_updated_by'] == null || ($_SESSION['password_updated_by'] == 'VTHN20008')) {
+            echo '<script type="text/javascript">';
+            echo 'window.location.href = "defaultpasswordreset.php";';
+            echo '</script>';
+        }
         if (isset($_SESSION["login_redirect"])) {
-            header("Location: " . $_SESSION["login_redirect"]);
+            $params = "";
+            if (isset($_SESSION["login_redirect_params"])) {
+                foreach ($_SESSION["login_redirect_params"] as $key => $value) {
+                    $params = $params . "$key=$value&";
+                }
+                unset($_SESSION["login_redirect_params"]);
+            }
+            header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
             unset($_SESSION["login_redirect"]);
         } else {
-            header("Location: ../rssi-student/home.php");
+            header("Location: home.php");
         }
     } else {
         $login_failed_dialog = true;

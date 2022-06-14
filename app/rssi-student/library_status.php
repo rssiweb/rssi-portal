@@ -4,19 +4,10 @@ session_start();
 include("../util/login_util.php");
 
 if (!isLoggedIn("sid")) {
-    header("Location: index.php");
-}
-$user_check = $_SESSION['sid'];
-
-if (!$_SESSION['sid']) {
-
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
-    exit;  
+    exit;
 }
-?>
-
-<?php
 
 @$status = $_POST['get_status'];
 
@@ -26,7 +17,7 @@ if ($status == null) {
     $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$user_check' order by timestamp desc");
 } else if ($status > 0 && $status != 'ALL') {
     $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$user_check' AND bookstatus='$status' order by timestamp desc");
-}  else {
+} else {
     $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$user_check' order by timestamp desc");
 }
 
@@ -56,7 +47,7 @@ $resultArr = pg_fetch_all($result);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -92,7 +83,7 @@ $resultArr = pg_fetch_all($result);
                     <span class="noticet" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
                 </div>
                 <section class="box" style="padding: 2%;">
-                <form action="" method="POST">
+                    <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
                                 <select name="get_status" class="form-control" style="width:max-content;display:inline-block" required>
