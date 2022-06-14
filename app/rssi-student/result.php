@@ -168,9 +168,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                 </div>
                             </div>
                             <div class="col2 left noprint" style="display: inline;">
-                                <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
+                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                     <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                                <button type="button" onclick="window.print()" name="print" class="btn btn-success btn-sm" style="outline: none;">
+                                <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;">
                                     <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
                             </div>
                         </form>

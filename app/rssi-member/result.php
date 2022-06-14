@@ -56,7 +56,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
 {
     $student_id = $roww[1];
     $studentname = $roww[3];
-    $photourl = $roww[25];
+    $photourl = $roww[24];
 
 ?>
 <?php } ?>
@@ -183,9 +183,9 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 </div>
                             </div>
                             <div class="col2 left noprint" style="display: inline;">
-                                <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
+                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                     <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                                <button type="button" onclick="window.print()" name="print" class="btn btn-success btn-sm" style="outline: none;">
+                                <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;">
                                     <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
                             </div>
                         </form>
