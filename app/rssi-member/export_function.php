@@ -81,11 +81,11 @@ function fees_export()
 
     $resultArr = pg_fetch_all($result);
 
-    echo 'Fees collection date,ID/F Name,Category,Month,Amount,Collected by' . "\n";
+    echo 'Fees collection date,ID/F Name,Category,Month,Amount,Collected by,Status' . "\n";
 
     foreach ($resultArr as $array) {
 
-        echo substr($array['date'], 0, 10) . ',' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . ',' . $array['category'] . ',' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . ',' . $array['fees'] . ',' . $array['fullname'] . "\n";
+        echo substr($array['date'], 0, 10) . ',' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . ',' . $array['category'] . ',' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . ',' . $array['fees'] . ',' . $array['fullname'] . ',' . $array['pstatus'] . "\n";
     }
 }
 
