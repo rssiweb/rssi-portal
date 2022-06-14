@@ -265,6 +265,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                                 <th scope="col">Category</th>
                                 <th scope="col">Month</th>
                                 <th scope="col">Amount (&#8377;)</th>
+                                <th scope="col">Type</th>
                                 <th scope="col">Collected by</th>
                                 <th scope="col"></th>
                                 </tr>
@@ -279,20 +280,33 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         <td>' . $array['category'] . '</td>   
                         <td>' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . '</td>  
                         <td>' . $array['fees'] . '</td>
+                        <td>' . $array['ptype'] . '</td>
                         <td>' . $array['fullname'] . '</td>
                         <td>
-                        <form name="transfer_' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()">
+                        <form name="transfer_' . $array['id'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
                         <input type="hidden" name="form-type" type="text" value="transfer">
                         <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">' ?>
 
                             <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') { ?>
 
-                                <?php echo '<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                        padding: 0px;
-                        border: none;" title="Transfer"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>' ?>
+                                <?php echo '<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Transfer"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>' ?>
                             <?php } ?>
                             <?php echo ' </form>
-      </td>' ?>
+
+
+                        <form name="paydelete_' . $array['id'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
+                        <input type="hidden" name="form-type" type="text" value="paydelete">
+                        <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">' ?>
+
+                            <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') { ?>
+
+                                <?php echo '&nbsp;&nbsp;&nbsp;<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="fa-solid fa-xmark"></i></button>' ?>
+                            <?php } ?>
+                            <?php echo ' </form>
+                        
+                        
+                        
+                        </td>' ?>
                             <?php  }
                     } else if ($status == null) {
                         echo '<tr>
@@ -316,7 +330,10 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
 
     <script>
         function myFunction() {
-            alert("Fee has been transferred.");
+            alert("Amount has been transferred.");
+        }
+        function myFunctionn() {
+            alert("Entry has been deleted.");
         }
     </script>
     <script>
@@ -335,6 +352,21 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                 fetch(scriptURL, {
                         method: 'POST',
                         body: new FormData(document.forms['transfer_' + item.id])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
+        })
+
+        data.forEach(item => {
+            const form = document.forms['paydelete_' + item.id]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['paydelete_' + item.id])
                     })
                     .then(response => console.log('Success!', response))
                     .catch(error => console.error('Error!', error.message))

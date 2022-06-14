@@ -463,12 +463,20 @@ $resultArr = pg_fetch_all($result);
           <p style="display: inline; font-size: small;">Fee</p>&nbsp;
           <p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></p>
         </b><br><br>
+
         <form name="payment" action="#" method="POST" onsubmit="myFunction()">
           <input type="hidden" name="form-type" type="text" value="payment">
           <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
           <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
           <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
-          <!-- <input type="hidden" type="text" name="status2" id="count2" value="" readonly required> -->
+
+          <select name="ptype" id="ptype" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+            <option value="" disabled selected hidden>Select Type</option>
+            <option value="Fees" selected>Fees</option>
+            <option value="Fine">Fine</option>
+            <option value="Other">Other</option>
+          </select>
+
           <select name="month" id="month" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
             <option value="" disabled selected hidden>Select Month</option>
             <option value="1">January</option>
@@ -484,7 +492,9 @@ $resultArr = pg_fetch_all($result);
             <option value="11">November</option>
             <option value="12">December</option>
           </select>
-          <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required><br><br>
+
+          <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;font-size: small;" placeholder="Amount" required>&nbsp;
+          <br><br>
           <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
         </form><br>
         <script>

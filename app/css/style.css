@@ -947,3 +947,9 @@ z-index: 5001;
             background: #f2545f;
             color: #ffffff;
         }
+        
+        input[type=checkbox],
+        input[type=radio] {
+            margin: unset !important;
+            vertical-align: middle !important;
+        }

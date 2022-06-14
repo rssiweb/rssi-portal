@@ -1,6 +1,6 @@
 <!-- This API has been used in student.php file for fees collection -->
 <?php
-
+include("database.php");
 date_default_timezone_set('Asia/Kolkata');
 echo json_encode($_POST);
 if ($_POST['form-type'] == "payment") {
@@ -10,9 +10,11 @@ if ($_POST['form-type'] == "payment") {
   // @$month = join(',', $_POST['month']);
   @$month = $_POST['month'];
   @$collectedby = $_POST['collectedby'];
+  @$ptype = $_POST['ptype'];
   $now = date('Y-m-d H:i:s');
-  $feesupdate = "INSERT INTO fees VALUES ('$now','$sname','$studentid','$fees','$month','$collectedby')";
+  $feesupdate = "INSERT INTO fees (date, sname, studentid, fees, month, collectedby, ptype) VALUES ('$now','$sname','$studentid','$fees','$month','$collectedby','$ptype')";
   $result = pg_query($con, $feesupdate);
+  // echo json_encode($result);
 } ?>
 
 <?php
@@ -21,6 +23,14 @@ if ($_POST['form-type'] == "transfer") {
   @$refid = $_POST['pid'];
   $pstatus = "UPDATE fees SET  pstatus = 'transferred' WHERE id = $refid";
   $result = pg_query($con, $pstatus);
+} ?>
+
+<?php
+
+if ($_POST['form-type'] == "paydelete") {
+  @$refid = $_POST['pid'];
+  $paydelete = "DELETE from fees WHERE id = $refid";
+  $result = pg_query($con, $paydelete);
 } ?>
 
 <?php
