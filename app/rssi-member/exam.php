@@ -85,8 +85,8 @@ if ($filterstatus != 'Active') {
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class="alert alert-info" role="alert" style="text-align: -webkit-center;">Please download and install the Kalpurush.ttf file given here in the portal before opening or editing the question template of the State Module.
-                </div>
+                <!-- <div class="alert alert-info" role="alert" style="text-align: -webkit-center;">Please download and install the Kalpurush.ttf file given here in the portal before opening or editing the question template of the State Module.
+                </div> -->
 
                 <section class="box" style="padding: 2%;">
 
@@ -95,23 +95,23 @@ if ($filterstatus != 'Active') {
                             <tr>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Question paper Template</th>
-                                <th scope="col">Download Bengali font</th>
+                                <!-- <th scope="col">Download Bengali font</th> -->
                                 <th scope="col">Info</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
+                                <td id=cw>1st Term Examination (QT1/2022)- Hybrid, Max. Time - 2 hours<br><br>
 
 
                                     <table style="border:1px solid black; width:80%">
                                         <tr style="border:1px solid black">
-                                            <th style="border:1px solid black">National module</th>
-                                            <th style="border:1px solid black">State module</th>
+                                            <th style="border:1px solid black">Online-LG4S1-9</th>
+                                            <th style="border:1px solid black">Offline</th>
                                         </tr>
                                         <tr>
-                                            <td style="border:1px solid black">Written exam - 70<br>Project/VIVA - 30</td>
-                                            <td style="border:1px solid black">Written exam - 90<br>Project/VIVA - 10</td>
+                                            <td style="border:1px solid black">Written exam - 50</td>
+                                            <td style="border:1px solid black">Written exam - 30<br>Project - 20</td>
                                         </tr>
                                     </table>
                                     <br>
@@ -122,18 +122,18 @@ if ($filterstatus != 'Active') {
                                 </td>
 
                                 <td><span class="noticea">
-                                        <a href="https://drive.google.com/uc?id=1RMjfSsFNPaDQixvNPsO2ee5xgraRzhVt&export=download" title="Download" target="_blank">State module</a><br>
+                                        <!-- <a href="https://drive.google.com/uc?id=1RMjfSsFNPaDQixvNPsO2ee5xgraRzhVt&export=download" title="Download" target="_blank">State module</a><br> -->
                                         <a href="https://drive.google.com/uc?id=15yFD54mAJQzZN0l1sK3EuMRsCYSKR5ec&export=download" title="Download" target="_blank">National module</a><br></td>
 
-                                <td style="line-height: 2"><span class="noticea"><a href="https://drive.google.com/uc?id=15L-QSLklMZ1k3aWIdhPqsAeNhJL7ggFz&export=download" title="Download" target="_blank">Kalpurush.ttf</a></span></td>
+                                <!-- <td style="line-height: 2"><span class="noticea"><a href="https://drive.google.com/uc?id=15L-QSLklMZ1k3aWIdhPqsAeNhJL7ggFz&export=download" title="Download" target="_blank">Kalpurush.ttf</a></span></td> -->
 
                                 <td style="line-height: 2"><span class="noticea">
                                         <a href="https://drive.google.com/file/d/1S5iE7baHY2i49EZgRSfVRLhnQGO7QGYZ/view" target="_blank">Question paper submission date</i></a><br>
 
                                         <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
 
-                                        <!--<a href="javascript:void(0)" target="_self">Invigilation duty list</i></a><br>-->
-                                        <a href="https://drive.google.com/file/d/1wrTxXQLzPPuJr0T8BnyfkNjkM00JpzLY/view" target="_blank">Invigilation duty list</i></a><br>
+                                        <a href="javascript:void(0)" target="_self">Invigilation duty list</i></a><br>
+                                        <!-- <a href="https://drive.google.com/file/d/1wrTxXQLzPPuJr0T8BnyfkNjkM00JpzLY/view" target="_blank">Invigilation duty list</i></a><br> -->
 
                                         <a href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator</i></a><br>
                                         <a href="https://drive.google.com/file/d/13cH8Rd4aPYHPe0ltzQzQDNFAH1GRTruY/view" target="_blank">Examiner User Guide</i></a>
