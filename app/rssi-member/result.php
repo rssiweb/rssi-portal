@@ -170,6 +170,9 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                             <option hidden selected><?php echo $id ?></option>
                                         <?php }
                                         ?>
+                                        <option value="QT1/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT1/2022') {
+                                                                        echo ('selected="QT1/2022"');
+                                                                    } ?>>QT1/2022</option>
                                         <option value="QT3/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT3/2022') {
                                                                         echo ('selected="QT3/2022"');
                                                                     } ?>>QT3/2022</option>
