@@ -583,21 +583,21 @@ $resultArr = pg_fetch_all($result);
 
     //Program to disable or enable a button using javascript
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    // const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    // const d = new Date();
 
-    const d = new Date();
     // var dd = String(d.getDate()).padStart(2, '0');
     // var mm = String(d.getMonth() + 1).padStart(2, '0');
     // var yyyy = d.getFullYear();
     // document.write("The date is : " + monthNames[d.getMonth()]);
 
-    if (mydata["maxmonth"] === monthNames[d.getMonth() - 1] && mydata["feecycle"] !== "A") {
-      yes.disabled = true; //button remains disabled
-    } else if (mydata["maxmonth"] === monthNames[d.getMonth()] && mydata["feecycle"] === "A") {
-      yes.disabled = true;
-    } else {
-      yes.disabled = false;
-    } //button is enabled
+    // if (mydata["maxmonth"] === monthNames[d.getMonth() - 1] && mydata["feecycle"] !== "A") {
+    //   yes.disabled = true; //button remains disabled
+    // } else if (mydata["maxmonth"] === monthNames[d.getMonth()] && mydata["feecycle"] === "A") {
+    //   yes.disabled = true;
+    // } else {
+    //   yes.disabled = false;
+    // }
   }
 
   // When the user clicks the button, open the modal 
