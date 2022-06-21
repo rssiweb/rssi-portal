@@ -144,18 +144,13 @@
             <?php  }
             ?>
 
-            <li>
+            <li class="hidden-xs">
                 <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i>
                 </a>
             </li>
-            <li>
+            <li class="hidden-xs">
                 <a href="https://www.youtube.com/c/RSSINGO" target="_blank"> <i class="fab fa-youtube" title="Watch now"></i>
                 </a>
-            </li>
-            <li class="hidden-xs">
-                <a href="https://securegw.paytm.in/link/paymentForm/65499/LL_512357102" target='_blank' rel='im-checkout' data-behaviour='remote' data-style='light' data-text="Donate with Paytm" style="border-radius: 2px;display: inline-block;border: 1px solid #e6ebf3;padding: 0 23px;color: #182233;font-size: 12px;text-decoration: none;font-family: 'Nunito Sans', sans-serif;height: 32px;line-height: 28px;background: #00b9f5;color: #ffffff;border: 1px solid #00b9f5;">
-                    <span>Donate with</span>
-                    <img style="margin-left: 6px;vertical-align:sub;width: 50px;" src="https://staticgw.paytm.in/1.4/plogo/paytmlogo-white.png" /></a>
             </li>
         </ul>
 

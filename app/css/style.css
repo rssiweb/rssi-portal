@@ -928,7 +928,8 @@ z-index: 5001;
             }
         }
         
-        [type="submit"] {
+        [type="submit"],
+        [type="button"] {
             outline: none !important;
         }
         
