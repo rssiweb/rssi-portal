@@ -76,9 +76,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                     <span class="noticet">The last date for submission of question paper is 3/July/2022. For more details please visit Examination Portal.&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
                 </div>
-                <div class="col" style="text-align: right;">
+                <!-- <div class="col" style="text-align: right;">
                     <a href="https://paytm.me/u3jP-st" target="_blank" title="Help a journey - from childhood to livelihood"><button type="button" class="btn btn-info btn-sm">Donate Smile</button></a>
-                </div>
+                </div> -->
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
@@ -307,6 +307,25 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             fjs.parentNode.insertBefore(js, fjs);
         }(document, 'script', 'facebook-jssdk'));
     </script>-->
+
+    <div id="hellobar-bar" class="regular closable" style="bottom: 0%;">
+        <div class="hb-content-wrapper">
+            <div class="hb-text-wrapper">
+                <div class="hb-headline-text">
+                    <p><span>Help a journey - from childhood to livelihood</span></p>
+                </div>
+            </div>
+            <a href="https://rssi.in/donation-portal" target="_blank" class="btn btn-info btn-sm">
+                <div class="hb-text-holder">
+                    <p style="color: white">Donate Smile</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="hb-close-wrapper">
+            <a href="javascript:void(0);" class="icon-close" onClick="$('#hellobar-bar').fadeOut ()">&#10006;</a>
+        </div>
+    </div>
 </body>
 
 </html>

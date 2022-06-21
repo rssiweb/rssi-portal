@@ -109,7 +109,7 @@ if ($feesflag == 'd') {
                                 <td style="line-height: 2;"><span class=noticea><a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br><a href="visco.php">Visco</a><br><a href="https://drive.google.com/file/d/1b3AcN68TJa7gIai_RTyJ5989Te-TXCbq/view" target=_blank>Class schedule</a></span>
                                 </td>
                                 <td>
-                                <a href="https://paytm.me/oI-wJVz" target="_blank"><button type="button" class="btn btn-info btn-sm">Fee payment</button></a>
+                                <a href="#" target="_blank"><button type="button" class="btn btn-info btn-sm" disabled>Fee payment</button></a>
                                 </td>
 
                                 <td style="line-height: 2;"><span class="noticea"><a href="myfees.php" target="_self">My fees</a></span></td>
