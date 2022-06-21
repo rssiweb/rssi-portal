@@ -99,6 +99,7 @@ if ($feesflag == 'd') {
                             <tr>
                                 <th scope="col">Class URL</th>
                                 <th scope="col">Quick link</th>
+                                <th scope="col">Fee deposit</th>
                                 <th scope="col">Fee Details</th>
                             </tr>
                         </thead>
@@ -107,6 +108,12 @@ if ($feesflag == 'd') {
                                 <td style="line-height: 2;"><?php echo $classurl ?></td>
                                 <td style="line-height: 2;"><span class=noticea><a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br><a href="visco.php">Visco</a><br><a href="https://drive.google.com/file/d/1b3AcN68TJa7gIai_RTyJ5989Te-TXCbq/view" target=_blank>Class schedule</a></span>
                                 </td>
+                                <td>
+                                    <a href="https://securegw.paytm.in/link/paymentForm/29269/LL_512318792" target='_blank' rel='im-checkout' data-behaviour='remote' data-style='light' data-text="Pay with Paytm" style="border-radius: 2px;display: inline-block;border: 1px solid #e6ebf3;padding: 0 23px;color: #182233;font-size: 12px;text-decoration: none;font-family: 'Nunito Sans', sans-serif;height: 32px;line-height: 28px;background: #00b9f5;color: #ffffff;border: 1px solid #00b9f5;">
+                                        <span>Pay with</span>
+                                        <img style="margin-left: 6px;vertical-align:sub;width: 50px;" src="https://staticgw.paytm.in/1.4/plogo/paytmlogo-white.png" /></a>
+                                </td>
+
                                 <td style="line-height: 2;"><span class="noticea"><a href="myfees.php" target="_self">My fees</a></span></td>
                             </tr>
                         </tbody>
