@@ -336,3 +336,22 @@ if (isset($_POST['login'])) {
         });
     </script>
 </div>-->
+
+<div id="hellobar-bar" class="regular closable" style="bottom: 0%;">
+        <div class="hb-content-wrapper">
+            <div class="hb-text-wrapper">
+                <div class="hb-headline-text">
+                    <p><span>Help a journey - from childhood to livelihood</span></p>
+                </div>
+            </div>
+            <a href="https://rssi.in/donation-portal" target="_blank" class="btn btn-info btn-sm">
+                <div class="hb-text-holder">
+                    <p style="color: white">Donate Smile</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="hb-close-wrapper">
+            <a href="javascript:void(0);" class="icon-close" onClick="$('#hellobar-bar').fadeOut ()">&#10006;</a>
+        </div>
+    </div>
