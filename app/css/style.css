@@ -539,7 +539,7 @@
         }
         
         .link a:hover {
-            text-decoration: underline !important;
+            text-decoration: 1px underline !important;
             color: #F2545F !important;
         }
         
@@ -1028,4 +1028,26 @@ z-index: 5001;
             line-height: 15px;
             z-index: 1000;
             text-decoration: none;
+        }
+        /* Footer */
+        
+        .footer-bs {
+            background-color: #3c3d41;
+            color: rgba(255, 255, 255, 1.00);
+            min-height: 50px;
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+        }
+        
+        .footer-bs a {
+            color: rgba(255, 255, 255, 1.00) !important;
+        }
+        
+        .footer-bs a:hover,
+        .footer-bs a:visited,
+        .footer-bs a:active,
+        .footer-bs a:focus {
+            border-bottom: 1px dotted whitesmoke !important;
+            text-decoration: none !important;
         }

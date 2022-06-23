@@ -95,6 +95,91 @@ if (isset($_POST['login'])) {
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+
+    <style>
+        <?php include '../css/style.css';
+        include '../css/addstyle.css'; ?>;
+
+        label {
+            display: block;
+            padding-left: 15px;
+            text-indent: -15px;
+        }
+
+        .checkbox {
+            padding: 0;
+            margin: 0;
+            vertical-align: bottom;
+            position: relative;
+            top: 0px;
+            overflow: hidden;
+        }
+
+        .btn:focus,
+        .button:focus,
+        [type="submit"]:focus {
+            outline: none !important;
+        }
+    </style>
+    <!--------------- POP-UP BOX ------------
+-------------------------------------->
+    <style>
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 1;
+            /* Sit on top */
+            padding-top: 100px;
+            /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0);
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 100vh;
+        }
+
+        @media (max-width:767px) {
+            .modal-content {
+                width: 50vh;
+            }
+        }
+
+        /* The Close Button */
+
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
@@ -158,163 +243,77 @@ if (isset($_POST['login'])) {
 
         }
     </script>
-</body>
 
-</html>
-
-<?php if ($login_failed_dialog) { ?>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 col-md-offset-4" style="text-align: center;">
-                <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
+    <?php if ($login_failed_dialog) { ?>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 col-md-offset-4" style="text-align: center;">
+                    <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
+                </div>
             </div>
         </div>
+    <?php } ?>
+    <!--protected by reCAPTCHA-->
+    <script>
+        grecaptcha.ready(function() {
+            grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+                    action: 'homepage'
+                })
+                .then(function(token) {
+                    //console.log(token);
+                    document.getElementById('g-recaptcha-response').value = token;
+                });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+        });
+    </script>
+
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            Please contact RSSI Admin at 7980168159 or email at info@rssi.in
+        </div>
+
     </div>
-<?php } ?>
-<!--protected by reCAPTCHA-->
-<script>
-    grecaptcha.ready(function() {
-        grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                action: 'homepage'
-            })
-            .then(function(token) {
-                //console.log(token);
-                document.getElementById('g-recaptcha-response').value = token;
-            });
-    });
-</script>
+    <script>
+        // Get the modal
+        var modal = document.getElementById("myModal");
 
-<script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-<!-- Glow Cookies v3.0.1 -->
-<script>
-    glowCookies.start('en', {
-        analytics: 'G-S25QWTFJ2S',
-        //facebookPixel: '',
-        policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
-    });
-</script>
-<style>
-    <?php include '../css/style.css';
-    ?><?php include '../css/addstyle.css';
+        // Get the button that opens the modal
+        var btn = document.getElementById("myBtn");
 
-        ?>label {
-        display: block;
-        padding-left: 15px;
-        text-indent: -15px;
-    }
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
 
-    .checkbox {
-        padding: 0;
-        margin: 0;
-        vertical-align: bottom;
-        position: relative;
-        top: 0px;
-        overflow: hidden;
-    }
-
-    .btn:focus,
-    .button:focus,
-    [type="submit"]:focus {
-        outline: none !important;
-    }
-</style>
-<!--------------- POP-UP BOX ------------
--------------------------------------->
-<style>
-    .modal {
-        display: none;
-        /* Hidden by default */
-        position: fixed;
-        /* Stay in place */
-        z-index: 1;
-        /* Sit on top */
-        padding-top: 100px;
-        /* Location of the box */
-        left: 0;
-        top: 0;
-        width: 100%;
-        /* Full width */
-        height: 100%;
-        /* Full height */
-        overflow: auto;
-        /* Enable scroll if needed */
-        background-color: rgb(0, 0, 0);
-        /* Fallback color */
-        background-color: rgba(0, 0, 0, 0.4);
-        /* Black w/ opacity */
-    }
-
-    /* Modal Content */
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 100vh;
-    }
-
-    @media (max-width:767px) {
-        .modal-content {
-            width: 50vh;
+        // When the user clicks the button, open the modal 
+        btn.onclick = function() {
+            modal.style.display = "block";
         }
-    }
 
-    /* The Close Button */
-
-    .close {
-        color: #aaaaaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        text-align: right;
-    }
-
-    .close:hover,
-    .close:focus {
-        color: #000;
-        text-decoration: none;
-        cursor: pointer;
-    }
-</style>
-<div id="myModal" class="modal">
-
-    <!-- Modal content -->
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        Please contact RSSI Admin at 7980168159 or email at info@rssi.in
-    </div>
-
-</div>
-<script>
-    // Get the modal
-    var modal = document.getElementById("myModal");
-
-    // Get the button that opens the modal
-    var btn = document.getElementById("myBtn");
-
-    // Get the <span> element that closes the modal
-    var span = document.getElementsByClassName("close")[0];
-
-    // When the user clicks the button, open the modal 
-    btn.onclick = function() {
-        modal.style.display = "block";
-    }
-
-    // When the user clicks on <span> (x), close the modal
-    span.onclick = function() {
-        modal.style.display = "none";
-    }
-
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-        if (event.target == modal) {
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
             modal.style.display = "none";
         }
-    }
-</script>
 
-<!--<div id="thoverX" class="thover"></div>
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+
+    <!--<div id="thoverX" class="thover"></div>
 <div id="tpopupX" class="tpopup">
     <img src="/images/pride3.jpg" class="img-fluid img-responsive hidden-xs" style="display: block;margin-left: auto;margin-right: auto;">
     <p style="display: block; margin-left: 5%;margin-right: 5%; text-align: left;">This Pride Month, RSSI launches #AgarTumSaathHo, to bring together LGBTQ Community and their straight allies.<br><br> Families and friends really matter! We know that most young people from the LGBTQ community grow up having to hide their identity
@@ -336,8 +335,9 @@ if (isset($_POST['login'])) {
         });
     </script>
 </div>-->
+    <?php include("../util/footer.php"); ?>
 
-<div id="hellobar-bar" class="regular closable" style="bottom: 0%;">
+    <div id="hellobar-bar" class="regular closable" style="bottom: 0%;">
         <div class="hb-content-wrapper">
             <div class="hb-text-wrapper">
                 <div class="hb-headline-text">
@@ -355,3 +355,6 @@ if (isset($_POST['login'])) {
             <a href="javascript:void(0);" class="icon-close" onClick="$('#hellobar-bar').fadeOut ()">&#10006;</a>
         </div>
     </div>
+</body>
+
+</html>
