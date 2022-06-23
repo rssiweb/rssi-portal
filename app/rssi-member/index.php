@@ -338,17 +338,13 @@ if (isset($_POST['login'])) {
     <?php include("../util/footer.php"); ?>
 
     <div id="hellobar-bar" class="regular closable" style="bottom: 0%;">
-        <div class="hb-content-wrapper">
-            <div class="hb-text-wrapper">
-                <div class="hb-headline-text">
-                    <p><span>Help a journey - from childhood to livelihood</span></p>
-                </div>
-            </div>
-            <a href="https://rssi.in/donation-portal" target="_blank" class="btn btn-info btn-sm">
-                <div class="hb-text-holder">
-                    <p style="color: white">Donate Smile</p>
-                </div>
-            </a>
+        <div class="hb-content-wrapper" style="width:60%; text-align:left;">
+            <p style="margin-left: 5%;"> Help a journey - from childhood to livelihood. Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961.</p>
+        </div>
+        <div class="hb-content-wrapper" style="width:40%; text-align:left;">
+            <form style="margin-left: 5%;">
+                <script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_JkuxffSBCwLu2p" async> </script>
+            </form>
         </div>
 
         <div class="hb-close-wrapper">
