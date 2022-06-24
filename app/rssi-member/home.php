@@ -307,6 +307,31 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             fjs.parentNode.insertBefore(js, fjs);
         }(document, 'script', 'facebook-jssdk'));
     </script>-->
+
+    <div id="hellobar-bar" class="regular closable hidden-xs" style="bottom: 0%;">
+        <div class="hb-content-wrapper">
+            <div class="hb-text-wrapper">
+                <div class="hb-headline-text" style="display: inline; display: table-cell; vertical-align: middle;">
+                    <span>Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961.&nbsp;</span>
+                </div>
+                <form style="display: inline; display: table-cell; vertical-align: middle;">
+                    <script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_JkuxffSBCwLu2p" async> </script>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="hb-close-wrapper">
+            <a href="javascript:void(0);" class="icon-close" onClick="$('#hellobar-bar').fadeOut ()">&#10006;</a>
+        </div>
+    </div>
+
+    <script>
+        $('#hellobar-bar').hide().fadeOut('slow');
+        $(function() { // $(document).ready shorthand
+            $('#hellobar-bar').fadeIn('slow');
+        });
+    </script>
 </body>
 
 </html>

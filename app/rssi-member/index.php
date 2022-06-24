@@ -336,21 +336,6 @@ if (isset($_POST['login'])) {
     </script>
 </div>-->
     <?php include("../util/footer.php"); ?>
-
-    <div id="hellobar-bar" class="regular closable" style="bottom: 0%;">
-        <div class="hb-content-wrapper" style="width:60%; text-align:left;">
-            <p style="margin-left: 5%;"> Help a journey - from childhood to livelihood. Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961.</p>
-        </div>
-        <div class="hb-content-wrapper" style="width:40%; text-align:left;">
-            <form style="margin-left: 5%;">
-                <script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_JkuxffSBCwLu2p" async> </script>
-            </form>
-        </div>
-
-        <div class="hb-close-wrapper">
-            <a href="javascript:void(0);" class="icon-close" onClick="$('#hellobar-bar').fadeOut ()">&#10006;</a>
-        </div>
-    </div>
 </body>
 
 </html>
