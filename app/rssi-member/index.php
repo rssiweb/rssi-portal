@@ -1,5 +1,13 @@
 <?php
 session_start(); //session starts here
+include("../util/login_util.php");
+
+if (isLoggedIn("aid")) {
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: home.php");
+    exit;
+}
+
 include("database.php");
 
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
