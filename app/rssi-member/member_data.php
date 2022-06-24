@@ -86,4 +86,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $ipfl = $row[71];
         $approveddate = $row[78];
         $password_updated_by= $row[80];
-        $password_updated_on= $row[81];} ?>
+        $password_updated_on= $row[81];
+        $default_pass_updated_by= $row[82];
+        $default_pass_updated_on= $row[83];} ?>

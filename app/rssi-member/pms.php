@@ -9,6 +9,14 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
+
+if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+
 if ($role != 'Admin') {
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
@@ -26,9 +34,9 @@ if ($_POST) {
     $now = date('Y-m-d H:i:s');
 
     if ($type == "Associate") {
-        $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', password_updated_by='$user_check', password_updated_on='$now' where associatenumber='$user_id'";
+        $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', default_pass_updated_by='$user_check', default_pass_updated_on='$now' where associatenumber='$user_id'";
     } else {
-        $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash', password_updated_by='$user_check', password_updated_on='$now' where student_id='$user_id'";
+        $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash', default_pass_updated_by='$user_check', default_pass_updated_on='$now' where student_id='$user_id'";
     }
     $result = pg_query($con, $change_password_query);
     $cmdtuples = pg_affected_rows($result);
@@ -201,8 +209,11 @@ $resultArrr = pg_fetch_all($result);
                         <thead>
                             <tr>
                                 <th scope="col">User ID</th>
+                                <th scope="col">Set on</th>
+                                <th scope="col">Set by</th>
                                 <th scope="col">Changed on</th>
                                 <th scope="col">Changed by</th>
+                                
                             </tr>
                         </thead>' ?>
                         <?php if (sizeof($resultArrr) > 0) { ?>
@@ -212,11 +223,13 @@ $resultArrr = pg_fetch_all($result);
                                 echo '<tr>
                                 <td>' . @$array['associatenumber'] . @$array['student_id'] ?>
 
-                                <?php if ($array['password_updated_by'] == 'VTHN20008') { ?>
+                                <?php if ($array['password_updated_by'] == null || $array['password_updated_on'] < $array['default_pass_updated_on']) { ?>
                                     <?php echo '<p class="label label-warning">defaulter</p>' ?><?php } ?>
 
                                 <?php
                                 echo '</td>
+                                <td>' . $array['default_pass_updated_on'] . '</td>
+                                <td>' . $array['default_pass_updated_by'] . '</td>
                                 <td>' . $array['password_updated_on'] . '</td>
                                 <td>' . $array['password_updated_by'] . '</td></tr>';
                             } ?>

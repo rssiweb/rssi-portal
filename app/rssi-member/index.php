@@ -36,14 +36,15 @@ function afterlogin($con, $date)
 
     $row = pg_fetch_row($result);
     $password_updated_by = $row[80];
-
-    $_SESSION['password_updated_by'] = $password_updated_by;
+    $password_updated_on= $row[81];
+    $default_pass_updated_by = $row[82];
+    $default_pass_updated_on = $row[83];
 
     // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
     $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$associatenumber','$_SERVER[HTTP_X_REAL_IP]','$date')";
     $result = pg_query($con, $query);
 
-    if ($_SESSION['password_updated_by'] == null || ($_SESSION['password_updated_by'] == 'VTHN20008' && $_SESSION['aid'] != 'VTHN20008')) {
+    if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
         echo '<script type="text/javascript">';
         echo 'window.location.href = "defaultpasswordreset.php";';
         echo '</script>';

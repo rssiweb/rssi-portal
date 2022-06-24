@@ -8,6 +8,14 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
+
+if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+
 if ($role != 'Admin') {
 
     //header("Location: javascript:history.back()"); //redirect to the login page to secure the welcome page without login access.

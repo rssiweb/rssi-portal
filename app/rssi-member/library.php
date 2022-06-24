@@ -9,6 +9,14 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
+if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+
+
 if ($filterstatus != 'Active') {
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';

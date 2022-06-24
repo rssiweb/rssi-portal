@@ -9,6 +9,14 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
+if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+
+
 $view_users_query = "select * from claim WHERE registrationid='$user_check'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 

@@ -56,4 +56,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $password_updated_on = $row[48];
         $upload_aadhar_card = $row[49];
         $special_service = $row[50];
-        $feecycle = $row[51];} ?>
+        $feecycle = $row[51];
+        $default_pass_updated_by= $row[52];
+        $default_pass_updated_on= $row[53];} ?>

@@ -9,6 +9,14 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
+if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+
+
 $result = pg_query($con, "select * from payslip where associatenumber='$user_check' ORDER BY slno DESC;");
 if (!$result) {
     echo "An error occurred.\n";
