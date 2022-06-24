@@ -1,13 +1,7 @@
 <?php
 session_start(); //session starts here
+
 include("../util/login_util.php");
-
-if (isLoggedIn("aid")) {
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: home.php");
-    exit;
-}
-
 include("database.php");
 
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
@@ -21,7 +15,6 @@ if ($_POST) {
         return $Return;
     }
     $Return = getCaptcha($_POST['g-recaptcha-response']);
-    //var_dump($Return);
     if ($Return->success == true && $Return->score > 0.5) {
         // echo "Succes!";
     } else {
@@ -33,9 +26,51 @@ date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = false;
 
+function afterlogin($con, $date)
+{
 
+    $associatenumber = $_SESSION['aid']; //here session is used and value of $user_email store in $_SESSION.
+
+    $user_query = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'";
+    $result = pg_query($con, $user_query);
+
+    $row = pg_fetch_row($result);
+    $password_updated_by = $row[80];
+
+    $_SESSION['password_updated_by'] = $password_updated_by;
+
+    // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
+    $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$associatenumber','$_SERVER[HTTP_X_REAL_IP]','$date')";
+    $result = pg_query($con, $query);
+
+    if ($_SESSION['password_updated_by'] == null || ($_SESSION['password_updated_by'] == 'VTHN20008' && $_SESSION['aid'] != 'VTHN20008')) {
+        echo '<script type="text/javascript">';
+        echo 'window.location.href = "defaultpasswordreset.php";';
+        echo '</script>';
+    }
+
+    if (isset($_SESSION["login_redirect"])) {
+        $params = "";
+        if (isset($_SESSION["login_redirect_params"])) {
+            foreach ($_SESSION["login_redirect_params"] as $key => $value) {
+                $params = $params . "$key=$value&";
+            }
+            unset($_SESSION["login_redirect_params"]);
+        }
+        header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
+        unset($_SESSION["login_redirect"]);
+    } else {
+        header("Location: home.php");
+    }
+}
+
+if (isLoggedIn("aid")) {
+    afterlogin($con, $date);
+    exit;
+}
 
 if (isset($_POST['login'])) {
+
     $associatenumber = strtoupper($_POST['aid']);
     $colors = $_POST['pass'];
 
@@ -49,40 +84,8 @@ if (isset($_POST['login'])) {
     // Do the login stuff...
 
     if ($loginSuccess) {
-
-        $_SESSION['aid'] = $associatenumber; //here session is used and value of $user_email store in $_SESSION.
-
-        $user_query = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'";
-        $result = pg_query($con, $user_query);
-
-        $row = pg_fetch_row($result);
-        $password_updated_by = $row[80];
-
-        $_SESSION['password_updated_by'] = $password_updated_by;
-
-        // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[aid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
-        $result = pg_query($con, $query);
-
-        if ($_SESSION['password_updated_by'] == null || ($_SESSION['password_updated_by'] == 'VTHN20008' && $_SESSION['aid'] != 'VTHN20008')) {
-            echo '<script type="text/javascript">';
-            echo 'window.location.href = "defaultpasswordreset.php";';
-            echo '</script>';
-        }
-
-        if (isset($_SESSION["login_redirect"])) {
-            $params = "";
-            if (isset($_SESSION["login_redirect_params"])) {
-                foreach ($_SESSION["login_redirect_params"] as $key => $value) {
-                    $params = $params . "$key=$value&";
-                }
-                unset($_SESSION["login_redirect_params"]);
-            }
-            header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
-            unset($_SESSION["login_redirect"]);
-        } else {
-            header("Location: home.php");
-        }
+        $_SESSION['aid'] = $associatenumber;
+        afterlogin($con, $date);
     } else {
         $login_failed_dialog = true;
     }
@@ -134,25 +137,16 @@ if (isset($_POST['login'])) {
     <style>
         .modal {
             display: none;
-            /* Hidden by default */
             position: fixed;
-            /* Stay in place */
             z-index: 1;
-            /* Sit on top */
             padding-top: 100px;
-            /* Location of the box */
             left: 0;
             top: 0;
             width: 100%;
-            /* Full width */
             height: 100%;
-            /* Full height */
             overflow: auto;
-            /* Enable scroll if needed */
             background-color: rgb(0, 0, 0);
-            /* Fallback color */
             background-color: rgba(0, 0, 0, 0.4);
-            /* Black w/ opacity */
         }
 
         /* Modal Content */
@@ -294,26 +288,15 @@ if (isset($_POST['login'])) {
 
     </div>
     <script>
-        // Get the modal
         var modal = document.getElementById("myModal");
-
-        // Get the button that opens the modal
         var btn = document.getElementById("myBtn");
-
-        // Get the <span> element that closes the modal
         var span = document.getElementsByClassName("close")[0];
-
-        // When the user clicks the button, open the modal 
         btn.onclick = function() {
             modal.style.display = "block";
         }
-
-        // When the user clicks on <span> (x), close the modal
         span.onclick = function() {
             modal.style.display = "none";
         }
-
-        // When the user clicks anywhere outside of the modal, close it
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";

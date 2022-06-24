@@ -1,17 +1,11 @@
 <?php
 session_start(); //session starts here
+
 include("../util/login_util.php");
-
-if (isLoggedIn("sid")) {
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: home.php");
-    exit;
-}
-
 include("database.php");
+
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
-
 
 if ($_POST) {
     function getCaptcha($SecretKey)
@@ -21,7 +15,6 @@ if ($_POST) {
         return $Return;
     }
     $Return = getCaptcha($_POST['g-recaptcha-response']);
-    //var_dump($Return);
     if ($Return->success == true && $Return->score > 0.5) {
         // echo "Succes!";
     } else {
@@ -33,9 +26,51 @@ date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = false;
 
+function afterlogin($con, $date)
+{
 
+    $student_id = $_SESSION['sid']; //here session is used and value of $user_email store in $_SESSION.
+
+    $user_query = "select * from rssimyprofile_student WHERE student_id='$student_id'";
+    $result = pg_query($con, $user_query);
+
+    $row = pg_fetch_row($result);
+    $password_updated_by = $row[47];
+
+    $_SESSION['password_updated_by'] = $password_updated_by;
+
+    // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
+    $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$student_id','$_SERVER[HTTP_X_REAL_IP]','$date')";
+    $result = pg_query($con, $query);
+
+    if ($_SESSION['password_updated_by'] == null || $_SESSION['password_updated_by'] == 'VTHN20008') {
+        echo '<script type="text/javascript">';
+        echo 'window.location.href = "defaultpasswordreset.php";';
+        echo '</script>';
+    }
+
+    if (isset($_SESSION["login_redirect"])) {
+        $params = "";
+        if (isset($_SESSION["login_redirect_params"])) {
+            foreach ($_SESSION["login_redirect_params"] as $key => $value) {
+                $params = $params . "$key=$value&";
+            }
+            unset($_SESSION["login_redirect_params"]);
+        }
+        header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
+        unset($_SESSION["login_redirect"]);
+    } else {
+        header("Location: home.php");
+    }
+}
+
+if (isLoggedIn("sid")) {
+    afterlogin($con, $date);
+    exit;
+}
 
 if (isset($_POST['login'])) {
+
     $student_id = strtoupper($_POST['sid']);
     $colors = $_POST['pass'];
 
@@ -46,39 +81,11 @@ if (isset($_POST['login'])) {
 
     @$loginSuccess = password_verify($colors, $existingHashFromDb);
 
+    // Do the login stuff...
+
     if ($loginSuccess) {
-        $_SESSION['sid'] = $student_id; //here session is used and value of $user_email store in $_SESSION.
-
-        $user_query = "select * from rssimyprofile_student WHERE student_id='$student_id'";
-        $result = pg_query($con, $user_query);
-
-        $row = pg_fetch_row($result);
-        $password_updated_by = $row[47];
-
-
-        $_SESSION['password_updated_by'] = $password_updated_by;
-
-        $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$_POST[sid]','$_SERVER[HTTP_X_REAL_IP]','$date')";
-        $result = pg_query($con, $query);
-
-        if ($_SESSION['password_updated_by'] == null || ($_SESSION['password_updated_by'] == 'VTHN20008')) {
-            echo '<script type="text/javascript">';
-            echo 'window.location.href = "defaultpasswordreset.php";';
-            echo '</script>';
-        }
-        if (isset($_SESSION["login_redirect"])) {
-            $params = "";
-            if (isset($_SESSION["login_redirect_params"])) {
-                foreach ($_SESSION["login_redirect_params"] as $key => $value) {
-                    $params = $params . "$key=$value&";
-                }
-                unset($_SESSION["login_redirect_params"]);
-            }
-            header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
-            unset($_SESSION["login_redirect"]);
-        } else {
-            header("Location: home.php");
-        }
+        $_SESSION['sid'] = $student_id;
+        afterlogin($con, $date);
     } else {
         $login_failed_dialog = true;
     }
@@ -95,15 +102,16 @@ if (isset($_POST['login'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <title>My Profile</title>
+    <title>My Account</title>
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+
     <style>
         <?php include '../css/style.css';
-        ?><?php include '../css/addstyle.css';
+        include '../css/addstyle.css'; ?>;
 
-        ?>label {
+        label {
             display: block;
             padding-left: 15px;
             text-indent: -15px;
@@ -129,25 +137,16 @@ if (isset($_POST['login'])) {
     <style>
         .modal {
             display: none;
-            /* Hidden by default */
             position: fixed;
-            /* Stay in place */
             z-index: 1;
-            /* Sit on top */
             padding-top: 100px;
-            /* Location of the box */
             left: 0;
             top: 0;
             width: 100%;
-            /* Full width */
             height: 100%;
-            /* Full height */
             overflow: auto;
-            /* Enable scroll if needed */
             background-color: rgb(0, 0, 0);
-            /* Fallback color */
             background-color: rgba(0, 0, 0, 0.4);
-            /* Black w/ opacity */
         }
 
         /* Modal Content */
@@ -248,7 +247,6 @@ if (isset($_POST['login'])) {
     </script>
 
     <?php if ($login_failed_dialog) { ?>
-
         <div class="container">
             <div class="row">
                 <div class="col-md-4 col-md-offset-4" style="text-align: center;">
@@ -257,7 +255,6 @@ if (isset($_POST['login'])) {
             </div>
         </div>
     <?php } ?>
-
     <!--protected by reCAPTCHA-->
     <script>
         grecaptcha.ready(function() {
@@ -291,32 +288,44 @@ if (isset($_POST['login'])) {
 
     </div>
     <script>
-        // Get the modal
         var modal = document.getElementById("myModal");
-
-        // Get the button that opens the modal
         var btn = document.getElementById("myBtn");
-
-        // Get the <span> element that closes the modal
         var span = document.getElementsByClassName("close")[0];
-
-        // When the user clicks the button, open the modal 
         btn.onclick = function() {
             modal.style.display = "block";
         }
-
-        // When the user clicks on <span> (x), close the modal
         span.onclick = function() {
             modal.style.display = "none";
         }
-
-        // When the user clicks anywhere outside of the modal, close it
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
             }
         }
     </script>
+
+    <!--<div id="thoverX" class="thover"></div>
+<div id="tpopupX" class="tpopup">
+    <img src="/images/pride3.jpg" class="img-fluid img-responsive hidden-xs" style="display: block;margin-left: auto;margin-right: auto;">
+    <p style="display: block; margin-left: 5%;margin-right: 5%; text-align: left;">This Pride Month, RSSI launches #AgarTumSaathHo, to bring together LGBTQ Community and their straight allies.<br><br> Families and friends really matter! We know that most young people from the LGBTQ community grow up having to hide their identity
+        because they fear being judged and rejected even by their loved ones. But this has a severe impact on their self-esteem and sense of self-worth. Supportive parents, families, friends, teachers, and peers can all play an important role in helping
+        build self-esteem and a positive sense of self among LGBTQ youth, including gender non-conforming teens. This Pride month, RSSI NGO aims to bring forward and celebrate these stories of support, courage, love, and of understanding.</p>
+    <div class="embed-responsive embed-responsive-16by9">
+        <iframe class="embed-responsive-item" src="/images/imp.mp4" allowfullscreen></iframe>
+    </div>
+    <div id="tcloseX" class="tclose notranslate">X</div>
+    <script>
+        $("#tcloseX").click(function() {
+            $("#tpopupX").toggleClass('hidden');
+            $("#thoverX").toggleClass('hidden');
+        });
+
+        $("#thoverX").click(function() {
+            $("#tpopupX").toggleClass('hidden');
+            $("#thoverX").toggleClass('hidden');
+        });
+    </script>
+</div>-->
     <?php include("../util/footer.php"); ?>
 </body>
 
