@@ -9,6 +9,13 @@ if (!isLoggedIn("sid")) {
     exit;
 }
 
+if ($password_updated_by == null || $password_updated_by == 'VTHN20008') {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+
 if (($filterstatus != 'Active') || ($feesflag == 'd')) {
 
     echo '<script type="text/javascript">';

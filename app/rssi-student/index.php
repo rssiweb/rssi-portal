@@ -43,7 +43,7 @@ function afterlogin($con, $date)
     $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$student_id','$_SERVER[HTTP_X_REAL_IP]','$date')";
     $result = pg_query($con, $query);
 
-    if ($_SESSION['password_updated_by'] == null || $_SESSION['password_updated_by'] == 'VTHN20008') {
+    if ($password_updated_by == null || $password_updated_by == 'VTHN20008') {
         echo '<script type="text/javascript">';
         echo 'window.location.href = "defaultpasswordreset.php";';
         echo '</script>';

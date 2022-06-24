@@ -8,6 +8,13 @@ if (!isLoggedIn("sid")) {
     exit;
 }
 
+if ($password_updated_by == null || $password_updated_by == 'VTHN20008') {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 @$id = $_POST['get_id'];

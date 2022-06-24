@@ -9,6 +9,13 @@ if (!isLoggedIn("sid")) {
     exit;
 }
 
+if ($password_updated_by == null || $password_updated_by == 'VTHN20008') {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+
 @$id = $_POST['get_id'];
 $result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' and position LIKE '%-Faculty%' order by filterstatus asc,today desc");
 if (!$result) {
