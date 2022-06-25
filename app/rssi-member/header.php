@@ -331,7 +331,7 @@
         function logout() {
             alert("Your session has expired, please login again.")
             location.href = 'logout.php'
-            window.close()
+            // window.close()
         }
 
         function resetTimer() {
