@@ -5,42 +5,45 @@
 
         <ul class="pull-left info-menu  user-notify" id="menu">
             <button id="menu_icon"><i class="fa fa-bars" aria-hidden="true"></i></button>
-             <!--<li><a href="#"> <i class="fa fa-envelope"></i>
+            <!--<li><a href="#"> <i class="fa fa-envelope"></i>
                    <span class="badge">1</span>
                 </a></li>-->
-                <?php if (@$filterstatus == 'Active') {
+            <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i><!--<span class="badge">1</span>--></a>
+                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i>
+                        <!--<span class="badge">1</span>-->
+                    </a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; /*overflow-y: auto;*/">
-                    
-                    <li style="height: unset;">
+
+                        <li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/document/d/1CpnFSbSjn7wB2ey9d-ZtikgC0WlhT86fO7k3gOSLTQE/edit" target="_blank">National Module Syllabus
-                               <span class="label label-info">Apr 5, 2022</span> <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>-->
+                                <span class="label label-info">Apr 5, 2022</span>
+                                <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>-->
                             </a>
                         </li>
 
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1BPcxYM3X9PgQZDoI_9aK5lpEwuvdXVby/view" target="_blank">How to join Google space
                                 <span class="label label-info">Dec 3, 2021</span>
                             </a>
                         </li>
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1yDOMpaOaHatAaDBjRyuoaOpuDGCf9h9S/view" target="_blank">How to Accept a Google Meeting Invite
                                 <span class="label label-info">Aug 2, 2021</span>
                             </a>
                         </li>
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1GnFHc-WzcmKmLvXo3I1FOWZvio6ETDbX/view" target="_blank">RSSI Library User Guide
                                 <span class="label label-info">Aug 1, 2021</span>
                             </a>
                         </li>
-                    <!--<li style="height: unset;">
+                        <!--<li style="height: unset;">
                             <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit?usp=sharing" target="_blank">Exam Attendance Tracker_QT1/2021
                                 <span class="label label-info">Jul 9, 2021</span>
                             </a>
                         </li>-->
-                    <li style="height: unset;">
+                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting
                                 <span class="label label-info">Jul 7, 2021</span>
                             </a>
@@ -52,7 +55,8 @@
                         </li>
                         <li></li>
                     </ul>
-                </li><!------------------------------- ACTIVE STUDENT ---------------------------------->
+                </li>
+                <!------------------------------- ACTIVE STUDENT ---------------------------------->
                 <li class="profile dropdown">
                     <a href="#"> <i class="fas fa-sitemap"></i></a>
                     <ul class="dropdown-menu profile fadeIn" style="right:unset">
@@ -75,12 +79,13 @@
 
                 <li>
                     <a href="#"> <i class="fas fa-folder-plus"></i>
-                    <a href="#"> <i class="fas fa-project-diagram"></i>
+                        <a href="#"> <i class="fas fa-project-diagram"></i>
                 </li>
             <?php  }
             ?>
-                        <li>
-                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i><!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
+            <li>
+                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i>
+                    <!--<span class="badge" style="right:unset !important; left: 25px;">Rate us</span>-->
                 </a>
             </li>
             <li>
@@ -96,13 +101,13 @@
                     <span class="hidden-xs"><?php echo $studentname ?> <i class="fa fa-angle-down"></i></span>
                 </a>
                 <ul class="dropdown-menu profile fadeIn">
-                <li>
+                    <li>
                         <a>
                             Last synced: <?php echo $extracolumn ?>
                         </a>
                     </li>
                     <li>
-                    <a href="resetpassword.php">
+                        <a href="resetpassword.php">
                             <i class="fa fa-wrench"></i>
                             Reset Password
                         </a>
@@ -239,35 +244,35 @@
                 $('.logo-area').addClass('logo-icon');
                 $('#main-content').addClass('sidebar_shift');
                 $('.menu-title').css("display", "none");
-            }else{}
+            } else {}
         }
     });
-    </script>
-    <script>
-        var inactivityTime = function() {
-            var time;
-            document.onload = resetTimer;
-            document.onmousemove = resetTimer;
-            document.onmousedown = resetTimer; // touchscreen presses
-            document.ontouchstart = resetTimer;
-            document.onclick = resetTimer; // touchpad clicks
-            document.onkeydown = resetTimer; // onkeypress is deprectaed
-            document.addEventListener('scroll', resetTimer, true); // improved; see comments
+</script>
+<script>
+    var inactivityTime = function() {
+        var time;
+        document.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onmousedown = resetTimer; // touchscreen presses
+        document.ontouchstart = resetTimer;
+        document.onclick = resetTimer; // touchpad clicks
+        document.onkeydown = resetTimer; // onkeypress is deprectaed
+        document.addEventListener('scroll', resetTimer, true); // improved; see comments
 
-            function logout() {
-                alert("Your session has expired, please login again.")
-                location.href = 'logout.php'
-                window.close()
-            }
-
-            function resetTimer() {
-                clearTimeout(time);
-                time = setTimeout(logout, 1800000)
-                    // 1000 milliseconds = 1 second
-            }
-        };
-        window.onload = function() {
-            inactivityTime();
+        function logout() {
+            alert("Your session has expired, please login again.")
+            location.href = 'logout.php'
+            window.close()
         }
-    </script>
+
+        function resetTimer() {
+            clearTimeout(time);
+            time = setTimeout(logout, 1800000)
+            // 1000 milliseconds = 1 second
+        }
+    };
+    window.addEventListener("load", function() {
+        inactivityTime();
+    }, false);
+</script>
 <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>

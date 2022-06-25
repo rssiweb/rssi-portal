@@ -1,12 +1,19 @@
 <?php
 session_start();
+// Storing Session
 include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
+}
+
+if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
 }
 
 @$type = $_GET['get_id'];
@@ -62,7 +69,6 @@ while ($row = pg_fetch_array($run)) {
     <title>My Appraisal</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
     <!-- Main css -->
     <style>
         <?php include '../css/style.css'; ?>
@@ -144,6 +150,7 @@ while ($row = pg_fetch_array($run)) {
 <body>
     <?php $appraisal_active = 'active'; ?>
     <?php include 'header.php'; ?>
+
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
@@ -338,13 +345,14 @@ while ($row = pg_fetch_array($run)) {
                 });
             </script>
             <script>
-                window.onload = function() {
+                window.addEventListener("load",function(){ {
                     document.getElementById('close').onclick = function() {
                         this.parentNode.parentNode.parentNode
                             .removeChild(this.parentNode.parentNode);
                         return false;
                     };
                 };
+            },false);
             </script>
 
 

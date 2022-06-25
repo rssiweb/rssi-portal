@@ -331,7 +331,7 @@
         function logout() {
             alert("Your session has expired, please login again.")
             location.href = 'logout.php'
-            // window.close()
+            window.close()
         }
 
         function resetTimer() {
@@ -340,8 +340,8 @@
             // 1000 milliseconds = 1 second
         }
     };
-    window.onload = function() {
+    window.addEventListener("load", function() {
         inactivityTime();
-    }
+    }, false);
 </script>
 <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
