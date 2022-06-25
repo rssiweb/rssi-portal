@@ -86,7 +86,8 @@ $resultArr = pg_fetch_all($result);
                     <thead>
                         <tr>
                             <th scope="col">Name</th>
-                            <th scope="col">PAN No</th>
+                            <th scope="col">National Identifier</th>
+                            <th scope="col">National Identifier Number</th>
                             <th scope="col">Donation Date</th>
                             <th scope="col">Donated Amount/Item(s)</th>
                             <th scope="col">Invoice No</th>
@@ -99,7 +100,8 @@ $resultArr = pg_fetch_all($result);
                         echo '<tr>' ?>
                         <?php echo '
                                 <td><b>' . $array['firstname'] . '&nbsp;' . $array['lastname'] . '</b></td>
-                                <td>' . $array['panno'] . '</td>
+                                <td>' . $array['uitype'] . '</td>
+                                <td>' . $array['uinumber'] . '</td>
                                 <td>' . date("d/m/Y H:i", strtotime($array['timestamp'])) . '</td><td>' ?>
 
                         <?php if ($array['nameofitemsyoushared'] != "") { ?>

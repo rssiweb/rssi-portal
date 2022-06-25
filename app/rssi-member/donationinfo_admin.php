@@ -146,7 +146,7 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
                             <th scope="col">Contact</th>
                                 <th scope="col">Transaction id</th>
                                 <th scope="col">Amount</th>
-                        <th scope="col">PAN</th>
+                                <th scope="col">National Identifier/Number</th>
                         <th scope="col">Mode of payment</th>
                         <th scope="col">Project</th>
                         <th scope="col">Invoice</th>
@@ -167,7 +167,7 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
                                     <td>' . $array['mobilenumber'] . '<br>' . $array['emailaddress'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>
                                     <td>' . $array['currencyofthedonatedamount'] . '&nbsp;' . $array['donatedamount'] . '</td>
-                                    <td>' . $array['panno'] . '</td>
+                                    <td>' . $array['uitype'] . '/'. $array['uinumber'] .'</td>
                                     <td>' . $array['modeofpayment'] . '</td>
                                     <td>' . $array['youwantustospendyourdonationfor'] . '</td>' ?>
 

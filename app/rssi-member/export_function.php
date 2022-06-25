@@ -122,11 +122,12 @@ function donation_export()
 
     $resultArr = pg_fetch_all($result);
 
-    echo 'Date,Name,Contact,Transaction id,Amount,PAN,Mode of payment,Invoice,URL,Status,By' . "\n";
+    echo 'Sl. No.,Pre Acknowledgement Number,ID Code,Unique Identification Number,Section Code,Unique Registration Number (URN),Date of Issuance of Unique Registration Number,Name of donor,Address of donor,Donation Type,Mode of receipt,Amount of donation (Indian rupees)' . "\n";
 
     foreach ($resultArr as $array) {
 
-        echo date("d/m/Y H:i", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',' . $array['mobilenumber'] . ',' . $array['transactionid'] . ',' . $array['currencyofthedonatedamount'] . ' ' . $array['donatedamount'] . ',' . $array['panno'] . ',' . $array['modeofpayment'] . ',' . $array['invoice'] . ',' . $array['profile'] . ',' ?><?php if ($array['approvedby'] != '--' && $array['approvedby'] != 'rejected') { ?><?php echo 'accepted' ?><?php } else if ($array['approvedby'] == 'rejected') { echo 'rejected' ?><?php } else {echo 'on hold' ?><?php }echo ',' . $array['approvedby'] . "\n";
+        echo ',' . ','. $array['uitype'] . ',' . $array['uinumber'] . ',' . $array['section_code'] . ',' . $array['invoice'] . ',' . date("d/m/Y H:i", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',"' . $array['address'] . '",' . $array['donation_type'] . ',' . $array['modeofpayment'] . ',' . $array['currencyofthedonatedamount'] . ' ' . $array['donatedamount'] . "\n";
+
         }
     }
 
@@ -218,4 +219,3 @@ function donation_export()
         echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['doa'] . ',' . $array['maxmonth'] .',' . $array['special_service'] ."\n";
         }
     }
-?>
