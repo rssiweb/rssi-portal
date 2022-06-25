@@ -283,7 +283,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         <td>' . $array['ptype'] . '</td>
                         <td>' . $array['fullname'] . '</td>
                         <td>
-                        <form name="transfer_' . $array['id'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
+                        <form name="transfer_' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()" style="display: -webkit-inline-box;">
                         <input type="hidden" name="form-type" type="text" value="transfer">
                         <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">' ?>
 
