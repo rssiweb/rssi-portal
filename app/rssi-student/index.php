@@ -307,15 +307,20 @@ if (isset($_POST['login'])) {
         }
     </script>
 
-    <!--<div id="thoverX" class="thover"></div>
+<div id="thoverX" class="thover"></div>
 <div id="tpopupX" class="tpopup">
-    <img src="/images/pride3.jpg" class="img-fluid img-responsive hidden-xs" style="display: block;margin-left: auto;margin-right: auto;">
+    <!-- <img src="/images/pride3.jpg" class="img-fluid img-responsive hidden-xs" style="display: block;margin-left: auto;margin-right: auto;">
     <p style="display: block; margin-left: 5%;margin-right: 5%; text-align: left;">This Pride Month, RSSI launches #AgarTumSaathHo, to bring together LGBTQ Community and their straight allies.<br><br> Families and friends really matter! We know that most young people from the LGBTQ community grow up having to hide their identity
         because they fear being judged and rejected even by their loved ones. But this has a severe impact on their self-esteem and sense of self-worth. Supportive parents, families, friends, teachers, and peers can all play an important role in helping
         build self-esteem and a positive sense of self among LGBTQ youth, including gender non-conforming teens. This Pride month, RSSI NGO aims to bring forward and celebrate these stories of support, courage, love, and of understanding.</p>
     <div class="embed-responsive embed-responsive-16by9">
         <iframe class="embed-responsive-item" src="/images/imp.mp4" allowfullscreen></iframe>
+    </div> -->
+    
+    <div class="embed-responsive embed-responsive-16by9">
+    <iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Frssi.in%2Fvideos%2F559725239078858%2F&width=1280" width="1280" height="720" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
     </div>
+
     <div id="tcloseX" class="tclose notranslate">X</div>
     <script>
         $("#tcloseX").click(function() {
@@ -328,7 +333,7 @@ if (isset($_POST['login'])) {
             $("#thoverX").toggleClass('hidden');
         });
     </script>
-</div>-->
+</div>
     <?php include("../util/footer.php"); ?>
 </body>
 
