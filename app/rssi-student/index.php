@@ -316,10 +316,6 @@ if (isset($_POST['login'])) {
     <div class="embed-responsive embed-responsive-16by9">
         <iframe class="embed-responsive-item" src="/images/imp.mp4" allowfullscreen></iframe>
     </div> -->
-    
-    <div class="embed-responsive embed-responsive-16by9">
-    <iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Frssi.in%2Fvideos%2F559725239078858%2F&width=1280" width="1280" height="720" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
-    </div>
 
     <div id="tcloseX" class="tclose notranslate">X</div>
     <script>
