@@ -312,7 +312,7 @@ if (isset($_POST['login'])) {
         because they fear being judged and rejected even by their loved ones. But this has a severe impact on their self-esteem and sense of self-worth. Supportive parents, families, friends, teachers, and peers can all play an important role in helping
         build self-esteem and a positive sense of self among LGBTQ youth, including gender non-conforming teens. This Pride month, RSSI NGO aims to bring forward and celebrate these stories of support, courage, love, and of understanding.</p>-->
     <div class="embed-responsive embed-responsive-16by9">
-        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/f2Iz-XR8LMA" allowfullscreen></iframe>
+        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/e677aw0T0Pk" allowfullscreen></iframe>
     </div>
 
     <div id="tcloseX" class="tclose notranslate">X</div>
