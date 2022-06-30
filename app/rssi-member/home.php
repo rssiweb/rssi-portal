@@ -80,12 +80,9 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                <!-- <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
                     <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                     <span class="noticet">The last date for submission of question paper is 3/July/2022. For more details please visit Examination Portal.&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>
-                </div>
-                <!-- <div class="col" style="text-align: right;">
-                    <a href="https://paytm.me/u3jP-st" target="_blank" title="Help a journey - from childhood to livelihood"><button type="button" class="btn btn-info btn-sm">Donate Smile</button></a>
                 </div> -->
                 <section class="box" style="padding: 2%;">
 
