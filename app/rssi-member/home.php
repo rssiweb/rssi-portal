@@ -317,11 +317,10 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         <div class="hb-content-wrapper">
             <div class="hb-text-wrapper">
                 <div class="hb-headline-text" style="display: inline; display: table-cell; vertical-align: middle;">
-                    <span>Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961.&nbsp;</span>
+                    <span>Donations to Rina Shiksha Sahayak Foundation shall be eligible for tax benefits under section 80G(5)(vi) of the Income Tax Act, 1961&nbsp;</span>
+
+                    <button><a href="https://www.rssi.in/donation-portal" target="_blank" style="color:#444444; text-decoration:none">Donate Now</a></button>
                 </div>
-                <form style="display: inline; display: table-cell; vertical-align: middle;">
-                    <script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_JkuxffSBCwLu2p" async> </script>
-                </form>
             </div>
 
         </div>
