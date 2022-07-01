@@ -2,6 +2,20 @@
 session_start();
 // Storing Session
 include("../util/login_util.php");
+
+if (!isLoggedIn("aid")) {
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: index.php");
+    exit;
+}
+
+if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+$generate_order_id  = hash('sha256', microtime() );
 ?>
 
 <!DOCTYPE html>
@@ -44,10 +58,13 @@ include("../util/login_util.php");
                     <div class="panel-heading">
                         <h3 class="panel-title">Fee deposit</h3>
                     </div>
+
                     <form method="post" name="google-sheet" onsubmit="$('#loading').show();">
                         <div id="loading" class="overlay"></div>
                         <br>
                         <input type="hidden" name="form-type" value="test" required>
+                        <label for="orderid">Order ID:</label><br>
+                        <input type="text" name="orderid" value="<?php echo $generate_order_id ?>" required readonly><br><br>
                         <label for="sname">Student Name:</label><br>
                         <input type="text" name="sname" required><br><br>
                         <label for="sid">Student ID:</label><br>
@@ -77,7 +94,7 @@ this.parentNode.parentNode.style.backgroundColor=/^\d+(?:\.\d{1,2})?$/.test(this
                     $('#loading').hide();
                 })
                 .then(response => setTimeout(function() {
-                    alert("Your response has been recorded.")
+                    alert("Your response has been recorded. Your order id <?php echo $generate_order_id ?>")
                 }, 10))
                 .then(response => setTimeout(function() {
                     window.location.reload()

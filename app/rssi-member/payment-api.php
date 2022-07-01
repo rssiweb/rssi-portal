@@ -76,7 +76,8 @@ if ($_POST['form-type'] == "test") {
   @$sname = $_POST['sname'];
   @$sid = $_POST['sid'];
   @$amount = $_POST['amount'];
+  @$orderid = $_POST['orderid'];
   $now = date('Y-m-d H:i:s');
-  $test = "INSERT INTO test VALUES ('$now','$sname','$sid','$amount')";
+  $test = "INSERT INTO test VALUES ('$now','$sname','$sid','$amount','$orderid')";
   $result = pg_query($con, $test);
 } ?>
