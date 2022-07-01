@@ -44,8 +44,10 @@ include("../util/login_util.php");
                     <div class="panel-heading">
                         <h3 class="panel-title">Fee deposit</h3>
                     </div>
-                    <form method="post" autocomplete="off" name="google-sheet">
+                    <form method="post" name="google-sheet" onsubmit="$('#loading').show();">
+                        <div id="loading" class="overlay"></div>
                         <br>
+                        <input type="hidden" name="form-type" value="test" required>
                         <label for="sname">Student Name:</label><br>
                         <input type="text" name="sname" required><br><br>
                         <label for="sid">Student ID:</label><br>
@@ -61,16 +63,21 @@ include("../util/login_util.php");
     </div>
 
     <script>
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbx-AFfl2_6Q4fRY6dfqythwmr0XFJ2hhJibcuGWbUy0XozyosJEccB5z4RiP4j2SDZO/exec'
-            const form = document.forms['google-sheet']
-          
-            form.addEventListener('submit', e => {
-              e.preventDefault()
-              fetch(scriptURL, { method: 'POST', body: new FormData(form)})
-                .then(response => alert("Your response has been recorded."))
+        const scriptURL = 'payment-api.php'
+        const form = document.forms['google-sheet']
+
+        form.addEventListener('submit', e => {
+            e.preventDefault()
+            fetch(scriptURL, {
+                    method: 'POST',
+                    body: new FormData(form)
+                })
+                .then(response => {$('#loading').hide();})
+                .then(response => setTimeout(function(){alert("Your response has been recorded.")}, 100))
+                .then(response => setTimeout(function(){window.location.reload()}, 100))
                 .catch(error => console.error('Error!', error.message))
-            })
-          </script>
+        })
+    </script>
 </body>
 
 </html>

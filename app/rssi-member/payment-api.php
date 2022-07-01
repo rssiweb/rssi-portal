@@ -67,3 +67,16 @@ if ($_POST['form-type'] == "ipfclose") {
   $ipfclose = "UPDATE ipfsubmission SET  ipfstatus = 'closed', closedon = '$now' WHERE id = $ipfid";
   $result = pg_query($con, $ipfclose);
 } ?>
+
+<?php
+
+date_default_timezone_set('Asia/Kolkata');
+echo json_encode($_POST);
+if ($_POST['form-type'] == "test") {
+  @$sname = $_POST['sname'];
+  @$sid = $_POST['sid'];
+  @$amount = $_POST['amount'];
+  $now = date('Y-m-d H:i:s');
+  $test = "INSERT INTO test VALUES ('$now','$sname','$sid','$amount')";
+  $result = pg_query($con, $test);
+} ?>
