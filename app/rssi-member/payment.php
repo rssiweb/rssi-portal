@@ -53,7 +53,8 @@ include("../util/login_util.php");
                         <label for="sid">Student ID:</label><br>
                         <input type="text" name="sid" required><br><br>
                         <label for="amount">Amount:</label><br>
-                        <input type="number" name="amount" required><br><br>
+                        <input type="number" name="amount" required min="0" step="0.01" title="Currency" pattern="^\d+(?:\.\d{1,2})?$" onblur="
+this.parentNode.parentNode.style.backgroundColor=/^\d+(?:\.\d{1,2})?$/.test(this.value)"><br><br>
 
                         <button type="submit">Pay now</button>
                     </form>
@@ -72,9 +73,15 @@ include("../util/login_util.php");
                     method: 'POST',
                     body: new FormData(form)
                 })
-                .then(response => {$('#loading').hide();})
-                .then(response => setTimeout(function(){alert("Your response has been recorded.")}, 10))
-                .then(response => setTimeout(function(){window.location.reload()}, 10))
+                .then(response => {
+                    $('#loading').hide();
+                })
+                .then(response => setTimeout(function() {
+                    alert("Your response has been recorded.")
+                }, 10))
+                .then(response => setTimeout(function() {
+                    window.location.reload()
+                }, 10))
                 .catch(error => console.error('Error!', error.message))
         })
     </script>
