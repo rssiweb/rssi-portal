@@ -73,8 +73,8 @@ include("../util/login_util.php");
                     body: new FormData(form)
                 })
                 .then(response => {$('#loading').hide();})
-                .then(response => setTimeout(function(){alert("Your response has been recorded.")}, 100))
-                .then(response => setTimeout(function(){window.location.reload()}, 100))
+                .then(response => setTimeout(function(){alert("Your response has been recorded.")}, 10))
+                .then(response => setTimeout(function(){window.location.reload()}, 10))
                 .catch(error => console.error('Error!', error.message))
         })
     </script>
