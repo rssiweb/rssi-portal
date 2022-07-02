@@ -157,7 +157,7 @@ $url = ""
 
                                     </div>
                                     <div class="col-md-6">
-                                        <img src="http://web.local/images/donation/payment.jpg" alt="Google pay QR" width="100px">
+                                        <img src="/images/payment.jpg" alt="Google pay QR" width="100px">
                                     </div>
                                 </div>
                                 <br>
