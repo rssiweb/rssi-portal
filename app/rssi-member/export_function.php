@@ -126,7 +126,7 @@ function donation_export()
 
     foreach ($resultArr as $array) {
 
-        echo ',' . ','. $array['uitype'] . ',' . $array['uinumber'] . ',' . $array['section_code'] . ',' . $array['invoice'] . ',' . date("d/m/Y H:i", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',"' . $array['address'] . '",' . $array['donation_type'] . ',' . $array['modeofpayment'] . ',' . $array['currencyofthedonatedamount'] . ' ' . $array['donatedamount'] . "\n";
+        echo ',' . ','. $array['uitype'] . ',' . $array['uinumber'] . ',' . $array['section_code'] . ',AAKCR2540KF20214,' . date("d/m/Y H:i", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',"' . $array['address'] . '",' . $array['donation_type'] . ',' . $array['modeofpayment'] . ',' . $array['currencyofthedonatedamount'] . ' ' . $array['donatedamount'] . "\n";
 
         }
     }
