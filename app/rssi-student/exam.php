@@ -144,7 +144,7 @@ if ($feesflag == 'd') {
                             <tr>
                                 <!--<td><span class="noticea"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>-->
                                 <td><span class="noticea">
-                                        <a href="https://drive.google.com/file/d/1B0sONvc9bb5igUOo1gVO_INfIod9sfIW/view" title="Download" target="_blank">State module</a><br>
+                                        <!-- <a href="https://drive.google.com/file/d/1B0sONvc9bb5igUOo1gVO_INfIod9sfIW/view" title="Download" target="_blank">State module</a><br> -->
                                         <a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" title="Download" target="_blank">National module</a><br></td>
                                 <td><span class="noticea"><a href="question.php">Question paper</i></a></span></td>
                                 <td><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
