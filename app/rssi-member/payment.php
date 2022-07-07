@@ -2,20 +2,25 @@
 session_start();
 // Storing Session
 include("../util/login_util.php");
+include("../util/paytm-util.php");
 
-if (!isLoggedIn("aid")) {
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
-}
+// if (!isLoggedIn("aid")) {
+//     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+//     header("Location: index.php");
+//     exit;
+// }
 
-if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+// if (@$password_updated_by == null || @$password_updated_on < @$default_pass_updated_on) {
+//     header("Location: defaultpasswordreset.php");
+// }
 
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
-$generate_order_id  = hash('sha256', microtime() );
+
+
+/*
+* import checksum generation utility
+* You can get this utility from https://developer.paytm.com/docs/checksum/
+*/
+$order_id = "";
 ?>
 
 <!DOCTYPE html>
@@ -41,6 +46,43 @@ $generate_order_id  = hash('sha256', microtime() );
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
+    
+    <!-- payment step 3: call JS checkout paytm -->
+    <script type="application/javascript" crossorigin="anonymous" src="https://securegw.paytm.in/merchantpgpui/checkoutjs/merchants/OsXyfL78631649755177.js"></script>
+    <script>
+
+        function start_paytm_js(orderid, amount, token){
+            console.log("start paytm");
+            var config = {
+            "root": "",
+            "flow": "DEFAULT",
+            "data": {
+                "orderId": orderid /* update order id */,
+                "token": token /* update token value */,
+                "tokenType": "TXN_TOKEN",
+                "amount": amount /* update amount */
+            },
+            "handler": {
+                "notifyMerchant": function(eventName,data){
+                console.log("notifyMerchant handler function called");
+                console.log("eventName => ",eventName);
+                console.log("data => ",data);
+                } 
+            }
+            };
+
+            if(window.Paytm && window.Paytm.CheckoutJS){
+                console.log("after paytm if check");
+                window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
+                    // after successfully update configuration invoke checkoutjs
+                    window.Paytm.CheckoutJS.invoke();
+                }).catch(function onError(error){
+                    console.log("error => ",error);
+                });
+            } 
+        }
+    
+    </script>
     <script>
         glowCookies.start('en', {
             analytics: 'G-S25QWTFJ2S',
@@ -59,12 +101,10 @@ $generate_order_id  = hash('sha256', microtime() );
                         <h3 class="panel-title">Fee deposit</h3>
                     </div>
 
-                    <form method="post" name="google-sheet" onsubmit="$('#loading').show();">
+                    <form method="post" name="google-sheet" >
                         <div id="loading" class="overlay"></div>
                         <br>
                         <input type="hidden" name="form-type" value="test" required>
-                        <label for="orderid">Order ID:</label><br>
-                        <input type="text" name="orderid" value="<?php echo $generate_order_id ?>" required readonly><br><br>
                         <label for="sname">Student Name:</label><br>
                         <input type="text" name="sname" required><br><br>
                         <label for="sid">Student ID:</label><br>
@@ -90,15 +130,13 @@ this.parentNode.parentNode.style.backgroundColor=/^\d+(?:\.\d{1,2})?$/.test(this
                     method: 'POST',
                     body: new FormData(form)
                 })
-                .then(response => {
-                    $('#loading').hide();
+                .then(response => response.json())
+                .then(data => {
+                    // $('#loading').hide();
+                    console.log(data)
+                    start_paytm_js(data.orderid, data.amount, data.txnToken)
+                    // alert("Your response has been recorded. Your order id")
                 })
-                .then(response => setTimeout(function() {
-                    alert("Your response has been recorded. Your order id <?php echo $generate_order_id ?>")
-                }, 10))
-                .then(response => setTimeout(function() {
-                    window.location.reload()
-                }, 10))
                 .catch(error => console.error('Error!', error.message))
         })
     </script>
