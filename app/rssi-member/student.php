@@ -473,6 +473,7 @@ $resultArr = pg_fetch_all($result);
           <select name="ptype" id="ptype" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
             <option value="" disabled selected hidden>Select Type</option>
             <option value="Fees" selected>Fees</option>
+            <option value="Admission Fee">Admission Fee</option>
             <option value="Fine">Fine</option>
             <option value="Other">Other</option>
           </select>
