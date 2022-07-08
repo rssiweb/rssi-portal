@@ -101,7 +101,7 @@ echo '
             <td style="line-height:2">' . $array['doa'] . '&nbsp;to&nbsp;' ?>
 
         <?php if ($array['status'] != null) { ?>
-            <?php echo substr($array['remarks'], 0, 4) ?>
+            <?php echo  $array['effectivefrom'] ?>
         <?php } else { ?> <?php echo 'Present' ?>
         <?php } ?>
 
@@ -110,7 +110,7 @@ echo '
             <td>' . $array['filterstatus'] . '</td>' ?>
 
         <?php if ($array['status'] != null) { ?>
-            <?php echo '<td>' . substr($array['remarks'], 0, 4) . '</td>' ?>
+            <?php echo '<td>' . $array['effectivefrom'] . '</td>' ?>
         <?php } else { ?> <?php echo '<td>' . $today = date('d/m/Y') . '</td>' ?>
         <?php } ?>
 

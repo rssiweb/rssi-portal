@@ -58,4 +58,5 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $special_service = $row[50];
         $feecycle = $row[51];
         $default_pass_updated_by= $row[52];
-        $default_pass_updated_on= $row[53];} ?>
+        $default_pass_updated_on= $row[53];
+        $effectivefrom= $row[54];} ?>
