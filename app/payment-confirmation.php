@@ -23,7 +23,7 @@ foreach($_POST as $key => $value){
 * Find your Merchant Key in your Paytm Dashboard at https://dashboard.paytm.com/next/apikeys 
 */
 
-$isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "C6_2T26Ep@bTugrM", $paytmChecksum);
+$isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "0jsr1z9J3L_&1B3w", $paytmChecksum);
 // $isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "C6_2T26Ep@bTugrM", $paytmChecksum);
 echo json_encode($paytmParams);
 echo json_encode($_POST);
