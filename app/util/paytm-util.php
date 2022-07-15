@@ -11,7 +11,7 @@ function get_paytm_tnx_token($order_id, $amount, $customer_id){
         "requestType"   => "Payment",
         "mid"           => "OsXyfL78631649755177",
         "orderId"       => $order_id,
-        "callbackUrl"   => "https://rssi.in/payment-confirmation.php",
+        "callbackUrl"   => "https://login.rssi.in/payment-confirmation.php",
         "txnAmount"     => array(
             "value"     => $amount, # Amount
             "currency"  => "INR",
