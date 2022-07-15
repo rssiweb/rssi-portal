@@ -23,6 +23,11 @@ foreach($_POST as $key => $value){
 */
 
 $isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "C6_2T26Ep@bTugrM", $paytmChecksum);
+// $isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "C6_2T26Ep@bTugrM", $paytmChecksum);
+echo json_encode($paytmParams);
+echo json_encode($_POST);
+echo json_encode($isValidChecksum);
+
 if($isValidChecksum) {
     $orderid=$paytmParams['ORDERID'];
     // update database 
