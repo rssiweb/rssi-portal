@@ -1,7 +1,8 @@
 <?php
+
 /**
-* import checksum generation utility
-*/
+ * import checksum generation utility
+ */
 include("./rssi-member/database.php");
 require_once("./util/PaytmChecksum.php");
 
@@ -9,30 +10,26 @@ $paytmChecksum = "";
 
 /* Create a Dictionary from the parameters received in POST */
 $paytmParams = array();
-foreach($_POST as $key => $value){
-	if($key == "CHECKSUMHASH"){
-		$paytmChecksum = $value;
+foreach ($_POST as $key => $value) {
+    if ($key == "CHECKSUMHASH") {
+        $paytmChecksum = $value;
         $paytmParams[$key] = $value;
-	} else {
-		$paytmParams[$key] = $value;
-	}
+    } else {
+        $paytmParams[$key] = $value;
+    }
 }
 
 /**
-* Verify checksum
-* Find your Merchant Key in your Paytm Dashboard at https://dashboard.paytm.com/next/apikeys 
-*/
+ * Verify checksum
+ * Find your Merchant Key in your Paytm Dashboard at https://dashboard.paytm.com/next/apikeys 
+ */
 
 $isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "0jsr1z9J3L_&1B3w", $paytmChecksum);
-// $isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "C6_2T26Ep@bTugrM", $paytmChecksum);
-echo json_encode($paytmParams);
-echo json_encode($_POST);
-echo json_encode($isValidChecksum);
 
-if($isValidChecksum) {
-    $orderid=$paytmParams['ORDERID'];
+if ($isValidChecksum) {
+    $orderid = $paytmParams['ORDERID'];
     // update database 
-    if(strpos($orderid, "ORDER_") !== false) {
+    if (strpos($orderid, "ORDER_") !== false) {
         $test = "UPDATE test SET  orderstatus = 'completed' WHERE orderid = $orderid";
     }
     // else if (strpos($paytmParams['ORDERID'], "FEES_") !== false) {
@@ -41,6 +38,6 @@ if($isValidChecksum) {
     echo "Checksum Matched! payment received!";
     // success output
 } else {
-	echo "Checksum Mismatched";
+    echo "Checksum Mismatched";
     // error output
 }
