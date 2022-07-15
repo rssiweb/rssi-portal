@@ -2,7 +2,7 @@
 /**
 * import checksum generation utility
 */
-include("database.php");
+include("./rssi-member/database.php");
 require_once("./util/PaytmChecksum.php");
 
 $paytmChecksum = "";
