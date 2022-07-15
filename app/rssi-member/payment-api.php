@@ -64,7 +64,7 @@ if ($_POST['form-type'] == "test") {
   @$amount = $_POST['amount'];
   $orderid  = "ORDER_".time();
   $now = date('Y-m-d H:i:s');
-  $test = "INSERT INTO fees VALUES ('$now', '$type', '$amount','$orderid', 'initiated')";
+  $test = "INSERT INTO test VALUES ('$now', '$sname', '$sid', '$amount','$orderid', 'initiated')";
   $result = pg_query($con, $test);
 
 
