@@ -12,6 +12,7 @@ $paytmParams = array();
 foreach($_POST as $key => $value){
 	if($key == "CHECKSUMHASH"){
 		$paytmChecksum = $value;
+        $paytmParams[$key] = $value;
 	} else {
 		$paytmParams[$key] = $value;
 	}
