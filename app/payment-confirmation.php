@@ -149,7 +149,7 @@ $isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "0jsr1z9J3L_&1B3
                 <div class="col-md-6 mx-auto mt-5">
                     <div class="payment">
                         <div class="payment_header_failed">
-                            <div class="check"><i class="fa fa-check" aria-hidden="true" style="color:rgb(194,0,0);"></i></div>
+                            <div class="check"><i class="fa fa-times" aria-hidden="true" style="color:rgb(194,0,0);"></i></div>
                         </div>
                         <div class="content failed">
                             <h1>Payment Failed !</h1>
