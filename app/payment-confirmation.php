@@ -122,6 +122,7 @@ $isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "0jsr1z9J3L_&1B3
         //     $test = "UPDATE test2 VALUES SET STATUS = 'completed' where ORDER_ID = $paytmParams['ORDERID'];
         // }
         // echo "Checksum Matched! payment received!";
+        // success output
     ?>
         <div class="container">
             <div class="row">
@@ -140,8 +141,6 @@ $isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "0jsr1z9J3L_&1B3
                 </div>
             </div>
         </div>
-
-        // success output
     <?php } else {
         // echo "Checksum Mismatched";
     ?>
