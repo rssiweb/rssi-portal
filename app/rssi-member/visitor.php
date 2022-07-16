@@ -160,7 +160,7 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php echo '</td>
                                 <td>' . $array['visitorname'] . '<br>' . $array['contact'] . '<br>' . $array['email'] . '</td>
-                                <td>' . date("d/m/Y H:i", strtotime($array['visitdatefrom'])) . '</td> 
+                                <td>' . date("d/m/Y", strtotime($array['visitdatefrom'])) . '&nbsp;' . $array['visittime'] . '</td>
                                 
                                 <td>' . date("d/m/Y", strtotime($array['visitdateto'])) . '</td><td> ' ?>
 
