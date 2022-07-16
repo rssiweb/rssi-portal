@@ -133,7 +133,7 @@ $isValidChecksum = PaytmChecksum::verifySignature($paytmParams, "0jsr1z9J3L_&1B3
                         </div>
                         <div class="content">
                             <h1>Payment Success !</h1>
-                            <p>Your orderid: <?php echo @$orderid ?><br>Your payment was successful! For invoicing please check your email or contact the RSSI administrator.</p>
+                            <p>Your orderid: <?php echo @$orderid ?><br>Your payment was successful! For payment receipt, please check your email or contact RSSI administrator.</p>
                             <a href="javascript:history.back()">Go to Home</a>
                         </div>
 
