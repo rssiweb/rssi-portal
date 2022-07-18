@@ -13,23 +13,28 @@ if (!isLoggedIn("aid")) {
 
 if ($role == 'Admin') {
 
-  @$id = $_POST['get_aid'];
+  @$id = strtoupper($_POST['get_aid']);
 
   if ($id == null && $status == 'ALL') {
     $result = pg_query($con, "SELECT * FROM claim order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus!='rejected'");
   } else if ($id == null && $status != 'ALL') {
     $result = pg_query($con, "SELECT * FROM claim WHERE year='$status' order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE year='$status' AND claimstatus!='rejected'");
   } else if ($id > 0 && $status != 'ALL') {
     $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' AND year='$status' order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id' AND year='$status'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND year='$status' AND claimstatus!='rejected'");
   } else if ($id > 0 && $status == 'ALL') {
     $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND claimstatus!='rejected'");
   } else {
     $result = pg_query($con, "SELECT * FROM claim order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus!='rejected'");
   }
 }
 
@@ -37,6 +42,7 @@ if ($role != 'Admin') {
 
   $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$user_check' AND year='$status' order by id desc");
   $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check' AND year='$status'");
+  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check' AND year='$status' AND claimstatus!='rejected'");
 }
 
 if (!$result) {
@@ -46,6 +52,7 @@ if (!$result) {
 
 $resultArr = pg_fetch_all($result);
 $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
+$resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 ?>
 
 
@@ -105,7 +112,8 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
       <div class="col-md-12">
         <div class="row">
           <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
-            Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total Approved amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
+            Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+            <br>Total Approved amount:&nbsp;<p class="label label-success"><?php echo ($resultArrr) ?></p>&nbsp;/&nbsp;<p class="label label-default"><?php echo ($resultArrrr) ?></p>
           </div>
           <!-- <div class="col" style="display: inline-block; width:47%; text-align:right; font-size:small">
             Home / Reimbursement Status
@@ -115,8 +123,8 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
-              <?php if ($role == 'Admin') { ?>
-                <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
+                <?php if ($role == 'Admin') { ?>
+                  <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
                 <?php } ?>
                 <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
                   <?php if ($status == null) { ?>
