@@ -16,14 +16,35 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
+if ($role == 'Admin') {
 
-$result = pg_query($con, "select * from payslip where associatenumber='$user_check' ORDER BY slno DESC;");
+    @$id = strtoupper($_POST['get_aid']);
+
+    if ($id > 0 && $id != 'ALL') {
+        $result = pg_query($con, "SELECT * FROM payslip WHERE associatenumber='$id' order by slno DESC");
+        $totalamount = pg_query($con, "SELECT SUM(netpay) FROM payslip WHERE associatenumber='$id'");
+
+    } else if ($id == 'ALL') {
+        $result = pg_query($con, "SELECT * FROM payslip order by slno DESC");
+        $totalamount = pg_query($con, "SELECT SUM(netpay) FROM payslip");
+    } else {
+        $result = pg_query($con, "SELECT * FROM payslip WHERE slno is null");
+        $totalamount = pg_query($con, "SELECT SUM(netpay) FROM payslip WHERE slno is null");
+    }
+}
+
+
+if ($role != 'Admin') {
+    $result = pg_query($con, "select * from payslip where associatenumber='$user_check' ORDER BY slno DESC;");
+    $totalamount = pg_query($con, "SELECT SUM(netpay) FROM payslip where associatenumber='$user_check'");
+}
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
 
 $resultArr = pg_fetch_all($result);
+$resultArrr = pg_fetch_result($totalamount, 0, 0);
 ?>
 
 <!DOCTYPE html>
@@ -66,15 +87,33 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                    <div class="col" style="display: inline-block; width:99%; text-align:right">
+                    <!-- <div class="col" style="display: inline-block; width:99%; text-align:right">
                         <p style="font-size:small"><span class="noticea" style="line-height: 2;"><a href="document.php">My Document</a></span> / Payslip</p>
                     </div>
 
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                    </div> -->
+                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
+                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                        <br>Total paid amount:&nbsp;<p class="label label-success"><?php echo ($resultArrr) ?></p>
                     </div>
-                </div>
-
+                </div><br>
+                <?php if ($role == 'Admin') { ?>
+                    <form action="" method="POST">
+                        <div class="form-group" style="display: inline-block;">
+                            <div class="col2" style="display: inline-block;">
+                                <?php if ($role == 'Admin') { ?>
+                                    <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
+                                <?php } ?>
+                            </div>
+                        </div>
+                        <div class="col2 left" style="display: inline-block;">
+                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                        </div>
+                    </form>
+                <?php } ?>
                 <?php echo '
                        <table class="table">
                         <thead style="font-size: 12px;">
@@ -82,6 +121,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Reference number</th>
                                 <th scope="col">Date</th>
                                 <th scope="col">Class count</th>
+                                <th scope="col">Amount</th>
                                 <th scope="col">Transaction ID</th>
                                 <th scope="col">Payslip</th>
                             </tr>
@@ -94,6 +134,7 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['payslipid'] . '</td>
                                 <td>' . $array['date'] . '</td>
                                 <td>' . $array['classcount'] . '</td>
+                                <td>' . $array['netpay'] . '</td>
                                 <td>' . $array['transaction_id'] . '</td>
                                 <td><span class="noticea"><a href="' . $array['profile'] . '" target="_blank" title="' . $array['filename'] . '"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
                                 
