@@ -174,7 +174,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="label label-default"><?php echo ($resultArrr - $resultArrrr) ?></p> + <p class="label label-success"><?php echo ($resultArrrr) ?></p> = <p class="label label-info"><?php echo ($resultArrr) ?></p>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / <span class="noticea"><a href="faculty.php" target="_self">RSSI Student</a></span> / Fees Details<br><br>
+                        Home / <span class="noticea"><a href="student.php" target="_self">RSSI Student</a></span> / Fees Details<br><br>
                         <form method="POST" action="export_function.php">
                             <input type="hidden" value="fees" name="export_type" />
                             <input type="hidden" value="<?php echo $id ?>" name="id" />
