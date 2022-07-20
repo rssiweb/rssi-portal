@@ -21,6 +21,7 @@ if ($filterstatus != 'Active') {
 @$category = $_POST['get_category'];
 @$class = $_POST['get_class'];
 @$stid = $_POST['get_stid'];
+@$is_user = $_POST['is_user'];
 // $categories = "'".implode("','", $category)."'";
 
 
@@ -241,7 +242,7 @@ $resultArr = pg_fetch_all($result);
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
                 <input type="hidden" name="form-type" type="text" value="search">
-                <select name="get_module" id="get_module" class="form-control" style="width:max-content; display:inline-block" required disabled>
+                <select name="get_module" id="get_module" class="form-control" style="width:max-content; display:inline-block" required>
                   <?php if ($module == null) { ?>
                     <option value="" disabled selected hidden>Select Module</option>
                   <?php
@@ -314,13 +315,35 @@ $resultArr = pg_fetch_all($result);
             <div class="col2 left" style="display: inline-block;">
               <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                 <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-            </div><br>
-                <input type="checkbox" name="is_user" id="is_user" onclick="enableCreateUser()" checked/>
-                <label for="is_user" style="font-weight: 400;">Search by Student ID</label>
+            </div>
+            <div id="filter-checks">
+              <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+              <label for="is_user" style="font-weight: 400;">Search by Student ID</label>
+            </div>
           </form>
           <script>
-            function enableCreateUser() {
-              if (document.getElementById("is_user").checked) {
+            if ($('#is_user').not(':checked').length > 0) {
+
+              document.getElementById("get_module").disabled = false;
+              document.getElementById("get_id").disabled = false;
+              document.getElementById("get_category").disabled = false;
+              document.getElementById("get_class").disabled = false;
+              document.getElementById("get_stid").disabled = true;
+
+            } else {
+
+              document.getElementById("get_module").disabled = true;
+              document.getElementById("get_id").disabled = true;
+              document.getElementById("get_category").disabled = true;
+              document.getElementById("get_class").disabled = true;
+              document.getElementById("get_stid").disabled = false;
+
+            }
+
+            const checkbox = document.getElementById('is_user');
+
+            checkbox.addEventListener('change', (event) => {
+              if (event.target.checked) {
                 document.getElementById("get_module").disabled = true;
                 document.getElementById("get_id").disabled = true;
                 document.getElementById("get_category").disabled = true;
@@ -333,7 +356,7 @@ $resultArr = pg_fetch_all($result);
                 document.getElementById("get_class").disabled = false;
                 document.getElementById("get_stid").disabled = true;
               }
-            }
+            })
           </script>
 
           <?php
