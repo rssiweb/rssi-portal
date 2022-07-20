@@ -20,7 +20,10 @@ if ($filterstatus != 'Active') {
 @$id = $_POST['get_id'];
 @$category = $_POST['get_category'];
 @$class = $_POST['get_class'];
+@$stid = $_POST['get_stid'];
 // $categories = "'".implode("','", $category)."'";
+
+
 
 if ($id == 'ALL' && $category == 'ALL' && ($class == 'ALL' || $class == null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
@@ -83,6 +86,13 @@ if ($id == 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class == null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
     ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE module='$module' AND category='$category' order by category asc, studentname asc");
+}
+
+if ($stid != null && $module == null  && $id == null && $category == null && $class == null) {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
+  left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
+    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE student_id='$stid' order by filterstatus asc, category asc, studentname asc");
 }
 
 
@@ -231,7 +241,7 @@ $resultArr = pg_fetch_all($result);
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
                 <input type="hidden" name="form-type" type="text" value="search">
-                <select name="get_module" class="form-control" style="width:max-content; display:inline-block" required>
+                <select name="get_module" id="get_module" class="form-control" style="width:max-content; display:inline-block" required disabled>
                   <?php if ($module == null) { ?>
                     <option value="" disabled selected hidden>Select Module</option>
                   <?php
@@ -242,7 +252,7 @@ $resultArr = pg_fetch_all($result);
                   <option>National</option>
                   <option>State</option>
                 </select>
-                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
+                <select name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" required disabled>
                   <?php if ($id == null) { ?>
                     <option value="" disabled selected hidden>Select Status</option>
                   <?php
@@ -254,7 +264,7 @@ $resultArr = pg_fetch_all($result);
                   <option>Inactive</option>
                   <option>ALL</option>
                 </select>
-                <select name="get_category" class="form-control" style="width:max-content;display:inline-block" required>
+                <select name="get_category" id="get_category" class="form-control" style="width:max-content;display:inline-block" required disabled>
                   <?php if ($category == null) { ?>
                     <option value="" disabled selected hidden>Select Category</option>
                   <?php
@@ -274,7 +284,7 @@ $resultArr = pg_fetch_all($result);
                   <option>Undefined</option>
                   <option>ALL</option>
                 </select>
-                <select name="get_class" class="form-control" style="width:max-content; display:inline-block">
+                <select name="get_class" id="get_class" class="form-control" style="width:max-content; display:inline-block" disabled>
                   <?php if ($class == null) { ?>
                     <option value="" disabled selected hidden>Select Class</option>
                   <?php
@@ -298,13 +308,33 @@ $resultArr = pg_fetch_all($result);
                   <option>x</option>
                   <option>ALL</option>
                 </select>
+                <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>" required>
               </div>
             </div>
             <div class="col2 left" style="display: inline-block;">
               <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                 <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-            </div>
+            </div><br>
+                <input type="checkbox" name="is_user" id="is_user" onclick="enableCreateUser()" checked/>
+                <label for="is_user" style="font-weight: 400;">Search by Student ID</label>
           </form>
+          <script>
+            function enableCreateUser() {
+              if (document.getElementById("is_user").checked) {
+                document.getElementById("get_module").disabled = true;
+                document.getElementById("get_id").disabled = true;
+                document.getElementById("get_category").disabled = true;
+                document.getElementById("get_class").disabled = true;
+                document.getElementById("get_stid").disabled = false;
+              } else {
+                document.getElementById("get_module").disabled = false;
+                document.getElementById("get_id").disabled = false;
+                document.getElementById("get_category").disabled = false;
+                document.getElementById("get_class").disabled = false;
+                document.getElementById("get_stid").disabled = true;
+              }
+            }
+          </script>
 
           <?php
           echo '<table class="table">
@@ -353,7 +383,7 @@ $resultArr = pg_fetch_all($result);
         </tr>';
             } ?>
             <?php
-          } else if ($module == "") {
+          } else if ($stid == "") {
             ?>
               <tr>
                 <td colspan="5">Please select Filter value.</td>
