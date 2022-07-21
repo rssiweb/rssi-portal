@@ -352,47 +352,50 @@ $resultArr = pg_fetch_all($result);
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
                             echo '<tr>
-            <td><div class="icon-container"><img src="' . $array['photo'] . '" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>'
-                        ?>
+            <td>' ?>
+                            <?php if ($array['photo'] != null) { ?>
+                                <?php echo '<div class="icon-container"><img src="' . $array['photo'] . '" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>' ?>
+                            <?php } else { ?> <?php echo '<div class="icon-container"><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>'
+                                                ?><?php } ?>
 
-                            <?php if ($array['logintime'] != null) { ?>
+                                <?php if ($array['logintime'] != null) { ?>
 
-                                <?php if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
+                                    <?php if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
 
-                                    <?php echo '<div class="status-circle" title="Online"></div>' ?>
+                                        <?php echo '<div class="status-circle" title="Online"></div>' ?>
 
-                                <?php } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>' ?>
+                                    <?php } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>' ?>
+
+                                    <?php }
+                                } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>' ?>
 
                                 <?php }
-                            } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>' ?>
-
-                            <?php }
-                            echo '</div></td>
+                                echo '</div></td>
             <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
             <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['originaldoj'] . '<br>' . $array['yos'] . '</td>
             <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
             <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>' ?>
-                            <?php if ($id == "Active") { ?>
-                                <?php echo '<td><span class="noticea"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>' ?>
-                            <?php } else { ?> <?php echo '<td></td>' ?>
-                            <?php } ?>
+                                <?php if ($id == "Active") { ?>
+                                    <?php echo '<td><span class="noticea"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>' ?>
+                                <?php } else { ?> <?php echo '<td></td>' ?>
+                                <?php } ?>
 
-                            <?php echo '<td style="white-space:unset">' . $array['astatus'] ?><br>
+                                <?php echo '<td style="white-space:unset">' . $array['astatus'] ?><br>
 
-                            <?php if ($array['on_leave'] != null && $array['filterstatus'] != 'Inactive') { ?>
-                                <?php echo '<br><p class="label label-danger">on leave</p>' ?>
-                            <?php } else {
-                            } ?>
-                            <?php if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') { ?>
-                                <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
-                            <?php    } ?>
-                            <?php if ($array['assetdetails'] != null && $array['status'] != 'Closed' && $array['category'] == 'Asset') { ?>
-                                <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>' ?>
-                            <?php } else if ($array['agreementname'] != null && $array['status'] != 'Closed' && $array['category'] != 'Asset') { ?>
-                                <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-warning">agreement</p></a>' ?>
-                            <?php } ?>
+                                <?php if ($array['on_leave'] != null && $array['filterstatus'] != 'Inactive') { ?>
+                                    <?php echo '<br><p class="label label-danger">on leave</p>' ?>
+                                <?php } else {
+                                } ?>
+                                <?php if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') { ?>
+                                    <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
+                                <?php    } ?>
+                                <?php if ($array['assetdetails'] != null && $array['status'] != 'Closed' && $array['category'] == 'Asset') { ?>
+                                    <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>' ?>
+                                <?php } else if ($array['agreementname'] != null && $array['status'] != 'Closed' && $array['category'] != 'Asset') { ?>
+                                    <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-warning">agreement</p></a>' ?>
+                                <?php } ?>
 
-                            <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
+                                <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
             <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
             <td style="white-space: unset;">
             
@@ -405,33 +408,33 @@ $resultArr = pg_fetch_all($result);
                         <input type="hidden" type="text" name="ipf" id="ipf" value="' . $array['googlechat'] . '" readonly required>
                         <input type="hidden" name="flag" type="text" value="initiated" readonly>' ?>
 
-                            <?php if ($role == 'Admin') { ?>
+                                <?php if ($role == 'Admin') { ?>
 
-                                <?php echo '<button type="submit" id="yes" style=" outline: none;background: none;
+                                    <?php echo '<button type="submit" id="yes" style=" outline: none;background: none;
                         padding: 0px;
                         border: none;" title="Release IPF"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777""></i></button>' ?>
-                            <?php } ?>
-                        <?php echo ' </form>
+                                <?php } ?>
+                            <?php echo ' </form>
       </td>
             </tr>';
                         } ?>
-                    <?php
+                        <?php
                     } else if ($id == "") {
-                    ?>
-                        <tr>
-                            <td colspan="5">Please select Status.</td>
-                        </tr>
-                    <?php
+                        ?>
+                            <tr>
+                                <td colspan="5">Please select Status.</td>
+                            </tr>
+                        <?php
                     } else {
-                    ?>
-                        <tr>
-                            <td colspan="5">No record found for <?php echo $id ?></td>
-                        </tr>
-                    <?php }
+                        ?>
+                            <tr>
+                                <td colspan="5">No record found for <?php echo $id ?></td>
+                            </tr>
+                        <?php }
 
                     echo '</tbody>
                         </table>';
-                    ?>
+                        ?>
             </div>
             </div>
             </div>

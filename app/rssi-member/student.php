@@ -406,16 +406,22 @@ $resultArr = pg_fetch_all($result);
         </tr>';
             } ?>
             <?php
-          } else if ($stid == "") {
+          } else if ($module == "" && $stid == "") {
             ?>
               <tr>
                 <td colspan="5">Please select Filter value.</td>
               </tr>
             <?php
-          } else {
+          } else if (sizeof($resultArr) == 0 && $stid == "") {
             ?>
               <tr>
                 <td colspan="5">No record found for <?php echo $module ?>, <?php echo $id ?> and <?php echo $category ?>&nbsp;<?php echo $class ?></td>
+              </tr>
+
+            <?php } else if (sizeof($resultArr) == 0 && $stid != "") {
+            ?>
+              <tr>
+                <td colspan="5">No record found for <?php echo $stid ?></td>
               </tr>
             <?php }
 
