@@ -26,6 +26,8 @@ setlocale(LC_TIME, 'fr_FR.UTF-8');
 @$id = $_POST['get_aid'];
 @$status = $_POST['get_id'];
 @$section = $_POST['get_category'];
+@$stid = $_POST['get_stid'];
+@$is_user = $_POST['is_user'];
 
 if (($section != null && $section != 'ALL') && ($status != null && $status != 'ALL')) {
 
@@ -97,12 +99,30 @@ if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == n
     WHERE DATE_PART('year', date::date)=$id AND pstatus='transferred'");
 }
 
+if ($stid != null && $status == null && $section == null && $id == null) {
 
-if ($id == null) {
+    $result = pg_query($con, "SELECT * FROM fees 
+    
+    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    
+    WHERE fees.studentid='$stid' order by id desc");
+
+    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE fees.studentid='$stid'");
+
+    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees
+    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
+    WHERE fees.studentid='$stid' AND pstatus='transferred'");
+}
+
+if ($stid == null && $status == null && $section == null && $id == null) {
     $result = pg_query($con, "SELECT * FROM fees WHERE month='0'");
     $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
     $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
 }
+
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -192,7 +212,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
 
-                                <select name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
+                                <select name="get_aid" id="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
                                     <?php if ($id == null) { ?>
                                         <option value="" hidden selected>Select year</option>
                                     <?php
@@ -204,7 +224,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                                     <option>2021</option>
                                 </select>
 
-                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
+                                <select name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
                                     <?php if ($status == null) { ?>
                                         <option value="" hidden selected>Select month</option>
                                     <?php
@@ -227,7 +247,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                                     <option>ALL</option>
                                 </select>
 
-                                <select name="get_category" class="form-control" style="width:max-content;display:inline-block">
+                                <select name="get_category" id="get_category" class="form-control" style="width:max-content;display:inline-block">
                                     <?php if ($section == null) { ?>
                                         <option value="" disabled selected hidden>Select Category</option>
                                     <?php
@@ -247,14 +267,51 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                                     <option>Undefined</option>
                                     <option>ALL</option>
                                 </select>
-
+                                <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>" required>
                             </div>
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                 <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                         </div>
+                        <div id="filter-checks">
+                            <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                            <label for="is_user" style="font-weight: 400;">Search by Student ID</label>
+                        </div>
                     </form>
+                    <script>
+                        if ($('#is_user').not(':checked').length > 0) {
+
+                            document.getElementById("get_aid").disabled = false;
+                            document.getElementById("get_id").disabled = false;
+                            document.getElementById("get_category").disabled = false;
+                            document.getElementById("get_stid").disabled = true;
+
+                        } else {
+
+                            document.getElementById("get_aid").disabled = true;
+                            document.getElementById("get_id").disabled = true;
+                            document.getElementById("get_category").disabled = true;
+                            document.getElementById("get_stid").disabled = false;
+
+                        }
+
+                        const checkbox = document.getElementById('is_user');
+
+                        checkbox.addEventListener('change', (event) => {
+                            if (event.target.checked) {
+                                document.getElementById("get_aid").disabled = true;
+                                document.getElementById("get_id").disabled = true;
+                                document.getElementById("get_category").disabled = true;
+                                document.getElementById("get_stid").disabled = false;
+                            } else {
+                                document.getElementById("get_aid").disabled = false;
+                                document.getElementById("get_id").disabled = false;
+                                document.getElementById("get_category").disabled = false;
+                                document.getElementById("get_stid").disabled = true;
+                            }
+                        })
+                    </script>
                     <?php echo '
                         <table class="table">
                             <thead style="font-size: 12px;">
@@ -302,25 +359,34 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
 
                                 <?php echo '&nbsp;&nbsp;&nbsp;<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="fa-solid fa-xmark"></i></button>' ?>
                             <?php } ?>
-                            <?php echo ' </form>
+                        <?php echo ' </form>
                         
                         
                         
-                        </td>' ?>
-                            <?php  }
-                    } else if ($status == null) {
-                        echo '<tr>
-                                <td colspan="5">Please select Filter value.</td>
-                            </tr>';
-                    } else {
-                        echo '<tr>
-                            <td colspan="5">No record found for' ?>&nbsp;<?php echo $id ?>&nbsp;<?php echo $status ?>
-                        <?php echo '</td>
-                        </tr>';
-                    }
+                        </td></tr>';
+                        } ?>
+                    <?php
+                    } else if ($id == "" && $stid == "") {
+                    ?>
+                        <tr>
+                            <td colspan="5">Please select Filter value.</td>
+                        </tr>
+                    <?php
+                    } else if (sizeof($resultArr) == 0 && $stid == "") {
+                    ?>
+                        <tr>
+                            <td colspan="5">No record found for <?php echo @$id ?>, <?php echo @$status ?> and <?php echo @$section ?></td>
+                        </tr>
+
+                    <?php } else if (sizeof($resultArr) == 0 && $stid != "") {
+                    ?>
+                        <tr>
+                            <td colspan="5">No record found for <?php echo $stid ?></td>
+                        </tr>
+                    <?php }
                     echo '</tbody>
                         </table>';
-                        ?>
+                    ?>
                 </section>
             </div>
         </section>
@@ -332,6 +398,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
         function myFunction() {
             alert("Amount has been transferred.");
         }
+
         function myFunctionn() {
             alert("Entry has been deleted.");
         }
