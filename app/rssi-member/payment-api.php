@@ -56,7 +56,7 @@ if ($_POST['form-type'] == "ipfclose") {
   $now = date('Y-m-d H:i:s');
   $ipfclose = "UPDATE ipfsubmission SET  ipfstatus = 'closed', closedon = '$now' WHERE id = $ipfid";
   $result = pg_query($con, $ipfclose);
-} 
+}
 
 if ($_POST['form-type'] == "test") {
   @$sname = $_POST['sname'];

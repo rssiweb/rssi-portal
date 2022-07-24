@@ -91,6 +91,9 @@
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-building-user"></i>&nbsp;Visitor pass</a>
                             </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="gps.php"><i class="fa-solid fa-network-wired"></i>&nbsp;GPS</a>
+                            </li>
                         <?php }
                         ?>
 

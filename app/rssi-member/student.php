@@ -253,7 +253,7 @@ $resultArr = pg_fetch_all($result);
                   <option>National</option>
                   <option>State</option>
                 </select>
-                <select name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" required disabled>
+                <select name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" required>
                   <?php if ($id == null) { ?>
                     <option value="" disabled selected hidden>Select Status</option>
                   <?php
@@ -265,7 +265,7 @@ $resultArr = pg_fetch_all($result);
                   <option>Inactive</option>
                   <option>ALL</option>
                 </select>
-                <select name="get_category" id="get_category" class="form-control" style="width:max-content;display:inline-block" required disabled>
+                <select name="get_category" id="get_category" class="form-control" style="width:max-content;display:inline-block" required>
                   <?php if ($category == null) { ?>
                     <option value="" disabled selected hidden>Select Category</option>
                   <?php
@@ -285,7 +285,7 @@ $resultArr = pg_fetch_all($result);
                   <option>Undefined</option>
                   <option>ALL</option>
                 </select>
-                <select name="get_class" id="get_class" class="form-control" style="width:max-content; display:inline-block" disabled>
+                <select name="get_class" id="get_class" class="form-control" style="width:max-content; display:inline-block">
                   <?php if ($class == null) { ?>
                     <option value="" disabled selected hidden>Select Class</option>
                   <?php
