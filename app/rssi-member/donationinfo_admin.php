@@ -162,7 +162,7 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
               <?php
               echo '
 
-                                <td>' . date("d/m/Y H:i", strtotime($array['timestamp'])) . '</td>
+                                <td>' . date("d/m/Y H:i:s", strtotime($array['timestamp'])) . '</td>
                                 <td>' . $array['firstname'] . '&nbsp;' . $array['lastname'] . '</td>   
                                     <td>' . $array['mobilenumber'] . '<br>' . $array['emailaddress'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>

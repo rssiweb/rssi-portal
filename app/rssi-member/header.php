@@ -177,7 +177,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="profile.php">
+                        <a href="myprofile.php">
                             <i class="fa fa-user"></i>
                             Profile
                         </a>

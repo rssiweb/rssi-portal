@@ -16,8 +16,22 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
-$result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"); //select query for viewing users.  
+if ($role == 'Admin') {
 
+    @$id = strtoupper($_POST['get_aid']);
+
+    if ($id > 0) {
+        $result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$id'");
+    } else {
+        $result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber=''");
+    }
+
+}
+
+if ($role != 'Admin') {
+
+$result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"); //select query for viewing users.  
+}
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -96,6 +110,21 @@ $resultArr = pg_fetch_all($result);
                         </tbody>
                     </table>
                     <hr>
+                    <?php if ($role == 'Admin') { ?>
+                    <form action="" method="POST">
+                        <div class="form-group" style="display: inline-block;">
+                            <div class="col2" style="display: inline-block;">
+                                <?php if ($role == 'Admin') { ?>
+                                    <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
+                                <?php } ?>
+                            </div>
+                        </div>
+                        <div class="col2 left" style="display: inline-block;">
+                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                        </div>
+                    </form>
+                <?php } ?>
                     <b><span class="underline">History</span></b>
                     <?php echo ' <table class="table">
                         <thead style="font-size: 12px;">
