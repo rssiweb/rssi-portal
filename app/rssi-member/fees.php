@@ -171,10 +171,6 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                 margin-left: 2%;
             }
         }
-
-        #btn {
-            border: none !important;
-        }
     </style>
 
 </head>

@@ -25,6 +25,14 @@ if ($_POST['form-type'] == "transfer") {
   $result = pg_query($con, $pstatus);
 } 
 
+
+if ($_POST['form-type'] == "remarksedit") {
+  @$itemid = $_POST['itemid'];
+  @$remarks = $_POST['remarks'];
+  $remarksedit = "UPDATE gps SET  remarks = '$remarks' WHERE itemid = '$itemid'";
+  $result = pg_query($con, $remarksedit);
+} 
+
 if ($_POST['form-type'] == "paydelete") {
   @$refid = $_POST['pid'];
   $paydelete = "DELETE from fees WHERE id = $refid";

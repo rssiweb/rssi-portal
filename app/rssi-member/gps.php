@@ -160,7 +160,7 @@ $resultArr = pg_fetch_all($result);
                                 <div class="col2" style="display: inline-block;">
 
                                     <span class="input-help">
-                                        <input type="text" name="itemid" class="form-control" style="width:max-content; display:inline-block" placeholder="Item ID" value="<?php echo time() ?>" required readonly>
+                                        <input type="text" name="itemid" class="form-control" style="width:max-content; display:inline-block" placeholder="Item ID" value="A-<?php echo time() ?>" required readonly>
                                         <small id="passwordHelpBlock" class="form-text text-muted">Item ID</small>
                                     </span>
 
@@ -207,8 +207,8 @@ $resultArr = pg_fetch_all($result);
                         </form>
 
 
-                        <br><span class = "label label-default">Asset details</span><br><br>
-                        
+                        <br><span class="label label-default">Asset details</span><br><br>
+
 
                         <form name="gpsdetails" id="gpsdetails" action="" method="POST">
                             <div class="form-group" style="display: inline-block;">
@@ -262,7 +262,20 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['itemname'] . '</td>
                                 <td>' . $array['itemtype'] . '</td>
                                 <td>' . $array['quantity'] . '</td>
-                                <td>' . $array['remarks'] . '</td>
+                                <td>
+                                <form name="remarks_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="remarksedit">
+                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
+                                <textarea id="inp_' . $array['itemid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>&nbsp;
+
+                                <button type="button" id="edit_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+
+                                <button type="submit" id="save_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>
+
+                                <!--<input id="edit_' . $array['itemid'] . '" type="button" value="Edit">&nbsp;-->
+                                <!--<input id="save_' . $array['itemid'] . '" type="Submit" value="Save">-->
+                                </td>
+                                </form>
                                 <td>' . $array['collectedby'] . '</td>
                                 </tr>';
                             } ?>
@@ -307,6 +320,45 @@ $resultArr = pg_fetch_all($result);
                 return false;
             });
         });
+    </script>
+    <script>
+        // function myFunction() {
+        //     alert("Amount has been transferred.");
+        // }
+
+        function myFunctionn() {
+            alert("Remarks has been updated.");
+            location.reload();
+        }
+    </script>
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>;
+
+        data.forEach(item => {
+
+            const form = document.getElementById('edit_' + item.itemid);
+
+            form.addEventListener('click', function() {
+                document.getElementById('inp_' + item.itemid).disabled = false;
+            });
+        })
+
+        const scriptURL = 'payment-api.php'
+
+        data.forEach(item => {
+            const form = document.forms['remarks_' + item.itemid]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['remarks_' + item.itemid])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
+        })
     </script>
     <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>
