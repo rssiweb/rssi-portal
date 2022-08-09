@@ -45,7 +45,7 @@ if ($_POST) {
 @$item_type = $_POST['item_type'];
 
 if ($item_type == 'ALL' && $item_id == "") {
-    $gpsdetails = "SELECT * from gps";
+    $gpsdetails = "SELECT * from gps order by date desc";
 } else if ($item_type == 'ALL' && $item_id != "") {
     $gpsdetails = "SELECT * from gps where itemid='$item_id'";
 } else if ($item_type == "" && $item_id != "") {
@@ -266,15 +266,19 @@ $resultArr = pg_fetch_all($result);
                                 <form name="remarks_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="remarksedit">
                                 <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <textarea id="inp_' . $array['itemid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>&nbsp;
+                                <textarea id="inp_' . $array['itemid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>'?>
+                                
+                                <?php if ($role == 'Admin') { ?>
+
+                                <?php echo '&nbsp;
 
                                 <button type="button" id="edit_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
 
-                                <button type="submit" id="save_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>
+                                <button type="submit" id="save_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>'?>
+                                
+                                <?php } ?>
 
-                                <!--<input id="edit_' . $array['itemid'] . '" type="button" value="Edit">&nbsp;-->
-                                <!--<input id="save_' . $array['itemid'] . '" type="Submit" value="Save">-->
-                                </td>
+                                <?php echo '</td>
                                 </form>
                                 <td>' . $array['collectedby'] . '</td>
                                 </tr>';
@@ -343,6 +347,7 @@ $resultArr = pg_fetch_all($result);
             });
         })
 
+        //For form submission - to update Remarks
         const scriptURL = 'payment-api.php'
 
         data.forEach(item => {
