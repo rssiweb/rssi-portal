@@ -119,7 +119,8 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
                         <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Reference number</th>
-                                <th scope="col">Date</th>
+                                <th scope="col">Issuance Date</th>
+                                <th scope="col">Pay month</th>
                                 <th scope="col">Class count</th>
                                 <th scope="col">Amount</th>
                                 <th scope="col">Transaction ID</th>
@@ -133,6 +134,7 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
                         echo '<tr>
                                 <td>' . $array['payslipid'] . '</td>
                                 <td>' . $array['date'] . '</td>
+                                <td>' . $array['dateformat'] . '</td>
                                 <td>' . $array['classcount'] . '</td>
                                 <td>' . $array['netpay'] . '</td>
                                 <td>' . $array['transaction_id'] . '</td>

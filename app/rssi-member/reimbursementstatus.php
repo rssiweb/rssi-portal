@@ -174,7 +174,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
               <?php
               echo '<td>' . substr($array['timestamp'], 0, 10) . '</td>
                         <td>' . $array['registrationid'] . '/' . strtok($array['name'], ' ') . '</td>   
-                        <td>' . $array['selectclaimheadfromthelistbelow'] . '</td>
+                        <td>' . $array['selectclaimheadfromthelistbelow'] . '<br>' . $array['claimheaddetails'] . '</td>
                         <td>' . $array['totalbillamount'] . '</td>' ?>
 
               <?php if ($array['claimstatus'] != 'claim settled') { ?>
@@ -305,6 +305,10 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
     <!-- Modal content -->
     <div class="modal-content">
       <span class="close">&times;</span>
+
+      <div style="width:100%; text-align:right"><p id="status1" class="label " style="display: inline !important;"><span class="claimstatus"></span></p></div>
+
+
       <p style="font-size: small;">
         Claim Number: <span class="reimbid"></span><br />
         Transaction Reference Number: <span class="transactionid"></span><br /><br>
@@ -340,14 +344,26 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
           span[0].innerHTML = mydata[key];
       })
       modal.style.display = "block";
+      
+    //class add 
+    var status = document.getElementById("status1")
+    if (mydata["claimstatus"] === "claim settled") {
+      status.classList.add("label-success")
+      status.classList.remove("label-danger")
+    } else if (mydata["claimstatus"] === "rejected") {
+      status.classList.remove("label-success")
+      status.classList.add("label-danger")
+    } else {
+      status.classList.remove("label-success")
+      status.classList.remove("label-danger")
+    }
+    //class add end
     }
     // When the user clicks the button, open the modal 
-
     // When the user clicks on <span> (x), close the modal
     span.onclick = function() {
       modal.style.display = "none";
     }
-
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
       if (event.target == modal) {
