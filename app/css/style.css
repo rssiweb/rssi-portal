@@ -1051,3 +1051,17 @@ z-index: 5001;
             border-bottom: 1px dotted whitesmoke !important;
             text-decoration: none !important;
         }
+        
+        .heading {
+            background: #fe921f;
+            color: #ffffff;
+            display: inline-block;
+            font-family: 'Lato', sans-serif;
+            font-size: 10px;
+            font-weight: bold;
+            line-height: 12px;
+            letter-spacing: 1px;
+            margin: 0 0 30px;
+            padding: 10px 15px 8px;
+            text-transform: uppercase;
+        }

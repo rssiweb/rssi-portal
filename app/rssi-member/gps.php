@@ -207,7 +207,7 @@ $resultArr = pg_fetch_all($result);
                         </form>
 
 
-                        <br><span class="label label-default">Asset details</span><br><br>
+                        <br><span class="heading">Asset details</span><br><br>
 
 
                         <form name="gpsdetails" id="gpsdetails" action="" method="POST">
@@ -259,26 +259,43 @@ $resultArr = pg_fetch_all($result);
                                 echo '<tr>
                                 <td>' . @$array['date'] . '</td>
                                 <td>' . $array['itemid'] . '</td>
-                                <td>' . $array['itemname'] . '</td>
+                                <td>
+                                <form name="name_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunction()" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="nameedit">
+                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
+                                <input id="inpname_' . $array['itemid'] . '" name="itemname" type="text" value="' . $array['itemname'] . '" disabled>' ?>
+
+                                <?php if ($role == 'Admin') { ?>
+
+                                    <?php echo '&nbsp;
+
+                                <button type="button" id="editname_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+
+                                <button type="submit" id="savename_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>' ?>
+
+                                <?php } ?>
+
+                                <?php echo '</td>
+                                </form>
                                 <td>' . $array['itemtype'] . '</td>
                                 <td>' . $array['quantity'] . '</td>
                                 <td>
                                 <form name="remarks_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="remarksedit">
                                 <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <textarea id="inp_' . $array['itemid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>'?>
-                                
+                                <textarea id="inp_' . $array['itemid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>' ?>
+
                                 <?php if ($role == 'Admin') { ?>
 
-                                <?php echo '&nbsp;
+                                    <?php echo '&nbsp;
 
                                 <button type="button" id="edit_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
 
-                                <button type="submit" id="save_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>'?>
-                                
+                                <button type="submit" id="save_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>' ?>
+
                                 <?php } ?>
 
-                                <?php echo '</td>
+                            <?php echo '</td>
                                 </form>
                                 <td>' . $array['collectedby'] . '</td>
                                 </tr>';
@@ -326,9 +343,10 @@ $resultArr = pg_fetch_all($result);
         });
     </script>
     <script>
-        // function myFunction() {
-        //     alert("Amount has been transferred.");
-        // }
+        function myFunction() {
+            alert("Item name has been updated.");
+            location.reload();
+        }
 
         function myFunctionn() {
             alert("Remarks has been updated.");
@@ -337,6 +355,16 @@ $resultArr = pg_fetch_all($result);
     </script>
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
+
+        data.forEach(item => {
+
+            const form = document.getElementById('editname_' + item.itemid);
+
+            form.addEventListener('click', function() {
+                document.getElementById('inpname_' + item.itemid).disabled = false;
+            });
+        })
+
 
         data.forEach(item => {
 
@@ -349,6 +377,22 @@ $resultArr = pg_fetch_all($result);
 
         //For form submission - to update Remarks
         const scriptURL = 'payment-api.php'
+
+        data.forEach(item => {
+            const form = document.forms['name_' + item.itemid]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['name_' + item.itemid])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
+        })
+
 
         data.forEach(item => {
             const form = document.forms['remarks_' + item.itemid]
