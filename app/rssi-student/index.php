@@ -190,7 +190,7 @@ if (isset($_POST['login'])) {
 <body>
     <div class="page-topbar">
         <div class="logo-area"> </div>
-        <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1659756398/indian-flag-20_v5idmk.gif" width="50" class="over" />
+        <!-- <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1659756398/indian-flag-20_v5idmk.gif" width="50" class="over" /> -->
     </div>
     <div class="container">
         <div class="row">
