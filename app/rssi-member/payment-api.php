@@ -40,6 +40,13 @@ if ($_POST['form-type'] == "nameedit") {
   $result = pg_query($con, $nameedit);
 } 
 
+if ($_POST['form-type'] == "tagedit") {
+  @$itemid = $_POST['itemid'];
+  @$taggedto = $_POST['taggedto'];
+  $tagedit = "UPDATE gps SET  taggedto = '$taggedto' WHERE itemid = '$itemid'";
+  $result = pg_query($con, $tagedit);
+} 
+
 if ($_POST['form-type'] == "paydelete") {
   @$refid = $_POST['pid'];
   $paydelete = "DELETE from fees WHERE id = $refid";

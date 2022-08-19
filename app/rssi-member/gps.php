@@ -249,6 +249,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Quantity</th>
                                 <th scope="col">Remarks</th>
                                 <th scope="col">Registered by</th>
+                                <th scope="col">Tagged to</th>
                                 
                             </tr>
                         </thead>' ?>
@@ -275,8 +276,8 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php } ?>
 
-                                <?php echo '</td>
-                                </form>
+                                <?php echo '</form></td>
+                                
                                 <td>' . $array['itemtype'] . '</td>
                                 <td>' . $array['quantity'] . '</td>
                                 <td>
@@ -295,9 +296,27 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php } ?>
 
-                            <?php echo '</td>
-                                </form>
+                                <?php echo '</form></td>
+                                
                                 <td>' . $array['collectedby'] . '</td>
+
+                                <td>
+                                <form name="tag_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiontag()" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="tagedit">
+                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
+                                <input id="inptag_' . $array['itemid'] . '" name="taggedto" type="text" value="' . $array['taggedto'] . '" disabled>' ?>
+
+                                <?php if ($role == 'Admin') { ?>
+
+                                    <?php echo '&nbsp;
+
+                                <button type="button" id="edittag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+
+                                <button type="submit" id="savetag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>' ?>
+
+                                <?php } ?>
+
+                            <?php echo '</form></td>
                                 </tr>';
                             } ?>
                         <?php
@@ -352,6 +371,11 @@ $resultArr = pg_fetch_all($result);
             alert("Remarks has been updated.");
             location.reload();
         }
+
+        function myFunctiontag() {
+            alert("Tagged to has been updated.");
+            location.reload();
+        }
     </script>
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
@@ -372,6 +396,16 @@ $resultArr = pg_fetch_all($result);
 
             form.addEventListener('click', function() {
                 document.getElementById('inp_' + item.itemid).disabled = false;
+            });
+        })
+
+
+        data.forEach(item => {
+
+            const form = document.getElementById('edittag_' + item.itemid);
+
+            form.addEventListener('click', function() {
+                document.getElementById('inptag_' + item.itemid).disabled = false;
             });
         })
 
@@ -401,6 +435,21 @@ $resultArr = pg_fetch_all($result);
                 fetch(scriptURL, {
                         method: 'POST',
                         body: new FormData(document.forms['remarks_' + item.itemid])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
+        })
+
+        data.forEach(item => {
+            const form = document.forms['tag_' + item.itemid]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['tag_' + item.itemid])
                     })
                     .then(response => console.log('Success!', response))
                     .catch(error => console.error('Error!', error.message))
