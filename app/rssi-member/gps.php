@@ -41,18 +41,18 @@ if ($_POST) {
     }
 }
 
-@$item_id = $_POST['item_id'];
-@$item_type = $_POST['item_type'];
+@$taggedto = $_GET['taggedto'];
+@$item_type = $_GET['item_type'];
 
-if ($item_type == 'ALL' && $item_id == "") {
+if ($item_type == 'ALL' && $taggedto == "") {
     $gpsdetails = "SELECT * from gps order by date desc";
-} else if ($item_type == 'ALL' && $item_id != "") {
-    $gpsdetails = "SELECT * from gps where itemid='$item_id'";
-} else if ($item_type == "" && $item_id != "") {
-    $gpsdetails = "SELECT * from gps where itemid='$item_id'";
-} else if ($item_type != "ALL" && $item_type != "" && $item_id != "") {
-    $gpsdetails = "SELECT * from gps where itemid='$item_id' and itemtype='$item_type'";
-} else if ($item_type != "ALL" && $item_type != "" && $item_id == "") {
+} else if ($item_type == 'ALL' && $taggedto != "") {
+    $gpsdetails = "SELECT * from gps where taggedto='$taggedto'";
+} else if ($item_type == "" && $taggedto != "") {
+    $gpsdetails = "SELECT * from gps where taggedto='$taggedto'";
+} else if ($item_type != "ALL" && $item_type != "" && $taggedto != "") {
+    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' and itemtype='$item_type'";
+} else if ($item_type != "ALL" && $item_type != "" && $taggedto == "") {
     $gpsdetails = "SELECT * from gps where itemtype='$item_type'";
 } else {
     $gpsdetails = "SELECT * from gps where itemid=''";
@@ -210,7 +210,7 @@ $resultArr = pg_fetch_all($result);
                         <br><span class="heading">Asset details</span><br><br>
 
 
-                        <form name="gpsdetails" id="gpsdetails" action="" method="POST">
+                        <form name="gpsdetails" id="gpsdetails" action="" method="GET">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
 
@@ -226,7 +226,7 @@ $resultArr = pg_fetch_all($result);
                                         <option>Donation</option>
                                         <option>ALL</option>
                                     </select>&nbsp;
-                                    <input type="text" name="item_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Item id" value="<?php echo $item_id ?>">
+                                    <input type="text" name="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="<?php echo $taggedto ?>">
                                 </div>
                             </div>
                             <div class="col2 left" style="display: inline-block;">
@@ -320,7 +320,7 @@ $resultArr = pg_fetch_all($result);
                                 </tr>';
                             } ?>
                         <?php
-                        } else if ($item_id == null && $item_type == null) {
+                        } else if ($taggedto == null && $item_type == null) {
                         ?>
                             <tr>
                                 <td colspan="5">Please select Filter value.</td>

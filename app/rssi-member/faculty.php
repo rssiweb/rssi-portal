@@ -30,7 +30,7 @@ $date = date('Y-m-d H:i:s');
 
 @$id = $_POST['get_id'];
 
-$result = pg_query($con, "SELECT rssimyaccount_members.doj,
+$result = pg_query($con, "SELECT distinct rssimyaccount_members.doj,
 rssimyaccount_members.associatenumber,
 rssimyaccount_members.fullname,
 rssimyaccount_members.email,
@@ -109,13 +109,15 @@ rssimyaccount_members.hbday,
 rssimyaccount_members.on_leave,
 rssimyaccount_members.attd_pending,
 rssimyaccount_members.approveddate,
-asset.agreementname,
 asset.status,
-asset.category,
-asset.assetdetails,
+asset.userid,
+gps.taggedto,
 max(userlog_member.logintime) as logintime FROM rssimyaccount_members 
 left join asset ON asset.userid=rssimyaccount_members.associatenumber 
-left join userlog_member ON userlog_member.username=rssimyaccount_members.associatenumber WHERE filterstatus='$id' group by rssimyaccount_members.doj,
+left join userlog_member ON userlog_member.username=rssimyaccount_members.associatenumber
+left join gps ON gps.taggedto=rssimyaccount_members.associatenumber 
+
+WHERE filterstatus='$id' group by rssimyaccount_members.doj,
 rssimyaccount_members.associatenumber,
 rssimyaccount_members.fullname,
 rssimyaccount_members.email,
@@ -194,10 +196,9 @@ rssimyaccount_members.hbday,
 rssimyaccount_members.on_leave,
 rssimyaccount_members.attd_pending,
 rssimyaccount_members.approveddate,
-asset.agreementname,
 asset.status,
-asset.category,
-asset.assetdetails
+asset.userid,
+gps.taggedto
 order by filterstatus asc,today desc");
 
 if (!$result) {
@@ -389,10 +390,15 @@ $resultArr = pg_fetch_all($result);
                                 <?php if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') { ?>
                                     <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
                                 <?php    } ?>
-                                <?php if ($array['assetdetails'] != null && $array['status'] != 'Closed' && $array['category'] == 'Asset') { ?>
-                                    <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>' ?>
-                                <?php } else if ($array['agreementname'] != null && $array['status'] != 'Closed' && $array['category'] != 'Asset') { ?>
+
+                                <?php if ($array['userid'] != null && $array['status'] != 'Closed') { ?>
                                     <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-warning">agreement</p></a>' ?>
+                                <?php } else { ?>
+                                <?php } ?>
+
+                                <?php if ($array['taggedto'] != null) { ?>
+                                    <?php echo '<br><a href="gps.php?taggedto=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>' ?>
+                                <?php } else { ?>
                                 <?php } ?>
 
                                 <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
