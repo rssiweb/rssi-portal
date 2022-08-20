@@ -28,7 +28,7 @@
             policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
         });
     </script>
-<style>
+    <style>
         @media (max-width:767px) {
             td {
                 width: 100%
@@ -60,20 +60,20 @@
         <div class="logo-area"> </div>
     </div>
     <?php
-include("../rssi-member/database.php");
-$result = pg_query($con, "SELECT * FROM notice order by date desc");
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-}
+    include("../rssi-member/database.php");
+    $result = pg_query($con, "SELECT * FROM notice order by date desc");
+    if (!$result) {
+        echo "An error occurred.\n";
+        exit;
+    }
 
-$resultArr = pg_fetch_all($result);
-?>
+    $resultArr = pg_fetch_all($result);
+    ?>
     <section>
-    <section class="wrapper main-wrapper row">
-        <div class="col-md-12">
-            <section class="box" style="padding: 2%;">
-                <?php echo '
+        <section class="wrapper main-wrapper row">
+            <div class="col-md-12">
+                <section class="box" style="padding: 2%;">
+                    <?php echo '
                     <div class="container">
                     <p>Select Number Of Rows</p>
                     <div class="form-group">
@@ -100,40 +100,40 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>
                         <tbody>';
-                foreach ($resultArr as $array) {
-                    echo '
+                    foreach ($resultArr as $array) {
+                        echo '
                             <tr>
                                 <td>' . $array['noticeid'] . '</td>
                                 <td>' . $array['date'] . '</td>
                                 <td>' . $array['subject'] . '&nbsp;<p class="label label-default">' . $array['category'] . '</p></td>
                                 <td><a href="' . $array['url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['noticeid'] . '" display:inline;></i></a></td>
                             </tr>';
-                }
-                echo '</tbody>
+                    }
+                    echo '</tbody>
                         </table>';
-                ?>
-                <!--		Start Pagination -->
-                <div class='pagination-container'>
-                    <nav>
-                        <ul class="pagination">
+                    ?>
+                    <!--		Start Pagination -->
+                    <div class='pagination-container'>
+                        <nav>
+                            <ul class="pagination">
 
-                            <li data-page="prev">
-                                <span>
-                                    < <span class="sr-only">(current)
-                                </span></span>
-                            </li>
-                            <!--	Here the JS Function Will Add the Rows -->
-                            <li data-page="next" id="prev">
-                                <span> > <span class="sr-only">(current)</span></span>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+                                <li data-page="prev">
+                                    <span>
+                                        < <span class="sr-only">(current)
+                                    </span></span>
+                                </li>
+                                <!--	Here the JS Function Will Add the Rows -->
+                                <li data-page="next" id="prev">
+                                    <span> > <span class="sr-only">(current)</span></span>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+            </div>
+            </div>
+            </div>
+        </section>
         </div>
-        </div>
-        </div>
-    </section>
-    </div>
     </section>
     <script>
         getPagination('#table-id');
@@ -292,7 +292,8 @@ $resultArr = pg_fetch_all($result);
             <a href="https://rssi.in/terms-of-service" target="_blank">Terms & Conditions</a> |
             <a href="https://rssi.in/refund-policy" target="_blank">Cancellation/Refund Policy</a> |
             <a href="https://rssi.in/privacy-policy" target="_blank">Privacy Policy</a>
-            <br>Site Contents owned, designed, developed, maintained and updated by the IT Department, RSSI.</p>
+            <br>Site Contents owned, designed, developed, maintained and updated by the IT Department, RSSI.
+        </p>
 
     </footer>
 </body>
