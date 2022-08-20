@@ -185,12 +185,12 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
               <?php echo '
                         <td>' . $array['transfereddate'] . '</td>'
               ?>
-              <?php if ($array['claimstatus'] == 'review' || $array['claimstatus'] == 'in progress' || $array['claimstatus'] == 'withdrawn') { ?>
+              <?php if ($array['claimstatus'] == 'Review' || $array['claimstatus'] == 'In progress' || $array['claimstatus'] == 'Withdrawn') { ?>
                 <?php echo '<td> <p class="label label-warning">' . $array['claimstatus'] . '</p>' ?>
 
-              <?php } else if ($array['claimstatus'] == 'approved' || $array['claimstatus'] == 'claim settled') { ?>
+              <?php } else if ($array['claimstatus'] == 'Approved' || $array['claimstatus'] == 'Claim settled') { ?>
                 <?php echo '<td><p class="label label-success">' . $array['claimstatus'] . '</p>' ?>
-              <?php    } else if ($array['claimstatus'] == 'rejected' || $array['claimstatus'] == 'on hold') { ?>
+              <?php    } else if ($array['claimstatus'] == 'Rejected' || $array['claimstatus'] == 'On hold') { ?>
                 <?php echo '<td><p class="label label-danger">' . $array['claimstatus'] . '</p>' ?>
               <?php    } else { ?>
                 <?php echo '<td><p class="label label-info">' . $array['claimstatus'] . '</p>' ?>
@@ -347,10 +347,10 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
       
     //class add 
     var status = document.getElementById("status1")
-    if (mydata["claimstatus"] === "claim settled") {
+    if (mydata["claimstatus"] === "Claim settled") {
       status.classList.add("label-success")
       status.classList.remove("label-danger")
-    } else if (mydata["claimstatus"] === "rejected") {
+    } else if (mydata["claimstatus"] === "Rejected") {
       status.classList.remove("label-success")
       status.classList.add("label-danger")
     } else {

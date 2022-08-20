@@ -41,15 +41,14 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $termsofagreement = $row[16];
     $year = $row[17];
     $reimbid = $row[18];
-    $mergestatus = $row[19];
-    $claimstatus = $row[20];
-    $approvedamount = $row[21];
-    $transactionid = $row[22];
-    $transfereddate = $row[23];
-    $closedon = $row[24];
-    $mediremarks = $row[25];
-    $profile = $row[26];
-    $rlastupdatedon = $row[27]
+    $claimstatus = $row[19];
+    $approvedamount = $row[20];
+    $transactionid = $row[21];
+    $transfereddate = $row[22];
+    $closedon = $row[23];
+    $mediremarks = $row[24];
+    $profile = $row[25];
+    $rlastupdatedon = $row[26]
 
 ?>
 <?php } ?>
@@ -109,7 +108,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         <tbody>
                             <tr>
                                 <td style="line-height: 2;"><span class="noticea"><a href="javascript:void(0)" target="_self">RSSI reimbursement policy</a></span></td>
-                                <td style="line-height: 2;"><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSeJvl1DPzvAHpEfGLdPhnjK1ojTcRNnLR_w1WCCswDxJTZxlg/viewform?usp=pp_url&entry.1268051974=<?php echo @$fullname ?>&entry.288127209=<?php echo @$associatenumber ?>&entry.995125243=<?php echo @$phone ?>&entry.605633398=<?php echo @$email ?>&entry.1867197840=<?php echo @$bankname ?>&entry.1288695359=<?php echo @$accountnumber ?>&entry.1236133419=<?php echo @$accountholdername ?>&entry.1547933107=<?php echo @$ifsccode ?>" target="_blank">Claim form</a></span></td>
+                                <td style="line-height: 2;"><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSeJvl1DPzvAHpEfGLdPhnjK1ojTcRNnLR_w1WCCswDxJTZxlg/viewform?usp=pp_url&entry.1268051974=<?php echo @$fullname ?>&entry.288127209=<?php echo @$associatenumber ?>&entry.995125243=<?php echo @$phone ?>&entry.116606678=<?php echo @$email ?>&entry.1867197840=<?php echo @$bankname ?>&entry.1288695359=<?php echo @$accountnumber ?>&entry.1236133419=<?php echo @$accountholdername ?>&entry.1547933107=<?php echo @$ifsccode ?>" target="_blank">Claim form</a></span></td>
                             </tr>
                         </tbody>
                     </table>
