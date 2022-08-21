@@ -18,23 +18,23 @@ if ($role == 'Admin') {
   if ($id == null && $status == 'ALL') {
     $result = pg_query($con, "SELECT * FROM claim order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus!='rejected'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus!='Rejected'");
   } else if ($id == null && $status != 'ALL') {
     $result = pg_query($con, "SELECT * FROM claim WHERE year='$status' order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE year='$status' AND claimstatus!='rejected'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE year='$status' AND claimstatus!='Rejected'");
   } else if ($id > 0 && $status != 'ALL') {
     $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' AND year='$status' order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id' AND year='$status'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND year='$status' AND claimstatus!='rejected'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND year='$status' AND claimstatus!='Rejected'");
   } else if ($id > 0 && $status == 'ALL') {
     $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND claimstatus!='rejected'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND claimstatus!='Rejected'");
   } else {
     $result = pg_query($con, "SELECT * FROM claim order by id desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus!='rejected'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus!='Rejected'");
   }
 }
 
