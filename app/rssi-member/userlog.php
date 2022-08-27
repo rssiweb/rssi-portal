@@ -120,7 +120,7 @@ $resultArr = pg_fetch_all($result);
                                 <td style="line-height: 1.7;">' . $array['id'] . '</td>
                                 <td style="line-height: 1.7;">' . $array['username'] . '</td>
                                 <td style="line-height: 1.7;">' . $array['ipaddress'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['logintime'] . '</td>
+                                <td style="line-height: 1.7;">' . @date("d/m/Y g:i a", strtotime($array['logintime'])) . '</td>
                             </tr>';
                     }
                     echo '</tbody>
