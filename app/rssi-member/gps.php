@@ -235,23 +235,28 @@ $resultArr = pg_fetch_all($result);
                             </div>
                         </form>
                         <div class="col" style="display: inline-block; width:99%; text-align:right">
-                            Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                            Record count:&nbsp;<?php echo sizeof($resultArr) ?><br><br>
+                            <form method="POST" action="export_function.php">
+                                <input type="hidden" value="gps" name="export_type" />
+                                <input type="hidden" value="<?php echo $item_type ?>" name="item_type" />
+                                <input type="hidden" value="<?php echo $taggedto ?>" name="taggedto" />
+
+                                <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="Export CSV"><i class="fa-regular fa-file-excel" style="font-size:large;"></i></button>
+                            </form>
                         </div>
 
                         <?php echo '
                         <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Date</th>
                                 <th scope="col">Item Id</th>
                                 <th scope="col">Item name</th>
                                 <th scope="col">Item type</th>
                                 <th scope="col">Quantity</th>
-                                <th scope="col">Remarks</th> ' ?>
-                        <?php if ($role == 'Admin') { ?>
-                            <?php echo ' <th scope="col">Registered by</th>' ?>
-                        <?php } ?>
-                        <?php echo ' <th scope="col">Tagged to</th>
+                                <th scope="col">Remarks</th>
+                                <th scope="col">Tagged to</th>
                                 
                             </tr>
                         </thead>' ?>
@@ -260,7 +265,7 @@ $resultArr = pg_fetch_all($result);
                             echo '<tbody>';
                             foreach ($resultArr as $array) {
                                 echo '<tr>
-                                <td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>
+                                <!--<td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>-->
                                 <td>' . $array['itemid'] . '</td>' ?>
 
                                 <?php if ($role != 'Admin') { ?>
@@ -330,7 +335,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php if ($role == 'Admin') { ?>
 
                                     <?php echo '
-                                <td>' . $array['collectedby'] . '</td>
+                                
 
                                 <td><form name="tag_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiontag()" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="tagedit">
@@ -438,12 +443,13 @@ $resultArr = pg_fetch_all($result);
             <span class="close">&times;</span>
 
             <div style="width:100%; text-align:right">
-                <p id="status1" class="label " style="display: inline !important;"><span class="claimstatus"></span></p>
+                <p class="label label-info" style="display: inline !important;"><span class="itemid"></span></p>
             </div>
 
 
             <p style="font-size: small;">
-                <span class="itemname"></span><br />
+                <span class="itemname"></span><br /><br />
+                <span style="font-size:10px;">Registered by&nbsp;<span class="collectedby"></span>&nbsp;on&nbsp;<span class="date"></span></span>
             </p>
         </div>
 
@@ -473,7 +479,6 @@ $resultArr = pg_fetch_all($result);
                     span[0].innerHTML = mydata[key];
             })
             modal.style.display = "block";
-
         }
         // When the user clicks the button, open the modal 
         // When the user clicks on <span> (x), close the modal
