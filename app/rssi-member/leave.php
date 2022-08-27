@@ -19,21 +19,22 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
 @$id = $_POST['get_id'];
 @$status = $_POST['get_status'];
+date_default_timezone_set('Asia/Kolkata');
 
 if (($id == null && $status == null) || (($status > 0 && $status != 'ALL') && ($id > 0 && $id != 'ALL'))) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' AND lyear='$id'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' AND lyear='$id' order by timestamp desc");
 } else if (($id == 'ALL' && $status == null) || ($id == null && $status == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timestamp desc");
 } else if (($id > 0 && $id != 'ALL') && ($status == null)) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timestamp desc");
 } else if (($id > 0 && $id != 'ALL') && ($status == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timestamp desc");
 } else if (($status > 0 && $status != 'ALL') && ($id == null)) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' order by timestamp desc");
 } else if (($status > 0 && $status != 'ALL') && ($id == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' order by timestamp desc");
 } else {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timestamp desc");
 }
 
 if (!$result) {
@@ -161,9 +162,8 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
-                                    <option>2022</option>
-                                    <option>2021</option>
-                                    <option>2020</option>
+                                    <option>2022-2023</option>
+                                    <option>2021-2022</option>
                                     <option>ALL</option>
                                 </select>&nbsp;
                                 <select name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
@@ -210,9 +210,9 @@ $resultArr = pg_fetch_all($result);
                         foreach ($resultArr as $array) {
                             echo '<tr>
                                 <td>' . $array['leaveid'] . '</td>
-                                <td>' . $array['timestamp'] . '</td>
-                                <td>' . $array['from'] . '</td>
-                                <td>' . $array['to'] . '</td>
+                                <td>' . @date("d/m/Y h:i:s", strtotime($array['timestamp'])) . '</td>
+                                <td>' . @date("d/m/Y", strtotime($array['from'])) . '</td>
+                                <td>' . @date("d/m/Y", strtotime($array['to'])) . '</td>
                                 <td>' . $array['day'] . '</td>
                                 <td>' . $array['typeofleave'] . '</td>
                                 <td>' . $array['doc'] . '</td>

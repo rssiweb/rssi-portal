@@ -29,16 +29,19 @@ if ($role != 'Admin') {
 @$statuse = $_POST['get_statuse'];
 @$appid = $_POST['get_appid'];
 
+date_default_timezone_set('Asia/Kolkata');
+// $date = date('Y-d-m h:i:s');
+
 if ($id == null && $status == null && $statuse == null && $appid == null) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE leaveid=''");
 } else if ($id != null && $status == 'ALL' && $statuse != null && $appid == null) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id'AND organizationalengagement='$statuse'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id'AND organizationalengagement='$statuse' order by timestamp desc");
 } else if ($id != null && $status == 'ALL' && $statuse != null && $appid != null) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id' AND organizationalengagement='$statuse'AND associatenumber='$appid'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id' AND organizationalengagement='$statuse'AND associatenumber='$appid' order by timestamp desc");
 } else if ($id != null && $status != 'ALL' && $status != null && $statuse != null && $appid == null) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id' AND status='$status' AND organizationalengagement='$statuse'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id' AND status='$status' AND organizationalengagement='$statuse' order by timestamp desc");
 } else {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id' AND status='$status' AND organizationalengagement='$statuse'AND associatenumber='$appid'");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE lyear='$id' AND status='$status' AND organizationalengagement='$statuse'AND associatenumber='$appid' order by timestamp desc");
 }
 
 if (!$result) {
@@ -103,9 +106,8 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
-                                    <option>2022</option>
-                                    <option>2021</option>
-                                    <option>2020</option>
+                                    <option>2022-2023</option>
+                                    <option>2021-2022</option>
                                 </select>&nbsp;
                                 <select name="get_status" required class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
                                     <?php if ($status == null) { ?>
@@ -175,9 +177,9 @@ $resultArr = pg_fetch_all($result);
                             <?php } ?>
                         <?php
                             echo '  <td>' . $array['associatenumber'] . '/' . strtok($array['applicantname'], ' ') . '</td>
-                                <td>' . $array['timestamp'] . '</td>
-                                <td>' . $array['from'] . '</td>
-                                <td>' . $array['to'] . '</td>
+                                <td>' . @date("d/m/Y h:i:s", strtotime($array['timestamp'])) . '</td>
+                                <td>' .  @date("d/m/Y", strtotime($array['from'])) . '</td>
+                                <td>' .  @date("d/m/Y", strtotime($array['to'])) . '</td>
                                 <td>' . $array['day'] . '</td>
                                 <td>' . $array['typeofleave'] . '<br>
                                 ' . $array['sreason'] . $array['creason'] . '</td>
