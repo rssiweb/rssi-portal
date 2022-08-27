@@ -177,7 +177,7 @@ $resultArr = pg_fetch_all($result);
                             <?php } ?>
                         <?php
                             echo '  <td>' . $array['associatenumber'] . '/' . strtok($array['applicantname'], ' ') . '</td>
-                                <td>' . @date("d/m/Y h:i:s", strtotime($array['timestamp'])) . '</td>
+                                <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['from'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['to'])) . '</td>
                                 <td>' . $array['day'] . '</td>

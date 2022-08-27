@@ -211,7 +211,7 @@ if ($_POST) {
                     echo '
                             <tr>
                                 <td>' . $array['noticeid'] . '</td>
-                                <td>' . $array['date'] . '</td>
+                                <td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>
                                 <td>' . $array['subject'] . '&nbsp;<p class="label label-default">' . $array['category'] . '</p></td>
                                 <td><a href="' . $array['url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['noticeid'] . '" display:inline;></i></a></td>
                             </tr>';

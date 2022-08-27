@@ -210,7 +210,7 @@ $resultArr = pg_fetch_all($result);
                         foreach ($resultArr as $array) {
                             echo '<tr>
                                 <td>' . $array['leaveid'] . '</td>
-                                <td>' . @date("d/m/Y h:i:s", strtotime($array['timestamp'])) . '</td>
+                                <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' . @date("d/m/Y", strtotime($array['from'])) . '</td>
                                 <td>' . @date("d/m/Y", strtotime($array['to'])) . '</td>
                                 <td>' . $array['day'] . '</td>

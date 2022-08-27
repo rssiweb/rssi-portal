@@ -48,11 +48,11 @@ if ($_POST) {
 if ($get_id == "Associate" && $get_status != null) {
     $change_details = "SELECT * from rssimyaccount_members where associatenumber='$get_status'";
 } else if ($get_id == "Associate" && $get_status == null) {
-    $change_details = "SELECT * from rssimyaccount_members where filterstatus='Active'";
+    $change_details = "SELECT * from rssimyaccount_members where filterstatus='Active' AND default_pass_updated_on is not null";
 } else if ($get_id == "Student" && $get_status != null) {
     $change_details = "SELECT * from rssimyprofile_student where student_id='$get_status'";
 } else if ($get_id == "Student" && $get_status == null) {
-    $change_details = "SELECT * from rssimyprofile_student where filterstatus='Active'";
+    $change_details = "SELECT * from rssimyprofile_student where filterstatus='Active' AND default_pass_updated_on is not null";
 } else {
     $change_details = "SELECT * from rssimyprofile_student where student_id=''";
 }
@@ -83,7 +83,7 @@ $resultArrr = pg_fetch_all($result);
     <style>
         <?php include '../css/style.css'; ?>
     </style>
-    
+
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
@@ -226,12 +226,26 @@ $resultArrr = pg_fetch_all($result);
                                 <?php if ($array['password_updated_by'] == null || $array['password_updated_on'] < $array['default_pass_updated_on']) { ?>
                                     <?php echo '<p class="label label-warning">defaulter</p>' ?><?php } ?>
 
-                                <?php
-                                echo '</td>
-                                <td>' . $array['default_pass_updated_on'] . '</td>
-                                <td>' . $array['default_pass_updated_by'] . '</td>
-                                <td>' . $array['password_updated_on'] . '</td>
-                                <td>' . $array['password_updated_by'] . '</td></tr>';
+                                    <?php
+                                    echo '</td>' ?>
+
+                                    <?php if ($array['default_pass_updated_on'] != null) { ?>
+
+                                        <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['default_pass_updated_on'])) . '</td>' ?>
+                                    <?php } else { ?>
+                                        <?php echo '<td></td>' ?>
+                                    <?php } ?>
+
+
+                                    <?php echo '<td>' . $array['default_pass_updated_by'] . '</td>' ?>
+
+                                    <?php if ($array['password_updated_on'] != null) { ?>
+
+                                        <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['password_updated_on'])) . '</td>' ?>
+                                    <?php } else { ?>
+                                        <?php echo '<td></td>' ?>
+                                    <?php } ?>
+                                <?php echo '<td>' . $array['password_updated_by'] . '</td></tr>';
                             } ?>
                             <?php
                         } else if ($get_id == null && $get_status == null) {

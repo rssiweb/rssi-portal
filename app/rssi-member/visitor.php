@@ -26,17 +26,17 @@ if ($appid == null && $status == null) {
     $result = pg_query($con, "select * from visitor WHERE visitorid is null");
 }
 if ($appid != null && ($status == null || $status == 'ALL')) {
-    $result = pg_query($con, "select * from visitor WHERE visitorid='$appid' or existingid='$appid'");
+    $result = pg_query($con, "select * from visitor WHERE visitorid='$appid' or existingid='$appid' order by visitdatefrom desc");
 }
 if ($appid != null && $status != null && $status != 'ALL') {
-    $result = pg_query($con, "select * from visitor WHERE (visitorid='$appid' or existingid='$appid') AND EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))=EXTRACT(MONTH FROM visitdatefrom)");
+    $result = pg_query($con, "select * from visitor WHERE (visitorid='$appid' or existingid='$appid') AND EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))=EXTRACT(MONTH FROM visitdatefrom) order by visitdatefrom desc");
 }
 if ($appid == null && $status != null && $status != 'ALL') {
-    $result = pg_query($con, "select * from visitor WHERE EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))=EXTRACT(MONTH FROM visitdatefrom)");
+    $result = pg_query($con, "select * from visitor WHERE EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))=EXTRACT(MONTH FROM visitdatefrom) order by visitdatefrom desc");
 }
 
 if ($appid == null && $status == 'ALL') {
-    $result = pg_query($con, "select * from visitor");
+    $result = pg_query($con, "select * from visitor order by visitdatefrom desc");
 }
 
 if (!$result) {
@@ -160,7 +160,7 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php echo '</td>
                                 <td>' . $array['visitorname'] . '<br>' . $array['contact'] . '<br>' . $array['email'] . '</td>
-                                <td>' . date("d/m/Y", strtotime($array['visitdatefrom'])) . '&nbsp;' . $array['visittime'] . '</td>
+                                <td>' . date("d/m/Y", strtotime($array['visitdatefrom'])) . '&nbsp;' . date("g:i a", strtotime($array['visittime'])) . '</td>
                                 
                                 <td>' . date("d/m/Y", strtotime($array['visitdateto'])) . '</td><td> ' ?>
 

@@ -247,9 +247,11 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Item name</th>
                                 <th scope="col">Item type</th>
                                 <th scope="col">Quantity</th>
-                                <th scope="col">Remarks</th>
-                                <th scope="col">Registered by</th>
-                                <th scope="col">Tagged to</th>
+                                <th scope="col">Remarks</th> ' ?>
+                        <?php if ($role == 'Admin') { ?>
+                            <?php echo ' <th scope="col">Registered by</th>' ?>
+                        <?php } ?>
+                        <?php echo ' <th scope="col">Tagged to</th>
                                 
                             </tr>
                         </thead>' ?>
@@ -258,25 +260,44 @@ $resultArr = pg_fetch_all($result);
                             echo '<tbody>';
                             foreach ($resultArr as $array) {
                                 echo '<tr>
-                                <td>' . @$array['date'] . '</td>
-                                <td>' . $array['itemid'] . '</td>
-                                <td>
-                                <form name="name_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunction()" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="nameedit">
-                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <input id="inpname_' . $array['itemid'] . '" name="itemname" type="text" value="' . $array['itemname'] . '" disabled>' ?>
+                                <td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>
+                                <td>' . $array['itemid'] . '</td>' ?>
 
-                                <?php if ($role == 'Admin') { ?>
+                                <?php if ($role != 'Admin') { ?>
 
-                                    <?php echo '&nbsp;
-
-                                <button type="button" id="editname_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
-
-                                <button type="submit" id="savename_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>' ?>
+                                    <?php echo '<td>' . substr($array['itemname'], 0, 35) . '
+                                    
+                                    &nbsp;<button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+                                    
+                                    </td>' ?>
 
                                 <?php } ?>
 
-                                <?php echo '</form></td>
+                                <?php if ($role == 'Admin') { ?>
+
+                                    <?php echo '
+                                    
+                                <td>
+                                
+                                <form name="name_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunction()" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="nameedit">
+                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
+                                <input id="inpname_' . $array['itemid'] . '" name="itemname" type="text" value="' . $array['itemname'] . '" disabled>
+                                &nbsp;
+                                
+                                <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+                                
+                                &nbsp;
+
+                                <button type="button" id="editname_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+
+                                <button type="submit" id="savename_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button></form></td>' ?>
+
+                                <?php } ?>
+
+                                <?php echo '
                                 
                                 <td>' . $array['itemtype'] . '</td>
                                 <td>' . $array['quantity'] . '</td>
@@ -296,19 +317,27 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php } ?>
 
-                                <?php echo '</form></td>
-                                
-                                <td>' . $array['collectedby'] . '</td>
+                                <?php echo '</form></td>' ?>
 
-                                <td>
-                                <form name="tag_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiontag()" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="tagedit">
-                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <input id="inptag_' . $array['itemid'] . '" name="taggedto" type="text" value="' . $array['taggedto'] . '" disabled>' ?>
+                                <?php if ($role != 'Admin') { ?>
+
+                                    <?php echo '<td>' . $array['taggedto'] . '</td>' ?>
+
+                                <?php } ?>
+
+
 
                                 <?php if ($role == 'Admin') { ?>
 
-                                    <?php echo '&nbsp;
+                                    <?php echo '
+                                <td>' . $array['collectedby'] . '</td>
+
+                                <td><form name="tag_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiontag()" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="tagedit">
+                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
+                                <input id="inptag_' . $array['itemid'] . '" name="taggedto" type="text" value="' . $array['taggedto'] . '" disabled>
+                                    
+                                    &nbsp;
 
                                 <button type="button" id="edittag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
 
@@ -341,6 +370,123 @@ $resultArr = pg_fetch_all($result);
                 </div>
         </section>
     </section>
+
+    <!--------------- POP-UP BOX ------------
+-------------------------------------->
+    <style>
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 100;
+            /* Sit on top */
+            padding-top: 100px;
+            /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0);
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 100vh;
+        }
+
+        @media (max-width:767px) {
+            .modal-content {
+                width: 50vh;
+            }
+        }
+
+        /* The Close Button */
+
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+
+            <div style="width:100%; text-align:right">
+                <p id="status1" class="label " style="display: inline !important;"><span class="claimstatus"></span></p>
+            </div>
+
+
+            <p style="font-size: small;">
+                <span class="itemname"></span><br />
+            </p>
+        </div>
+
+    </div>
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>
+
+        // Get the modal
+        var modal = document.getElementById("myModal");
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        function showDetails(id) {
+            // console.log(modal)
+            // console.log(modal.getElementsByClassName("data"))
+            var mydata = undefined
+            data.forEach(item => {
+                if (item["itemid"] == id) {
+                    mydata = item;
+                }
+            })
+
+            var keys = Object.keys(mydata)
+            keys.forEach(key => {
+                var span = modal.getElementsByClassName(key)
+                if (span.length > 0)
+                    span[0].innerHTML = mydata[key];
+            })
+            modal.style.display = "block";
+
+        }
+        // When the user clicks the button, open the modal 
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 
     <!-- Back top -->
     <script>
