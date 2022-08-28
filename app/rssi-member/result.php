@@ -401,7 +401,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         </tbody>
                     </table>
                     <div class="footer no-display">
-                        <p>Report card generated:&nbsp;<?php echo $date ?></p>
+                        <p>Report card generated:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p>
                     </div>
                 <?php
                         } else if ($id == "") {

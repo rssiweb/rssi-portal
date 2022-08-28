@@ -114,7 +114,7 @@ if (isset($_POST['login'])) {
 
                 <?php } ?>
                 <div class="col" style="display: inline-block; width:100%; text-align:right">
-                    Last password updated on: <?php echo @$password_updated_on ?>
+                    Last password updated on: <?php echo @date("d/m/Y g:i a", strtotime($password_updated_on)) ?>
                 </div>
                 <section class="box" style="padding: 2%;">
                     <div class="col-md-4 col-md-offset-4">

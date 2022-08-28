@@ -382,7 +382,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     </table>
 
                     <div class="footer no-display">
-                        <p style="text-align:right;">Admission form generated:&nbsp;<?php echo $date ?></p>
+                        <p style="text-align:right;">Admission form generated:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p>
                     </div>
                 <?php
                         } else if ($id == "") {

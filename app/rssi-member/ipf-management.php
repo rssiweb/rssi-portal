@@ -176,10 +176,10 @@ $resultArr = pg_fetch_all($result);
                             echo '<tr><td>' . $array['id'] . '</td>
                         <td>' . $array['memberid2'] . '/' . strtok($array['membername2'], ' ') . '</td>
                         <td>' . str_replace("(", "&nbsp;(", $array['ipf']) . '</td>
-                        <td>' . $array['timestamp'] . '</td> 
+                        <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td> 
                         <td>' . $array['ipfl'] . '</td>     
                         <td>' . $array['status2'] . '</td>
-                        <td>' . $array['respondedon'] . '</td>
+                        <td>' . @date("d/m/Y g:i a", strtotime($array['respondedon'])) . '</td>
                         <td>
 
                         <form name="ipfclose' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()">
@@ -195,7 +195,7 @@ $resultArr = pg_fetch_all($result);
                             <?php } ?>
                             <?php echo ' </form>
 
-' . $array['closedon'] . '
+' . @date("d/m/Y g:i a", strtotime($array['closedon'])) . '
       </td>' ?>
                             <?php  }
                     } else if (@$id == null) {

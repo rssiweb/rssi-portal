@@ -219,7 +219,7 @@ if (!$result) {
                         </table>
                          
                         <div class="footer no-display">
-                        <p style="text-align:right;">Admission form generated:&nbsp;' ?><?php echo $date ?><?php echo '</p>
+                        <p style="text-align:right;">Admission form generated:&nbsp;' ?><?php echo @date("d/m/Y g:i a", strtotime($date)) ?><?php echo '</p>
                         </div>' ?>
                 <?php }
             } else { ?> <p class="no-print">Please enter Student ID.</p> <?php } ?>
