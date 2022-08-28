@@ -19,8 +19,8 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
 if ($role == 'Admin') {
 
-    @$statuse = $_POST['get_statuse'];
-    @$appid = $_POST['get_appid'];
+    // @$statuse = $_POST['get_statuse'];
+    // @$appid = $_POST['get_appid'];
     @$statuse = $_GET['get_statuse'];
     @$appid = $_GET['get_appid'];
 
@@ -91,7 +91,7 @@ $resultArr = pg_fetch_all($result);
                         <div class="col" style="display: inline-block; width:100%; text-align:right">
                             Home / Asset Management
                         </div>
-                        <form id="myform" action="" method="POST" onsubmit="process()">
+                        <form id="myform" action="" method="GET" onsubmit="process()">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
                                     <select name="get_statuse" required class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">

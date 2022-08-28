@@ -448,8 +448,9 @@ $resultArr = pg_fetch_all($result);
 
 
             <p style="font-size: small;">
-                <span class="itemname"></span><br /><br />
-                <span style="font-size:10px;">Registered by&nbsp;<span class="collectedby"></span>&nbsp;on&nbsp;<span class="date"></span></span>
+                <span class="itemname"></span>
+                <!-- <br /><br />
+                <span style="font-size:10px;">Registered by&nbsp;<span class="collectedby"></span>&nbsp;on&nbsp;<span class="date"></span></span> -->
             </p>
         </div>
 
