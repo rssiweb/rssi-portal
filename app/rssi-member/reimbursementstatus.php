@@ -38,11 +38,18 @@ if ($role == 'Admin') {
   }
 }
 
-if ($role != 'Admin') {
+if ($role != 'Admin' && $status != 'ALL') {
 
   $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$user_check' AND year='$status' order by id desc");
   $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check' AND year='$status'");
   $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check' AND year='$status' AND claimstatus!='rejected'");
+}
+
+if ($role != 'Admin' && $status == 'ALL') {
+
+  $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$user_check' order by id desc");
+  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check'");
+  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check'AND claimstatus!='rejected'");
 }
 
 if (!$result) {
@@ -115,9 +122,20 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
             Record count:&nbsp;<?php echo sizeof($resultArr) ?>
             <br>Total Approved amount:&nbsp;<p class="label label-success"><?php echo ($resultArrr) ?></p>&nbsp;/&nbsp;<p class="label label-default"><?php echo ($resultArrrr) ?></p>
           </div>
-          <!-- <div class="col" style="display: inline-block; width:47%; text-align:right; font-size:small">
-            Home / Reimbursement Status
-          </div> -->
+          <div class="col" style="display: inline-block; width:47%; text-align:right">
+            Home / Reimbursement Status<br><br>
+            <form method="POST" action="export_function.php">
+              <input type="hidden" value="reimb" name="export_type" />
+              <input type="hidden" value="<?php echo $id ?>" name="id" />
+              <input type="hidden" value="<?php echo $status ?>" name="status" />
+              <input type="hidden" value="<?php echo $role ?>" name="role" />
+              <input type="hidden" value="<?php echo $user_check ?>" name="user_check" />
+
+              <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="Export CSV"><i class="fa-regular fa-file-excel" style="font-size:large;"></i></button>
+            </form>
+          </div>
         </div>
         <section class="box" style="padding: 2%;">
           <form action="" method="POST">

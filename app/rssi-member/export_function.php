@@ -20,6 +20,8 @@ if ($export_type == "fees") {
   student_export();
 } else if ($export_type == "gps") {
   gps_export();
+} else if ($export_type == "reimb") {
+  reimb_export();
 }
 
 function fees_export()
@@ -168,6 +170,57 @@ function gps_export()
   foreach ($resultArr as $array) {
 
     echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] . "\n";
+  }
+}
+
+function reimb_export()
+{
+
+
+  include("database.php");
+  @$status = $_POST['status'];
+  @$role = $_POST['role'];
+  @$user_check = $_POST['user_check'];
+
+  if ($role == 'Admin') {
+
+    @$id = strtoupper($_POST['id']);
+
+    if ($id == null && $status == 'ALL') {
+      $result = pg_query($con, "SELECT * FROM claim order by id desc");
+    } else if ($id == null && $status != 'ALL') {
+      $result = pg_query($con, "SELECT * FROM claim WHERE year='$status' order by id desc");
+    } else if ($id > 0 && $status != 'ALL') {
+      $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' AND year='$status' order by id desc");
+    } else if ($id > 0 && $status == 'ALL') {
+      $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' order by id desc");
+    } else {
+      $result = pg_query($con, "SELECT * FROM claim order by id desc");
+    }
+  }
+
+  if ($role != 'Admin' && $status != 'ALL') {
+
+    $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$user_check' order by id desc");
+  }
+
+  if ($role != 'Admin' && $status == 'ALL') {
+
+    $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$user_check' order by id desc");
+  }
+
+  if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+  }
+
+  $resultArr = pg_fetch_all($result);
+
+  echo 'Claim Number,Registered On,ID/F Name,Category,Claim head details,Claimed Amount (₹),Amount Transfered (₹),Status,Transfered Date,Bill,Remarks' . "\n";
+
+  foreach ($resultArr as $array) {
+
+    echo $array['reimbid'] . ',"' . substr($array['timestamp'], 0, 10) . '",' .  $array['registrationid'] . '/' . strtok($array['name'], ' ') . ',' . $array['selectclaimheadfromthelistbelow'] . ',"' . $array['claimheaddetails'] . '",' . $array['totalbillamount'] . ',' . $array['approvedamount'] . ',' . $array['claimstatus'] . ',' . $array['transfereddate'] . ',' . $array['uploadeddocuments'] . ',"' . $array['mediremarks'] . '"' . "\n";
   }
 }
 
