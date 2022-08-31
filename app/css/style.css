@@ -524,6 +524,12 @@
             color: #F2545F !important;
             font-size: 13px;
         }
+        
+        .noticea a:focus {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 13px;
+        }
         /*---------------------------------------
     CLASS NAME- link : URL DECORATION               
 -----------------------------------------*/

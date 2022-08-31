@@ -166,7 +166,11 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
               echo '<tr>' ?>
               <?php if ($array['uploadeddocuments'] != null) { ?>
                 <?php
-                echo '<td><span class="noticea"><a href="' . $array['uploadeddocuments'] . '" target="_blank">' . $array['reimbid'] . '</a></span></td>'
+                echo '<td>
+                
+                <span class="noticea"><a href="javascript:void(0)" onclick="showpdf(\'' . $array['reimbid'] . '\')">' . $array['reimbid'] . '</a></span>                
+                
+                </td>'
                 ?>
                 <?php } else { ?><?php
                                   echo '<td>' . $array['reimbid'] . '</td>' ?>
@@ -304,9 +308,11 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 
     <!-- Modal content -->
     <div class="modal-content">
-      <span class="close">&times;</span>
+      <span id="closedetails" class="close">&times;</span>
 
-      <div style="width:100%; text-align:right"><p id="status1" class="label " style="display: inline !important;"><span class="claimstatus"></span></p></div>
+      <div style="width:100%; text-align:right">
+        <p id="status1" class="label " style="display: inline !important;"><span class="claimstatus"></span></p>
+      </div>
 
 
       <p style="font-size: small;">
@@ -319,13 +325,33 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
     </div>
 
   </div>
+
+  <div id="myModalpdf" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+      <span id="closepdf" class="close">&times;</span>
+
+      <div style="width:100%; text-align:right">
+        <p id="status2" class="label " style="display: inline !important;"><span class="claimstatus"></span></p>
+      </div>
+
+
+      <p style="font-size: small;">
+        Claim Number: <span class="reimbid"></span><br />
+        <object id="docid" data="#" type="application/pdf" width="100%" height="450px"></object>
+      </p>
+    </div>
+
+  </div>
   <script>
     var data = <?php echo json_encode($resultArr) ?>
 
     // Get the modal
     var modal = document.getElementById("myModal");
-    // Get the <span> element that closes the modal
-    var span = document.getElementsByClassName("close")[0];
+
+    var closedetails = document.getElementById("closedetails");
+    var closepdf = document.getElementById("closepdf");
 
     function showDetails(id) {
       // console.log(modal)
@@ -344,33 +370,80 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
           span[0].innerHTML = mydata[key];
       })
       modal.style.display = "block";
-      
-    //class add 
-    var status = document.getElementById("status1")
-    if (mydata["claimstatus"] === "Claim settled") {
-      status.classList.add("label-success")
-      status.classList.remove("label-danger")
-    } else if (mydata["claimstatus"] === "Rejected") {
-      status.classList.remove("label-success")
-      status.classList.add("label-danger")
-    } else {
-      status.classList.remove("label-success")
-      status.classList.remove("label-danger")
-    }
-    //class add end
+
+      //class add 
+      var status = document.getElementById("status1")
+      if (mydata["claimstatus"] === "Claim settled") {
+        status.classList.add("label-success")
+        status.classList.remove("label-danger")
+      } else if (mydata["claimstatus"] === "Rejected") {
+        status.classList.remove("label-success")
+        status.classList.add("label-danger")
+      } else {
+        status.classList.remove("label-success")
+        status.classList.remove("label-danger")
+      }
+      //class add end
     }
     // When the user clicks the button, open the modal 
     // When the user clicks on <span> (x), close the modal
-    span.onclick = function() {
+    closedetails.onclick = function() {
       modal.style.display = "none";
     }
+
+    closepdf.onclick = function() {
+      modal1.style.display = "none";
+    }
+
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
       if (event.target == modal) {
         modal.style.display = "none";
+      } else if (event.target == modal1) {
+        modal1.style.display = "none";
       }
     }
   </script>
+
+  <script>
+    var data1 = <?php echo json_encode($resultArr) ?>
+
+    // Get the modal
+    var modal1 = document.getElementById("myModalpdf");
+
+    function showpdf(id1) {
+      var mydata1 = undefined
+      data1.forEach(item1 => {
+        if (item1["reimbid"] == id1) {
+          mydata1 = item1;
+        }
+      })
+      var keys1 = Object.keys(mydata1)
+      keys1.forEach(key => {
+        var span1 = modal1.getElementsByClassName(key)
+        if (span1.length > 0)
+          span1[0].innerHTML = mydata1[key];
+      })
+      modal1.style.display = "block";
+
+      //class add 
+      var statuss = document.getElementById("status2")
+      if (mydata1["claimstatus"] === "Claim settled") {
+        statuss.classList.add("label-success")
+        statuss.classList.remove("label-danger")
+      } else if (mydata1["claimstatus"] === "Rejected") {
+        statuss.classList.remove("label-success")
+        statuss.classList.add("label-danger")
+      } else {
+        statuss.classList.remove("label-success")
+        statuss.classList.remove("label-danger")
+      }
+      //class add end
+      var docid = document.getElementById("docid")
+      docid.data = mydata1["uploadeddocuments"]
+    }
+  </script>
+
 
 
 
