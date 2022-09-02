@@ -17,7 +17,14 @@
                         <!--<span class="badge">1</span>-->
                     </a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
-                    
+
+                        <li style="height: unset;">
+                            <a class="notification" href="https://drive.google.com/file/d/1VOuqKRhyy3hycuiIMi022qKAzvPVd4dw/view" target="_blank">Responsibilities of Centre In charge / Asst. centre in-
+                                charge
+                                <span class="label label-info">Sep 2, 2022</span>
+                            </a>
+                        </li>
+
                         <li style="height: unset;">
                             <a class="notification" href="https://youtu.be/W3sWtsuRlTM" target="_blank">User Guide My Account
                                 <span class="label label-info">Dec 8, 2021</span>
