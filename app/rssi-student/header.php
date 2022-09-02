@@ -17,15 +17,9 @@
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; /*overflow-y: auto;*/">
 
                         <li style="height: unset;">
-                            <a class="notification" href="https://docs.google.com/document/d/1CpnFSbSjn7wB2ey9d-ZtikgC0WlhT86fO7k3gOSLTQE/edit" target="_blank">National Module Syllabus
-                                <span class="label label-info">Apr 5, 2022</span>
-                                <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>-->
-                            </a>
-                        </li>
-
-                        <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1BPcxYM3X9PgQZDoI_9aK5lpEwuvdXVby/view" target="_blank">How to join Google space
                                 <span class="label label-info">Dec 3, 2021</span>
+                                <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>-->
                             </a>
                         </li>
                         <li style="height: unset;">
@@ -38,11 +32,7 @@
                                 <span class="label label-info">Aug 1, 2021</span>
                             </a>
                         </li>
-                        <!--<li style="height: unset;">
-                            <a class="notification" href="https://docs.google.com/spreadsheets/d/12y-AWluI4FyefSLvh-PXvSxTZXMOZQzpYVMHeLR8ivc/edit?usp=sharing" target="_blank">Exam Attendance Tracker_QT1/2021
-                                <span class="label label-info">Jul 9, 2021</span>
-                            </a>
-                        </li>-->
+
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting
                                 <span class="label label-info">Jul 7, 2021</span>

@@ -17,16 +17,11 @@
                         <!--<span class="badge">1</span>-->
                     </a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
-
-                        <li style="height: unset;">
-                            <a class="notification" href="https://docs.google.com/document/d/1CpnFSbSjn7wB2ey9d-ZtikgC0WlhT86fO7k3gOSLTQE/edit" target="_blank">National Module Syllabus
-                                <span class="label label-info">Apr 5, 2022</span>
-                                <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span> -->
-                            </a>
-                        </li>
+                    
                         <li style="height: unset;">
                             <a class="notification" href="https://youtu.be/W3sWtsuRlTM" target="_blank">User Guide My Account
                                 <span class="label label-info">Dec 8, 2021</span>
+                                <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span> -->
                             </a>
                         </li>
                         <li style="height: unset;">
