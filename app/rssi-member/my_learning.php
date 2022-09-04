@@ -49,7 +49,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>My Learning</title>
+    <title>iExplore-My Learning</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -94,7 +94,7 @@ $resultArr = pg_fetch_all($result);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / <span class="noticea"><a href="wbt.php" target="_self">WBT</a></span> / My Learning
+                        Home / <span class="noticea"><a href="iexplore.php" target="_self">WBT</a></span> / My Learning
                     </div>
                 </div>
                 <section class="box" style="padding: 2%;">

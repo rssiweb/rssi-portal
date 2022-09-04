@@ -88,6 +88,9 @@
                         <li style="height: unset;">
                             <a style="font-size:13px;" href="student.php"><i class="fa-solid fa-user-graduate"></i>&nbsp;RSSI Student</a>
                         </li>
+                        <li style="height: unset;">
+                            <a style="font-size:13px;" href="iexplore.php"><i class="fa-solid fa-arrow-up-a-z"></i>&nbsp;iExplore</a>
+                        </li>
                         <?php if (@$role == 'Offline Manager' || @$role == 'Admin') {
                         ?>
                             <li style="height: unset;">

@@ -72,7 +72,7 @@ $resultArr1 = pg_fetch_all($result1);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>RSSI-WBT</title>
+    <title>iExplore</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -130,10 +130,10 @@ $resultArr1 = pg_fetch_all($result1);
             <div class="col-md-12">
                 <div class="row">
                     <?php if ($role == 'Admin') { ?>
-                        <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / WMS (WBT Management System)
+                        <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / iExplore Management System
                         </div>
                     <?php } else { ?>
-                        <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / WBT (Web-based training)
+                        <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / iExplore Web-based training (WBT)
                         </div>
                     <?php } ?>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
@@ -158,7 +158,7 @@ $resultArr1 = pg_fetch_all($result1);
                 <?php } ?>
 
                     <section class="box" style="padding: 2%;">
-                        <form autocomplete="off" name="wbt" id="wbt" action="wbt.php" method="POST">
+                        <form autocomplete="off" name="wbt" id="wbt" action="iexplore.php" method="POST">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
 
