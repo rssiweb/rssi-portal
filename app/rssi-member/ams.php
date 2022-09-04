@@ -172,7 +172,7 @@ if ($_POST) {
                         </form>
 
                 <?php
-                include("../rssi-member/database.php");
+                
                 $result = pg_query($con, "SELECT * FROM notice order by date desc");
                 if (!$result) {
                     echo "An error occurred.\n";

@@ -33,7 +33,7 @@ $date = date('Y-m-d H:i:s');
 @$is_user = $_POST['is_user'];
 
 if ($id != null && $aaid == null) {
-$result = pg_query($con, "SELECT distinct rssimyaccount_members.doj,
+    $result = pg_query($con, "SELECT distinct rssimyaccount_members.doj,
 rssimyaccount_members.associatenumber,
 rssimyaccount_members.fullname,
 rssimyaccount_members.email,
@@ -203,7 +203,7 @@ asset.status,
 asset.userid,
 gps.taggedto
 order by filterstatus asc,today desc");
-} 
+}
 
 if ($id == null && $aaid != null) {
     $result = pg_query($con, "SELECT distinct rssimyaccount_members.doj,
@@ -377,8 +377,9 @@ if ($id == null && $aaid != null) {
     gps.taggedto
     order by filterstatus asc,today desc");
 }
-if ($id == null && $aaid == null){
-    $result = pg_query($con, "SELECT * from rssimyaccount_members where associatenumber is null");}
+if ($id == null && $aaid == null) {
+    $result = pg_query($con, "SELECT * from rssimyaccount_members where associatenumber is null");
+}
 
 if (!$result) {
     echo "An error occurred.\n";
@@ -495,7 +496,7 @@ $resultArr = pg_fetch_all($result);
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
-                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" disabled >
+                                <select name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" disabled>
                                     <?php if ($id == null) { ?>
                                         <option value="" disabled selected hidden>Select Status</option>
                                     <?php
@@ -506,7 +507,7 @@ $resultArr = pg_fetch_all($result);
                                     <option>Active</option>
                                     <option>Inactive</option>
                                 </select>
-                                <input name="get_aaid" id="get_aaid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate ID" value="<?php echo $aaid ?>" >
+                                <input name="get_aaid" id="get_aaid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aaid ?>">
                             </div>
                         </div>
                         <div class="col2 left" style="display: inline-block;">
@@ -536,7 +537,7 @@ $resultArr = pg_fetch_all($result);
                         checkbox.addEventListener('change', (event) => {
                             if (event.target.checked) {
                                 document.getElementById("get_id").disabled = true;
-                                document.getElementById("get_aatid").disabled = false;
+                                document.getElementById("get_aaid").disabled = false;
                             } else {
                                 document.getElementById("get_id").disabled = false;
                                 document.getElementById("get_aaid").disabled = true;
@@ -616,7 +617,7 @@ $resultArr = pg_fetch_all($result);
             
             
             <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 16px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;
+                                <i class="fa-regular fa-file-lines" style="font-size: 16px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;
             
             <a id="profile" href="myprofile.php?get_id=' . $array['associatenumber'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
 
@@ -734,6 +735,7 @@ $resultArr = pg_fetch_all($result);
             </div>
 
             WBT Completed:&nbsp;<span class="attd"></span>
+            <div class="col" style="display: inline-block; text-align:right"><a id="wbt_details" href="#" target="_blank"><i class="fa-regular fa-eye" style="font-size: 20px ;color:#777777" title="WBT Details"></i></a></div>
 
 
 
@@ -776,6 +778,9 @@ $resultArr = pg_fetch_all($result);
                 status.classList.add("label-danger")
             }
             //class add end
+
+            var profile = document.getElementById("wbt_details")
+            profile.href = "/rssi-member/wbt_status.php?get_aid=" + mydata["associatenumber"]
 
         }
         // When the user clicks the button, open the modal 
