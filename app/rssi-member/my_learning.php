@@ -117,10 +117,11 @@ $resultArr = pg_fetch_all($result);
                         <thead style="font-size: 12px;">
                             <tr>
                             <th scope="col">Associate number</th>
-                            <th scope="col">Timestamp</th>
+                            <th scope="col">Completed on</th>
                             <th scope="col">Course id</th>    
                             <th scope="col">Course name</th>    
                             <th scope="col">Score</th>
+                            <th scope="col">Validity</th>
                             </tr>
                         </thead>' ?>
                     <?php if ($resultArr != null) {
@@ -132,6 +133,7 @@ $resultArr = pg_fetch_all($result);
                                     <td>' . $array['courseid'] . '</td>
                                     <td>'. $array['coursename'] .'</td>
                                     <td>' . round((float)$array['f_score'] * 100) . '%' . '</td>
+                                    <td>'. $array['validity'] .'</td>
                                     </tr>';
                         } }
                         

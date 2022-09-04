@@ -188,7 +188,7 @@ $resultArr1 = pg_fetch_all($result1);
                                     </span>
                                     <span class="input-help">
                                         <input type="number" name="passingmarks" max="100" accuracy="2" min="0" class="form-control" style="width:max-content; display:inline-block" placeholder="%" value="" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Mastery Score %</small>
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Mastery Score</small>
                                     </span>
 
                                     <span class="input-help">
@@ -271,7 +271,7 @@ $resultArr1 = pg_fetch_all($result1);
                                 <th scope="col">Course id</th>
                                 <th scope="col">Course name</th>
                                 <th scope="col">Language</th>
-                                <th scope="col">Passing marks</th>
+                                <th scope="col">Mastery Score</th>
                                 <th scope="col">Validity</th>
                                 <th scope="col">Assesment</th>
                             </tr>
