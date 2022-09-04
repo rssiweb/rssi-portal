@@ -29,7 +29,10 @@ date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 
 @$id = $_POST['get_id'];
+@$aaid = $_POST['get_aaid'];
+@$is_user = $_POST['is_user'];
 
+if ($id != null && $aaid == null) {
 $result = pg_query($con, "SELECT distinct rssimyaccount_members.doj,
 rssimyaccount_members.associatenumber,
 rssimyaccount_members.fullname,
@@ -115,7 +118,7 @@ gps.taggedto,
 max(userlog_member.logintime) as logintime FROM rssimyaccount_members 
 left join asset ON asset.userid=rssimyaccount_members.associatenumber 
 left join userlog_member ON userlog_member.username=rssimyaccount_members.associatenumber
-left join gps ON gps.taggedto=rssimyaccount_members.associatenumber 
+left join gps ON gps.taggedto=rssimyaccount_members.associatenumber
 
 WHERE filterstatus='$id' group by rssimyaccount_members.doj,
 rssimyaccount_members.associatenumber,
@@ -200,6 +203,182 @@ asset.status,
 asset.userid,
 gps.taggedto
 order by filterstatus asc,today desc");
+} 
+
+if ($id == null && $aaid != null) {
+    $result = pg_query($con, "SELECT distinct rssimyaccount_members.doj,
+    rssimyaccount_members.associatenumber,
+    rssimyaccount_members.fullname,
+    rssimyaccount_members.email,
+    rssimyaccount_members.basebranch,
+    rssimyaccount_members.gender,
+    rssimyaccount_members.dateofbirth,
+    rssimyaccount_members.howyouwouldliketobeaddressed,
+    rssimyaccount_members.currentaddress,
+    rssimyaccount_members.permanentaddress,
+    rssimyaccount_members.languagedetailsenglish,
+    rssimyaccount_members.languagedetailshindi,
+    rssimyaccount_members.workexperience,
+    rssimyaccount_members.nationalidentifier,
+    rssimyaccount_members.yourthoughtabouttheworkyouareengagedwith,
+    rssimyaccount_members.applicationnumber,
+    rssimyaccount_members.position,
+    rssimyaccount_members.approvedby,
+    rssimyaccount_members.associationstatus,
+    rssimyaccount_members.effectivedate,
+    rssimyaccount_members.remarks,
+    rssimyaccount_members.phone,
+    rssimyaccount_members.identifier,
+    rssimyaccount_members.astatus,
+    rssimyaccount_members.badge,
+    rssimyaccount_members.colors,
+    rssimyaccount_members.gm,
+    rssimyaccount_members.lastupdatedon,
+    rssimyaccount_members.photo,
+    rssimyaccount_members.mydoc,
+    rssimyaccount_members.class,
+    rssimyaccount_members.notification,
+    rssimyaccount_members.age,
+    rssimyaccount_members.depb,
+    rssimyaccount_members.attd,
+    rssimyaccount_members.filterstatus,
+    rssimyaccount_members.today,
+    rssimyaccount_members.allocationdate,
+    rssimyaccount_members.maxclass,
+    rssimyaccount_members.classtaken,
+    rssimyaccount_members.leave,
+    rssimyaccount_members.ctp,
+    rssimyaccount_members.feedback,
+    rssimyaccount_members.evaluationpath,
+    rssimyaccount_members.leaveapply,
+    rssimyaccount_members.cl,
+    rssimyaccount_members.sl,
+    rssimyaccount_members.el,
+    rssimyaccount_members.engagement,
+    rssimyaccount_members.cltaken,
+    rssimyaccount_members.sltaken,
+    rssimyaccount_members.eltaken,
+    rssimyaccount_members.othtaken,
+    rssimyaccount_members.clbal,
+    rssimyaccount_members.slbal,
+    rssimyaccount_members.elbal,
+    rssimyaccount_members.officialdoc,
+    rssimyaccount_members.profile,
+    rssimyaccount_members.filename,
+    rssimyaccount_members.fname,
+    rssimyaccount_members.quicklink,
+    rssimyaccount_members.yos,
+    rssimyaccount_members.role,
+    rssimyaccount_members.originaldoj,
+    rssimyaccount_members.iddoc,
+    rssimyaccount_members.vaccination,
+    rssimyaccount_members.scode,
+    rssimyaccount_members.exitinterview,
+    rssimyaccount_members.questionflag,
+    rssimyaccount_members.googlechat,
+    rssimyaccount_members.adjustedleave,
+    rssimyaccount_members.ipfl,
+    rssimyaccount_members.eduq,
+    rssimyaccount_members.mjorsub,
+    rssimyaccount_members.disc,
+    rssimyaccount_members.hbday,
+    rssimyaccount_members.on_leave,
+    rssimyaccount_members.attd_pending,
+    rssimyaccount_members.approveddate,
+    asset.status,
+    asset.userid,
+    gps.taggedto,
+    max(userlog_member.logintime) as logintime FROM rssimyaccount_members 
+    left join asset ON asset.userid=rssimyaccount_members.associatenumber 
+    left join userlog_member ON userlog_member.username=rssimyaccount_members.associatenumber
+    left join gps ON gps.taggedto=rssimyaccount_members.associatenumber
+    
+    WHERE associatenumber='$aaid' group by rssimyaccount_members.doj,
+    rssimyaccount_members.associatenumber,
+    rssimyaccount_members.fullname,
+    rssimyaccount_members.email,
+    rssimyaccount_members.basebranch,
+    rssimyaccount_members.gender,
+    rssimyaccount_members.dateofbirth,
+    rssimyaccount_members.howyouwouldliketobeaddressed,
+    rssimyaccount_members.currentaddress,
+    rssimyaccount_members.permanentaddress,
+    rssimyaccount_members.languagedetailsenglish,
+    rssimyaccount_members.languagedetailshindi,
+    rssimyaccount_members.workexperience,
+    rssimyaccount_members.nationalidentifier,
+    rssimyaccount_members.yourthoughtabouttheworkyouareengagedwith,
+    rssimyaccount_members.applicationnumber,
+    rssimyaccount_members.position,
+    rssimyaccount_members.approvedby,
+    rssimyaccount_members.associationstatus,
+    rssimyaccount_members.effectivedate,
+    rssimyaccount_members.remarks,
+    rssimyaccount_members.phone,
+    rssimyaccount_members.identifier,
+    rssimyaccount_members.astatus,
+    rssimyaccount_members.badge,
+    rssimyaccount_members.colors,
+    rssimyaccount_members.gm,
+    rssimyaccount_members.lastupdatedon,
+    rssimyaccount_members.photo,
+    rssimyaccount_members.mydoc,
+    rssimyaccount_members.class,
+    rssimyaccount_members.notification,
+    rssimyaccount_members.age,
+    rssimyaccount_members.depb,
+    rssimyaccount_members.attd,
+    rssimyaccount_members.filterstatus,
+    rssimyaccount_members.today,
+    rssimyaccount_members.allocationdate,
+    rssimyaccount_members.maxclass,
+    rssimyaccount_members.classtaken,
+    rssimyaccount_members.leave,
+    rssimyaccount_members.ctp,
+    rssimyaccount_members.feedback,
+    rssimyaccount_members.evaluationpath,
+    rssimyaccount_members.leaveapply,
+    rssimyaccount_members.cl,
+    rssimyaccount_members.sl,
+    rssimyaccount_members.el,
+    rssimyaccount_members.engagement,
+    rssimyaccount_members.cltaken,
+    rssimyaccount_members.sltaken,
+    rssimyaccount_members.eltaken,
+    rssimyaccount_members.othtaken,
+    rssimyaccount_members.clbal,
+    rssimyaccount_members.slbal,
+    rssimyaccount_members.elbal,
+    rssimyaccount_members.officialdoc,
+    rssimyaccount_members.profile,
+    rssimyaccount_members.filename,
+    rssimyaccount_members.fname,
+    rssimyaccount_members.quicklink,
+    rssimyaccount_members.yos,
+    rssimyaccount_members.role,
+    rssimyaccount_members.originaldoj,
+    rssimyaccount_members.iddoc,
+    rssimyaccount_members.vaccination,
+    rssimyaccount_members.scode,
+    rssimyaccount_members.exitinterview,
+    rssimyaccount_members.questionflag,
+    rssimyaccount_members.googlechat,
+    rssimyaccount_members.adjustedleave,
+    rssimyaccount_members.ipfl,
+    rssimyaccount_members.eduq,
+    rssimyaccount_members.mjorsub,
+    rssimyaccount_members.disc,
+    rssimyaccount_members.hbday,
+    rssimyaccount_members.on_leave,
+    rssimyaccount_members.attd_pending,
+    rssimyaccount_members.approveddate,
+    asset.status,
+    asset.userid,
+    gps.taggedto
+    order by filterstatus asc,today desc");
+}
+if ($id == null && $aaid == null){
+    $result = pg_query($con, "SELECT * from rssimyaccount_members where associatenumber is null");}
 
 if (!$result) {
     echo "An error occurred.\n";
@@ -316,7 +495,7 @@ $resultArr = pg_fetch_all($result);
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
-                                <select name="get_id" class="form-control" style="width:max-content;" placeholder="Appraisal type" required>
+                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" disabled >
                                     <?php if ($id == null) { ?>
                                         <option value="" disabled selected hidden>Select Status</option>
                                     <?php
@@ -327,13 +506,43 @@ $resultArr = pg_fetch_all($result);
                                     <option>Active</option>
                                     <option>Inactive</option>
                                 </select>
+                                <input name="get_aaid" id="get_aaid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate ID" value="<?php echo $aaid ?>" >
                             </div>
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                 <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                         </div>
+                        <div id="filter-checks">
+                            <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                            <label for="is_user" style="font-weight: 400;">Search by Associate ID</label>
+                        </div>
                     </form>
+                    <script>
+                        if ($('#is_user').not(':checked').length > 0) {
+
+                            document.getElementById("get_id").disabled = false;
+                            document.getElementById("get_aaid").disabled = true;
+
+                        } else {
+
+                            document.getElementById("get_id").disabled = true;
+                            document.getElementById("get_aaid").disabled = false;
+
+                        }
+
+                        const checkbox = document.getElementById('is_user');
+
+                        checkbox.addEventListener('change', (event) => {
+                            if (event.target.checked) {
+                                document.getElementById("get_id").disabled = true;
+                                document.getElementById("get_aatid").disabled = false;
+                            } else {
+                                document.getElementById("get_id").disabled = false;
+                                document.getElementById("get_aaid").disabled = true;
+                            }
+                        })
+                    </script>
                     <?php
                     echo '<table class="table">
           <thead style="font-size: 12px;">
@@ -402,10 +611,16 @@ $resultArr = pg_fetch_all($result);
                                 <?php } ?>
 
                                 <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br>s-' . $array['slbal'] . ',&nbsp;c-' . $array['clbal'] . '</td>
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br>s&nbsp;' . $array['slbal'] . ',&nbsp;c&nbsp;' . $array['clbal'] . '</td>
             <td style="white-space: unset;">
             
+            
+            <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 16px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;
+            
             <a id="profile" href="myprofile.php?get_id=' . $array['associatenumber'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
+
+            
 
                         <form name="ipfpush' . $array['associatenumber'] . '" action="#" method="POST" onsubmit="myFunction()" style="display:inline;">
                         <input type="hidden" name="form-type" type="text" value="ipfpush">
@@ -448,6 +663,133 @@ $resultArr = pg_fetch_all($result);
         </div>
     </section>
     </section>
+
+    <!--------------- POP-UP BOX ------------
+-------------------------------------->
+    <style>
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 100;
+            /* Sit on top */
+            padding-top: 100px;
+            /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0);
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 100vh;
+        }
+
+        @media (max-width:767px) {
+            .modal-content {
+                width: 50vh;
+            }
+        }
+
+        /* The Close Button */
+
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div style="width:100%; text-align:right">
+                <p id="status" class="label " style="display: inline !important;"><span class="fullname"></span></p>
+            </div>
+
+            WBT Completed:&nbsp;<span class="attd"></span>
+
+
+
+        </div>
+
+    </div>
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>
+
+        // Get the modal
+        var modal = document.getElementById("myModal");
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        function showDetails(id) {
+            // console.log(modal)
+            // console.log(modal.getElementsByClassName("data"))
+            var mydata = undefined
+            data.forEach(item => {
+                if (item["associatenumber"] == id) {
+                    mydata = item;
+                }
+            })
+
+            var keys = Object.keys(mydata)
+            keys.forEach(key => {
+                var span = modal.getElementsByClassName(key)
+                if (span.length > 0)
+                    span[0].innerHTML = mydata[key];
+            })
+            modal.style.display = "block";
+
+            //class add 
+            var status = document.getElementById("status")
+            if (mydata["filterstatus"] === "Active") {
+                status.classList.add("label-success")
+                status.classList.remove("label-danger")
+            } else {
+                status.classList.remove("label-success")
+                status.classList.add("label-danger")
+            }
+            //class add end
+
+        }
+        // When the user clicks the button, open the modal 
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
     <script>
         function myFunction() {
             alert("IPF has been initiated in the system.");
