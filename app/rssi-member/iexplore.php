@@ -43,13 +43,13 @@ if ($role == 'Admin') {
 @$language1 = $_POST['language1'];
 
 if (($courseid1 == null && $language1 == 'ALL')) {
-    $result1 = pg_query($con, "select * from wbt");
+    $result1 = pg_query($con, "select * from wbt order by date desc");
 } else if (($courseid1 == null && ($language1 != 'ALL' && $language1 != null))) {
-    $result1 = pg_query($con, "select * from wbt where language='$language1'");
+    $result1 = pg_query($con, "select * from wbt where language='$language1' order by date desc");
 }  else if (($courseid1 != null && ($language1 == null || $language1 == 'ALL'))) {
-    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1'");
+    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' order by date desc");
 } else if (($courseid1 != null && ($language1 != 'ALL' && $language1 != null))) {
-    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' AND language='$language1'");
+    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' AND language='$language1' order by date desc");
 }
 
 else {
@@ -137,7 +137,7 @@ $resultArr1 = pg_fetch_all($result1);
                         </div>
                     <?php } ?>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        <a href="my_learning.php" target="_self" class="btn btn-danger btn-sm" role="button"><i class="fa-solid fa-book-open-reader"></i>&nbsp;&nbsp;My Learnings</a>
+                        <a href="my_learning.php" target="_self" class="btn btn-danger btn-sm" role="button">My Learnings</a>
                     </div>
                 </div>
                 <?php if ($role == 'Admin') { ?>
@@ -205,11 +205,13 @@ $resultArr1 = pg_fetch_all($result1);
                                                 <option hidden selected><?php echo $validity ?></option>
                                             <?php }
                                             ?>
-                                            <option>1 year</option>
-                                            <option>2 year</option>
-                                            <option>Lifetime</option>
+                                            <option>0.5</option>
+                                            <option>1</option>
+                                            <option>2</option>
+                                            <option>3</option>
+                                            <option>5</option>
                                         </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Validity</small>
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Validity (Year)</small>
                                     </span>
 
                                     <input type="hidden" name="issuedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="<?php echo $fullname ?>" required readonly>
@@ -272,7 +274,7 @@ $resultArr1 = pg_fetch_all($result1);
                                 <th scope="col">Course name</th>
                                 <th scope="col">Language</th>
                                 <th scope="col">Mastery Score</th>
-                                <th scope="col">Validity</th>
+                                <th scope="col">Validity (Year)</th>
                                 <th scope="col">Assesment</th>
                             </tr>
                         </thead>' ?>
@@ -286,7 +288,7 @@ $resultArr1 = pg_fetch_all($result1);
                                 <td>' . $array['language'] . '</td>
                                 <td>' . $array['passingmarks'] . '%</td>
                                 <td>' . $array['validity'] . '</td>
-                                <td><a href="' . $array['url'] . '" target="_blank" title="Click here"><button type="button" id="btn" class="btn btn-info btn-sm" style="outline: none; color:#fff"></span><i class="fa-regular fa-pen-to-square"></i>&nbsp;Launch</button></a></td>
+                                <td><a href="' . $array['url'] . '" target="_blank" title="'.$array['coursename'].'-'.$array['language'].'"><button type="button" id="btn" class="btn btn-warning btn-sm" style="outline: none; color:#fff"></span>Launch&nbsp;'.$array['courseid'].'</button></a></td>
                             </tr>';
                             }
                         } else if ($courseid1 == null && $language1 == null) {
