@@ -53,7 +53,7 @@ if (($courseid1 == null && $language1 == 'ALL')) {
 }
 
 else {
-    $result1 = pg_query($con, "select * from wbt WHERE courseid=''");
+    $result1 = pg_query($con, "select * from wbt order by date desc");
 }
 if (!$result1) {
     echo "An error occurred.\n";
