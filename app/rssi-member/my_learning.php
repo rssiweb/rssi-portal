@@ -162,15 +162,15 @@ $resultArr = pg_fetch_all($result);
 
 
 
-                                <?php if ((date_format($date, "d/m/Y g:i a") >= date('d/m/Y g:i a', time()))) { ?>
+                                <?php if ((date_format($date, "Y-m-d") > date('Y-m-d', time()))) { ?>
 
                                     <?php echo '<p class="label label-success">Active</p>' ?>
 
-                                <?php } else if ((date_format($date, "d/m/Y g:i a") <= date('d/m/Y g:i a', time()))) { ?>
+                                <?php } else { ?>
 
                                     <?php echo '<p class="label label-default">Expired</p>' ?>
 
-                                <?php } else {
+                                <?php
                                 } ?>
                             <?php } ?>
                         <?php echo '</td></tr>';
