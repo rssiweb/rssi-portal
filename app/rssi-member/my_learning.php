@@ -121,7 +121,8 @@ $resultArr = pg_fetch_all($result);
                             <th scope="col">Course id</th>    
                             <th scope="col">Course name</th>    
                             <th scope="col">Score</th>
-                            <th scope="col">Validity</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Valid upto</th>
                             </tr>
                         </thead>' ?>
                     <?php if ($resultArr != null) {
@@ -131,21 +132,45 @@ $resultArr = pg_fetch_all($result);
                                 <tr><td>' . substr($array['wassociatenumber'], 0, 10) . '</td>
                                     <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                     <td>' . $array['courseid'] . '</td>
-                                    <td>'. $array['coursename'] .'</td>
-                                    <td>' . round((float)$array['f_score'] * 100) . '%' . '</td>
-                                    <td>'. $array['validity'] .'</td>
-                                    </tr>';
-                        } }
-                        
-                        else if ($role == 'Admin' && $cid == null && $aid == null) { ?>
-                            <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
-                        <?php } 
-                        
-                        else if ($role != 'Admin' && $cid == null) { ?>
-                            <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
-                        <?php } 
-                        
-                        else {
+                                    <td>' . $array['coursename'] . '</td>
+                                    <td>' . round((float)$array['f_score'] * 100) . '%' . '</td><td>' ?>
+
+                            <?php
+                            $validity = $array['validity'];
+                            $date = date_create($array['timestamp']);
+                            date_add($date, date_interval_create_from_date_string("$validity years"));
+                            echo date_format($date, "d/m/Y g:i a");
+
+                            if (($array['passingmarks'] <= round((float)$array['f_score'] * 100)) && date_format($date, "d/m/Y g:i a") >= date('d/m/Y g:i a', time())) { ?>
+
+                                <?php echo '<p class="label label-success">Complete</p>&nbsp;<p class="label label-info">Active</p>' ?>
+
+                            <?php } else if (($array['passingmarks'] <= round((float)$array['f_score'] * 100)) && date_format($date, "d/m/Y g:i a") <= date('d/m/Y g:i a', time())) { ?>
+
+                                <?php echo '<p class="label label-default">Expired</p>' ?>
+
+                            <?php } else { ?>
+
+                                <?php echo '<p class="label label-danger">Incomplete</p>' ?>
+                            <?php } ?>
+
+                            <?php echo
+                            '</td><td>' ?>
+                            <?php if ($array['passingmarks'] <= round((float)$array['f_score'] * 100)) { ?>
+                                <?php
+                                // $validity = $array['validity'];
+                                // $date = date_create($array['timestamp']);
+                                // date_add($date, date_interval_create_from_date_string("$validity years"));
+                                echo date_format($date, "d/m/Y g:i a");
+                                ?>
+                            <?php } ?>
+                        <?php echo '</td></tr>';
+                        }
+                    } else if ($role == 'Admin' && $cid == null && $aid == null) { ?>
+                        <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
+                    <?php } else if ($role != 'Admin' && $cid == null) { ?>
+                        <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
+                        <?php } else {
                         echo '<tr>
                         <td colspan="5">No record found for' ?>&nbsp;
 
