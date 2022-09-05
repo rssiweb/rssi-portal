@@ -39,8 +39,8 @@ if ($role == 'Admin') {
 }
 
 
-@$courseid1 = $_POST['courseid1'];
-@$language1 = $_POST['language1'];
+@$courseid1 = trim($_GET['courseid1']);
+@$language1 = $_GET['language1'];
 
 if (($courseid1 == null && $language1 == 'ALL')) {
     $result1 = pg_query($con, "select * from wbt order by date desc");
@@ -230,7 +230,7 @@ $resultArr1 = pg_fetch_all($result1);
                     <?php if ($role != 'Admin') { ?>
                         <section class="box" style="padding: 2%;">
                     <?php } ?>
-                        <form action="" method="POST">
+                        <form action="" method="GET">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
                                     <span class="input-help">
