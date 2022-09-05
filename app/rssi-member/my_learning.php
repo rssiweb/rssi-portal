@@ -139,7 +139,7 @@ $resultArr = pg_fetch_all($result);
                             $validity = $array['validity'];
                             $date = date_create($array['timestamp']);
                             date_add($date, date_interval_create_from_date_string("$validity years"));
-                            echo date_format($date, "d/m/Y g:i a");
+                            date_format($date, "d/m/Y g:i a");
 
                             if (($array['passingmarks'] <= round((float)$array['f_score'] * 100)) && date_format($date, "d/m/Y g:i a") >= date('d/m/Y g:i a', time())) { ?>
 
