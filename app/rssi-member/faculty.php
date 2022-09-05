@@ -780,7 +780,7 @@ $resultArr = pg_fetch_all($result);
             //class add end
 
             var profile = document.getElementById("wbt_details")
-            profile.href = "/rssi-member/wbt_status.php?get_aid=" + mydata["associatenumber"]
+            profile.href = "/rssi-member/my_learning.php?get_aid=" + mydata["associatenumber"]
 
         }
         // When the user clicks the button, open the modal 

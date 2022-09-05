@@ -141,13 +141,9 @@ $resultArr = pg_fetch_all($result);
                             date_add($date, date_interval_create_from_date_string("$validity years"));
                             date_format($date, "d/m/Y g:i a");
 
-                            if (($array['passingmarks'] <= round((float)$array['f_score'] * 100)) && date_format($date, "d/m/Y g:i a") >= date('d/m/Y g:i a', time())) { ?>
+                            if (($array['passingmarks'] <= round((float)$array['f_score'] * 100))) { ?>
 
-                                <?php echo '<p class="label label-success">Complete</p>&nbsp;<p class="label label-info">Active</p>' ?>
-
-                            <?php } else if (($array['passingmarks'] <= round((float)$array['f_score'] * 100)) && date_format($date, "d/m/Y g:i a") <= date('d/m/Y g:i a', time())) { ?>
-
-                                <?php echo '<p class="label label-default">Expired</p>' ?>
+                                <?php echo '<p class="label label-success">Completed</p>' ?>
 
                             <?php } else { ?>
 
@@ -162,7 +158,20 @@ $resultArr = pg_fetch_all($result);
                                 // $date = date_create($array['timestamp']);
                                 // date_add($date, date_interval_create_from_date_string("$validity years"));
                                 echo date_format($date, "d/m/Y g:i a");
-                                ?>
+                                ?>&nbsp;
+
+
+
+                                <?php if ((date_format($date, "d/m/Y g:i a") >= date('d/m/Y g:i a', time()))) { ?>
+
+                                    <?php echo '<p class="label label-success">Active</p>' ?>
+
+                                <?php } else if ((date_format($date, "d/m/Y g:i a") <= date('d/m/Y g:i a', time()))) { ?>
+
+                                    <?php echo '<p class="label label-default">Expired</p>' ?>
+
+                                <?php } else {
+                                } ?>
                             <?php } ?>
                         <?php echo '</td></tr>';
                         }
