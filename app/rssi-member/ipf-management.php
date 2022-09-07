@@ -178,9 +178,14 @@ $resultArr = pg_fetch_all($result);
                         <td>' . str_replace("(", "&nbsp;(", $array['ipf']) . '</td>
                         <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td> 
                         <td>' . $array['ipfl'] . '</td>     
-                        <td>' . $array['status2'] . '</td>
-                        <td>' . @date("d/m/Y g:i a", strtotime($array['respondedon'])) . '</td>
-                        <td>
+                        <td>' . $array['status2'] . '</td>' ?>
+
+                            <?php if ($array['respondedon'] != null) { ?>
+                                <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['respondedon'])) . '</td>' ?>
+                                <?php } else { ?><?php echo '<td></td>' ?>
+                            <?php } ?>
+
+                            <?php echo '<td>
 
                         <form name="ipfclose' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()">
                         <input type="hidden" name="form-type" type="text" value="ipfclose">
@@ -193,10 +198,14 @@ $resultArr = pg_fetch_all($result);
                         padding: 0px;
                         border: none;" title="Closed"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>' ?>
                             <?php } ?>
-                            <?php echo ' </form>
+                            <?php echo '</form>' ?>
 
-' . @date("d/m/Y g:i a", strtotime($array['closedon'])) . '
-      </td>' ?>
+                            <?php if ($array['closedon'] != null) { ?>
+                                <?php echo @date("d/m/Y g:i a", strtotime($array['closedon'])) ?>
+                            <?php } else {
+                            } ?>
+
+                            <?php echo '</td>' ?>
                             <?php  }
                     } else if (@$id == null) {
                         echo '<tr>
