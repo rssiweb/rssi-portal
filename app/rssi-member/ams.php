@@ -30,11 +30,12 @@ if ($_POST) {
     @$noticeid = $_POST['noticeid'];
     @$category = $_POST['category'];
     @$noticesub = $_POST['noticesub'];
+    @$noticebody = $_POST['noticebody'];
     @$url = $_POST['url'];
     @$issuedby = $_POST['issuedby'];
     @$now = date('Y-m-d H:i:s');
     if ($noticeid != "") {
-        $notice = "INSERT INTO notice (noticeid, date, subject, url, issuedby, category) VALUES ('$noticeid','$now','$noticesub','$url','$issuedby','$category')";
+        $notice = "INSERT INTO notice (noticeid, date, subject, url, issuedby, category, noticebody) VALUES ('$noticeid','$now','$noticesub','$url','$issuedby','$category','$noticebody')";
         $result = pg_query($con, $notice);
         $cmdtuples = pg_affected_rows($result);
     }
@@ -150,12 +151,17 @@ if ($_POST) {
                                     </span>
 
                                     <span class="input-help">
-                                        <textarea type="text" name="noticesub" class="form-control" style="width:max-content; display:inline-block" placeholder="Notice Subject" value=""></textarea>
+                                        <input type="text" name="noticesub" class="form-control" style="width:max-content; display:inline-block" placeholder="Notice Subject" value=""></input>
                                         <small id="passwordHelpBlock" class="form-text text-muted">Subject</small>
                                     </span>
 
                                     <span class="input-help">
-                                        <input type="url" name="url" class="form-control" style="width:max-content; display:inline-block" placeholder="URL" value="" required>
+                                        <textarea type="text" name="noticebody" class="form-control" style="width:max-content; display:inline-block" placeholder="Notice Body" value=""></textarea>
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Details</small>
+                                    </span>
+
+                                    <span class="input-help">
+                                        <input type="url" name="url" class="form-control" style="width:max-content; display:inline-block" placeholder="URL" value="">
                                         <small id="passwordHelpBlock" class="form-text text-muted">URL</small>
                                     </span>
 
@@ -171,17 +177,17 @@ if ($_POST) {
                             </div>
                         </form>
 
-                <?php
-                
-                $result = pg_query($con, "SELECT * FROM notice order by date desc");
-                if (!$result) {
-                    echo "An error occurred.\n";
-                    exit;
-                }
+                        <?php
 
-                $resultArr = pg_fetch_all($result);
-                ?>
-                <?php echo '
+                        $result = pg_query($con, "SELECT * FROM notice order by date desc");
+                        if (!$result) {
+                            echo "An error occurred.\n";
+                            exit;
+                        }
+
+                        $resultArr = pg_fetch_all($result);
+                        ?>
+                        <?php echo '
                     <p>Select Number Of Rows</p>
                     <div class="form-group">
                         <!--		Show Numbers Of Rows 		-->
@@ -200,43 +206,51 @@ if ($_POST) {
                     <table class="table" id="table-id">
                         <thead>
                             <tr>
-                                <th scope="col">Notice Id</th>
-                                <th scope="col">Date</th>
-                                <th scope="col">Subject</th>
-                                <th scope="col">View</th>
+                            <th scope="col" width="10%">Notice Id</th>
+                            <th scope="col" width="10%">Date</th>
+                            <th scope="col" width="20%">Subject</th>
+                            <th scope="col">Details</th>
+                            <th scope="col" width="10%">Document</th>
                             </tr>
                         </thead>
                         <tbody>';
-                foreach ($resultArr as $array) {
-                    echo '
+                        foreach ($resultArr as $array) {
+                            echo '
                             <tr>
                                 <td>' . $array['noticeid'] . '</td>
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>
                                 <td>' . $array['subject'] . '&nbsp;<p class="label label-default">' . $array['category'] . '</p></td>
-                                <td><a href="' . $array['url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['noticeid'] . '" display:inline;></i></a></td>
-                            </tr>';
-                }
-                echo '</tbody>
-                        </table>';
-                ?>
-                <!--		Start Pagination -->
-                <div class='pagination-container'>
-                    <nav>
-                        <ul class="pagination">
+                                <td>' . $array['noticebody'] . '</td>' ?>
+                            <?php if ($array['url'] == null) { ?>
+                                <?php echo '<td></td>' ?>
 
-                            <li data-page="prev">
-                                <span>
-                                    < <span class="sr-only">(current)
-                                </span></span>
-                            </li>
-                            <!--	Here the JS Function Will Add the Rows -->
-                            <li data-page="next" id="prev">
-                                <span> > <span class="sr-only">(current)</span></span>
-                            </li>
-                        </ul>
-                    </nav>
+                            <?php } else { ?>
+
+                                <?php echo '<td><a href="' . $array['url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['noticeid'] . '" display:inline;></i></a></td>
+                            </tr>'; ?>
+                            <?php } ?>
+                        <?php }
+                        echo '</tbody>
+                        </table>';
+                        ?>
+                        <!--		Start Pagination -->
+                        <div class='pagination-container'>
+                            <nav>
+                                <ul class="pagination">
+
+                                    <li data-page="prev">
+                                        <span>
+                                            < <span class="sr-only">(current)
+                                        </span></span>
+                                    </li>
+                                    <!--	Here the JS Function Will Add the Rows -->
+                                    <li data-page="next" id="prev">
+                                        <span> > <span class="sr-only">(current)</span></span>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                 </div>
-            </div>
         </section>
     </section>
     <script>

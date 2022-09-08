@@ -93,10 +93,11 @@
                     <table class="table" id="table-id">
                         <thead>
                             <tr>
-                                <th scope="col">Notice Id</th>
-                                <th scope="col">Date</th>
-                                <th scope="col">Subject</th>
-                                <th scope="col">View</th>
+                            <th scope="col" width="10%">Notice Id</th>
+                            <th scope="col" width="10%">Date</th>
+                            <th scope="col" width="20%">Subject</th>
+                            <th scope="col">Details</th>
+                            <th scope="col" width="10%">Document</th>
                             </tr>
                         </thead>
                         <tbody>';
@@ -106,9 +107,16 @@
                                 <td>' . $array['noticeid'] . '</td>
                                 <td>' . $array['date'] . '</td>
                                 <td>' . $array['subject'] . '&nbsp;<p class="label label-default">' . $array['category'] . '</p></td>
-                                <td><a href="' . $array['url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['noticeid'] . '" display:inline;></i></a></td>
-                            </tr>';
-                    }
+                                <td>' . $array['noticebody'] . '</td>' ?>
+                        <?php if ($array['url'] == null) { ?>
+                            <?php echo '<td></td>' ?>
+
+                        <?php } else { ?>
+
+                            <?php echo '<td><a href="' . $array['url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['noticeid'] . '" display:inline;></i></a></td>
+                            </tr>'; ?>
+                        <?php } ?>
+                    <?php }
                     echo '</tbody>
                         </table>';
                     ?>
