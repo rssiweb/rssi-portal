@@ -134,10 +134,7 @@
                                 <a style="font-size:13px;" href="asset-management.php"><i class="fa-solid fa-truck-fast"></i>&nbsp;Asset Management</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="ipf-management.php"><i class="fa-solid fa-circle-nodes"></i>&nbsp;Appraisal Management</a>
-                            </li>
-                            <li style="height: unset;">
-                                <a style="font-size:13px;" href="ams.php"><i class="fa-solid fa-bullhorn"></i>&nbsp;Announcement Management</a>
+                                <a style="font-size:13px;" href="ams.php"><i class="fa-solid fa-bullhorn"></i>&nbsp;Announcement</a>
                             </li>
                         <?php
                         } else {

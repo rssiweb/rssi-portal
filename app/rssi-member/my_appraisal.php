@@ -66,7 +66,7 @@ while ($row = pg_fetch_array($run)) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>My Appraisal</title>
+    <title>Appraisal details</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -156,35 +156,42 @@ while ($row = pg_fetch_array($run)) {
             <div class="col-md-12">
 
                 <div class="row">
-                    <div class="col" style="display: inline-block; width:99%; text-align:right">
-                        Academic year: <?php echo @$year ?><br>
-
+                    <div class="col" style="display: inline-block; width:50%; text-align:left">
+                        Appraisal cycle: <?php echo @$year ?>
                         <?php if (@$ipfstatus == null && @$status2 == null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
-                            <a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+
+                            <br><a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-danger">In Progress</p>
                             </a>
                         <?php } ?>
 
                         <?php if (@$ipfstatus == null && @$status2 == 'IPF Accepted' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
-                            <a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+
+                            <br><a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-success"><?php echo $status2 ?></p>
                             </a>
                         <?php } ?>
 
                         <?php if (@$ipfstatus == null && @$status2 == 'IPF Rejected' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
-                            <a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+
+                            <br><a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-danger"><?php echo $status2 ?></p>
                             </a>
                         <?php } ?>
 
 
                         <?php if (@$ipfstatus != null && @$status2 != null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
-                            <a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
+
+                            <br><a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
                                 <p class="label label-success">Process Closed</p>
                             </a>
                         <?php } ?>
-
                     </div>
+                    <div class="col" style="display: inline-block; width:49%; text-align:right;vertical-align: top;">
+                        <!-- <span class="noticea" title="Click here"><a href="ipf-management.php">Workflow</a></span> -->
+                        <a href="ipf-management.php" target="_self" class="btn btn-danger btn-sm" role="button">Appraisal Workflow</a>
+                    </div>
+
 
 
                     <section class="box" style="padding: 2%;">
@@ -345,14 +352,15 @@ while ($row = pg_fetch_array($run)) {
                 });
             </script>
             <script>
-                window.addEventListener("load",function(){ {
-                    document.getElementById('close').onclick = function() {
-                        this.parentNode.parentNode.parentNode
-                            .removeChild(this.parentNode.parentNode);
-                        return false;
+                window.addEventListener("load", function() {
+                    {
+                        document.getElementById('close').onclick = function() {
+                            this.parentNode.parentNode.parentNode
+                                .removeChild(this.parentNode.parentNode);
+                            return false;
+                        };
                     };
-                };
-            },false);
+                }, false);
             </script>
 
 
