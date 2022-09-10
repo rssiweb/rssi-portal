@@ -152,8 +152,13 @@ $resultArr = pg_fetch_all($result);
                     </div>
                 <?php } ?>
                 <div class="row">
+                    <div class="col" style="display: inline-block; width:50%; text-align:left">
+                        Home / GPS (Global Procurement System)<br><br>
+                    </div>
+                    <div class="col" style="display: inline-block; width:49%; text-align:right">
+                       <span class="noticea"><a href="asset-management.php">Legal agreement </a></span><br><br>
+                    </div>
                     <section class="box" style="padding: 2%;">
-                        <p>Home / GPS (Global Procurement System)</p><br><br>
 
                         <form autocomplete="off" name="gps" id="gps" action="gps.php" method="POST">
                             <div class="form-group" style="display: inline-block;">

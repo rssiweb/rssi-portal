@@ -22,22 +22,30 @@ if ($role == 'Admin') {
 
     if ($id > 0) {
         $result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$id'");
+        $resultc = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'");
     } else {
-        $result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber=''");
+        $result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"); //select query for viewing users.
+        $resultc = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$user_check'");
     }
-
 }
 
 if ($role != 'Admin') {
 
-$result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"); //select query for viewing users.  
+    $result = pg_query($con, "select * from allocationdb_allocationdb WHERE associatenumber='$user_check'"); //select query for viewing users.
+    $resultc = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$user_check'");
 }
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
+if (!$resultc) {
+    echo "An error occurred.\n";
+    exit;
+}
+
 
 $resultArr = pg_fetch_all($result);
+$resultArrc = pg_fetch_all($resultc);
 ?>
 
 <!DOCTYPE html>
@@ -80,53 +88,61 @@ $resultArr = pg_fetch_all($result);
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
+            <div class="col" style="display: inline-block; width:99%; text-align:right">
+                            Home / My Allocation
+                        </div>
                 <section class="box" style="padding: 2%;">
-                    <b><span class="underline">Current</span></b>
+                    <?php if ($role == 'Admin') { ?>
+                        <form action="" method="POST">
+                            <div class="form-group" style="display: inline-block;">
+                                <div class="col2" style="display: inline-block;">
+                                    <?php if ($role == 'Admin') { ?>
+                                        <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
+                                    <?php } ?>
+                                </div>
+                            </div>
+                            <div class="col2 left" style="display: inline-block;">
+                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                            </div>
+                        </form>
+                    <?php } ?>
+                    <br><span class="heading">Current Allocation</span>
 
-                    <table class="table">
+                    <?php echo ' <table class="table">
                         <thead style="font-size: 12px;">
                             <tr>
-                                <th scope="col">Allocation Date</th>
-                                <th scope="col">Max. Class<br>(Allocation start date to today)</th>
-                                <th scope="col">Class Taken<br>(Inc. Extra class)</th>
-                                <th scope="col">Off Class</th>
-                                <th scope="col">Remarks</th>
+                            <th scope="col">Allocation Date</th>
+                            <th scope="col">Max. Class<br>(Allocation start date to today)</th>
+                            <th scope="col">Class Taken<br>(Inc. Extra class)</th>
+                            <th scope="col">Off Class</th>
+                            <th scope="col">Allocation Index</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody>';
+                    foreach ($resultArrc as $array) {
+                        echo '
                             <tr>
-                                <td style="line-height: 2;"><?php echo $allocationdate ?></td>
-                                <td style="line-height: 2;"><?php echo $maxclass ?></td>
-                                <td style="line-height: 2;"><?php echo $classtaken ?>
-                                    <?php if (@$allocationdate != null) { ?>
-                                        &nbsp;(<?php echo $ctp ?>)
-                                    <?php
-                                    } else {
-                                    }
-                                    ?></td>
-                                <td style="line-height: 2;"><?php echo $leave ?></td>
-                                <td style="line-height: 2;"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <hr>
-                    <?php if ($role == 'Admin') { ?>
-                    <form action="" method="POST">
-                        <div class="form-group" style="display: inline-block;">
-                            <div class="col2" style="display: inline-block;">
-                                <?php if ($role == 'Admin') { ?>
-                                    <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
-                                <?php } ?>
-                            </div>
-                        </div>
-                        <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                        </div>
-                    </form>
-                <?php } ?>
-                    <b><span class="underline">History</span></b>
-                    <?php echo ' <table class="table">
+                            <td style="line-height: 2;">' . $array['allocationdate'] . '</td>
+                            <td style="line-height: 2;">' . $array['maxclass'] . '</td>
+                            <td style="line-height: 2;">' . $array['classtaken'] . '</td>
+                            <td style="line-height: 2;">' . $array['leave'] . '</td>
+                            <td style="line-height: 2;">' ?>
+                        <?php if (@$array['allocationdate'] != null) {
+                            echo $array['ctp'] . '&nbsp;<meter id="disk_c" value="' . strtok($array['ctp'], '%') . '" min="0" max="100"></meter>' ?>
+                        <?php
+                        } else {
+                        }
+                        ?>
+                    <?php echo '</td>
+                            </tr>';
+                    }
+                    echo '</tbody>
+                                </table>'; ?>
+
+                    <?php echo '
+                    <br><span class="heading">History</span>
+                     <table class="table">
                         <thead style="font-size: 12px;">
                             <tr>
                                 <th scope="col">Allocation Date</th>

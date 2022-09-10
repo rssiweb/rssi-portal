@@ -160,36 +160,35 @@ while ($row = pg_fetch_array($run)) {
                         Appraisal cycle: <?php echo @$year ?>
                         <?php if (@$ipfstatus == null && @$status2 == null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
 
-                            <br><a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
-                                <p class="label label-danger">In Progress</p>
+                            <br>
+                            <p class="label label-danger">In Progress</p>
                             </a>
                         <?php } ?>
 
                         <?php if (@$ipfstatus == null && @$status2 == 'IPF Accepted' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
 
-                            <br><a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
-                                <p class="label label-success"><?php echo $status2 ?></p>
+                            <br>
+                            <p class="label label-success"><?php echo $status2 ?></p>
                             </a>
                         <?php } ?>
 
                         <?php if (@$ipfstatus == null && @$status2 == 'IPF Rejected' && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
 
-                            <br><a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
-                                <p class="label label-danger"><?php echo $status2 ?></p>
+                            <br>
+                            <p class="label label-danger"><?php echo $status2 ?></p>
                             </a>
                         <?php } ?>
 
 
                         <?php if (@$ipfstatus != null && @$status2 != null && @$ipfinitiate == 'initiated' && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
 
-                            <br><a href="ipf-management.php?get_aid=<?php echo $year ?>" style="text-decoration: none;" title="Workflow">
-                                <p class="label label-success">Process Closed</p>
+                            <br>
+                            <p class="label label-success">Process Closed</p>
                             </a>
                         <?php } ?>
                     </div>
                     <div class="col" style="display: inline-block; width:49%; text-align:right;vertical-align: top;">
-                        <!-- <span class="noticea" title="Click here"><a href="ipf-management.php">Workflow</a></span> -->
-                        <a href="ipf-management.php" target="_self" class="btn btn-danger btn-sm" role="button">Appraisal Workflow</a>
+                        <span class="noticea" title="Click here"><a href="ipf-management.php?get_aid=<?php echo $year ?>">Appraisal Workflow</a></span>
                     </div>
 
 

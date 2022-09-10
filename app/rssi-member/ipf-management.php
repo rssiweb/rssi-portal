@@ -120,18 +120,9 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
-                    <?php if ($role == 'Admin') { ?>
-                        <div class="col" style="display: inline-block; width:47%; text-align:right">
-                            Home / <span class="noticea"><a href="my_appraisal.php">My Appraisal</a></span> / Appraisal Workflow<br><br>
-                        </div>
-                    <?php } ?>
-                    <?php if ($role != 'Admin') { ?>
-                        <div class="col" style="display: inline-block; width:47%; text-align:right">
-                            <span class="noticea" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
-                        </div>
-                    <?php } ?>
-
-
+                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+                        Home / <span class="noticea"><a href="my_appraisal.php">My Appraisal</a></span> / Appraisal Workflow<br><br>
+                    </div>
                 </div>
                 <section class="box" style="padding: 2%;">
                     <form action="" method="GET">

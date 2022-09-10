@@ -143,7 +143,7 @@ $resultArr = pg_fetch_all($result);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / Examination / Question paper
+                        Home / <span class="noticea"><a href="exam.php">Examination</a></span> / Question paper
                     </div>
                 </div>
                 <section class="box" style="padding: 2%;">

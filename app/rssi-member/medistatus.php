@@ -93,7 +93,7 @@ $resultArr = pg_fetch_all($result);
             Record count:&nbsp;<?php echo sizeof($resultArr) ?>
           </div>
           <div class="col" style="display: inline-block; width:47%; text-align:right">
-            Home / Medimate Status
+            Home / <span class="noticea"><a href="medimate.php">Medimate</a></span> / Medimate Status<br><br>
           </div>
         </div>
         <section class="box" style="padding: 2%;">
@@ -195,9 +195,6 @@ $resultArr = pg_fetch_all($result);
           echo '</tbody>
                      </table>';
             ?>
-      </div>
-      <div class="col-md-12" style="text-align: right;">
-        <span class="noticea" style="line-height: 2;"><a href="medimate.php">Back to Medimate</a></span>
       </div>
       </div>
     </section>

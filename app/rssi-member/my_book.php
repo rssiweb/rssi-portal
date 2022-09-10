@@ -77,7 +77,7 @@ $resultArr = pg_fetch_all($result);
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
@@ -113,17 +113,10 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
-                    <?php if ($role == 'Admin') { ?>
-                        <div class="col" style="display: inline-block; width:47%; text-align:right">
-                            Home / Library Status
-                        </div>
-                    <?php } ?>
-                    <?php if ($role != 'Admin') { ?>
-                        <div class=col style="text-align: right;">
-                            <span class="noticea" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
-                        </div>
-                    <?php } ?>
 
+                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+                        Home / <span class="noticea"><a href="library.php">Library</a></span> / Library Status
+                    </div>
                 </div>
                 <section class="box" style="padding: 2%;">
 

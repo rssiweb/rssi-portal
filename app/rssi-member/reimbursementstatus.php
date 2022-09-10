@@ -123,7 +123,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
             <br>Total Approved amount:&nbsp;<p class="label label-success"><?php echo ($resultArrr) ?></p>&nbsp;/&nbsp;<p class="label label-default"><?php echo ($resultArrrr) ?></p>
           </div>
           <div class="col" style="display: inline-block; width:47%; text-align:right">
-            Home / Reimbursement Status<br><br>
+            Home / <span class="noticea"><a href="reimbursement.php">Reimbursement</a></span> / Reimbursement Status<br><br>
             <form method="POST" action="export_function.php">
               <input type="hidden" value="reimb" name="export_type" />
               <input type="hidden" value="<?php echo $id ?>" name="id" />

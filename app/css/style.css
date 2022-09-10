@@ -1067,7 +1067,7 @@ z-index: 5001;
             font-weight: bold;
             line-height: 12px;
             letter-spacing: 1px;
-            margin: 0 0 30px;
-            padding: 10px 15px 8px;
-            text-transform: uppercase;
+            margin: 0 0 10px;
+            padding: 6px 6px 5px;
+            /* text-transform: uppercase; */
         }
