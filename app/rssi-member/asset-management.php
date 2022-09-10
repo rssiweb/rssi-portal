@@ -22,16 +22,25 @@ if ($role == 'Admin') {
     // @$statuse = $_POST['get_statuse'];
     // @$appid = $_POST['get_appid'];
     @$statuse = $_GET['get_statuse'];
+    @$statusee = $_GET['get_statusee'];
     @$appid = $_GET['get_appid'];
 
-    if ($statuse == 'Associate' && $appid == null) {
-        $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate' order by status");
-    } else if ($statuse == 'Associate' && $appid != null) {
-        $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate' AND userid='$appid'");
-    } else if ($statuse == 'Student' && $appid == null) {
-        $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student'");
-    } else if ($statuse == 'Student' && $appid != null) {
-        $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student' AND userid='$appid'");
+    if ($statuse == 'Associate' && $statusee != null && $statusee != 'ALL' && $appid == null) {
+        $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate' AND status='$statusee' order by timestamp desc");
+    } else if ($statuse == 'Associate' && ($statusee == null || $statusee == 'ALL') && $appid == null) {
+        $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate' order by timestamp desc");
+    } else if ($statuse == 'Associate' && ($statusee == null || $statusee == 'ALL') && $appid != null) {
+        $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate' AND userid='$appid' order by timestamp desc");
+    } else if ($statuse == 'Associate' && $statusee != null && $statusee != 'ALL' && $appid != null) {
+        $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber WHERE usertype='Associate' AND status='$statusee' AND userid='$appid' order by timestamp desc");
+    } else if ($statuse == 'Student' && $statusee != null && $statusee != 'ALL' && $appid == null) {
+        $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student' AND asset.status='$statusee' order by timestamp desc");
+    } else if ($statuse == 'Student' && ($statusee == null || $statusee == 'ALL') && $appid == null) {
+        $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student' order by timestamp desc");
+    } else if ($statuse == 'Student' && ($statusee == null || $statusee == 'ALL') && $appid != null) {
+        $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student' AND userid='$appid' order by timestamp desc");
+    } else if ($statuse == 'Student' && $statusee != null && $statusee != 'ALL' && $appid != null) {
+        $result = pg_query($con, "select * from asset inner join rssimyprofile_student ON asset.userid=rssimyprofile_student.student_id WHERE usertype='Student' AND asset.status='$statusee' AND userid='$appid' order by timestamp desc");
     } else {
         $result = pg_query($con, "select * from asset WHERE usertype=''");
     }
@@ -56,7 +65,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Legal agreement</title>
+    <title>Asset Movement</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -89,7 +98,7 @@ $resultArr = pg_fetch_all($result);
                 <div class="row">
                     <?php if ($role == 'Admin') { ?>
                         <div class="col" style="display: inline-block; width:100%; text-align:right">
-                            Home / <span class="noticea"><a href="gps.php">GPS</a></span> / Legal agreement<br><br>
+                            Home / <span class="noticea"><a href="gps.php">GPS</a></span> / Asset Movement<br><br>
                         </div>
                         <form id="myform" action="" method="GET" onsubmit="process()">
                             <div class="form-group" style="display: inline-block;">
@@ -105,12 +114,31 @@ $resultArr = pg_fetch_all($result);
                                         <option>Associate</option>
                                         <option>Student</option>
                                     </select>
+
+
+                                    <select name="get_statusee" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
+                                        <?php if ($statusee == null) { ?>
+                                            <option value="" disabled selected hidden>Select Status</option>
+                                        <?php
+                                        } else { ?>
+                                            <option hidden selected><?php echo $statusee ?></option>
+                                        <?php }
+                                        ?>
+                                        <option>Initiated</option>
+                                        <option>Despatched</option>
+                                        <option>Delivered</option>
+                                        <option>Return initiated</option>
+                                        <option>Closed</option>
+                                        <option>ALL</option>
+                                    </select>
+
+
                                     <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="<?php echo $appid ?>">
                                 </div>
                             </div>
                             <div class="col2 left" style="display: inline-block;">
                                 <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLScLENQKgw2bEDuhZFRLDuxcmwuXIh-6H7zXm8NbCSv6x63fNw/viewform" target="_blank" class="btn btn-danger btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Add</a>
+                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLScLENQKgw2bEDuhZFRLDuxcmwuXIh-6H7zXm8NbCSv6x63fNw/viewform" target="_blank" class="btn btn-danger btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Ticket</a>
                             </div>
                         </form>
                     <?php } ?>
@@ -150,7 +178,7 @@ $resultArr = pg_fetch_all($result);
                             <!-- <?php if ($array['category'] == 'Asset') { ?>
                                 <?php echo '<p class="label label-danger">asset</p>' ?>
                             <?php } else {
-                            } ?> -->
+                                    } ?> -->
 
                         <?php echo '</td>
                                 <td>' . $array['issuedon'] . '</td>

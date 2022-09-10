@@ -156,7 +156,7 @@ $resultArr = pg_fetch_all($result);
                         Home / GPS (Global Procurement System)<br><br>
                     </div>
                     <div class="col" style="display: inline-block; width:49%; text-align:right">
-                       <span class="noticea"><a href="asset-management.php">Legal agreement </a></span><br><br>
+                       <span class="noticea"><a href="asset-management.php">Asset Movement</a></span><br><br>
                     </div>
                     <section class="box" style="padding: 2%;">
 
