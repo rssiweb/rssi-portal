@@ -10,27 +10,52 @@ if (!isLoggedIn("aid")) {
 }
 
 @$cid = $_GET['get_cid'];
+@$wbtstatus = $_GET['wbtstatus'];
 
 if ($role == 'Admin') {
     @$aid = $_GET['get_aid'];
 
 
-    if ($aid != null && $cid == null) {
+    if ($aid != null && $cid == null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
         $result = pg_query($con, "SELECT * FROM wbt_status 
         left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$aid' order by timestamp desc");
-    } else if ($aid == null && $cid != null) {
+    } else if ($aid != null && $cid == null && ($wbtstatus == 'Completed')) {
+        $result = pg_query($con, "SELECT * FROM wbt_status 
+        left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$aid' AND passingmarks <= f_score * 100 order by timestamp desc");
+    } else if ($aid != null && $cid == null && ($wbtstatus == 'Incomplete')) {
+        $result = pg_query($con, "SELECT * FROM wbt_status 
+        left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$aid' AND passingmarks > f_score * 100 order by timestamp desc");
+    } else if ($aid == null && $cid != null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
         $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' order by timestamp desc");
-    } else if ($aid != null && $cid != null) {
+    } else if ($aid == null && $cid != null && ($wbtstatus == 'Completed')) {
+        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND passingmarks <= f_score * 100 order by timestamp desc");
+    } else if ($aid == null && $cid != null && ($wbtstatus == 'Incomplete')) {
+        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND passingmarks > f_score * 100 order by timestamp desc");
+    } else if ($aid != null && $cid != null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
         $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND wassociatenumber='$aid' order by timestamp desc");
+    } else if ($aid != null && $cid != null && $wbtstatus == 'Completed') {
+        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND wassociatenumber='$aid' AND passingmarks <= f_score * 100 order by timestamp desc");
+    } else if ($aid != null && $cid != null && $wbtstatus == 'Incomplete') {
+        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND wassociatenumber='$aid' AND passingmarks > f_score * 100 order by timestamp desc");
     } else {
-        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' order by timestamp desc");
+        $result = pg_query($con, "SELECT * FROM wbt_status 
+        left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='' order by timestamp desc");
     }
 }
-if ($role != 'Admin' && $cid != null) {
+if ($role != 'Admin' && $cid != null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
     $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND wbt_status.courseid='$cid' order by timestamp desc");
-} else if ($role != 'Admin' && $cid == null) {
+} else if ($role != 'Admin' && $cid == null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
     $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' order by timestamp desc");
+} else if ($role != 'Admin' && $cid == null && $wbtstatus == 'Completed') {
+    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND passingmarks <= f_score * 100 order by timestamp desc");
+} else if ($role != 'Admin' && $cid == null && $wbtstatus == 'Incomplete') {
+    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND passingmarks > f_score * 100 order by timestamp desc");
+} else if ($role != 'Admin' && $cid != null && $wbtstatus == 'Completed') {
+    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND passingmarks <= f_score * 100 AND wbt_status.courseid='$cid' order by timestamp desc");
+} else if ($role != 'Admin' && $cid != null && $wbtstatus == 'Incomplete') {
+    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND passingmarks > f_score * 100 AND wbt_status.courseid='$cid' order by timestamp desc");
 }
+
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -104,6 +129,20 @@ $resultArr = pg_fetch_all($result);
                                 <?php if ($role == 'Admin') { ?>
                                     <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aid ?>">
                                 <?php } ?>
+
+                                <select name="wbtstatus" class="form-control" style="width:max-content; display:inline-block">
+                                    <?php if ($wbtstatus == null) { ?>
+                                        <option value="" disabled selected hidden>Status</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $wbtstatus ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>Completed</option>
+                                    <option>Incomplete</option>
+                                    <option>ALL</option>
+                                </select>
+
                                 <input name="get_cid" class="form-control" style="width:max-content; display:inline-block" placeholder="Course id" value="<?php echo $cid ?>">
                             </div>
                         </div>
@@ -179,14 +218,9 @@ $resultArr = pg_fetch_all($result);
                         <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
                     <?php } else if ($role != 'Admin' && $cid == null) { ?>
                         <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
-                        <?php } else {
+                    <?php } else {
                         echo '<tr>
-                        <td colspan="5">No record found for' ?>&nbsp;
-
-                        <?php if ($role == 'Admin') { ?>
-                            <?php echo $cid ?>
-                        <?php } ?>
-                        <?php echo $cid ?>
+                        <td colspan="5">No record was found for the selected filter value.' ?>
                     <?php echo '</td>
                     </tr>';
                     }
