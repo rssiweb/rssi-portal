@@ -155,7 +155,7 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:50%; text-align:left">
                         Home / GPS (Global Procurement System)<br><br>
                     </div>
-                    <div class="col" style="display: inline-block; width:49%; text-align:right">
+                    <div class="col" style="display: inline-block; width:47%; text-align:right">
                        <span class="noticea"><a href="asset-management.php">Asset Movement</a></span><br><br>
                     </div>
                     <section class="box" style="padding: 2%;">

@@ -143,11 +143,11 @@ $resultArr = pg_fetch_all($result);
 
                             if (($array['passingmarks'] <= round((float)$array['f_score'] * 100))) { ?>
 
-                                <?php echo '<p class="label label-success">Completed</p>' ?>
+                                <?php echo 'Completed' ?>
 
                             <?php } else { ?>
 
-                                <?php echo '<p class="label label-danger">Incomplete</p>' ?>
+                                <?php echo 'Incomplete' ?>
                             <?php } ?>
 
                             <?php echo

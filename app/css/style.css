@@ -1059,7 +1059,8 @@ z-index: 5001;
         }
         
         .heading {
-            background: #fe921f;
+            /* background: #fe921f; */
+            background: #808080;
             color: #ffffff;
             display: inline-block;
             font-family: 'Lato', sans-serif;

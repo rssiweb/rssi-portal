@@ -152,7 +152,7 @@
             <?php  }
             ?>
 
-            <li class="hidden-xs">
+            <li> <!--class="hidden-xs"-->
                 <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i>
                 </a>
             </li>

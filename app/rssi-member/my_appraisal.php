@@ -187,7 +187,7 @@ while ($row = pg_fetch_array($run)) {
                             </a>
                         <?php } ?>
                     </div>
-                    <div class="col" style="display: inline-block; width:49%; text-align:right;vertical-align: top;">
+                    <div class="col" style="display: inline-block; width:47%; text-align:right;vertical-align: top;">
                         <span class="noticea" title="Click here"><a href="ipf-management.php?get_aid=<?php echo $year ?>">Appraisal Workflow</a></span>
                     </div>
 
