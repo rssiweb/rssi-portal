@@ -199,7 +199,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                         <td>' . $array['selectclaimheadfromthelistbelow'] . '<br>' . $array['claimheaddetails'] . '</td>
                         <td>' . $array['totalbillamount'] . '</td>' ?>
 
-              <?php if ($array['claimstatus'] != 'claim settled') { ?>
+              <?php if ($array['claimstatus'] != 'Claim settled') { ?>
                 <?php echo '<td></td>' ?> <?php } else { ?>
 
                 <?php echo '<td>' . $array['approvedamount'] . '</td>' ?>
