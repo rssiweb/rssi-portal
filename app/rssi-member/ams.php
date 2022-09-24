@@ -220,7 +220,27 @@ if ($_POST) {
                                 <td>' . $array['noticeid'] . '</td>
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>
                                 <td>' . $array['subject'] . '&nbsp;<p class="label label-default">' . $array['category'] . '</p></td>
-                                <td>' . $array['noticebody'] . '</td>' ?>
+                                <td>
+                                
+                                <form name="noticebody_' . $array['noticeid'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="noticebodyedit">
+                                <input type="hidden" name="noticeid" id="noticeid" type="text" value="' . $array['noticeid'] . '">
+                                <textarea id="inp_' . $array['noticeid'] . '" name="noticebody" type="text" disabled>' . $array['noticebody'] . '</textarea>' ?>
+
+                            <?php if ($role == 'Admin') { ?>
+
+                                <?php echo '&nbsp;
+
+                                <button type="button" id="edit_' . $array['noticeid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+
+                                <button type="submit" id="save_' . $array['noticeid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>
+                                
+                                ' ?>
+
+                            <?php } ?>
+
+                            <?php echo '</form></td>' ?>
+
                             <?php if ($array['url'] == null) { ?>
                                 <?php echo '<td></td>' ?>
 
@@ -253,6 +273,40 @@ if ($_POST) {
                 </div>
         </section>
     </section>
+    <script>
+        function myFunctionn() {
+            alert("Notice body has been updated.");
+            location.reload();
+        }
+        var data = <?php echo json_encode($resultArr) ?>;
+
+        data.forEach(item => {
+
+            const form = document.getElementById('edit_' + item.noticeid);
+
+            form.addEventListener('click', function() {
+                document.getElementById('inp_' + item.noticeid).disabled = false;
+            });
+        })
+
+        //For form submission - to update Remarks
+        const scriptURL = 'payment-api.php'
+
+        data.forEach(item => {
+            const form = document.forms['noticebody_' + item.noticeid]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['noticebody_' + item.noticeid])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
+        })
+    </script>
     <script>
         getPagination('#table-id');
 

@@ -156,7 +156,7 @@ $resultArr = pg_fetch_all($result);
                         Home / GPS (Global Procurement System)<br><br>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                       <span class="noticea"><a href="asset-management.php">Asset Movement</a></span><br><br>
+                        <span class="noticea"><a href="asset-management.php">Asset Movement</a></span><br><br>
                     </div>
                     <section class="box" style="padding: 2%;">
 
@@ -199,7 +199,7 @@ $resultArr = pg_fetch_all($result);
                                         <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
                                     </span>
 
-                                    <input type="hidden" name="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Collected by" value="<?php echo $fullname ?>" required readonly>
+                                    <input type="hidden" name="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Collected by" value="<?php echo $associatenumber ?>" required readonly>
 
                                 </div>
 
@@ -261,7 +261,9 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Item type</th>
                                 <th scope="col">Quantity</th>
                                 <th scope="col">Remarks</th>
+                                <th scope="col">Issued by</th>
                                 <th scope="col">Tagged to</th>
+                                <th scope="col"></th>
                                 
                             </tr>
                         </thead>' ?>
@@ -333,6 +335,8 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php if ($role != 'Admin') { ?>
 
+                                    <?php echo '<td>' . $array['collectedby'] . '</td>' ?>
+
                                     <?php echo '<td>' . $array['taggedto'] . '</td>' ?>
 
                                 <?php } ?>
@@ -342,6 +346,19 @@ $resultArr = pg_fetch_all($result);
                                 <?php if ($role == 'Admin') { ?>
 
                                     <?php echo '
+
+
+
+                                <td><form name="issuedby_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctionissuedby()" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="issuedbyedit">
+                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
+                                <input id="inpissuedby_' . $array['itemid'] . '" name="issuedby" type="text" value="' . $array['collectedby'] . '" disabled>
+                                    
+                                    &nbsp;
+
+                                <button type="button" id="editissuedby_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+
+                                <button type="submit" id="saveissuedby_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button></form></td>
                                 
 
                                 <td><form name="tag_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiontag()" style="display: -webkit-inline-box;">
@@ -353,15 +370,28 @@ $resultArr = pg_fetch_all($result);
 
                                 <button type="button" id="edittag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
 
-                                <button type="submit" id="savetag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>&nbsp;
+                                <button type="submit" id="savetag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button></form></td>
                                 
+                                <td>
                                 <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['fullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['fullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['collectedby'] . '%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a> &nbsp;
                                 
                                 <a href="mailto:' . $array['email'] . '?subject=' . $array['itemid'] . ' | Asset Allocation has been done in GPS&body=Dear ' . $array['fullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['fullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['collectedby'] . '%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>' ?>
                                 <?php } ?>
 
-                            <?php echo '</form></td>
+                            <?php echo 
+                            '
+
+                            &nbsp;<form name="gpsdelete_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiongpsdelete()" style="display: -webkit-inline-box;">
+                            <input type="hidden" name="form-type" type="text" value="gpsdelete">
+                            <input type="hidden" name="gpsid" id="gpsid" type="text" value="' . $array['itemid'] . '">
+                            
+                            <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="fa-solid fa-xmark"></i></button>' ?>
+
+                            <?php echo ' </form>
+      
+                            
+                            </td>
                                 </tr>';
                             } ?>
                         <?php
@@ -539,6 +569,15 @@ $resultArr = pg_fetch_all($result);
             alert("Tagged to has been updated.");
             location.reload();
         }
+
+        function myFunctionissuedby() {
+            alert("Issue by has been updated.");
+            location.reload();
+        }
+        function myFunctiongpsdelete() {
+            alert("GPS record has been deleted.");
+            location.reload();
+        }
     </script>
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
@@ -569,6 +608,15 @@ $resultArr = pg_fetch_all($result);
 
             form.addEventListener('click', function() {
                 document.getElementById('inptag_' + item.itemid).disabled = false;
+            });
+        })
+
+        data.forEach(item => {
+
+            const form = document.getElementById('editissuedby_' + item.itemid);
+
+            form.addEventListener('click', function() {
+                document.getElementById('inpissuedby_' + item.itemid).disabled = false;
             });
         })
 
@@ -613,6 +661,35 @@ $resultArr = pg_fetch_all($result);
                 fetch(scriptURL, {
                         method: 'POST',
                         body: new FormData(document.forms['tag_' + item.itemid])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+        })
+
+            data.forEach(item => {
+            const form = document.forms['issuedby_' + item.itemid]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['issuedby_' + item.itemid])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
+        })
+
+
+        data.forEach(item => {
+            const form = document.forms['gpsdelete_' + item.itemid]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['gpsdelete_' + item.itemid])
                     })
                     .then(response => console.log('Success!', response))
                     .catch(error => console.error('Error!', error.message))

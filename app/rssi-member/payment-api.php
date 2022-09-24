@@ -40,6 +40,13 @@ if ($_POST['form-type'] == "nameedit") {
   $result = pg_query($con, $nameedit);
 } 
 
+if ($_POST['form-type'] == "noticebodyedit") {
+  @$noticeid = $_POST['noticeid'];
+  @$noticebody = $_POST['noticebody'];
+  $noticebodyedit = "UPDATE notice SET  noticebody = '$noticebody' WHERE noticeid = '$noticeid'";
+  $result = pg_query($con, $noticebodyedit);
+} 
+
 if ($_POST['form-type'] == "tagedit") {
   @$itemid = $_POST['itemid'];
   @$taggedto = $_POST['taggedto'];
@@ -47,10 +54,23 @@ if ($_POST['form-type'] == "tagedit") {
   $result = pg_query($con, $tagedit);
 } 
 
+if ($_POST['form-type'] == "issuedbyedit") {
+  @$itemid = $_POST['itemid'];
+  @$issuedby = $_POST['issuedby'];
+  $issuedbyedit = "UPDATE gps SET  collectedby = '$issuedby' WHERE itemid = '$itemid'";
+  $result = pg_query($con, $issuedbyedit);
+} 
+
 if ($_POST['form-type'] == "paydelete") {
   @$refid = $_POST['pid'];
   $paydelete = "DELETE from fees WHERE id = $refid";
   $result = pg_query($con, $paydelete);
+} 
+
+if ($_POST['form-type'] == "gpsdelete") {
+  @$gpsid = $_POST['gpsid'];
+  $gpsdelete = "DELETE from gps WHERE itemid = '$gpsid'";
+  $result = pg_query($con, $gpsdelete);
 } 
 
 if ($_POST['form-type'] == "ipfpush") {
