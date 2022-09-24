@@ -290,8 +290,7 @@ $resultArr = pg_fetch_all($result);
                             echo '<tbody>';
                             foreach ($resultArr as $array) {
                                 echo '<tr>
-                                <!--<td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>-->
-                                <td>' . $array['itemid'] . '</td>' ?>
+                                <td><span class="noticea"><a href="gps_history.php?assetid=' . $array['itemid'] . '" target="_blank" title="Asset History">' . $array['itemid'] . '</a></span></td>' ?>
 
                                 <?php if ($role != 'Admin') { ?>
 
@@ -397,8 +396,8 @@ $resultArr = pg_fetch_all($result);
                                 <a href="mailto:' . $array['temail'] . '?subject=' . $array['itemid'] . ' | Asset Allocation has been done in GPS&body=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>' ?>
                                 <?php } ?><br><br>
 
-                            <?php echo 
-                            '
+                                <?php echo
+                                '
 
                             <form name="gpshistory_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiongpshistory()" style="display: -webkit-inline-box;">
                             <input type="hidden" name="form-type" type="text" value="gpshistory">
@@ -420,7 +419,7 @@ $resultArr = pg_fetch_all($result);
                             <input type="hidden" name="form-type" type="text" value="gpsdelete">
                             <input type="hidden" name="gpsid" id="gpsid" type="text" value="' . $array['itemid'] . '">
                             
-                            <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete '. $array['itemid'] .'"><i class="fa-solid fa-xmark"></i></button>' ?>
+                            <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="fa-solid fa-xmark"></i></button>' ?>
 
                             <?php echo ' </form>
       
@@ -608,10 +607,12 @@ $resultArr = pg_fetch_all($result);
             alert("Issue by has been updated.");
             location.reload();
         }
+
         function myFunctiongpsdelete() {
             alert("Asset has been deleted.");
             location.reload();
         }
+
         function myFunctiongpshistory() {
             alert("GPS history table has been updated.");
             location.reload();
@@ -705,7 +706,7 @@ $resultArr = pg_fetch_all($result);
             })
         })
 
-            data.forEach(item => {
+        data.forEach(item => {
             const form = document.forms['issuedby_' + item.itemid]
             form.addEventListener('submit', e => {
                 e.preventDefault()
