@@ -45,17 +45,35 @@ if ($_POST) {
 @$item_type = $_GET['item_type'];
 
 if ($item_type == 'ALL' && $taggedto == "") {
-    $gpsdetails = "SELECT * from gps left join (select fullname,associatenumber,phone,email from rssimyaccount_members) as member ON gps.taggedto=member.associatenumber order by date desc";
+    $gpsdetails = "SELECT * from gps 
+    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
+    order by date desc";
 } else if ($item_type == 'ALL' && $taggedto != "") {
-    $gpsdetails = "SELECT * from gps left join (select fullname,associatenumber,phone,email from rssimyaccount_members) as member ON gps.taggedto=member.associatenumber where taggedto='$taggedto' order by date desc";
+    $gpsdetails = "SELECT * from gps 
+    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
+    where taggedto='$taggedto' order by date desc";
 } else if ($item_type == "" && $taggedto != "") {
-    $gpsdetails = "SELECT * from gps left join (select fullname,associatenumber,phone,email from rssimyaccount_members) as member ON gps.taggedto=member.associatenumber where taggedto='$taggedto' order by date desc";
+    $gpsdetails = "SELECT * from gps 
+    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  
+    where taggedto='$taggedto' order by date desc";
 } else if ($item_type != "ALL" && $item_type != "" && $taggedto != "") {
-    $gpsdetails = "SELECT * from gps left join (select fullname,associatenumber,phone,email from rssimyaccount_members) as member ON gps.taggedto=member.associatenumber where taggedto='$taggedto' and itemtype='$item_type' order by date desc";
+    $gpsdetails = "SELECT * from gps 
+    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  
+    where taggedto='$taggedto' and itemtype='$item_type' order by date desc";
 } else if ($item_type != "ALL" && $item_type != "" && $taggedto == "") {
-    $gpsdetails = "SELECT * from gps left join (select fullname,associatenumber,phone,email from rssimyaccount_members) as member ON gps.taggedto=member.associatenumber where itemtype='$item_type' order by date desc";
+    $gpsdetails = "SELECT * from gps 
+    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
+    where itemtype='$item_type' order by date desc";
 } else {
-    $gpsdetails = "SELECT * from gps left join (select fullname,associatenumber,phone,email from rssimyaccount_members) as member ON gps.taggedto=member.associatenumber where itemid=''";
+    $gpsdetails = "SELECT * from gps 
+    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
+    where itemid=''";
 }
 
 $result = pg_query($con, $gpsdetails);
@@ -303,9 +321,9 @@ $resultArr = pg_fetch_all($result);
                                 
                                 &nbsp;
 
-                                <button type="button" id="editname_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+                                <button type="button" id="editname_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit Item name"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
 
-                                <button type="submit" id="savename_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button></form></td>' ?>
+                                <button type="submit" id="savename_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save Item name"><i class="fa-regular fa-floppy-disk"></i></button></form></td>' ?>
 
                                 <?php } ?>
 
@@ -323,9 +341,9 @@ $resultArr = pg_fetch_all($result);
 
                                     <?php echo '&nbsp;
 
-                                <button type="button" id="edit_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+                                <button type="button" id="edit_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit Remarks"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
 
-                                <button type="submit" id="save_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button>
+                                <button type="submit" id="save_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save Remarks"><i class="fa-regular fa-floppy-disk"></i></button>
                                 
                                 ' ?>
 
@@ -356,9 +374,9 @@ $resultArr = pg_fetch_all($result);
                                     
                                     &nbsp;
 
-                                <button type="button" id="editissuedby_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+                                <button type="button" id="editissuedby_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit Issued by"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
 
-                                <button type="submit" id="saveissuedby_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button></form></td>
+                                <button type="submit" id="saveissuedby_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save Issued by"><i class="fa-regular fa-floppy-disk"></i></button></form></td>
                                 
 
                                 <td><form name="tag_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiontag()" style="display: -webkit-inline-box;">
@@ -368,25 +386,41 @@ $resultArr = pg_fetch_all($result);
                                     
                                     &nbsp;
 
-                                <button type="button" id="edittag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
+                                <button type="button" id="edittag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit Tagged to"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
 
-                                <button type="submit" id="savetag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="fa-regular fa-floppy-disk"></i></button></form></td>
+                                <button type="submit" id="savetag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save Tagged to"><i class="fa-regular fa-floppy-disk"></i></button></form></td>
                                 
                                 <td>
-                                <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['fullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['fullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['collectedby'] . '%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a> &nbsp;
+                                <a href="https://api.whatsapp.com/send?phone=91' . $array['tphone'] . '&text=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;
                                 
-                                <a href="mailto:' . $array['email'] . '?subject=' . $array['itemid'] . ' | Asset Allocation has been done in GPS&body=Dear ' . $array['fullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['fullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['collectedby'] . '%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>' ?>
-                                <?php } ?>
+                                <a href="mailto:' . $array['temail'] . '?subject=' . $array['itemid'] . ' | Asset Allocation has been done in GPS&body=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>' ?>
+                                <?php } ?><br><br>
 
                             <?php echo 
                             '
+
+                            <form name="gpshistory_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiongpshistory()" style="display: -webkit-inline-box;">
+                            <input type="hidden" name="form-type" type="text" value="gpshistory">
+                            <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
+                            <input type="hidden" name="itemname" id="itemname" type="text" value="' . $array['itemname'] . '">
+                            <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
+                            <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
+                            <input type="hidden" name="remarks" id="remarks" type="text" value="' . $array['remarks'] . '">
+                            <input type="hidden" name="collectedby" id="collectedby" type="text" value="' . $array['collectedby'] . '">
+                            <input type="hidden" name="taggedto" id="taggedto" type="text" value="' . $array['taggedto'] . '">
+                            
+                            <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Update History"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
+                            </form>
+
+
+
 
                             &nbsp;<form name="gpsdelete_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiongpsdelete()" style="display: -webkit-inline-box;">
                             <input type="hidden" name="form-type" type="text" value="gpsdelete">
                             <input type="hidden" name="gpsid" id="gpsid" type="text" value="' . $array['itemid'] . '">
                             
-                            <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="fa-solid fa-xmark"></i></button>' ?>
+                            <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete '. $array['itemid'] .'"><i class="fa-solid fa-xmark"></i></button>' ?>
 
                             <?php echo ' </form>
       
@@ -575,7 +609,11 @@ $resultArr = pg_fetch_all($result);
             location.reload();
         }
         function myFunctiongpsdelete() {
-            alert("GPS record has been deleted.");
+            alert("Asset has been deleted.");
+            location.reload();
+        }
+        function myFunctiongpshistory() {
+            alert("GPS history table has been updated.");
             location.reload();
         }
     </script>
@@ -690,6 +728,21 @@ $resultArr = pg_fetch_all($result);
                 fetch(scriptURL, {
                         method: 'POST',
                         body: new FormData(document.forms['gpsdelete_' + item.itemid])
+                    })
+                    .then(response => console.log('Success!', response))
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
+        })
+
+        data.forEach(item => {
+            const form = document.forms['gpshistory_' + item.itemid]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['gpshistory_' + item.itemid])
                     })
                     .then(response => console.log('Success!', response))
                     .catch(error => console.error('Error!', error.message))

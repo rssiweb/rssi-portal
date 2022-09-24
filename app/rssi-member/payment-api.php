@@ -73,6 +73,19 @@ if ($_POST['form-type'] == "gpsdelete") {
   $result = pg_query($con, $gpsdelete);
 } 
 
+if ($_POST['form-type'] == "gpshistory") {
+  @$itemid = $_POST['itemid'];
+  @$itemname = $_POST['itemname'];
+  @$itemtype = $_POST['itemtype'];
+  @$quantity = $_POST['quantity'];
+  @$remarks = $_POST['remarks'];
+  @$collectedby = $_POST['collectedby'];
+  @$taggedto = $_POST['taggedto'];
+  $now = date('Y-m-d H:i:s');
+  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto')";
+  $result = pg_query($con, $gpshistory);
+} 
+
 if ($_POST['form-type'] == "ipfpush") {
   @$membername2 = $_POST['membername2'];
   @$memberid2 = $_POST['memberid2'];
@@ -118,4 +131,4 @@ if ($_POST['form-type'] == "test") {
     "amount" => $amount,
     "orderid" => $orderid
   ));
-} ?>
+}
