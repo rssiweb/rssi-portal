@@ -28,16 +28,32 @@ if ($_POST['form-type'] == "transfer") {
 
 if ($_POST['form-type'] == "remarksedit") {
   @$itemid = $_POST['itemid'];
+  @$itemname = $_POST['itemname'];
+  @$itemtype = $_POST['itemtype'];
+  @$quantity = $_POST['quantity'];
   @$remarks = $_POST['remarks'];
+  @$collectedby = $_POST['collectedby'];
+  @$taggedto = $_POST['taggedto'];
+  $now = date('Y-m-d H:i:s');
+  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto')";
   $remarksedit = "UPDATE gps SET  remarks = '$remarks' WHERE itemid = '$itemid'";
   $result = pg_query($con, $remarksedit);
+  $result = pg_query($con, $gpshistory);
 } 
 
 if ($_POST['form-type'] == "nameedit") {
   @$itemid = $_POST['itemid'];
   @$itemname = $_POST['itemname'];
+  @$itemtype = $_POST['itemtype'];
+  @$quantity = $_POST['quantity'];
+  @$remarks = $_POST['remarks'];
+  @$collectedby = $_POST['collectedby'];
+  @$taggedto = $_POST['taggedto'];
+  $now = date('Y-m-d H:i:s');
+  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto')";
   $nameedit = "UPDATE gps SET  itemname = '$itemname' WHERE itemid = '$itemid'";
   $result = pg_query($con, $nameedit);
+  $result = pg_query($con, $gpshistory);
 } 
 
 if ($_POST['form-type'] == "noticebodyedit") {
@@ -49,16 +65,32 @@ if ($_POST['form-type'] == "noticebodyedit") {
 
 if ($_POST['form-type'] == "tagedit") {
   @$itemid = $_POST['itemid'];
+  @$itemname = $_POST['itemname'];
+  @$itemtype = $_POST['itemtype'];
+  @$quantity = $_POST['quantity'];
+  @$remarks = $_POST['remarks'];
+  @$collectedby = $_POST['collectedby'];
   @$taggedto = $_POST['taggedto'];
+  $now = date('Y-m-d H:i:s');
+  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto')";
   $tagedit = "UPDATE gps SET  taggedto = '$taggedto' WHERE itemid = '$itemid'";
   $result = pg_query($con, $tagedit);
+  $result = pg_query($con, $gpshistory);
 } 
 
 if ($_POST['form-type'] == "issuedbyedit") {
   @$itemid = $_POST['itemid'];
-  @$issuedby = $_POST['issuedby'];
-  $issuedbyedit = "UPDATE gps SET  collectedby = '$issuedby' WHERE itemid = '$itemid'";
+  @$itemname = $_POST['itemname'];
+  @$itemtype = $_POST['itemtype'];
+  @$quantity = $_POST['quantity'];
+  @$remarks = $_POST['remarks'];
+  @$collectedby = $_POST['collectedby'];
+  @$taggedto = $_POST['taggedto'];
+  $now = date('Y-m-d H:i:s');
+  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto')";
+  $issuedbyedit = "UPDATE gps SET  collectedby = '$collectedby' WHERE itemid = '$itemid'";
   $result = pg_query($con, $issuedbyedit);
+  $result = pg_query($con, $gpshistory);
 } 
 
 if ($_POST['form-type'] == "paydelete") {
@@ -71,20 +103,7 @@ if ($_POST['form-type'] == "gpsdelete") {
   @$gpsid = $_POST['gpsid'];
   $gpsdelete = "DELETE from gps WHERE itemid = '$gpsid'";
   $result = pg_query($con, $gpsdelete);
-} 
-
-if ($_POST['form-type'] == "gpshistory") {
-  @$itemid = $_POST['itemid'];
-  @$itemname = $_POST['itemname'];
-  @$itemtype = $_POST['itemtype'];
-  @$quantity = $_POST['quantity'];
-  @$remarks = $_POST['remarks'];
-  @$collectedby = $_POST['collectedby'];
-  @$taggedto = $_POST['taggedto'];
-  $now = date('Y-m-d H:i:s');
-  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto')";
-  $result = pg_query($con, $gpshistory);
-} 
+}  
 
 if ($_POST['form-type'] == "ipfpush") {
   @$membername2 = $_POST['membername2'];

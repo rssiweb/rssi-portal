@@ -95,7 +95,7 @@ $resultArr = pg_fetch_all($result);
                     Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                 </div>
                 <div class="col" style="display: inline-block; width:47%; text-align:right">
-                Home / <span class="noticea"><a href="gps.php">GPS Portal</a></span> / GPS History
+                    Home / <span class="noticea"><a href="gps.php">GPS Portal</a></span> / GPS History
                 </div>
                 <section class="box" style="padding: 2%;">
 
@@ -142,7 +142,7 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>
                         <tbody>'; ?>
-                    <?php if (sizeof($resultArr) > 0 && $assetid != null) { ?>
+                    <?php if (sizeof($resultArr) > 0) { ?>
                         <?php foreach ($resultArr as $array) {
                             echo '
                             <tr>
@@ -156,12 +156,6 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['taggedto'] . '</td>                                
                             </tr>';
                         }
-                    } else if ($assetid == null) { ?>
-
-                        <tr>
-                            <td colspan="5">Please select Asset id.</td>
-                        </tr>
-                    <?php
                     } else {
                     ?>
                         <tr>

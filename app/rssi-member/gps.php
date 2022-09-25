@@ -36,7 +36,9 @@ if ($_POST) {
     @$now = date('Y-m-d H:i:s');
     if ($itemtype != "") {
         $gps = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby')";
+        $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby')";
         $result = pg_query($con, $gps);
+        $result = pg_query($con, $gpshistory);
         $cmdtuples = pg_affected_rows($result);
     }
 }
@@ -231,8 +233,6 @@ $resultArr = pg_fetch_all($result);
 
 
                         <br><span class="heading">Asset details</span><br><br>
-
-
                         <form name="gpsdetails" id="gpsdetails" action="" method="GET">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
@@ -313,6 +313,11 @@ $resultArr = pg_fetch_all($result);
                                 <input type="hidden" name="form-type" type="text" value="nameedit">
                                 <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
                                 <input id="inpname_' . $array['itemid'] . '" name="itemname" type="text" value="' . $array['itemname'] . '" disabled>
+                                <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
+                                <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
+                                <input type="hidden" name="remarks" id="remarks" type="text" value="' . $array['remarks'] . '">
+                                <input type="hidden" name="collectedby" id="collectedby" type="text" value="' . $array['collectedby'] . '">
+                                <input type="hidden" name="taggedto" id="taggedto" type="text" value="' . $array['taggedto'] . '">
                                 &nbsp;
                                 
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
@@ -334,7 +339,12 @@ $resultArr = pg_fetch_all($result);
                                 <form name="remarks_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="remarksedit">
                                 <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <textarea id="inp_' . $array['itemid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>' ?>
+                                <textarea id="inp_' . $array['itemid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>
+                                <input type="hidden" name="itemname" id="itemname" type="text" value="' . $array['itemname'] . '">
+                                <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
+                                <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
+                                <input type="hidden" name="collectedby" id="collectedby" type="text" value="' . $array['collectedby'] . '">
+                                <input type="hidden" name="taggedto" id="taggedto" type="text" value="' . $array['taggedto'] . '">' ?>
 
                                 <?php if ($role == 'Admin') { ?>
 
@@ -369,7 +379,12 @@ $resultArr = pg_fetch_all($result);
                                 <td><form name="issuedby_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctionissuedby()" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="issuedbyedit">
                                 <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <input id="inpissuedby_' . $array['itemid'] . '" name="issuedby" type="text" value="' . $array['collectedby'] . '" disabled>
+                                <input id="inpissuedby_' . $array['itemid'] . '" name="collectedby" type="text" value="' . $array['collectedby'] . '" disabled>
+                                <input type="hidden" name="itemname" id="itemname" type="text" value="' . $array['itemname'] . '">
+                                <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
+                                <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
+                                <input type="hidden" name="remarks" id="remarks" type="text" value="' . $array['remarks'] . '">
+                                <input type="hidden" name="taggedto" id="taggedto" type="text" value="' . $array['taggedto'] . '">
                                     
                                     &nbsp;
 
@@ -382,7 +397,12 @@ $resultArr = pg_fetch_all($result);
                                 <input type="hidden" name="form-type" type="text" value="tagedit">
                                 <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
                                 <input id="inptag_' . $array['itemid'] . '" name="taggedto" type="text" value="' . $array['taggedto'] . '" disabled>
-                                    
+                                <input type="hidden" name="itemname" id="itemname" type="text" value="' . $array['itemname'] . '">
+                                <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
+                                <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
+                                <input type="hidden" name="remarks" id="remarks" type="text" value="' . $array['remarks'] . '">
+                                <input type="hidden" name="collectedby" id="collectedby" type="text" value="' . $array['collectedby'] . '">
+                                        
                                     &nbsp;
 
                                 <button type="button" id="edittag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit Tagged to"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
@@ -393,38 +413,18 @@ $resultArr = pg_fetch_all($result);
                                 <a href="https://api.whatsapp.com/send?phone=91' . $array['tphone'] . '&text=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;
                                 
-                                <a href="mailto:' . $array['temail'] . '?subject=' . $array['itemid'] . ' | Asset Allocation has been done in GPS&body=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>' ?>
-                                <?php } ?><br><br>
+                                <a href="mailto:' . $array['temail'] . '?subject=' . $array['itemid'] . ' | Asset Allocation has been done in GPS&body=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a><br><br>
 
-                                <?php echo
-                                '
+                                <form name="gpsdelete_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiongpsdelete()" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="gpsdelete">
+                                <input type="hidden" name="gpsid" id="gpsid" type="text" value="' . $array['itemid'] . '">
+                                
+                                <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="fa-solid fa-xmark"></i></button>' ?>
 
-                            <form name="gpshistory_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiongpshistory()" style="display: -webkit-inline-box;">
-                            <input type="hidden" name="form-type" type="text" value="gpshistory">
-                            <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                            <input type="hidden" name="itemname" id="itemname" type="text" value="' . $array['itemname'] . '">
-                            <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
-                            <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
-                            <input type="hidden" name="remarks" id="remarks" type="text" value="' . $array['remarks'] . '">
-                            <input type="hidden" name="collectedby" id="collectedby" type="text" value="' . $array['collectedby'] . '">
-                            <input type="hidden" name="taggedto" id="taggedto" type="text" value="' . $array['taggedto'] . '">
-                            
-                            <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Update History"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
-                            </form>
+                                    <?php echo ' </form>' ?>
+                                <?php } ?>
 
-
-
-
-                            &nbsp;<form name="gpsdelete_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiongpsdelete()" style="display: -webkit-inline-box;">
-                            <input type="hidden" name="form-type" type="text" value="gpsdelete">
-                            <input type="hidden" name="gpsid" id="gpsid" type="text" value="' . $array['itemid'] . '">
-                            
-                            <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="fa-solid fa-xmark"></i></button>' ?>
-
-                            <?php echo ' </form>
-      
-                            
-                            </td>
+                            <?php echo '</td>
                                 </tr>';
                             } ?>
                         <?php
@@ -612,11 +612,6 @@ $resultArr = pg_fetch_all($result);
             alert("Asset has been deleted.");
             location.reload();
         }
-
-        function myFunctiongpshistory() {
-            alert("GPS history table has been updated.");
-            location.reload();
-        }
     </script>
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
@@ -729,21 +724,6 @@ $resultArr = pg_fetch_all($result);
                 fetch(scriptURL, {
                         method: 'POST',
                         body: new FormData(document.forms['gpsdelete_' + item.itemid])
-                    })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
-
-            console.log(item)
-        })
-
-        data.forEach(item => {
-            const form = document.forms['gpshistory_' + item.itemid]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['gpshistory_' + item.itemid])
                     })
                     .then(response => console.log('Success!', response))
                     .catch(error => console.error('Error!', error.message))

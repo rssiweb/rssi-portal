@@ -117,3 +117,7 @@ ALTER TABLE ipfsubmission
 RENAME ipfststus TO ipfstatus;
 
 SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'rssimyprofile_student';
+
+INSERT INTO [Table to copy To]
+SELECT [Columns to Copy]
+FROM [Table to copy From]
