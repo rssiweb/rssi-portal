@@ -168,23 +168,12 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['visitorname'] . '<br>' . $array['contact'] . '<br>' . $array['email'] . '</td>
                                 <td>' . date("d/m/Y", strtotime($array['visitdatefrom'])) . '&nbsp;' . date("g:i a", strtotime($array['visittime'])) . '</td>
                                 
-                                <td>' . date("d/m/Y", strtotime($array['visitdateto'])) . '</td><td> ' ?>
-
-                                <?php if ($array['existingid'] != null) { ?><?php } ?>
-
-                                <?php if ($array['existingid'] == null) { ?>
-                                    <?php echo
-                                    '<span class="noticea"><a href="' . $array['aadharcard'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span>' ?> <?php } ?>
-
-                                <?php if ($array['existingid'] == null) { ?>
-                                    <?php echo
-                                    '</td><td><img src="' . str_replace("open", "uc", $array['photo']) . '" width="50" height="50"/></td>'
-
-                                    ?><?php } else { ?><?php echo
-                                                        '</td><td></td>' ?><?php } ?>
-
-                                    <?php echo
-                                    '<td>' . $array['purposeofvisit'] . '</td>
+                                <td>' . date("d/m/Y", strtotime($array['visitdateto'])) . '</td>
+                                
+                                <td><span class="noticea"><a href="' . $array['aadharcard'] . '" target="_blank"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
+                                
+                                <td><img src="' . str_replace("open", "uc", $array['photo']) . '" width="50" height="50"/></td>
+                                <td>' . $array['purposeofvisit'] . '</td>
                                 <td>' . $array['branch'] . '</td>'  ?>
 
 
