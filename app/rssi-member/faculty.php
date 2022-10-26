@@ -634,7 +634,7 @@ $resultArr = pg_fetch_all($result);
 
                                     <?php echo '<button type="submit" id="yes" style=" outline: none;background: none;
                         padding: 0px;
-                        border: none;" title="Release IPF"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777""></i></button>' ?>
+                        border: none;" title="Release IPF ' . $array['googlechat'] . '/' . $array['ipfl'] . '"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777""></i></button>' ?>
                                 <?php } ?>
                             <?php echo ' </form>
       </td>
