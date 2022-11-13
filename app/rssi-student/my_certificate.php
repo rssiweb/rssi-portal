@@ -104,7 +104,7 @@ $resultArrr = pg_fetch_result($totalgems, 0, 0);
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-            <?php if ($resultArrr != null) { ?>
+                <?php if ($resultArrr != null) { ?>
                     <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo $resultArrr ?></p>
                     </div>
                 <?php } ?>
@@ -176,15 +176,9 @@ $resultArrr = pg_fetch_result($totalgems, 0, 0);
                             <?php }
                             echo '</tr>' ?>
                         <?php
-                        } else if (@$get_certificate_no == "" && @$get_nomineeid == "") {
-                        ?>
-                            <tr>
-                                <td colspan="5">Please select Filter value.</td>
-                            </tr>
-                        <?php
-                        } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
+                        } else if (sizeof($resultArr) == 0) { ?>
                             <?php echo '<tr>
-                                    <td colspan="5">No record found for <?php echo $stid ?></td>
+                                    <td colspan="5">No record found for ' ?><?php echo $student_id ?><?php echo '.</td>
                                 </tr>' ?>
                         <?php
                         }

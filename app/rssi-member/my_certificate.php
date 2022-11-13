@@ -152,14 +152,14 @@ date_default_timezone_set('Asia/Kolkata');
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <?php if ($resultArrr != null) { ?>
-                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo $resultArrr ?></p>
-                    </div>
-                <?php } ?>
-                <?php if ($resultArrr == null) { ?>
-                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
-                    </div>
-                <?php } ?>
+            <?php if ($resultArrr!=null) { ?>
+            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo $resultArrr?></p>
+                        </div>
+                        <?php }?>
+                        <?php if ($resultArrr==null) { ?>
+            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
+                        </div>
+                        <?php }?>
                 <?php if ($role == 'Admin') { ?>
                     <?php if (@$certificate_no != null && @$cmdtuples == 0) { ?>
 
@@ -393,7 +393,7 @@ date_default_timezone_set('Asia/Kolkata');
                         <?php
                         } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
                             <?php echo '<tr>
-                                    <td colspan="5">No record found for <?php echo $stid ?></td>
+                                    <td colspan="5">No record found for ' ?><?php echo $get_certificate_no ?><?php echo $get_nomineeid ?><?php echo '.</td>
                                 </tr>' ?>
                         <?php
                         }
