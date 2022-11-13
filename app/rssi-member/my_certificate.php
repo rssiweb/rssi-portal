@@ -6,6 +6,7 @@ include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -45,9 +46,9 @@ date_default_timezone_set('Asia/Kolkata');
         }
     }
 
-    @$get_certificate_no = strtoupper($_POST['get_certificate_no']);
-    @$get_nomineeid = strtoupper($_POST['get_nomineeid']);
-    @$is_user = $_POST['is_user'];
+    @$get_certificate_no = strtoupper($_GET['get_certificate_no']);
+    @$get_nomineeid = strtoupper($_GET['get_nomineeid']);
+    @$is_user = $_GET['is_user'];
 
     if (($get_certificate_no == null && $get_nomineeid == null)) {
 
@@ -78,6 +79,7 @@ date_default_timezone_set('Asia/Kolkata');
 <?php if ($role != 'Admin') {
 
     $result = pg_query($con, "SELECT * FROM certificate where awarded_to_id='$associatenumber' order by issuedon desc");
+    $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$associatenumber'");
 
     if (!$result) {
         echo "An error occurred.\n";
@@ -85,6 +87,7 @@ date_default_timezone_set('Asia/Kolkata');
     }
 
     $resultArr = pg_fetch_all($result);
+    $resultArrr = pg_fetch_result($totalgems, 0, 0);
 } ?>
 
 <!DOCTYPE html>
@@ -262,7 +265,7 @@ date_default_timezone_set('Asia/Kolkata');
 
                         <?php if ($role == 'Admin') { ?>
 
-                            <form action="" method="POST">
+                            <form action="" method="GET">
                                 <div class="form-group" style="display: inline-block;">
                                     <div class="col2" style="display: inline-block;">
                                         <input name="get_certificate_no" id="get_certificate_no" class="form-control" style="width:max-content; display:inline-block" placeholder="Certificate no" value="<?php echo $get_certificate_no ?>">
