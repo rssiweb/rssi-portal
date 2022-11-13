@@ -52,16 +52,19 @@ date_default_timezone_set('Asia/Kolkata');
     if (($get_certificate_no == null && $get_nomineeid == null)) {
 
         $result = pg_query($con, "SELECT * FROM certificate where certificate_no=''");
+        $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
     }
 
     if (($get_certificate_no != null)) {
 
         $result = pg_query($con, "SELECT * FROM certificate where certificate_no='$get_certificate_no' order by issuedon desc");
+        $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no='$get_certificate_no'");
     }
 
     if (($get_nomineeid != null)) {
 
         $result = pg_query($con, "SELECT * FROM certificate where awarded_to_id='$get_nomineeid' order by issuedon desc");
+        $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$get_nomineeid'");
     }
 
     if (!$result) {
@@ -70,6 +73,7 @@ date_default_timezone_set('Asia/Kolkata');
     }
 
     $resultArr = pg_fetch_all($result);
+    $resultArrr = pg_fetch_result($totalgems, 0, 0);
 } ?>
 <?php if ($role != 'Admin') {
 
@@ -148,6 +152,14 @@ date_default_timezone_set('Asia/Kolkata');
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
+                <?php if ($resultArrr != null) { ?>
+                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo $resultArrr ?></p>
+                    </div>
+                <?php } ?>
+                <?php if ($resultArrr == null) { ?>
+                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
+                    </div>
+                <?php } ?>
                 <?php if ($role == 'Admin') { ?>
                     <?php if (@$certificate_no != null && @$cmdtuples == 0) { ?>
 
