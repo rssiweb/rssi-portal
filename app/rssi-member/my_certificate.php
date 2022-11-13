@@ -202,19 +202,19 @@ date_default_timezone_set('Asia/Kolkata');
                                     </span>
 
                                     <span class="input-help">
-                                        <input type="text" name="awarded_to_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee id">
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Nominee id</small>
+                                        <input type="text" name="awarded_to_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee id" value="<?php echo @$_GET['awarded_to_id']; ?>" required>
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Nominee id*</small>
                                     </span>
 
                                     <span class="input-help">
-                                        <input type="text" name="awarded_to_name" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee name" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Nominee name</small>
+                                        <input type="text" name="awarded_to_name" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee name" value="<?php echo @$_GET['awarded_to_name']; ?>" required>
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Nominee name*</small>
                                     </span>
 
                                     <span class="input-help">
                                         <select name="badge_name" class="form-control" style="width:max-content; display:inline-block" required>
                                             <?php if ($badge_name == null) { ?>
-                                                <option value="" disabled selected hidden>Badge name</option>
+                                                <option value="" disabled selected hidden>Badge name*</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $badge_name ?></option>

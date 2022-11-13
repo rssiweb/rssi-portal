@@ -735,9 +735,10 @@ $resultArr = pg_fetch_all($result);
             </div>
 
             WBT Completed:&nbsp;<span class="attd"></span>
-            <div class="col" style="display: inline-block; text-align:right"><a id="wbt_details" href="#" target="_blank"><i class="fa-regular fa-eye" style="font-size: 20px ;color:#777777" title="WBT Details"></i></a></div>
+            <div class="col" style="display: inline-block; text-align:right"><a id="wbt_details" href="#" target="_blank"><i class="fa-regular fa-eye" style="font-size: 20px ;color:#777777" title="WBT Details"></i></a></div><br>
 
-
+            <span class="noticea"><a id="certificate_issue" href="#" target="_blank">Issue Document</a></span><br>
+            <span class="noticea"><a id="certificate_view" href="#" target="_blank">View Document</a></span>
 
         </div>
 
@@ -781,6 +782,10 @@ $resultArr = pg_fetch_all($result);
 
             var profile = document.getElementById("wbt_details")
             profile.href = "/rssi-member/my_learning.php?get_aid=" + mydata["associatenumber"]
+            var profile = document.getElementById("certificate_issue")
+            profile.href = "/rssi-member/my_certificate.php?awarded_to_id=" + mydata["associatenumber"]+"&awarded_to_name=" + mydata["fullname"]
+            var profile = document.getElementById("certificate_view")
+            profile.href = "/rssi-member/my_certificate.php?get_nomineeid=" + mydata["associatenumber"]
 
         }
         // When the user clicks the button, open the modal 
