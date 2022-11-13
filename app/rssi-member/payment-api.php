@@ -99,6 +99,13 @@ if ($_POST['form-type'] == "paydelete") {
   $result = pg_query($con, $paydelete);
 } 
 
+
+if ($_POST['form-type'] == "cmsdelete") {
+  @$certificate_no = $_POST['cmsid'];
+  $cmsdelete = "DELETE from certificate WHERE certificate_no = '$certificate_no'";
+  $result = pg_query($con, $cmsdelete);
+} 
+
 if ($_POST['form-type'] == "gpsdelete") {
   @$gpsid = $_POST['gpsid'];
   $gpsdelete = "DELETE from gps WHERE itemid = '$gpsid'";

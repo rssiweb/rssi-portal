@@ -72,7 +72,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                         <tbody>
                             <tr>
 
-                                <td style="line-height: 2;"><span class="noticea"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a></span>
+                                <td style="line-height: 2;"><span class="noticea"><a href="my_certificate.php">My Certificate</a></span>
                                     <?php echo $officialdoc ?>
                                 </td>
                                 <td style="line-height: 2;"><span class="noticea"><a href="payslip.php" target="_self">Payslip</a></span></td>
