@@ -279,7 +279,7 @@ date_default_timezone_set('Asia/Kolkata');
                                         <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                                 </div>
                                 <div id="filter-checks">
-                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
                                     <label for="is_user" style="font-weight: 400;">Search by Nominee id</label>
                                 </div>
                             </form>
