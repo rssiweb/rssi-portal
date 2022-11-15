@@ -228,7 +228,7 @@ if (@$_POST['form-type'] == "gms") {
                                 </span>
 
                                 <span class="input-help">
-                                    <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems">
+                                    <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr - $resultArrr) ?>" min="1">
                                     <small id="passwordHelpBlock" class="form-text text-muted">Redeem gems point</small>
                                 </span>
 
