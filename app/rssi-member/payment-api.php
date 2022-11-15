@@ -23,7 +23,7 @@ if ($_POST['form-type'] == "transfer") {
   @$refid = $_POST['pid'];
   $pstatus = "UPDATE fees SET  pstatus = 'transferred' WHERE id = $refid";
   $result = pg_query($con, $pstatus);
-} 
+}
 
 
 if ($_POST['form-type'] == "remarksedit") {
@@ -39,7 +39,7 @@ if ($_POST['form-type'] == "remarksedit") {
   $remarksedit = "UPDATE gps SET  remarks = '$remarks' WHERE itemid = '$itemid'";
   $result = pg_query($con, $remarksedit);
   $result = pg_query($con, $gpshistory);
-} 
+}
 
 if ($_POST['form-type'] == "nameedit") {
   @$itemid = $_POST['itemid'];
@@ -54,14 +54,14 @@ if ($_POST['form-type'] == "nameedit") {
   $nameedit = "UPDATE gps SET  itemname = '$itemname' WHERE itemid = '$itemid'";
   $result = pg_query($con, $nameedit);
   $result = pg_query($con, $gpshistory);
-} 
+}
 
 if ($_POST['form-type'] == "noticebodyedit") {
   @$noticeid = $_POST['noticeid'];
   @$noticebody = $_POST['noticebody'];
   $noticebodyedit = "UPDATE notice SET  noticebody = '$noticebody' WHERE noticeid = '$noticeid'";
   $result = pg_query($con, $noticebodyedit);
-} 
+}
 
 if ($_POST['form-type'] == "tagedit") {
   @$itemid = $_POST['itemid'];
@@ -76,7 +76,7 @@ if ($_POST['form-type'] == "tagedit") {
   $tagedit = "UPDATE gps SET  taggedto = '$taggedto' WHERE itemid = '$itemid'";
   $result = pg_query($con, $tagedit);
   $result = pg_query($con, $gpshistory);
-} 
+}
 
 if ($_POST['form-type'] == "issuedbyedit") {
   @$itemid = $_POST['itemid'];
@@ -91,26 +91,32 @@ if ($_POST['form-type'] == "issuedbyedit") {
   $issuedbyedit = "UPDATE gps SET  collectedby = '$collectedby' WHERE itemid = '$itemid'";
   $result = pg_query($con, $issuedbyedit);
   $result = pg_query($con, $gpshistory);
-} 
+}
 
 if ($_POST['form-type'] == "paydelete") {
   @$refid = $_POST['pid'];
   $paydelete = "DELETE from fees WHERE id = $refid";
   $result = pg_query($con, $paydelete);
-} 
+}
 
 
 if ($_POST['form-type'] == "cmsdelete") {
   @$certificate_no = $_POST['cmsid'];
   $cmsdelete = "DELETE from certificate WHERE certificate_no = '$certificate_no'";
   $result = pg_query($con, $cmsdelete);
-} 
+}
+
+if ($_POST['form-type'] == "gemsdelete") {
+  @$redeem_id = $_POST['redeem_id'];
+  $gemsdelete = "DELETE from gems WHERE redeem_id = '$redeem_id'";
+  $result = pg_query($con, $gemsdelete);
+}
 
 if ($_POST['form-type'] == "gpsdelete") {
   @$gpsid = $_POST['gpsid'];
   $gpsdelete = "DELETE from gps WHERE itemid = '$gpsid'";
   $result = pg_query($con, $gpsdelete);
-}  
+}
 
 if ($_POST['form-type'] == "ipfpush") {
   @$membername2 = $_POST['membername2'];
@@ -129,7 +135,18 @@ if ($_POST['form-type'] == "ipfsubmission") {
   $now = date('Y-m-d H:i:s');
   $ipfclose = "UPDATE ipfsubmission SET  status2 = '$status2', respondedon = '$now' WHERE id = $ipfid";
   $result = pg_query($con, $ipfclose);
-} 
+}
+
+if ($_POST['form-type'] == "gemsredeem") {
+  @$reviewer_id = $_POST['reviewer_id'];
+  @$reviewer_name = $_POST['reviewer_name'];
+  @$redeem_idd = $_POST['redeem_idd'];
+  @$reviewer_status = $_POST['reviewer_status'];
+  @$reviewer_remarks = $_POST['reviewer_remarks'];
+  $now = date('Y-m-d H:i:s');
+  $gemsredeem = "UPDATE gems SET  reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name', reviewer_status = '$reviewer_status', reviewer_remarks = '$reviewer_remarks', reviewer_status_updated_on = '$now' WHERE redeem_id = '$redeem_idd'";
+  $result = pg_query($con, $gemsredeem);
+}
 
 if ($_POST['form-type'] == "ipfclose") {
   @$ipfid = $_POST['ipfid'];
@@ -143,7 +160,7 @@ if ($_POST['form-type'] == "test") {
   @$sname = $_POST['sname'];
   @$sid = $_POST['sid'];
   @$amount = $_POST['amount'];
-  $orderid  = "ORDER_".time();
+  $orderid  = "ORDER_" . time();
   $now = date('Y-m-d H:i:s');
   $test = "INSERT INTO test VALUES ('$now', '$sname', '$sid', '$amount','$orderid', 'initiated')";
   $result = pg_query($con, $test);

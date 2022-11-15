@@ -155,14 +155,30 @@ date_default_timezone_set('Asia/Kolkata');
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-            <?php if ($resultArrr!=null) { ?>
-            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo $resultArrr?></p>
+                <div class="row">
+                    <?php if ($role == 'Admin') { ?>
+                        <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / <span class="noticea"><a href="document.php">My Document</a></span> / Certificate Management System (CMS)
                         </div>
-                        <?php }?>
-                        <?php if ($resultArrr==null) { ?>
-            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
+                    <?php } else { ?>
+                        <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / <span class="noticea"><a href="document.php">My Document</a></span> / My Certificate
                         </div>
-                        <?php }?>
+                    <?php } ?>
+                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+
+                        <?php if ($resultArrr != null) { ?>
+                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo $resultArrr ?></p>
+                            </div>
+                        <?php } else { ?>
+
+                            <i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
+                        <?php } ?>
+                        <br><br>
+
+                        <a href="redeem_gems.php" target="_self" class="btn btn-danger btn-sm" role="button">Redeem Gems</a>
+                    </div>
+                </div>
+                <?php if ($resultArrr == null) { ?>
+                <?php } ?>
                 <?php if ($role == 'Admin') { ?>
                     <?php if (@$certificate_no != null && @$cmdtuples == 0) { ?>
 
@@ -187,10 +203,6 @@ date_default_timezone_set('Asia/Kolkata');
 
                 <div class="row">
                     <section class="box" style="padding: 2%;">
-                        <!-- <p>Home / Certificate Management System</p><br> -->
-                        <div class="col" style="display: inline-block; width:100%; text-align:right">
-                            Home / <span class="noticea"><a href="document.php">My Document</a></span> / My Certificate<br><br>
-                        </div>
 
                         <?php if ($role == 'Admin') { ?>
 
@@ -214,7 +226,7 @@ date_default_timezone_set('Asia/Kolkata');
                                     <span class="input-help">
                                         <select name="badge_name" class="form-control" style="width:max-content; display:inline-block" required>
                                             <?php if ($badge_name == null) { ?>
-                                                <option value="" disabled selected hidden>Badge name*</option>
+                                                <option value="" disabled selected hidden>Badge name</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $badge_name ?></option>
@@ -233,7 +245,7 @@ date_default_timezone_set('Asia/Kolkata');
                                             <option>Volunteer Of The Quarter</option>
 
                                         </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Badge name</small>
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Badge name*</small>
                                     </span>
 
                                     <span class="input-help">
