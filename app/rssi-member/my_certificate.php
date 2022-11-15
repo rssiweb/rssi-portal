@@ -54,18 +54,21 @@ date_default_timezone_set('Asia/Kolkata');
 
         $result = pg_query($con, "SELECT * FROM certificate where certificate_no=''");
         $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
+        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
     }
 
     if (($get_certificate_no != null)) {
 
         $result = pg_query($con, "SELECT * FROM certificate where certificate_no='$get_certificate_no' order by issuedon desc");
         $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no='$get_certificate_no'");
+        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
     }
 
     if (($get_nomineeid != null)) {
 
         $result = pg_query($con, "SELECT * FROM certificate where awarded_to_id='$get_nomineeid' order by issuedon desc");
         $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$get_nomineeid'");
+        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$get_nomineeid' AND reviewer_status='Approved'");
     }
 
     if (!$result) {
@@ -75,11 +78,13 @@ date_default_timezone_set('Asia/Kolkata');
 
     $resultArr = pg_fetch_all($result);
     $resultArrr = pg_fetch_result($totalgems, 0, 0);
+    $resultArrrr = pg_fetch_result($totalgemsredeem, 0, 0);
 } ?>
 <?php if ($role != 'Admin') {
 
     $result = pg_query($con, "SELECT * FROM certificate where awarded_to_id='$associatenumber' order by issuedon desc");
     $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$associatenumber'");
+    $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$associatenumber' AND reviewer_status='Approved'");
 
     if (!$result) {
         echo "An error occurred.\n";
@@ -88,6 +93,7 @@ date_default_timezone_set('Asia/Kolkata');
 
     $resultArr = pg_fetch_all($result);
     $resultArrr = pg_fetch_result($totalgems, 0, 0);
+    $resultArrrr = pg_fetch_result($totalgemsredeem, 0, 0);
 } ?>
 
 <!DOCTYPE html>
@@ -165,8 +171,8 @@ date_default_timezone_set('Asia/Kolkata');
                     <?php } ?>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
 
-                        <?php if ($resultArrr != null) { ?>
-                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo $resultArrr ?></p>
+                        <?php if ($resultArrr - $resultArrrr != null) { ?>
+                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo ($resultArrr - $resultArrrr) ?></p>
                             </div>
                         <?php } else { ?>
 

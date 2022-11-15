@@ -50,18 +50,21 @@ if (@$_POST['form-type'] == "gms") {
 
         $result = pg_query($con, "SELECT * FROM gems where redeem_id=''");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
+        $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
     }
 
     if (($redeem_id != null)) {
 
         $result = pg_query($con, "SELECT * FROM gems where redeem_id='$redeem_id' order by requested_on desc");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id='$redeem_id' AND reviewer_status='Approved'");
+        $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
     }
 
     if (($user_id != null)) {
 
         $result = pg_query($con, "SELECT * FROM gems where user_id='$user_id' order by requested_on desc");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$user_id' AND reviewer_status='Approved'");
+        $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$user_id'");
     }
 
     if (!$result) {
@@ -71,11 +74,13 @@ if (@$_POST['form-type'] == "gms") {
 
     $resultArr = pg_fetch_all($result);
     $resultArrr = pg_fetch_result($totalgemsredeem, 0, 0);
+    $resultArrrr = pg_fetch_result($totalgemsreceived, 0, 0);
 } ?>
 <?php if ($role != 'Admin') {
 
     $result = pg_query($con, "SELECT * FROM gems where user_id='$associatenumber' order by requested_on desc");
     $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$associatenumber'");
+    $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$associatenumber'");
 
     if (!$result) {
         echo "An error occurred.\n";
@@ -84,6 +89,7 @@ if (@$_POST['form-type'] == "gms") {
 
     $resultArr = pg_fetch_all($result);
     $resultArrr = pg_fetch_result($totalgemsredeem, 0, 0);
+    $resultArrrr = pg_fetch_result($totalgemsreceived, 0, 0);
 } ?>
 
 <!DOCTYPE html>
@@ -161,8 +167,8 @@ if (@$_POST['form-type'] == "gms") {
                     <?php } ?>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
 
-                        <?php if ($resultArrr != null) { ?>
-                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo $resultArrr ?></p>
+                        <?php if ($resultArrrr - $resultArrr != null) { ?>
+                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo ($resultArrrr - $resultArrr) ?></p>
                             </div>
                         <?php } else { ?>
 
@@ -277,13 +283,13 @@ if (@$_POST['form-type'] == "gms") {
                             <script>
                                 if ($('#is_user').not(':checked').length > 0) {
 
-                                    document.getElementById("redeem_id").disabled = false;
-                                    document.getElementById("user_id").disabled = true;
+                                    document.getElementById("user_id").disabled = false;
+                                    document.getElementById("redeem_id").disabled = true;
 
                                 } else {
 
-                                    document.getElementById("redeem_id").disabled = true;
-                                    document.getElementById("user_id").disabled = false;
+                                    document.getElementById("user_id").disabled = true;
+                                    document.getElementById("redeem_id").disabled = false;
 
                                 }
 
@@ -291,11 +297,11 @@ if (@$_POST['form-type'] == "gms") {
 
                                 checkbox.addEventListener('change', (event) => {
                                     if (event.target.checked) {
-                                        document.getElementById("redeem_id").disabled = true;
-                                        document.getElementById("user_id").disabled = false;
-                                    } else {
-                                        document.getElementById("redeem_id").disabled = false;
                                         document.getElementById("user_id").disabled = true;
+                                        document.getElementById("redeem_id").disabled = false;
+                                    } else {
+                                        document.getElementById("user_id").disabled = false;
+                                        document.getElementById("redeem_id").disabled = true;
                                     }
                                 })
                             </script>
