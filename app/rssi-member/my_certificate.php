@@ -52,21 +52,21 @@ date_default_timezone_set('Asia/Kolkata');
 
     if (($get_certificate_no == null && $get_nomineeid == null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate where certificate_no=''");
+        $result = pg_query($con, "SELECT * FROM certificate  left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where certificate_no=''");
         $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
     }
 
     if (($get_certificate_no != null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate where certificate_no='$get_certificate_no' order by issuedon desc");
+        $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where certificate_no='$get_certificate_no' order by issuedon desc");
         $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no='$get_certificate_no'");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
     }
 
     if (($get_nomineeid != null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate where awarded_to_id='$get_nomineeid' order by issuedon desc");
+        $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where awarded_to_id='$get_nomineeid' order by issuedon desc");
         $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$get_nomineeid'");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$get_nomineeid' AND reviewer_status='Approved'");
     }
@@ -396,6 +396,11 @@ date_default_timezone_set('Asia/Kolkata');
                                     <?php echo '
 
                                 <td>
+                                <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['awarded_to_name'] . ',%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;&nbsp;
+                                
+                                <a href="mailto:' . $array['email'] . '?subject=You have received ' . $array['badge_name'] . '&body=Dear ' . $array['awarded_to_name'] . ',%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>&nbsp;&nbsp;
+
                                 <form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="cmsdelete">
                                 <input type="hidden" name="cmsid" id="cmsid" type="text" value="' . $array['certificate_no'] . '">

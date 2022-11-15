@@ -79,7 +79,7 @@ if (@$_POST['form-type'] == "gms") {
 <?php if ($role != 'Admin') {
 
     $result = pg_query($con, "SELECT * FROM gems where user_id='$associatenumber' order by requested_on desc");
-    $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$associatenumber'");
+    $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$associatenumber'AND reviewer_status='Approved'");
     $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$associatenumber'");
 
     if (!$result) {
