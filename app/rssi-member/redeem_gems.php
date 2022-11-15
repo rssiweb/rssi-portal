@@ -74,7 +74,7 @@ if (@$_POST['form-type'] == "gms") {
 } ?>
 <?php if ($role != 'Admin') {
 
-    $result = pg_query($con, "SELECT * FROM gems where user_id='$associatenumber' order by issuedon desc");
+    $result = pg_query($con, "SELECT * FROM gems where user_id='$associatenumber' order by requested_on desc");
     $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$associatenumber'");
 
     if (!$result) {
@@ -95,7 +95,7 @@ if (@$_POST['form-type'] == "gms") {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>RSSI-Certificate management</title>
+    <title>RSSI-Gems Redeem</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -616,7 +616,7 @@ if (@$_POST['form-type'] == "gms") {
                 <p id="status" class="label " style="display: inline !important;"><span class="redeem_id"></span></p>
             </div>
 
-            <form id="reviewform" action="#" method="POST" name="RSG1668513933">
+            <form id="reviewform" action="#" method="POST" name="RSG1668522707">
                 <input type="text" class="form-control" name="form-type" type="text" value="gemsredeem" readonly>
                 <input type="text" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
                 <input type="text" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
