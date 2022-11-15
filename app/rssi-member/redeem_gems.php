@@ -630,7 +630,7 @@ if (@$_POST['form-type'] == "gms") {
                 </select>
 
                 <span class="input-help">
-                    <textarea type="text" name="reviewer_remarks" class="form-control" placeholder="Reviewer remarks" value=""></textarea>
+                    <textarea type="text" name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="Reviewer remarks" value=""></textarea>
                     <small id="passwordHelpBlock" class="form-text text-muted">Reviewer remarks</small>
                 </span>
                 <br><br>
@@ -678,6 +678,14 @@ if (@$_POST['form-type'] == "gms") {
 
             var profile = document.getElementById("redeem_idd")
             profile.value = mydata["redeem_id"]
+            if (mydata["reviewer_status"] !== null) {
+                profile = document.getElementById("reviewer_status")
+                profile.value = mydata["reviewer_status"]
+            }
+            if (mydata["reviewer_remarks"] !== null) {
+                profile = document.getElementById("reviewer_remarks")
+                profile.value = mydata["reviewer_remarks"]
+            }
         }
         // When the user clicks the button, open the modal 
         // When the user clicks on <span> (x), close the modal
@@ -714,21 +722,21 @@ if (@$_POST['form-type'] == "gms") {
             console.log(item)
         })
 
-            const form = document.getElementById ('reviewform')
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.getElementById ('reviewform'))
-                    })
-                    .then(response =>
-                        alert("Record has been updated.") +
-                        location.reload()
-                    )
-                    .catch(error => console.error('Error!', error.message))
-            })
+        const form = document.getElementById('reviewform')
+        form.addEventListener('submit', e => {
+            e.preventDefault()
+            fetch(scriptURL, {
+                    method: 'POST',
+                    body: new FormData(document.getElementById('reviewform'))
+                })
+                .then(response =>
+                    alert("Record has been updated.") +
+                    location.reload()
+                )
+                .catch(error => console.error('Error!', error.message))
+        })
 
-            console.log(item)
+        console.log(item)
     </script>
 
     <!-- Back top -->
