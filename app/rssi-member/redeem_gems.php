@@ -616,11 +616,11 @@ if (@$_POST['form-type'] == "gms") {
                 <p id="status" class="label " style="display: inline !important;"><span class="redeem_id"></span></p>
             </div>
 
-            <form id="reviewform" action="#" method="POST" name="RSG1668522707">
-                <input type="text" class="form-control" name="form-type" type="text" value="gemsredeem" readonly>
-                <input type="text" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
-                <input type="text" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
-                <input type="text" class="form-control" name="redeem_idd" id="redeem_idd" type="text" value="" readonly>
+            <form id="reviewform" action="#" method="POST">
+                <input type="hidden" class="form-control" name="form-type" type="text" value="gemsredeem" readonly>
+                <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
+                <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
+                <input type="hidden" class="form-control" name="redeem_idd" id="redeem_idd" type="text" value="" readonly>
 
                 <select name="reviewer_status" id="reviewer_status" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
                     <option value="" disabled selected hidden>Status</option>
@@ -678,10 +678,6 @@ if (@$_POST['form-type'] == "gms") {
 
             var profile = document.getElementById("redeem_idd")
             profile.value = mydata["redeem_id"]
-            var profilee = document.getElementById("reviewform")
-            profilee.name = mydata["redeem_id"]
-
-
         }
         // When the user clicks the button, open the modal 
         // When the user clicks on <span> (x), close the modal
@@ -718,13 +714,12 @@ if (@$_POST['form-type'] == "gms") {
             console.log(item)
         })
 
-        data.forEach(item => {
-            const form = document.forms[item.redeem_id]
+            const form = document.getElementById ('reviewform')
             form.addEventListener('submit', e => {
                 e.preventDefault()
                 fetch(scriptURL, {
                         method: 'POST',
-                        body: new FormData(document.forms[item.redeem_id])
+                        body: new FormData(document.getElementById ('reviewform'))
                     })
                     .then(response =>
                         alert("Record has been updated.") +
@@ -734,7 +729,6 @@ if (@$_POST['form-type'] == "gms") {
             })
 
             console.log(item)
-        })
     </script>
 
     <!-- Back top -->
