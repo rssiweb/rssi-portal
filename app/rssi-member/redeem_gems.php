@@ -188,7 +188,7 @@ if (@$_POST['form-type'] == "gms") {
 
                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Redeem request has been submitted. Redeem id <?php echo $redeem_id1 ?>.</span>
+                        <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Redeem id <?php echo $redeem_id1 ?>.</span>
                     </div>
                     <script>
                         if (window.history.replaceState) {
