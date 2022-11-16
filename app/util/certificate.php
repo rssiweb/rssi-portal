@@ -15,7 +15,7 @@
         <?php include '../css/style.css'; ?>
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
 
     <!------ Include the above in your HEAD tag ---------->
@@ -56,8 +56,8 @@
 </div>
 <?php
 include("../rssi-member/database.php");
-@$certificate_no = $_GET['certificate_no'];
-$result = pg_query($con, "SELECT * FROM certificate WHERE certificate_no='$certificate_no'");
+@$scode = $_GET['scode'];
+$result = pg_query($con, "SELECT * FROM certificate LEFT JOIN (SELECT associatenumber, scode FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber WHERE scode='$scode' AND badge_name != 'Experience Letter'");
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -88,7 +88,7 @@ echo '
         </tr>
         </thead>' ?>
 
-<?php if (@$certificate_no > 0) {
+<?php if ($resultArr != null) {
 
     foreach ($resultArr as $array) {
         echo '<tbody><tr>
@@ -96,7 +96,7 @@ echo '
         <td>' . $array['awarded_to_id'] . '</td>
         <td>' . $array['awarded_to_name'] . '</td>
         <td>' . $array['badge_name'] . '</td>
-        <td>' . $array['comment'] . '</td>'?>
+        <td>' . $array['comment'] . '</td>' ?>
         <?php if ($array['issuedon'] == null) { ?>
             <?php echo '<td></td>' ?>
         <?php } else { ?>
@@ -113,8 +113,11 @@ echo '
             <?php echo '<td><a href="' . $array['certificate_url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
         <?php } ?>
 
-   <?php  }
-} ?>
+    <?php  }
+} else { ?>
+    <?php echo '<td colspan="5">No record found.</td>' ?>
+<?php  }
+echo '</tr></tbody></table>' ?>
 </section>
 </div>
 </section>
