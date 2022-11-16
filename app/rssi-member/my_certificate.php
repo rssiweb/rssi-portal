@@ -52,9 +52,9 @@ date_default_timezone_set('Asia/Kolkata');
 
     if (($get_certificate_no == null && $get_nomineeid == null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate  left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where certificate_no=''");
-        $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
-        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
+        $result = pg_query($con, "SELECT * FROM certificate  left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber order by issuedon desc");
+        $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate");
+        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems");
     }
 
     if (($get_certificate_no != null)) {

@@ -48,9 +48,9 @@ if (@$_POST['form-type'] == "gms") {
 
     if (($redeem_id == null && $user_id == null)) {
 
-        $result = pg_query($con, "SELECT * FROM gems where redeem_id=''");
-        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
-        $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
+        $result = pg_query($con, "SELECT * FROM gems");
+        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems");
+        $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate");
     }
 
     if (($redeem_id != null)) {
