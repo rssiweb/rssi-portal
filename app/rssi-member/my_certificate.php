@@ -53,22 +53,31 @@ date_default_timezone_set('Asia/Kolkata');
     if (($get_certificate_no == null && $get_nomineeid == null)) {
 
         $result = pg_query($con, "SELECT * FROM certificate  left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber order by issuedon desc");
-        $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate");
-        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems");
+        $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems");
+        $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate");
+        $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
+        $totalgemsreceived_admin = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$associatenumber'");
+        $totalgemsredeem_approved = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems");
     }
 
     if (($get_certificate_no != null)) {
 
         $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where certificate_no='$get_certificate_no' order by issuedon desc");
-        $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no='$get_certificate_no'");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
+        $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
+        $totalgemsredeem_admin = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
+        $totalgemsreceived_admin = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
+        $totalgemsredeem_approved = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
     }
 
     if (($get_nomineeid != null)) {
 
         $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where awarded_to_id='$get_nomineeid' order by issuedon desc");
-        $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$get_nomineeid'");
-        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$get_nomineeid' AND reviewer_status='Approved'");
+        $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$get_nomineeid' AND (reviewer_status is null or reviewer_status !='Rejected')");
+        $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$get_nomineeid'");
+        $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
+        $totalgemsreceived_admin = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$associatenumber'");
+        $totalgemsredeem_approved = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$get_nomineeid' AND reviewer_status='Approved'");
     }
 
     if (!$result) {
@@ -77,14 +86,17 @@ date_default_timezone_set('Asia/Kolkata');
     }
 
     $resultArr = pg_fetch_all($result);
-    $resultArrr = pg_fetch_result($totalgems, 0, 0);
+    $resultArrr = pg_fetch_result($totalgemsreceived, 0, 0);
     $resultArrrr = pg_fetch_result($totalgemsredeem, 0, 0);
+    $resultArrr_admin = pg_fetch_result($totalgemsreceived_admin, 0, 0);
+    $resultArrrr_admin = pg_fetch_result($totalgemsredeem_admin, 0, 0);
+    $gems_approved = pg_fetch_result($totalgemsredeem_approved, 0, 0);
 } ?>
 <?php if ($role != 'Admin') {
 
     $result = pg_query($con, "SELECT * FROM certificate where awarded_to_id='$associatenumber' order by issuedon desc");
-    $totalgems = pg_query($con, "SELECT SUM(gems) FROM certificate where awarded_to_id='$associatenumber'");
-    $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where user_id='$associatenumber' AND reviewer_status='Approved'");
+    $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
+    $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$associatenumber'");
 
     if (!$result) {
         echo "An error occurred.\n";
@@ -92,7 +104,7 @@ date_default_timezone_set('Asia/Kolkata');
     }
 
     $resultArr = pg_fetch_all($result);
-    $resultArrr = pg_fetch_result($totalgems, 0, 0);
+    $resultArrr = pg_fetch_result($totalgemsreceived, 0, 0);
     $resultArrrr = pg_fetch_result($totalgemsredeem, 0, 0);
 } ?>
 
@@ -171,12 +183,28 @@ date_default_timezone_set('Asia/Kolkata');
                     <?php } ?>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
 
-                        <?php if ($resultArrr - $resultArrrr != null) { ?>
-                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo ($resultArrr - $resultArrrr) ?></p>
+                        <?php if ($role == 'Admin') { ?>
+                            <div class="col" style="display: inline-block; width:47%; text-align:right">
+
+                                <?php if ($resultArrr_admin - $resultArrrr_admin != null) { ?>
+                                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo ($resultArrr_admin - $resultArrrr_admin) ?></p>
+                                    </div>
+                                <?php } else { ?>
+
+                                    <i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
+                                <?php } ?>
                             </div>
                         <?php } else { ?>
+                            <div class="col" style="display: inline-block; width:47%; text-align:right">
 
-                            <i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
+                                <?php if ($resultArrr - $resultArrrr != null) { ?>
+                                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo ($resultArrr - $resultArrrr) ?></p>
+                                    </div>
+                                <?php } else { ?>
+
+                                    <i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
+                                <?php } ?>
+                            </div>
                         <?php } ?>
                         <br><br>
 
@@ -277,9 +305,28 @@ date_default_timezone_set('Asia/Kolkata');
 
                             </form>
 
+                            <?php if ($get_nomineeid != null) { ?>
+                                <div class="col" style="display: inline-block; width:100%; text-align:right">
+
+
+                                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;">Total Gems:&nbsp;
+                                        <p class="label label-default"><?php echo $resultArrr ?></p><br>
+
+                                        Balance:&nbsp;
+                                        <?php if ($resultArrr - $gems_approved <= 0) { ?>
+                                            <p class="label label-danger"><?php echo ($resultArrr - $gems_approved) ?></p><br><br>
+                                        <?php } else { ?>
+
+                                            <p class="label label-info"><?php echo ($resultArrr - $gems_approved) ?></p><br><br>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;">Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                            </div>
+
+
                         <?php } ?>
-                        <div style="display: inline-block; width:100%; font-size:small; text-align:right;">Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                        </div>
 
                         <?php if ($role == 'Admin') { ?>
 
@@ -445,183 +492,181 @@ date_default_timezone_set('Asia/Kolkata');
                                 </ul>
                             </nav>
                         </div>
-                </div>
-        </section>
-    </section>
-    <script>
-        var data = <?php echo json_encode($resultArr) ?>;
-        //For form submission - to update Remarks
-        const scriptURL = 'payment-api.php'
+                    </section>
+                    <script>
+                        var data = <?php echo json_encode($resultArr) ?>;
+                        //For form submission - to update Remarks
+                        const scriptURL = 'payment-api.php'
 
-        data.forEach(item => {
-            const form = document.forms['cmsdelete_' + item.certificate_no]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['cmsdelete_' + item.certificate_no])
-                    })
-                    .then(response =>
-                        alert("Record has been deleted.") +
-                        location.reload()
-                    )
-                    .catch(error => console.error('Error!', error.message))
-            })
+                        data.forEach(item => {
+                            const form = document.forms['cmsdelete_' + item.certificate_no]
+                            form.addEventListener('submit', e => {
+                                e.preventDefault()
+                                fetch(scriptURL, {
+                                        method: 'POST',
+                                        body: new FormData(document.forms['cmsdelete_' + item.certificate_no])
+                                    })
+                                    .then(response =>
+                                        alert("Record has been deleted.") +
+                                        location.reload()
+                                    )
+                                    .catch(error => console.error('Error!', error.message))
+                            })
 
-            console.log(item)
-        })
-    </script>
+                            console.log(item)
+                        })
+                    </script>
 
-    <script>
-        getPagination('#table-id');
+                    <script>
+                        getPagination('#table-id');
 
-        function getPagination(table) {
-            var lastPage = 1;
+                        function getPagination(table) {
+                            var lastPage = 1;
 
-            $('#maxRows')
-                .on('change', function(evt) {
-                    //$('.paginationprev').html('');						// reset pagination
+                            $('#maxRows')
+                                .on('change', function(evt) {
+                                    //$('.paginationprev').html('');						// reset pagination
 
-                    lastPage = 1;
-                    $('.pagination')
-                        .find('li')
-                        .slice(1, -1)
-                        .remove();
-                    var trnum = 0; // reset tr counter
-                    var maxRows = parseInt($(this).val()); // get Max Rows from select option
+                                    lastPage = 1;
+                                    $('.pagination')
+                                        .find('li')
+                                        .slice(1, -1)
+                                        .remove();
+                                    var trnum = 0; // reset tr counter
+                                    var maxRows = parseInt($(this).val()); // get Max Rows from select option
 
-                    if (maxRows == 5000) {
-                        $('.pagination').hide();
-                    } else {
-                        $('.pagination').show();
-                    }
+                                    if (maxRows == 5000) {
+                                        $('.pagination').hide();
+                                    } else {
+                                        $('.pagination').show();
+                                    }
 
-                    var totalRows = $(table + ' tbody tr').length; // numbers of rows
-                    $(table + ' tr:gt(0)').each(function() {
-                        // each TR in  table and not the header
-                        trnum++; // Start Counter
-                        if (trnum > maxRows) {
-                            // if tr number gt maxRows
+                                    var totalRows = $(table + ' tbody tr').length; // numbers of rows
+                                    $(table + ' tr:gt(0)').each(function() {
+                                        // each TR in  table and not the header
+                                        trnum++; // Start Counter
+                                        if (trnum > maxRows) {
+                                            // if tr number gt maxRows
 
-                            $(this).hide(); // fade it out
-                        }
-                        if (trnum <= maxRows) {
-                            $(this).show();
-                        } // else fade in Important in case if it ..
-                    }); //  was fade out to fade it in
-                    if (totalRows > maxRows) {
-                        // if tr total rows gt max rows option
-                        var pagenum = Math.ceil(totalRows / maxRows); // ceil total(rows/maxrows) to get ..
-                        //	numbers of pages
-                        for (var i = 1; i <= pagenum;) {
-                            // for each page append pagination li
-                            $('.pagination #prev')
-                                .before(
-                                    '<li data-page="' +
-                                    i +
-                                    '">\
+                                            $(this).hide(); // fade it out
+                                        }
+                                        if (trnum <= maxRows) {
+                                            $(this).show();
+                                        } // else fade in Important in case if it ..
+                                    }); //  was fade out to fade it in
+                                    if (totalRows > maxRows) {
+                                        // if tr total rows gt max rows option
+                                        var pagenum = Math.ceil(totalRows / maxRows); // ceil total(rows/maxrows) to get ..
+                                        //	numbers of pages
+                                        for (var i = 1; i <= pagenum;) {
+                                            // for each page append pagination li
+                                            $('.pagination #prev')
+                                                .before(
+                                                    '<li data-page="' +
+                                                    i +
+                                                    '">\
 								  <span>' +
-                                    i++ +
-                                    '<span class="sr-only">(current)</span></span>\
+                                                    i++ +
+                                                    '<span class="sr-only">(current)</span></span>\
 								</li>'
-                                )
-                                .show();
-                        } // end for i
-                    } // end if row count > max rows
-                    $('.pagination [data-page="1"]').addClass('active'); // add active class to the first li
-                    $('.pagination li').on('click', function(evt) {
-                        // on click each page
-                        evt.stopImmediatePropagation();
-                        evt.preventDefault();
-                        var pageNum = $(this).attr('data-page'); // get it's number
+                                                )
+                                                .show();
+                                        } // end for i
+                                    } // end if row count > max rows
+                                    $('.pagination [data-page="1"]').addClass('active'); // add active class to the first li
+                                    $('.pagination li').on('click', function(evt) {
+                                        // on click each page
+                                        evt.stopImmediatePropagation();
+                                        evt.preventDefault();
+                                        var pageNum = $(this).attr('data-page'); // get it's number
 
-                        var maxRows = parseInt($('#maxRows').val()); // get Max Rows from select option
+                                        var maxRows = parseInt($('#maxRows').val()); // get Max Rows from select option
 
-                        if (pageNum == 'prev') {
-                            if (lastPage == 1) {
-                                return;
-                            }
-                            pageNum = --lastPage;
+                                        if (pageNum == 'prev') {
+                                            if (lastPage == 1) {
+                                                return;
+                                            }
+                                            pageNum = --lastPage;
+                                        }
+                                        if (pageNum == 'next') {
+                                            if (lastPage == $('.pagination li').length - 2) {
+                                                return;
+                                            }
+                                            pageNum = ++lastPage;
+                                        }
+
+                                        lastPage = pageNum;
+                                        var trIndex = 0; // reset tr counter
+                                        $('.pagination li').removeClass('active'); // remove active class from all li
+                                        $('.pagination [data-page="' + lastPage + '"]').addClass('active'); // add active class to the clicked
+                                        // $(this).addClass('active');					// add active class to the clicked
+                                        limitPagging();
+                                        $(table + ' tr:gt(0)').each(function() {
+                                            // each tr in table not the header
+                                            trIndex++; // tr index counter
+                                            // if tr index gt maxRows*pageNum or lt maxRows*pageNum-maxRows fade if out
+                                            if (
+                                                trIndex > maxRows * pageNum ||
+                                                trIndex <= maxRows * pageNum - maxRows
+                                            ) {
+                                                $(this).hide();
+                                            } else {
+                                                $(this).show();
+                                            } //else fade in
+                                        }); // end of for each tr in table
+                                    }); // end of on click pagination list
+                                    limitPagging();
+                                })
+                                .val(5)
+                                .change();
+
+                            // end of on select change
+
+                            // END OF PAGINATION
                         }
-                        if (pageNum == 'next') {
-                            if (lastPage == $('.pagination li').length - 2) {
-                                return;
+
+                        function limitPagging() {
+                            // alert($('.pagination li').length)
+
+                            if ($('.pagination li').length > 7) {
+                                if ($('.pagination li.active').attr('data-page') <= 3) {
+                                    $('.pagination li:gt(5)').hide();
+                                    $('.pagination li:lt(5)').show();
+                                    $('.pagination [data-page="next"]').show();
+                                }
+                                if ($('.pagination li.active').attr('data-page') > 3) {
+                                    $('.pagination li:gt(0)').hide();
+                                    $('.pagination [data-page="next"]').show();
+                                    for (let i = (parseInt($('.pagination li.active').attr('data-page')) - 2); i <= (parseInt($('.pagination li.active').attr('data-page')) + 2); i++) {
+                                        $('.pagination [data-page="' + i + '"]').show();
+
+                                    }
+
+                                }
                             }
-                            pageNum = ++lastPage;
                         }
+                    </script>
 
-                        lastPage = pageNum;
-                        var trIndex = 0; // reset tr counter
-                        $('.pagination li').removeClass('active'); // remove active class from all li
-                        $('.pagination [data-page="' + lastPage + '"]').addClass('active'); // add active class to the clicked
-                        // $(this).addClass('active');					// add active class to the clicked
-                        limitPagging();
-                        $(table + ' tr:gt(0)').each(function() {
-                            // each tr in table not the header
-                            trIndex++; // tr index counter
-                            // if tr index gt maxRows*pageNum or lt maxRows*pageNum-maxRows fade if out
-                            if (
-                                trIndex > maxRows * pageNum ||
-                                trIndex <= maxRows * pageNum - maxRows
-                            ) {
-                                $(this).hide();
-                            } else {
-                                $(this).show();
-                            } //else fade in
-                        }); // end of for each tr in table
-                    }); // end of on click pagination list
-                    limitPagging();
-                })
-                .val(5)
-                .change();
-
-            // end of on select change
-
-            // END OF PAGINATION
-        }
-
-        function limitPagging() {
-            // alert($('.pagination li').length)
-
-            if ($('.pagination li').length > 7) {
-                if ($('.pagination li.active').attr('data-page') <= 3) {
-                    $('.pagination li:gt(5)').hide();
-                    $('.pagination li:lt(5)').show();
-                    $('.pagination [data-page="next"]').show();
-                }
-                if ($('.pagination li.active').attr('data-page') > 3) {
-                    $('.pagination li:gt(0)').hide();
-                    $('.pagination [data-page="next"]').show();
-                    for (let i = (parseInt($('.pagination li.active').attr('data-page')) - 2); i <= (parseInt($('.pagination li.active').attr('data-page')) + 2); i++) {
-                        $('.pagination [data-page="' + i + '"]').show();
-
-                    }
-
-                }
-            }
-        }
-    </script>
-
-    <!-- Back top -->
-    <script>
-        $(document).ready(function() {
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#back-to-top').fadeIn();
-                } else {
-                    $('#back-to-top').fadeOut();
-                }
-            });
-            // scroll body to 0px on click
-            $('#back-to-top').click(function() {
-                $('body,html').animate({
-                    scrollTop: 0
-                }, 400);
-                return false;
-            });
-        });
-    </script>
-    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+                    <!-- Back top -->
+                    <script>
+                        $(document).ready(function() {
+                            $(window).scroll(function() {
+                                if ($(this).scrollTop() > 50) {
+                                    $('#back-to-top').fadeIn();
+                                } else {
+                                    $('#back-to-top').fadeOut();
+                                }
+                            });
+                            // scroll body to 0px on click
+                            $('#back-to-top').click(function() {
+                                $('body,html').animate({
+                                    scrollTop: 0
+                                }, 400);
+                                return false;
+                            });
+                        });
+                    </script>
+                    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>
 
 </html>
