@@ -41,7 +41,7 @@ if (@$_POST['form-type'] == "gms") {
 
     if (($redeem_id == null && $user_id == null)) {
 
-        $result = pg_query($con, "SELECT * FROM gems");
+        $result = pg_query($con, "SELECT * FROM gems order by requested_on desc");
         $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems");
         $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate");
         $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -305,9 +305,9 @@ if (@$_POST['form-type'] == "gms") {
 
                         <div style="display: inline-block; width:100%; font-size:small; text-align:right;">Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                         </div>
-                        <?php if ($role == 'Admin') { ?>
+                        <?php if ($role == 'Admin' && $user_id!=null) { ?>
                         <div class="col" style="display: inline-block; width:100%; text-align:right">
-                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;
+                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;">Balance:&nbsp;
                                 <?php if ($resultArrrr - $gems_approved <= 0) { ?>
                                     <p class="label label-danger"><?php echo ($resultArrrr - $gems_approved) ?></p>
                                 <?php } else { ?>
