@@ -394,7 +394,6 @@ if (@$_POST['form-type'] == "gms") {
                             <th scope="col">Redeem type</th>
                             <th scope="col">Reviewer id</th>
                             <th scope="col">Reviewer status</th>
-                            <th scope="col">Reviewer status updated on</th>
                             <th scope="col">Reviewer remarks</th>' ?>
                         <?php if ($role == 'Admin') { ?>
                             <?php echo '<th scope="col"></th>' ?>
@@ -419,11 +418,11 @@ if (@$_POST['form-type'] == "gms") {
                                 <?php echo '<td>' . $array['redeem_gems_point'] . '</td>
                                 <td>' . $array['redeem_type'] . '</td>
                                 <td>' . $array['reviewer_id'] . '<br>' . $array['reviewer_name'] . '</td>
-                                <td>' . $array['reviewer_status'] . '</td>' ?>
+                                <td>' . $array['reviewer_status'] . '<br>' ?>
                                 <?php if ($array['reviewer_status_updated_on'] == null) { ?>
-                                    <?php echo '<td></td>' ?>
+                                    <?php echo null ?>
                                 <?php } else { ?>
-                                    <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on'])) . '</td>' ?>
+                                    <?php echo @date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on'])) . '</td>' ?>
                                 <?php } ?>
 
                                 <?php echo '<td>' . $array['reviewer_remarks'] . '</td>' ?>
