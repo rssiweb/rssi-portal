@@ -395,11 +395,10 @@ date_default_timezone_set('Asia/Kolkata');
                             <tr>
                             <th scope="col">Certificate no</th>' ?>
                         <?php if ($role == 'Admin') { ?>
-                            <?php echo '<th scope="col">Nominee id</th>
-                            <th scope="col">Nominee name</th>' ?>
+                            <?php echo '<th scope="col">Nominee Details</th>' ?>
                         <?php } ?>
                         <?php echo ' <th scope="col">Badge name</th>
-                            <th scope="col">Remarks</th>
+                            <th scope="col" width="20%">Remarks</th>
                             <th scope="col">Gems</th>
                             <th scope="col">Issued on</th>
                             <th scope="col">Issued by</th>
@@ -416,12 +415,23 @@ date_default_timezone_set('Asia/Kolkata');
                             <tr>
                                 <td>' . $array['certificate_no'] . '</td>' ?>
                                 <?php if ($role == 'Admin') { ?>
-                                    <?php echo '<td>' . $array['awarded_to_id'] . '</td>
-                                <td>' . $array['awarded_to_name'] . '</td>' ?>
+                                    <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . $array['awarded_to_name'] . '</td>' ?>
                                 <?php } ?>
-                                <?php echo '<td>' . $array['badge_name'] . '</td>
-                                <td>' . $array['comment'] . '</td>
-                                <td>' . $array['gems'] . '</td>' ?>
+                                <?php echo '<td>' . $array['badge_name'] . '</td><td>' ?>
+
+                                <?php if (@strlen($array['comment']) <= 90) {
+
+                                    echo $array['comment'] ?>
+
+                                <?php } else { ?>
+
+                                    <?php echo substr($array['comment'], 0, 90) .
+                                        '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['certificate_no'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i></button>' ?>
+                                <?php } ?>
+
+
+                                <?php echo '</td><td>' . $array['gems'] . '</td>' ?>
                                 <?php if ($array['issuedon'] == null) { ?>
                                     <?php echo '<td></td>' ?>
                                 <?php } else { ?>
@@ -438,15 +448,15 @@ date_default_timezone_set('Asia/Kolkata');
                                     <?php echo '<td><a href="' . $array['certificate_url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
                                 <?php } ?>
 
-                                <?php if ($role == 'Admin') { ?>
+                                 <?php if ($role == 'Admin') { ?>
 
                                     <?php echo '
 
                                 <td>
-                                <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['awarded_to_name'] . ',%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                               <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;&nbsp;
                                 
-                                <a href="mailto:' . $array['email'] . '?subject=You have received ' . $array['badge_name'] . '&body=Dear ' . $array['awarded_to_name'] . ',%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>&nbsp;&nbsp;
+                                <a href="mailto:' . $array['email'] . '?subject=You have received ' . $array['badge_name'] . '&body=Dear ' . $array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>&nbsp;&nbsp;
 
                                 <form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="cmsdelete">
@@ -643,6 +653,123 @@ date_default_timezone_set('Asia/Kolkata');
                                     }
 
                                 }
+                            }
+                        }
+                    </script>
+                    <!--------------- POP-UP BOX ------------
+-------------------------------------->
+                    <style>
+                        .modal {
+                            display: none;
+                            /* Hidden by default */
+                            position: fixed;
+                            /* Stay in place */
+                            z-index: 100;
+                            /* Sit on top */
+                            padding-top: 100px;
+                            /* Location of the box */
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            /* Full width */
+                            height: 100%;
+                            /* Full height */
+                            overflow: auto;
+                            /* Enable scroll if needed */
+                            background-color: rgb(0, 0, 0);
+                            /* Fallback color */
+                            background-color: rgba(0, 0, 0, 0.4);
+                            /* Black w/ opacity */
+                        }
+
+                        /* Modal Content */
+
+                        .modal-content {
+                            background-color: #fefefe;
+                            margin: auto;
+                            padding: 20px;
+                            border: 1px solid #888;
+                            width: 100vh;
+                        }
+
+                        @media (max-width:767px) {
+                            .modal-content {
+                                width: 50vh;
+                            }
+                        }
+
+                        /* The Close Button */
+
+                        .close {
+                            color: #aaaaaa;
+                            float: right;
+                            font-size: 28px;
+                            font-weight: bold;
+                            text-align: right;
+                        }
+
+                        .close:hover,
+                        .close:focus {
+                            color: #000;
+                            text-decoration: none;
+                            cursor: pointer;
+                        }
+                    </style>
+
+                    <div id="myModal" class="modal">
+
+                        <!-- Modal content -->
+                        <div class="modal-content">
+                            <span class="close">&times;</span>
+
+                            <div style="width:100%; text-align:right">
+                                <p class="label label-info" style="display: inline !important;"><span class="certificate_no"></span></p>
+                            </div>
+
+
+                            <p style="font-size: small;">
+                                <span class="comment"></span>
+                                <!-- <br /><br />
+                <span style="font-size:10px;">Registered by&nbsp;<span class="collectedby"></span>&nbsp;on&nbsp;<span class="date"></span></span> -->
+                            </p>
+                        </div>
+
+                    </div>
+                    <script>
+                        var data = <?php echo json_encode($resultArr) ?>
+
+                        // Get the modal
+                        var modal = document.getElementById("myModal");
+                        // Get the <span> element that closes the modal
+                        var span = document.getElementsByClassName("close")[0];
+
+                        function showDetails(id) {
+                            // console.log(modal)
+                            // console.log(modal.getElementsByClassName("data"))
+                            var mydata = undefined
+                            data.forEach(item => {
+                                if (item["certificate_no"] == id) {
+                                    mydata = item;
+                                }
+                            })
+
+                            var keys = Object.keys(mydata)
+                            keys.forEach(key => {
+                                var span = modal.getElementsByClassName(key)
+                                if (span.length > 0)
+                                    span[0].innerHTML = mydata[key];
+                            })
+                            modal.style.display = "block";
+                        }
+                        // When the user clicks the button, open the modal 
+                        // When the user clicks on <span> (x), close the modal
+                        span.onclick = function() {
+                            modal.style.display = "none";
+                        }
+                        // When the user clicks anywhere outside of the modal, close it
+                        window.onclick = function(event) {
+                            if (event.target == modal) {
+                                modal.style.display = "none";
                             }
                         }
                     </script>

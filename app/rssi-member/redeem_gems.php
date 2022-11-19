@@ -41,7 +41,7 @@ if (@$_POST['form-type'] == "gms") {
 
     if (($redeem_id == null && $user_id == null)) {
 
-        $result = pg_query($con, "SELECT * FROM gems order by requested_on desc");
+        $result = pg_query($con, "SELECT * FROM gems left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON gems.user_id=faculty.associatenumber order by requested_on desc");
         $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems");
         $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate");
         $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -51,7 +51,7 @@ if (@$_POST['form-type'] == "gms") {
 
     if (($redeem_id != null)) {
 
-        $result = pg_query($con, "SELECT * FROM gems where redeem_id='$redeem_id' order by requested_on desc");
+        $result = pg_query($con, "SELECT * FROM gems left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON gems.user_id=faculty.associatenumber where redeem_id='$redeem_id' order by requested_on desc");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
         $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
         $totalgemsredeem_admin = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
@@ -61,7 +61,7 @@ if (@$_POST['form-type'] == "gms") {
 
     if (($user_id != null)) {
 
-        $result = pg_query($con, "SELECT * FROM gems where user_id='$user_id' order by requested_on desc");
+        $result = pg_query($con, "SELECT * FROM gems left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON gems.user_id=faculty.associatenumber where user_id='$user_id' order by requested_on desc");
         $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$user_id' AND (reviewer_status is null or reviewer_status !='Rejected')");
         $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$user_id'");
         $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber' AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -305,69 +305,69 @@ if (@$_POST['form-type'] == "gms") {
 
                         <div style="display: inline-block; width:100%; font-size:small; text-align:right;">Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                         </div>
-                        <?php if ($role == 'Admin' && $user_id!=null) { ?>
-                        <div class="col" style="display: inline-block; width:100%; text-align:right">
-                            <div style="display: inline-block; width:100%; font-size:small; text-align:right;">Balance:&nbsp;
-                                <?php if ($resultArrrr - $gems_approved <= 0) { ?>
-                                    <p class="label label-danger"><?php echo ($resultArrrr - $gems_approved) ?></p>
-                                <?php } else { ?>
+                        <?php if ($role == 'Admin' && $user_id != null) { ?>
+                            <div class="col" style="display: inline-block; width:100%; text-align:right">
+                                <div style="display: inline-block; width:100%; font-size:small; text-align:right;">Balance:&nbsp;
+                                    <?php if ($resultArrrr - $gems_approved <= 0) { ?>
+                                        <p class="label label-danger"><?php echo ($resultArrrr - $gems_approved) ?></p>
+                                    <?php } else { ?>
 
-                                    <p class="label label-info"><?php echo ($resultArrrr - $gems_approved) ?></p>
-                                <?php } ?>
-                            </div>
-                        </div>
-                    <?php } ?>
-
-
-                    <?php if ($role == 'Admin') { ?>
-
-                        <form action="" method="GET">
-                            <div class="form-group" style="display: inline-block;">
-                                <div class="col2" style="display: inline-block;">
-                                    <input name="redeem_id" id="redeem_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Redeem id" value="<?php echo $redeem_id ?>">
-                                </div>
-                                <div class="col2" style="display: inline-block;">
-                                    <input name="user_id" id="user_id" class="form-control" style="width:max-content; display:inline-block" placeholder="User id" value="<?php echo $user_id ?>">
+                                        <p class="label label-info"><?php echo ($resultArrrr - $gems_approved) ?></p>
+                                    <?php } ?>
                                 </div>
                             </div>
-                            <div class="col2 left" style="display: inline-block;">
-                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                            </div>
-                            <div id="filter-checks">
-                                <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
-                                <label for="is_user" style="font-weight: 400;">Search by Redeem id</label>
-                            </div>
-                        </form>
-                        <script>
-                            if ($('#is_user').not(':checked').length > 0) {
+                        <?php } ?>
 
-                                document.getElementById("user_id").disabled = false;
-                                document.getElementById("redeem_id").disabled = true;
 
-                            } else {
+                        <?php if ($role == 'Admin') { ?>
 
-                                document.getElementById("user_id").disabled = true;
-                                document.getElementById("redeem_id").disabled = false;
+                            <form action="" method="GET">
+                                <div class="form-group" style="display: inline-block;">
+                                    <div class="col2" style="display: inline-block;">
+                                        <input name="redeem_id" id="redeem_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Redeem id" value="<?php echo $redeem_id ?>">
+                                    </div>
+                                    <div class="col2" style="display: inline-block;">
+                                        <input name="user_id" id="user_id" class="form-control" style="width:max-content; display:inline-block" placeholder="User id" value="<?php echo $user_id ?>">
+                                    </div>
+                                </div>
+                                <div class="col2 left" style="display: inline-block;">
+                                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                        <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                                </div>
+                                <div id="filter-checks">
+                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                    <label for="is_user" style="font-weight: 400;">Search by Redeem id</label>
+                                </div>
+                            </form>
+                            <script>
+                                if ($('#is_user').not(':checked').length > 0) {
 
-                            }
-
-                            const checkbox = document.getElementById('is_user');
-
-                            checkbox.addEventListener('change', (event) => {
-                                if (event.target.checked) {
-                                    document.getElementById("user_id").disabled = true;
-                                    document.getElementById("redeem_id").disabled = false;
-                                } else {
                                     document.getElementById("user_id").disabled = false;
                                     document.getElementById("redeem_id").disabled = true;
+
+                                } else {
+
+                                    document.getElementById("user_id").disabled = true;
+                                    document.getElementById("redeem_id").disabled = false;
+
                                 }
-                            })
-                        </script>
 
-                    <?php } ?>
+                                const checkbox = document.getElementById('is_user');
 
-                    <?php echo '
+                                checkbox.addEventListener('change', (event) => {
+                                    if (event.target.checked) {
+                                        document.getElementById("user_id").disabled = true;
+                                        document.getElementById("redeem_id").disabled = false;
+                                    } else {
+                                        document.getElementById("user_id").disabled = false;
+                                        document.getElementById("redeem_id").disabled = true;
+                                    }
+                                })
+                            </script>
+
+                        <?php } ?>
+
+                        <?php echo '
                     <p>Select Number Of Rows</p>
                     <div class="form-group">
                         <select class="form-control" name="state" id="maxRows">
@@ -387,98 +387,103 @@ if (@$_POST['form-type'] == "gms") {
                             <th scope="col">Redeem id</th>
                             <th scope="col">Requested on</th>' ?>
 
-                    <?php if ($role == 'Admin') { ?>
-                        <?php echo '<th scope="col">User id</th>' ?>
-                    <?php } ?>
-                    <?php echo ' <th scope="col">Gems point</th>
+                        <?php if ($role == 'Admin') { ?>
+                            <?php echo '<th scope="col">User id</th>' ?>
+                        <?php } ?>
+                        <?php echo ' <th scope="col">Gems point</th>
                             <th scope="col">Redeem type</th>
                             <th scope="col">Reviewer id</th>
                             <th scope="col">Reviewer status</th>
                             <th scope="col">Reviewer status updated on</th>
                             <th scope="col">Reviewer remarks</th>' ?>
-                    <?php if ($role == 'Admin') { ?>
-                        <?php echo '<th scope="col"></th>' ?>
-                    <?php } ?>
-                    <?php echo '</tr>
+                        <?php if ($role == 'Admin') { ?>
+                            <?php echo '<th scope="col"></th>' ?>
+                        <?php } ?>
+                        <?php echo '</tr>
                             </thead>' ?>
-                    <?php if ($resultArr != null) {
-                        echo '<tbody>';
-                        foreach ($resultArr as $array) {
-                            echo '
+                        <?php if ($resultArr != null) {
+                            echo '<tbody>';
+                            foreach ($resultArr as $array) {
+                                echo '
                             <tr>
                                 <td>' . $array['redeem_id'] . '</td>' ?>
 
-                            <?php if ($array['requested_on'] == null) { ?>
-                                <?php echo '<td></td>' ?>
-                            <?php } else { ?>
-                                <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['requested_on'])) . '</td>' ?>
-                            <?php } ?>
-                            <?php if ($role == 'Admin') { ?>
-                                <?php echo '<td>' . $array['user_id'] . '<br>' . $array['user_name'] . '</td>' ?>
-                            <?php } ?>
-                            <?php echo '<td>' . $array['redeem_gems_point'] . '</td>
+                                <?php if ($array['requested_on'] == null) { ?>
+                                    <?php echo '<td></td>' ?>
+                                <?php } else { ?>
+                                    <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['requested_on'])) . '</td>' ?>
+                                <?php } ?>
+                                <?php if ($role == 'Admin') { ?>
+                                    <?php echo '<td>' . $array['user_id'] . '<br>' . $array['user_name'] . '</td>' ?>
+                                <?php } ?>
+                                <?php echo '<td>' . $array['redeem_gems_point'] . '</td>
                                 <td>' . $array['redeem_type'] . '</td>
                                 <td>' . $array['reviewer_id'] . '<br>' . $array['reviewer_name'] . '</td>
                                 <td>' . $array['reviewer_status'] . '</td>' ?>
-                            <?php if ($array['reviewer_status_updated_on'] == null) { ?>
-                                <?php echo '<td></td>' ?>
-                            <?php } else { ?>
-                                <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on'])) . '</td>' ?>
-                            <?php } ?>
+                                <?php if ($array['reviewer_status_updated_on'] == null) { ?>
+                                    <?php echo '<td></td>' ?>
+                                <?php } else { ?>
+                                    <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on'])) . '</td>' ?>
+                                <?php } ?>
 
-                            <?php echo '<td>' . $array['reviewer_remarks'] . '</td>' ?>
+                                <?php echo '<td>' . $array['reviewer_remarks'] . '</td>' ?>
 
-                            <?php if ($role == 'Admin') { ?>
+                                <?php if ($role == 'Admin') { ?>
 
-                                <?php echo '
+                                    <?php echo '
 
                                 <td>
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['redeem_id'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;
+
+                                <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['user_name'] . ' (' . $array['user_id'] . '),%0A%0ARedeem id ' . $array['redeem_id'] . ' against the policy issued by the organization has been settled at Rs.' . $array['redeem_gems_point'] . ' on ' . $array['reviewer_status_updated_on'] . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                    " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;&nbsp;
+                                    
+                                    <a href="mailto:' . $array['email'] . '?subject=Redeem id: ' . $array['redeem_id'] . ' | ' . $array['reviewer_status'] . '&body=Dear ' . $array['user_name'] . ' (' . $array['user_id'] . '),%0A%0ARedeem id ' . $array['redeem_id'] . ' against the policy issued by the organization has been settled at Rs.' . $array['redeem_gems_point'] . ' on ' . $array['reviewer_status_updated_on'] . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>&nbsp;&nbsp;
                                 <form name="gemsdelete_' . $array['redeem_id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="gemsdelete">
                                 <input type="hidden" name="redeem_id" type="text" value="' . $array['redeem_id'] . '">
                                 
                                 <button type="submit" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['redeem_id'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
                                 </td>' ?>
-                            <?php } ?>
-                        <?php }
-                        echo '</tr>' ?>
-                    <?php
-                    } else if (@$get_certificate_no == "" && @$get_nomineeid == "") {
-                    ?>
-                        <tr>
-                            <td colspan="5">Please select Filter value.</td>
-                        </tr>
-                    <?php
-                    } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
-                        <?php echo '<tr>
+                                <?php } ?>
+                            <?php }
+                            echo '</tr>' ?>
+                        <?php
+                        } else if (@$get_certificate_no == "" && @$get_nomineeid == "") {
+                        ?>
+                            <tr>
+                                <td colspan="5">Please select Filter value.</td>
+                            </tr>
+                        <?php
+                        } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
+                            <?php echo '<tr>
                                     <td colspan="5">No record found for ' ?><?php echo $get_certificate_no ?><?php echo $get_nomineeid ?><?php echo '.</td>
                                 </tr>' ?>
-                    <?php
-                    }
-                    echo '</tbody>
+                        <?php
+                        }
+                        echo '</tbody>
                     </table>'
-                    ?>
+                        ?>
 
 
-                    <!--		Start Pagination -->
-                    <div class='pagination-container'>
-                        <nav>
-                            <ul class="pagination">
+                        <!--		Start Pagination -->
+                        <div class='pagination-container'>
+                            <nav>
+                                <ul class="pagination">
 
-                                <li data-page="prev">
-                                    <span>
-                                        < <span class="sr-only">(current)
-                                    </span></span>
-                                </li>
-                                <!--	Here the JS Function Will Add the Rows -->
-                                <li data-page="next" id="prev">
-                                    <span> > <span class="sr-only">(current)</span></span>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
+                                    <li data-page="prev">
+                                        <span>
+                                            < <span class="sr-only">(current)
+                                        </span></span>
+                                    </li>
+                                    <!--	Here the JS Function Will Add the Rows -->
+                                    <li data-page="next" id="prev">
+                                        <span> > <span class="sr-only">(current)</span></span>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                 </div>
         </section>
     </section>
