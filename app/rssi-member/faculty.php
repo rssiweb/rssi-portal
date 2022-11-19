@@ -6,6 +6,7 @@ include("../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -738,7 +739,8 @@ $resultArr = pg_fetch_all($result);
             <div class="col" style="display: inline-block; text-align:right"><a id="wbt_details" href="#" target="_blank"><i class="fa-regular fa-eye" style="font-size: 20px ;color:#777777" title="WBT Details"></i></a></div><br>
 
             <span class="noticea"><a id="certificate_issue" href="#" target="_blank">Issue Document</a></span><br>
-            <span class="noticea"><a id="certificate_view" href="#" target="_blank">View Document</a></span>
+            <span class="noticea"><a id="certificate_view" href="#" target="_blank">View Document</a></span><br>
+            <span class="noticea"><a id="experience_letter" href="#" target="_blank">Generate Experience Letter</a></span>
 
         </div>
 
@@ -782,10 +784,12 @@ $resultArr = pg_fetch_all($result);
 
             var profile = document.getElementById("wbt_details")
             profile.href = "/rssi-member/my_learning.php?get_aid=" + mydata["associatenumber"]
-            var profile = document.getElementById("certificate_issue")
+            profile = document.getElementById("certificate_issue")
             profile.href = "/rssi-member/my_certificate.php?awarded_to_id=" + mydata["associatenumber"]+"&awarded_to_name=" + mydata["fullname"]
-            var profile = document.getElementById("certificate_view")
+            profile = document.getElementById("certificate_view")
             profile.href = "/rssi-member/my_certificate.php?get_nomineeid=" + mydata["associatenumber"]
+            profile = document.getElementById("experience_letter")
+            profile.href = "/rssi-member/expletter.php?get_id=" + mydata["associatenumber"]
 
         }
         // When the user clicks the button, open the modal 
