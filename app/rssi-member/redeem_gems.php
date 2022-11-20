@@ -443,7 +443,7 @@ if (@$_POST['form-type'] == "gms") {
                                 <input type="hidden" name="form-type" type="text" value="gemsdelete">
                                 <input type="hidden" name="redeem_id" type="text" value="' . $array['redeem_id'] . '">
                                 
-                                <button type="submit" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['redeem_id'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
+                                <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['redeem_id'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
                                 </td>' ?>
                                 <?php } ?>
                             <?php }
@@ -773,23 +773,31 @@ if (@$_POST['form-type'] == "gms") {
         //For form submission - to update Remarks
         const scriptURL = 'payment-api.php'
 
-        data.forEach(item => {
-            const form = document.forms['gemsdelete_' + item.redeem_id]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['gemsdelete_' + item.redeem_id])
-                    })
-                    .then(response =>
-                        alert("Record has been deleted.") +
-                        location.reload()
-                    )
-                    .catch(error => console.error('Error!', error.message))
-            })
+        function validateForm() {
+            if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
 
-            console.log(item)
-        })
+                data.forEach(item => {
+                    const form = document.forms['gemsdelete_' + item.redeem_id]
+                    form.addEventListener('submit', e => {
+                        e.preventDefault()
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['gemsdelete_' + item.redeem_id])
+                            })
+                            .then(response =>
+                                alert("Record has been deleted.") +
+                                location.reload()
+                            )
+                            .catch(error => console.error('Error!', error.message))
+                    })
+
+                    console.log(item)
+                })
+            } else {
+                alert("Record has NOT been deleted.");
+                return false;
+            }
+        }
 
         const form = document.getElementById('reviewform')
         form.addEventListener('submit', e => {

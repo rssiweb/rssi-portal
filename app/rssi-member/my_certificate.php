@@ -40,7 +40,7 @@ date_default_timezone_set('Asia/Kolkata');
         @$issuedby = $_POST['issuedby'];
         @$now = date('Y-m-d H:i:s');
         if ($certificate_no != "") {
-            $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, awarded_to_name, badge_name, comment, gems,certificate_url,issuedby) VALUES ('$certificate_no','$now','$awarded_to_id','$awarded_to_name','$badge_name','$comment','$gems','$certificate_url','$issuedby')";
+            $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, awarded_to_name, badge_name, comment, gems, certificate_url, issuedby) VALUES ('$certificate_no','$now','$awarded_to_id','$awarded_to_name','$badge_name','$comment', NULLIF('$gems','')::integer,'$certificate_url','$issuedby')";
             $result = pg_query($con, $certificate);
             $cmdtuples = pg_affected_rows($result);
         }
@@ -287,7 +287,7 @@ date_default_timezone_set('Asia/Kolkata');
                                         <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
                                     </span>
                                     <span class="input-help">
-                                        <input type="number" name="gems" class="form-control" placeholder="Gems">
+                                        <input type="number" name="gems" class="form-control" placeholder="Gems" min="1">
                                         <small id="passwordHelpBlock" class="form-text text-muted">Gems</small>
                                     </span>
 
@@ -448,7 +448,7 @@ date_default_timezone_set('Asia/Kolkata');
                                     <?php echo '<td><a href="' . $array['certificate_url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
                                 <?php } ?>
 
-                                 <?php if ($role == 'Admin') { ?>
+                                <?php if ($role == 'Admin') { ?>
 
                                     <?php echo '
 
@@ -462,7 +462,7 @@ date_default_timezone_set('Asia/Kolkata');
                                 <input type="hidden" name="form-type" type="text" value="cmsdelete">
                                 <input type="hidden" name="cmsid" id="cmsid" type="text" value="' . $array['certificate_no'] . '">
                                 
-                                <button type="submit" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['certificate_no'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
+                                <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['certificate_no'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
                                 </td>' ?>
                                 <?php } ?>
                             <?php }
@@ -503,28 +503,47 @@ date_default_timezone_set('Asia/Kolkata');
                             </nav>
                         </div>
                     </section>
+
+                    <!-- <script>
+                        function validateForm() {
+                            if (confirm('If you enter the incorrect number, the search will still be conducted and charge you for the cost of the search. do you want to continue?.')) {
+                                $("delete").submit();
+
+                            } else {
+                                alert("Invalid");
+                                return false;
+                            }
+                        }
+                    </script> -->
                     <script>
                         var data = <?php echo json_encode($resultArr) ?>;
-                        //For form submission - to update Remarks
                         const scriptURL = 'payment-api.php'
 
-                        data.forEach(item => {
-                            const form = document.forms['cmsdelete_' + item.certificate_no]
-                            form.addEventListener('submit', e => {
-                                e.preventDefault()
-                                fetch(scriptURL, {
-                                        method: 'POST',
-                                        body: new FormData(document.forms['cmsdelete_' + item.certificate_no])
-                                    })
-                                    .then(response =>
-                                        alert("Record has been deleted.") +
-                                        location.reload()
-                                    )
-                                    .catch(error => console.error('Error!', error.message))
-                            })
+                        function validateForm() {
+                            if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
 
-                            console.log(item)
-                        })
+                                data.forEach(item => {
+                                    const form = document.forms['cmsdelete_' + item.certificate_no]
+                                    form.addEventListener('submit', e => {
+                                        e.preventDefault()
+                                        fetch(scriptURL, {
+                                                method: 'POST',
+                                                body: new FormData(document.forms['cmsdelete_' + item.certificate_no])
+                                            })
+                                            .then(response =>
+                                                alert("Record has been deleted.") +
+                                                location.reload()
+                                            )
+                                            .catch(error => console.error('Error!', error.message))
+                                    })
+
+                                    console.log(item)
+                                })
+                            } else {
+                                alert("Record has NOT been deleted.");
+                                return false;
+                            }
+                        }
                     </script>
 
                     <script>
