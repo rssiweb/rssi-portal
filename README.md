@@ -121,3 +121,6 @@ SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'rssimypro
 INSERT INTO [Table to copy To]
 SELECT [Columns to Copy]
 FROM [Table to copy From]
+
+
+CREATE TABLE test_form (LIKE certificate INCLUDING ALL);
