@@ -2,7 +2,7 @@
 session_start();
 // Storing Session
 include("../util/login_util.php");
-
+include("../util/email.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -39,11 +39,17 @@ date_default_timezone_set('Asia/Kolkata');
         @$certificate_url = $_POST['certificate_url'];
         @$issuedby = $_POST['issuedby'];
         @$now = date('Y-m-d H:i:s');
+        $email="zkhan1093@gmail.com";
         if ($certificate_no != "") {
             $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, awarded_to_name, badge_name, comment, gems, certificate_url, issuedby) VALUES ('$certificate_no','$now','$awarded_to_id','$awarded_to_name','$badge_name','$comment', NULLIF('$gems','')::integer,'$certificate_url','$issuedby')";
             $result = pg_query($con, $certificate);
             $cmdtuples = pg_affected_rows($result);
         }
+        sendEmail("badge", array(
+                "awarded_to_name" => $awarded_to_name,
+                "awarded_to_id" => $awarded_to_id,
+                "badge_name" => $badge_name
+        ), $email);
     }
 
     @$get_certificate_no = strtoupper($_GET['get_certificate_no']);
@@ -458,6 +464,17 @@ date_default_timezone_set('Asia/Kolkata');
                                 
                                 <a href="mailto:' . $array['email'] . '?subject=You have received ' . $array['badge_name'] . '&body=Dear ' . $array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>&nbsp;&nbsp;
 
+
+                                <form  action="#" name="email-form-' . $array['certificate_no'] . '" method="POST" style="display: -webkit-inline-box;" >
+                                    <input type="hidden" name="template" type="text" value="badge">
+                                    <input type="hidden" name="data[badge_name]" type="text" value="'.$array['badge_name'].'">
+                                    <input type="hidden" name="data[awarded_to_name]" type="text" value="'.$array['awarded_to_name'].'">
+                                    <input type="hidden" name="data[awarded_to_id]" type="text" value="'.$array['awarded_to_id'].'">
+                                    <input type="hidden" name="email" type="text" value="'.$array['email'].'">
+                                    <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
+                                     type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></button>
+                                </form>&nbsp;&nbsp;
+
                                 <form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="cmsdelete">
                                 <input type="hidden" name="cmsid" id="cmsid" type="text" value="' . $array['certificate_no'] . '">
@@ -544,6 +561,24 @@ date_default_timezone_set('Asia/Kolkata');
                                 return false;
                             }
                         }
+
+                        
+                        data.forEach(item => {
+                            const formId = 'email-form-' + item.certificate_no
+                            const form = document.forms[formId]
+                            form.addEventListener('submit', e => {
+                                e.preventDefault()
+                                fetch('mailer.php', {
+                                        method: 'POST',
+                                        body: new FormData(document.forms[formId])
+                                    })
+                                    .then(response =>
+                                        alert("Email has been send.")
+                                    )
+                                    .catch(error => console.error('Error!', error.message))
+                            })
+                        })
+
                     </script>
 
                     <script>
