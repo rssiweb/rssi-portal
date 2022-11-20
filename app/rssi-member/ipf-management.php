@@ -178,7 +178,7 @@ $resultArr = pg_fetch_all($result);
 
                             <?php echo '<td>
 
-                        <form name="ipfclose' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()">
+                        <form name="ipfclose' . $array['id'] . '" action="#" method="POST">
                         <input type="hidden" name="form-type" type="text" value="ipfclose">
                         <input type="hidden" name="ipfid" id="ipfid" type="text" value="' . $array['id'] . '">
                         <input type="hidden" name="ipfstatus" id="ipfstatus" type="text" value="closed">' ?>
@@ -218,11 +218,11 @@ $resultArr = pg_fetch_all($result);
 
 
 
-    <script>
+    <!-- <script>
         function myFunction() {
             alert("The process has been closed in the system.");
         }
-    </script>
+    </script> -->
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
         var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
@@ -237,7 +237,10 @@ $resultArr = pg_fetch_all($result);
                         method: 'POST',
                         body: new FormData(document.forms['ipfclose' + item.id])
                     })
-                    .then(response => console.log('Success!', response))
+                    .then(response =>
+                        alert("The process has been closed in the system.") +
+                        location.reload()
+                    )
                     .catch(error => console.error('Error!', error.message))
             })
 

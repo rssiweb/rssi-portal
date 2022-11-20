@@ -299,7 +299,7 @@ while ($row = pg_fetch_array($run)) {
 
             <?php if (@$status2 == null && @$appraisaltype != null && @$type == strtok(@$ipf,  '(') && @$year == explode(')', (explode('(', $ipf)[1]))[0]) { ?>
                 <div id="footer">
-                    <form name="ipfsubmission" action="#" method="POST" onsubmit="myFunction()">
+                    <form name="ipfsubmission" action="#" method="POST">
                         <span id='close'>x</span>
                         <input type="hidden" name="form-type" type="text" value="ipfsubmission">
                         <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
@@ -321,11 +321,11 @@ while ($row = pg_fetch_array($run)) {
                     $('#count2').val('IPF Rejected');
                 });
             </script>
-            <script>
+            <!-- <script>
                 function myFunction() {
                     alert("Your response has been recorded.");
                 }
-            </script>
+            </script> -->
             <script>
                 const scriptURL = 'payment-api.php'
                 const form = document.forms['ipfsubmission']
@@ -336,7 +336,10 @@ while ($row = pg_fetch_array($run)) {
                             method: 'POST',
                             body: new FormData(document.forms['ipfsubmission'])
                         })
-                        .then(response => console.log('Success!', response))
+                        .then(response =>
+                                alert("Your response has been recorded.") +
+                                location.reload()
+                            )
                         .catch(error => console.error('Error!', error.message))
                 })
             </script>
