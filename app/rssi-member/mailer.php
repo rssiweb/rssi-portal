@@ -1,50 +1,28 @@
 <?php
+include("../util/email.php");
 //Import PHPMailer classes into the global namespace
 //These must be at the top of your script, not inside a function
 
-@include("../mailer/PHPMailer.php");
-@include("../mailer/SMTP.php");
-@include("../mailer/Exception.php");
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-//Load Composer's autoloader
-// require 'vendor/autoload.php';
+// include("../util/login_util.php");
 
-//Create an instance; passing `true` enables exceptions
-$mail = new PHPMailer(true);
 
-try {
-    //Server settings
-    $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
-    $mail->isSMTP();                                            //Send using SMTP
-    $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
-    $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-    $mail->Username   = 'info@rssi.in';                     //SMTP username
-    $mail->Password   = '';                               //SMTP password
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
-    $mail->Port       = 465;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+// if (!isLoggedIn("aid")) {
+//     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+//     header("Location: index.php");
+//     exit;
+// }
 
-    //Recipients
-    $mail->setFrom('info@rssi.in', 'Mailer');
-    $mail->addAddress('info@rssi.in', 'RSSI Mailer Test');     //Add a recipient
-    // $mail->addAddress('ellen@example.com');               //Name is optional
-    // $mail->addReplyTo('info@example.com', 'Information');
-    // $mail->addCC('cc@example.com');
-    // $mail->addBCC('bcc@example.com');
+// if ($role != 'Admin') {
+//     echo '<script type="text/javascript">';
+//     echo 'alert("Access Denied. You are not authorized to access this web page.");';
+//     echo 'window.location.href = "home.php";';
+//     echo '</script>';
+// }
 
-    // //Attachments
-    // $mail->addAttachment('/var/tmp/file.tar.gz');         //Add attachments
-    // $mail->addAttachment('/tmp/image.jpg', 'new.jpg');    //Optional name
-
-    //Content
-    $mail->isHTML(true);                                  //Set email format to HTML
-    $mail->Subject = 'Here is the subject';
-    $mail->Body    = 'This is the HTML message body <b>in bold!</b>';
-    $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
-
-    $mail->send();
-    echo 'Message has been sent';
-} catch (Exception $e) {
-    echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $template_name = $_POST['template'];
+    $template_data = $_POST['data']; 
+    $email = $_POST['email'];
+    sendEmail($template_name, $template_data, $email);
 }
+?>
