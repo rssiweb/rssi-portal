@@ -624,7 +624,7 @@ $resultArr = pg_fetch_all($result);
 
             
 
-                        <form name="ipfpush' . $array['associatenumber'] . '" action="#" method="POST" onsubmit="myFunction()" style="display:inline;">
+                        <form name="ipfpush' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
                         <input type="hidden" name="form-type" type="text" value="ipfpush">
                         <input type="hidden" name="membername2" type="text" value="' . $array['fullname'] . '" readonly>
                         <input type="hidden" name="memberid2" type="text" value="' . $array['associatenumber'] . '" readonly>
@@ -633,7 +633,7 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php if ($role == 'Admin') { ?>
 
-                                    <?php echo '<button type="submit" id="yes" style=" outline: none;background: none;
+                                    <?php echo '<button type="submit" id="yes" onclick=validateForm() style=" outline: none;background: none;
                         padding: 0px;
                         border: none;" title="Release IPF ' . $array['googlechat'] . '/' . $array['ipfl'] . '"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777""></i></button>' ?>
                                 <?php } ?>
@@ -785,7 +785,7 @@ $resultArr = pg_fetch_all($result);
             var profile = document.getElementById("wbt_details")
             profile.href = "/rssi-member/my_learning.php?get_aid=" + mydata["associatenumber"]
             profile = document.getElementById("certificate_issue")
-            profile.href = "/rssi-member/my_certificate.php?awarded_to_id=" + mydata["associatenumber"]+"&awarded_to_name=" + mydata["fullname"]
+            profile.href = "/rssi-member/my_certificate.php?awarded_to_id=" + mydata["associatenumber"] + "&awarded_to_name=" + mydata["fullname"]
             profile = document.getElementById("certificate_view")
             profile.href = "/rssi-member/my_certificate.php?get_nomineeid=" + mydata["associatenumber"]
             profile = document.getElementById("experience_letter")
@@ -804,31 +804,42 @@ $resultArr = pg_fetch_all($result);
             }
         }
     </script>
-    <script>
+    <!-- <script>
         function myFunction() {
             alert("IPF has been initiated in the system.");
         }
-    </script>
+    </script> -->
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
         var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
 
         const scriptURL = 'payment-api.php'
 
-        data.forEach(item => {
-            const form = document.forms['ipfpush' + item.associatenumber]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['ipfpush' + item.associatenumber])
-                    })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
+        function validateForm() {
+            if (confirm('Are you sure you want to release IPF? Once you click on OK the associate will be notified.')) {
 
-            console.log(item)
-        })
+                data.forEach(item => {
+                    const form = document.forms['ipfpush' + item.associatenumber]
+                    form.addEventListener('submit', e => {
+                        e.preventDefault()
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['ipfpush' + item.associatenumber])
+                            })
+                            .then(response =>
+                                alert("IPF has been released in the system.") +
+                                location.reload()
+                            )
+                            .catch(error => console.error('Error!', error.message))
+                    })
+
+                    console.log(item)
+                })
+            } else {
+                alert("IPF is NOT released in the system.");
+                return false;
+            }
+        }
     </script>
     <!-- Back top -->
     <script>
