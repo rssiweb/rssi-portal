@@ -2,7 +2,6 @@
 session_start();
 // Storing Session
 include("../util/login_util.php");
-include("../util/email.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -18,38 +17,30 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
-// if ($role != 'Admin' && $role != 'Offline Manager') {
-//     echo '<script type="text/javascript">';
-//     echo 'alert("Access Denied. You are not authorized to access this web page.");';
-//     echo 'window.location.href = "home.php";';
-//     echo '</script>';
-// }
-
 date_default_timezone_set('Asia/Kolkata');
+// include("../util/email.php");
 ?>
 <?php if ($role == 'Admin') {
 
     if ($_POST) {
-        @$certificate_no = $_POST['certificate_no'];
+        @$certificate_no = 'RSC' . time();
         @$awarded_to_id = strtoupper($_POST['awarded_to_id']);
-        @$awarded_to_name = $_POST['awarded_to_name'];
         @$badge_name = $_POST['badge_name'];
         @$comment = $_POST['comment'];
         @$gems = $_POST['gems'];
         @$certificate_url = $_POST['certificate_url'];
         @$issuedby = $_POST['issuedby'];
         @$now = date('Y-m-d H:i:s');
-        $email="zkhan1093@gmail.com";
         if ($certificate_no != "") {
-            $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, awarded_to_name, badge_name, comment, gems, certificate_url, issuedby) VALUES ('$certificate_no','$now','$awarded_to_id','$awarded_to_name','$badge_name','$comment', NULLIF('$gems','')::integer,'$certificate_url','$issuedby')";
+            $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$certificate_url','$issuedby')";
             $result = pg_query($con, $certificate);
             $cmdtuples = pg_affected_rows($result);
         }
-        sendEmail("badge", array(
-                "awarded_to_name" => $awarded_to_name,
-                "awarded_to_id" => $awarded_to_id,
-                "badge_name" => $badge_name
-        ), $email);
+        // sendEmail("badge", array(
+        //         "awarded_to_name" => $awarded_to_name,
+        //         "awarded_to_id" => $awarded_to_id,
+        //         "badge_name" => $badge_name
+        // ), $email);
     }
 
     @$get_certificate_no = strtoupper($_GET['get_certificate_no']);
@@ -58,7 +49,10 @@ date_default_timezone_set('Asia/Kolkata');
 
     if (($get_certificate_no == null && $get_nomineeid == null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate  left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber order by issuedon desc");
+        $result = pg_query($con, "SELECT * FROM certificate  
+        left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber
+        left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON certificate.awarded_to_id=student.student_id
+        order by issuedon desc");
         $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems");
         $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate");
         $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -68,7 +62,7 @@ date_default_timezone_set('Asia/Kolkata');
 
     if (($get_certificate_no != null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where certificate_no='$get_certificate_no' order by issuedon desc");
+        $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where certificate_no='$get_certificate_no' order by issuedon desc");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
         $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
         $totalgemsredeem_admin = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
@@ -78,7 +72,7 @@ date_default_timezone_set('Asia/Kolkata');
 
     if (($get_nomineeid != null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where awarded_to_id='$get_nomineeid' order by issuedon desc");
+        $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where awarded_to_id='$get_nomineeid' order by issuedon desc");
         $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$get_nomineeid' AND (reviewer_status is null or reviewer_status !='Rejected')");
         $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$get_nomineeid'");
         $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -250,19 +244,9 @@ date_default_timezone_set('Asia/Kolkata');
                                 <div class="form-group" style="display: inline-block;">
 
                                     <span class="input-help">
-                                        <input type="hidden" name="certificate_no" class="form-control" style="width:max-content; display:inline-block" placeholder="Certificate no" value="RSC<?php echo time() ?>" required>
-                                    </span>
-
-                                    <span class="input-help">
                                         <input type="text" name="awarded_to_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee id" value="<?php echo @$_GET['awarded_to_id']; ?>" required>
                                         <small id="passwordHelpBlock" class="form-text text-muted">Nominee id*</small>
                                     </span>
-
-                                    <span class="input-help">
-                                        <input type="text" name="awarded_to_name" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee name" value="<?php echo @$_GET['awarded_to_name']; ?>" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Nominee name*</small>
-                                    </span>
-
                                     <span class="input-help">
                                         <select name="badge_name" class="form-control" style="width:max-content; display:inline-block" required>
                                             <?php if ($badge_name == null) { ?>
@@ -421,7 +405,7 @@ date_default_timezone_set('Asia/Kolkata');
                             <tr>
                                 <td>' . $array['certificate_no'] . '</td>' ?>
                                 <?php if ($role == 'Admin') { ?>
-                                    <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . $array['awarded_to_name'] . '</td>' ?>
+                                    <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . $array['fullname'] . $array['studentname'] . '</td>' ?>
                                 <?php } ?>
                                 <?php echo '<td>' . $array['badge_name'] . '</td><td>' ?>
 
@@ -458,67 +442,73 @@ date_default_timezone_set('Asia/Kolkata');
 
                                     <?php echo '
 
-                                <td>
-                               <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;&nbsp;
-                                
-                                <a href="mailto:' . $array['email'] . '?subject=You have received ' . $array['badge_name'] . '&body=Dear ' . $array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>&nbsp;&nbsp;
+                                <td>' ?>
+                                    <?php if ($array['phone'] != null || $array['contact'] != null) { ?>
+                                        <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
+                                    <?php } else { ?>
+                                        <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
+                                        <?php } ?>&nbsp;&nbsp;
 
 
-                                <form  action="#" name="email-form-' . $array['certificate_no'] . '" method="POST" style="display: -webkit-inline-box;" >
+                                        <?php if ($array['email'] != null || $array['emailaddress'] != null) { ?>
+                                            <?php echo '<form  action="#" name="email-form-' . $array['certificate_no'] . '" method="POST" style="display: -webkit-inline-box;" >
                                     <input type="hidden" name="template" type="text" value="badge">
-                                    <input type="hidden" name="data[badge_name]" type="text" value="'.$array['badge_name'].'">
-                                    <input type="hidden" name="data[awarded_to_name]" type="text" value="'.$array['awarded_to_name'].'">
-                                    <input type="hidden" name="data[awarded_to_id]" type="text" value="'.$array['awarded_to_id'].'">
-                                    <input type="hidden" name="email" type="text" value="'.$array['email'].'">
+                                    <input type="hidden" name="data[badge_name]" type="text" value="' . $array['badge_name'] . '">
+                                    <input type="hidden" name="data[awarded_to_id]" type="text" value="' . $array['awarded_to_id'] . '">
+                                    <input type="hidden" name="data[fullname]" type="text" value="' . $array['fullname'] . $array['studentname'] . '">
+                                    <input type="hidden" name="email" type="text" value="' . $array['email'] . $array['emailaddress'] . '">
                                     <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
-                                     type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></button>
-                                </form>&nbsp;&nbsp;
+                                     type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email ' . $array['email'] . $array['emailaddress'] . '"></i></button>
+                                </form>' ?>
+                                        <?php } else { ?>
+                                            <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
+                                        <?php } ?>
 
-                                <form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                        <?php echo '&nbsp;&nbsp;<form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="cmsdelete">
                                 <input type="hidden" name="cmsid" id="cmsid" type="text" value="' . $array['certificate_no'] . '">
                                 
                                 <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['certificate_no'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
                                 </td>' ?>
-                                <?php } ?>
-                            <?php }
+                                    <?php } ?>
+                                <?php }
                             echo '</tr>' ?>
-                        <?php
+                            <?php
                         } else if (@$get_certificate_no == "" && @$get_nomineeid == "") {
-                        ?>
-                            <tr>
-                                <td colspan="5">Please select Filter value.</td>
-                            </tr>
-                        <?php
+                            ?>
+                                <tr>
+                                    <td colspan="5">Please select Filter value.</td>
+                                </tr>
+                            <?php
                         } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
-                            <?php echo '<tr>
+                                <?php echo '<tr>
                                     <td colspan="5">No record found for ' ?><?php echo $get_certificate_no ?><?php echo $get_nomineeid ?><?php echo '.</td>
                                 </tr>' ?>
-                        <?php
+                            <?php
                         }
                         echo '</tbody>
                     </table>'
-                        ?>
+                            ?>
 
 
-                        <!--		Start Pagination -->
-                        <div class='pagination-container'>
-                            <nav>
-                                <ul class="pagination">
+                            <!--		Start Pagination -->
+                            <div class='pagination-container'>
+                                <nav>
+                                    <ul class="pagination">
 
-                                    <li data-page="prev">
-                                        <span>
-                                            < <span class="sr-only">(current)
-                                        </span></span>
-                                    </li>
-                                    <!--	Here the JS Function Will Add the Rows -->
-                                    <li data-page="next" id="prev">
-                                        <span> > <span class="sr-only">(current)</span></span>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
+                                        <li data-page="prev">
+                                            <span>
+                                                < <span class="sr-only">(current)
+                                            </span></span>
+                                        </li>
+                                        <!--	Here the JS Function Will Add the Rows -->
+                                        <li data-page="next" id="prev">
+                                            <span> > <span class="sr-only">(current)</span></span>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
                     </section>
 
                     <!-- <script>
@@ -562,7 +552,7 @@ date_default_timezone_set('Asia/Kolkata');
                             }
                         }
 
-                        
+
                         data.forEach(item => {
                             const formId = 'email-form-' + item.certificate_no
                             const form = document.forms[formId]
@@ -578,7 +568,6 @@ date_default_timezone_set('Asia/Kolkata');
                                     .catch(error => console.error('Error!', error.message))
                             })
                         })
-
                     </script>
 
                     <script>

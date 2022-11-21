@@ -21,14 +21,13 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 date_default_timezone_set('Asia/Kolkata');
 
 if (@$_POST['form-type'] == "gms") {
-    @$redeem_id1 = $_POST['redeem_id'];
-    @$user_id1 = strtoupper($_POST['user_id']);
-    @$user_name = $_POST['user_name'];
+    @$redeem_id1 = 'RSG' . time();;
+    @$user_id1 = $associatenumber;
     @$redeem_gems_point = $_POST['redeem_gems_point'];
     @$redeem_type = $_POST['redeem_type'];
     @$now = date('Y-m-d H:i:s');
     if ($redeem_id1 != "") {
-        $redeem = "INSERT INTO gems (redeem_id, user_id, user_name, redeem_gems_point, redeem_type,requested_on) VALUES ('$redeem_id1','$user_id1','$user_name','$redeem_gems_point','$redeem_type','$now')";
+        $redeem = "INSERT INTO gems (redeem_id, user_id, redeem_gems_point, redeem_type,requested_on) VALUES ('$redeem_id1','$user_id1','$redeem_gems_point','$redeem_type','$now')";
         $result = pg_query($con, $redeem);
         $cmdtuples = pg_affected_rows($result);
     }
@@ -41,7 +40,10 @@ if (@$_POST['form-type'] == "gms") {
 
     if (($redeem_id == null && $user_id == null)) {
 
-        $result = pg_query($con, "SELECT * FROM gems left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON gems.user_id=faculty.associatenumber order by requested_on desc");
+        $result = pg_query($con, "SELECT * FROM gems 
+        left join (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty ON gems.user_id=faculty.associatenumber 
+        left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON gems.user_id=student.student_id
+        order by requested_on desc");
         $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems");
         $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate");
         $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -51,7 +53,7 @@ if (@$_POST['form-type'] == "gms") {
 
     if (($redeem_id != null)) {
 
-        $result = pg_query($con, "SELECT * FROM gems left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON gems.user_id=faculty.associatenumber where redeem_id='$redeem_id' order by requested_on desc");
+        $result = pg_query($con, "SELECT * FROM gems left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON gems.user_id=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON gems.user_id=student.student_id where redeem_id='$redeem_id' order by requested_on desc");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
         $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
         $totalgemsredeem_admin = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
@@ -61,7 +63,7 @@ if (@$_POST['form-type'] == "gms") {
 
     if (($user_id != null)) {
 
-        $result = pg_query($con, "SELECT * FROM gems left join (SELECT associatenumber, email, phone FROM rssimyaccount_members) faculty ON gems.user_id=faculty.associatenumber where user_id='$user_id' order by requested_on desc");
+        $result = pg_query($con, "SELECT * FROM gems left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON gems.user_id=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON gems.user_id=student.student_id where user_id='$user_id' order by requested_on desc");
         $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$user_id' AND (reviewer_status is null or reviewer_status !='Rejected')");
         $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$user_id'");
         $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber' AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -235,16 +237,6 @@ if (@$_POST['form-type'] == "gms") {
                                     <input type="hidden" name="redeem_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Redeem id" value="RSG<?php echo time() ?>" required readonly>
                                 </span>
 
-                                <span class="input-help">
-                                    <input type="text" name="user_id" class="form-control" style="width:max-content; display:inline-block" placeholder="User Id" value="<?php echo $associatenumber ?>" required readonly>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">User Id*</small>
-                                </span>
-
-                                <span class="input-help">
-                                    <input type="text" name="user_name" class="form-control" style="width:max-content; display:inline-block" placeholder="User name" value="<?php echo $fullname ?>" required readonly>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">User name*</small>
-                                </span>
-
                                 <?php if ($role == 'Admin') { ?>
                                     <span class="input-help">
                                         <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr_admin - $resultArrr_admin) ?>" min="1">
@@ -413,7 +405,7 @@ if (@$_POST['form-type'] == "gms") {
                                     <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['requested_on'])) . '</td>' ?>
                                 <?php } ?>
                                 <?php if ($role == 'Admin') { ?>
-                                    <?php echo '<td>' . $array['user_id'] . '<br>' . $array['user_name'] . '</td>' ?>
+                                    <?php echo '<td>' . $array['user_id'] . '<br>' . $array['fullname'] . $array['studentname'] . '</td>' ?>
                                 <?php } ?>
                                 <?php echo '<td>' . $array['redeem_gems_point'] . '</td>
                                 <td>' . $array['redeem_type'] . '</td>
@@ -433,56 +425,60 @@ if (@$_POST['form-type'] == "gms") {
 
                                 <td>
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['redeem_id'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;
+                                <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;' ?>
+                                    <?php if ($array['phone'] != null || $array['contact'] != null) { ?>
+                                        <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['user_id'] . '),%0A%0ARedeem id ' . $array['redeem_id'] . ' against the policy issued by the organization has been settled at Rs.' . $array['redeem_gems_point'] . ' on ' . $array['reviewer_status_updated_on'] . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                    " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
+                                    <?php } else { ?>
+                                        <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
+                                        <?php } ?>&nbsp;&nbsp;
 
-                                <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['user_name'] . ' (' . $array['user_id'] . '),%0A%0ARedeem id ' . $array['redeem_id'] . ' against the policy issued by the organization has been settled at Rs.' . $array['redeem_gems_point'] . ' on ' . $array['reviewer_status_updated_on'] . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                    " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;&nbsp;
-                                    
-                                    <a href="mailto:' . $array['email'] . '?subject=Redeem id: ' . $array['redeem_id'] . ' | ' . $array['reviewer_status'] . '&body=Dear ' . $array['user_name'] . ' (' . $array['user_id'] . '),%0A%0ARedeem id ' . $array['redeem_id'] . ' against the policy issued by the organization has been settled at Rs.' . $array['redeem_gems_point'] . ' on ' . $array['reviewer_status_updated_on'] . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>&nbsp;&nbsp;
-                                <form name="gemsdelete_' . $array['redeem_id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="gemsdelete">
-                                <input type="hidden" name="redeem_id" type="text" value="' . $array['redeem_id'] . '">
-                                
-                                <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['redeem_id'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
-                                </td>' ?>
-                                <?php } ?>
-                            <?php }
+                                        <?php echo '<a href="mailto:' . $array['email'] . '?subject=Redeem id: ' . $array['redeem_id'] . ' | ' . $array['reviewer_status'] . '&body=Dear ' . $array['user_name'] . ' (' . $array['user_id'] . '),%0A%0ARedeem id ' . $array['redeem_id'] . ' against the policy issued by the organization has been settled at Rs.' . $array['redeem_gems_point'] . ' on ' . $array['reviewer_status_updated_on'] . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>&nbsp;&nbsp;
+                                        <form name="gemsdelete_' . $array['redeem_id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                            <input type="hidden" name="form-type" type="text" value="gemsdelete">
+                                            <input type="hidden" name="redeem_id" type="text" value="' . $array['redeem_id'] . '">
+
+                                            <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['redeem_id'] . '"><i class="fa-solid fa-xmark"></i></button>
+                                        </form>
+                                        </td>' ?>
+                                    <?php } ?>
+                                <?php }
                             echo '</tr>' ?>
-                        <?php
+                            <?php
                         } else if (@$get_certificate_no == "" && @$get_nomineeid == "") {
-                        ?>
-                            <tr>
-                                <td colspan="5">Please select Filter value.</td>
-                            </tr>
-                        <?php
+                            ?>
+                                <tr>
+                                    <td colspan="5">Please select Filter value.</td>
+                                </tr>
+                            <?php
                         } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
-                            <?php echo '<tr>
+                                <?php echo '<tr>
                                     <td colspan="5">No record found for ' ?><?php echo $get_certificate_no ?><?php echo $get_nomineeid ?><?php echo '.</td>
                                 </tr>' ?>
-                        <?php
+                            <?php
                         }
                         echo '</tbody>
                     </table>'
-                        ?>
+                            ?>
 
 
-                        <!--		Start Pagination -->
-                        <div class='pagination-container'>
-                            <nav>
-                                <ul class="pagination">
+                            <!--		Start Pagination -->
+                            <div class='pagination-container'>
+                                <nav>
+                                    <ul class="pagination">
 
-                                    <li data-page="prev">
-                                        <span>
-                                            < <span class="sr-only">(current)
-                                        </span></span>
-                                    </li>
-                                    <!--	Here the JS Function Will Add the Rows -->
-                                    <li data-page="next" id="prev">
-                                        <span> > <span class="sr-only">(current)</span></span>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
+                                        <li data-page="prev">
+                                            <span>
+                                                < <span class="sr-only">(current)
+                                            </span></span>
+                                        </li>
+                                        <!--	Here the JS Function Will Add the Rows -->
+                                        <li data-page="next" id="prev">
+                                            <span> > <span class="sr-only">(current)</span></span>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
                 </div>
         </section>
     </section>

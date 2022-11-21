@@ -96,6 +96,8 @@ SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND
 
 ***** TO CHECK OFFLINE
 docker-compose up --build -d
+docker-compose down
+docker-compose ps
 git stash
 http://web.local/generate-hash-for/2311 -> D:\services\.env
 http://rssi.in/generate-hash-for/2311 -> digital ocean
