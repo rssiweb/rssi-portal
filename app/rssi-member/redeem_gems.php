@@ -19,6 +19,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 date_default_timezone_set('Asia/Kolkata');
+include("../util/email.php");
 
 if (@$_POST['form-type'] == "gms") {
     @$redeem_id1 = 'RSG' . time();;
@@ -26,11 +27,17 @@ if (@$_POST['form-type'] == "gms") {
     @$redeem_gems_point = $_POST['redeem_gems_point'];
     @$redeem_type = $_POST['redeem_type'];
     @$now = date('Y-m-d H:i:s');
+    @$email = $email;
     if ($redeem_id1 != "") {
         $redeem = "INSERT INTO gems (redeem_id, user_id, redeem_gems_point, redeem_type,requested_on) VALUES ('$redeem_id1','$user_id1','$redeem_gems_point','$redeem_type','$now')";
         $result = pg_query($con, $redeem);
         $cmdtuples = pg_affected_rows($result);
     }
+    sendEmail("badge", array(
+        "fullname" => $fullname,
+        "awarded_to_id" => $awarded_to_id,
+        "badge_name" => $badge_name
+    ), $email);
 }
 ?>
 <?php if ($role == 'Admin') {
@@ -219,23 +226,11 @@ if (@$_POST['form-type'] == "gms") {
 
                 <div class="row">
                     <section class="box" style="padding: 2%;">
-                        <!-- <button onclick="myFunction()">Try it</button>
-                        <p id="demo"></p>
-                        <script>
-                            function myFunction() {
-                                var x = document.getElementById("reviewform").name;
-                                document.getElementById("demo").innerHTML = "The name of the form is: " + x;
-                            }
-                        </script> -->
 
                         <form autocomplete="off" name="gms" id="gms" action="redeem_gems.php" method="POST">
                             <div class="form-group" style="display: inline-block;">
 
                                 <input type="hidden" name="form-type" type="text" value="gms">
-
-                                <span class="input-help">
-                                    <input type="hidden" name="redeem_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Redeem id" value="RSG<?php echo time() ?>" required readonly>
-                                </span>
 
                                 <?php if ($role == 'Admin') { ?>
                                     <span class="input-help">

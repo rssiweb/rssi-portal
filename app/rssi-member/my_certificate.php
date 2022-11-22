@@ -18,7 +18,6 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 date_default_timezone_set('Asia/Kolkata');
-// include("../util/email.php");
 ?>
 <?php if ($role == 'Admin') {
 
@@ -36,11 +35,6 @@ date_default_timezone_set('Asia/Kolkata');
             $result = pg_query($con, $certificate);
             $cmdtuples = pg_affected_rows($result);
         }
-        // sendEmail("badge", array(
-        //         "awarded_to_name" => $awarded_to_name,
-        //         "awarded_to_id" => $awarded_to_id,
-        //         "badge_name" => $badge_name
-        // ), $email);
     }
 
     @$get_certificate_no = strtoupper($_GET['get_certificate_no']);
@@ -234,7 +228,6 @@ date_default_timezone_set('Asia/Kolkata');
                         </script>
                     <?php } ?>
                 <?php } ?>
-
                 <div class="row">
                     <section class="box" style="padding: 2%;">
 
@@ -511,17 +504,6 @@ date_default_timezone_set('Asia/Kolkata');
                             </div>
                     </section>
 
-                    <!-- <script>
-                        function validateForm() {
-                            if (confirm('If you enter the incorrect number, the search will still be conducted and charge you for the cost of the search. do you want to continue?.')) {
-                                $("delete").submit();
-
-                            } else {
-                                alert("Invalid");
-                                return false;
-                            }
-                        }
-                    </script> -->
                     <script>
                         var data = <?php echo json_encode($resultArr) ?>;
                         const scriptURL = 'payment-api.php'
@@ -772,8 +754,6 @@ date_default_timezone_set('Asia/Kolkata');
 
                             <p style="font-size: small;">
                                 <span class="comment"></span>
-                                <!-- <br /><br />
-                <span style="font-size:10px;">Registered by&nbsp;<span class="collectedby"></span>&nbsp;on&nbsp;<span class="date"></span></span> -->
                             </p>
                         </div>
 
