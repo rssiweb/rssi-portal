@@ -424,15 +424,31 @@ if (@$_POST['form-type'] == "gms") {
                                 <td>
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['redeem_id'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;' ?>
-                                    <?php if ($array['phone'] != null || $array['contact'] != null) { ?>
+                                    <?php if (($array['phone'] != null || $array['contact'] != null) && $array['reviewer_status'] == 'Approved') { ?>
                                         <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['user_id'] . '),%0A%0ARedeem id ' . $array['redeem_id'] . ' against the policy issued by the organization has been settled at Rs.' . $array['redeem_gems_point'] . ' on ' . $array['reviewer_status_updated_on'] . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                     " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
                                     <?php } else { ?>
                                         <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
                                         <?php } ?>&nbsp;&nbsp;
 
-                                        <?php echo '<a href="mailto:' . $array['email'] . '?subject=Redeem id: ' . $array['redeem_id'] . ' | ' . $array['reviewer_status'] . '&body=Dear ' . $array['user_name'] . ' (' . $array['user_id'] . '),%0A%0ARedeem id ' . $array['redeem_id'] . ' against the policy issued by the organization has been settled at Rs.' . $array['redeem_gems_point'] . ' on ' . $array['reviewer_status_updated_on'] . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a>&nbsp;&nbsp;
-                                        <form name="gemsdelete_' . $array['redeem_id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                        <?php if (($array['email'] != null || $array['emailaddress'] != null) && $array['reviewer_status'] == 'Approved') { ?>
+                                            <?php echo '<form  action="#" name="email-form-' . $array['redeem_id'] . '" method="POST" style="display: -webkit-inline-box;" >
+                                    <input type="hidden" name="template" type="text" value="redeem_update">
+                                    <input type="hidden" name="data[redeem_id]" type="text" value="' . $array['redeem_id'] . '">
+                                    <input type="hidden" name="data[user_id]" type="text" value="' . $array['user_id'] . '">
+                                    <input type="hidden" name="data[fullname]" type="text" value="' . $array['fullname'] . $array['studentname'] . '">
+                                    <input type="hidden" name="data[redeem_gems_point]" type="text" value="' . $array['redeem_gems_point'] . '">
+                                    <input type="hidden" name="data[reviewer_status]" type="text" value="' . $array['reviewer_status'] . '">
+                                    <input type="hidden" name="data[reviewer_status_updated_on]" type="text" value="' . @date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on'])) . '">
+                                    <input type="hidden" name="email" type="text" value="' . $array['email'] . $array['emailaddress'] . '">
+                                    <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
+                                     type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email ' . $array['email'] . $array['emailaddress'] . '"></i></button>
+                                </form>' ?>
+                                        <?php } else { ?>
+                                            <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
+                                        <?php } ?>
+
+                                        <?php echo '&nbsp;&nbsp;<form name="gemsdelete_' . $array['redeem_id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                             <input type="hidden" name="form-type" type="text" value="gemsdelete">
                                             <input type="hidden" name="redeem_id" type="text" value="' . $array['redeem_id'] . '">
 
@@ -807,7 +823,21 @@ if (@$_POST['form-type'] == "gms") {
                 .catch(error => console.error('Error!', error.message))
         })
 
-        console.log(item)
+        data.forEach(item => {
+            const formId = 'email-form-' + item.redeem_id
+            const form = document.forms[formId]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch('mailer.php', {
+                        method: 'POST',
+                        body: new FormData(document.forms[formId])
+                    })
+                    .then(response =>
+                        alert("Email has been send.")
+                    )
+                    .catch(error => console.error('Error!', error.message))
+            })
+        })
     </script>
 
     <!-- Back top -->
