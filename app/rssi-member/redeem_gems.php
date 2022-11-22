@@ -33,10 +33,13 @@ if (@$_POST['form-type'] == "gms") {
         $result = pg_query($con, $redeem);
         $cmdtuples = pg_affected_rows($result);
     }
-    sendEmail("badge", array(
+    sendEmail("redeem_apply", array(
         "fullname" => $fullname,
-        "awarded_to_id" => $awarded_to_id,
-        "badge_name" => $badge_name
+        "user_id1" => $user_id1,
+        "redeem_id1" => $redeem_id1,
+        "redeem_gems_point" => $redeem_gems_point,
+        "redeem_type" => $redeem_type,
+        "now" => @date("d/m/Y g:i a", strtotime($now))
     ), $email);
 }
 ?>
