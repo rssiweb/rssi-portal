@@ -64,8 +64,8 @@ if ($_POST['form-type'] == "gpsedit") {
   @$itemtype = $_POST['itemtype'];
   @$quantity = $_POST['quantity'];
   @$remarks = $_POST['remarks'];
-  @$collectedby = $_POST['collectedby'];
-  @$taggedto = $_POST['taggedto'];
+  @$collectedby = strtoupper($_POST['collectedby']);
+  @$taggedto = strtoupper($_POST['taggedto']);
   $now = date('Y-m-d H:i:s');
   $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto')";
   $tagedit = "UPDATE gps SET  itemid='$itemid', itemtype='$itemtype', itemname='$itemname', quantity='$quantity', remarks='$remarks', collectedby='$collectedby',taggedto='$taggedto' WHERE itemid = '$itemid'";

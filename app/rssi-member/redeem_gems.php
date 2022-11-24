@@ -833,7 +833,7 @@ if (@$_POST['form-type'] == "gms") {
                         body: new FormData(document.forms[formId])
                     })
                     .then(response =>
-                        alert("Email has been send.")
+                        alert("Email has been sent.")
                     )
                     .catch(error => console.error('Error!', error.message))
             })

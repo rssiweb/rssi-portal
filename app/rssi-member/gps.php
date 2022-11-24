@@ -32,7 +32,7 @@ if ($_POST) {
     @$itemname = $_POST['itemname'];
     @$quantity = $_POST['quantity'];
     @$remarks = $_POST['remarks'];
-    @$collectedby = $_POST['collectedby'];
+    @$collectedby = strtoupper($_POST['collectedby']);
     @$now = date('Y-m-d H:i:s');
     if ($itemtype != "") {
         $gps = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby')";
@@ -43,7 +43,7 @@ if ($_POST) {
     }
 }
 
-@$taggedto = $_GET['taggedto'];
+@$taggedto = strtoupper($_GET['taggedto']);
 @$item_type = $_GET['item_type'];
 
 if ($item_type == 'ALL' && $taggedto == "") {
@@ -274,10 +274,13 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Quantity</th>
                                 <th scope="col" width="20%">Remarks</th>
                                 <th scope="col">Issued by</th>
-                                <th scope="col">Tagged to</th>
+                                <th scope="col">Tagged to</th>' ?>
+                        <?php if ($role == 'Admin') { ?>
+                            <?php echo '
                                 <th scope="col"></th>
-                                
-                            </tr>
+                                ' ?>
+                        <?php }
+                        echo '</tr>
                         </thead>' ?>
                         <?php if (sizeof($resultArr) > 0) { ?>
                             <?php
@@ -304,25 +307,46 @@ $resultArr = pg_fetch_all($result);
                                 <?php } ?>
 
 
-                            <?php echo '</td>
+                                <?php echo '</td>
                                 <td>' . $array['collectedby'] . '</td>
-                                <td>' . $array['taggedto'] . '</td>
-                                
-                                <td>
+                                <td>' . $array['taggedto'] . '</td>' ?>
+                                <?php if ($role == 'Admin') { ?>
+                                    <?php echo '<td>
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;
 
                                 <a href="https://api.whatsapp.com/send?phone=91' . $array['tphone'] . '&text=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;
+                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;' ?>
 
-                                <form name="gpsdelete_' . $array['itemid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                    <?php if ($array['temail'] != null) { ?>
+                                        <?php echo '<form  action="#" name="email-form-' . $array['itemid'] . '" method="POST" style="display: -webkit-inline-box;" >
+                            <input type="hidden" name="template" type="text" value="gps">
+                            <input type="hidden" name="data[itemname]" type="text" value="' . $array['itemname'] . '">
+                            <input type="hidden" name="data[itemid]" type="text" value="' . $array['itemid'] . '">
+                            <input type="hidden" name="data[quantity]" type="text" value="' . $array['quantity'] . '">
+                            <input type="hidden" name="data[taggedto]" type="text" value="' . $array['taggedto'] . '">
+                            <input type="hidden" name="data[tfullname]" type="text" value="' . $array['tfullname'] . '">
+                            <input type="hidden" name="data[collectedby]" type="text" value="' . $array['collectedby'] . '">
+                            <input type="hidden" name="data[ifullname]" type="text" value="' . $array['ifullname'] . '">
+                            <input type="hidden" name="email" type="text" value="' . $array['temail'] . '">
+                            <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
+                             type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email ' . $array['temail'] . '"></i></button>
+                        </form>' ?>
+                                    <?php } else { ?>
+                                        <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
+                                    <?php } ?>
+
+                                    <?php echo '
+
+                                &nbsp;<form name="gpsdelete_' . $array['itemid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="gpsdelete">
                                 <input type="hidden" name="gpsid" id="gpsid" type="text" value="' . $array['itemid'] . '">
                                 
                                 <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="fa-solid fa-xmark"></i></button>
                                 </form>
-                                </td>
-                                </tr>';
+                                </td>' ?>
+                            <?php }
+                                echo '</tr>';
                             } ?>
                         <?php
                         } else if ($taggedto == null && $item_type == null) {
@@ -456,11 +480,11 @@ $resultArr = pg_fetch_all($result);
                             <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
                         </span>
                         <span class="input-help">
-                            <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="<?php echo $associatenumber ?>" required>
+                            <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="" required>
                             <small id="passwordHelpBlock" class="form-text text-muted"> Issued by*</small>
                         </span>
                         <span class="input-help">
-                            <input type="text" name="taggedto" id="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="<?php echo $associatenumber ?>">
+                            <input type="text" name="taggedto" id="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="">
                             <small id="passwordHelpBlock" class="form-text text-muted"> Tagged to</small>
                         </span>
 
@@ -659,7 +683,7 @@ $resultArr = pg_fetch_all($result);
         })
 
         data.forEach(item => {
-            const formId = 'email-form-' + item.redeem_id
+            const formId = 'email-form-' + item.itemid
             const form = document.forms[formId]
             form.addEventListener('submit', e => {
                 e.preventDefault()
@@ -668,7 +692,7 @@ $resultArr = pg_fetch_all($result);
                         body: new FormData(document.forms[formId])
                     })
                     .then(response =>
-                        alert("Email has been send.")
+                        alert("Email has been sent.")
                     )
                     .catch(error => console.error('Error!', error.message))
             })
