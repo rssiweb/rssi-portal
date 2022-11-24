@@ -308,8 +308,8 @@ $resultArr = pg_fetch_all($result);
 
 
                                 <?php echo '</td>
-                                <td>' . $array['collectedby'] . '</td>
-                                <td>' . $array['taggedto'] . '</td>' ?>
+                                <td>' . $array['collectedby'] .'<br>'. $array['ifullname'] . '</td>
+                                <td>' . $array['taggedto'] .'<br>'. $array['tfullname'] . '</td>' ?>
                                 <?php if ($role == 'Admin') { ?>
                                     <?php echo '<td>
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
