@@ -369,7 +369,6 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
     var modal = document.getElementById("myModal");
 
     var closedetails = document.getElementById("closedetails");
-    var closepdf = document.getElementById("closepdf");
 
     function showDetails(id) {
       // console.log(modal)
@@ -409,10 +408,6 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
       modal.style.display = "none";
     }
 
-    closepdf.onclick = function() {
-      modal1.style.display = "none";
-    }
-
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
       if (event.target == modal) {
@@ -428,6 +423,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 
     // Get the modal
     var modal1 = document.getElementById("myModalpdf");
+    var closepdf = document.getElementById("closepdf");
 
     function showpdf(id1) {
       var mydata1 = undefined
@@ -459,6 +455,9 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
       //class add end
       var docid = document.getElementById("docid")
       docid.data = mydata1["uploadeddocuments"]
+    }
+    closepdf.onclick = function() {
+      modal1.style.display = "none";
     }
   </script>
 

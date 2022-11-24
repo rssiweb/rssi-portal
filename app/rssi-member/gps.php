@@ -27,7 +27,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 date_default_timezone_set('Asia/Kolkata');
 
 if ($_POST) {
-    @$itemid = $_POST['itemid'];
+    @$itemid = "A" . time();
     @$itemtype = $_POST['itemtype'];
     @$itemname = $_POST['itemname'];
     @$quantity = $_POST['quantity'];
@@ -74,8 +74,7 @@ if ($item_type == 'ALL' && $taggedto == "") {
 } else {
     $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
-    where itemid=''";
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  order by date desc";
 }
 
 $result = pg_query($con, $gpsdetails);
@@ -185,11 +184,6 @@ $resultArr = pg_fetch_all($result);
                                 <div class="col2" style="display: inline-block;">
 
                                     <span class="input-help">
-                                        <input type="text" name="itemid" class="form-control" style="width:max-content; display:inline-block" placeholder="Item ID" value="A-<?php echo time() ?>" required readonly>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Item ID</small>
-                                    </span>
-
-                                    <span class="input-help">
                                         <select name="itemtype" class="form-control" style="width:max-content; display:inline-block" required>
                                             <?php if ($itemtype == null) { ?>
                                                 <option value="" disabled selected hidden>Item type</option>
@@ -232,7 +226,7 @@ $resultArr = pg_fetch_all($result);
                         </form>
 
 
-                        <br><span class="heading">Asset details</span><br><br>
+                        <!-- <br><span class="heading">Asset details</span><br><br> -->
                         <form name="gpsdetails" id="gpsdetails" action="" method="GET">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
@@ -275,10 +269,10 @@ $resultArr = pg_fetch_all($result);
                         <thead>
                             <tr>
                                 <th scope="col">Item Id</th>
-                                <th scope="col">Item name</th>
+                                <th scope="col" width="15%">Item name</th>
                                 <th scope="col">Item type</th>
                                 <th scope="col">Quantity</th>
-                                <th scope="col">Remarks</th>
+                                <th scope="col" width="20%">Remarks</th>
                                 <th scope="col">Issued by</th>
                                 <th scope="col">Tagged to</th>
                                 <th scope="col"></th>
@@ -292,139 +286,42 @@ $resultArr = pg_fetch_all($result);
                                 echo '<tr>
                                 <td><span class="noticea"><a href="gps_history.php?assetid=' . $array['itemid'] . '" target="_blank" title="Asset History">' . $array['itemid'] . '</a></span></td>' ?>
 
-                                <?php if ($role != 'Admin') { ?>
 
-                                    <?php echo '<td>' . substr($array['itemname'], 0, 35) . '
-                                    
-                                    &nbsp;<button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
-                                    
-                                    </td>' ?>
 
+                                <?php echo '<td>' . substr($array['itemname'], 0, 35) . '</td>
+                                    <td>' . $array['itemtype'] . '</td>
+                                <td>' . $array['quantity'] . '</td><td>' ?>
+
+                                <?php if (@strlen($array['remarks']) <= 90) {
+
+                                    echo $array['remarks'] ?>
+
+                                <?php } else { ?>
+
+                                    <?php echo substr($array['remarks'], 0, 90) .
+                                        '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showremarks(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i></button>' ?>
                                 <?php } ?>
 
-                                <?php if ($role == 'Admin') { ?>
 
-                                    <?php echo '
-                                    
+                            <?php echo '</td>
+                                <td>' . $array['collectedby'] . '</td>
+                                <td>' . $array['taggedto'] . '</td>
+                                
                                 <td>
-                                
-                                <form name="name_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunction()" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="nameedit">
-                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <input id="inpname_' . $array['itemid'] . '" name="itemname" type="text" value="' . $array['itemname'] . '" disabled>
-                                <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
-                                <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
-                                <input type="hidden" name="remarks" id="remarks" type="text" value="' . $array['remarks'] . '">
-                                <input type="hidden" name="collectedby" id="collectedby" type="text" value="' . $array['collectedby'] . '">
-                                <input type="hidden" name="taggedto" id="taggedto" type="text" value="' . $array['taggedto'] . '">
-                                &nbsp;
-                                
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
-                                
-                                &nbsp;
+                                <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;
 
-                                <button type="button" id="editname_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit Item name"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
-
-                                <button type="submit" id="savename_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save Item name"><i class="fa-regular fa-floppy-disk"></i></button></form></td>' ?>
-
-                                <?php } ?>
-
-                                <?php echo '
-                                
-                                <td>' . $array['itemtype'] . '</td>
-                                <td>' . $array['quantity'] . '</td>
-                                <td>
-                                <form name="remarks_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="remarksedit">
-                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <textarea id="inp_' . $array['itemid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>
-                                <input type="hidden" name="itemname" id="itemname" type="text" value="' . $array['itemname'] . '">
-                                <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
-                                <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
-                                <input type="hidden" name="collectedby" id="collectedby" type="text" value="' . $array['collectedby'] . '">
-                                <input type="hidden" name="taggedto" id="taggedto" type="text" value="' . $array['taggedto'] . '">' ?>
-
-                                <?php if ($role == 'Admin') { ?>
-
-                                    <?php echo '&nbsp;
-
-                                <button type="button" id="edit_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit Remarks"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
-
-                                <button type="submit" id="save_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save Remarks"><i class="fa-regular fa-floppy-disk"></i></button>
-                                
-                                ' ?>
-
-                                <?php } ?>
-
-                                <?php echo '</form></td>' ?>
-
-                                <?php if ($role != 'Admin') { ?>
-
-                                    <?php echo '<td>' . $array['collectedby'] . '</td>' ?>
-
-                                    <?php echo '<td>' . $array['taggedto'] . '</td>' ?>
-
-                                <?php } ?>
-
-
-
-                                <?php if ($role == 'Admin') { ?>
-
-                                    <?php echo '
-
-
-
-                                <td><form name="issuedby_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctionissuedby()" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="issuedbyedit">
-                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <input id="inpissuedby_' . $array['itemid'] . '" name="collectedby" type="text" value="' . $array['collectedby'] . '" disabled>
-                                <input type="hidden" name="itemname" id="itemname" type="text" value="' . $array['itemname'] . '">
-                                <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
-                                <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
-                                <input type="hidden" name="remarks" id="remarks" type="text" value="' . $array['remarks'] . '">
-                                <input type="hidden" name="taggedto" id="taggedto" type="text" value="' . $array['taggedto'] . '">
-                                    
-                                    &nbsp;
-
-                                <button type="button" id="editissuedby_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit Issued by"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
-
-                                <button type="submit" id="saveissuedby_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save Issued by"><i class="fa-regular fa-floppy-disk"></i></button></form></td>
-                                
-
-                                <td><form name="tag_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiontag()" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="tagedit">
-                                <input type="hidden" name="itemid" id="itemid" type="text" value="' . $array['itemid'] . '">
-                                <input id="inptag_' . $array['itemid'] . '" name="taggedto" type="text" value="' . $array['taggedto'] . '" disabled>
-                                <input type="hidden" name="itemname" id="itemname" type="text" value="' . $array['itemname'] . '">
-                                <input type="hidden" name="itemtype" id="itemtype" type="text" value="' . $array['itemtype'] . '">
-                                <input type="hidden" name="quantity" id="quantity" type="text" value="' . $array['quantity'] . '">
-                                <input type="hidden" name="remarks" id="remarks" type="text" value="' . $array['remarks'] . '">
-                                <input type="hidden" name="collectedby" id="collectedby" type="text" value="' . $array['collectedby'] . '">
-                                        
-                                    &nbsp;
-
-                                <button type="button" id="edittag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit Tagged to"><i class="fa-regular fa-pen-to-square"></i></button>&nbsp;
-
-                                <button type="submit" id="savetag_' . $array['itemid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save Tagged to"><i class="fa-regular fa-floppy-disk"></i></button></form></td>
-                                
-                                <td>
                                 <a href="https://api.whatsapp.com/send?phone=91' . $array['tphone'] . '&text=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS"></i></a>&nbsp;
-                                
-                                <a href="mailto:' . $array['temail'] . '?subject=' . $array['itemid'] . ' | Asset Allocation has been done in GPS&body=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0AThis is a system generated email." target="_blank"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email"></i></a><br><br>
 
-                                <form name="gpsdelete_' . $array['itemid'] . '" action="#" method="POST" onsubmit="myFunctiongpsdelete()" style="display: -webkit-inline-box;">
+                                <form name="gpsdelete_' . $array['itemid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="gpsdelete">
                                 <input type="hidden" name="gpsid" id="gpsid" type="text" value="' . $array['itemid'] . '">
                                 
-                                <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="fa-solid fa-xmark"></i></button>' ?>
-
-                                    <?php echo ' </form>' ?>
-                                <?php } ?>
-
-                            <?php echo '</td>
+                                <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="fa-solid fa-xmark"></i></button>
+                                </form>
+                                </td>
                                 </tr>';
                             } ?>
                         <?php
@@ -521,14 +418,65 @@ $resultArr = pg_fetch_all($result);
             </div>
 
 
-            <p style="font-size: small;">
-                <span class="itemname"></span>
-                <!-- <br /><br />
-                <span style="font-size:10px;">Registered by&nbsp;<span class="collectedby"></span>&nbsp;on&nbsp;<span class="date"></span></span> -->
-            </p>
+            <form id="gpsform" action="#" method="POST">
+                <div class="form-group" style="display: inline-block;">
+                    <div class="col2" style="display: inline-block;">
+
+                        <input type="hidden" class="form-control" name="itemid1" id="itemid1" type="text" value="" readonly>
+
+                        <input type="hidden" class="form-control" name="form-type" type="text" value="gpsedit" readonly>
+
+                        <span class="input-help">
+                            <select name="itemtype" id="itemtype" class="form-control" style="width:max-content; display:inline-block" required>
+                                <?php if ($itemtype == null) { ?>
+                                    <option value="" disabled selected hidden>Item type</option>
+                                <?php
+                                } else { ?>
+                                    <option hidden selected><?php echo $itemtype ?></option>
+                                <?php }
+                                ?>
+                                <option>Purchased</option>
+                                <option>Donation</option>
+                            </select>
+                            <small id="passwordHelpBlock" class="form-text text-muted">Item type*</small>
+                        </span>
+
+                        <span class="input-help">
+                            <input type="text" name="itemname" id="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" value="" required>
+                            <small id="passwordHelpBlock" class="form-text text-muted">Item name*</small>
+                        </span>
+
+                        <span class="input-help">
+                            <input type="number" name="quantity" id="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" value="" min="1" required>
+                            <small id="passwordHelpBlock" class="form-text text-muted">Quantity*</small>
+                        </span>
+
+                        <span class="input-help">
+                            <textarea type="text" name="remarks" id="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
+                            <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
+                        </span>
+                        <span class="input-help">
+                            <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="<?php echo $associatenumber ?>" required>
+                            <small id="passwordHelpBlock" class="form-text text-muted"> Issued by*</small>
+                        </span>
+                        <span class="input-help">
+                            <input type="text" name="taggedto" id="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="<?php echo $associatenumber ?>">
+                            <small id="passwordHelpBlock" class="form-text text-muted"> Tagged to</small>
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="col2 left" style="display: inline-block;">
+                    <button type="submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
+                        <i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
+                </div>
+            </form>
         </div>
 
     </div>
+
     <script>
         var data = <?php echo json_encode($resultArr) ?>
 
@@ -554,6 +502,35 @@ $resultArr = pg_fetch_all($result);
                     span[0].innerHTML = mydata[key];
             })
             modal.style.display = "block";
+
+            var profile = document.getElementById("itemtype")
+            profile.value = mydata["itemtype"]
+            if (mydata["itemtype"] !== null) {
+                profile = document.getElementById("itemtype")
+                profile.value = mydata["itemtype"]
+            }
+            if (mydata["itemname"] !== null) {
+                profile = document.getElementById("itemname")
+                profile.value = mydata["itemname"]
+            }
+            if (mydata["quantity"] !== null) {
+                profile = document.getElementById("quantity")
+                profile.value = mydata["quantity"]
+            }
+            if (mydata["remarks"] !== null) {
+                profile = document.getElementById("remarks")
+                profile.value = mydata["remarks"]
+            }
+            if (mydata["collectedby"] !== null) {
+                profile = document.getElementById("collectedby")
+                profile.value = mydata["collectedby"]
+            }
+            if (mydata["taggedto"] !== null) {
+                profile = document.getElementById("taggedto")
+                profile.value = mydata["taggedto"]
+            }
+            profile = document.getElementById("itemid1")
+            profile.value = mydata["itemid"]
         }
         // When the user clicks the button, open the modal 
         // When the user clicks on <span> (x), close the modal
@@ -564,9 +541,57 @@ $resultArr = pg_fetch_all($result);
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
+            } else if (event.target == modal1) {
+                modal1.style.display = "none";
             }
         }
     </script>
+
+
+    <div id="myModal1" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span id="closeremarks" class="close">&times;</span>
+
+            <div style="width:100%; text-align:right">
+                <p class="label label-info" style="display: inline !important;"><span class="itemid"></span></p>
+            </div>
+
+            <span class="remarks"></span>
+        </div>
+
+    </div>
+
+    <script>
+        var data1 = <?php echo json_encode($resultArr) ?>
+
+        // Get the modal
+        var modal1 = document.getElementById("myModal1");
+        var closeremarks = document.getElementById("closeremarks");
+
+        function showremarks(id1) {
+            var mydata1 = undefined
+            data1.forEach(item1 => {
+                if (item1["itemid"] == id1) {
+                    mydata1 = item1;
+                }
+            })
+            var keys1 = Object.keys(mydata1)
+            keys1.forEach(key => {
+                var span1 = modal1.getElementsByClassName(key)
+                if (span1.length > 0)
+                    span1[0].innerHTML = mydata1[key];
+            })
+            modal1.style.display = "block";
+
+        }
+        closeremarks.onclick = function() {
+            modal1.style.display = "none";
+        }
+        // When the user clicks anywhere outside of the modal, close it SEE OTHER SCRIPT
+    </script>
+
 
     <!-- Back top -->
     <script>
@@ -587,151 +612,69 @@ $resultArr = pg_fetch_all($result);
             });
         });
     </script>
-    <script>
-        function myFunction() {
-            alert("Item name has been updated.");
-            location.reload();
-        }
 
-        function myFunctionn() {
-            alert("Remarks has been updated.");
-            location.reload();
-        }
-
-        function myFunctiontag() {
-            alert("Tagged to has been updated.");
-            location.reload();
-        }
-
-        function myFunctionissuedby() {
-            alert("Issue by has been updated.");
-            location.reload();
-        }
-
-        function myFunctiongpsdelete() {
-            alert("Asset has been deleted.");
-            location.reload();
-        }
-    </script>
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
-
-        data.forEach(item => {
-
-            const form = document.getElementById('editname_' + item.itemid);
-
-            form.addEventListener('click', function() {
-                document.getElementById('inpname_' + item.itemid).disabled = false;
-            });
-        })
-
-
-        data.forEach(item => {
-
-            const form = document.getElementById('edit_' + item.itemid);
-
-            form.addEventListener('click', function() {
-                document.getElementById('inp_' + item.itemid).disabled = false;
-            });
-        })
-
-
-        data.forEach(item => {
-
-            const form = document.getElementById('edittag_' + item.itemid);
-
-            form.addEventListener('click', function() {
-                document.getElementById('inptag_' + item.itemid).disabled = false;
-            });
-        })
-
-        data.forEach(item => {
-
-            const form = document.getElementById('editissuedby_' + item.itemid);
-
-            form.addEventListener('click', function() {
-                document.getElementById('inpissuedby_' + item.itemid).disabled = false;
-            });
-        })
-
         //For form submission - to update Remarks
         const scriptURL = 'payment-api.php'
 
-        data.forEach(item => {
-            const form = document.forms['name_' + item.itemid]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['name_' + item.itemid])
+        function validateForm() {
+            if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+
+                data.forEach(item => {
+                    const form = document.forms['gpsdelete_' + item.itemid]
+                    form.addEventListener('submit', e => {
+                        e.preventDefault()
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['gpsdelete_' + item.itemid])
+                            })
+                            .then(response =>
+                                alert("Record has been deleted.") +
+                                location.reload()
+                            )
+                            .catch(error => console.error('Error!', error.message))
                     })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
 
-            console.log(item)
-        })
+                    console.log(item)
+                })
+            } else {
+                alert("Record has NOT been deleted.");
+                return false;
+            }
+        }
 
-
-        data.forEach(item => {
-            const form = document.forms['remarks_' + item.itemid]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['remarks_' + item.itemid])
-                    })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
-
-            console.log(item)
-        })
-
-        data.forEach(item => {
-            const form = document.forms['tag_' + item.itemid]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['tag_' + item.itemid])
-                    })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
+        const form = document.getElementById('gpsform')
+        form.addEventListener('submit', e => {
+            e.preventDefault()
+            fetch(scriptURL, {
+                    method: 'POST',
+                    body: new FormData(document.getElementById('gpsform'))
+                })
+                .then(response =>
+                    alert("Record has been updated.") +
+                    location.reload()
+                )
+                .catch(error => console.error('Error!', error.message))
         })
 
         data.forEach(item => {
-            const form = document.forms['issuedby_' + item.itemid]
+            const formId = 'email-form-' + item.redeem_id
+            const form = document.forms[formId]
             form.addEventListener('submit', e => {
                 e.preventDefault()
-                fetch(scriptURL, {
+                fetch('mailer.php', {
                         method: 'POST',
-                        body: new FormData(document.forms['issuedby_' + item.itemid])
+                        body: new FormData(document.forms[formId])
                     })
-                    .then(response => console.log('Success!', response))
+                    .then(response =>
+                        alert("Email has been send.")
+                    )
                     .catch(error => console.error('Error!', error.message))
             })
-
-            console.log(item)
-        })
-
-
-        data.forEach(item => {
-            const form = document.forms['gpsdelete_' + item.itemid]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['gpsdelete_' + item.itemid])
-                    })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
-
-            console.log(item)
         })
     </script>
+
     <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>
 
