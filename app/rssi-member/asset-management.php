@@ -96,10 +96,11 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                    <?php if ($role == 'Admin') { ?>
+                    
                         <div class="col" style="display: inline-block; width:100%; text-align:right">
-                            Home / <span class="noticea"><a href="gps.php">GPS</a></span> / Asset Movement<br><br>
+                            Home / <span class="noticea"><a href="document.php">My Document</a></span> / <span class="noticea"><a href="gps.php">GPS</a></span> / Asset Movement<br><br>
                         </div>
+                        <?php if ($role == 'Admin') { ?>
                         <form id="myform" action="" method="GET" onsubmit="process()">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
@@ -141,11 +142,6 @@ $resultArr = pg_fetch_all($result);
                                     <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLScLENQKgw2bEDuhZFRLDuxcmwuXIh-6H7zXm8NbCSv6x63fNw/viewform" target="_blank" class="btn btn-danger btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Ticket</a>
                             </div>
                         </form>
-                    <?php } ?>
-                    <?php if ($role != 'Admin') { ?>
-                        <div class="col" style="display: inline-block; width:99%; text-align:right">
-                            <p style="font-size:small"><span class="noticea" style="line-height: 2;"><a href="document.php">My Document</a></span> / My Asset</p>
-                        </div>
                     <?php } ?>
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>

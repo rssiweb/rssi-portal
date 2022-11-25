@@ -78,7 +78,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                 </td>
                                 <td style="line-height: 2;"><span class="noticea"><a href="payslip.php" target="_self">Payslip</a></span></td>
                                 <td style="line-height: 2;"><span class="noticea"><a href="idcard.php" target="_blank">RSSI Identity Card</a><br>
-                                        <a href="asset-management.php" target="_self">My Asset</a>
+                                        <a href="gps.php" target="_self">GPS (Global Procurement System)</a>
                                     </span></td>
                             </tr>
                         </tbody>

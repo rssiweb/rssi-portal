@@ -14,15 +14,9 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '<script type="text/javascript">';
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';
-}
+}?>
 
-if ($role != 'Admin') {
-
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
+<?php if ($role == 'Admin') {
 
 @$assetid = $_GET['assetid'];
 
@@ -40,7 +34,26 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
-?>
+} ?>
+<?php if ($role != 'Admin') {
+
+@$assetid = $_GET['assetid'];
+
+if ($assetid != null) {
+    $result = pg_query($con, "SELECT * FROM gps_history where itemid='$assetid' AND taggedto='$associatenumber' order by date desc");
+} else {
+    $result = pg_query($con, "SELECT * FROM gps_history where taggedto='$associatenumber' order by date desc");
+}
+
+
+
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+$resultArr = pg_fetch_all($result);
+} ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -157,7 +170,7 @@ $resultArr = pg_fetch_all($result);
                             </tr>';
                         }
                     } else {
-                    ?>
+                        ?>
                         <tr>
                             <td colspan="5">No record found for <?php echo $assetid ?></td>
                         </tr>

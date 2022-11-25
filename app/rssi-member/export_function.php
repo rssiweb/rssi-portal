@@ -144,14 +144,12 @@ function gps_export()
 
   if ($item_type == 'ALL' && $taggedto == "") {
     $gpsdetails = "SELECT * from gps order by date desc";
-  } else if ($item_type == 'ALL' && $taggedto != "") {
-    $gpsdetails = "SELECT * from gps where taggedto='$taggedto'";
-  } else if ($item_type == "" && $taggedto != "") {
-    $gpsdetails = "SELECT * from gps where taggedto='$taggedto'";
+  } else if (($item_type == 'ALL' && $taggedto != "") || ($item_type == "" && $taggedto != "")) {
+    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' order by date desc";
   } else if ($item_type != "ALL" && $item_type != "" && $taggedto != "") {
-    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' and itemtype='$item_type'";
+    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' and itemtype='$item_type' order by date desc";
   } else if ($item_type != "ALL" && $item_type != "" && $taggedto == "") {
-    $gpsdetails = "SELECT * from gps where itemtype='$item_type'";
+    $gpsdetails = "SELECT * from gps where itemtype='$item_type' order by date desc";
   } else {
     $gpsdetails = "SELECT * from gps where itemid=''";
   }
