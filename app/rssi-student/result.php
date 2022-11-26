@@ -178,13 +178,10 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <form action="" method="GET" id="formid">
                             <div class="form-group" style="display: unset;">
                                 <div class="col2" style="display: inline-block;">
-
                                     <?php if ($stid != null) { ?>
-                                        <input type="hidden" name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $stid ?>" readonly><?php } ?>
+                                        <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $stid ?>"><?php } ?>
                                     <?php if ($stid == null) { ?>
-                                        <input type="hidden" name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $student_id ?>" readonly><?php } ?>
-
-
+                                        <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $student_id ?>"><?php } ?>
 
                                     <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
                                         <?php if ($id == null) { ?>
@@ -219,10 +216,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     </div>
                 </div>
                 <section class="box" style="padding: 2%;">
+                
+                <?php if (@$examname > 0) {
+                        ?>
                     <table class="table" border="0">
-                        <thead class="no-display">
+                        <thead>
                             <tr>
-                                <td colspan=3>
+                                <td colspan=4>
                                     <div class="col" style="display: inline-block; width:80%;">
 
                                         <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
@@ -231,18 +231,8 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                         <p style="font-size: small;">NGO Unique Id — WB/2021/0282726 (NITI Aayog, Government of India)</p>
                                     </div>
                                 </td>
-                                <td>
-
-                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-student/result.php?get_id=<?php echo $stid ?>&get_id=<?php echo $id ?>" width="100%" />
-
-                                </td>
-
                             </tr>
                         </thead>
-
-                        <!-- <table class="table" border="0" align="center" style="width: 80%;"> -->
-                        <?php if (@$examname > 0) {
-                        ?>
                             <tbody>
                                 <tr>
                                     <td colspan="4">
@@ -265,8 +255,12 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 <tr>
                                     <td style="text-align:left"> Date Of Birth </td>
                                     <th style="text-align:left"><?php echo $dob ?></th>
-                                    <td style="text-align:left"></td>
-                                    <td style="text-align:left"><img src=<?php echo $photourl ?> width=50px /></td>
+                                    <td style="text-align:left" colspan="2">Scan QR code to check authenticity<br><?php
+                                                                                                                    $url = "https://login.rssi.in/rssi-student/result.php?get_stid=$stid&get_id=$id";
+                                                                                                                    $url = urlencode($url); ?>
+                                        <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
+                                        <img src=<?php echo $photourl ?> width=50px />
+                                    </td>
                                 </tr>
                             </tbody>
                     </table>
