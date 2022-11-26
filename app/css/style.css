@@ -531,6 +531,39 @@
             font-size: 13px;
         }
         /*---------------------------------------
+    CLASS NAME- NOTICEAS : URL DECORATION for table              
+-----------------------------------------*/
+        
+        .noticeas a:link {
+            text-decoration: none !important;
+            color: #F2545F !important;
+            font-size: 12px;
+        }
+        
+        .noticeas a:visited {
+            text-decoration: none !important;
+            color: #F2545F !important;
+            font-size: 12px;
+        }
+        
+        .noticeas a:hover {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 12px;
+        }
+        
+        .noticeas a:active {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 12px;
+        }
+        
+        .noticeas a:focus {
+            text-decoration: underline !important;
+            color: #F2545F !important;
+            font-size: 12px;
+        }
+        /*---------------------------------------
     CLASS NAME- link : URL DECORATION               
 -----------------------------------------*/
         

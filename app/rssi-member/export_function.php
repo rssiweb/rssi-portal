@@ -163,7 +163,7 @@ function gps_export()
 
   $resultArr = pg_fetch_all($result);
 
-  echo 'Item Id,Item name,Item type,Quantity,Tagged to' . "\n";
+  echo 'Asset Id,Asset name,Asset type,Quantity,Tagged to' . "\n";
 
   foreach ($resultArr as $array) {
 

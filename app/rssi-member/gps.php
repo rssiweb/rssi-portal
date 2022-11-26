@@ -71,16 +71,8 @@ date_default_timezone_set('Asia/Kolkata'); ?>
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
     left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  order by date desc";
     }
-
-    $result = pg_query($con, $gpsdetails);
-
-    if (!$result) {
-        echo "An error occurred.\n";
-        exit;
-    }
-
-    $resultArr = pg_fetch_all($result);
 } ?>
+
 <?php if ($role != 'Admin') {
 
     @$taggedto = $associatenumber;
@@ -88,17 +80,18 @@ date_default_timezone_set('Asia/Kolkata'); ?>
     $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
     left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  where taggedto='$associatenumber' order by date desc";
-
-    $result = pg_query($con, $gpsdetails);
-
-    if (!$result) {
-        echo "An error occurred.\n";
-        exit;
-    }
-
-    $resultArr = pg_fetch_all($result);
 } ?>
+<?php
+$result = pg_query($con, $gpsdetails);
 
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+$resultArr = pg_fetch_all($result);
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -180,7 +173,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 
                         <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Database has been updated successfully for item id <?php echo @$itemid ?>.</span>
+                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Database has been updated successfully for asset id <?php echo @$itemid ?>.</span>
                         </div>
                         <script>
                             if (window.history.replaceState) {
@@ -191,12 +184,12 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                 } ?>
 
                 <div class="row">
-                    <div class="col" style="display: inline-block; width:50%; text-align:left">
+                    <div class="col" style="display: inline-block; width:100%; text-align:right">
                         Home / <span class="noticea"><a href="document.php">My Document</a></span> / GPS (Global Procurement System)
                     </div>
-                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+                    <!-- <div class="col" style="display: inline-block; width:47%; text-align:right">
                         <span class="noticea"><a href="asset-management.php">Asset Movement</a></span>
-                    </div>
+                    </div> -->
                     <section class="box" style="padding: 2%;">
                         <?php if ($role == 'Admin') { ?>
                             <form autocomplete="off" name="gps" id="gps" action="gps.php" method="POST">
@@ -208,7 +201,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                                         <span class="input-help">
                                             <select name="itemtype" class="form-control" style="width:max-content; display:inline-block" required>
                                                 <?php if ($itemtype == null) { ?>
-                                                    <option value="" disabled selected hidden>Item type</option>
+                                                    <option value="" disabled selected hidden>Asset type</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $itemtype ?></option>
@@ -217,12 +210,12 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                                                 <option>Purchased</option>
                                                 <option>Donation</option>
                                             </select>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">Item type</small>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Asset type</small>
                                         </span>
 
                                         <span class="input-help">
                                             <input type="text" name="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" value="" required>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">Item name</small>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Asset name</small>
                                         </span>
 
                                         <span class="input-help">
@@ -255,7 +248,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 
                                         <select name="item_type" class="form-control" style="width:max-content; display:inline-block">
                                             <?php if ($item_type == null) { ?>
-                                                <option value="" disabled selected hidden>Item type</option>
+                                                <option value="" disabled selected hidden>Asset type</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $item_type ?></option>
@@ -301,29 +294,21 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                                 <option value="100">100</option>
                             </select>
                         </div>
-                        <table class="table" id="table-id">
+                        <table class="table" id="table-id" style="font-size: 12px;">
                         <thead>
                             <tr>
                                 <th scope="col">Asset Id</th>
-                                <th scope="col" width="15%">Asset name</th>' ?>
-                        <?php if ($role == 'Admin') { ?>
-                            <?php echo '
-                                <th scope="col">Asset type</th>' ?>
-                        <?php }
-                        echo '
-                                        
+                                <th scope="col" width="15%">Asset name</th>
                                 <th scope="col">Quantity</th>' ?>
                         <?php if ($role == 'Admin') { ?>
                             <?php echo '
+                                <th scope="col">Asset type</th>
                                 <th scope="col" width="20%">Remarks</th>' ?>
                         <?php }
                         echo '
-                                <th scope="col">Issued by</th>' ?>
-                        <?php if ($role == 'Admin') { ?>
-                            <?php echo '
-                                <th scope="col">Tagged to</th>' ?>
-                        <?php }
-                        echo '<th scope="col">Last updated on</th></tr>
+                                <th scope="col">Issued by</th>
+                                <th scope="col">Tagged to</th>
+                                <th scope="col">Last updated on</th></tr>
                         </thead>' ?>
                         <?php if (sizeof($resultArr) > 0) { ?>
                             <?php
@@ -331,7 +316,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                             foreach ($resultArr as $array) {
                                 echo '<tr>
                                 <td>
-                                <span class="noticea"><a href="gps_history.php?assetid=' . $array['itemid'] . '" target="_blank" title="Asset History">' . $array['itemid'] . '</a></span>
+                                <span class="noticeas"><a href="gps_history.php?assetid=' . $array['itemid'] . '" target="_blank" title="Asset History">' . $array['itemid'] . '</a></span>
                                 </td><td>' ?>
 
                                 <?php if (@strlen($array['itemname']) <= 50) {
@@ -343,66 +328,60 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                                     <?php echo substr($array['itemname'], 0, 50) .
                                         '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showname(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                         <i class="fa-solid fa-arrow-up-right-from-square"></i></button>' ?>
-                                <?php } ?>
-                                </td>
+
+                                <?php }
+                                echo '</td><td>' . $array['quantity'] . '</td>' ?>
+
+
                                 <?php if ($role == 'Admin') { ?>
-                                    <?php echo '<td>' . $array['itemtype'] . '</td>' ?>
-                                <?php } ?>
-                                <?php echo '<td>' . $array['quantity'] . '</td>' ?>
-                                <?php if ($role == 'Admin') { ?>
-                                    <td>
-                                        <?php if (@strlen($array['remarks']) <= 90) {
+                                    <?php echo '<td>' . $array['itemtype'] . '</td><td>' ?>
+                                    <?php if (@strlen($array['remarks']) <= 90) {
 
-                                            echo $array['remarks'] ?>
+                                        echo $array['remarks'] ?>
 
-                                        <?php } else { ?>
+                                    <?php } else { ?>
 
-                                            <?php echo substr($array['remarks'], 0, 90) .
-                                                '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showremarks(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                        <?php echo substr($array['remarks'], 0, 90) .
+                                            '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showremarks(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i></button>' ?>
-                                        <?php } ?>
-                                    </td>
+                                    <?php }
+                                    echo '</td>' ?>
                                 <?php } ?>
 
                                 <?php echo '
-                                <td>' . $array['ifullname'] . '&nbsp;(' . $array['collectedby'] . ')</td>
-                                ' ?>
-                                <?php if ($role == 'Admin') { ?>
-                                    <?php echo '<td>' . $array['taggedto'] . '<br>' . $array['tfullname'] . '</td>' ?>
-                                <?php } ?>
-
-                                <?php echo '</td>
-                                <td>'
-                                ?>
+                                <td>' . $array['collectedby'] . '<br>' . $array['ifullname'] . '</td>
+                                <td>' . $array['taggedto'] . '<br>' . $array['tfullname'] . '</td>
+                                <td>' ?>
                                 <?php if ($array['lastupdatedon'] != null) { ?>
 
                                     <?php echo @date("d/m/Y g:i a", strtotime($array['lastupdatedon'])) ?>
 
                                 <?php } else {
                                 }
-                                '</td>' ?>
+                                echo '</td><td>' ?>
 
 
                                 <?php if ($role == 'Admin') { ?>
-                                    <td>
-                                        <?php if ($array['collectedby'] == $associatenumber) { ?>
-                                            <?php echo '
+
+                                    <?php if ($array['collectedby'] == $associatenumber) { ?>
+                                        <?php echo '
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-regular fa-pen-to-square" style="color:#777777" title="Show Details" display:inline;></i></button>' ?>
-                                        <?php } else { ?>
-                                            <?php echo '<i class="fa-regular fa-pen-to-square" style="color:#A2A2A2;" title="Show Details"></i>' ?>
-                                            <?php } ?>&nbsp;
-                                            <?php if ($array['tphone'] != null && $array['collectedby'] == $associatenumber) { ?>
-                                                <?php echo '
+                                    <?php } else { ?>
+                                        <?php echo '&nbsp;<i class="fa-regular fa-pen-to-square" style="color:#A2A2A2;" title="Show Details"></i>' ?>
+                                    <?php } ?>
 
-                                <a href="https://api.whatsapp.com/send?phone=91' . $array['tphone'] . '&text=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                    <?php if ($array['tphone'] != null && $array['collectedby'] == $associatenumber) { ?>
+                                        <?php echo '
+
+                                    &nbsp;<a href="https://api.whatsapp.com/send?phone=91' . $array['tphone'] . '&text=Dear ' . $array['tfullname'] . ',%0A%0AAsset Allocation has been done in Global Procurement System.%0A%0AAsset Details%0A%0AItem Name – ' . $array['itemname'] . '%0AQuantity – ' . $array['quantity'] . '%0AAllocated to – ' . $array['tfullname'] . ' (' . $array['taggedto'] . ')%0AAsset ID – ' . $array['itemid'] . '%0AAllocated by – ' . $array['ifullname'] . ' (' . $array['collectedby'] . ')%0A%0AIn case of any concerns kindly contact Asset officer (refer Allocated by in the table).%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tphone'] . '"></i></a>' ?>
-                                            <?php } else { ?>
-                                                <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                                                <?php } ?>&nbsp;
+                                    <?php } else { ?>
+                                        <?php echo '&nbsp;<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
+                                    <?php } ?>
 
-                                                <?php if ($array['temail'] != null && $array['collectedby'] == $associatenumber) { ?>
-                                                    <?php echo '<form  action="#" name="email-form-' . $array['itemid'] . '" method="POST" style="display: -webkit-inline-box;" >
+                                    <?php if ($array['temail'] != null && $array['collectedby'] == $associatenumber) { ?>
+                                        <?php echo '<form  action="#" name="email-form-' . $array['itemid'] . '" method="POST" style="display: -webkit-inline-box;" >
                             <input type="hidden" name="template" type="text" value="gps">
                             <input type="hidden" name="data[itemname]" type="text" value="' . $array['itemname'] . '">
                             <input type="hidden" name="data[itemid]" type="text" value="' . $array['itemid'] . '">
@@ -412,27 +391,25 @@ date_default_timezone_set('Asia/Kolkata'); ?>
                             <input type="hidden" name="data[collectedby]" type="text" value="' . $array['collectedby'] . '">
                             <input type="hidden" name="data[ifullname]" type="text" value="' . $array['ifullname'] . '">
                             <input type="hidden" name="email" type="text" value="' . $array['temail'] . '">
-                            <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
+                            &nbsp;<button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
                              type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email ' . $array['temail'] . '"></i></button>
                         </form>' ?>
-                                                <?php } else { ?>
-                                                    <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
-                                                <?php } ?>
+                                    <?php } else { ?>
+                                        <?php echo '&nbsp;<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
+                                    <?php } ?>
 
-                                                &nbsp;&nbsp;
-                                                <?php if ($array['collectedby'] == $associatenumber) { ?>
-                                                    <?php echo '
-                                <form name="gpsdelete_' . $array['itemid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                    <?php if ($array['collectedby'] == $associatenumber) { ?>
+                                        <?php echo '
+                                <form id="gpsdelete" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="gpsdelete">
-                                <input type="hidden" name="gpsid" id="gpsid" type="text" value="' . $array['itemid'] . '">
-                                
-                                <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="fa-solid fa-xmark"></i></button>
-                                </form>' ?>
-                                                <?php } else { ?>
-                                                    <?php echo '<i class="fa-solid fa-xmark" style="color:#A2A2A2;" title="Send Email"></i>' ?>
-                                                <?php } ?>
-                                    </td>
-                            <?php echo '</tr>';
+                                <input type="hidden" name="gpsid" type="text" value="' . $array['itemid'] . '">
+
+                                &nbsp;<button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="fa-solid fa-xmark"></i></button> </form>' ?>
+                                    <?php } else { ?>
+                                        <?php echo '&nbsp;<i class="fa-solid fa-xmark" style="color:#A2A2A2;" title="Delete ' . $array['itemid'] . '"></i>' ?>
+                                    <?php } ?>
+
+                            <?php echo '</td></tr>';
                                 }
                             } ?>
                         <?php
@@ -540,70 +517,69 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 
         <!-- Modal content -->
         <div class="modal-content">
-            <span class="close">&times;</span>
+            <div class="col2 left" style="display: inline-block;">
+                <span class="close">&times;</span>
 
-            <div style="width:100%; text-align:right">
-                <p class="label label-info" style="display: inline !important;"><span class="itemid"></span></p>
-            </div>
+                <div style="width:100%; text-align:right">
+                    <p class="label label-info"><span class="itemid"></span></p>
 
+                </div>
 
-            <form id="gpsform" action="#" method="POST">
-                <div class="form-group" style="display: inline-block;">
-                    <div class="col2" style="display: inline-block;">
+                <form id="gpsform" action="#" method="POST">
+                    <div class="form-group" style="display: inline-block;">
+                        <div class="col2" style="display: inline-block;">
 
-                        <input type="hidden" class="form-control" name="itemid1" id="itemid1" type="text" value="" readonly>
+                            <input type="hidden" class="form-control" name="itemid1" id="itemid1" type="text" value="" readonly>
 
-                        <input type="hidden" class="form-control" name="form-type" type="text" value="gpsedit" readonly>
+                            <input type="hidden" class="form-control" name="form-type" type="text" value="gpsedit" readonly>
 
-                        <span class="input-help">
-                            <select name="itemtype" id="itemtype" class="form-control" style="width:max-content; display:inline-block" required>
-                                <?php if ($itemtype == null) { ?>
-                                    <option value="" disabled selected hidden>Item type</option>
-                                <?php
-                                } else { ?>
-                                    <option hidden selected><?php echo $itemtype ?></option>
-                                <?php }
-                                ?>
-                                <option>Purchased</option>
-                                <option>Donation</option>
-                            </select>
-                            <small id="passwordHelpBlock" class="form-text text-muted">Item type*</small>
-                        </span>
+                            <span class="input-help">
+                                <select name="itemtype" id="itemtype" class="form-control" style="width:max-content; display:inline-block" required>
+                                    <?php if ($itemtype == null) { ?>
+                                        <option value="" disabled selected hidden>Item type</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $itemtype ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>Purchased</option>
+                                    <option>Donation</option>
+                                </select>
+                                <small id="passwordHelpBlock" class="form-text text-muted">Item type*</small>
+                            </span>
 
-                        <span class="input-help">
-                            <input type="text" name="itemname" id="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" value="" required>
-                            <small id="passwordHelpBlock" class="form-text text-muted">Item name*</small>
-                        </span>
+                            <span class="input-help">
+                                <input type="text" name="itemname" id="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" value="" required>
+                                <small id="passwordHelpBlock" class="form-text text-muted">Item name*</small>
+                            </span>
 
-                        <span class="input-help">
-                            <input type="number" name="quantity" id="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" value="" min="1" required>
-                            <small id="passwordHelpBlock" class="form-text text-muted">Quantity*</small>
-                        </span>
+                            <span class="input-help">
+                                <input type="number" name="quantity" id="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" value="" min="1" required>
+                                <small id="passwordHelpBlock" class="form-text text-muted">Quantity*</small>
+                            </span>
 
-                        <span class="input-help">
-                            <textarea type="text" name="remarks" id="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
-                            <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
-                        </span>
-                        <span class="input-help">
-                            <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="" required>
-                            <small id="passwordHelpBlock" class="form-text text-muted"> Issued by*</small>
-                        </span>
-                        <span class="input-help">
-                            <input type="text" name="taggedto" id="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="">
-                            <small id="passwordHelpBlock" class="form-text text-muted"> Tagged to</small>
-                        </span>
+                            <span class="input-help">
+                                <textarea type="text" name="remarks" id="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
+                                <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
+                            </span>
+                            <span class="input-help">
+                                <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="" required>
+                                <small id="passwordHelpBlock" class="form-text text-muted"> Issued by*</small>
+                            </span>
+                            <span class="input-help">
+                                <input type="text" name="taggedto" id="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="">
+                                <small id="passwordHelpBlock" class="form-text text-muted"> Tagged to</small>
+                            </span>
+
+                        </div>
 
                     </div>
 
-                </div>
-
-                <div class="col2 left" style="display: inline-block;">
                     <button type="submit" name="search_by_id3" class="btn btn-danger btn-sm" style="outline: none;">
                         <i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-
     </div>
 
     <script>
@@ -796,22 +772,18 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         function validateForm() {
             if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
 
-                data.forEach(item => {
-                    const form = document.forms['gpsdelete_' + item.itemid]
-                    form.addEventListener('submit', e => {
-                        e.preventDefault()
-                        fetch(scriptURL, {
-                                method: 'POST',
-                                body: new FormData(document.forms['gpsdelete_' + item.itemid])
-                            })
-                            .then(response =>
-                                alert("Record has been deleted.") +
-                                location.reload()
-                            )
-                            .catch(error => console.error('Error!', error.message))
-                    })
-
-                    console.log(item)
+                const form = document.getElementById('gpsdelete')
+                form.addEventListener('submit', e => {
+                    e.preventDefault()
+                    fetch(scriptURL, {
+                            method: 'POST',
+                            body: new FormData(document.getElementById('gpsdelete'))
+                        })
+                        .then(response =>
+                            alert("Record has been updated.") +
+                            location.reload()
+                        )
+                        .catch(error => console.error('Error!', error.message))
                 })
             } else {
                 alert("Record has NOT been deleted.");
