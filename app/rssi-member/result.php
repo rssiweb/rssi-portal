@@ -122,6 +122,12 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
             }
         }
 
+        @media screen {
+            .no-display {
+                display: none;
+            }
+        }
+
         /*---------------------------------------
     CLASS NAME- NOTICET : URL DECORATION for table              
 -----------------------------------------*/
@@ -151,7 +157,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
         }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
 </head>
 
@@ -164,7 +170,10 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
+
                     <div class="col noprint" style="display: inline-block; width:100%;margin-left:10%; margin-top:2%">
+
+                        <!-- <div id="google_translate_element" style="display: inline-flex;"></div><br><br> -->
 
                         <form action="" method="POST" id="formid">
                             <div class="form-group" style="display: unset;">
@@ -201,27 +210,41 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                             </div>
                         </form>
                     </div>
-                    <!--<div class="col noprint" style="display: inline-block; width:47%; text-align:right">
-                    <button type="button" onclick="window.location.href='logout.php'" name="print" class="btn btn-danger btn-sm" style="outline: none;">
-                                <span class="glyphicon glyphicon-log-out"></span>&nbsp;Sign out</button>
-                    </div>-->
                 </div>
                 <section class="box" style="padding: 2%;">
-                    <b>
-                        <h5 style="font-size: 20px; text-align:center">Rina Shiksha Sahayak Foundation (RSSI)
-                    </b></h5>
-                    <h5 style="text-align:center; line-height:2">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301<br>
-                        Registration Number - 237900</h5>
-                    <hr>
-                    <b>
-                        <h4 style="font-size: 20px; text-align:center"> Report Card
-                    </b></h4><br>
-                    <table class="table" border="0" align="center" style="width: 80%;">
+                    <table class="table" border="0">
+                        <thead class="no-display">
+                            <tr>
+                                <td colspan=3>
+                                    <div class="col" style="display: inline-block; width:80%;">
+
+                                        <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
+                                        <p style="font-size: small;">624B/195/01, Vijayipur, Vijaipur Village, Vishesh Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>
+                                        <!-- <p style="font-size: small;">Registration Number — U80101WB2020NPL237900</p> -->
+                                        <p style="font-size: small;">NGO Unique Id — WB/2021/0282726 (NITI Aayog, Government of India)</p>
+                                    </div>
+                                </td>
+                                <td>
+
+                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-student/result.php?get_id=<?php echo $stid ?>&get_id=<?php echo $id ?>" width="100%" />
+
+                                </td>
+
+                            </tr>
+                        </thead>
+
+                        <!-- <table class="table" border="0" align="center" style="width: 80%;"> -->
                         <?php if (@$examname > 0) {
                         ?>
                             <tbody>
                                 <tr>
-                                    <td style="text-align:left"> Registration Number </td>
+                                    <td colspan="4">
+                                        <h4 style="font-size: 20px; text-align:center"> Report Card
+                                            </b></h4>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:left">Registration Number </td>
                                     <th style="text-align:left"><?php echo $studentid ?></th>
                                     <td style="text-align:left"> Learning Group/Class </td>
                                     <th style="text-align:left"><?php echo $category ?>/<?php echo $class ?></th>
@@ -236,7 +259,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     <td style="text-align:left"> Date Of Birth </td>
                                     <th style="text-align:left"><?php echo $dob ?></th>
                                     <td style="text-align:left"></td>
-                                    <th style="text-align:left"><img src=<?php echo $photourl ?> width=50px /></th>
+                                    <td style="text-align:left"><img src=<?php echo $photourl ?> width=50px /></td>
                                 </tr>
                             </tbody>
                     </table>
@@ -374,11 +397,11 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                             </tr>
                             <?php if (@$hnd != null && @$hnd != '-') { ?>
                                 <tr>
-                                    <td style="text-align:left">* Language I - <?php echo $language1 ?></td>
+                                    <td style="text-align:left" colspan="4">* Language I - <?php echo $language1 ?></td>
                                 </tr>
                             <?php } else { ?>
                                 <tr>
-                                    <td style="text-align:left"></td>
+                                    <td style="text-align:left" colspan="4"></td>
                                 </tr>
                             <?php } ?>
 
@@ -400,8 +423,9 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                             </tr>
                         </tbody>
                     </table>
-                    <div class="footer no-display">
-                        <p>Report card generated:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p>
+
+                    <div class="footer no-display" style="width: 97%;">
+                        <p style="text-align: left;">Report card generated:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p>
                     </div>
                 <?php
                         } else if ($id == "") {
@@ -426,6 +450,30 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
             document.lostpasswordform.submit(); // Submits the form without the button
         }
     </script>
+
+    <!------------------------------------
+        For Google translate
+    -------------------------------------->
+    <!-- <script>
+        function googleTranslateElementInit() {
+            if ($(window).width() < 760) {
+                new google.translate.TranslateElement({
+                    pageLanguage: 'en',
+                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                    includedLanguages: "hi,en,bn"
+                }, 'google_translate_element1');
+
+            } else {
+                new google.translate.TranslateElement({
+                    pageLanguage: 'en',
+                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                    includedLanguages: "hi,en,bn"
+                }, 'google_translate_element');
+            }
+
+        }
+    </script> -->
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
 

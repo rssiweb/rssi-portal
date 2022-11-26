@@ -14,45 +14,45 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '<script type="text/javascript">';
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';
-}?>
+} ?>
 
 <?php if ($role == 'Admin') {
 
-@$assetid = $_GET['assetid'];
+    @$assetid = $_GET['assetid'];
 
-if ($assetid != null) {
-    $result = pg_query($con, "SELECT * FROM gps_history where itemid='$assetid' order by date desc");
-} else {
-    $result = pg_query($con, "SELECT * FROM gps_history order by date desc");
-}
+    if ($assetid != null) {
+        $result = pg_query($con, "SELECT * FROM gps_history where itemid='$assetid' order by date desc");
+    } else {
+        $result = pg_query($con, "SELECT * FROM gps_history order by date desc");
+    }
 
 
 
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-}
+    if (!$result) {
+        echo "An error occurred.\n";
+        exit;
+    }
 
-$resultArr = pg_fetch_all($result);
+    $resultArr = pg_fetch_all($result);
 } ?>
 <?php if ($role != 'Admin') {
 
-@$assetid = $_GET['assetid'];
+    @$assetid = $_GET['assetid'];
 
-if ($assetid != null) {
-    $result = pg_query($con, "SELECT * FROM gps_history where itemid='$assetid' AND taggedto='$associatenumber' order by date desc");
-} else {
-    $result = pg_query($con, "SELECT * FROM gps_history where taggedto='$associatenumber' order by date desc");
-}
+    if ($assetid != null) {
+        $result = pg_query($con, "SELECT * FROM gps_history where itemid='$assetid' AND taggedto='$associatenumber' order by date desc");
+    } else {
+        $result = pg_query($con, "SELECT * FROM gps_history where taggedto='$associatenumber' order by date desc");
+    }
 
 
 
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-}
+    if (!$result) {
+        echo "An error occurred.\n";
+        exit;
+    }
 
-$resultArr = pg_fetch_all($result);
+    $resultArr = pg_fetch_all($result);
 } ?>
 
 <!DOCTYPE html>
@@ -141,43 +141,92 @@ $resultArr = pg_fetch_all($result);
                         </select>
             
                     </div>
-                    <table class="table" id="table-id">
+                    <table class="table" id="table-id" style="font-size: 12px;">
                         <thead>
                             <tr>
-                                <th scope="col">Updated on</th>
-                                <th scope="col">Item Id</th>
-                                <th scope="col">Item name</th>
-                                <th scope="col">Item type</th>
-                                <th scope="col">Quantity</th>
-                                <th scope="col">Remarks</th>
+                                <th scope="col">Asset Id</th>
+                                <th scope="col" width="15%">Asset name</th>
+                                <th scope="col">Quantity</th>' ?>
+                    <?php if ($role == 'Admin') { ?>
+                        <?php echo '
+                                <th scope="col">Asset type</th>
+                                <th scope="col" width="20%">Remarks</th>' ?>
+                    <?php }
+                    echo '
                                 <th scope="col">Issued by</th>
                                 <th scope="col">Tagged to</th>
-                            </tr>
-                        </thead>
-                        <tbody>'; ?>
+                                <th scope="col">Last updated on</th></tr>
+                        </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
-                        <?php foreach ($resultArr as $array) {
-                            echo '
-                            <tr>
-                            <td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>
-                                <td>' . $array['itemid'] . '</td>
-                                <td>' . $array['itemname'] . '</td>
-                                <td>' . $array['itemtype'] . '</td>
-                                <td>' . $array['quantity'] . '</td>
-                                <td>' . $array['remarks'] . '</td>
+                        <?php
+                        echo '<tbody>';
+                        foreach ($resultArr as $array) {
+                            echo '<tr>
+                                <td>
+                                <span class="noticeas"><a href="gps_history.php?assetid=' . $array['itemid'] . '" target="_blank" title="Asset History">' . $array['itemid'] . '</a></span>
+                                </td><td>' ?>
+
+                            <?php if (@strlen($array['itemname']) <= 50) {
+
+                                echo $array['itemname'] ?>
+
+                            <?php } else { ?>
+
+                                <?php echo substr($array['itemname'], 0, 50) .
+                                    '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showname(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i></button>' ?>
+
+                            <?php }
+                            echo '</td><td>' . $array['quantity'] . '</td>' ?>
+
+
+                            <?php if ($role == 'Admin') { ?>
+                                <?php echo '<td>' . $array['itemtype'] . '</td><td>' ?>
+                                <?php if (@strlen($array['remarks']) <= 90) {
+
+                                    echo $array['remarks'] ?>
+
+                                <?php } else { ?>
+
+                                    <?php echo substr($array['remarks'], 0, 90) .
+                                        '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showremarks(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i></button>' ?>
+                                <?php }
+                                echo '</td>' ?>
+                            <?php } ?>
+
+                            <?php echo '
                                 <td>' . $array['collectedby'] . '</td>
-                                <td>' . $array['taggedto'] . '</td>                                
-                            </tr>';
-                        }
-                    } else {
-                        ?>
+                                <td>' . $array['taggedto'] . '</td>
+                                <td>' ?>
+                            <?php if ($array['date'] != null) { ?>
+
+                                <?php echo @date("d/m/Y g:i a", strtotime($array['date'])) ?>
+
+                            <?php } else {
+                            } ?>
+
+
+
+
+                        <?php echo '</tr>';
+                        } ?>
+                    <?php
+                    } else if ($taggedto == null && $item_type == null) {
+                    ?>
                         <tr>
-                            <td colspan="5">No record found for <?php echo $assetid ?></td>
+                            <td colspan="5">Please select Filter value.</td>
+                        </tr>
+                    <?php
+                    } else {
+                    ?>
+                        <tr>
+                            <td colspan="5">No record was found for the selected filter value.</td>
                         </tr>
                     <?php }
 
                     echo '</tbody>
-                        </table>';
+                            </table>';
                     ?>
                     <!--		Start Pagination -->
                     <div class='pagination-container'>
@@ -332,6 +381,163 @@ $resultArr = pg_fetch_all($result);
             }
         }
     </script>
+
+        <!--------------- POP-UP BOX ------------
+-------------------------------------->
+<style>
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 100;
+            /* Sit on top */
+            padding-top: 100px;
+            /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0);
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 100vh;
+        }
+
+        @media (max-width:767px) {
+            .modal-content {
+                width: 50vh;
+            }
+        }
+
+        /* The Close Button */
+
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+
+    <div id="myModal1" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span id="closeremarks" class="close">&times;</span>
+
+            <div style="width:100%; text-align:right">
+                <p class="label label-info" style="display: inline !important;"><span class="itemid"></span></p>
+            </div>
+
+            <span class="remarks"></span>
+        </div>
+
+    </div>
+
+    <script>
+        var data1 = <?php echo json_encode($resultArr) ?>
+
+        // Get the modal
+        var modal1 = document.getElementById("myModal1");
+        var closeremarks = document.getElementById("closeremarks");
+
+        function showremarks(id1) {
+            var mydata1 = undefined
+            data1.forEach(item1 => {
+                if (item1["itemid"] == id1) {
+                    mydata1 = item1;
+                }
+            })
+            var keys1 = Object.keys(mydata1)
+            keys1.forEach(key => {
+                var span1 = modal1.getElementsByClassName(key)
+                if (span1.length > 0)
+                    span1[0].innerHTML = mydata1[key];
+            })
+            modal1.style.display = "block";
+
+        }
+        closeremarks.onclick = function() {
+            modal1.style.display = "none";
+        }
+        // When the user clicks anywhere outside of the modal, close it SEE OTHER SCRIPT
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal1) {
+                modal1.style.display = "none";
+            } else if (event.target == modal2) {
+                modal2.style.display = "none";
+            }
+        }
+    </script>
+
+    <div id="myModal2" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span id="closename" class="close">&times;</span>
+
+            <div style="width:100%; text-align:right">
+                <p class="label label-info" style="display: inline !important;"><span class="itemid"></span></p>
+            </div>
+
+            <span class="itemname"></span>
+        </div>
+
+    </div>
+
+    <script>
+        var data2 = <?php echo json_encode($resultArr) ?>
+
+        // Get the modal
+        var modal2 = document.getElementById("myModal2");
+        var closeremarks = document.getElementById("closename");
+
+        function showname(id2) {
+            var mydata2 = undefined
+            data2.forEach(item2 => {
+                if (item2["itemid"] == id2) {
+                    mydata2 = item2;
+                }
+            })
+            var keys2 = Object.keys(mydata2)
+            keys2.forEach(key => {
+                var span2 = modal2.getElementsByClassName(key)
+                if (span2.length > 0)
+                    span2[0].innerHTML = mydata2[key];
+            })
+            modal2.style.display = "block";
+
+        }
+        closename.onclick = function() {
+            modal2.style.display = "none";
+        }
+        // When the user clicks anywhere outside of the modal, close it SEE OTHER SCRIPT
+    </script>
+
 
 
     <!-- Back top -->

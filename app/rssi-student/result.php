@@ -2,24 +2,28 @@
 session_start();
 include("../util/login_util.php");
 
-if (!isLoggedIn("sid")) {
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
-}
+// if (!isLoggedIn("aid")) {
+//     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+//     header("Location: index.php");
+//     exit;
+// }
 
-if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+// if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
 
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
+//     echo '<script type="text/javascript">';
+//     echo 'window.location.href = "defaultpasswordreset.php";';
+//     echo '</script>';
+// }
+
 
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
-@$id = $_POST['get_id'];
-$view_users_query = "select * from new_result WHERE studentid='$user_check' AND examname='$id'"; //select query for viewing users.  
-$run = pg_query($con, $view_users_query); //here run the sql query.  
+@$id = $_GET['get_id'];
+@$stid = $_GET['get_stid'];
+$view_users_query = "select * from new_result WHERE studentid='$stid' AND examname='$id'"; //select query for viewing users.
+$view_users_queryy = "select * from rssimyprofile_student WHERE student_id='$stid'";
+$run = pg_query($con, $view_users_query); //here run the sql query.
+$runn = pg_query($con, $view_users_queryy);
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
 {
@@ -52,7 +56,18 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $fullmarks = $row[26];
     $month = $row[27];
     $language1 = $row[28];
-} ?>
+?>
+<?php } ?>
+<?php
+
+while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store in a array $row.  
+{
+    $student_id = $roww[1];
+    $studentname = $roww[3];
+    $photourl = $roww[24];
+
+?>
+<?php } ?>
 
 
 <!DOCTYPE html>
@@ -107,6 +122,12 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             }
         }
 
+        @media screen {
+            .no-display {
+                display: none;
+            }
+        }
+
         /*---------------------------------------
     CLASS NAME- NOTICET : URL DECORATION for table              
 -----------------------------------------*/
@@ -149,12 +170,23 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
+
                     <div class="col noprint" style="display: inline-block; width:100%;margin-left:10%; margin-top:2%">
 
-                        <form action="" method="POST" id="formid">
+                        <!-- <div id="google_translate_element" style="display: inline-flex;"></div><br><br> -->
+
+                        <form action="" method="GET" id="formid">
                             <div class="form-group" style="display: unset;">
                                 <div class="col2" style="display: inline-block;">
-                                    <select name="get_id" class="form-control" style="width:max-content;" required>
+
+                                    <?php if ($stid != null) { ?>
+                                        <input type="hidden" name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $stid ?>" readonly><?php } ?>
+                                    <?php if ($stid == null) { ?>
+                                        <input type="hidden" name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $student_id ?>" readonly><?php } ?>
+
+
+
+                                    <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
                                         <?php if ($id == null) { ?>
                                             <option value="" disabled selected hidden>Select Exam name</option>
                                         <?php
@@ -187,21 +219,39 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     </div>
                 </div>
                 <section class="box" style="padding: 2%;">
-                    <b>
-                        <h5 style="font-size: 20px; text-align:center">Rina Shiksha Sahayak Foundation (RSSI)
-                    </b></h5>
-                    <h5 style="text-align:center; line-height:2">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301<br>
-                        Registration Number - 237900</h5>
-                    <hr>
-                    <b>
-                        <h4 style="font-size: 20px; text-align:center"> Report Card
-                    </b></h4><br>
-                    <table class="table" border="0" align="center" style="width: 80%;">
+                    <table class="table" border="0">
+                        <thead class="no-display">
+                            <tr>
+                                <td colspan=3>
+                                    <div class="col" style="display: inline-block; width:80%;">
+
+                                        <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
+                                        <p style="font-size: small;">624B/195/01, Vijayipur, Vijaipur Village, Vishesh Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>
+                                        <!-- <p style="font-size: small;">Registration Number — U80101WB2020NPL237900</p> -->
+                                        <p style="font-size: small;">NGO Unique Id — WB/2021/0282726 (NITI Aayog, Government of India)</p>
+                                    </div>
+                                </td>
+                                <td>
+
+                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-student/result.php?get_id=<?php echo $stid ?>&get_id=<?php echo $id ?>" width="100%" />
+
+                                </td>
+
+                            </tr>
+                        </thead>
+
+                        <!-- <table class="table" border="0" align="center" style="width: 80%;"> -->
                         <?php if (@$examname > 0) {
                         ?>
                             <tbody>
                                 <tr>
-                                    <td style="text-align:left"> Registration Number </td>
+                                    <td colspan="4">
+                                        <h4 style="font-size: 20px; text-align:center"> Report Card
+                                            </b></h4>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:left">Registration Number </td>
                                     <th style="text-align:left"><?php echo $studentid ?></th>
                                     <td style="text-align:left"> Learning Group/Class </td>
                                     <th style="text-align:left"><?php echo $category ?>/<?php echo $class ?></th>
@@ -216,7 +266,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                     <td style="text-align:left"> Date Of Birth </td>
                                     <th style="text-align:left"><?php echo $dob ?></th>
                                     <td style="text-align:left"></td>
-                                    <th style="text-align:left"><img src=<?php echo $photourl ?> width=50px /></th>
+                                    <td style="text-align:left"><img src=<?php echo $photourl ?> width=50px /></td>
                                 </tr>
                             </tbody>
                     </table>
@@ -354,11 +404,11 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             </tr>
                             <?php if (@$hnd != null && @$hnd != '-') { ?>
                                 <tr>
-                                    <td style="text-align:left">* Language I - <?php echo $language1 ?></td>
+                                    <td style="text-align:left" colspan="4">* Language I - <?php echo $language1 ?></td>
                                 </tr>
                             <?php } else { ?>
                                 <tr>
-                                    <td style="text-align:left"></td>
+                                    <td style="text-align:left" colspan="4"></td>
                                 </tr>
                             <?php } ?>
 
@@ -381,8 +431,8 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         </tbody>
                     </table>
 
-                    <div class="footer no-display">
-                        <p style="text-align:right;">Admission form generated:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p>
+                    <div class="footer no-display" style="width: 97%;">
+                        <p style="text-align: left;">Report card generated:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p>
                     </div>
                 <?php
                         } else if ($id == "") {
@@ -401,6 +451,37 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             </div>
         </section>
     </section>
+    <script>
+        function submit() {
+            document.getElementById("formid").click(); // Simulates button click
+            document.lostpasswordform.submit(); // Submits the form without the button
+        }
+    </script>
+
+    <!------------------------------------
+        For Google translate
+    -------------------------------------->
+    <!-- <script>
+        function googleTranslateElementInit() {
+            if ($(window).width() < 760) {
+                new google.translate.TranslateElement({
+                    pageLanguage: 'en',
+                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                    includedLanguages: "hi,en,bn"
+                }, 'google_translate_element1');
+
+            } else {
+                new google.translate.TranslateElement({
+                    pageLanguage: 'en',
+                    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                    includedLanguages: "hi,en,bn"
+                }, 'google_translate_element');
+            }
+
+        }
+    </script> -->
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
 </body>
 
 </html>

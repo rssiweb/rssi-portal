@@ -118,7 +118,7 @@ if (!$result) {
             <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
             </div>
             <div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
-                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $id ?>" width="74px" />
+                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-student/verification.php?get_id='?><?php echo $id ?><?php echo '" width="74px" />
             </div>
             </td>
             </tr>
