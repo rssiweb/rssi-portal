@@ -154,9 +154,9 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
 
 <body>
     <section id="main-content">
-        <section class="wrapper main-wrapper row">
+        <section class="wrapper main-wrapper row" style="margin-right: 15px;">
             <div class="col-md-12">
-                <div class="row">
+                <div class="row" style="margin-right: 15px;">
 
                     <div class="col noprint" style="display: inline-block; width:100%;margin-left:10%; margin-top:2%">
 
