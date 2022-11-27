@@ -164,7 +164,7 @@ if ($filterstatus != 'Active') {
                                 <td id=cw1><span class="noticea"><a href="question.php">Question paper</i></a></span></td>
                                 <td style="line-height: 2;"><span class=noticea><a href="https://docs.google.com/spreadsheets/d/1d1dfSWWh_aM7Eq2rZc3ZxXJ2uMpqKfchy0ciNSF4KxU/edit?usp=sharing" target=_blank>Homework, QT Exam</a><br><a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vS7xMLLw8oFxfw9x8PSjCyB_-D-vdE_zVfgeHqXsE74QIdoEh60jiybeKVNT9XeBFDXqZB0Fe0cVmrQ/pubhtml?gid=1995146093&single=true" target=_blank>Online Exam</a></span></td>
                                 <td><span class="noticea"><a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a></span></td>
-                                <td><span class="noticea"><a href="result.php" target="_blank">Results</a></span></td>
+                                <td><span class="noticea"><a href="../util/result.php" target="_blank">Results</a></span></td>
                             </tr>
                         </tbody>
                     </table>

@@ -1,25 +1,12 @@
 <?php
 session_start();
 include("../util/login_util.php");
-
-if (!isLoggedIn("aid")) {
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
-}
-
-if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
-
+include("../rssi-student/database.php");
 
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
-@$id = $_POST['get_id'];
-@$stid = $_POST['get_stid'];
+@$id = $_GET['get_id'];
+@$stid = $_GET['get_stid'];
 $view_users_query = "select * from new_result WHERE studentid='$stid' AND examname='$id'"; //select query for viewing users.
 $view_users_queryy = "select * from rssimyprofile_student WHERE student_id='$stid'";
 $run = pg_query($con, $view_users_query); //here run the sql query.
@@ -175,10 +162,12 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
 
                         <!-- <div id="google_translate_element" style="display: inline-flex;"></div><br><br> -->
 
-                        <form action="" method="POST" id="formid">
+                        <form action="" method="GET" id="formid">
                             <div class="form-group" style="display: unset;">
                                 <div class="col2" style="display: inline-block;">
-                                    <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo $stid ?>">
+
+                                    <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo @$stid ?>">
+
                                     <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
                                         <?php if ($id == null) { ?>
                                             <option value="" disabled selected hidden>Select Exam name</option>
@@ -212,18 +201,25 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     </div>
                 </div>
                 <section class="box" style="padding: 2%;">
+
                     <?php if (@$examname > 0) {
                     ?>
                         <table class="table" border="0">
                             <thead>
                                 <tr>
                                     <td colspan=4>
-                                        <div class="col" style="display: inline-block; width:80%;">
+                                        <div class="col" style="display: inline-block; width:65%;">
 
                                             <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
                                             <p style="font-size: small;">624B/195/01, Vijayipur, Vijaipur Village, Vishesh Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>
-                                            <!-- <p style="font-size: small;">Registration Number — U80101WB2020NPL237900</p> -->
-                                            <p style="font-size: small;">NGO Unique Id — WB/2021/0282726 (NITI Aayog, Government of India)</p>
+                                            <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
+                                        </div>
+                                        <div class="col" style="display: inline-block; width:32%;">
+                                            Scan QR code to check authenticity
+                                            <?php $url = "https://login.rssi.in/util/result.php?get_stid=$stid&get_id=$id";
+                                            $url = urlencode($url); ?>
+                                            <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
+                                            <img src=<?php echo $photourl ?> width=80px height=80px />
                                         </div>
                                     </td>
                                 </tr>
@@ -231,34 +227,28 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                             <tbody>
                                 <tr>
                                     <td colspan="4">
-                                        <h4 style="font-size: 20px; text-align:center"> Report Card
-                                            </b></h4>
+                                        <h3 style="text-align:center;margin-top: 10px;">Report card</h3>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:left">Registration Number </td>
-                                    <th style="text-align:left"><?php echo $studentid ?></th>
-                                    <td style="text-align:left"> Learning Group/Class </td>
-                                    <th style="text-align:left"><?php echo $category ?>/<?php echo $class ?></th>
+                                    <td>Registration Number </td>
+                                    <th><?php echo $studentid ?></th>
+                                    <td> Learning Group/Class </td>
+                                    <th><?php echo $category ?>/<?php echo $class ?></th>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:left"> Name </td>
-                                    <th style="text-align:left"><?php echo $studentname ?></th>
-                                    <td style="text-align:left">Name of the examination</td>
-                                    <th style="text-align:left"><?php echo $examname ?></th>
+                                    <td> Name </td>
+                                    <th><?php echo $studentname ?></th>
+                                    <td>Name of the examination</td>
+                                    <th><?php echo $examname ?></th>
                                 </tr>
                                 <tr>
-                                    <td style="text-align:left"> Date Of Birth </td>
-                                    <th style="text-align:left"><?php echo $dob ?></th>
-                                    <td style="text-align:left" colspan="2">Scan QR code to check authenticity<br><?php
-                                                                                                                    $url = "https://login.rssi.in/rssi-student/result.php?get_stid=$stid&get_id=$id";
-                                                                                                                    $url = urlencode($url); ?>
-                                        <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
-                                        <img src=<?php echo $photourl ?> width=50px />
-                                    </td>
+                                    <td> Date Of Birth </td>
+                                    <th><?php echo $dob ?></th>
+                                    <td colspan="2"></td>
                                 </tr>
                             </tbody>
-                        </table>
+                        </table><br>
 
                         <table class="table" border="0" align="center" style="width: 80%;">
                             <tbody>
@@ -419,26 +409,33 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 </tr>
                             </tbody>
                         </table>
+                        <table class="table" border="0" align="left" style="width: 30%; margin-left:10%; margin-top:5%;">
+                            <tbody>
+                                <tr>
+                                    <td style="text-align:left">Signature of Class Teacher / Center In-charge<br><br>Date:</td>
+                                </tr>
+                            </tbody>
+                        </table>
 
                         <div class="footer no-display" style="width: 97%;">
                             <p style="text-align: left;">Report card generated:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p>
                         </div>
+
                     <?php
                     } else if ($id == "") {
                     ?>
-                        <tr>
-                            <td>Please select Exam name.</td>
-                        </tr>
+                        Please select Exam name.
                     <?php
                     } else {
                     ?>
-                        <tr>
-                            <td>No record found for <?php echo $id ?></td>
-                        </tr>
+                        No record found for <?php echo $stid ?>&nbsp;<?php echo $id ?>
+
                     <?php }
                     ?>
             </div>
+
         </section>
+
     </section>
     <script>
         function submit() {
