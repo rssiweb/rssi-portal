@@ -136,7 +136,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
 
         <div class="noprint top">
             <div style="font-family:Poppins; text-align:Center;font-size:20px;">Rina Shiksha Sahayak Foundation (RSSI)</div>
-            <div style="font-family:Roboto; text-align:Center;font-size:20px; line-height:2">Online result portal</div><br>
+            <div style="font-family:Roboto; text-align:Center;font-size:20px; line-height:2">Online Result Portal</div><br>
         </div>
 
         <div class="noprint">
