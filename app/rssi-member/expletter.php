@@ -156,6 +156,7 @@ if (!$result) {
 
                             <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
                             <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
+                            <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
                             </div>' ?>
                     <?php if ($role != 'Admin') {
                         echo '<div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
