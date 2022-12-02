@@ -436,23 +436,23 @@ date_default_timezone_set('Asia/Kolkata');
                                     <?php echo '
 
                                 <td>' ?>
-                                    <?php if ($array['phone'] != null || $array['contact'] != null) { ?>
-                                        <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
+                                    <?php if (@$array['phone'] != null || @$array['contact'] != null) { ?>
+                                        <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['phone'] . @$array['contact'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['phone'] . @$array['contact'] . '"></i></a>' ?>
                                     <?php } else { ?>
                                         <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
                                         <?php } ?>&nbsp;&nbsp;
 
 
-                                        <?php if ($array['email'] != null || $array['emailaddress'] != null) { ?>
+                                        <?php if (@$array['email'] != null || @$array['emailaddress'] != null) { ?>
                                             <?php echo '<form  action="#" name="email-form-' . $array['certificate_no'] . '" method="POST" style="display: -webkit-inline-box;" >
                                     <input type="hidden" name="template" type="text" value="badge">
                                     <input type="hidden" name="data[badge_name]" type="text" value="' . $array['badge_name'] . '">
                                     <input type="hidden" name="data[awarded_to_id]" type="text" value="' . $array['awarded_to_id'] . '">
-                                    <input type="hidden" name="data[fullname]" type="text" value="' . $array['fullname'] . $array['studentname'] . '">
-                                    <input type="hidden" name="email" type="text" value="' . $array['email'] . $array['emailaddress'] . '">
+                                    <input type="hidden" name="data[fullname]" type="text" value="' . @$array['fullname'] . @$array['studentname'] . '">
+                                    <input type="hidden" name="email" type="text" value="' . @$array['email'] . @$array['emailaddress'] . '">
                                     <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
-                                     type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email ' . $array['email'] . $array['emailaddress'] . '"></i></button>
+                                     type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email ' . @$array['email'] . @$array['emailaddress'] . '"></i></button>
                                 </form>' ?>
                                         <?php } else { ?>
                                             <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
