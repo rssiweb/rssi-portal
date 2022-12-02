@@ -398,7 +398,7 @@ date_default_timezone_set('Asia/Kolkata');
                             <tr>
                                 <td>' . $array['certificate_no'] . '</td>' ?>
                                 <?php if ($role == 'Admin') { ?>
-                                    <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . $array['fullname'] . $array['studentname'] . '</td>' ?>
+                                    <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . @$array['fullname'] . @$array['studentname'] . '</td>' ?>
                                 <?php } ?>
                                 <?php echo '<td>' . $array['badge_name'] . '</td><td>' ?>
 
