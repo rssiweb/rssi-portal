@@ -145,37 +145,40 @@ if (!$result) {
 
             <?php if ($resultArr != null) { ?>
 
-                <?php foreach ($resultArr as $array) {
+                <?php foreach ($resultArr as $array) {?>
 
-                    echo '
                     <table class="table" border="0">
-                        <thead style="font-size: 12px;" class="no-display">
-                            <tr>
-                            <td colspan=5>
-                            <div class="col" style="display: inline-block; width:55%; text-align:left;">
+                <thead>
+                    <tr>
+                        <td>
+                            <div class="row">
+                                <div class="col" style="display: inline-block; width:65%;">
 
-                            <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
-                            <p>1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
-                            <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
-                            </div>' ?>
-                    <?php if ($role != 'Admin') {
-                        echo '<div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
-                                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/getdetails.php?scode=' ?><?php echo $array['scode'] ?><?php echo '" width="74px" />
-                            </div>' ?><?php } ?>
-
-                    <?php if ($role == 'Admin') {
-                        echo '<div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
-                                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/getdetails.php?scode=' ?><?php echo $array['scode'] ?><?php echo '" width="74px" />
-                            </div>' ?><?php } ?>
-
-                    <?php echo
-                    '</td>
-                            </tr>
-                        </thead>
+                                    <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
+                                    <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
+                                    <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
+                                </div>
+                                <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
+                                    Scan QR code to check authenticity
+                                    <?php 
+                                    
+                                    $a='https://login.rssi.in/rssi-member/getdetails.php?scode=';
+                                    $b= $array['scode'];
+                                    $c= $array['photo'];
+                                    
+                                    $url = $a.$b;
+                                    $url = urlencode($url); ?>
+                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
+                                    <img src=<?php echo $c ?> width=80px height=80px />
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </thead>
 
                        
 
-                        <tr>
+                        <?php echo '<tr>
                            <td> <p><b>' . $array['fullname'] . '</b><br>' . $array['currentaddress'] . '<br>Contact Number:&nbsp;' . $array['phone'] . '
                            <br>Email:&nbsp;' . $array['email'] . '<br>Date:&nbsp;' ?><?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p><br>
 
