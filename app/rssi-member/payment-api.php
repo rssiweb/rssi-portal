@@ -38,6 +38,18 @@ if ($_POST['form-type'] == "paydelete") {
   $result = pg_query($con, $paydelete);
 }
 
+if ($_POST['form-type'] == "paydelete") {
+  @$refid = $_POST['pid'];
+  $paydelete = "DELETE from fees WHERE id = $refid";
+  $result = pg_query($con, $paydelete);
+}
+
+if ($_POST['form-type'] == "lms") {
+  @$lmsid = $_POST['lmsid'];
+  $leavedelete = "DELETE from leavedb_leavedb WHERE leaveid = '$lmsid'";
+  $result = pg_query($con, $leavedelete);
+}
+
 
 if ($_POST['form-type'] == "cmsdelete") {
   @$certificate_no = $_POST['cmsid'];
