@@ -214,7 +214,7 @@ Sincerely,<br><br><br><br>' ?>
                         </table>
 
                     <div class="footer no-display">
-                        <p style="text-align:right;">Document generated:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?><?php echo '</p>
+                        <p style="text-align:right;">Document generated on:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?><?php echo '</p>
                     </div>' ?>
                         <?php }
                 } else { ?>
