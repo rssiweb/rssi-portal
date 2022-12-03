@@ -24,6 +24,23 @@ if ($role != 'Admin') {
     echo '</script>';
 }
 
+if (@$_POST['form-type'] == "leaveapply") {
+    @$leaveid = 'RSL' . time();
+    @$applicantid = strtoupper($_POST['applicantid']);
+    @$fromdate = $_POST['fromdate'];
+    @$todate = $_POST['todate'];
+    @$typeofleave = $_POST['typeofleave'];
+    @$creason = $_POST['creason'];
+    @$comment = $_POST['comment'];
+    @$appliedby = $_POST['appliedby'];
+    @$now = date('Y-m-d H:i:s');
+    if ($leaveid != "") {
+        $leave = "INSERT INTO leavedb_leavedb (leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby) VALUES ('$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby')";
+        $result = pg_query($con, $leave);
+        $cmdtuples = pg_affected_rows($result);
+    }
+}
+
 @$id = $_POST['get_id'];
 @$status = $_POST['get_status'];
 @$statuse = $_POST['get_statuse'];
@@ -47,33 +64,6 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
-
-
-if (@$_POST['form-type'] == "leaveapply") {
-    @$leaveid = 'RSL' . time();
-    @$applicantid = strtoupper($_POST['applicantid']);
-    @$fromdate = $_POST['fromdate'];
-    @$todate = $_POST['todate'];
-    @$typeofleave = $_POST['typeofleave'];
-    @$creason = $_POST['creason'];
-    @$comment = $_POST['comment'];
-    @$appliedby = $_POST['appliedby'];
-    @$now = date('Y-m-d H:i:s');
-    // @$email = $email;
-    if ($leaveid != "") {
-        $leave = "INSERT INTO leavedb_leavedb (leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby) VALUES ('$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby')";
-        $result = pg_query($con, $leave);
-        $cmdtuples = pg_affected_rows($result);
-    }
-    // sendEmail("redeem_apply", array(
-    //     "fullname" => $fullname,
-    //     "user_id1" => $user_id1,
-    //     "redeem_id1" => $redeem_id1,
-    //     "redeem_gems_point" => $redeem_gems_point,
-    //     "redeem_type" => $redeem_type,
-    //     "now" => @date("d/m/Y g:i a", strtotime($now))
-    // ), $email);
-}
 ?>
 
 <!DOCTYPE html>
@@ -154,7 +144,7 @@ if (@$_POST['form-type'] == "leaveapply") {
 </div>
 <script>
     if (window.history.replaceState) {
-        window.history.replaceState(null, null, window.location.href);
+        window.history.replaceState(null, null, window.location.href)
     }
 </script>
 <?php } ?>
@@ -391,7 +381,7 @@ if (@$_POST['form-type'] == "leaveapply") {
                                                         echo '<td>' . $array['leaveid'] . '</td>' ?>
                                 <?php } ?>
                                 <?php
-                                echo '  <td>' . $array['applicantid'] . '<br>' . $array['applicantname'] . '</td>
+                                echo '  <td>' . $array['applicantid'] . '<br>' . @$array['fullname'].@$array['studentname'] . '</td>
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
                                 <td>' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '</td>

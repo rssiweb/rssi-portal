@@ -22,19 +22,19 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 date_default_timezone_set('Asia/Kolkata');
 
 if (($id == null && $status == null) || (($status > 0 && $status != 'ALL') && ($id > 0 && $id != 'ALL'))) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' AND lyear='$id' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' AND status='$status' AND lyear='$id' order by timestamp desc");
 } else if (($id == 'ALL' && $status == null) || ($id == null && $status == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' order by timestamp desc");
 } else if (($id > 0 && $id != 'ALL') && ($status == null)) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' AND lyear='$id' order by timestamp desc");
 } else if (($id > 0 && $id != 'ALL') && ($status == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timestamp desc");
 } else if (($status > 0 && $status != 'ALL') && ($id == null)) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' AND status='$status' order by timestamp desc");
 } else if (($status > 0 && $status != 'ALL') && ($id == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND status='$status' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' AND status='$status' order by timestamp desc");
 } else {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' order by timestamp desc");
 }
 
 if (!$result) {
