@@ -24,6 +24,15 @@ if ($role != 'Admin') {
     echo '</script>';
 }
 
+if (date('m') <= 4) { //Upto June 2014-2015
+    $academic_year = (date('Y') - 1) . '-' . date('Y');
+} else { //After June 2015-2016
+    $academic_year = date('Y') . '-' . (date('Y') + 1);
+}
+
+@$now = date('Y-m-d H:i:s');
+@$year = $academic_year;
+
 if (@$_POST['form-type'] == "leaveapply") {
     @$leaveid = 'RSL' . time();
     @$applicantid = strtoupper($_POST['applicantid']);
@@ -33,9 +42,9 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$creason = $_POST['creason'];
     @$comment = $_POST['comment'];
     @$appliedby = $_POST['appliedby'];
-    @$now = date('Y-m-d H:i:s');
+
     if ($leaveid != "") {
-        $leave = "INSERT INTO leavedb_leavedb (leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby) VALUES ('$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby')";
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year')";
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
     }
