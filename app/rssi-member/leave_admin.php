@@ -129,25 +129,25 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
+                    <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
 
-<div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-    <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
-</div>
-<?php
-} else if (@$cmdtuples == 1) { ?>
+                        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                        </div>
+                    <?php
+                    } else if (@$cmdtuples == 1) { ?>
 
-<div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-    <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
-</div>
-<script>
-    if (window.history.replaceState) {
-        window.history.replaceState(null, null, window.location.href)
-    }
-</script>
-<?php } ?>
+                        <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
+                        </div>
+                        <script>
+                            if (window.history.replaceState) {
+                                window.history.replaceState(null, null, window.location.href)
+                            }
+                        </script>
+                    <?php } ?>
                     <section class="box" style="padding: 2%;">
                         <div class="col" style="display: inline-block; width:100%; text-align:right">
                             Home / Leave Tracker
@@ -381,7 +381,7 @@ $resultArr = pg_fetch_all($result);
                                                         echo '<td>' . $array['leaveid'] . '</td>' ?>
                                 <?php } ?>
                                 <?php
-                                echo '  <td>' . $array['applicantid'] . '<br>' . @$array['fullname'].@$array['studentname'] . '</td>
+                                echo '  <td>' . $array['applicantid'] . '<br>' . @$array['fullname'] . @$array['studentname'] . '</td>
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
                                 <td>' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '</td>
@@ -397,25 +397,29 @@ $resultArr = pg_fetch_all($result);
 
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['leaveid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;' ?>
-                                <?php if (($array['phone'] != null || $array['contact'] != null) && $array['status'] == 'Approved') { ?>
-                                    <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ARedeem id ' . $array['leaveid'] . ' against the policy issued by the organization has been settled at Rs.' . $array['leaveid'] . ' on ' . @date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on'])) . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                <?php if ((@$array['phone'] != null || @$array['contact'] != null)) { ?>
+                                    <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ABased on your timesheet data, system-enforced leave has been initiated for ' .  @date("d/m/Y", strtotime($array['fromdate'])) . '-' .  @date("d/m/Y", strtotime($array['todate'])) . ' (' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . ' day(s)) in the system. If you think this is done by mistake, please call on 7980168159 or write to us at info@rssi.in.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
                                 <?php } else { ?>
                                     <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
                                     <?php } ?>&nbsp;
 
-                                    <?php if (($array['email'] != null || $array['emailaddress'] != null) && $array['status'] == 'Approved') { ?>
+                                    <?php if ((@$array['email'] != null || @$array['emailaddress'] != null)) { ?>
                                         <?php echo '<form  action="#" name="email-form-' . $array['leaveid'] . '" method="POST" style="display: -webkit-inline-box;" >
-                                <input type="hidden" name="template" type="text" value="redeem_update">
+                                <input type="hidden" name="template" type="text" value="leaveconf">
                                 <input type="hidden" name="data[leaveid]" type="text" value="' . $array['leaveid'] . '">
                                 <input type="hidden" name="data[applicantid]" type="text" value="' . $array['applicantid'] . '">
-                                <input type="hidden" name="data[fullname]" type="text" value="' . $array['fullname'] . $array['studentname'] . '">
-                                <input type="hidden" name="data[day]" type="text" value="' . $array['day'] . '">
-                                <input type="hidden" name="data[status]" type="text" value="' . $array['status'] . '">
-                                <input type="hidden" name="data[reviewer_status_updated_on]" type="text" value="' . @date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on'])) . '">
-                                <input type="hidden" name="email" type="text" value="' . $array['email'] . $array['emailaddress'] . '">
+                                <input type="hidden" name="data[applicantname]" type="text" value="' . $array['fullname'] . $array['studentname'] . '">
+                                <input type="hidden" name="data[category]" type="text" value="' . $array['creason'] . '">
+                                <input type="hidden" name="data[comment]" type="text" value="' . $array['comment'] . '">
+                                <input type="hidden" name="data[day]" type="text" value="' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '">
+                                <input type="hidden" name="data[fromdate]" type="text" value="' . @date("d/m/Y", strtotime($array['fromdate'])) . '">
+                                <input type="hidden" name="data[todate]" type="text" value="' . @date("d/m/Y", strtotime($array['todate'])) . '">
+                                <input type="hidden" name="data[status]" type="text" value="' . @strtoupper($array['status']) . '">
+                                <input type="hidden" name="email" type="text" value="' . @$array['email'] . @$array['emailaddress'] . '">
+                                
                                 <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
-                                 type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email ' . $array['email'] . $array['emailaddress'] . '"></i></button>
+                                 type="submit"><i class="fa-regular fa-envelope" style="color:#444444;" title="Send Email ' . @$array['email'] . @$array['emailaddress'] . '"></i></button>
                             </form>' ?>
                                     <?php } else { ?>
                                         <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
@@ -607,7 +611,7 @@ $resultArr = pg_fetch_all($result);
                     profile = document.getElementById("reviewer_remarks")
                     profile.value = mydata["comment"]
                 }
-                
+
                 if (mydata["fromdate"] !== null) {
                     profile = document.getElementById("fromdated")
                     profile.value = mydata["fromdate"]
@@ -680,21 +684,21 @@ $resultArr = pg_fetch_all($result);
                     .catch(error => console.error('Error!', error.message))
             })
 
-            // data.forEach(item => {
-            //     const formId = 'email-form-' + item.certificate_no
-            //     const form = document.forms[formId]
-            //     form.addEventListener('submit', e => {
-            //         e.preventDefault()
-            //         fetch('mailer.php', {
-            //                 method: 'POST',
-            //                 body: new FormData(document.forms[formId])
-            //             })
-            //             .then(response =>
-            //                 alert("Email has been sent.")
-            //             )
-            //             .catch(error => console.error('Error!', error.message))
-            //     })
-            // })
+            data.forEach(item => {
+                const formId = 'email-form-' + item.leaveid
+                const form = document.forms[formId]
+                form.addEventListener('submit', e => {
+                    e.preventDefault()
+                    fetch('mailer.php', {
+                            method: 'POST',
+                            body: new FormData(document.forms[formId])
+                        })
+                        .then(response =>
+                            alert("Email has been sent.")
+                        )
+                        .catch(error => console.error('Error!', error.message))
+                })
+            })
         </script>
 
         <script>
