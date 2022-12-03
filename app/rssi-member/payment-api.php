@@ -118,6 +118,19 @@ if ($_POST['form-type'] == "gemsredeem") {
   $result = pg_query($con, $gemsredeem);
 }
 
+if ($_POST['form-type'] == "leavereviewform") {
+  @$reviewer_id = $_POST['reviewer_id'];
+  @$reviewer_name = $_POST['reviewer_name'];
+  @$leaveid = $_POST['leaveidd'];
+  @$status = $_POST['leave_status'];
+  @$comment = $_POST['reviewer_remarks'];
+  @$fromdate = $_POST['fromdate'];
+  @$todate = $_POST['todate'];
+  $now = date('Y-m-d H:i:s');
+  $leaveapproval = "UPDATE leavedb_leavedb SET  status = '$status', fromdate = '$fromdate',  todate = '$todate', comment = '$comment',reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name' WHERE leaveid = '$leaveid'";
+  $result = pg_query($con, $leaveapproval);
+}
+
 if ($_POST['form-type'] == "ipfclose") {
   @$ipfid = $_POST['ipfid'];
   @$ipfstatus = $_POST['ipfstatus'];
