@@ -44,9 +44,9 @@ if ($_POST['form-type'] == "paydelete") {
   $result = pg_query($con, $paydelete);
 }
 
-if ($_POST['form-type'] == "lms") {
-  @$lmsid = $_POST['lmsid'];
-  $leavedelete = "DELETE from leavedb_leavedb WHERE leaveid = '$lmsid'";
+if ($_POST['form-type'] == "leavedelete") {
+  @$leavedeleteid = $_POST['leavedeleteid'];
+  $leavedelete = "DELETE from leavedb_leavedb WHERE leaveid = '$leavedeleteid'";
   $result = pg_query($con, $leavedelete);
 }
 

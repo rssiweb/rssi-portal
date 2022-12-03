@@ -1,0 +1,45 @@
+{{leaveid}}-Your leave for the period from {{fromdate}} to {{todate}} has been {{status}}
+<html>
+
+<head>
+    <style>
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+    </style>
+</head>
+
+<body>
+    <p>Dear {{applicantname}},<br><br>Your leave for the period from {{fromdate}} to {{todate}} has been {{status}}.
+        <br><br>
+        <table class="table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th scope="col">Applicant Name</th>
+                    <th scope="col">Applicant ID</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Start Date</th>
+                    <th scope="col">End Date</th>
+                    <th scope="col">Total No. of Day(s)</th>
+                    <th scope="col">Status - HR remarks</th>
+                </tr>
+                <tr>
+                    <td>{{applicantname}}</td>
+                    <td>{{applicantid}}</td>
+                    <td>{{typeofleave}}<br>{{category}}</td>
+                    <td>{{fromdate}}</td>
+                    <td>{{todate}}</td>
+                    <td>{{day}}</td>
+                    <td>{{status}} — {{comment}}</td>
+                </tr>
+            </thead>
+        </table>
+
+        <br><br>You can always check your leave balance from My Account>Leave. For further information, you may contact your HR.<br><br>--RSSI Human resources team<br><br>This is a system generated email.
+    </p>
+</body>
+
+</html>

@@ -144,7 +144,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
                         <script>
                             if (window.history.replaceState) {
-                                window.history.replaceState(null, null, window.location.href)
+                                window.history.replaceState(null, null, window.location.href);
                             }
                         </script>
                     <?php } ?>
@@ -381,34 +381,34 @@ $resultArr = pg_fetch_all($result);
                                                         echo '<td>' . $array['leaveid'] . '</td>' ?>
                                 <?php } ?>
                                 <?php
-                                echo '  <td>' . $array['applicantid'] . '<br>' . @$array['fullname'] . @$array['studentname'] . '</td>
+                                echo '  <td>' . $array['applicantid'] . '<br>' . $array['fullname'] . '</td>
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
                                 <td>' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '</td>
                                 <td>' . $array['typeofleave'] . '<br>
-                                ' . $array['sreason'] . $array['creason'] . '</td>
+                                ' . $array['creason'] . '</td>
                                 <td>' . $array['status'] . '</td>
                                 <td>' . $array['reviewer_id'] . '<br>' . $array['reviewer_name'] . '</td>
                                 <td>' . $array['comment'] . '</td>
                                 <td>
-                                <form name="lms_' . $array['leaveid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="lms">
-                                <input type="hidden" name="lmsid" id="lmsid" type="text" value="' . $array['leaveid'] . '">
-
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['leaveid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;' ?>
-                                <?php if ((@$array['phone'] != null || @$array['contact'] != null)) { ?>
-                                    <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ABased on your timesheet data, system-enforced leave has been initiated for ' .  @date("d/m/Y", strtotime($array['fromdate'])) . '-' .  @date("d/m/Y", strtotime($array['todate'])) . ' (' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . ' day(s)) in the system. If you think this is done by mistake, please call on 7980168159 or write to us at info@rssi.in.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                <?php if (($array['phone'] != null || $array['contact'] != null)) { ?>
+                                    <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ARedeem id ' . $array['leaveid'] . ' against the policy issued by the organization has been settled at Rs.' . $array['leaveid'] . ' on ' . @date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on'])) . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
                                 <?php } else { ?>
                                     <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
                                     <?php } ?>&nbsp;
+
+
+
 
                                     <?php if ((@$array['email'] != null || @$array['emailaddress'] != null)) { ?>
                                         <?php echo '<form  action="#" name="email-form-' . $array['leaveid'] . '" method="POST" style="display: -webkit-inline-box;" >
                                 <input type="hidden" name="template" type="text" value="leaveconf">
                                 <input type="hidden" name="data[leaveid]" type="text" value="' . $array['leaveid'] . '">
                                 <input type="hidden" name="data[applicantid]" type="text" value="' . $array['applicantid'] . '">
+                                <input type="hidden" name="data[typeofleave]" type="text" value="' . $array['typeofleave'] . '">
                                 <input type="hidden" name="data[applicantname]" type="text" value="' . $array['fullname'] . $array['studentname'] . '">
                                 <input type="hidden" name="data[category]" type="text" value="' . $array['creason'] . '">
                                 <input type="hidden" name="data[comment]" type="text" value="' . $array['comment'] . '">
@@ -425,9 +425,13 @@ $resultArr = pg_fetch_all($result);
                                         <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
                                     <?php } ?>
 
-                                <?php echo '&nbsp;<button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['leaveid'] . '"><i class="fa-solid fa-xmark"></i></button> </form></td>
-                            </tr>';
-                            } ?>
+                                    <?php echo '&nbsp;&nbsp;<form name="leavedelete_' . $array['leaveid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="leavedelete">
+                                <input type="hidden" name="leavedeleteid" id="leavedeleteid" type="text" value="' . $array['leaveid'] . '">
+                                
+                                <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['leaveid'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
+                                </td>' ?>
+                                <?php } ?>
                             <?php
                         } else if ($id == null && $status == null) {
                             ?>
@@ -648,12 +652,12 @@ $resultArr = pg_fetch_all($result);
                 if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
 
                     data.forEach(item => {
-                        const form = document.forms['lms_' + item.leaveid]
+                        const form = document.forms['leavedelete_' + item.leaveid]
                         form.addEventListener('submit', e => {
                             e.preventDefault()
                             fetch(scriptURL, {
                                     method: 'POST',
-                                    body: new FormData(document.forms['lms_' + item.leaveid])
+                                    body: new FormData(document.forms['leavedelete_' + item.leaveid])
                                 })
                                 .then(response =>
                                     alert("Record has been deleted.") +
