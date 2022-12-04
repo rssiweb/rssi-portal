@@ -1,4 +1,4 @@
-{{leaveid}}-Your leave for the period from {{fromdate}} to {{todate}} has been {{status}}
+Your Request No.: {{leaveid}} has been submitted successfully and is peanding with HR for approval
 <html>
 
 <head>
@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <p>Dear {{applicantname}},<br><br>Your leave for the period from {{fromdate}} to {{todate}} has been {{status}}.
+    <p>Dear {{applicantname}} ({{applicantid}}),<br><br>Your Request No.: {{leaveid}} has been submitted successfully and is peanding with HR for approval.
         <br><br>
         <table class="table" style="font-size: 12px;">
             <thead>
@@ -24,7 +24,6 @@
                     <th scope="col">Start Date</th>
                     <th scope="col">End Date</th>
                     <th scope="col">Total No. of Day(s)</th>
-                    <th scope="col">Status - HR remarks</th>
                 </tr>
                 <tr>
                     <td>{{applicantname}}</td>
@@ -33,12 +32,12 @@
                     <td>{{fromdate}}</td>
                     <td>{{todate}}</td>
                     <td>{{day}}</td>
-                    <td>{{status}} — {{comment}}</td>
                 </tr>
             </thead>
         </table>
 
-        <br><br>You can always check your leave balance from My Account>Leave. For further information, you may contact your HR.<br><br>--RSSI HR team<br><br>This is a system generated email.
+        <br><br>Request you to ensure that these pending leaves are closed in the system at the earliest by submitting your medical documents to your HR (if the sick leave period is 3 days or more).<br><br>You can always check your leave approval status
+        from My Account>Leave. For further information, you may contact your HR.<br><br>--RSSI HR team<br><br>This is a system generated email.
     </p>
 </body>
 

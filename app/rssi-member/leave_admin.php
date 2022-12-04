@@ -84,7 +84,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>My Leave</title>
+    <title>RSSI-LMS</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -157,12 +157,11 @@ $resultArr = pg_fetch_all($result);
                             }
                         </script>
                     <?php } ?>
-                    <section class="box" style="padding: 2%;">
-                        <div class="col" style="display: inline-block; width:100%; text-align:right">
-                            Home / Leave Tracker
+                    <div class="col" style="display: inline-block; width:100%; text-align:right">
+                            Home / Leave Management System (LMS)
                         </div>
-
-
+                    <section class="box" style="padding: 2%;">
+                        
                         <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave_admin.php" method="POST">
                             <div class="form-group" style="display: inline-block;">
 
@@ -395,7 +394,8 @@ $resultArr = pg_fetch_all($result);
                                 <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
                                 <td>' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '</td>
                                 <td>' . $array['typeofleave'] . '<br>
-                                ' . $array['creason'] . '</td>
+                                ' . $array['creason'] . '<br>
+                                ' . $array['applicantcomment'] . '</td>
                                 <td>' . $array['status'] . '</td>
                                 <td>' . $array['reviewer_id'] . '<br>' . $array['reviewer_name'] . '</td>
                                 <td>' . $array['comment'] . '</td>

@@ -16,6 +16,8 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
+include("../util/email.php");
+
 if (date('m') <= 4) { //Upto June 2014-2015
     $academic_year = (date('Y') - 1) . '-' . date('Y');
 } else { //After June 2015-2016
@@ -34,13 +36,26 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$creason = $_POST['creason'];
     @$comment = $_POST['comment'];
     @$appliedby = $_POST['appliedby'];
-    @$email = $email;
+    @$applicantcomment = $_POST['applicantcomment'];
+    @$email = @$email . @$emailaddress;
 
     if ($leaveid != "") {
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year')";
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$applicantcomment')";
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
     }
+
+    sendEmail("leaveapply", array(
+        "leaveid" => $leaveid,
+        "applicantid" => $applicantid,
+        "applicantname" => @$fullname . @$studentname,
+        "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+        "todate" => @date("d/m/Y", strtotime($todate)),
+        "typeofleave" => $typeofleave,
+        "category" => $creason,
+        "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
+        "now" => @date("d/m/Y g:i a", strtotime($now))
+    ), $email);
 }
 
 @$id = $_POST['get_id'];
@@ -48,19 +63,19 @@ if (@$_POST['form-type'] == "leaveapply") {
 date_default_timezone_set('Asia/Kolkata');
 
 if (($id == null && $status == null) || (($status > 0 && $status != 'ALL') && ($id > 0 && $id != 'ALL'))) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' AND status='$status' AND lyear='$id' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' order by timestamp desc");
 } else if (($id == 'ALL' && $status == null) || ($id == null && $status == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' order by timestamp desc");
 } else if (($id > 0 && $id != 'ALL') && ($status == null)) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' AND lyear='$id' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND lyear='$id' order by timestamp desc");
 } else if (($id > 0 && $id != 'ALL') && ($status == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE associatenumber='$user_check' AND lyear='$id' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND lyear='$id' order by timestamp desc");
 } else if (($status > 0 && $status != 'ALL') && ($id == null)) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' AND status='$status' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND status='$status' order by timestamp desc");
 } else if (($status > 0 && $status != 'ALL') && ($id == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' AND status='$status' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND status='$status' order by timestamp desc");
 } else {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$user_check' order by timestamp desc");
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' order by timestamp desc");
 }
 
 if (!$result) {
@@ -136,8 +151,7 @@ $resultArr = pg_fetch_all($result);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
-                        Academic year: 2022-2023
-                        <!--<br>Opening balance is the balance carried forward from previous credit cycle and refers to the leave till the allocation end date.-->
+                        Academic year: <?php echo $year ?>
                     </div>
                     <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
 
@@ -187,7 +201,7 @@ $resultArr = pg_fetch_all($result);
                     <table class="table">
                         <thead style="font-size: 12px;">
                             <tr>
-                                <th scope="col">Leave Balance</th>
+                                <th scope="col">Apply Leave</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -231,7 +245,7 @@ $resultArr = pg_fetch_all($result);
                             </span>
 
                             <span class="input-help">
-                                <textarea type="text" name="comment" class="form-control" placeholder="Remarks" value=""></textarea>
+                                <textarea type="text" name="applicantcomment" class="form-control" placeholder="Remarks" value=""></textarea>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
                             </span>
 
@@ -292,14 +306,32 @@ $resultArr = pg_fetch_all($result);
                         }
                         document.getElementById("typeofleave").addEventListener("click", getType)
                     </script>
+                    <script>
+                        if (<?php echo $slbal ?> <= 0) {
+                            document.getElementById("typeofleave").options[1].disabled = true;
+                        } else {
+                            document.getElementById("typeofleave").options[1].disabled = false;
+                        }
+
+                        if (<?php echo $clbal ?> <= 0) {
+                            document.getElementById("typeofleave").options[2].disabled = true;
+                        } else {
+                            document.getElementById("typeofleave").options[2].disabled = false;
+                        }
+                    </script>
 
 
 
 
 
 
-
-                    <b><span class="underline">Leave Details</span></b><br><br>
+                    <table class="table">
+                        <thead style="font-size: 12px;">
+                            <tr>
+                                <th scope="col">Leave Details</th>
+                            </tr>
+                        </thead>
+                    </table>
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
@@ -339,15 +371,27 @@ $resultArr = pg_fetch_all($result);
                     </div>
 
                     <?php echo '
-                       <table class="table">
-                        <thead style="font-size: 12px;">
+                       <p>Select Number Of Rows</p>
+                       <div class="form-group">
+                           <select class="form-control" name="state" id="maxRows">
+                               <option value="5000">Show ALL Rows</option>
+                               <option value="5">5</option>
+                               <option value="10">10</option>
+                               <option value="15">15</option>
+                               <option value="20">20</option>
+                               <option value="50">50</option>
+                               <option value="70">70</option>
+                               <option value="100">100</option>
+                           </select>
+                       </div>
+                       <table class="table" id="table-id" style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Leave ID</th>
                                 <th scope="col">Applied on</th>
                                 <th scope="col">From-To</th>
                                 <th scope="col">Day(s) count</th>
                                 <th scope="col">Type of Leave</th>
-                                <th scope="col">Certificate(s)</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">HR remarks</th>
                             </tr>
@@ -356,16 +400,26 @@ $resultArr = pg_fetch_all($result);
                         <?php
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
-                            echo '<tr>
-                                <td>' . $array['leaveid'] . '</td>
+                            echo '<tr>'
+                        ?>
+
+                            <?php if ($array['doc'] != null) { ?>
+                                <?php
+                                echo '<td><span class="noticea"><a href="' . $array['doc'] . '" target="_blank">' . $array['leaveid'] . '</a></span></td>'
+                                ?>
+                                <?php    } else { ?><?php
+                                                    echo '<td>' . $array['leaveid'] . '</td>' ?>
+                            <?php } ?>
+                        <?php
+                            echo '
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
                                 <td>' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '</td>
                                 <td>' . $array['typeofleave'] . '<br>
-                                ' . $array['creason'] . '</td>
-                                <td>' . $array['doc'] . '</td>
+                                ' . $array['creason'] . '<br>
+                                ' . $array['applicantcomment'] . '</td>
                                 <td>' . $array['status'] . '</td>
-                                <td>' . $array['comment'] . '</td>
+                                <td>' . $array['comment'] . '<br>' . $array['reviewer_id'] . '<br>' . $array['reviewer_name'] . '</td>
                             </tr>';
                         } ?>
                     <?php
@@ -385,10 +439,156 @@ $resultArr = pg_fetch_all($result);
                     echo '</tbody>
                                     </table>';
                     ?>
+                    <!--		Start Pagination -->
+                    <div class='pagination-container'>
+                        <nav>
+                            <ul class="pagination">
+
+                                <li data-page="prev">
+                                    <span>
+                                        < <span class="sr-only">(current)
+                                    </span></span>
+                                </li>
+                                <!--	Here the JS Function Will Add the Rows -->
+                                <li data-page="next" id="prev">
+                                    <span> > <span class="sr-only">(current)</span></span>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
                 </section>
             </div>
         </section>
     </section>
 </body>
+<script>
+    getPagination('#table-id');
+
+    function getPagination(table) {
+        var lastPage = 1;
+
+        $('#maxRows')
+            .on('change', function(evt) {
+                //$('.paginationprev').html('');						// reset pagination
+
+                lastPage = 1;
+                $('.pagination')
+                    .find('li')
+                    .slice(1, -1)
+                    .remove();
+                var trnum = 0; // reset tr counter
+                var maxRows = parseInt($(this).val()); // get Max Rows from select option
+
+                if (maxRows == 5000) {
+                    $('.pagination').hide();
+                } else {
+                    $('.pagination').show();
+                }
+
+                var totalRows = $(table + ' tbody tr').length; // numbers of rows
+                $(table + ' tr:gt(0)').each(function() {
+                    // each TR in  table and not the header
+                    trnum++; // Start Counter
+                    if (trnum > maxRows) {
+                        // if tr number gt maxRows
+
+                        $(this).hide(); // fade it out
+                    }
+                    if (trnum <= maxRows) {
+                        $(this).show();
+                    } // else fade in Important in case if it ..
+                }); //  was fade out to fade it in
+                if (totalRows > maxRows) {
+                    // if tr total rows gt max rows option
+                    var pagenum = Math.ceil(totalRows / maxRows); // ceil total(rows/maxrows) to get ..
+                    //	numbers of pages
+                    for (var i = 1; i <= pagenum;) {
+                        // for each page append pagination li
+                        $('.pagination #prev')
+                            .before(
+                                '<li data-page="' +
+                                i +
+                                '">\
+								  <span>' +
+                                i++ +
+                                '<span class="sr-only">(current)</span></span>\
+								</li>'
+                            )
+                            .show();
+                    } // end for i
+                } // end if row count > max rows
+                $('.pagination [data-page="1"]').addClass('active'); // add active class to the first li
+                $('.pagination li').on('click', function(evt) {
+                    // on click each page
+                    evt.stopImmediatePropagation();
+                    evt.preventDefault();
+                    var pageNum = $(this).attr('data-page'); // get it's number
+
+                    var maxRows = parseInt($('#maxRows').val()); // get Max Rows from select option
+
+                    if (pageNum == 'prev') {
+                        if (lastPage == 1) {
+                            return;
+                        }
+                        pageNum = --lastPage;
+                    }
+                    if (pageNum == 'next') {
+                        if (lastPage == $('.pagination li').length - 2) {
+                            return;
+                        }
+                        pageNum = ++lastPage;
+                    }
+
+                    lastPage = pageNum;
+                    var trIndex = 0; // reset tr counter
+                    $('.pagination li').removeClass('active'); // remove active class from all li
+                    $('.pagination [data-page="' + lastPage + '"]').addClass('active'); // add active class to the clicked
+                    // $(this).addClass('active');					// add active class to the clicked
+                    limitPagging();
+                    $(table + ' tr:gt(0)').each(function() {
+                        // each tr in table not the header
+                        trIndex++; // tr index counter
+                        // if tr index gt maxRows*pageNum or lt maxRows*pageNum-maxRows fade if out
+                        if (
+                            trIndex > maxRows * pageNum ||
+                            trIndex <= maxRows * pageNum - maxRows
+                        ) {
+                            $(this).hide();
+                        } else {
+                            $(this).show();
+                        } //else fade in
+                    }); // end of for each tr in table
+                }); // end of on click pagination list
+                limitPagging();
+            })
+            .val(5)
+            .change();
+
+        // end of on select change
+
+        // END OF PAGINATION
+    }
+
+    function limitPagging() {
+        // alert($('.pagination li').length)
+
+        if ($('.pagination li').length > 7) {
+            if ($('.pagination li.active').attr('data-page') <= 3) {
+                $('.pagination li:gt(5)').hide();
+                $('.pagination li:lt(5)').show();
+                $('.pagination [data-page="next"]').show();
+            }
+            if ($('.pagination li.active').attr('data-page') > 3) {
+                $('.pagination li:gt(0)').hide();
+                $('.pagination [data-page="next"]').show();
+                for (let i = (parseInt($('.pagination li.active').attr('data-page')) - 2); i <= (parseInt($('.pagination li.active').attr('data-page')) + 2); i++) {
+                    $('.pagination [data-page="' + i + '"]').show();
+
+                }
+
+            }
+        }
+    }
+</script>
 
 </html>
