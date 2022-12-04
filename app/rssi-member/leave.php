@@ -46,17 +46,17 @@ if (@$_POST['form-type'] == "leaveapply") {
         $cmdtuples = pg_affected_rows($result);
     }
 
-    // sendEmail("leaveapply", array(
-    //     "leaveid" => $leaveid,
-    //     "applicantid" => $applicantid,
-    //     "applicantname" => @$fullname . @$studentname,
-    //     "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-    //     "todate" => @date("d/m/Y", strtotime($todate)),
-    //     "typeofleave" => $typeofleave,
-    //     "category" => $creason,
-    //     "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
-    //     "now" => @date("d/m/Y g:i a", strtotime($now))
-    // ), $email);
+    sendEmail("leaveapply", array(
+        "leaveid" => $leaveid,
+        "applicantid" => $applicantid,
+        "applicantname" => @$fullname . @$studentname,
+        "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+        "todate" => @date("d/m/Y", strtotime($todate)),
+        "typeofleave" => $typeofleave,
+        "category" => $creason,
+        "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
+        "now" => @date("d/m/Y g:i a", strtotime($now))
+    ), $email);
 }
 
 @$id = $_POST['get_id'];
