@@ -18,6 +18,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 date_default_timezone_set('Asia/Kolkata');
+include("../util/email.php");
 ?>
 <?php if ($role == 'Admin') {
 
@@ -34,6 +35,12 @@ date_default_timezone_set('Asia/Kolkata');
             $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$certificate_url','$issuedby')";
             $result = pg_query($con, $certificate);
             $cmdtuples = pg_affected_rows($result);
+            $resultt= pg_query($con,"Select email from rssimyaccount_members where associatenumber='$awarded_to_id'");
+            $email = pg_fetch_result($resultt, 0, 0);
+            sendEmail("badge", array(
+                "certificate_no" => $certificate_no,
+                "awarded_to_id" => $awarded_to_id,
+            ), $email);
         }
     }
 

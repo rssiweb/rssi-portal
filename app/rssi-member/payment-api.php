@@ -2,6 +2,7 @@
 // This API has been used in student.php file for fees collection 
 include("database.php");
 include("../util/paytm-util.php");
+// require_once("email.php");
 
 date_default_timezone_set('Asia/Kolkata');
 
@@ -119,6 +120,7 @@ if ($_POST['form-type'] == "gemsredeem") {
 }
 
 if ($_POST['form-type'] == "leavereviewform") {
+  echo 'hello12222';
   @$reviewer_id = $_POST['reviewer_id'];
   @$reviewer_name = $_POST['reviewer_name'];
   @$leaveid = $_POST['leaveidd'];
