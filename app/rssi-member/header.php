@@ -109,7 +109,7 @@
                                 <a style="font-size:13px;" href="faculty.php"><i class="fas fa-user-tie"></i>&nbsp;RSSI Faculty</a>
                             </li>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="leave_admin.php"><i class="fas fa-plane-departure"></i>&nbsp;Leave Tracker</a>
+                                <a style="font-size:13px;" href="leave_admin.php"><i class="fas fa-plane-departure"></i>&nbsp;Leave Management</a>
                             </li>
 
                             <!-- <li style="height: unset;">

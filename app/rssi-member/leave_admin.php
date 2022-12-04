@@ -51,20 +51,30 @@ if (@$_POST['form-type'] == "leaveapply") {
 }
 
 @$id = $_POST['get_id'];
-@$status = $_POST['get_status'];
-@$statuse = $_POST['get_statuse'];
 @$appid = strtoupper($_POST['get_appid']);
 @$is_user = $_POST['is_user'];
 
 date_default_timezone_set('Asia/Kolkata');
 // $date = date('Y-d-m h:i:s');
 
-if (($id == null && $status == null && $statuse == null) && $appid == null) {
+if ($id == null && $appid == null) {
     $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id order by timestamp desc");
-} else if ($id != null && $status != null && $statuse != null) {
-    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE lyear='$id'AND status='$status' AND organizationalengagement='$statuse' order by timestamp desc");
+    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved')");
+    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$year' AND (status='Approved')");
+    $allocl = pg_query($con, "SELECT cl FROM rssimyaccount_members WHERE associatenumber='$appid'");
+    $allosl = pg_query($con, "SELECT sl FROM rssimyaccount_members WHERE associatenumber='$appid'");
+} else if ($id != null) {
+    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE leaveid='$id' order by timestamp desc");
+    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved')");
+    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$year' AND (status='Approved')");
+    $allocl = pg_query($con, "SELECT cl FROM rssimyaccount_members WHERE associatenumber='$appid'");
+    $allosl = pg_query($con, "SELECT sl FROM rssimyaccount_members WHERE associatenumber='$appid'");
 } else if ($appid != null) {
     $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE applicantid='$appid' order by timestamp desc");
+    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved')");
+    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$year' AND (status='Approved')");
+    $allocl = pg_query($con, "SELECT cl FROM rssimyaccount_members WHERE associatenumber='$appid'");
+    $allosl = pg_query($con, "SELECT sl FROM rssimyaccount_members WHERE associatenumber='$appid'");
 }
 
 if (!$result) {
@@ -73,6 +83,10 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
+$resultArrsl = pg_fetch_result($totalsl, 0, 0);
+$resultArrcl = pg_fetch_result($totalcl, 0, 0);
+@$resultArrrcl = pg_fetch_result($allocl, 0, 0);
+@$resultArrrsl = pg_fetch_result($allosl, 0, 0);
 ?>
 
 <!DOCTYPE html>
@@ -158,10 +172,10 @@ $resultArr = pg_fetch_all($result);
                         </script>
                     <?php } ?>
                     <div class="col" style="display: inline-block; width:100%; text-align:right">
-                            Home / Leave Management System (LMS)
-                        </div>
+                        Home / Leave Management System (LMS)
+                    </div>
                     <section class="box" style="padding: 2%;">
-                        
+
                         <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave_admin.php" method="POST">
                             <div class="form-group" style="display: inline-block;">
 
@@ -258,90 +272,69 @@ $resultArr = pg_fetch_all($result);
                         </script>
 
 
-                        <form action="" method="POST">
-                            <div class="form-group" style="display: inline-block;">
-                                <div class="col2" style="display: inline-block;">
-                                    <select name="get_id" id="get_id" required class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
-                                        <?php if ($id == null) { ?>
-                                            <option value="" disabled selected hidden>Select Year</option>
-                                        <?php
-                                        } else { ?>
-                                            <option hidden selected><?php echo $id ?></option>
-                                        <?php }
-                                        ?>
-                                        <option>2022-2023</option>
-                                        <option>2021-2022</option>
-                                    </select>&nbsp;
-                                    <select name="get_status" id="get_status" required class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
-                                        <?php if ($status == null) { ?>
-                                            <option value="" disabled selected hidden>Select Status</option>
-                                        <?php
-                                        } else { ?>
-                                            <option hidden selected><?php echo $status ?></option>
-                                        <?php }
-                                        ?>
-                                        <option>Approved</option>
-                                        <option>Rejected</option>
-                                    </select>
-                                    <select name="get_statuse" id="get_statuse" required class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
-                                        <?php if ($status == null) { ?>
-                                            <option value="" disabled selected hidden>Select Engagement</option>
-                                        <?php
-                                        } else { ?>
-                                            <option hidden selected><?php echo $statuse ?></option>
-                                        <?php }
-                                        ?>
-                                        <option>Volunteer</option>
-                                        <option>Employee</option>
-                                        <option>Intern</option>
-                                        <option>Student</option>
-                                    </select>
-                                    <input name="get_appid" id="get_appid" required class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>">
-                                </div>
-                            </div>
-                            <div class="col2 left" style="display: inline-block;">
-                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                            </div>
-                            <div id="filter-checks">
-                                <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
-                                <label for="is_user" style="font-weight: 400;">Search by Applicant ID</label>
-                            </div>
-                        </form>
-                        <script>
-                            if ($('#is_user').not(':checked').length > 0) {
 
-                                document.getElementById("get_id").disabled = false;
-                                document.getElementById("get_status").disabled = false;
-                                document.getElementById("get_statuse").disabled = false;
-                                document.getElementById("get_appid").disabled = true;
 
-                            } else {
+                        <table class="table">
+                            <thead style="font-size: 12px;">
+                                <tr>
+                                    <th scope="col" colspan="2">Leave Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <form action="" method="POST">
+                                            <div class="form-group" style="display: inline-block;">
+                                                <div class="col2" style="display: inline-block;">
+                                                    <input name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave ID" value="<?php echo $id ?>">
 
-                                document.getElementById("get_id").disabled = true;
-                                document.getElementById("get_status").disabled = true;
-                                document.getElementById("get_statuse").disabled = true;
-                                document.getElementById("get_appid").disabled = false;
+                                                    <input name="get_appid" id="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>">
+                                                </div>
+                                            </div>
+                                            <div class="col2 left" style="display: inline-block;">
+                                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                                            </div>
+                                            <div id="filter-checks">
+                                                <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                                                <label for="is_user" style="font-weight: 400;">Search by Applicant ID</label>
+                                            </div>
+                                        </form>
+                                        <script>
+                                            if ($('#is_user').not(':checked').length > 0) {
 
-                            }
+                                                document.getElementById("get_id").disabled = true;
+                                                document.getElementById("get_appid").disabled = false;
 
-                            const checkbox = document.getElementById('is_user');
+                                            } else {
 
-                            checkbox.addEventListener('change', (event) => {
-                                if (event.target.checked) {
-                                    document.getElementById("get_id").disabled = true;
-                                    document.getElementById("get_status").disabled = true;
-                                    document.getElementById("get_statuse").disabled = true;
-                                    document.getElementById("get_appid").disabled = false;
-                                } else {
-                                    document.getElementById("get_id").disabled = false;
-                                    document.getElementById("get_status").disabled = false;
-                                    document.getElementById("get_statuse").disabled = false;
-                                    document.getElementById("get_appid").disabled = true;
-                                }
-                            })
-                        </script>
-                        <div class="col" style="display: inline-block; width:99%; text-align:right">
+                                                document.getElementById("get_id").disabled = false;
+                                                document.getElementById("get_appid").disabled = true;
+
+                                            }
+
+                                            const checkbox = document.getElementById('is_user');
+
+                                            checkbox.addEventListener('change', (event) => {
+                                                if (event.target.checked) {
+                                                    document.getElementById("get_id").disabled = false;
+                                                    document.getElementById("get_appid").disabled = true;
+                                                } else {
+                                                    document.getElementById("get_id").disabled = true;
+                                                    document.getElementById("get_appid").disabled = false;
+                                                }
+                                            })
+                                        </script>
+                                    </td>
+                                    <?php if ($appid != null) { ?>
+                                        <td>Sick Leave - <?php echo $resultArrrsl - $resultArrsl ?><br>Casual Leave - <?php echo $resultArrrcl - $resultArrcl ?>
+                                        </td>
+                                    <?php } else { ?><td></td><?php } ?>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="col" style="display: inline-block; width:100%; text-align:right;">
                             Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                         </div>
 
@@ -389,7 +382,7 @@ $resultArr = pg_fetch_all($result);
                                                         echo '<td>' . $array['leaveid'] . '</td>' ?>
                                 <?php } ?>
                                 <?php
-                                echo '  <td>' . $array['applicantid'] . '<br>' . $array['fullname'] . '</td>
+                                echo '  <td>' . $array['applicantid'] . '<br>' . $array['fullname'] . $array['studentname']. '</td>
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
                                 <td>' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '</td>
@@ -442,7 +435,7 @@ $resultArr = pg_fetch_all($result);
                                 </td>' ?>
                                 <?php } ?>
                             <?php
-                        } else if ($id == null && $status == null) {
+                        } else if ($id == null) {
                             ?>
                                 <tr>
                                     <td colspan="5">Please select Filter value.</td>
