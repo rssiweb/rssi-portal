@@ -1,13 +1,24 @@
-You have received {{badge_name}}
+System-enforced leave has been initiated for {{fromdate}}-{{todate}}
 <!-- You have earned a badge -->
 <html>
 
+<head>
+    <style>
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+    </style>
+</head>
+
 <body>
-    <p>Dear {{fullname}} ({{applicantid}}),<br><br>Based on your timesheet data, system-enforced leave has been initiated for {{fromdate}}-{{todate}} ({{day}} day(s)) in the system. If you think this is done by mistake, please call on 7980168159 or write
-        to us at info@rssi.in.<br><br>
+    <p>Dear {{fullname}} ({{applicantid}}),<br><br>Based on your timesheet data, system-enforced leave has been initiated for {{fromdate}}-{{todate}} ({{day}} day(s)) in the system.<br><br>
         <table class="table" style="font-size: 12px;">
             <thead>
                 <tr>
+                    <th scope="col">Leave ID</th>
                     <th scope="col">Applicant Name</th>
                     <th scope="col">Applicant ID</th>
                     <th scope="col">Type</th>
@@ -16,6 +27,7 @@ You have received {{badge_name}}
                     <th scope="col">Total No. of Day(s)</th>
                 </tr>
                 <tr>
+                    <td>{{leaveid}}</td>
                     <td>{{applicantname}}</td>
                     <td>{{applicantid}}</td>
                     <td>{{typeofleave}}<br>{{category}}</td>
@@ -26,7 +38,8 @@ You have received {{badge_name}}
             </thead>
         </table>
 
-        <br><br>--RSSI<br><br>This is a system generated email.
+        <br><br> If you think this is done by mistake, please call on 7980168159 or write to us at info@rssi.in.
+        <br><br>--RSSI HR team<br><br>This is a system generated email.
     </p>
 </body>
 

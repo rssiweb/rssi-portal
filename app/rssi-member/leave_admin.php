@@ -23,7 +23,7 @@ if ($role != 'Admin') {
     echo 'window.location.href = "home.php";';
     echo '</script>';
 }
-
+include("../util/email.php");
 if (date('m') <= 4) { //Upto June 2014-2015
     $academic_year = (date('Y') - 1) . '-' . date('Y');
 } else { //After June 2015-2016
@@ -49,11 +49,11 @@ if (@$_POST['form-type'] == "leaveapply") {
         $cmdtuples = pg_affected_rows($result);
 
 
-        $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$awarded_to_id'");
+        $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$applicantid'");
         @$nameassociate = pg_fetch_result($resultt, 0, 0);
         @$emailassociate = pg_fetch_result($resultt, 0, 1);
 
-        $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$awarded_to_id'");
+        $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$applicantid'");
         @$namestudent = pg_fetch_result($resulttt, 0, 0);
         @$emailstudent = pg_fetch_result($resulttt, 0, 1);
 
