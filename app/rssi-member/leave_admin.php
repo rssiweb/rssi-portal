@@ -47,6 +47,31 @@ if (@$_POST['form-type'] == "leaveapply") {
         $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year')";
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
+
+
+        $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$awarded_to_id'");
+        @$nameassociate = pg_fetch_result($resultt, 0, 0);
+        @$emailassociate = pg_fetch_result($resultt, 0, 1);
+
+        $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$awarded_to_id'");
+        @$namestudent = pg_fetch_result($resulttt, 0, 0);
+        @$emailstudent = pg_fetch_result($resulttt, 0, 1);
+
+        $fullname = $nameassociate . $namestudent;
+        $email = $emailassociate . $emailstudent;
+
+        sendEmail("leaveapply_admin", array(
+            "leaveid" => $leaveid,
+            "applicantid" => $applicantid,
+            "applicantname" => @$fullname . @$studentname,
+            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+            "todate" => @date("d/m/Y", strtotime($todate)),
+            "typeofleave" => $typeofleave,
+            "category" => $creason,
+            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
+            "now" => $now,
+            "fullname" => $fullname,
+        ), $email);
     }
 }
 
@@ -382,7 +407,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                                         echo '<td>' . $array['leaveid'] . '</td>' ?>
                                 <?php } ?>
                                 <?php
-                                echo '  <td>' . $array['applicantid'] . '<br>' . $array['fullname'] . $array['studentname']. '</td>
+                                echo '  <td>' . $array['applicantid'] . '<br>' . $array['fullname'] . $array['studentname'] . '</td>
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
                                 <td>' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '</td>

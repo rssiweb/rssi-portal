@@ -1,0 +1,33 @@
+You have received {{badge_name}}
+<!-- You have earned a badge -->
+<html>
+
+<body>
+    <p>Dear {{fullname}} ({{applicantid}}),<br><br>Based on your timesheet data, system-enforced leave has been initiated for {{fromdate}}-{{todate}} ({{day}} day(s)) in the system. If you think this is done by mistake, please call on 7980168159 or write
+        to us at info@rssi.in.<br><br>
+        <table class="table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th scope="col">Applicant Name</th>
+                    <th scope="col">Applicant ID</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Start Date</th>
+                    <th scope="col">End Date</th>
+                    <th scope="col">Total No. of Day(s)</th>
+                </tr>
+                <tr>
+                    <td>{{applicantname}}</td>
+                    <td>{{applicantid}}</td>
+                    <td>{{typeofleave}}<br>{{category}}</td>
+                    <td>{{fromdate}}</td>
+                    <td>{{todate}}</td>
+                    <td>{{day}}</td>
+                </tr>
+            </thead>
+        </table>
+
+        <br><br>--RSSI<br><br>This is a system generated email.
+    </p>
+</body>
+
+</html>

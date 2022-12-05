@@ -35,11 +35,22 @@ include("../util/email.php");
             $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$certificate_url','$issuedby')";
             $result = pg_query($con, $certificate);
             $cmdtuples = pg_affected_rows($result);
-            $resultt= pg_query($con,"Select email from rssimyaccount_members where associatenumber='$awarded_to_id'");
-            $email = pg_fetch_result($resultt, 0, 0);
+
+            $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$awarded_to_id'");
+            @$nameassociate = pg_fetch_result($resultt, 0, 0);
+            @$emailassociate = pg_fetch_result($resultt, 0, 1);
+
+            $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$awarded_to_id'");
+            @$namestudent = pg_fetch_result($resulttt, 0, 0);
+            @$emailstudent = pg_fetch_result($resulttt, 0, 1);
+
+            $fullname = $nameassociate . $namestudent;
+            $email = $emailassociate . $emailstudent;
+
             sendEmail("badge", array(
-                "certificate_no" => $certificate_no,
+                "badge_name" => $badge_name,
                 "awarded_to_id" => $awarded_to_id,
+                "fullname" => $fullname,
             ), $email);
         }
     }
@@ -448,10 +459,10 @@ include("../util/email.php");
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['phone'] . @$array['contact'] . '"></i></a>' ?>
                                     <?php } else { ?>
                                         <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                                        <?php } ?>&nbsp;&nbsp;
+                                        <?php } ?>
 
 
-                                        <?php if (@$array['email'] != null || @$array['emailaddress'] != null) { ?>
+                                        <!-- &nbsp;&nbsp;<?php if (@$array['email'] != null || @$array['emailaddress'] != null) { ?>
                                             <?php echo '<form  action="#" name="email-form-' . $array['certificate_no'] . '" method="POST" style="display: -webkit-inline-box;" >
                                     <input type="hidden" name="template" type="text" value="badge">
                                     <input type="hidden" name="data[badge_name]" type="text" value="' . $array['badge_name'] . '">
@@ -463,9 +474,9 @@ include("../util/email.php");
                                 </form>' ?>
                                         <?php } else { ?>
                                             <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
-                                        <?php } ?>
+                                        <?php } ?> -->
 
-                                        <?php echo '&nbsp;&nbsp;<form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                        <?php echo '&nbsp;&nbsp;&nbsp;<form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="cmsdelete">
                                 <input type="hidden" name="cmsid" id="cmsid" type="text" value="' . $array['certificate_no'] . '">
                                 
@@ -542,21 +553,21 @@ include("../util/email.php");
                         }
 
 
-                        data.forEach(item => {
-                            const formId = 'email-form-' + item.certificate_no
-                            const form = document.forms[formId]
-                            form.addEventListener('submit', e => {
-                                e.preventDefault()
-                                fetch('mailer.php', {
-                                        method: 'POST',
-                                        body: new FormData(document.forms[formId])
-                                    })
-                                    .then(response =>
-                                        alert("Email has been sent.")
-                                    )
-                                    .catch(error => console.error('Error!', error.message))
-                            })
-                        })
+                        // data.forEach(item => {
+                        //     const formId = 'email-form-' + item.certificate_no
+                        //     const form = document.forms[formId]
+                        //     form.addEventListener('submit', e => {
+                        //         e.preventDefault()
+                        //         fetch('mailer.php', {
+                        //                 method: 'POST',
+                        //                 body: new FormData(document.forms[formId])
+                        //             })
+                        //             .then(response =>
+                        //                 alert("Email has been sent.")
+                        //             )
+                        //             .catch(error => console.error('Error!', error.message))
+                        //     })
+                        // })
                     </script>
 
                     <script>
