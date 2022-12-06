@@ -1,0 +1,2 @@
+bin/doctrine orm:convert:mapping --force --from-database -- annotation ./models
+bin/doctrine orm:generate-entities --generate-methods=true  ./models/

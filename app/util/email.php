@@ -1,8 +1,6 @@
 
 <?php
-@include("../mailer/PHPMailer.php");
-@include("../mailer/SMTP.php");
-@include("../mailer/Exception.php");
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;

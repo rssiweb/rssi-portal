@@ -1,6 +1,8 @@
 <?php 
+require_once __DIR__ . '/../vendor/autoload.php';
 
-require_once("../util/PaytmChecksum.php");
+use paytm\paytmchecksum\PaytmChecksum;
+
 
 function get_paytm_tnx_token($order_id, $amount, $customer_id){
     // payment step 2: send data to Paytm including amount, generated order id etc.
