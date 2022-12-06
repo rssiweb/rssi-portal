@@ -38,13 +38,14 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$applicantid = strtoupper($_POST['applicantid']);
     @$fromdate = $_POST['fromdate'];
     @$todate = $_POST['todate'];
+    @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
     @$typeofleave = $_POST['typeofleave'];
     @$creason = $_POST['creason'];
     @$comment = $_POST['comment'];
     @$appliedby = $_POST['appliedby'];
 
     if ($leaveid != "") {
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year')";
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,days) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$day')";
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
 

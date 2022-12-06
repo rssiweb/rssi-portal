@@ -120,7 +120,6 @@ if ($_POST['form-type'] == "gemsredeem") {
 }
 
 if ($_POST['form-type'] == "leavereviewform") {
-  echo 'hello12222';
   @$reviewer_id = $_POST['reviewer_id'];
   @$reviewer_name = $_POST['reviewer_name'];
   @$leaveid = $_POST['leaveidd'];
@@ -128,8 +127,9 @@ if ($_POST['form-type'] == "leavereviewform") {
   @$comment = $_POST['reviewer_remarks'];
   @$fromdate = $_POST['fromdate'];
   @$todate = $_POST['todate'];
+  @$day = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1);
   $now = date('Y-m-d H:i:s');
-  $leaveapproval = "UPDATE leavedb_leavedb SET  status = '$status', fromdate = '$fromdate',  todate = '$todate', comment = '$comment',reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name' WHERE leaveid = '$leaveid'";
+  $leaveapproval = "UPDATE leavedb_leavedb SET  status = '$status', fromdate = '$fromdate',  todate = '$todate', comment = '$comment',reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name', days = '$day' WHERE leaveid = '$leaveid'";
   $result = pg_query($con, $leaveapproval);
 }
 
