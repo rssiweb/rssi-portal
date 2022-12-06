@@ -1,5 +1,5 @@
 <?php 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../bootstrap.php';
 
 use paytm\paytmchecksum\PaytmChecksum;
 
@@ -52,5 +52,3 @@ function get_paytm_tnx_token($order_id, $amount, $customer_id){
     return $res["body"]["txnToken"];
     // return json_decode($response).body.txnToken;
 }
-
-?>

@@ -1,6 +1,6 @@
 <?php
-session_start();
-// Storing Session
+require_once __DIR__ . "/../../bootstrap.php";
+
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
@@ -39,8 +39,9 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu&family=Ubuntu+Condensed&display=swap" rel="stylesheet">
     <!-- Main css -->
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-        <?php include '../css/style.css'; ?>@media (min-width:767px) {
+        @media (min-width:767px) {
             .left {
                 margin-left: 2%;
             }

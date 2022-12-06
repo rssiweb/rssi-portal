@@ -1,10 +1,7 @@
 <?php
 
-/**
- * import checksum generation utility
- */
-include("./rssi-member/database.php");
-require_once("./util/PaytmChecksum.php");
+require_once __DIR__ . "/../bootstrap.php";
+
 
 $paytmChecksum = "";
 

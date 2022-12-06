@@ -1,8 +1,7 @@
 <?php
-session_start(); //session starts here
+require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
-include("database.php");
 
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
@@ -108,10 +107,9 @@ if (isset($_POST['login'])) {
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     
-
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/addstyle.css">
     <style>
-        <?php include '../css/style.css';
-        include '../css/addstyle.css'; ?>;
 
         label {
             display: block;

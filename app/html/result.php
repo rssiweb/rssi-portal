@@ -1,7 +1,7 @@
 <?php
-session_start();
-include("../util/login_util.php");
-include("../rssi-student/database.php");
+require_once __DIR__ . '/../bootstrap.php';
+
+include(__DIR__ . "/../util/login_util.php");
 
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
@@ -43,9 +43,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $fullmarks = $row[26];
     $month = $row[27];
     $language1 = $row[28];
-?>
-<?php } ?>
-<?php
+}
 
 while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store in a array $row.  
 {
@@ -53,8 +51,9 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
     $studentname = $roww[3];
     $photourl = $roww[24];
 
+}
+
 ?>
-<?php } ?>
 
 
 <!DOCTYPE html>
@@ -194,7 +193,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 </div>
                                 <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
                                     Scan QR code to check authenticity
-                                    <?php $url = "https://login.rssi.in/util/result.php?get_stid=$stid&get_id=$id";
+                                    <?php $url = "https://login.rssi.in/result.php?get_stid=$stid&get_id=$id";
                                     $url = urlencode($url); ?>
                                     <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
                                     <img src=<?php echo $photourl ?> width=80px height=80px />

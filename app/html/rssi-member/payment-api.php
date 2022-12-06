@@ -1,6 +1,6 @@
 <?php
-// This API has been used in student.php file for fees collection 
-include("database.php");
+require_once __DIR__ . "/../../bootstrap.php";
+
 include("../../util/paytm-util.php");
 // require_once("email.php");
 

@@ -1,6 +1,6 @@
 <?php
 
-require_once "bootstrap.php";
+require_once __DIR__ . "bootstrap.php";
 
 // $memberRepository = $entityManager->getRepository('Member');
 // $members = $memberRepository->findAll();

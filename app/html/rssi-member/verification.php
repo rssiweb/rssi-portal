@@ -1,5 +1,6 @@
 <?php
-include("database.php");
+require_once __DIR__ . "/../../bootstrap.php";
+
 @$id = strtoupper($_GET['get_id']);
 $view_users_query = "select * from rssimyaccount_members WHERE associatenumber='$id'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
@@ -29,9 +30,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
     <!-- Main css -->
-    <style>
-        <?php include '../css/style.css'; ?>
-    </style>
+<link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>

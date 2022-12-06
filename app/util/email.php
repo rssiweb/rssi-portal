@@ -1,6 +1,5 @@
-
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../bootstrap.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -69,5 +68,3 @@ function sendEmail($template, $data, $email) {
 
 
 }
-
-?>

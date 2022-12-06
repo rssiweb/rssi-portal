@@ -1,7 +1,6 @@
 <?php
-// This API has been used in student.php file for fees collection 
-include("database.php");
-date_default_timezone_set('Asia/Kolkata');
+require_once __DIR__ . "/../../bootstrap.php";
+
 include("../../util/email.php");
 
 function SendLeaveUpdateEmail($leaveid,$reviewer_id)

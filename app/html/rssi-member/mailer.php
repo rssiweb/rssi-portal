@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/vendor/autoload.php';
-session_start();
+require_once __DIR__ . "/../../bootstrap.php";
+
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {

@@ -1,6 +1,6 @@
 <?php
-session_start();
-// Storing Session
+require_once __DIR__ . "/../../bootstrap.php";
+
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
@@ -41,9 +41,7 @@ if ($filterstatus != 'Active') {
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <style>
-        <?php include '../css/style.css'; ?>
-    </style>
+<link rel="stylesheet" href="/css/style.css" />
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>

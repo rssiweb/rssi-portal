@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 
+session_start();
+date_default_timezone_set('Asia/Kolkata');
+
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 
@@ -19,3 +22,12 @@ $dbParams = array(
 );
 // obtaining the entity manager
 $entityManager = EntityManager::create($dbParams, $config);
+
+
+// legacy db connection object
+$servername=$_ENV["DB_HOST"];
+$username=$_ENV["DB_USER"];
+$password=$_ENV["DB_PASSWORD"];
+$dbname=$_ENV["DB_NAME"];
+$connection_string = "host = $servername user = $username password = $password dbname = $dbname";
+$con = pg_connect ( $connection_string );

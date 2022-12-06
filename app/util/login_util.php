@@ -7,4 +7,3 @@ function isLoggedIn(string $key) {
 }
 @include("member_data.php");
 @include("student_data.php");
-?>

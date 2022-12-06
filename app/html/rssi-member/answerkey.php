@@ -1,6 +1,6 @@
 <?php
-session_start();
-// Storing Session
+require_once __DIR__ . "/../../bootstrap.php";
+
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {

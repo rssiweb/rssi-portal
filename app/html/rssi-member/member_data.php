@@ -1,5 +1,7 @@
 <?php
-include("database.php");
+require_once __DIR__ . "/../../bootstrap.php";
+
+
 $user_check = $_SESSION['aid'];
 $view_users_query = "select * from rssimyaccount_members WHERE associatenumber='$user_check'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  

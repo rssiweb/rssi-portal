@@ -1,7 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . "/../../bootstrap.php";
 
-date_default_timezone_set('Asia/Kolkata');
 $today = date("YmdHis");
 
 //FEES EXPORT FUNTION
@@ -26,7 +25,7 @@ if ($export_type == "fees") {
 
 function fees_export()
 {
-  include("database.php");
+  global $con
   @$id = $_POST['id'];
   @$status = $_POST['status'];
   @$section = $_POST['section'];
@@ -96,7 +95,7 @@ function donation_export()
 {
 
 
-  include("database.php");
+  global $con
   @$id = $_POST['invoice'];
   @$status = $_POST['fyear'];
 
@@ -137,7 +136,7 @@ function gps_export()
 {
 
 
-  include("database.php");
+  global $con
   @$taggedto = $_POST['taggedto'];
   @$item_type = $_POST['item_type'];
 
@@ -175,7 +174,7 @@ function reimb_export()
 {
 
 
-  include("database.php");
+  global $con
   @$status = $_POST['status'];
   @$role = $_POST['role'];
   @$user_check = $_POST['user_check'];
@@ -226,7 +225,7 @@ function student_export()
 {
 
 
-  include("database.php");
+  global $con
   @$module = $_POST['module'];
   @$id = $_POST['id'];
   @$category = $_POST['category'];
