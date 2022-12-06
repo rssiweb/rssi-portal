@@ -39,25 +39,26 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$comment = $_POST['comment'];
     @$appliedby = $_POST['appliedby'];
     @$applicantcomment = $_POST['applicantcomment'];
-    @$email = @$email . @$emailaddress;
+    @$email = $email;
 
     if ($leaveid != "") {
         $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$applicantcomment','$day')";
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
     }
-
-    sendEmail("leaveapply", array(
-        "leaveid" => $leaveid,
-        "applicantid" => $applicantid,
-        "applicantname" => @$fullname . @$studentname,
-        "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-        "todate" => @date("d/m/Y", strtotime($todate)),
-        "typeofleave" => $typeofleave,
-        "category" => $creason,
-        "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
-        "now" => @date("d/m/Y g:i a", strtotime($now))
-    ), $email);
+    if ($email != "") {
+        sendEmail("leaveapply", array(
+            "leaveid" => $leaveid,
+            "applicantid" => $applicantid,
+            "applicantname" => @$fullname,
+            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+            "todate" => @date("d/m/Y", strtotime($todate)),
+            "typeofleave" => $typeofleave,
+            "category" => $creason,
+            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
+            "now" => @date("d/m/Y g:i a", strtotime($now))
+        ), $email);
+    }
 }
 
 @$id = $_POST['get_id'];
@@ -72,10 +73,10 @@ if (($id > 0 && $id != 'ALL') && ($status == null || $status == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND status='$status' order by timestamp desc");
     $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
     $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$id' AND (status='Approved' OR status is null)");
-} else if (($status > 0 && $status != 'ALL') && ($status > 0 && $status != 'ALL')) {
+} else if (($status > 0 && $status != 'ALL') && ($id > 0 || $id != 'ALL')) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND status='$status' AND lyear='$id' order by timestamp desc");
     $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
-    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
-    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND lyear='$id'");
+    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$id' AND (status='Approved' OR status is null)");
 } else {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' order by timestamp desc");
     $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
@@ -180,19 +181,19 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         </script>
                     <?php } ?>
                     <?php
-                    if (($cl-$resultArrcl == 0 || @$cl-$resultArrcl < 0) && ($sl-$resultArrsl == 0 || $sl-$resultArrsl < 0) && $filterstatus == 'Active') {
+                    if (($cl - $resultArrcl == 0 || @$cl - $resultArrcl < 0) && ($sl - $resultArrsl == 0 || $sl - $resultArrsl < 0) && $filterstatus == 'Active') {
                     ?>
                         <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                             <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Inadequate SL and CL balance. You are not eligible to take leave. Please take a makeup class to enable the apply leave option.
                         </div>
                     <?php
-                    } else if ((@$cl-$resultArrcl == 0 || @$cl-$resultArrcl < 0) && $filterstatus == 'Active') {
+                    } else if ((@$cl - $resultArrcl == 0 || @$cl - $resultArrcl < 0) && $filterstatus == 'Active') {
                     ?>
                         <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                             <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient CL balance. You are not eligible for casual leave. Please take makeup class to increase CL balance.
                         </div>
                     <?php
-                    } else if ((@$sl-$resultArrsl == 0 || @$sl-$resultArrsl < 0) && $filterstatus == 'Active') {
+                    } else if ((@$sl - $resultArrsl == 0 || @$sl - $resultArrsl < 0) && $filterstatus == 'Active') {
                     ?>
                         <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                             <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient SL balance. You are not eligible for sick leave. Please take makeup class to increase SL balance.
@@ -213,9 +214,9 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         </thead>
                         <tbody>
                             <tr>
-                                
-                                <td style="line-height: 2;">Sick Leave - <?php echo $sl-$resultArrsl?>
-                                    <br>Casual Leave - <?php echo $cl-$resultArrcl?>
+
+                                <td style="line-height: 2;">Sick Leave - <?php echo $sl - $resultArrsl ?>
+                                    <br>Casual Leave - <?php echo $cl - $resultArrcl ?>
 
                             </tr>
                         </tbody>
@@ -314,13 +315,13 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         document.getElementById("typeofleave").addEventListener("click", getType)
                     </script>
                     <script>
-                        if (<?php echo $sl-$resultArrsl?> <= 0) {
+                        if (<?php echo $sl - $resultArrsl ?> <= 0) {
                             document.getElementById("typeofleave").options[1].disabled = true;
                         } else {
                             document.getElementById("typeofleave").options[1].disabled = false;
                         }
 
-                        if (<?php echo $cl-$resultArrcl?> <= 0) {
+                        if (<?php echo $cl - $resultArrcl ?> <= 0) {
                             document.getElementById("typeofleave").options[2].disabled = true;
                         } else {
                             document.getElementById("typeofleave").options[2].disabled = false;
