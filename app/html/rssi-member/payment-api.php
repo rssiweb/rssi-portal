@@ -51,6 +51,12 @@ if ($_POST['form-type'] == "leavedelete") {
   $result = pg_query($con, $leavedelete);
 }
 
+if ($_POST['form-type'] == "leaveadjdelete") {
+  @$leaveadjdeleteid = $_POST['leaveadjdeleteid'];
+  $leaveadjdelete = "DELETE from leaveadjustment WHERE leaveadjustmentid = '$leaveadjdeleteid'";
+  $result = pg_query($con, $leaveadjdelete);
+}
+
 
 if ($_POST['form-type'] == "cmsdelete") {
   @$certificate_no = $_POST['cmsid'];

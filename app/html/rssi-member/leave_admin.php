@@ -198,8 +198,10 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             }
                         </script>
                     <?php } ?>
-                    <div class="col" style="display: inline-block; width:100%; text-align:right">
-                        Home / Leave Management System (LMS)
+
+                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / Leave Management System (LMS)</div>
+                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+                        <a href="leaveadjustment.php" target="_self" class="btn btn-danger btn-sm" role="button">Leave Adjustment</a>
                     </div>
                     <section class="box" style="padding: 2%;">
 
@@ -324,7 +326,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                             </div>
                                             <div id="filter-checks">
                                                 <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
-                                                <label for="is_user" style="font-weight: 400;">Search by Applicant ID</label>
+                                                <label for="is_user" style="font-weight: 400;">Search by Leave ID</label>
                                             </div>
                                         </form>
                                         <script>

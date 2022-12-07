@@ -1540,3 +1540,18 @@
     } else {
     ?>
     <?php } ?>
+
+
+    if (date("F", strtotime($_POST['adj_fromdate'])) <= 4) {
+                $academic_year = (date("Y", strtotime($_POST['adj_fromdate'])) - 1) . '-' . date("Y", strtotime($_POST['adj_fromdate']));
+            } else {
+                $academic_year = date("Y", strtotime($_POST['adj_fromdate'])) . '-' . (date("Y", strtotime($_POST['adj_fromdate'])) + 1);
+            }
+
+
+            if (date('m') <= 4) {
+                $academic_year = (date('Y') - 1) . '-' . date('Y');
+            } else {
+                $academic_year = date('Y') . '-' . (date('Y') + 1);
+            }
+
