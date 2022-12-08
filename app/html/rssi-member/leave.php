@@ -70,6 +70,9 @@ $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHE
 $cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
 $sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
 
+$allocl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$associatenumber' AND allo_leavetype='Casual Leave' AND allo_academicyear='$lyear'");
+$allosl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$associatenumber' AND allo_leavetype='Sick Leave' AND allo_academicyear='$lyear'");
+
 if (($lyear > 0 && $lyear != 'ALL') && ($status == null || $status == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND lyear='$lyear' order by timestamp desc");
 } else if (($status > 0 && $status != 'ALL') && ($lyear == null || $lyear == 'ALL')) {
@@ -90,6 +93,8 @@ $resultArrsl = pg_fetch_result($totalsl, 0, 0);
 $resultArrcl = pg_fetch_result($totalcl, 0, 0);
 @$resultArr_cladj = pg_fetch_result($cladj, 0, 0);
 @$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
+@$resultArrrcl = pg_fetch_result($allocl, 0, 0);
+@$resultArrrsl = pg_fetch_result($allosl, 0, 0);
 ?>
 
 <!DOCTYPE html>
@@ -160,7 +165,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
 
                 <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / Leave</div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        <a href="leaveadjustment.php" target="_self" class="btn btn-danger btn-sm" role="button">Leave Adjustment</a>
+                    <span class="noticea"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span> | <span class="noticea"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear?>" target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
                     </div>
                 
                     <div class="col" style="display: inline-block; width:99%; text-align:left;margin-left:1.5%">
@@ -249,8 +254,8 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             <tr>
 
                                 <td style="line-height: 2;">
-                                    Sick Leave - <?php echo (($sl + $resultArr_sladj) - $resultArrsl) ?>
-                                    <br>Casual Leave - <?php echo (($cl + $resultArr_cladj) - $resultArrcl) ?>
+                                    Sick Leave - <?php echo (($resultArrrsl + $resultArr_sladj) - $resultArrsl) ?>
+                                    <br>Casual Leave - <?php echo (($resultArrrcl + $resultArr_cladj) - $resultArrcl) ?>
                                 </td>
                             </tr>
                         </tbody>

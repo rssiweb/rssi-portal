@@ -28,77 +28,42 @@ include("../../util/email.php");
 
 @$now = date('Y-m-d H:i:s');
 if ($role == "Admin") {
-    if (@$_POST['form-type'] == "leaveadj") {
-        @$leaveadjustmentid = 'RSD' . time();
-        @$adj_applicantid = strtoupper($_POST['adj_applicantid']);
-        @$adj_fromdate = $_POST['adj_fromdate'];
-        @$adj_todate = $_POST['adj_todate'];
-        @$day = round((strtotime($_POST['adj_todate']) - strtotime($_POST['adj_fromdate'])) / (60 * 60 * 24) + 1);
-        @$adj_leavetype = $_POST['adj_leavetype'];
-        @$adj_day = $_POST['adj_day'];
-        @$adj_reason = $_POST['adj_reason'];
-        @$adj_academicyear = $_POST['adj_academicyear'];
-        @$adj_appliedby = $associatenumber;
-        @$adj_appliedby_name = $fullname;
+    if (@$_POST['form-type'] == "leaveallocation") {
+        @$leaveallocationid = 'RLA' . time();
+        @$allo_applicantid = strtoupper($_POST['allo_applicantid']);
+        @$allo_daycount = $_POST['allo_daycount'];
+        @$allo_leavetype = $_POST['allo_leavetype'];
+        @$allo_remarks = $_POST['allo_remarks'];
+        @$allocatedbyid = $_POST['associatenumber'];
+        @$allo_academicyear = $_POST['allo_academicyear'];
+        @$allocatedbyid = $associatenumber;
+        @$allocatedbyname = $fullname;
 
-        if ($leaveadjustmentid != "") {
+        if ($leaveallocationid != "") {
 
-            if ($adj_fromdate != "" && $adj_todate != "") {
+            $leaveallocation = "INSERT INTO leaveallocation (leaveallocationid,allo_applicantid,allo_daycount,allo_leavetype,allo_remarks,allocatedbyid,allo_date,allocatedbyname,allo_academicyear) VALUES ('$leaveallocationid','$allo_applicantid','$allo_daycount','$allo_leavetype','$allo_remarks','$allocatedbyid','$now','$allocatedbyname','$allo_academicyear')";
 
-                $leaveadjustment = "INSERT INTO leaveadjustment (adj_regdate,leaveadjustmentid,adj_applicantid,adj_fromdate,adj_todate,adj_reason,adj_leavetype,adj_appliedby,adj_academicyear,adj_day,adj_appliedby_name) VALUES ('$now','$leaveadjustmentid','$adj_applicantid','$adj_fromdate','$adj_todate','$adj_reason','$adj_leavetype','$adj_appliedby','$adj_academicyear','$day','$adj_appliedby_name')";
-            } else {
-                $leaveadjustment = "INSERT INTO leaveadjustment (adj_regdate,leaveadjustmentid,adj_applicantid,adj_reason,adj_leavetype,adj_appliedby,adj_academicyear,adj_day,adj_appliedby_name) VALUES ('$now','$leaveadjustmentid','$adj_applicantid','$adj_reason','$adj_leavetype','$adj_appliedby','$adj_academicyear','$adj_day','$adj_appliedby_name')";
-            }
-            $result = pg_query($con, $leaveadjustment);
+            $result = pg_query($con, $leaveallocation);
             $cmdtuples = pg_affected_rows($result);
 
 
-            $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$adj_applicantid'");
+            $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$allo_applicantid'");
             @$nameassociate = pg_fetch_result($resultt, 0, 0);
             @$emailassociate = pg_fetch_result($resultt, 0, 1);
 
-            $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$adj_applicantid'");
+            $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$allo_applicantid'");
             @$namestudent = pg_fetch_result($resulttt, 0, 0);
             @$emailstudent = pg_fetch_result($resulttt, 0, 1);
 
             $fullname = $nameassociate . $namestudent;
             $email = $emailassociate . $emailstudent;
-
-            if ($adj_day != "") {
-            sendEmail("leaveadjustment", array(
-                "leaveadjustmentid" => $leaveadjustmentid,
-                "adj_applicantid" => $adj_applicantid,
-                "adj_applicantname" => @$fullname . @$studentname,
-                "adj_fromdate" => @date("d/m/Y", strtotime($fromdate)),
-                "adj_todate" => @date("d/m/Y", strtotime($todate)),
-                "adj_day" => $adj_day,
-                "adj_leavetype" => $adj_leavetype,
-                "now" => $now,
-                "adj_appliedby" => $adj_appliedby,
-                "adj_reason" => $adj_reason,
-            ), $email);
-        }
-        if ($adj_day == "") {
-            sendEmail("leaveadjustment", array(
-                "leaveadjustmentid" => $leaveadjustmentid,
-                "adj_applicantid" => $adj_applicantid,
-                "adj_applicantname" => @$fullname . @$studentname,
-                "adj_fromdate" => @date("d/m/Y", strtotime($fromdate)),
-                "adj_todate" => @date("d/m/Y", strtotime($todate)),
-                "adj_day" => $day,
-                "adj_leavetype" => $adj_leavetype,
-                "now" => $now,
-                "adj_appliedby" => $adj_appliedby,
-                "adj_reason" => $adj_reason,
-            ), $email);
-        }
         }
     }
 }
 
-@$id = $_GET['leaveadjustmentid'];
-@$appid = strtoupper($_GET['adj_applicantid_search']);
-@$adj_academicyear_search = $_GET['adj_academicyear_search'];
+@$id = $_GET['leaveallocationid'];
+@$appid = strtoupper($_GET['allo_applicantid']);
+@$allo_academicyear = $_GET['allo_academicyear_search'];
 @$is_user = $_GET['is_user'];
 
 date_default_timezone_set('Asia/Kolkata');
@@ -106,23 +71,23 @@ date_default_timezone_set('Asia/Kolkata');
 
 if ($role == "Admin") {
 
-    if ($appid != null && $adj_academicyear_search != null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id WHERE adj_applicantid='$appid' AND adj_academicyear='$adj_academicyear_search' order by adj_regdate desc");
+    if ($appid != null && $allo_academicyear != null) {
+        $result = pg_query($con, "select * from leaveallocation left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveallocation.allo_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveallocation.allo_applicantid=student.student_id  WHERE allo_applicantid='$appid' AND allo_academicyear='$allo_academicyear' order by allo_date desc");
     } else if ($id != null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id WHERE leaveadjustmentid='$id' order by adj_regdate desc");
+        $result = pg_query($con, "select * from leaveallocation left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveallocation.allo_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveallocation.allo_applicantid=student.student_id WHERE leaveallocationid='$id' order by allo_date desc");
     } else {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id order by adj_regdate desc");
+        $result = pg_query($con, "select * from leaveallocation left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveallocation.allo_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveallocation.allo_applicantid=student.student_id order by allo_date desc");
     }
 }
 
 if ($role != "Admin") {
 
-    if ($id == null && $adj_academicyear_search == null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id where adj_applicantid='$associatenumber' order by adj_regdate desc");
-    } else if ($id == null && $adj_academicyear_search != null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id  WHERE adj_applicantid='$associatenumber' AND adj_academicyear='$adj_academicyear_search' order by adj_regdate desc");
-    } else if ($id != null && $adj_academicyear_search != null) {
-        $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id WHERE adj_applicantid='$associatenumber' AND leaveadjustmentid='$id' AND adj_academicyear='$adj_academicyear_search' order by adj_regdate desc");
+    if ($allo_academicyear != null) {
+        $result = pg_query($con, "select * from leaveallocation left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveallocation.allo_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveallocation.allo_applicantid=student.student_id  WHERE allo_applicantid='$associatenumber' AND allo_academicyear='$allo_academicyear' order by allo_date desc");
+    } else if ($id != null) {
+        $result = pg_query($con, "select * from leaveallocation left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveallocation.allo_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveallocation.allo_applicantid=student.student_id WHERE allo_applicantid='$associatenumber' AND leaveallocationid='$id' order by allo_date desc");
+    } else {
+        $result = pg_query($con, "select * from leaveallocation left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveallocation.allo_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveallocation.allo_applicantid=student.student_id WHERE allo_applicantid='$associatenumber' order by allo_date desc");
     }
 }
 
@@ -143,7 +108,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>RSSI-Leave Adjustment</title>
+    <title>RSSI-Leave Allocation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -198,7 +163,7 @@ $resultArr = pg_fetch_all($result);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                    <?php if (@$leaveadjustmentid != null && @$cmdtuples == 0) { ?>
+                    <?php if (@$leaveallocationid != null && @$cmdtuples == 0) { ?>
 
                         <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
@@ -209,7 +174,7 @@ $resultArr = pg_fetch_all($result);
 
                         <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave adjustment id <?php echo $leaveadjustmentid ?>.</span>
+                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave allocation id <?php echo $leaveallocationid ?>.</span>
                         </div>
                         <script>
                             if (window.history.replaceState) {
@@ -218,10 +183,10 @@ $resultArr = pg_fetch_all($result);
                         </script>
                     <?php } ?>
                     <?php if ($role == 'Admin') { ?>
-                        <div class="col" style="display: inline-block; text-align:right; width:100%">Home / <span class="noticea"><a href="leave_admin.php">Leave Management System (LMS)</a></span> / Leave Adjustment
+                        <div class="col" style="display: inline-block; text-align:right; width:100%">Home / <span class="noticea"><a href="leave_admin.php">Leave Management System (LMS)</a></span> / Leave Allocation
                         </div>
                     <?php } else { ?>
-                        <div class="col" style="display: inline-block; text-align:right; width:100%">Home / <span class="noticea"><a href="leave.php">Leave</a></span> / Leave Adjustment
+                        <div class="col" style="display: inline-block; text-align:right; width:100%">Home / <span class="noticea"><a href="leave.php">Leave</a></span> / Leave Allocation
                         </div>
                     <?php } ?>
                     <section class="box" style="padding: 2%;">
@@ -229,124 +194,59 @@ $resultArr = pg_fetch_all($result);
                             <table class="table">
                                 <thead style="font-size: 12px;">
                                     <tr>
-                                        <th scope="col" colspan="2">Apply Leave Adjustment</th>
+                                        <th scope="col" colspan="2">Allocate Leave</th>
                                     </tr>
                                 </thead>
                             </table>
 
-                            <form autocomplete="off" name="leaveadj" id="leaveadj" action="leaveadjustment.php" method="POST">
+                            <form autocomplete="off" name="leaveallocation" id="leaveallocation" action="leaveallo.php" method="POST">
                                 <div class="form-group" style="display: inline-block;">
 
-                                    <input type="hidden" name="form-type" type="text" value="leaveadj">
+                                    <input type="hidden" name="form-type" type="text" value="leaveallocation">
 
                                     <span class="input-help">
-                                        <input type="text" name="adj_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo @$_GET['adj_applicantid']; ?>" required>
+                                        <input type="text" name="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo @$_GET['allo_applicantid']; ?>" required>
                                         <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
                                     </span>
+
                                     <span class="input-help">
-                                        <input type="date" class="form-control" name="adj_fromdate" id="adj_fromdate" type="text" value="" required>
-                                        <small id="passwordHelpBlock_from" class="form-text text-muted">From*</small>
+                                        <input type="number" name="allo_daycount" id='allo_daycount' class="form-control" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
+                                        <small id="passwordHelpBlock_allo_daycount" class="form-text text-muted">Allocated day*</small>
                                     </span>
                                     <span class="input-help">
-                                        <input type="date" class="form-control" name="adj_todate" id="adj_todate" type="text" value="" required>
-                                        <small id="passwordHelpBlock_to" class="form-text text-muted">To*</small>
-                                    </span>
-                                    <span class="input-help">
-                                        <input type="number" name="adj_day" id='adj_day' class="form-control" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
-                                        <small id="passwordHelpBlock_dayadjusted" class="form-text text-muted">No of day adjusted*</small>
-                                    </span>
-                                    <span class="input-help">
-                                        <select name="adj_leavetype" id="adj_leavetype" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                                        <select name="allo_leavetype" id="allo_leavetype" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
                                             <option value="" disabled selected hidden>Types of Leave</option>
                                             <option value="Sick Leave">Sick Leave</option>
                                             <option value="Casual Leave">Casual Leave</option>
                                         </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Adjusted Leave Type</small>
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Adjusted Leave Type*</small>
                                     </span>
                                     <span class="input-help">
-                                        <select name="adj_academicyear" id="adj_academicyear" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                                        <select name="allo_academicyear" id="allo_academicyear" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
                                             <option value="" disabled selected hidden>Academic Year</option>
                                         </select>
                                         <small id="passwordHelpBlock" class="form-text text-muted">Academic Year</small>
                                     </span>
 
                                     <span class="input-help">
-                                        <textarea type="text" name="adj_reason" class="form-control" placeholder="Remarks" value=""></textarea>
+                                        <textarea type="text" name="allo_remarks" class="form-control" placeholder="Remarks" value=""></textarea>
                                         <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
                                     </span>
                                 </div>
                                 <div class="col2 left" style="display: inline-block;">
-                                    <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Adjust Leave</button>
+                                    <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Add Leave</button>
 
-                                </div>
-
-                                <div id="filter-checkss">
-                                    <input type="checkbox" name="is_users" id="is_users" value="1" <?php if (isset($_GET['is_users'])) echo "checked='checked'"; ?> />
-                                    <label for="is_users" style="font-weight: 400;">Adjust Leave With Salary/Other</label>
                                 </div>
 
                             </form>
-                            <script>
-                                if ($('#is_users').not(':checked').length > 0) {
 
-                                    document.getElementById("adj_day").disabled = true;
-                                    $('#adj_day').get(0).type = 'hidden';
-                                    document.getElementById("passwordHelpBlock_dayadjusted").classList.add("hidden");
-
-                                    document.getElementById("adj_fromdate").disabled = false;
-                                    document.getElementById("adj_todate").disabled = false;
-                                    $('#adj_fromdate').get(0).type = 'date';
-                                    $('#adj_todate').get(0).type = 'date';
-                                    document.getElementById("passwordHelpBlock_from").classList.remove("hidden");
-                                    document.getElementById("passwordHelpBlock_to").classList.remove("hidden");
-
-                                } else {
-
-                                    document.getElementById("adj_day").disabled = false;
-                                    $('#adj_day').get(0).type = 'number';
-                                    document.getElementById("passwordHelpBlock_dayadjusted").classList.remove("hidden");
-                                    document.getElementById("adj_fromdate").disabled = true;
-                                    document.getElementById("adj_todate").disabled = true;
-                                    $('#adj_fromdate').get(0).type = 'hidden';
-                                    $('#adj_todate').get(0).type = 'hidden';
-                                    document.getElementById("passwordHelpBlock_from").classList.add("hidden");
-                                    document.getElementById("passwordHelpBlock_to").classList.add("hidden");
-
-                                }
-
-                                const checkboxs = document.getElementById('is_users');
-
-                                checkboxs.addEventListener('change', (event) => {
-                                    if (event.target.checked) {
-                                        document.getElementById("adj_day").disabled = false;
-                                        $('#adj_day').get(0).type = 'number';
-                                        document.getElementById("passwordHelpBlock_dayadjusted").classList.remove("hidden");
-                                        document.getElementById("adj_fromdate").disabled = true;
-                                        document.getElementById("adj_todate").disabled = true;
-                                        $('#adj_fromdate').get(0).type = 'hidden';
-                                        $('#adj_todate').get(0).type = 'hidden';
-                                        document.getElementById("passwordHelpBlock_from").classList.add("hidden");
-                                        document.getElementById("passwordHelpBlock_to").classList.add("hidden");
-                                    } else {
-                                        document.getElementById("adj_day").disabled = true;
-                                        $('#adj_day').get(0).type = 'hidden';
-                                        document.getElementById("passwordHelpBlock_dayadjusted").classList.add("hidden");
-                                        document.getElementById("adj_fromdate").disabled = false;
-                                        document.getElementById("adj_todate").disabled = false;
-                                        $('#adj_fromdate').get(0).type = 'date';
-                                        $('#adj_todate').get(0).type = 'date';
-                                        document.getElementById("passwordHelpBlock_from").classList.remove("hidden");
-                                        document.getElementById("passwordHelpBlock_to").classList.remove("hidden");
-                                    }
-                                })
-                            </script>
                             <script>
                                 var currentYear = new Date().getFullYear();
-                                for (var i = 0; i < 5; i++) {
+                                for (var i = 0; i < 2; i++) {
                                     var next = currentYear + 1;
                                     var year = currentYear + '-' + next;
                                     //next.toString().slice(-2)
-                                    $('#adj_academicyear').append(new Option(year, year));
+                                    $('#allo_academicyear').append(new Option(year, year));
                                     currentYear--;
                                 }
                             </script>
@@ -354,7 +254,7 @@ $resultArr = pg_fetch_all($result);
                         <table class="table">
                             <thead style="font-size: 12px;">
                                 <tr>
-                                    <th scope="col" colspan="2">Leave Adjustment Details</th>
+                                    <th scope="col" colspan="2">Leave Allocation Details</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -363,16 +263,16 @@ $resultArr = pg_fetch_all($result);
                                         <form action="" method="GET">
                                             <div class="form-group" style="display: inline-block;">
                                                 <div class="col2" style="display: inline-block;">
-                                                    <input name="leaveadjustmentid" id="leaveadjustmentid" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave Adjustment ID" value="<?php echo $id ?>">
+                                                    <input name="leaveallocationid" id="leaveallocationid" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave Allocation ID" value="<?php echo $id ?>">
                                                     <?php if ($role == "Admin") { ?>
-                                                        <input name="adj_applicantid_search" id="adj_applicantid_search" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>">
+                                                        <input name="allo_applicantid" id="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>" required>
                                                     <?php } ?>
-                                                    <select name="adj_academicyear_search" id="adj_academicyear_search" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
-                                                        <?php if ($adj_academicyear_search == null) { ?>
+                                                    <select name="allo_academicyear_search" id="allo_academicyear_search" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                                                        <?php if ($allo_academicyear == null) { ?>
                                                             <option value="" disabled selected hidden>Academic Year</option>
                                                         <?php
                                                         } else { ?>
-                                                            <option hidden selected><?php echo $adj_academicyear_search ?></option>
+                                                            <option hidden selected><?php echo $allo_academicyear ?></option>
                                                         <?php }
                                                         ?>
                                                     </select>
@@ -384,8 +284,8 @@ $resultArr = pg_fetch_all($result);
                                             </div>
                                             <?php if ($role == "Admin") { ?>
                                                 <div id="filter-checks">
-                                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
-                                                    <label for="is_user" style="font-weight: 400;">Search by Leave Adjustment ID</label>
+                                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                                    <label for="is_user" style="font-weight: 400;">Search by Leave Allocation ID</label>
                                                 </div>
                                             <?php } ?>
                                         </form>
@@ -393,15 +293,15 @@ $resultArr = pg_fetch_all($result);
                                             <script>
                                                 if ($('#is_user').not(':checked').length > 0) {
 
-                                                    document.getElementById("leaveadjustmentid").disabled = true;
-                                                    document.getElementById("adj_applicantid_search").disabled = false;
-                                                    document.getElementById("adj_academicyear_search").disabled = false;
+                                                    document.getElementById("leaveallocationid").disabled = true;
+                                                    document.getElementById("allo_applicantid").disabled = false;
+                                                    document.getElementById("allo_academicyear_search").disabled = false;
 
                                                 } else {
 
-                                                    document.getElementById("leaveadjustmentid").disabled = false;
-                                                    document.getElementById("adj_applicantid_search").disabled = true;
-                                                    document.getElementById("adj_academicyear_search").disabled = true;
+                                                    document.getElementById("leaveallocationid").disabled = false;
+                                                    document.getElementById("allo_applicantid").disabled = true;
+                                                    document.getElementById("allo_academicyear_search").disabled = true;
 
                                                 }
 
@@ -409,13 +309,13 @@ $resultArr = pg_fetch_all($result);
 
                                                 checkbox.addEventListener('change', (event) => {
                                                     if (event.target.checked) {
-                                                        document.getElementById("leaveadjustmentid").disabled = false;
-                                                        document.getElementById("adj_applicantid_search").disabled = true;
-                                                        document.getElementById("adj_academicyear_search").disabled = true;
+                                                        document.getElementById("leaveallocationid").disabled = false;
+                                                        document.getElementById("allo_applicantid").disabled = true;
+                                                        document.getElementById("allo_academicyear_search").disabled = true
                                                     } else {
-                                                        document.getElementById("leaveadjustmentid").disabled = true;
-                                                        document.getElementById("adj_applicantid_search").disabled = false;
-                                                        document.getElementById("adj_academicyear_search").disabled = false;
+                                                        document.getElementById("leaveallocationid").disabled = true;
+                                                        document.getElementById("allo_applicantid").disabled = false;
+                                                        document.getElementById("allo_academicyear_search").disabled = false;
                                                     }
                                                 })
                                             </script>
@@ -426,7 +326,7 @@ $resultArr = pg_fetch_all($result);
                                                 var next = currentYear + 1;
                                                 var year = currentYear + '-' + next;
                                                 //next.toString().slice(-2)
-                                                $('#adj_academicyear_search').append(new Option(year, year));
+                                                $('#allo_academicyear_search').append(new Option(year, year));
                                                 currentYear--;
                                             }
                                         </script>
@@ -456,13 +356,12 @@ $resultArr = pg_fetch_all($result);
                     <table class="table" id="table-id" style="font-size: 12px;">
                         <thead>
                             <tr>
-                                <th scope="col">Leave adjustment id</th>
+                                <th scope="col">Leave allocation id</th>
                                 <th scope="col">Applicant ID</th>
                                 <th scope="col">Applied on</th>
-                                <th scope="col">Adjusted on</th>
-                                <th scope="col">No of day(s) adjusted</th>
-                                <th scope="col">Adjusted Leave Type</th>
-                                <th scope="col">Reviewer</th>
+                                <th scope="col">Allocated day(s)</th>
+                                <th scope="col">Allocated Leave Type</th>
+                                <th scope="col">Allocatd by</th>
                                 <th scope="col" width="15%">Remarks</th>' ?>
                         <?php if ($role == "Admin") { ?>
                             <?php echo '<th scope="col"></th>' ?>
@@ -476,39 +375,29 @@ $resultArr = pg_fetch_all($result);
                                 echo '<tr>'
                             ?>
                                 <?php
-                                echo '<td>' . $array['leaveadjustmentid'] . '</td>
-                                <td>' . $array['adj_applicantid'] . '<br>' . $array['fullname'] . $array['studentname'] . '</td>
-                                <td>' . @date("d/m/Y g:i a", strtotime($array['adj_regdate'])) . '</td>' ?>
-                                <?php if ($array['adj_fromdate'] != "" && $array['adj_todate'] != "") { ?>
-                                    <?php echo '<td>' .  @date("d/m/Y", strtotime($array['adj_fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['adj_todate'])) . '</td>' ?>
-                                <?php } else { ?>
-                                    <?php echo '<td></td>' ?>
-                                <?php } ?>
-
-                                <?php echo '<td>' . $array['adj_day'] . '</td>
-                                <td>' . $array['adj_leavetype'] . '<br>' . $array['adj_academicyear'] . '</td>
-                                <td>' . $array['adj_appliedby'] . '<br>' . $array['adj_appliedby_name'] . '</td>
-                                <td>' . $array['adj_reason'] . '</td>' ?>
+                                echo '<td>' . $array['leaveallocationid'] . '</td>
+                                <td>' . $array['allo_applicantid'] . '<br>' . $array['fullname'] . $array['studentname'] . '</td>
+                                <td>' . @date("d/m/Y g:i a", strtotime($array['allo_date'])) . '</td>
+                                <td>' . $array['allo_daycount'] . '</td>
+                                <td>' . $array['allo_leavetype'] . '/' . $array['allo_academicyear'] . '</td>
+                                <td>' . $array['allocatedbyid'] . '<br>' . $array['allocatedbyname'] . '</td>
+                                <td>' . $array['allo_remarks'] . '</td>' ?>
 
                                 <?php if ($role == "Admin") { ?>
 
-                                    <?php if (($array['phone'] != null || $array['contact'] != null)) { ?>
-                                        <?php echo '<td><a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['adj_applicantid'] . '),%0A%0ARedeem id ' . $array['leaveadjustmentid'] . ' against the policy issued by the organization has been settled at Rs.' . $array['leaveadjustmentid'] . ' on ' . @date("d/m/Y g:i a", strtotime($array['adj_regdate'])) . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
-                                    <?php } else { ?>
-                                        <?php echo '<td><i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                                    <?php } ?>
+                                    <?php echo '<td>
+                                    
+                                    <form name="leaveallodelete_' . $array['leaveallocationid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                    <input type="hidden" name="form-type" type="text" value="leaveallodelete">
+                                    <input type="hidden" name="leaveallodeleteid" id="leaveallodeleteid" type="text" value="' . $array['leaveallocationid'] . '">
 
-                                    <?php echo '&nbsp;<form name="leaveadjdelete_' . $array['leaveadjustmentid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                                    <input type="hidden" name="form-type" type="text" value="leaveadjdelete">
-                                    <input type="hidden" name="leaveadjdeleteid" id="leaveadjdeleteid" type="text" value="' . $array['leaveadjustmentid'] . '">
-
-                                    <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['leaveadjustmentid'] . '"><i class="fa-solid fa-xmark"></i></button>
-                                </form></td>' ?>
+                                    <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['leaveallocationid'] . '"><i class="fa-solid fa-xmark"></i></button>
+                                </form>
+                                </td>' ?>
                                 <?php } ?>
                             <?php } ?>
                         <?php
-                        } else if ($id == null && $adj_academicyear_search==null) {
+                        } else if ($id == null && $allo_academicyear==null) {
                         ?>
                             <tr>
                                 <td colspan="5">Please select Filter value.</td>
@@ -552,12 +441,12 @@ $resultArr = pg_fetch_all($result);
                 if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
 
                     data.forEach(item => {
-                        const form = document.forms['leaveadjdelete_' + item.leaveadjustmentid]
+                        const form = document.forms['leaveallodelete_' + item.leaveallocationid]
                         form.addEventListener('submit', e => {
                             e.preventDefault()
                             fetch(scriptURL, {
                                     method: 'POST',
-                                    body: new FormData(document.forms['leaveadjdelete_' + item.leaveadjustmentid])
+                                    body: new FormData(document.forms['leaveallodelete_' + item.leaveallocationid])
                                 })
                                 .then(response =>
                                     alert("Record has been deleted.") +

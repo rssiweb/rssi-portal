@@ -84,36 +84,33 @@ if (@$_POST['form-type'] == "leaveapply") {
 date_default_timezone_set('Asia/Kolkata');
 // $date = date('Y-d-m h:i:s');
 
-if ($id == null && $appid == null && $lyear == null) {
-    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id order by timestamp desc");
-
-    $resultArr = pg_fetch_all($result);
-} else if ($id == null && $appid == null && $lyear != null) {
+if ($id != null) {
+    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE leaveid='$id' order by timestamp desc");
+} else if ($appid == null && $lyear != null) {
     $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE lyear='$lyear' order by timestamp desc");
-
-    $resultArr = pg_fetch_all($result);
-} else if ($id != null && $lyear != null) {
-    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE leaveid='$id' AND lyear='$lyear' order by timestamp desc");
-
-    $resultArr = pg_fetch_all($result);
 } else if ($appid != null && $lyear != null) {
     $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE applicantid='$appid' AND lyear='$lyear' order by timestamp desc");
     $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved')");
     $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved')");
-    $allocl = pg_query($con, "SELECT cl FROM rssimyaccount_members WHERE associatenumber='$appid'");
-    $allosl = pg_query($con, "SELECT sl FROM rssimyaccount_members WHERE associatenumber='$appid'");
+
+    $allocl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$appid' AND allo_leavetype='Casual Leave' AND allo_academicyear='$lyear'");
+    $allosl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$appid' AND allo_leavetype='Sick Leave' AND allo_academicyear='$lyear'");
 
     $cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
     $sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
 
-    $resultArr = pg_fetch_all($result);
+
     $resultArrsl = pg_fetch_result($totalsl, 0, 0);
     $resultArrcl = pg_fetch_result($totalcl, 0, 0);
     @$resultArrrcl = pg_fetch_result($allocl, 0, 0);
     @$resultArrrsl = pg_fetch_result($allosl, 0, 0);
     @$resultArr_cladj = pg_fetch_result($cladj, 0, 0);
     @$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
+} else {
+    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id order by timestamp desc");
 }
+
+$resultArr = pg_fetch_all($result);
 
 if (!$result) {
     echo "An error occurred.\n";
@@ -207,7 +204,7 @@ if (!$result) {
 
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / Leave Management System (LMS)</div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        <a href="leaveadjustment.php" target="_self" class="btn btn-danger btn-sm" role="button">Leave Adjustment</a>
+                        <span class="noticea"><a href="leaveadjustment.php" target="_blank" title="Click to adjust leave">Leave Adjustment</a></span> | <span class="noticea"><a href="leaveallo.php" target="_blank" title="Click to allocate leave">Leave Allocation</a></span>
                     </div>
                     <section class="box" style="padding: 2%;">
 
@@ -312,7 +309,8 @@ if (!$result) {
                         <table class="table">
                             <thead style="font-size: 12px;">
                                 <tr>
-                                    <th scope="col" colspan="2">Leave Balance</th>
+                                    <th scope="col">Search Criteria</th>
+                                    <th scope="col">Leave Balance</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -350,11 +348,13 @@ if (!$result) {
 
                                                 document.getElementById("get_id").disabled = true;
                                                 document.getElementById("get_appid").disabled = false;
+                                                document.getElementById("lyear").disabled = false;
 
                                             } else {
 
                                                 document.getElementById("get_id").disabled = false;
                                                 document.getElementById("get_appid").disabled = true;
+                                                document.getElementById("lyear").disabled = true;
 
                                             }
 
@@ -364,9 +364,11 @@ if (!$result) {
                                                 if (event.target.checked) {
                                                     document.getElementById("get_id").disabled = false;
                                                     document.getElementById("get_appid").disabled = true;
+                                                    document.getElementById("lyear").disabled = true;
                                                 } else {
                                                     document.getElementById("get_id").disabled = true;
                                                     document.getElementById("get_appid").disabled = false;
+                                                    document.getElementById("lyear").disabled = false;
                                                 }
                                             })
                                         </script>
@@ -381,12 +383,14 @@ if (!$result) {
                                             }
                                         </script>
                                     </td>
-                                    <?php if ($appid != null) { ?>
-                                        <td>
+                                    <td>
+                                        <?php if ($appid != null) { ?>
+
                                             Sick Leave - <?php echo (($resultArrrsl + $resultArr_sladj) - $resultArrsl) ?>
                                             <br>Casual Leave - <?php echo (($resultArrrcl + $resultArr_cladj) - $resultArrcl) ?>
-                                        </td>
-                                    <?php } else { ?><td></td><?php } ?>
+
+                                        <?php } ?>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
