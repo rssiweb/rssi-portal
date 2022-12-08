@@ -78,41 +78,47 @@ if (@$_POST['form-type'] == "leaveapply") {
 
 @$id = $_POST['get_id'];
 @$appid = strtoupper($_POST['get_appid']);
+@$lyear = $_POST['lyear'];
 @$is_user = $_POST['is_user'];
 
 date_default_timezone_set('Asia/Kolkata');
 // $date = date('Y-d-m h:i:s');
 
-if ($id == null && $appid == null) {
+if ($id == null && $appid == null && $lyear == null) {
     $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id order by timestamp desc");
-    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved')");
-    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$year' AND (status='Approved')");
+
+    $resultArr = pg_fetch_all($result);
+} else if ($id == null && $appid == null && $lyear != null) {
+    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE lyear='$lyear' order by timestamp desc");
+
+    $resultArr = pg_fetch_all($result);
+} else if ($id != null && $lyear != null) {
+    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE leaveid='$id' AND lyear='$lyear' order by timestamp desc");
+
+    $resultArr = pg_fetch_all($result);
+} else if ($appid != null && $lyear != null) {
+    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE applicantid='$appid' AND lyear='$lyear' order by timestamp desc");
+    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved')");
+    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved')");
     $allocl = pg_query($con, "SELECT cl FROM rssimyaccount_members WHERE associatenumber='$appid'");
     $allosl = pg_query($con, "SELECT sl FROM rssimyaccount_members WHERE associatenumber='$appid'");
-} else if ($id != null) {
-    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE leaveid='$id' order by timestamp desc");
-    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved')");
-    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$year' AND (status='Approved')");
-    $allocl = pg_query($con, "SELECT cl FROM rssimyaccount_members WHERE associatenumber='$appid'");
-    $allosl = pg_query($con, "SELECT sl FROM rssimyaccount_members WHERE associatenumber='$appid'");
-} else if ($appid != null) {
-    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE applicantid='$appid' order by timestamp desc");
-    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved')");
-    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$year' AND (status='Approved')");
-    $allocl = pg_query($con, "SELECT cl FROM rssimyaccount_members WHERE associatenumber='$appid'");
-    $allosl = pg_query($con, "SELECT sl FROM rssimyaccount_members WHERE associatenumber='$appid'");
+
+    $cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
+    $sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
+
+    $resultArr = pg_fetch_all($result);
+    $resultArrsl = pg_fetch_result($totalsl, 0, 0);
+    $resultArrcl = pg_fetch_result($totalcl, 0, 0);
+    @$resultArrrcl = pg_fetch_result($allocl, 0, 0);
+    @$resultArrrsl = pg_fetch_result($allosl, 0, 0);
+    @$resultArr_cladj = pg_fetch_result($cladj, 0, 0);
+    @$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
 }
 
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
-
-$resultArr = pg_fetch_all($result);
-$resultArrsl = pg_fetch_result($totalsl, 0, 0);
-$resultArrcl = pg_fetch_result($totalcl, 0, 0);
-@$resultArrrcl = pg_fetch_result($allocl, 0, 0);
-@$resultArrrsl = pg_fetch_result($allosl, 0, 0);
 ?>
 
 <!DOCTYPE html>
@@ -124,7 +130,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>RSSI-LMS</title>
+    <title>RSSI-Leave Management System (LMS)</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -318,6 +324,16 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                                     <input name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave ID" value="<?php echo $id ?>">
 
                                                     <input name="get_appid" id="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>">
+
+                                                    <select name="lyear" id="lyear" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                                                        <?php if ($lyear == null) { ?>
+                                                            <option value="" disabled selected hidden>Academic Year</option>
+                                                        <?php
+                                                        } else { ?>
+                                                            <option hidden selected><?php echo $lyear ?></option>
+                                                        <?php }
+                                                        ?>
+                                                    </select>
                                                 </div>
                                             </div>
                                             <div class="col2 left" style="display: inline-block;">
@@ -354,9 +370,21 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                                 }
                                             })
                                         </script>
+                                        <script>
+                                            var currentYear = new Date().getFullYear();
+                                            for (var i = 0; i < 5; i++) {
+                                                var next = currentYear + 1;
+                                                var year = currentYear + '-' + next;
+                                                //next.toString().slice(-2)
+                                                $('#lyear').append(new Option(year, year));
+                                                currentYear--;
+                                            }
+                                        </script>
                                     </td>
                                     <?php if ($appid != null) { ?>
-                                        <td>Sick Leave - <?php echo $resultArrrsl - $resultArrsl ?><br>Casual Leave - <?php echo $resultArrrcl - $resultArrcl ?>
+                                        <td>
+                                            Sick Leave - <?php echo (($resultArrrsl + $resultArr_sladj) - $resultArrsl) ?>
+                                            <br>Casual Leave - <?php echo (($resultArrrcl + $resultArr_cladj) - $resultArrcl) ?>
                                         </td>
                                     <?php } else { ?><td></td><?php } ?>
                                 </tr>
@@ -498,377 +526,376 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                 </nav>
                             </div>
                     </section>
-        </section>
-
-        <!--------------- POP-UP BOX ------------
--------------------------------------->
-        <style>
-            .modal {
-                display: none;
-                /* Hidden by default */
-                position: fixed;
-                /* Stay in place */
-                z-index: 100;
-                /* Sit on top */
-                padding-top: 100px;
-                /* Location of the box */
-                left: 0;
-                top: 0;
-                width: 100%;
-                /* Full width */
-                height: 100%;
-                /* Full height */
-                overflow: auto;
-                /* Enable scroll if needed */
-                background-color: rgb(0, 0, 0);
-                /* Fallback color */
-                background-color: rgba(0, 0, 0, 0.4);
-                /* Black w/ opacity */
-            }
-
-            /* Modal Content */
-
-            .modal-content {
-                background-color: #fefefe;
-                margin: auto;
-                padding: 20px;
-                border: 1px solid #888;
-                width: 100vh;
-            }
-
-            @media (max-width:767px) {
-                .modal-content {
-                    width: 50vh;
-                }
-            }
-
-            /* The Close Button */
-
-            .close {
-                color: #aaaaaa;
-                float: right;
-                font-size: 28px;
-                font-weight: bold;
-                text-align: right;
-            }
-
-            .close:hover,
-            .close:focus {
-                color: #000;
-                text-decoration: none;
-                cursor: pointer;
-            }
-        </style>
-        <div id="myModal" class="modal">
-
-            <!-- Modal content -->
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <div style="width:100%; text-align:right">
-                    <p id="status" class="label " style="display: inline !important;"><span class="leaveid"></span></p>
                 </div>
+            </div>
+        </section>
+    </section>
 
-                <form id="leavereviewform" action="#" method="POST">
-                    <input type="hidden" class="form-control" name="form-type" type="text" value="leavereviewform" readonly>
-                    <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
-                    <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
-                    <input type="hidden" class="form-control" name="leaveidd" id="leaveidd" type="text" value="" readonly>
-                    <span class="input-help">
-                        <input type="date" class="form-control" name="fromdate" id="fromdated" type="text" value="">
-                        <small id="passwordHelpBlock" class="form-text text-muted">From</small>
-                    </span>
-                    <span class="input-help">
-                        <input type="date" class="form-control" name="todate" id="todated" type="text" value="">
-                        <small id="passwordHelpBlock" class="form-text text-muted">To</small>
-                    </span>
+    <!--------------- POP-UP BOX ------------
+-------------------------------------->
+    <style>
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 100;
+            /* Sit on top */
+            padding-top: 100px;
+            /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0);
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+        }
 
-                    <select name="leave_status" id="leave_status" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-                        <option value="" disabled selected hidden>Status</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Under review">Under review</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
+        /* Modal Content */
 
-                    <span class="input-help">
-                        <textarea type="text" name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="HR remarks" value=""></textarea>
-                        <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
-                    </span>
-                    <br><br>
-                    <button type="submit" id="leaveupdate" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
-                </form>
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 100vh;
+        }
+
+        @media (max-width:767px) {
+            .modal-content {
+                width: 50vh;
+            }
+        }
+
+        /* The Close Button */
+
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div style="width:100%; text-align:right">
+                <p id="status" class="label " style="display: inline !important;"><span class="leaveid"></span></p>
             </div>
 
+            <form id="leavereviewform" action="#" method="POST">
+                <input type="hidden" class="form-control" name="form-type" type="text" value="leavereviewform" readonly>
+                <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
+                <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
+                <input type="hidden" class="form-control" name="leaveidd" id="leaveidd" type="text" value="" readonly>
+                <span class="input-help">
+                    <input type="date" class="form-control" name="fromdate" id="fromdated" type="text" value="">
+                    <small id="passwordHelpBlock" class="form-text text-muted">From</small>
+                </span>
+                <span class="input-help">
+                    <input type="date" class="form-control" name="todate" id="todated" type="text" value="">
+                    <small id="passwordHelpBlock" class="form-text text-muted">To</small>
+                </span>
+
+                <select name="leave_status" id="leave_status" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                    <option value="" disabled selected hidden>Status</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Under review">Under review</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+
+                <span class="input-help">
+                    <textarea type="text" name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="HR remarks" value=""></textarea>
+                    <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
+                </span>
+                <br><br>
+                <button type="submit" id="leaveupdate" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
+            </form>
         </div>
-        <script>
-            var data = <?php echo json_encode($resultArr) ?>
 
-            // Get the modal
-            var modal = document.getElementById("myModal");
-            // Get the <span> element that closes the modal
-            var span = document.getElementsByClassName("close")[0];
+    </div>
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>
 
-            function showDetails(id) {
-                // console.log(modal)
-                // console.log(modal.getElementsByClassName("data"))
-                var mydata = undefined
-                data.forEach(item => {
-                    if (item["leaveid"] == id) {
-                        mydata = item;
-                    }
-                })
+        // Get the modal
+        var modal = document.getElementById("myModal");
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
 
-                var keys = Object.keys(mydata)
-                keys.forEach(key => {
-                    var span = modal.getElementsByClassName(key)
-                    if (span.length > 0)
-                        span[0].innerHTML = mydata[key];
-                })
-                modal.style.display = "block";
-
-                //class add 
-                var status = document.getElementById("status")
-                if (mydata["status"] === "Approved") {
-                    status.classList.add("label-success")
-                    status.classList.remove("label-danger")
-                } else {
-                    status.classList.remove("label-success")
-                    status.classList.add("label-danger")
+        function showDetails(id) {
+            // console.log(modal)
+            // console.log(modal.getElementsByClassName("data"))
+            var mydata = undefined
+            data.forEach(item => {
+                if (item["leaveid"] == id) {
+                    mydata = item;
                 }
-                //class add end
+            })
 
-                var profile = document.getElementById("leaveidd")
-                profile.value = mydata["leaveid"]
-                if (mydata["status"] !== null) {
-                    profile = document.getElementById("leave_status")
-                    profile.value = mydata["status"]
-                }
-                if (mydata["comment"] !== null) {
-                    profile = document.getElementById("reviewer_remarks")
-                    profile.value = mydata["comment"]
-                }
+            var keys = Object.keys(mydata)
+            keys.forEach(key => {
+                var span = modal.getElementsByClassName(key)
+                if (span.length > 0)
+                    span[0].innerHTML = mydata[key];
+            })
+            modal.style.display = "block";
 
-                if (mydata["fromdate"] !== null) {
-                    profile = document.getElementById("fromdated")
-                    profile.value = mydata["fromdate"]
-                }
-                if (mydata["todate"] !== null) {
-                    profile = document.getElementById("todated")
-                    profile.value = mydata["todate"]
-                }
-
-                if (mydata["status"] == 'Approved' || mydata["status"] == 'Rejected') {
-                    document.getElementById("leaveupdate").disabled = true;
-                } else {
-                    document.getElementById("leaveupdate").disabled = false;
-                }
+            //class add 
+            var status = document.getElementById("status")
+            if (mydata["status"] === "Approved") {
+                status.classList.add("label-success")
+                status.classList.remove("label-danger")
+            } else {
+                status.classList.remove("label-success")
+                status.classList.add("label-danger")
             }
-            // When the user clicks the button, open the modal 
-            // When the user clicks on <span> (x), close the modal
-            span.onclick = function() {
+            //class add end
+
+            var profile = document.getElementById("leaveidd")
+            profile.value = mydata["leaveid"]
+            if (mydata["status"] !== null) {
+                profile = document.getElementById("leave_status")
+                profile.value = mydata["status"]
+            }
+            if (mydata["comment"] !== null) {
+                profile = document.getElementById("reviewer_remarks")
+                profile.value = mydata["comment"]
+            }
+
+            if (mydata["fromdate"] !== null) {
+                profile = document.getElementById("fromdated")
+                profile.value = mydata["fromdate"]
+            }
+            if (mydata["todate"] !== null) {
+                profile = document.getElementById("todated")
+                profile.value = mydata["todate"]
+            }
+
+            if (mydata["status"] == 'Approved' || mydata["status"] == 'Rejected') {
+                document.getElementById("leaveupdate").disabled = true;
+            } else {
+                document.getElementById("leaveupdate").disabled = false;
+            }
+        }
+        // When the user clicks the button, open the modal 
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
                 modal.style.display = "none";
             }
-            // When the user clicks anywhere outside of the modal, close it
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
-            }
-        </script>
+        }
+    </script>
 
-        <script>
-            var data = <?php echo json_encode($resultArr) ?>;
-            const scriptURL = 'payment-api.php'
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>;
+        const scriptURL = 'payment-api.php'
 
-            function validateForm() {
-                if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+        function validateForm() {
+            if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
 
-                    data.forEach(item => {
-                        const form = document.forms['leavedelete_' + item.leaveid]
-                        form.addEventListener('submit', e => {
-                            e.preventDefault()
-                            fetch(scriptURL, {
-                                    method: 'POST',
-                                    body: new FormData(document.forms['leavedelete_' + item.leaveid])
-                                })
-                                .then(response =>
-                                    alert("Record has been deleted.") +
-                                    location.reload()
-                                )
-                                .catch(error => console.error('Error!', error.message))
-                        })
-
-                        console.log(item)
+                data.forEach(item => {
+                    const form = document.forms['leavedelete_' + item.leaveid]
+                    form.addEventListener('submit', e => {
+                        e.preventDefault()
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['leavedelete_' + item.leaveid])
+                            })
+                            .then(response =>
+                                alert("Record has been deleted.") +
+                                location.reload()
+                            )
+                            .catch(error => console.error('Error!', error.message))
                     })
-                } else {
-                    alert("Record has NOT been deleted.");
-                    return false;
-                }
-            }
 
-            const form = document.getElementById('leavereviewform')
+                    console.log(item)
+                })
+            } else {
+                alert("Record has NOT been deleted.");
+                return false;
+            }
+        }
+
+        const form = document.getElementById('leavereviewform')
+        form.addEventListener('submit', e => {
+            e.preventDefault()
+            fetch(scriptURL, {
+                    method: 'POST',
+                    body: new FormData(document.getElementById('leavereviewform'))
+                })
+                .then(response =>
+                    alert("Record has been updated.") +
+                    location.reload()
+                )
+                .catch(error => console.error('Error!', error.message))
+        })
+
+        data.forEach(item => {
+            const formId = 'email-form-' + item.leaveid
+            const form = document.forms[formId]
             form.addEventListener('submit', e => {
                 e.preventDefault()
-                fetch(scriptURL, {
+                fetch('mailer.php', {
                         method: 'POST',
-                        body: new FormData(document.getElementById('leavereviewform'))
+                        body: new FormData(document.forms[formId])
                     })
                     .then(response =>
-                        alert("Record has been updated.") +
-                        location.reload()
+                        alert("Email has been sent.")
                     )
                     .catch(error => console.error('Error!', error.message))
             })
+        })
+    </script>
 
-            data.forEach(item => {
-                const formId = 'email-form-' + item.leaveid
-                const form = document.forms[formId]
-                form.addEventListener('submit', e => {
-                    e.preventDefault()
-                    fetch('mailer.php', {
-                            method: 'POST',
-                            body: new FormData(document.forms[formId])
-                        })
-                        .then(response =>
-                            alert("Email has been sent.")
-                        )
-                        .catch(error => console.error('Error!', error.message))
-                })
-            })
-        </script>
+    <script>
+        getPagination('#table-id');
 
-        <script>
-            getPagination('#table-id');
+        function getPagination(table) {
+            var lastPage = 1;
 
-            function getPagination(table) {
-                var lastPage = 1;
+            $('#maxRows')
+                .on('change', function(evt) {
+                    //$('.paginationprev').html('');						// reset pagination
 
-                $('#maxRows')
-                    .on('change', function(evt) {
-                        //$('.paginationprev').html('');						// reset pagination
+                    lastPage = 1;
+                    $('.pagination')
+                        .find('li')
+                        .slice(1, -1)
+                        .remove();
+                    var trnum = 0; // reset tr counter
+                    var maxRows = parseInt($(this).val()); // get Max Rows from select option
 
-                        lastPage = 1;
-                        $('.pagination')
-                            .find('li')
-                            .slice(1, -1)
-                            .remove();
-                        var trnum = 0; // reset tr counter
-                        var maxRows = parseInt($(this).val()); // get Max Rows from select option
+                    if (maxRows == 5000) {
+                        $('.pagination').hide();
+                    } else {
+                        $('.pagination').show();
+                    }
 
-                        if (maxRows == 5000) {
-                            $('.pagination').hide();
-                        } else {
-                            $('.pagination').show();
+                    var totalRows = $(table + ' tbody tr').length; // numbers of rows
+                    $(table + ' tr:gt(0)').each(function() {
+                        // each TR in  table and not the header
+                        trnum++; // Start Counter
+                        if (trnum > maxRows) {
+                            // if tr number gt maxRows
+
+                            $(this).hide(); // fade it out
                         }
-
-                        var totalRows = $(table + ' tbody tr').length; // numbers of rows
-                        $(table + ' tr:gt(0)').each(function() {
-                            // each TR in  table and not the header
-                            trnum++; // Start Counter
-                            if (trnum > maxRows) {
-                                // if tr number gt maxRows
-
-                                $(this).hide(); // fade it out
-                            }
-                            if (trnum <= maxRows) {
-                                $(this).show();
-                            } // else fade in Important in case if it ..
-                        }); //  was fade out to fade it in
-                        if (totalRows > maxRows) {
-                            // if tr total rows gt max rows option
-                            var pagenum = Math.ceil(totalRows / maxRows); // ceil total(rows/maxrows) to get ..
-                            //	numbers of pages
-                            for (var i = 1; i <= pagenum;) {
-                                // for each page append pagination li
-                                $('.pagination #prev')
-                                    .before(
-                                        '<li data-page="' +
-                                        i +
-                                        '">\
+                        if (trnum <= maxRows) {
+                            $(this).show();
+                        } // else fade in Important in case if it ..
+                    }); //  was fade out to fade it in
+                    if (totalRows > maxRows) {
+                        // if tr total rows gt max rows option
+                        var pagenum = Math.ceil(totalRows / maxRows); // ceil total(rows/maxrows) to get ..
+                        //	numbers of pages
+                        for (var i = 1; i <= pagenum;) {
+                            // for each page append pagination li
+                            $('.pagination #prev')
+                                .before(
+                                    '<li data-page="' +
+                                    i +
+                                    '">\
 								  <span>' +
-                                        i++ +
-                                        '<span class="sr-only">(current)</span></span>\
+                                    i++ +
+                                    '<span class="sr-only">(current)</span></span>\
 								</li>'
-                                    )
-                                    .show();
-                            } // end for i
-                        } // end if row count > max rows
-                        $('.pagination [data-page="1"]').addClass('active'); // add active class to the first li
-                        $('.pagination li').on('click', function(evt) {
-                            // on click each page
-                            evt.stopImmediatePropagation();
-                            evt.preventDefault();
-                            var pageNum = $(this).attr('data-page'); // get it's number
+                                )
+                                .show();
+                        } // end for i
+                    } // end if row count > max rows
+                    $('.pagination [data-page="1"]').addClass('active'); // add active class to the first li
+                    $('.pagination li').on('click', function(evt) {
+                        // on click each page
+                        evt.stopImmediatePropagation();
+                        evt.preventDefault();
+                        var pageNum = $(this).attr('data-page'); // get it's number
 
-                            var maxRows = parseInt($('#maxRows').val()); // get Max Rows from select option
+                        var maxRows = parseInt($('#maxRows').val()); // get Max Rows from select option
 
-                            if (pageNum == 'prev') {
-                                if (lastPage == 1) {
-                                    return;
-                                }
-                                pageNum = --lastPage;
+                        if (pageNum == 'prev') {
+                            if (lastPage == 1) {
+                                return;
                             }
-                            if (pageNum == 'next') {
-                                if (lastPage == $('.pagination li').length - 2) {
-                                    return;
-                                }
-                                pageNum = ++lastPage;
+                            pageNum = --lastPage;
+                        }
+                        if (pageNum == 'next') {
+                            if (lastPage == $('.pagination li').length - 2) {
+                                return;
                             }
-
-                            lastPage = pageNum;
-                            var trIndex = 0; // reset tr counter
-                            $('.pagination li').removeClass('active'); // remove active class from all li
-                            $('.pagination [data-page="' + lastPage + '"]').addClass('active'); // add active class to the clicked
-                            // $(this).addClass('active');					// add active class to the clicked
-                            limitPagging();
-                            $(table + ' tr:gt(0)').each(function() {
-                                // each tr in table not the header
-                                trIndex++; // tr index counter
-                                // if tr index gt maxRows*pageNum or lt maxRows*pageNum-maxRows fade if out
-                                if (
-                                    trIndex > maxRows * pageNum ||
-                                    trIndex <= maxRows * pageNum - maxRows
-                                ) {
-                                    $(this).hide();
-                                } else {
-                                    $(this).show();
-                                } //else fade in
-                            }); // end of for each tr in table
-                        }); // end of on click pagination list
-                        limitPagging();
-                    })
-                    .val(5)
-                    .change();
-
-                // end of on select change
-
-                // END OF PAGINATION
-            }
-
-            function limitPagging() {
-                // alert($('.pagination li').length)
-
-                if ($('.pagination li').length > 7) {
-                    if ($('.pagination li.active').attr('data-page') <= 3) {
-                        $('.pagination li:gt(5)').hide();
-                        $('.pagination li:lt(5)').show();
-                        $('.pagination [data-page="next"]').show();
-                    }
-                    if ($('.pagination li.active').attr('data-page') > 3) {
-                        $('.pagination li:gt(0)').hide();
-                        $('.pagination [data-page="next"]').show();
-                        for (let i = (parseInt($('.pagination li.active').attr('data-page')) - 2); i <= (parseInt($('.pagination li.active').attr('data-page')) + 2); i++) {
-                            $('.pagination [data-page="' + i + '"]').show();
-
+                            pageNum = ++lastPage;
                         }
 
+                        lastPage = pageNum;
+                        var trIndex = 0; // reset tr counter
+                        $('.pagination li').removeClass('active'); // remove active class from all li
+                        $('.pagination [data-page="' + lastPage + '"]').addClass('active'); // add active class to the clicked
+                        // $(this).addClass('active');					// add active class to the clicked
+                        limitPagging();
+                        $(table + ' tr:gt(0)').each(function() {
+                            // each tr in table not the header
+                            trIndex++; // tr index counter
+                            // if tr index gt maxRows*pageNum or lt maxRows*pageNum-maxRows fade if out
+                            if (
+                                trIndex > maxRows * pageNum ||
+                                trIndex <= maxRows * pageNum - maxRows
+                            ) {
+                                $(this).hide();
+                            } else {
+                                $(this).show();
+                            } //else fade in
+                        }); // end of for each tr in table
+                    }); // end of on click pagination list
+                    limitPagging();
+                })
+                .val(5)
+                .change();
+
+            // end of on select change
+
+            // END OF PAGINATION
+        }
+
+        function limitPagging() {
+            // alert($('.pagination li').length)
+
+            if ($('.pagination li').length > 7) {
+                if ($('.pagination li.active').attr('data-page') <= 3) {
+                    $('.pagination li:gt(5)').hide();
+                    $('.pagination li:lt(5)').show();
+                    $('.pagination [data-page="next"]').show();
+                }
+                if ($('.pagination li.active').attr('data-page') > 3) {
+                    $('.pagination li:gt(0)').hide();
+                    $('.pagination [data-page="next"]').show();
+                    for (let i = (parseInt($('.pagination li.active').attr('data-page')) - 2); i <= (parseInt($('.pagination li.active').attr('data-page')) + 2); i++) {
+                        $('.pagination [data-page="' + i + '"]').show();
+
                     }
+
                 }
             }
-        </script>
-    </section>
-    </div>
-    </section>
-    </section>
+        }
+    </script>
 </body>
 
 </html>

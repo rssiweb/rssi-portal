@@ -25,7 +25,7 @@ function sendEmail($template, $data, $email) {
     $mail = new PHPMailer(true);
     $template_name = $template;
     $template_data = $data; 
-    $content = template_file('../email_templates/' . $template_name . '.html', $template_data);
+    $content = template_file('../../email_templates/' . $template_name . '.html', $template_data);
     
     $to_email = $email;
     $lines=explode("\n", $content);

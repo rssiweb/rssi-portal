@@ -61,26 +61,23 @@ if (@$_POST['form-type'] == "leaveapply") {
     }
 }
 
-@$id = $_POST['get_id'];
 @$status = $_POST['get_status'];
+@$lyear = $_POST['adj_academicyear'];
 date_default_timezone_set('Asia/Kolkata');
 
-if (($id > 0 && $id != 'ALL') && ($status == null || $status == 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND lyear='$id' order by timestamp desc");
-    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
-    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
-} else if (($status > 0 && $status != 'ALL') && ($id == null || $id == 'ALL')) {
+$totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved' OR status is null)");
+$totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved' OR status is null)");
+$cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
+$sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
+
+if (($lyear > 0 && $lyear != 'ALL') && ($status == null || $status == 'ALL')) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND lyear='$lyear' order by timestamp desc");
+} else if (($status > 0 && $status != 'ALL') && ($lyear == null || $lyear == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND status='$status' order by timestamp desc");
-    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
-    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$id' AND (status='Approved' OR status is null)");
-} else if (($status > 0 && $status != 'ALL') && ($id > 0 || $id != 'ALL')) {
-    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND status='$status' AND lyear='$id' order by timestamp desc");
-    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
-    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$id' AND (status='Approved' OR status is null)");
+} else if (($status > 0 && $status != 'ALL') && ($lyear > 0 || $lyear != 'ALL')) {
+    $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND status='$status' AND lyear='$lyear' order by timestamp desc");
 } else {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' order by timestamp desc");
-    $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
-    $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$year' AND (status='Approved' OR status is null)");
 }
 
 if (!$result) {
@@ -91,6 +88,8 @@ if (!$result) {
 $resultArr = pg_fetch_all($result);
 $resultArrsl = pg_fetch_result($totalsl, 0, 0);
 $resultArrcl = pg_fetch_result($totalcl, 0, 0);
+@$resultArr_cladj = pg_fetch_result($cladj, 0, 0);
+@$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
 ?>
 
 <!DOCTYPE html>
@@ -158,9 +157,43 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                    <div class="col" style="display: inline-block; width:99%; text-align:right">
-                        Academic year: <?php echo $year ?>
+
+                <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / Leave</div>
+                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+                        <a href="leaveadjustment.php" target="_self" class="btn btn-danger btn-sm" role="button">Leave Adjustment</a>
                     </div>
+                
+                    <div class="col" style="display: inline-block; width:99%; text-align:left;margin-left:1.5%">
+                        
+                        <form autocomplete="off" name="academicyear" id="academicyear" action="leave.php" method="POST">
+                        Academic year:&nbsp;<select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                                <?php if ($lyear != null) { ?>
+                                    <option hidden selected><?php echo $lyear ?></option>
+                                <?php }
+                                ?>
+                            </select>
+                        </form>
+                        <script>
+                            var currentYear = new Date().getFullYear();
+                            for (var i = 0; i < 5; i++) {
+                                var next = currentYear + 1;
+                                var year = currentYear + '-' + next;
+                                //next.toString().slice(-2) 
+                                $('#adj_academicyear').append(new Option(year, year));
+                                currentYear--;
+                            }
+                        </script>
+
+                        <script>
+                            <?php if ($lyear == null) { ?>
+                                $(document).ready(function() {
+                                    $("#academicyear").submit();
+                                });
+                            <?php } ?>
+                        </script>
+
+                    </div>
+                    
                     <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
 
                         <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
@@ -215,9 +248,10 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         <tbody>
                             <tr>
 
-                                <td style="line-height: 2;">Sick Leave - <?php echo $sl - $resultArrsl ?>
-                                    <br>Casual Leave - <?php echo $cl - $resultArrcl ?>
-
+                                <td style="line-height: 2;">
+                                    Sick Leave - <?php echo (($sl + $resultArr_sladj) - $resultArrsl) ?>
+                                    <br>Casual Leave - <?php echo (($cl + $resultArr_cladj) - $resultArrcl) ?>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -343,18 +377,6 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
-                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
-                                    <?php if ($id == null) { ?>
-                                        <option value="" disabled selected hidden>Select Year</option>
-                                    <?php
-                                    } else { ?>
-                                        <option hidden selected><?php echo $id ?></option>
-                                    <?php }
-                                    ?>
-                                    <option>2022-2023</option>
-                                    <option>2021-2022</option>
-                                    <option>ALL</option>
-                                </select>&nbsp;
                                 <select name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
                                     <?php if ($status == null) { ?>
                                         <option value="" disabled selected hidden>Select Status</option>
@@ -431,7 +453,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             </tr>';
                         } ?>
                     <?php
-                    } else if ($id == null && $status == null) {
+                    } else if ($lyear == null && $status == null) {
                     ?>
                         <tr>
                             <td colspan="5">Please select Filter value.</td>
