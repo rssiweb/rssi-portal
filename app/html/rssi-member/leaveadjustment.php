@@ -65,33 +65,33 @@ if ($role == "Admin") {
             $email = $emailassociate . $emailstudent;
 
             if ($adj_day != "") {
-            sendEmail("leaveadjustment", array(
-                "leaveadjustmentid" => $leaveadjustmentid,
-                "adj_applicantid" => $adj_applicantid,
-                "adj_applicantname" => @$fullname . @$studentname,
-                "adj_fromdate" => @date("d/m/Y", strtotime($fromdate)),
-                "adj_todate" => @date("d/m/Y", strtotime($todate)),
-                "adj_day" => $adj_day,
-                "adj_leavetype" => $adj_leavetype,
-                "now" => $now,
-                "adj_appliedby" => $adj_appliedby,
-                "adj_reason" => $adj_reason,
-            ), $email);
-        }
-        if ($adj_day == "") {
-            sendEmail("leaveadjustment", array(
-                "leaveadjustmentid" => $leaveadjustmentid,
-                "adj_applicantid" => $adj_applicantid,
-                "adj_applicantname" => @$fullname . @$studentname,
-                "adj_fromdate" => @date("d/m/Y", strtotime($fromdate)),
-                "adj_todate" => @date("d/m/Y", strtotime($todate)),
-                "adj_day" => $day,
-                "adj_leavetype" => $adj_leavetype,
-                "now" => $now,
-                "adj_appliedby" => $adj_appliedby,
-                "adj_reason" => $adj_reason,
-            ), $email);
-        }
+                sendEmail("leaveadjustment", array(
+                    "leaveadjustmentid" => $leaveadjustmentid,
+                    "adj_applicantid" => $adj_applicantid,
+                    "adj_applicantname" => @$fullname . @$studentname,
+                    "adj_fromdate" => @date("d/m/Y", strtotime($fromdate)),
+                    "adj_todate" => @date("d/m/Y", strtotime($todate)),
+                    "adj_day" => $adj_day,
+                    "adj_leavetype" => $adj_leavetype,
+                    "now" => $now,
+                    "adj_appliedby" => $adj_appliedby,
+                    "adj_reason" => $adj_reason,
+                ), $email);
+            }
+            if ($adj_day == "") {
+                sendEmail("leaveadjustment", array(
+                    "leaveadjustmentid" => $leaveadjustmentid,
+                    "adj_applicantid" => $adj_applicantid,
+                    "adj_applicantname" => @$fullname . @$studentname,
+                    "adj_fromdate" => @date("d/m/Y", strtotime($fromdate)),
+                    "adj_todate" => @date("d/m/Y", strtotime($todate)),
+                    "adj_day" => $day,
+                    "adj_leavetype" => $adj_leavetype,
+                    "now" => $now,
+                    "adj_appliedby" => $adj_appliedby,
+                    "adj_reason" => $adj_reason,
+                ), $email);
+            }
         }
     }
 }
@@ -493,13 +493,13 @@ $resultArr = pg_fetch_all($result);
                                 <?php if ($role == "Admin") { ?>
 
                                     <?php if (($array['phone'] != null || $array['contact'] != null)) { ?>
-                                        <?php echo '<td><a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['adj_applicantid'] . '),%0A%0ARedeem id ' . $array['leaveadjustmentid'] . ' against the policy issued by the organization has been settled at Rs.' . $array['leaveadjustmentid'] . ' on ' . @date("d/m/Y g:i a", strtotime($array['adj_regdate'])) . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                        <?php echo '<td><a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['adj_applicantid'] . '),%0A%0AYour ' . $array['adj_day'] . ' day(s) ' . $array['adj_leavetype'] . ' has been adjusted in the system. Please check your registered email for more details.%0A%0AYou can always check your leave adjustment details from My Account>Leave>Leave adjustment. For further information, you may contact your HR.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
                                     <?php } else { ?>
                                         <?php echo '<td><i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
                                     <?php } ?>
 
-                                    <?php echo '&nbsp;<form name="leaveadjdelete_' . $array['leaveadjustmentid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                    <?php echo '&nbsp;&nbsp;<form name="leaveadjdelete_' . $array['leaveadjustmentid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                     <input type="hidden" name="form-type" type="text" value="leaveadjdelete">
                                     <input type="hidden" name="leaveadjdeleteid" id="leaveadjdeleteid" type="text" value="' . $array['leaveadjustmentid'] . '">
 
@@ -508,7 +508,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php } ?>
                             <?php } ?>
                         <?php
-                        } else if ($id == null && $adj_academicyear_search==null) {
+                        } else if ($id == null && $adj_academicyear_search == null) {
                         ?>
                             <tr>
                                 <td colspan="5">Please select Filter value.</td>

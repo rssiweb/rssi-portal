@@ -95,6 +95,9 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
 @$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
 @$resultArrrcl = pg_fetch_result($allocl, 0, 0);
 @$resultArrrsl = pg_fetch_result($allosl, 0, 0);
+
+@$slbalance = ($resultArrrsl + $resultArr_sladj) - $resultArrsl;
+@$clbalance = ($resultArrrcl + $resultArr_cladj) - $resultArrcl;
 ?>
 
 <!DOCTYPE html>
@@ -163,15 +166,15 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
             <div class="col-md-12">
                 <div class="row">
 
-                <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / Leave</div>
+                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / Leave</div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                    <span class="noticea"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span> | <span class="noticea"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear?>" target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
+                        <span class="noticea"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span> | <span class="noticea"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
                     </div>
-                
+
                     <div class="col" style="display: inline-block; width:99%; text-align:left;margin-left:1.5%">
-                        
+
                         <form autocomplete="off" name="academicyear" id="academicyear" action="leave.php" method="POST">
-                        Academic year:&nbsp;<select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                            Academic year:&nbsp;<select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
                                 <?php if ($lyear != null) { ?>
                                     <option hidden selected><?php echo $lyear ?></option>
                                 <?php }
@@ -198,7 +201,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         </script>
 
                     </div>
-                    
+
                     <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
 
                         <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
@@ -219,19 +222,19 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         </script>
                     <?php } ?>
                     <?php
-                    if (($cl - $resultArrcl == 0 || @$cl - $resultArrcl < 0) && ($sl - $resultArrsl == 0 || $sl - $resultArrsl < 0) && $filterstatus == 'Active') {
+                    if (($clbalance == 0 || @$clbalance < 0) && ($slbalance == 0 || $slbalance < 0) && $filterstatus == 'Active') {
                     ?>
                         <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                             <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Inadequate SL and CL balance. You are not eligible to take leave. Please take a makeup class to enable the apply leave option.
                         </div>
                     <?php
-                    } else if ((@$cl - $resultArrcl == 0 || @$cl - $resultArrcl < 0) && $filterstatus == 'Active') {
+                    } else if ((@$clbalance == 0 || @$clbalance < 0) && $filterstatus == 'Active') {
                     ?>
                         <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                             <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient CL balance. You are not eligible for casual leave. Please take makeup class to increase CL balance.
                         </div>
                     <?php
-                    } else if ((@$sl - $resultArrsl == 0 || @$sl - $resultArrsl < 0) && $filterstatus == 'Active') {
+                    } else if ((@$slbalance == 0 || @$slbalance < 0) && $filterstatus == 'Active') {
                     ?>
                         <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                             <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient SL balance. You are not eligible for sick leave. Please take makeup class to increase SL balance.
@@ -254,8 +257,8 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             <tr>
 
                                 <td style="line-height: 2;">
-                                    Sick Leave - <?php echo (($resultArrrsl + $resultArr_sladj) - $resultArrsl) ?>
-                                    <br>Casual Leave - <?php echo (($resultArrrcl + $resultArr_cladj) - $resultArrcl) ?>
+                                    Sick Leave - <?php echo $slbalance ?>
+                                    <br>Casual Leave - <?php echo $clbalance ?>
                                 </td>
                             </tr>
                         </tbody>
@@ -354,13 +357,13 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         document.getElementById("typeofleave").addEventListener("click", getType)
                     </script>
                     <script>
-                        if (<?php echo $sl - $resultArrsl ?> <= 0) {
+                        if (<?php echo $slbalance ?> <= 0) {
                             document.getElementById("typeofleave").options[1].disabled = true;
                         } else {
                             document.getElementById("typeofleave").options[1].disabled = false;
                         }
 
-                        if (<?php echo $cl - $resultArrcl ?> <= 0) {
+                        if (<?php echo $clbalance ?> <= 0) {
                             document.getElementById("typeofleave").options[2].disabled = true;
                         } else {
                             document.getElementById("typeofleave").options[2].disabled = false;
