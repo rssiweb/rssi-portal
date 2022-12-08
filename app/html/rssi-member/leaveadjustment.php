@@ -486,7 +486,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php } ?>
 
                                 <?php echo '<td>' . $array['adj_day'] . '</td>
-                                <td>' . $array['adj_leavetype'] . '<br>' . $array['adj_academicyear'] . '</td>
+                                <td>' . $array['adj_leavetype'] . '/' . $array['adj_academicyear'] . '</td>
                                 <td>' . $array['adj_appliedby'] . '<br>' . $array['adj_appliedby_name'] . '</td>
                                 <td>' . $array['adj_reason'] . '</td>' ?>
 
