@@ -1,0 +1,48 @@
+[{{leaveadjustmentid}}] Your {{adj_day}} day(s) {{adj_leavetype}} has been adjusted in the system
+<!-- You have earned a badge -->
+<html>
+
+<head>
+    <style>
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+    </style>
+</head>
+
+<body>
+    <p>Dear {{adj_applicantname}} ({{adj_applicantid}}),<br><br>Your {{adj_day}} day(s) {{adj_leavetype}} has been adjusted in the system. Please see the leave adjustment details below.<br><br>
+        <table class="table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th scope="col">Leave adjustment id</th>
+                    <th scope="col">Applicant Details</th>
+                    <th scope="col">Applied on</th>
+                    <th scope="col">Adjusted on</th>
+                    <th scope="col">No of day(s) adjusted</th>
+                    <th scope="col">Adjusted Leave Type</th>
+                    <th scope="col">Reviewer</th>
+                    <th scope="col">Remarks</th>
+                </tr>
+                <tr>
+                    <td>{{leaveadjustmentid}}</td>
+                    <td>{{adj_applicantid}}<br>{{adj_applicantname}}</td>
+                    <td>{{now}}</td>
+                    <td>{{adj_fromdate}}-{{adj_todate}}</td>
+                    <td>{{adj_day}}</td>
+                    <td>{{adj_leavetype}}</td>
+                    <td>{{adj_appliedby}}</td>
+                    <td>{{adj_reason}}</td>
+                </tr>
+            </thead>
+        </table>
+
+        <br><br>You can always check your leave adjustment details from My Account>Leave>Leave adjustment. For further information, you may contact your HR.
+        <br><br>--RSSI HR team<br><br>This is a system generated email.
+    </p>
+</body>
+
+</html>
