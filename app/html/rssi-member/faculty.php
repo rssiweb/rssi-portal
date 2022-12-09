@@ -31,18 +31,29 @@ $date = date('Y-m-d H:i:s');
 
 @$id = $_POST['get_id'];
 @$aaid = $_POST['get_aaid'];
+@$lyear = $_POST['adj_academicyear'];
 @$is_user = $_POST['is_user'];
 
-if ($id != null && $aaid == null) {
+if ($id != null) {
     $result = pg_query($con, "SELECT distinct * FROM rssimyaccount_members 
     left join (SELECT status,userid FROM asset) asset ON asset.userid=rssimyaccount_members.associatenumber 
     left join (SELECT distinct username, max(logintime) as logintime FROM userlog_member GROUP BY username) userlog_member ON rssimyaccount_members.associatenumber=userlog_member.username
     left join (SELECT taggedto FROM gps) gps ON rssimyaccount_members.associatenumber=gps.taggedto
 
-    WHERE filterstatus='$id' order by filterstatus asc,today desc");
-}
+    left join (SELECT applicantid, COALESCE(SUM(days),0) as sltd  FROM leavedb_leavedb WHERE typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) sltaken ON rssimyaccount_members.associatenumber=sltaken.applicantid
 
-if ($id == null && $aaid != null) {
+    left join (SELECT applicantid, COALESCE(SUM(days),0) as cltd FROM leavedb_leavedb WHERE typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber=cltaken.applicantid
+
+    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as slad FROM leaveallocation WHERE allo_leavetype='Sick Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber=slallo.allo_applicantid
+
+    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as clad FROM leaveallocation WHERE allo_leavetype='Casual Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) clallo ON rssimyaccount_members.associatenumber=clallo.allo_applicantid
+
+    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as sladd FROM leaveadjustment WHERE adj_leavetype='Sick Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) sladj ON rssimyaccount_members.associatenumber=sladj.adj_applicantid
+
+    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as cladd FROM leaveadjustment WHERE adj_leavetype='Casual Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber=cladj.adj_applicantid
+
+    WHERE filterstatus='$id' order by filterstatus asc,today desc");
+} else if ($aaid != null) {
     $result = pg_query($con, "SELECT distinct * FROM rssimyaccount_members 
     
     left join (SELECT status,userid FROM asset) asset ON asset.userid=rssimyaccount_members.associatenumber 
@@ -50,8 +61,7 @@ if ($id == null && $aaid != null) {
     left join (SELECT taggedto FROM gps) gps ON rssimyaccount_members.associatenumber=gps.taggedto
     
     WHERE associatenumber='$aaid' order by filterstatus asc,today desc");
-}
-if ($id == null && $aaid == null) {
+} else {
     $result = pg_query($con, "SELECT * from rssimyaccount_members where associatenumber is null");
 }
 
@@ -76,7 +86,7 @@ $resultArr = pg_fetch_all($result);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -159,6 +169,25 @@ $resultArr = pg_fetch_all($result);
                 <div class="row">
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+
+                        <form autocomplete="off" name="academicyear" id="academicyear" action="#" method="POST">
+                            Academic year:&nbsp;<select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                                <?php if ($lyear != null) { ?>
+                                    <option hidden selected><?php echo $lyear ?></option>
+                                <?php }
+                                ?>
+                            </select>
+                        </form>
+                        <script>
+                            var currentYear = new Date().getFullYear();
+                            for (var i = 0; i < 5; i++) {
+                                var next = currentYear + 1;
+                                var year = currentYear + '-' + next;
+                                //next.toString().slice(-2) 
+                                $('#adj_academicyear').append(new Option(year, year));
+                                currentYear--;
+                            }
+                        </script>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         <a href="facultyexp.php" target="_self" class="btn btn-danger btn-sm" role="button">Faculty Details</a>
@@ -182,10 +211,18 @@ $resultArr = pg_fetch_all($result);
                                 <input name="get_aaid" id="get_aaid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aaid ?>">
                             </div>
                         </div>
+                        <select name="adj_academicyear" id="adj_academicyear" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                            <?php if ($lyear != null) { ?>
+                                <option hidden selected><?php echo $lyear ?></option>
+                            <?php }
+                            ?>
+                        </select>
+
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                 <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                         </div>
+
                         <div id="filter-checks">
                             <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
                             <label for="is_user" style="font-weight: 400;">Search by Associate ID</label>
@@ -217,8 +254,8 @@ $resultArr = pg_fetch_all($result);
                         })
                     </script>
                     <?php
-                    echo '<table class="table">
-          <thead style="font-size: 12px;">
+                    echo '<table class="table" style="font-size: 12px;">
+          <thead>
           <tr>
           <th scope="col" id="cw">Photo</th>
           <th scope="col" id="cw1">Volunteer Details</th>
@@ -284,8 +321,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php } ?>
 
                                 <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br>s&nbsp;' . $array['slbal'] . ',&nbsp;c&nbsp;' . $array['clbal'] . '</td>
-            <td style="white-space: unset;">
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br><br>s&nbsp;('.($array['slad']+$array['sladd'])-$array['sltd'].'),&nbsp;c&nbsp;(' . ($array['clad']+$array['cladd'])-$array['cltd']. ')</td><td style="white-space: unset;">
             
             
             <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">

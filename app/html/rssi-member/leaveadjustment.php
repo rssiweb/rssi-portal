@@ -216,7 +216,9 @@ $resultArr = pg_fetch_all($result);
                         </script>
                     <?php } ?>
                     <?php if ($role == 'Admin') { ?>
-                        <div class="col" style="display: inline-block; text-align:right; width:100%">Home / <span class="noticea"><a href="leave_admin.php">Leave Management System (LMS)</a></span> / Leave Adjustment
+                        <div class="col" style="display: inline-block; text-align:left; width:100%">
+                        <!-- Home / <span class="noticea"><a href="leave_admin.php">Leave Management System (LMS)</a></span> /  -->
+                        <h1>Leave Adjustment</h1>
                         </div>
                     <?php } else { ?>
                         <div class="col" style="display: inline-block; text-align:right; width:100%">Home / <span class="noticea"><a href="leave.php">Leave</a></span> / Leave Adjustment

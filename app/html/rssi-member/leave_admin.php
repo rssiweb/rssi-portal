@@ -100,12 +100,12 @@ if ($id != null) {
     $sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
 
 
-    $resultArrsl = pg_fetch_result($totalsl, 0, 0);
-    $resultArrcl = pg_fetch_result($totalcl, 0, 0);
-    @$resultArrrcl = pg_fetch_result($allocl, 0, 0);
-    @$resultArrrsl = pg_fetch_result($allosl, 0, 0);
-    @$resultArr_cladj = pg_fetch_result($cladj, 0, 0);
-    @$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
+    $resultArrsl = pg_fetch_result($totalsl, 0, 0); //sltaken        (resultArrrsl+resultArr_sladj)-$resultArrsl
+    $resultArrcl = pg_fetch_result($totalcl, 0, 0); //cltaken
+    @$resultArrrcl = pg_fetch_result($allocl, 0, 0); //clallocate
+    @$resultArrrsl = pg_fetch_result($allosl, 0, 0); //slallocate
+    @$resultArr_cladj = pg_fetch_result($cladj, 0, 0); //cladjusted
+    @$resultArr_sladj = pg_fetch_result($sladj, 0, 0); //sladjusted
 } else {
     $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id order by timestamp desc");
 }
@@ -386,8 +386,8 @@ if (!$result) {
                                     <td>
                                         <?php if ($appid != null) { ?>
 
-                                            Sick Leave - <?php echo (($resultArrrsl + $resultArr_sladj) - $resultArrsl) ?>
-                                            <br>Casual Leave - <?php echo (($resultArrrcl + $resultArr_cladj) - $resultArrcl) ?>
+                                            Sick Leave - (<?php echo ($resultArrrsl + $resultArr_sladj) - $resultArrsl ?>)
+                                            <br>Casual Leave - (<?php echo ($resultArrrcl + $resultArr_cladj) - $resultArrcl ?>)
 
                                         <?php } ?>
                                     </td>
@@ -446,7 +446,7 @@ if (!$result) {
                                 echo '  <td>' . $array['applicantid'] . '<br>' . $array['fullname'] . $array['studentname'] . '</td>
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
-                                <td>' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '</td>
+                                <td>' . $array['days'] . '</td>
                                 <td>' . $array['typeofleave'] . '<br>
                                 ' . $array['creason'] . '<br>
                                 ' . $array['applicantcomment'] . '</td>
