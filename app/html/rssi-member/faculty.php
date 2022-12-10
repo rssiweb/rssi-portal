@@ -169,25 +169,6 @@ $resultArr = pg_fetch_all($result);
                 <div class="row">
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-
-                        <form autocomplete="off" name="academicyear" id="academicyear" action="#" method="POST">
-                            Academic year:&nbsp;<select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-                                <?php if ($lyear != null) { ?>
-                                    <option hidden selected><?php echo $lyear ?></option>
-                                <?php }
-                                ?>
-                            </select>
-                        </form>
-                        <script>
-                            var currentYear = new Date().getFullYear();
-                            for (var i = 0; i < 5; i++) {
-                                var next = currentYear + 1;
-                                var year = currentYear + '-' + next;
-                                //next.toString().slice(-2) 
-                                $('#adj_academicyear').append(new Option(year, year));
-                                currentYear--;
-                            }
-                        </script>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         <a href="facultyexp.php" target="_self" class="btn btn-danger btn-sm" role="button">Faculty Details</a>
@@ -228,6 +209,20 @@ $resultArr = pg_fetch_all($result);
                             <label for="is_user" style="font-weight: 400;">Search by Associate ID</label>
                         </div>
                     </form>
+                    <script>
+                           <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                var currentYear = new Date().getFullYear() - 1;
+                            <?php } else { ?>
+                                var currentYear = new Date().getFullYear();
+                            <?php } ?>
+                            for (var i = 0; i < 5; i++) {
+                                var next = currentYear + 1;
+                                var year = currentYear + '-' + next;
+                                //next.toString().slice(-2) 
+                                $('#adj_academicyear').append(new Option(year, year));
+                                currentYear--;
+                            }
+                        </script>
                     <script>
                         if ($('#is_user').not(':checked').length > 0) {
 

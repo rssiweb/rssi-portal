@@ -126,7 +126,7 @@ $resultArr = pg_fetch_all($result);
                         <div class="form-group">
                             <div class="col2" style="display: inline-block;">
 
-                                <select name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
+                                <select name="get_aid" id="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
                                     <?php if ($id == null) { ?>
                                         <option value="" hidden selected>Select year</option>
                                     <?php
@@ -134,8 +134,6 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
-                                    <option>2022-2023</option>
-                                    <option>2021-2022</option>
                                 </select>
                             </div>
                             <div class="col2 left" style="display: inline-block;">
@@ -143,6 +141,21 @@ $resultArr = pg_fetch_all($result);
                                     <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                             </div>
                     </form>
+                    <script>
+                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                var currentYear = new Date().getFullYear() - 1;
+                            <?php } else { ?>
+                                var currentYear = new Date().getFullYear();
+                            <?php } ?>
+
+                            for (var i = 0; i < 5; i++) {
+                                var next = currentYear + 1;
+                                var year = currentYear + '-' + next;
+                                //next.toString().slice(-2) 
+                                $('#get_aid').append(new Option(year, year));
+                                currentYear--;
+                            }
+                        </script>
                     <br><br>
                     <?php echo '
                         <table class="table">

@@ -182,7 +182,12 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             </select>
                         </form>
                         <script>
-                            var currentYear = new Date().getFullYear();
+                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                var currentYear = new Date().getFullYear() - 1;
+                            <?php } else { ?>
+                                var currentYear = new Date().getFullYear();
+                            <?php } ?>
+
                             for (var i = 0; i < 5; i++) {
                                 var next = currentYear + 1;
                                 var year = currentYear + '-' + next;
@@ -222,27 +227,25 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         </script>
                     <?php } ?>
                     <?php
-                    if (($clbalance == 0 || @$clbalance < 0) && ($slbalance == 0 || $slbalance < 0) && $filterstatus == 'Active') {
+                    if (($clbalance == 0 || @$clbalance < 0) && ($slbalance == 0 || $slbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
                     ?>
                         <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                             <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Inadequate SL and CL balance. You are not eligible to take leave. Please take a makeup class to enable the apply leave option.
                         </div>
                     <?php
-                    } else if ((@$clbalance == 0 || @$clbalance < 0) && $filterstatus == 'Active') {
+                    } else if ((@$clbalance == 0 || @$clbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
                     ?>
                         <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                             <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient CL balance. You are not eligible for casual leave. Please take makeup class to increase CL balance.
                         </div>
                     <?php
-                    } else if ((@$slbalance == 0 || @$slbalance < 0) && $filterstatus == 'Active') {
+                    } else if ((@$slbalance == 0 || @$slbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
                     ?>
                         <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
                             <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient SL balance. You are not eligible for sick leave. Please take makeup class to increase SL balance.
                         </div>
                     <?php
-                    } else {
-                    }
-                    ?>
+                    } ?>
                 </div>
 
                 <section class="box" style="padding: 2%;">

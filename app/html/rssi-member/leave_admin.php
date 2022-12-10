@@ -373,7 +373,11 @@ if (!$result) {
                                             })
                                         </script>
                                         <script>
-                                            var currentYear = new Date().getFullYear();
+                                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                                var currentYear = new Date().getFullYear() - 1;
+                                            <?php } else { ?>
+                                                var currentYear = new Date().getFullYear();
+                                            <?php } ?>
                                             for (var i = 0; i < 5; i++) {
                                                 var next = currentYear + 1;
                                                 var year = currentYear + '-' + next;

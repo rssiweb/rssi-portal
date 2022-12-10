@@ -217,8 +217,8 @@ $resultArr = pg_fetch_all($result);
                     <?php } ?>
                     <?php if ($role == 'Admin') { ?>
                         <div class="col" style="display: inline-block; text-align:left; width:100%">
-                        <!-- Home / <span class="noticea"><a href="leave_admin.php">Leave Management System (LMS)</a></span> /  -->
-                        <h1>Leave Adjustment</h1>
+                            <!-- Home / <span class="noticea"><a href="leave_admin.php">Leave Management System (LMS)</a></span> /  -->
+                            <h1>Leave Adjustment</h1>
                         </div>
                     <?php } else { ?>
                         <div class="col" style="display: inline-block; text-align:right; width:100%">Home / <span class="noticea"><a href="leave.php">Leave</a></span> / Leave Adjustment
@@ -341,7 +341,11 @@ $resultArr = pg_fetch_all($result);
                                 })
                             </script>
                             <script>
-                                var currentYear = new Date().getFullYear();
+                                <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                    var currentYear = new Date().getFullYear() - 1;
+                                <?php } else { ?>
+                                    var currentYear = new Date().getFullYear();
+                                <?php } ?>
                                 for (var i = 0; i < 5; i++) {
                                     var next = currentYear + 1;
                                     var year = currentYear + '-' + next;
@@ -421,7 +425,11 @@ $resultArr = pg_fetch_all($result);
                                             </script>
                                         <?php } ?>
                                         <script>
-                                            var currentYear = new Date().getFullYear();
+                                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                                var currentYear = new Date().getFullYear() - 1;
+                                            <?php } else { ?>
+                                                var currentYear = new Date().getFullYear();
+                                            <?php } ?>
                                             for (var i = 0; i < 5; i++) {
                                                 var next = currentYear + 1;
                                                 var year = currentYear + '-' + next;

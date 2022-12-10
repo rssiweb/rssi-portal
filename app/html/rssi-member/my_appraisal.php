@@ -209,7 +209,7 @@ while ($row = pg_fetch_array($run)) {
                                         <option>Project end</option>
                                     </select>
 
-                                    <select name="get_year" class="form-control" style="width:max-content; display:inline-block" placeholder="Year" required>
+                                    <select name="get_year" id="get_year" class="form-control" style="width:max-content; display:inline-block" placeholder="Year" required>
                                         <?php if ($year == null) { ?>
                                             <option value="" hidden selected>Select Year</option>
                                         <?php
@@ -217,9 +217,6 @@ while ($row = pg_fetch_array($run)) {
                                             <option hidden selected><?php echo $year ?></option>
                                         <?php }
                                         ?>
-                                        <!--<option>Quarterly 2/2021</option>-->
-                                        <option>2022-2023</option>
-                                        <option>2021-2022</option>
                                     </select>
                                 </div>
                             </div>
@@ -228,6 +225,21 @@ while ($row = pg_fetch_array($run)) {
                                     <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                             </div>
                         </form>
+                        <script>
+                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                var currentYear = new Date().getFullYear() - 1;
+                            <?php } else { ?>
+                                var currentYear = new Date().getFullYear();
+                            <?php } ?>
+
+                            for (var i = 0; i < 5; i++) {
+                                var next = currentYear + 1;
+                                var year = currentYear + '-' + next;
+                                //next.toString().slice(-2) 
+                                $('#get_year').append(new Option(year, year));
+                                currentYear--;
+                            }
+                        </script>
 
                         <table class="table">
                             <thead style="font-size: 12px;">
