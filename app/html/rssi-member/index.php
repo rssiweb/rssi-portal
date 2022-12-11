@@ -6,22 +6,6 @@ include("../../util/login_util.php");
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
 
-if ($_POST) {
-    function getCaptcha($SecretKey)
-    {
-        $Response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" . SECRET_KEY . "&response={$SecretKey}");
-        $Return = json_decode($Response);
-        return $Return;
-    }
-    $Return = getCaptcha($_POST['g-recaptcha-response']);
-    if ($Return->success == true && $Return->score > 0.5) {
-        // echo "Succes!";
-    } else {
-        //echo "You are a Robot!!";
-    }
-}
-
-date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = false;
 
@@ -64,13 +48,8 @@ function afterlogin($con, $date)
     }
 }
 
-if (isLoggedIn("aid")) {
-    afterlogin($con, $date);
-    exit;
-}
-
-if (isset($_POST['login'])) {
-
+function checkLogin($con, $date){
+    global $login_failed_dialog;
     $associatenumber = strtoupper($_POST['aid']);
     $colors = $_POST['pass'];
 
@@ -90,6 +69,38 @@ if (isset($_POST['login'])) {
         $login_failed_dialog = true;
     }
 }
+
+function getCaptcha($SecretKey)
+{
+    $Response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" . SECRET_KEY . "&response={$SecretKey}");
+    $Return = json_decode($Response);
+    return $Return;
+}
+
+if ($_POST) {
+    $islocal = $_ENV['IS_LOCAL'] ?? "false";
+    if($islocal == "true"){
+        if (isset($_POST['login'])) {
+            checkLogin($con, $date);
+        }
+    } else{
+        $Return = getCaptcha($_POST['g-recaptcha-response']);
+        if ($Return->success == true && $Return->score > 0.5) {
+            if (isset($_POST['login'])) {
+                checkLogin($con, $date);
+            }
+        } else {
+            $login_failed_dialog = true;
+        }
+    }
+}
+
+if (isLoggedIn("aid")) {
+    afterlogin($con, $date);
+    exit;
+}
+
+
 ?>
 
 <html>

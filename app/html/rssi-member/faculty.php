@@ -44,6 +44,8 @@ if ($id != null) {
 
     left join (SELECT applicantid, COALESCE(SUM(days),0) as cltd FROM leavedb_leavedb WHERE typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber=cltaken.applicantid
 
+    left join (SELECT applicantid, 1 as onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved') onleave ON rssimyaccount_members.associatenumber=onleave.applicantid
+
     left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as slad FROM leaveallocation WHERE allo_leavetype='Sick Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber=slallo.allo_applicantid
 
     left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as clad FROM leaveallocation WHERE allo_leavetype='Casual Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) clallo ON rssimyaccount_members.associatenumber=clallo.allo_applicantid
@@ -297,7 +299,7 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php echo '<td style="white-space:unset">' . $array['astatus'] ?><br>
 
-                                <?php if ($array['on_leave'] != null && $array['filterstatus'] != 'Inactive') { ?>
+                                <?php if ($array['onleave'] != null && $array['filterstatus'] != 'Inactive') { ?>
                                     <?php echo '<br><p class="label label-danger">on leave</p>' ?>
                                 <?php } else {
                                 } ?>

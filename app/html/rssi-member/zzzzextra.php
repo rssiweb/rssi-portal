@@ -1555,3 +1555,18 @@
                 $academic_year = date('Y') . '-' . (date('Y') + 1);
             }
 
+
+            <?php  
+            echo "var lyear='" . $lyear . "'";
+        
+        ?> 
+
+<script>
+                            console.log(lyear)
+                            if (lyear == "") {
+                                $(document).ready(function() {
+                                   // $("#academicyear").submit();
+                                });
+                            }
+                        </script>
+

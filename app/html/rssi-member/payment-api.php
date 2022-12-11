@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/paytm-util.php");
+// include("../../util/email.php");
 // require_once("email.php");
 
 date_default_timezone_set('Asia/Kolkata');
@@ -142,6 +143,32 @@ if ($_POST['form-type'] == "leavereviewform") {
   $now = date('Y-m-d H:i:s');
   $leaveapproval = "UPDATE leavedb_leavedb SET  status = '$status', fromdate = '$fromdate',  todate = '$todate', comment = '$comment',reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name', days = '$day' WHERE leaveid = '$leaveid'";
   $result = pg_query($con, $leaveapproval);
+
+
+  // $applicantid = pg_query($con, "Select applicantid from leavedb_leavedb where leaveid='$leaveid'");
+  // $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$applicantid'");
+  // @$nameassociate = pg_fetch_result($resultt, 0, 0);
+  // @$emailassociate = pg_fetch_result($resultt, 0, 1);
+
+  // $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$applicantid'");
+  // @$namestudent = pg_fetch_result($resulttt, 0, 0);
+  // @$emailstudent = pg_fetch_result($resulttt, 0, 1);
+
+  // $applicantname = $nameassociate . $namestudent;
+  // $email = $emailassociate . $emailstudent;
+
+  // sendEmail("leaveapply_admin", array(
+  //   "leaveid" => $leaveid,
+  //   "applicantid" => $applicantid,
+  //   "applicantname" => @$applicantname,
+  //   "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+  //   "todate" => @date("d/m/Y", strtotime($todate)),
+  //   "typeofleave" => $typeofleave,
+  //   "category" => $creason,
+  //   "status" => $status,
+  //   "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
+  //   "comment" => $comment,
+  // ), $email);
 }
 
 if ($_POST['form-type'] == "ipfclose") {

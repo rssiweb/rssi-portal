@@ -19,7 +19,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
 
 
-if (date('m') <= 4) { //Upto June 2014-2015
+if (date('m') < 4) { //Upto June 2014-2015
     $academic_year = (date('Y') - 1) . '-' . date('Y');
 } else { //After June 2015-2016
     $academic_year = date('Y') . '-' . (date('Y') + 1);

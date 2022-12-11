@@ -19,7 +19,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
 
 
-if (date('m') <= 4) { //Upto June 2014-2015
+if (date('m') < 4) { //Upto June 2014-2015
     $academic_year = (date('Y') - 1) . '-' . date('Y');
 } else { //After June 2015-2016
     $academic_year = date('Y') . '-' . (date('Y') + 1);
@@ -41,6 +41,8 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$applicantcomment = $_POST['applicantcomment'];
     @$email = $email;
 
+    // send $file to google =======> google (rssi.in) // robotic service account credential.json
+
     if ($leaveid != "") {
         $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$applicantcomment','$day')";
         $result = pg_query($con, $leave);
@@ -61,8 +63,10 @@ if (@$_POST['form-type'] == "leaveapply") {
     }
 }
 
+@$currentAcademicYear = $year;
+
 @$status = $_POST['get_status'];
-@$lyear = $_POST['adj_academicyear'];
+@$lyear = $_POST['adj_academicyear'] ?? $currentAcademicYear;
 date_default_timezone_set('Asia/Kolkata');
 
 $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved' OR status is null)");
@@ -197,14 +201,6 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             }
                         </script>
 
-                        <script>
-                            <?php if ($lyear == null) { ?>
-                                $(document).ready(function() {
-                                    $("#academicyear").submit();
-                                });
-                            <?php } ?>
-                        </script>
-
                     </div>
 
                     <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
@@ -272,8 +268,8 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                     <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave.php" method="POST">
                         <div class="form-group" style="display: inline-block;">
 
-                            <input type="hidden" name="form-type" type="text" value="leaveapply">
-
+                            <input type="hidden" name="form-type" value="leaveapply">
+                            
                             <span class="input-help">
                                 <input type="date" class="form-control" name="fromdate" id="fromdate" type="text" value="">
                                 <small id="passwordHelpBlock" class="form-text text-muted">From</small>
