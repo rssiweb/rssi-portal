@@ -26,11 +26,10 @@ if ($role != 'Admin') {
 }
 ?>
 <?php
-date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 
 @$id = $_POST['get_id'];
-@$aaid = $_POST['get_aaid'];
+@$aaid = strtoupper($_POST['get_aaid']);
 @$lyear = $_POST['adj_academicyear'];
 @$is_user = $_POST['is_user'];
 
@@ -57,10 +56,23 @@ if ($id != null) {
     WHERE filterstatus='$id' order by filterstatus asc,today desc");
 } else if ($aaid != null) {
     $result = pg_query($con, "SELECT distinct * FROM rssimyaccount_members 
-    
     left join (SELECT status,userid FROM asset) asset ON asset.userid=rssimyaccount_members.associatenumber 
-    left JOIN (SELECT distinct username, max(logintime) as logintime FROM userlog_member GROUP BY username) userlog_member ON rssimyaccount_members.associatenumber=userlog_member.username
+    left join (SELECT distinct username, max(logintime) as logintime FROM userlog_member GROUP BY username) userlog_member ON rssimyaccount_members.associatenumber=userlog_member.username
     left join (SELECT taggedto FROM gps) gps ON rssimyaccount_members.associatenumber=gps.taggedto
+
+    left join (SELECT applicantid, COALESCE(SUM(days),0) as sltd  FROM leavedb_leavedb WHERE typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) sltaken ON rssimyaccount_members.associatenumber=sltaken.applicantid
+
+    left join (SELECT applicantid, COALESCE(SUM(days),0) as cltd FROM leavedb_leavedb WHERE typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber=cltaken.applicantid
+
+    left join (SELECT applicantid, 1 as onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved') onleave ON rssimyaccount_members.associatenumber=onleave.applicantid
+
+    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as slad FROM leaveallocation WHERE allo_leavetype='Sick Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber=slallo.allo_applicantid
+
+    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as clad FROM leaveallocation WHERE allo_leavetype='Casual Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) clallo ON rssimyaccount_members.associatenumber=clallo.allo_applicantid
+
+    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as sladd FROM leaveadjustment WHERE adj_leavetype='Sick Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) sladj ON rssimyaccount_members.associatenumber=sladj.adj_applicantid
+
+    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as cladd FROM leaveadjustment WHERE adj_leavetype='Casual Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber=cladj.adj_applicantid
     
     WHERE associatenumber='$aaid' order by filterstatus asc,today desc");
 } else {
@@ -212,19 +224,19 @@ $resultArr = pg_fetch_all($result);
                         </div>
                     </form>
                     <script>
-                           <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                var currentYear = new Date().getFullYear() - 1;
-                            <?php } else { ?>
-                                var currentYear = new Date().getFullYear();
-                            <?php } ?>
-                            for (var i = 0; i < 5; i++) {
-                                var next = currentYear + 1;
-                                var year = currentYear + '-' + next;
-                                //next.toString().slice(-2) 
-                                $('#adj_academicyear').append(new Option(year, year));
-                                currentYear--;
-                            }
-                        </script>
+                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                            var currentYear = new Date().getFullYear() - 1;
+                        <?php } else { ?>
+                            var currentYear = new Date().getFullYear();
+                        <?php } ?>
+                        for (var i = 0; i < 5; i++) {
+                            var next = currentYear + 1;
+                            var year = currentYear + '-' + next;
+                            //next.toString().slice(-2) 
+                            $('#adj_academicyear').append(new Option(year, year));
+                            currentYear--;
+                        }
+                    </script>
                     <script>
                         if ($('#is_user').not(':checked').length > 0) {
 
@@ -299,7 +311,7 @@ $resultArr = pg_fetch_all($result);
 
                                 <?php echo '<td style="white-space:unset">' . $array['astatus'] ?><br>
 
-                                <?php if ($array['onleave'] != null && $array['filterstatus'] != 'Inactive') { ?>
+                                <?php if ($array['onleave'] != null) { ?>
                                     <?php echo '<br><p class="label label-danger">on leave</p>' ?>
                                 <?php } else {
                                 } ?>
@@ -318,7 +330,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php } ?>
 
                                 <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br><br>s&nbsp;('.($array['slad']+$array['sladd'])-$array['sltd'].'),&nbsp;c&nbsp;(' . ($array['clad']+$array['cladd'])-$array['cltd']. ')</td><td style="white-space: unset;">
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br><br>s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
             
             
             <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">

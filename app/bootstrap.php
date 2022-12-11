@@ -31,3 +31,5 @@ $password=$_ENV["DB_PASSWORD"];
 $dbname=$_ENV["DB_NAME"];
 $connection_string = "host = $servername user = $username password = $password dbname = $dbname";
 $con = pg_connect ( $connection_string );
+
+pg_query($con,"SET timezone TO 'Asia/Calcutta'");

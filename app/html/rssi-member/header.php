@@ -233,7 +233,7 @@
                 </h3>
                 <p class="profile-title"><?php echo $associatenumber ?>
 
-                    <?php if (@$on_leave == 'on leave') {
+                    <?php if (@$onleave != null) {
                     ?>
                         <span class="label label-danger" style="display:-webkit-inline-box">on leave</span>
                     <?php

@@ -1,9 +1,10 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 
-
 $user_check = $_SESSION['aid'];
-$view_users_query = "select * from rssimyaccount_members WHERE associatenumber='$user_check'"; //select query for viewing users.  
+$view_users_query = "select * from rssimyaccount_members 
+left join (SELECT applicantid, 1 as onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND status='Approved') onleave ON rssimyaccount_members.associatenumber=onleave.applicantid
+WHERE associatenumber='$user_check'"; //select query for viewing users.  
 $run = pg_query($con, $view_users_query); //here run the sql query.  
 
 while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
@@ -90,4 +91,5 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $password_updated_by= $row[80];
         $password_updated_on= $row[81];
         $default_pass_updated_by= $row[82];
-        $default_pass_updated_on= $row[83];} ?>
+        $default_pass_updated_on= $row[83];
+        $onleave= $row[85];}
