@@ -169,40 +169,6 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-
-                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / Leave</div>
-                    <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        <span class="noticea"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span> | <span class="noticea"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
-                    </div>
-
-                    <div class="col" style="display: inline-block; width:99%; text-align:left;margin-left:1.5%">
-
-                        <form autocomplete="off" name="academicyear" id="academicyear" action="leave.php" method="POST">
-                            Academic year:&nbsp;<select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-                                <?php if ($lyear != null) { ?>
-                                    <option hidden selected><?php echo $lyear ?></option>
-                                <?php }
-                                ?>
-                            </select>
-                        </form>
-                        <script>
-                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                var currentYear = new Date().getFullYear() - 1;
-                            <?php } else { ?>
-                                var currentYear = new Date().getFullYear();
-                            <?php } ?>
-
-                            for (var i = 0; i < 5; i++) {
-                                var next = currentYear + 1;
-                                var year = currentYear + '-' + next;
-                                //next.toString().slice(-2) 
-                                $('#adj_academicyear').append(new Option(year, year));
-                                currentYear--;
-                            }
-                        </script>
-
-                    </div>
-
                     <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
 
                         <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
@@ -242,6 +208,39 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         </div>
                     <?php
                     } ?>
+
+                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / Leave</div>
+                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+                        <span class="noticea"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span> | <span class="noticea"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
+                    </div>
+
+                    <div class="col" style="display: inline-block; width:99%; text-align:left;margin-left:1.5%">
+
+                        <form autocomplete="off" name="academicyear" id="academicyear" action="leave.php" method="POST">
+                            Academic year:&nbsp;<select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                                <?php if ($lyear != null) { ?>
+                                    <option hidden selected><?php echo $lyear ?></option>
+                                <?php }
+                                ?>
+                            </select>
+                        </form>
+                        <script>
+                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                var currentYear = new Date().getFullYear() - 1;
+                            <?php } else { ?>
+                                var currentYear = new Date().getFullYear();
+                            <?php } ?>
+
+                            for (var i = 0; i < 5; i++) {
+                                var next = currentYear + 1;
+                                var year = currentYear + '-' + next;
+                                //next.toString().slice(-2) 
+                                $('#adj_academicyear').append(new Option(year, year));
+                                currentYear--;
+                            }
+                        </script>
+
+                    </div>
                 </div>
 
                 <section class="box" style="padding: 2%;">
@@ -269,7 +268,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         <div class="form-group" style="display: inline-block;">
 
                             <input type="hidden" name="form-type" value="leaveapply">
-                            
+
                             <span class="input-help">
                                 <input type="date" class="form-control" name="fromdate" id="fromdate" type="text" value="">
                                 <small id="passwordHelpBlock" class="form-text text-muted">From</small>

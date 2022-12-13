@@ -460,13 +460,14 @@ if (!$result) {
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['leaveid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;' ?>
                                 <?php if (($array['phone'] != null || $array['contact'] != null)) { ?>
-                                    <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ARedeem id ' . $array['leaveid'] . ' against the policy issued by the organization has been settled at Rs.' . $array['leaveid'] . ' on ' . @date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on'])) . '.%0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                    <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ABased on your timesheet data, system-enforced leave has been initiated for ' . @date("d/m/Y",strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])) . ' (' . $array['days'] . ' day(s)) in the system.%0A%0AIf you think this is done by mistake, please call on 7980168159 or write to us at info@rssi.in.
+%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
                                 <?php } else { ?>
                                     <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                                <?php } ?>&nbsp;&nbsp;
+                                    <?php } ?>&nbsp;&nbsp;
 
-                                <?php if ((@$array['email'] != null || @$array['emailaddress'] != null)) { ?>
+                                    <?php if ((@$array['email'] != null || @$array['emailaddress'] != null)) { ?>
                                         <?php echo '<form  action="#" name="email-form-' . $array['leaveid'] . '" method="POST" style="display: -webkit-inline-box;" >
                                 <input type="hidden" name="template" type="text" value="leaveconf">
                                 <input type="hidden" name="data[leaveid]" type="text" value="' . $array['leaveid'] . '">
@@ -488,47 +489,47 @@ if (!$result) {
                                         <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
                                     <?php } ?>
 
-                                <?php echo '&nbsp;&nbsp;<form name="leavedelete_' . $array['leaveid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                    <?php echo '&nbsp;&nbsp;<form name="leavedelete_' . $array['leaveid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="leavedelete">
                                 <input type="hidden" name="leavedeleteid" id="leavedeleteid" type="text" value="' . $array['leaveid'] . '">
                                 
                                 <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['leaveid'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
                                 </td>' ?>
-                            <?php } ?>
-                        <?php
+                                <?php } ?>
+                            <?php
                         } else if ($id == null) {
-                        ?>
-                            <tr>
-                                <td colspan="5">Please select Filter value.</td>
-                            </tr>
-                        <?php
+                            ?>
+                                <tr>
+                                    <td colspan="5">Please select Filter value.</td>
+                                </tr>
+                            <?php
                         } else {
-                        ?>
-                            <tr>
-                                <td colspan="5">No record was found for the selected filter value.</td>
-                            </tr>
-                        <?php }
+                            ?>
+                                <tr>
+                                    <td colspan="5">No record was found for the selected filter value.</td>
+                                </tr>
+                            <?php }
 
                         echo '</tbody>
                                     </table>';
-                        ?>
-                        <!--		Start Pagination -->
-                        <div class='pagination-container'>
-                            <nav>
-                                <ul class="pagination">
+                            ?>
+                            <!--		Start Pagination -->
+                            <div class='pagination-container'>
+                                <nav>
+                                    <ul class="pagination">
 
-                                    <li data-page="prev">
-                                        <span>
-                                            < <span class="sr-only">(current)
-                                        </span></span>
-                                    </li>
-                                    <!--	Here the JS Function Will Add the Rows -->
-                                    <li data-page="next" id="prev">
-                                        <span> > <span class="sr-only">(current)</span></span>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
+                                        <li data-page="prev">
+                                            <span>
+                                                < <span class="sr-only">(current)
+                                            </span></span>
+                                        </li>
+                                        <!--	Here the JS Function Will Add the Rows -->
+                                        <li data-page="next" id="prev">
+                                            <span> > <span class="sr-only">(current)</span></span>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
                     </section>
                 </div>
             </div>
