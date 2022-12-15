@@ -286,7 +286,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                 <small id="passwordHelpBlock" class="form-text text-muted">Types of Leave</small>
                             </span>
                             <span class="input-help">
-                                <select name="creason" id='creason' class="form-control">
+                                <select name="creason" id='creason' class="form-control" required>
                                     <option>--Select--</option>
                                 </select>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Leave Category*</small>

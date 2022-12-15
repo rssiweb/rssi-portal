@@ -385,7 +385,7 @@ $resultArr = pg_fetch_all($result);
                 <?php echo '&nbsp;&nbsp;<p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;' . $array['maxmonth'] . '</p></td><td style="white-space: unset;">' ?>
                 <?php    } else { ?><?php echo '</td><td style="white-space: unset;">' ?><?php   } ?>
 
-                <?php if ($role == 'Admin') { ?>
+                <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
 
                   <?php echo $array['contact'] ?>
                 <?php    } else { ?>
