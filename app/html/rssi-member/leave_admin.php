@@ -38,14 +38,23 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$applicantid = strtoupper($_POST['applicantid']);
     @$fromdate = $_POST['fromdate'];
     @$todate = $_POST['todate'];
-    @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
     @$typeofleave = $_POST['typeofleave'];
     @$creason = $_POST['creason'];
     @$comment = $_POST['comment'];
     @$appliedby = $_POST['appliedby'];
+    @$halfday = $_POST['is_userh'] ?? 0;
 
     if ($leaveid != "") {
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,days) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$day')";
+
+        if ($halfday == 1) {
+
+            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1)/2;
+        } else {
+            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
+        }
+
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,days,halfday) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$day',$halfday)";
+
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
 
@@ -61,17 +70,32 @@ if (@$_POST['form-type'] == "leaveapply") {
         $applicantname = $nameassociate . $namestudent;
         $email = $emailassociate . $emailstudent;
 
-        sendEmail("leaveapply_admin", array(
-            "leaveid" => $leaveid,
-            "applicantid" => $applicantid,
-            "applicantname" => @$applicantname,
-            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-            "todate" => @date("d/m/Y", strtotime($todate)),
-            "typeofleave" => $typeofleave,
-            "category" => $creason,
-            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
-            "now" => $now,
-        ), $email);
+        if ($halfday != 1) {
+            sendEmail("leaveapply_admin", array(
+                "leaveid" => $leaveid,
+                "applicantid" => $applicantid,
+                "applicantname" => @$applicantname,
+                "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+                "todate" => @date("d/m/Y", strtotime($todate)),
+                "typeofleave" => $typeofleave,
+                "category" => $creason,
+                "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
+                "now" => $now,
+            ), $email);
+        }
+        if ($halfday == 1) {
+            sendEmail("leaveapply_admin", array(
+                "leaveid" => $leaveid,
+                "applicantid" => $applicantid,
+                "applicantname" => @$applicantname,
+                "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+                "todate" => @date("d/m/Y", strtotime($todate)),
+                "typeofleave" => $typeofleave,
+                "category" => $creason,
+                "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2,
+                "now" => $now,
+            ), $email);
+        }
     }
 }
 
@@ -247,7 +271,10 @@ if (!$result) {
                                 <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by" value="<?php echo $associatenumber ?>" required readonly>
 
                                 <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
-
+                                <div id="filter-checksh">
+                                    <input type="checkbox" name="is_userh" id="is_userh" value="1" <?php if (isset($_POST['is_userh'])) echo "checked='checked'"; ?> />
+                                    <label for="is_userh" style="font-weight: 400;">Half day</label>
+                                </div>
                             </div>
 
                         </form>
@@ -460,7 +487,7 @@ if (!$result) {
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['leaveid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-regular fa-pen-to-square" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;' ?>
                                 <?php if (($array['phone'] != null || $array['contact'] != null)) { ?>
-                                    <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ABased on your timesheet data, system-enforced leave has been initiated for ' . @date("d/m/Y",strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])) . ' (' . $array['days'] . ' day(s)) in the system.%0A%0AIf you think this is done by mistake, please call on 7980168159 or write to us at info@rssi.in.
+                                    <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ABased on your timesheet data, system-enforced leave has been initiated for ' . @date("d/m/Y", strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])) . ' (' . $array['days'] . ' day(s)) in the system.%0A%0AIf you think this is done by mistake, please call on 7980168159 or write to us at info@rssi.in.
 %0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
                                 <?php } else { ?>
@@ -604,7 +631,7 @@ if (!$result) {
                 <p id="status" class="label " style="display: inline !important;"><span class="leaveid"></span></p>
             </div>
 
-            <form id="leavereviewform" action="#" method="POST">
+            <form id="leavereviewform" name="leavereviewform" action="#" method="POST">
                 <input type="hidden" class="form-control" name="form-type" type="text" value="leavereviewform" readonly>
                 <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
                 <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
@@ -629,7 +656,11 @@ if (!$result) {
                     <textarea type="text" name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="HR remarks" value=""></textarea>
                     <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
                 </span>
-                <br><br>
+                <div id="filter-checkshr">
+                    <input type="checkbox" name="is_userhr" id="" value="" />
+                    <label for="is_userhr" style="font-weight: 400;">Half day</label>
+                </div>
+                <br>
                 <button type="submit" id="leaveupdate" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
             </form>
         </div>
@@ -690,6 +721,23 @@ if (!$result) {
             if (mydata["todate"] !== null) {
                 profile = document.getElementById("todated")
                 profile.value = mydata["todate"]
+            }
+
+            // document.getElementsByName("leavereviewform")[0].id = "leavereviewform" + mydata["leaveid"];
+            document.getElementsByName("is_userhr")[0].id = "is_userhr" + mydata["leaveid"];
+
+            profile = document.getElementById("is_userhr" + mydata["leaveid"])
+            profile.value = mydata["halfday"]
+
+            $('input[type="checkbox"]').on('change', function() {
+                this.value ^= 1;
+            });
+
+
+            if (mydata["halfday"] == 1) {
+                document.getElementById("is_userhr" + mydata["leaveid"]).checked = true;
+            } else {
+                document.getElementById("is_userhr" + mydata["leaveid"]).checked = false;
             }
 
             if (mydata["status"] == 'Approved' || mydata["status"] == 'Rejected') {

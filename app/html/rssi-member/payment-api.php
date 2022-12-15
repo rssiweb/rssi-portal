@@ -139,9 +139,20 @@ if ($_POST['form-type'] == "leavereviewform") {
   @$comment = $_POST['reviewer_remarks'];
   @$fromdate = $_POST['fromdate'];
   @$todate = $_POST['todate'];
-  @$day = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1);
+  @$halfdayhr = $_POST['is_userhr'] ?? 0;
   $now = date('Y-m-d H:i:s');
-  $leaveapproval = "UPDATE leavedb_leavedb SET  status = '$status', fromdate = '$fromdate',  todate = '$todate', comment = '$comment',reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name', days = '$day' WHERE leaveid = '$leaveid'";
+?>
+
+<?php if ($halfdayhr != '' && $halfdayhr != 0) {
+
+    @$day = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2;
+  } else {
+    @$day = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1);
+  } ?>
+
+<?php
+  $leaveapproval = "UPDATE leavedb_leavedb SET  status = '$status', fromdate = '$fromdate',  todate = '$todate', comment = '$comment',reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name', days = '$day', halfday = $halfdayhr WHERE leaveid = '$leaveid'";
+
   $result = pg_query($con, $leaveapproval);
 
 

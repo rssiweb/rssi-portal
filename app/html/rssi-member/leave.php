@@ -33,22 +33,30 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$applicantid = $associatenumber;
     @$fromdate = $_POST['fromdate'];
     @$todate = $_POST['todate'];
-    @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
+
     @$typeofleave = $_POST['typeofleave'];
     @$creason = $_POST['creason'];
     @$comment = $_POST['comment'];
     @$appliedby = $_POST['appliedby'];
     @$applicantcomment = $_POST['applicantcomment'];
+    @$halfday = $_POST['is_userh'] ?? 0;
     @$email = $email;
 
     // send $file to google =======> google (rssi.in) // robotic service account credential.json
 
     if ($leaveid != "") {
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$applicantcomment','$day')";
+        if ($halfday == 1) {
+            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1) / 2;
+        } else {
+            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
+        }
+
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$applicantcomment','$day',$halfday)";
+
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
     }
-    if ($email != "") {
+    if ($email != "" && $halfday != 1) {
         sendEmail("leaveapply", array(
             "leaveid" => $leaveid,
             "applicantid" => $applicantid,
@@ -58,6 +66,19 @@ if (@$_POST['form-type'] == "leaveapply") {
             "typeofleave" => $typeofleave,
             "category" => $creason,
             "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
+            "now" => @date("d/m/Y g:i a", strtotime($now))
+        ), $email);
+    }
+    if ($email != "" && $halfday == 1) {
+        sendEmail("leaveapply", array(
+            "leaveid" => $leaveid,
+            "applicantid" => $applicantid,
+            "applicantname" => @$fullname,
+            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+            "todate" => @date("d/m/Y", strtotime($todate)),
+            "typeofleave" => $typeofleave,
+            "category" => $creason,
+            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2,
             "now" => @date("d/m/Y g:i a", strtotime($now))
         ), $email);
     }
@@ -301,6 +322,11 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
 
                             <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
 
+                            <div id="filter-checksh">
+                                <input type="checkbox" name="is_userh" id="is_userh" value="1"/>
+                                <label for="is_userh" style="font-weight: 400;">Half day</label>
+                            </div>
+
                         </div>
 
                     </form>
@@ -450,7 +476,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             echo '
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
-                                <td>' . round((strtotime($array['todate']) - strtotime($array['fromdate'])) / (60 * 60 * 24) + 1) . '</td>
+                                <td>' . $array['days'] . '</td>
                                 <td>' . $array['typeofleave'] . '<br>
                                 ' . $array['creason'] . '<br>
                                 ' . $array['applicantcomment'] . '</td>
