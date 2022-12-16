@@ -120,7 +120,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                     <?php } ?>
                 <?php } ?>
                 <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    Home / RSSI HR Policy
+                    Home / HR Policy
                 </div>
                 <div class="row">
                     <section class="box" style="padding: 2%;">
