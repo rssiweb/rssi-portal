@@ -47,6 +47,10 @@ function afterlogin($con, $date)
         header("Location: home.php");
     }
 }
+if (isLoggedIn("aid")) {
+    afterlogin($con, $date);
+    exit;
+}
 
 function checkLogin($con, $date){
     global $login_failed_dialog;
@@ -93,11 +97,6 @@ if ($_POST) {
             $login_failed_dialog = true;
         }
     }
-}
-
-if (isLoggedIn("aid")) {
-    afterlogin($con, $date);
-    exit;
 }
 
 
