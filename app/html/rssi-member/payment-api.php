@@ -34,6 +34,13 @@ if ($_POST['form-type'] == "noticebodyedit") {
   $result = pg_query($con, $noticebodyedit);
 }
 
+if ($_POST['form-type'] == "policybodyedit") {
+  @$policyid = $_POST['policyid'];
+  @$remarks = $_POST['remarks'];
+  $policybodyeditt = "UPDATE policy SET  remarks = '$remarks' WHERE policyid = '$policyid'";
+  $result = pg_query($con, $policybodyeditt);
+}
+
 if ($_POST['form-type'] == "paydelete") {
   @$refid = $_POST['pid'];
   $paydelete = "DELETE from fees WHERE id = $refid";
