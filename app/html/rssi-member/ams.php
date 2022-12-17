@@ -220,7 +220,7 @@ if ($_POST) {
                                 <td>' . $array['subject'] . '&nbsp;<p class="label label-default">' . $array['category'] . '</p></td>
                                 <td>
                                 
-                                <form name="noticebody_' . $array['noticeid'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
+                                <form name="noticebody_' . $array['noticeid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="noticebodyedit">
                                 <input type="hidden" name="noticeid" id="noticeid" type="text" value="' . $array['noticeid'] . '">
                                 <textarea id="inp_' . $array['noticeid'] . '" name="noticebody" type="text" disabled>' . $array['noticebody'] . '</textarea>' ?>
@@ -272,10 +272,6 @@ if ($_POST) {
         </section>
     </section>
     <script>
-        function myFunctionn() {
-            alert("Notice body has been updated.");
-            location.reload();
-        }
         var data = <?php echo json_encode($resultArr) ?>;
 
         data.forEach(item => {
@@ -298,7 +294,8 @@ if ($_POST) {
                         method: 'POST',
                         body: new FormData(document.forms['noticebody_' + item.noticeid])
                     })
-                    .then(response => console.log('Success!', response))
+                    .then(response => alert("Notice body has been updated.") +
+                                location.reload())
                     .catch(error => console.error('Error!', error.message))
             })
 

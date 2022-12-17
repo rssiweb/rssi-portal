@@ -147,7 +147,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
@@ -326,7 +326,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         foreach ($resultArr as $array) {
                             echo '<tr>
                             <td>' . $array['id'] . '</td>
-                            <td>' . substr($array['date'], 0, 10) . '</td>
+                            <td>' . @date("d/m/Y", strtotime($array['date'])) . '</td>
                         <td>' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . '</td>
                         <td>' . $array['category'] . '</td>   
                         <td>' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . '</td>  
@@ -334,7 +334,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         <td>' . $array['ptype'] . '</td>
                         <td>' . $array['fullname'] . '</td>
                         <td>
-                        <form name="transfer_' . $array['id'] . '" action="#" method="POST" onsubmit="myFunction()" style="display: -webkit-inline-box;">
+                        <form name="transfer_' . $array['id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                         <input type="hidden" name="form-type" type="text" value="transfer">
                         <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">' ?>
 
@@ -345,13 +345,13 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                             <?php echo ' </form>
 
 
-                        <form name="paydelete_' . $array['id'] . '" action="#" method="POST" onsubmit="myFunctionn()" style="display: -webkit-inline-box;">
+                        <form name="paydelete_' . $array['id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                         <input type="hidden" name="form-type" type="text" value="paydelete">
                         <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">' ?>
 
                             <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') { ?>
 
-                                <?php echo '&nbsp;&nbsp;&nbsp;<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="fa-solid fa-xmark"></i></button>' ?>
+                                <?php echo '&nbsp;&nbsp;&nbsp;<button type="submit" id="yes" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="fa-solid fa-xmark"></i></button>' ?>
                             <?php } ?>
                         <?php echo ' </form>
                         
@@ -386,17 +386,6 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
         </section>
     </section>
 
-
-
-    <script>
-        function myFunction() {
-            alert("Amount has been transferred.");
-        }
-
-        function myFunctionn() {
-            alert("Entry has been deleted.");
-        }
-    </script>
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
         var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
@@ -414,27 +403,36 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                         method: 'POST',
                         body: new FormData(document.forms['transfer_' + item.id])
                     })
-                    .then(response => console.log('Success!', response))
+                    .then(response => alert("Amount has been transferred.") +
+                                location.reload())
                     .catch(error => console.error('Error!', error.message))
             })
 
             console.log(item)
         })
 
-        data.forEach(item => {
-            const form = document.forms['paydelete_' + item.id]
-            form.addEventListener('submit', e => {
-                e.preventDefault()
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['paydelete_' + item.id])
+        function validateForm() {
+            if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+                data.forEach(item => {
+                    const form = document.forms['paydelete_' + item.id]
+                    form.addEventListener('submit', e => {
+                        e.preventDefault()
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['paydelete_' + item.id])
+                            })
+                            .then(response => alert("Record has been deleted.") +
+                                location.reload())
+                            .catch(error => console.error('Error!', error.message))
                     })
-                    .then(response => console.log('Success!', response))
-                    .catch(error => console.error('Error!', error.message))
-            })
 
-            console.log(item)
-        })
+                    console.log(item)
+                })
+            } else {
+                alert("Record has NOT been deleted.");
+                return false;
+            }
+        }
     </script>
 
     <!-- Back top -->

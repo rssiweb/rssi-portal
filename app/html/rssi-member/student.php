@@ -521,7 +521,7 @@ $resultArr = pg_fetch_all($result);
           <p style="display: inline !important;" class="label label-default">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></p>
         </b><br><br>
 
-        <form name="payment" action="#" method="POST" onsubmit="myFunction()">
+        <form name="payment" action="#" method="POST">
           <input type="hidden" name="form-type" type="text" value="payment">
           <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
           <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
@@ -556,11 +556,6 @@ $resultArr = pg_fetch_all($result);
           <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
         </form><br>
         <script>
-          function myFunction() {
-            alert("Fee has been deposited successfully.");
-          }
-        </script>
-        <script>
           const scriptURL = 'payment-api.php'
           const form = document.forms['payment']
 
@@ -570,7 +565,8 @@ $resultArr = pg_fetch_all($result);
                 method: 'POST',
                 body: new FormData(document.forms['payment'])
               })
-              .then(response => console.log('Success!', response))
+              .then(response => alert("Fee has been deposited successfully.") +
+                location.reload())
               .catch(error => console.error('Error!', error.message))
           })
         </script>
