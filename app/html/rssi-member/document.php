@@ -60,7 +60,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Official Letter</th>
                                 <th scope="col">Payslip/Reimbursement</th>

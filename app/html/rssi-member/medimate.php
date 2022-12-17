@@ -139,7 +139,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         </tbody>
                     </table>
                 </section>
-                <div style="font-size: 13px;">
+                <div>
                     <p><b>Note:</b></p>
                     Once the claim is settled, amount will be credited to applicant's account within 5 to 6 working days from date of Settlement.</p>
                     <p>For the first time you have to fill the complete Domiciliary Claim Form. From the second time onwards your bank account details will be automatically updated based on your previous information.</p>

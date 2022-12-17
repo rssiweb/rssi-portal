@@ -136,7 +136,7 @@ $resultArr = pg_fetch_all($result);
 
                         <?php echo '
                        <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Visitor ID</th>
                                 <th scope="col">Visitor details</th>

@@ -263,7 +263,7 @@ $resultArr = pg_fetch_all($result);
                         })
                     </script>
                     <?php
-                    echo '<table class="table" style="font-size: 12px;">
+                    echo '<table class="table">
           <thead>
           <tr>
           <th scope="col" id="cw">Photo</th>

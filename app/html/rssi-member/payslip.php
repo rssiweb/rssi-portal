@@ -114,7 +114,7 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
                 <?php } ?>
                 <?php echo '
                        <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Reference number</th>
                                 <th scope="col">Issuance Date</th>

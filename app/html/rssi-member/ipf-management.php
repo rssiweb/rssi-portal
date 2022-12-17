@@ -159,7 +159,7 @@ $resultArr = pg_fetch_all($result);
                     <br><br>
                     <?php echo '
                         <table class="table">
-                            <thead style="font-size: 12px;">
+                            <thead>
                                 <tr>
                                 <th scope="col">Ref. number</th>
                                 <th scope="col">Associate details</th>    

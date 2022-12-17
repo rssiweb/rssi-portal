@@ -185,7 +185,7 @@ $resultArrc = pg_fetch_all($resultc);
                         <div class="tab-panels">
                             <section id="marzen" class="tab-panel">
                                 <?php echo ' <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                             <th scope="col">Allocation Date</th>
                             <th scope="col">Max. Class<br>(Allocation start date to today)</th>
@@ -218,7 +218,7 @@ $resultArrc = pg_fetch_all($resultc);
                             <section id="rauchbier" class="tab-panel">
                                 <?php echo '
                      <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Allocation Date</th>
                                 <th scope="col">Max. Class<br>(Allocation start date to end date)</th>

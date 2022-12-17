@@ -333,7 +333,7 @@ if (!$result) {
 
 
                         <table class="table">
-                            <thead style="font-size: 12px;">
+                            <thead>
                                 <tr>
                                     <th scope="col">Search Criteria</th>
                                     <th scope="col">Leave Balance</th>
@@ -443,7 +443,7 @@ if (!$result) {
                             <option value="100">100</option>
                         </select>
                     </div>
-                    <table class="table" id="table-id" style="font-size: 12px;">
+                    <table class="table" id="table-id">
                         <thead>
                             <tr>
                                 <th scope="col">Leave ID</th>

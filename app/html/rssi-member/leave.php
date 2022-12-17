@@ -267,7 +267,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Apply Leave</th>
                             </tr>
@@ -400,7 +400,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
 
 
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Leave Details</th>
                             </tr>
@@ -446,7 +446,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                <option value="100">100</option>
                            </select>
                        </div>
-                       <table class="table" id="table-id" style="font-size: 12px;">
+                       <table class="table" id="table-id">
                         <thead>
                             <tr>
                                 <th scope="col">Leave ID</th>

@@ -200,11 +200,14 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                     <table class="table" id="table-id" style="font-size:12px;">
                         <thead>
                             <tr>
-                            <th scope="col" width="10%">Policy Id</th>
-                            <th scope="col" width="20%">Policy name</th>
+                            <th scope="col">Policy Id</th>
+                            <th scope="col">Policy name</th>
                             <th scope="col">Details</th>
-                            <th scope="col" width="10%">Policy document</th>
-                            </tr>
+                            <th scope="col">Policy document</th>' ?>
+                        <?php if ($role == 'Admin') { ?>
+                            <?php echo '<th></th>' ?>
+                        <?php } ?>
+                        <?php echo '</tr>
                         </thead>
                         <tbody>';
                         foreach ($resultArr as $array) {
@@ -238,11 +241,19 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
                             <?php } else { ?>
 
-                                <?php echo '<td><a href="' . $array['policydoc'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['policyid'] . '" display:inline;></i></a></td>
-                            </tr>'; ?>
+                                <?php echo '<td><a href="' . $array['policydoc'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['policyid'] . '" display:inline;></i></a></td>'; ?>
+                            <?php } ?>
+
+                            <?php if ($role == 'Admin') { ?>
+                                <?php echo '<td><form name="policydelete_' . $array['policyid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                    <input type="hidden" name="form-type1" type="text" value="policydelete">
+                                    <input type="hidden" name="policydeleteid" id="policydeleteid" type="text" value="' . $array['policyid'] . '">
+
+                                    <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['policyid'] . '"><i class="fa-solid fa-xmark"></i></button>
+                                    </td>' ?>
                             <?php } ?>
                         <?php }
-                        echo '</tbody>
+                        echo '</form></tr></tbody>
                         </table>';
                         ?>
                         <!--		Start Pagination -->
@@ -295,6 +306,32 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
             console.log(item)
         })
+
+        function validateForm() {
+            if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+
+                data.forEach(item => {
+                    const form = document.forms['policydelete_' + item.policyid]
+                    form.addEventListener('submit', e => {
+                        e.preventDefault()
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['policydelete_' + item.policyid])
+                            })
+                            .then(response =>
+                                alert("Record has been deleted.") +
+                                location.reload()
+                            )
+                            .catch(error => console.error('Error!', error.message))
+                    })
+
+                    console.log(item)
+                })
+            } else {
+                alert("Record has NOT been deleted.");
+                return false;
+            }
+        }
     </script>
     <script>
         getPagination('#table-id');

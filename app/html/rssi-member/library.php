@@ -176,7 +176,6 @@ if ($filterstatus != 'Active') {
     .btn {
         background-color: DodgerBlue;
         border: none;
-        font-size: 13px;
         cursor: pointer;
     }
 

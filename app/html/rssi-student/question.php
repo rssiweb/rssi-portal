@@ -107,7 +107,6 @@ $resultArr = pg_fetch_all($result);
         #btn {
             background-color: DodgerBlue;
             border: none;
-            font-size: 13px;
             cursor: pointer;
         }
 
@@ -221,7 +220,7 @@ $resultArr = pg_fetch_all($result);
                     </form>
                     <?php
                     echo '<table class="table">
-          <thead style="font-size: 12px;">
+          <thead>
           <tr>
           <th scope="col">Category</th>
           <th scope="col">Subject</th>

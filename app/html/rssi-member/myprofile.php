@@ -139,7 +139,7 @@ if (!$result) {
 
                     echo '
                     <table class="table" border="0">
-                        <thead style="font-size: 12px;" class="no-display">
+                        <thead class="no-display">
                             <tr>
                             <td colspan=5>
                             <div class="col" style="display: inline-block; width:55%; text-align:left;">

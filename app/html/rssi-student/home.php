@@ -102,7 +102,7 @@ if ($feesflag == 'd') {
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Class URL</th>
                                 <th scope="col">Quick link</th>

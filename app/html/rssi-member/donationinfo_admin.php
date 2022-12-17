@@ -137,7 +137,7 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
           </form>
           <?php echo '
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                             <th scope="col">Date</th>
                             <th scope="col">Name</th>    

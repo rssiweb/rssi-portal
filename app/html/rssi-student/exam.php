@@ -95,7 +95,7 @@ if ($feesflag == 'd') {
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Info</th>
@@ -131,7 +131,7 @@ if ($feesflag == 'd') {
 
 
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Answersheet (Cover page)</th>
                                 <th scope="col">Question paper</th>

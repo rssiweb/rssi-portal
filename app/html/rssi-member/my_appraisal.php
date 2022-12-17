@@ -242,7 +242,7 @@ while ($row = pg_fetch_array($run)) {
                         </script>
 
                         <table class="table">
-                            <thead style="font-size: 12px;">
+                            <thead>
                                 <tr>
                                     <th scope="col" id="cw2">Associate details</th>
                                     <th scope="col">Appraisal type</th>
@@ -268,13 +268,13 @@ while ($row = pg_fetch_array($run)) {
 
 
                         <table class="table">
-                            <thead style="font-size: 12px;">
+                            <thead>
                                 <tr>
                                     <th scope="col" id="cw3">Feedback<br>(5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied)</th>
                                     <th scope="col">Remarks<br>(Based on general observations, system-generated reports, and student feedback)</th>
                                 </tr>
                             </thead>
-                            <thead style="font-size: 12px;">
+                            <thead>
                                 <tr>
                                     <td style="line-height: 1.7;"><?php echo $feedback ?></td>
                                     <td style="line-height: 1.7;"><?php echo $scopeofimprovement ?></td>

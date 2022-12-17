@@ -194,7 +194,7 @@ $resultArr = pg_fetch_all($result);
                     <section class="box" style="padding: 2%;">
                         <?php if ($role == "Admin") { ?>
                             <table class="table">
-                                <thead style="font-size: 12px;">
+                                <thead>
                                     <tr>
                                         <th scope="col" colspan="2">Allocate Leave</th>
                                     </tr>
@@ -258,7 +258,7 @@ $resultArr = pg_fetch_all($result);
                             </script>
                         <?php } ?>
                         <table class="table">
-                            <thead style="font-size: 12px;">
+                            <thead>
                                 <tr>
                                     <th scope="col" colspan="2">Leave Allocation Details</th>
                                 </tr>
@@ -363,7 +363,7 @@ $resultArr = pg_fetch_all($result);
                             <option value="100">100</option>
                         </select>
                     </div>
-                    <table class="table" id="table-id" style="font-size: 12px;">
+                    <table class="table" id="table-id">
                         <thead>
                             <tr>
                                 <th scope="col">Leave allocation id</th>

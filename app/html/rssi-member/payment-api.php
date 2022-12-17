@@ -41,10 +41,17 @@ if ($_POST['form-type'] == "policybodyedit") {
   $result = pg_query($con, $policybodyeditt);
 }
 
+
 if ($_POST['form-type'] == "paydelete") {
   @$refid = $_POST['pid'];
   $paydelete = "DELETE from fees WHERE id = $refid";
   $result = pg_query($con, $paydelete);
+}
+
+if ($_POST['form-type1'] == "policydelete") {
+  @$policydid = $_POST['policydeleteid'];
+  $deletepolicy = "DELETE from policy WHERE policyid = '$policydid'";
+  $result = pg_query($con, $deletepolicy);
 }
 
 if ($_POST['form-type'] == "paydelete") {

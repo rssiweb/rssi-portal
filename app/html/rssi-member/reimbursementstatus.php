@@ -102,6 +102,9 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
     #btn {
       border: none !important;
     }
+    /* .table {
+            font-size: 12px !important;
+        } */
   </style>
 
 </head>
@@ -163,7 +166,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
           </form>
           <?php echo '
                         <table class="table">
-                            <thead style="font-size: 12px;">
+                            <thead>
                                 <tr>
                                 <th scope="col">Claim Number</th>
                                 <th scope="col">Registered On</th>    

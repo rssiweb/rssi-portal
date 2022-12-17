@@ -83,7 +83,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
 
                 <?php echo '
                        <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Reference number</th>
                                 <th scope="col">Month</th>

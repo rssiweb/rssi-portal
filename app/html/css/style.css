@@ -13,6 +13,11 @@
             /*line-height: 1.42857143;*/
             color: #444;
         }
+        
+        .table {
+            font-size: 12px;
+            ;
+        }
         /*Transition==========================*/
         
         .page-topbar,
@@ -111,7 +116,6 @@
         
         .page-topbar .user-info li a {
             display: inline-block;
-            font-size: 13px;
             padding: 5px 8px;
             color: #fff;
             font-family: 'Comfortaa';
@@ -369,7 +373,6 @@
         
         .profile-info .profile-details .profile-title {
             color: rgba(174, 178, 183, 1.0);
-            font-size: 13px;
             margin: 0px 0px 6px 14px;
         }
         
@@ -385,7 +388,6 @@
         
         #main-menu-wrapper .menusection {
             font-weight: 400;
-            font-size: 13px;
             line-height: 40px;
             padding-left: 24px;
             margin: 10px 0 0px 0;
@@ -504,31 +506,26 @@
         .noticea a:link {
             text-decoration: none !important;
             color: #F2545F !important;
-            font-size: 13px;
         }
         
         .noticea a:visited {
             text-decoration: none !important;
             color: #F2545F !important;
-            font-size: 13px;
         }
         
         .noticea a:hover {
             text-decoration: underline !important;
             color: #F2545F !important;
-            font-size: 13px;
         }
         
         .noticea a:active {
             text-decoration: underline !important;
             color: #F2545F !important;
-            font-size: 13px;
         }
         
         .noticea a:focus {
             text-decoration: underline !important;
             color: #F2545F !important;
-            font-size: 13px;
         }
         /*---------------------------------------
     CLASS NAME- NOTICEAS : URL DECORATION for table              

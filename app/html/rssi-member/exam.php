@@ -97,7 +97,7 @@ if ($filterstatus != 'Active') {
                 <section class="box" style="padding: 2%;">
 
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Exam Description</th>
                                 <th scope="col">Question paper Template</th>
@@ -149,7 +149,7 @@ if ($filterstatus != 'Active') {
                         </tbody>
                     </table>
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                                 <th scope="col">Question paper&nbsp;<i class="far fa-question-circle" title="The submitted question paper will appear on the portal after 24 hours of submission."></i></th>
                                 <th scope="col">Evaluation Path</th>

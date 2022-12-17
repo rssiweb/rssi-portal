@@ -308,7 +308,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                     </script>
                     <?php echo '
                         <table class="table">
-                            <thead style="font-size: 12px;">
+                            <thead>
                                 <tr>
                                 <th scope="col">Ref.</th>
                                 <th scope="col">Fees collection date</th>

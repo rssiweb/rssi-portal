@@ -139,7 +139,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                         </select>
             
                     </div>
-                    <table class="table" id="table-id" style="font-size: 12px;">
+                    <table class="table" id="table-id">
                         <thead>
                             <tr>
                                 <th scope="col">Asset Id</th>

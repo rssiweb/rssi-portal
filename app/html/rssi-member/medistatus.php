@@ -121,7 +121,7 @@ $resultArr = pg_fetch_all($result);
           </form>
           <?php echo '
                     <table class="table">
-                        <thead style="font-size: 12px;">
+                        <thead>
                             <tr>
                             <th scope="col">Claim Number</th>
                             <th scope="col">Registered On</th>    

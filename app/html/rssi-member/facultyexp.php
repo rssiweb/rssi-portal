@@ -137,7 +137,7 @@ $resultArr = pg_fetch_all($result);
                     </form>
                     <?php
                     echo '<table class="table">
-          <thead style="font-size: 12px;">
+          <thead>
           <tr>
           <th scope="col" id="cw">Photo</th>
           <th scope="col" id="cw1">Name</th>
