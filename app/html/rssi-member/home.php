@@ -86,7 +86,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                 </div> -->
                 <section class="box" style="padding: 2%;">
 
-                    <table class="table">
+                    <table class="table" style="font-size: 13px">
                         <thead>
                             <tr>
                                 <th scope="col">Class Allotment</th>
@@ -116,7 +116,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             ?>
                         </tbody>
                     </table>
-                    <table class="table">
+                    <table class="table" style="font-size: 13px">
                         <thead>
                             <tr>
                                 <th scope="col">Evaluation path</th>
