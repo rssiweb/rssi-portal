@@ -51,7 +51,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     <link rel="stylesheet" href="/css/style.css">
     <!-- Main css -->
     <style>
-
         .alert {
             padding: 10px 0px !important;
         }
@@ -127,10 +126,18 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <?php if (@$filterstatus == 'Active') {
                             ?>
                                 <tr>
-                                    <td style="line-height: 2;"><span class=noticea><a href="https://docs.google.com/spreadsheets/d/1d1dfSWWh_aM7Eq2rZc3ZxXJ2uMpqKfchy0ciNSF4KxU/edit?usp=sharing" target=_blank>Homework, QT Exam</a><br><a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vS7xMLLw8oFxfw9x8PSjCyB_-D-vdE_zVfgeHqXsE74QIdoEh60jiybeKVNT9XeBFDXqZB0Fe0cVmrQ/pubhtml?gid=1995146093&single=true" target=_blank>Online Exam</a></span></td>
-                                    <td style="line-height: 2;"><span class=noticea><a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br><a href=visco.php>Visco</a><br>
-                                            <a href="https://drive.google.com/file/d/1b3AcN68TJa7gIai_RTyJ5989Te-TXCbq/view" target=_blank>Online Class schedule</a><br>
-                                            <a href="https://drive.google.com/file/d/1t0AIguvsd1plCLSuis5gDNcozvTdlKoQ/view" target=_blank>Offline Class schedule</a></span></td>
+                                    <td style="line-height: 2;"><span class=noticea><a href="https://docs.google.com/spreadsheets/d/1d1dfSWWh_aM7Eq2rZc3ZxXJ2uMpqKfchy0ciNSF4KxU/edit?usp=sharing" target=_blank>Homework, QT Exam</a>
+                                            <!-- <br><a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vS7xMLLw8oFxfw9x8PSjCyB_-D-vdE_zVfgeHqXsE74QIdoEh60jiybeKVNT9XeBFDXqZB0Fe0cVmrQ/pubhtml?gid=1995146093&single=true" target=_blank>Online Exam</a></span> -->
+                                    </td>
+                                    <td style="line-height: 2;">
+                                        <span class=noticea>
+                                            <a href="https://drive.google.com/drive/u/0/folders/14FVzPdcCP-w1Oy22Xwrexn7_XWSFqTaI" target=_blank>Class Schedule</a><br>
+                                            <a href="https://ncert.nic.in/textbook.php" target=_blank>NCERT Textbooks PDF (I-XII)</a><br>
+                                            <!-- <a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br> -->
+                                            <a href=visco.php>Visco - Digital Learning portal</a><br>
+                                            <a href="policy.php">RSSI HR Policies</a>
+                                        </span>
+                                    </td>
                                 </tr>
                             <?php
                             } else {

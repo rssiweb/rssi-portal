@@ -52,7 +52,8 @@ if (isLoggedIn("aid")) {
     exit;
 }
 
-function checkLogin($con, $date){
+function checkLogin($con, $date)
+{
     global $login_failed_dialog;
     $associatenumber = strtoupper($_POST['aid']);
     $colors = $_POST['pass'];
@@ -83,11 +84,11 @@ function getCaptcha($SecretKey)
 
 if ($_POST) {
     $islocal = $_ENV['IS_LOCAL'] ?? "false";
-    if($islocal == "true"){
+    if ($islocal == "true") {
         if (isset($_POST['login'])) {
             checkLogin($con, $date);
         }
-    } else{
+    } else {
         $Return = getCaptcha($_POST['g-recaptcha-response']);
         if ($Return->success == true && $Return->score > 0.5) {
             if (isset($_POST['login'])) {
@@ -116,11 +117,10 @@ if ($_POST) {
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    
+
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/addstyle.css">
     <style>
-
         label {
             display: block;
             padding-left: 15px;
@@ -259,9 +259,13 @@ if ($_POST) {
 
     <?php if ($login_failed_dialog) { ?>
         <div class="container">
-            <div class="row">
-                <div class="col-md-4 col-md-offset-4" style="text-align: center;">
+            <div class="col-md-4 col-md-offset-4">
+                <!-- <div class="col-md-4 col-md-offset-4" style="text-align: center;">
                     <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
+                </div> -->
+                <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                    <!-- <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a> -->
+                    <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>Error: Login failed. Please enter valid credentials.</span>
                 </div>
             </div>
         </div>

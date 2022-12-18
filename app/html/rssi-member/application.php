@@ -66,7 +66,7 @@ if ($filterstatus != 'Active') {
 
                 <section class="box" style="padding: 2%;">
 
-                    <table class="table">
+                    <table class="table" style="font-size: 13px;">
                         <thead>
                             <tr>
                                 <th scope="col">Application</th>
@@ -75,9 +75,11 @@ if ($filterstatus != 'Active') {
                         <tbody>
                             <tr>
                                 <td style="line-height: 2;">
-                                    <span class=noticea><a href=https://www.rssi.in/digital-library target=_blank>Digital Library</a><br>
-                                        <a href=visco.php>Visco</a><br>
-                                        <a href=https://drive.google.com/drive/folders/1ZvYykh9BMv0ajDelsrEtskCPNdF5lmaQ target=_blank>Member's area</a></span>
+                                    <span class=noticea>
+                                        <!-- <a href=https://www.rssi.in/digital-library target=_blank>Digital Library</a><br> -->
+                                        <a href=visco.php>Visco - Digital Learning portal</a><br>
+                                        <!-- <a href=https://drive.google.com/drive/folders/1ZvYykh9BMv0ajDelsrEtskCPNdF5lmaQ target=_blank>Member's area</a> -->
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>

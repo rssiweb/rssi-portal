@@ -19,35 +19,35 @@
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
 
                         <li style="height: unset;">
+                            <a class="notification" href="https://youtube.com/shorts/ftA0TokZ28g" target="_blank">How to join Google space
+                                <span class="label label-info">Dec 18, 2022</span>
+                                <!-- &nbsp;&nbsp;<span class="label label-danger blink_me">new</span> -->
+                            </a>
+                        </li>
+
+                        <!-- <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1VOuqKRhyy3hycuiIMi022qKAzvPVd4dw/view" target="_blank">Responsibilities of Centre In charge / Asst. centre in-
                                 charge
                                 <span class="label label-info">Sep 2, 2022</span>
                             </a>
-                        </li>
+                        </li> -->
 
                         <li style="height: unset;">
                             <a class="notification" href="https://youtu.be/W3sWtsuRlTM" target="_blank">User Guide My Account
                                 <span class="label label-info">Dec 8, 2021</span>
-                                <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span> -->
                             </a>
                         </li>
-                        <li style="height: unset;">
+                        <!-- <li style="height: unset;">
                             <a class="notification" href="https://youtu.be/HuGmVkIW6vw" target="_blank">How to Evaluate Answer Sheet
                                 <span class="label label-info">Dec 5, 2021</span>
                             </a>
-                        </li>
+                        </li> -->
 
-                        <li style="height: unset;">
-                            <a class="notification" href="https://youtu.be/DFc97rQgqVc" target="_blank">How to join Google space
-                                <span class="label label-info">Dec 3, 2021</span>
-                            </a>
-                        </li>
-
-                        <li style="height: unset;">
+                        <!-- <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view" target="_blank">Responsibilities of the Teaching Intern
                                 <span class="label label-info">Aug 2, 2021</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1yDOMpaOaHatAaDBjRyuoaOpuDGCf9h9S/view" target="_blank">How to Accept a Google Meeting Invite
                                 <span class="label label-info">Aug 2, 2021</span>
@@ -58,11 +58,11 @@
                                 <span class="label label-info">Aug 1, 2021</span>
                             </a>
                         </li>
-                        <li style="height: unset;">
+                        <!-- <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1YOhIKnOe1Ygt7wFS-Jh3Fe8Fm4qUKiXG/view?usp=sharing" target="_blank">Examiner & Reviewer User Guide
                                 <span class="label label-info">Jul 20, 2021</span>
                             </a>
-                        </li>
+                        </li> -->
 
 
                         <li style="height: unset;">
@@ -71,11 +71,11 @@
                             </a>
                         </li>
 
-                        <li style="height: unset;">
+                        <!-- <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1no7KiM1Kqt9_elGZgNCzF2HAW8um85Un/view" target="_blank">Instructions to invigilators during examination
                                 <span class="label label-info">Jul 6, 2021</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li></li>
                     </ul>
                 </li>
@@ -155,7 +155,8 @@
             <?php  }
             ?>
 
-            <li> <!--class="hidden-xs"-->
+            <li>
+                <!--class="hidden-xs"-->
                 <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i>
                 </a>
             </li>
@@ -258,17 +259,6 @@
                 </a>
             </li>
 
-            <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-book-open-reader"></i></i></span> <span class="menu-title">Library</span></a></li>
-
-            <li>
-                <a href="exam.php" class="<?php echo $exam_active ?>">
-                    <span class="sidebar-icon"><i class="fas fa-spell-check"></i>
-                    </span>
-                    <span class="menu-title">Examination</span>
-                    <!--&nbsp;<span style="font-family:Arial, Helvetica, sans-serif" class="label label-warning">Update</span>-->
-                </a>
-            </li>
-
             <li><a href="leave.php" class="<?php echo $leave_active ?>"><span class="sidebar-icon"><i class="fas fa-plane-departure"></i></span> <span class="menu-title">Leave</span></a></li>
             <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-calendar-check"></i></span> <span class="menu-title">My Allocation</span></a></li>
 
@@ -279,6 +269,17 @@
             <li><a href="medimate.php" class="<?php echo $medimate_active ?>"><span class="sidebar-icon"><i class="fas fa-hand-holding-medical"></i></span> <span class="menu-title">Medimate</span></a></li>
 
             <li><a href="reimbursement.php" class="<?php echo $reimbursement_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span> <span class="menu-title">Reimbursement</span></a></li>
+
+            <!-- <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-book-open-reader"></i></i></span> <span class="menu-title">Library</span></a></li> -->
+
+            <li>
+                <a href="exam.php" class="<?php echo $exam_active ?>">
+                    <span class="sidebar-icon"><i class="fas fa-spell-check"></i>
+                    </span>
+                    <span class="menu-title">Examination</span>
+                    <!--&nbsp;<span style="font-family:Arial, Helvetica, sans-serif" class="label label-warning">Update</span>-->
+                </a>
+            </li>
 
             <li><a href="myprofile.php" target="_blank" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-user"></i></span> <span class="menu-title">My Profile</span></a></li>
 

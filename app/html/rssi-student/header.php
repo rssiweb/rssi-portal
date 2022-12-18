@@ -17,9 +17,8 @@
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;height:300px; /*overflow-y: auto;*/">
 
                         <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/1BPcxYM3X9PgQZDoI_9aK5lpEwuvdXVby/view" target="_blank">How to join Google space
-                                <span class="label label-info">Dec 3, 2021</span>
-                                <!--&nbsp;&nbsp;<span class="label label-danger blink_me">new</span>-->
+                            <a class="notification" href="https://youtube.com/shorts/ftA0TokZ28g" target="_blank">How to join Google space
+                                <span class="label label-info">Dec 18, 2022</span>
                             </a>
                         </li>
                         <li style="height: unset;">

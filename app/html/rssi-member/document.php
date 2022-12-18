@@ -71,7 +71,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                             <tr>
 
                                 <td style="line-height: 2;">
-                                <span class="noticea"><a href="<?php echo $profile ?>" target="_blank"><?php echo $filename ?></a><br>
+                                <span class="noticea"><a href="<?php echo $profile ?>" target="_blank" title="<?php echo $filename ?>">Letter of Offer</a><br>
                                 <a href="my_certificate.php">My Certificate</a></span>
                                 </td>
                                 <td style="line-height: 2;"><span class="noticea"><a href="payslip.php" target="_self">Payslip</a></span></td>
