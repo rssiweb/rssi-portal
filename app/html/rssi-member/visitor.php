@@ -178,20 +178,19 @@ $resultArr = pg_fetch_all($result);
                                     <?php if ($array['status'] == 'Approved' && $array['visitdateto'] >= $today) { ?>
                                         <?php echo '<td><p class="label label-success">approved</p></td>' ?>
                                     <?php }
-                                    if ($array['status'] == 'Rejected' && $array['visitdateto'] >= $today) { ?>
+                                    else if ($array['status'] == 'Rejected') { ?>
                                         <?php echo '<td><p class="label label-danger">rejected</p></td>' ?>
                                     <?php }
-                                    if ($array['status'] == null && $array['visitdateto'] >= $today) { ?>
+                                    else if ($array['status'] == null && $array['visitdateto'] >= $today) { ?>
                                         <?php echo '<td><p class="label label-default">under review</p></td>' ?>
-                                    <?php } ?>
+                                    <?php }
 
-                                    <?php
-                                    if ($array['status'] != 'Visited' && $array['visitdateto'] < $today) { ?>
+                                    else if ($array['status'] != 'Visited' && $array['visitdateto'] < $today) { ?>
                                         <?php echo '<td><p class="label label-default">expired</p></td>' ?>
-                                    <?php } ?>
-                                    <?php
-                                    if ($array['status'] == 'Visited') { ?>
-                                        <?php echo '<td><p class="label label-default">visited</p></td>' ?>
+                                    <?php }
+
+                                    else if ($array['status'] == 'Visited') { ?>
+                                        <?php echo '<td><p class="label label-warning">visited</p></td>' ?>
                                     <?php } ?>
 
                                 <?php echo '</tr>';
