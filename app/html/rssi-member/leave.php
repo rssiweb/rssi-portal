@@ -17,16 +17,34 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
-
-
-if (date('m') < 4) { //Upto June 2014-2015
+if (date('m') == 1 || date('m') == 2 || date('m') == 3) { //Upto March
     $academic_year = (date('Y') - 1) . '-' . date('Y');
-} else { //After June 2015-2016
+} else { //After MARCH
     $academic_year = date('Y') . '-' . (date('Y') + 1);
 }
 
 @$now = date('Y-m-d H:i:s');
-@$year = $academic_year;
+@$currentAcademicYear = $academic_year;
+
+@$lyear = $_POST['adj_academicyear'] ?? $currentAcademicYear;
+
+$totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved' OR status is null)");
+$totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved' OR status is null)");
+$cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
+$sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
+
+$allocl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$associatenumber' AND allo_leavetype='Casual Leave' AND allo_academicyear='$lyear'");
+$allosl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$associatenumber' AND allo_leavetype='Sick Leave' AND allo_academicyear='$lyear'");
+
+$resultArrsl = pg_fetch_result($totalsl, 0, 0);
+$resultArrcl = pg_fetch_result($totalcl, 0, 0);
+@$resultArr_cladj = pg_fetch_result($cladj, 0, 0);
+@$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
+@$resultArrrcl = pg_fetch_result($allocl, 0, 0);
+@$resultArrrsl = pg_fetch_result($allosl, 0, 0);
+
+@$slbalance = ($resultArrrsl + $resultArr_sladj) - $resultArrsl;
+@$clbalance = ($resultArrrcl + $resultArr_cladj) - $resultArrcl;
 
 if (@$_POST['form-type'] == "leaveapply") {
     @$leaveid = 'RSL' . time();
@@ -50,53 +68,50 @@ if (@$_POST['form-type'] == "leaveapply") {
         } else {
             @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
         }
+    }
+    if (($slbalance >= $day && $typeofleave = "Sick Leave") || ($clbalance >= $day && $typeofleave = "Casual Leave")) {
 
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$year','$applicantcomment','$day',$halfday)";
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday)";
 
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
+
+        if ($typeofleave = "Sick Leave") {
+            @$slbalance = $slbalance - $day;
+        } else if ($typeofleave = "Casual Leave") {
+            @$clbalance = $clbalance - $day;
+        }
     }
-    if ($email != "" && $halfday != 1) {
-        sendEmail("leaveapply", array(
-            "leaveid" => $leaveid,
-            "applicantid" => $applicantid,
-            "applicantname" => @$fullname,
-            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-            "todate" => @date("d/m/Y", strtotime($todate)),
-            "typeofleave" => $typeofleave,
-            "category" => $creason,
-            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
-            "now" => @date("d/m/Y g:i a", strtotime($now))
-        ), $email);
-    }
-    if ($email != "" && $halfday == 1) {
-        sendEmail("leaveapply", array(
-            "leaveid" => $leaveid,
-            "applicantid" => $applicantid,
-            "applicantname" => @$fullname,
-            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-            "todate" => @date("d/m/Y", strtotime($todate)),
-            "typeofleave" => $typeofleave,
-            "category" => $creason,
-            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2,
-            "now" => @date("d/m/Y g:i a", strtotime($now))
-        ), $email);
-    }
+    // if ($email != "" && $halfday != 1) {
+    //     sendEmail("leaveapply", array(
+    //         "leaveid" => $leaveid,
+    //         "applicantid" => $applicantid,
+    //         "applicantname" => @$fullname,
+    //         "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+    //         "todate" => @date("d/m/Y", strtotime($todate)),
+    //         "typeofleave" => $typeofleave,
+    //         "category" => $creason,
+    //         "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
+    //         "now" => @date("d/m/Y g:i a", strtotime($now))
+    //     ), $email);
+    // }
+    // if ($email != "" && $halfday == 1) {
+    //     sendEmail("leaveapply", array(
+    //         "leaveid" => $leaveid,
+    //         "applicantid" => $applicantid,
+    //         "applicantname" => @$fullname,
+    //         "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+    //         "todate" => @date("d/m/Y", strtotime($todate)),
+    //         "typeofleave" => $typeofleave,
+    //         "category" => $creason,
+    //         "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2,
+    //         "now" => @date("d/m/Y g:i a", strtotime($now))
+    //     ), $email);
+    // }
 }
 
-@$currentAcademicYear = $year;
 
 @$status = $_POST['get_status'];
-@$lyear = $_POST['adj_academicyear'] ?? $currentAcademicYear;
-date_default_timezone_set('Asia/Kolkata');
-
-$totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved' OR status is null)");
-$totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved' OR status is null)");
-$cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
-$sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
-
-$allocl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$associatenumber' AND allo_leavetype='Casual Leave' AND allo_academicyear='$lyear'");
-$allosl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$associatenumber' AND allo_leavetype='Sick Leave' AND allo_academicyear='$lyear'");
 
 if (($lyear > 0 && $lyear != 'ALL') && ($status == null || $status == 'ALL')) {
     $result = pg_query($con, "select * from leavedb_leavedb WHERE applicantid='$associatenumber' AND lyear='$lyear' order by timestamp desc");
@@ -114,15 +129,6 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
-$resultArrsl = pg_fetch_result($totalsl, 0, 0);
-$resultArrcl = pg_fetch_result($totalcl, 0, 0);
-@$resultArr_cladj = pg_fetch_result($cladj, 0, 0);
-@$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
-@$resultArrrcl = pg_fetch_result($allocl, 0, 0);
-@$resultArrrsl = pg_fetch_result($allosl, 0, 0);
-
-@$slbalance = ($resultArrrsl + $resultArr_sladj) - $resultArrsl;
-@$clbalance = ($resultArrrcl + $resultArr_cladj) - $resultArrcl;
 ?>
 
 <!DOCTYPE html>
@@ -190,11 +196,17 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="row">
-                    <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
+                    <?php if (@$leaveid != null && @$cmdtuples == 0 && @$typeofleave == "Sick Leave") { ?>
 
                         <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                            <span class="blink_me"><i class="fa-solid fa-xmark"></i></span>&nbsp;&nbsp;<span>ERROR: Your SL request has not been submitted because you have applied for more than the leave balance.</span>
+                        </div>
+                    <?php } else if (@$leaveid != null && @$cmdtuples == 0 && @$typeofleave == "Casual Leave") { ?>
+
+                        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>ERROR: Your CL request has not been submitted because you have applied for more than the leave balance.</span>
                         </div>
                     <?php
                     } else if (@$cmdtuples == 1) { ?>
