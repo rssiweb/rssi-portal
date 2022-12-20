@@ -64,7 +64,7 @@ $resultArr = pg_fetch_all($result);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -155,6 +155,8 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $category ?></option>
                                     <?php }
                                     ?>
+                                    <option>LG2A</option>
+                                    <option>LG2B</option>
                                     <option>LG3</option>
                                     <option>LG4</option>
                                     <option>LG4S1</option>
@@ -184,7 +186,7 @@ $resultArr = pg_fetch_all($result);
                                     <option> Computer </option>
                                     <option> GK </option>
                                 </select>
-                                <select name="get_year"  id="get_year" class="form-control" style="width:max-content;display:inline-block" required>
+                                <select name="get_year" id="get_year" class="form-control" style="width:max-content;display:inline-block" required>
                                     <?php if ($year == null) { ?>
                                         <option value="" disabled selected hidden>Select Year</option>
                                     <?php
@@ -201,11 +203,11 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $exam ?></option>
                                     <?php }
                                     ?>
-                                    <option> 1/CT01 </option>
-                                    <option> 1/CT02 </option>
+                                    <!-- <option> 1/CT01 </option>
+                                    <option> 1/CT02 </option> -->
                                     <option> QT1 </option>
-                                    <option> 2/CT01 </option>
-                                    <option> 2/CT02 </option>
+                                    <!-- <option> 2/CT01 </option>
+                                    <option> 2/CT02 </option> -->
                                     <option> QT2 </option>
                                     <option> QT3 </option>
                                     <option> ALL </option>
@@ -218,20 +220,20 @@ $resultArr = pg_fetch_all($result);
                         </div>
                     </form>
                     <script>
-                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                var currentYear = new Date().getFullYear() - 1;
-                            <?php } else { ?>
-                                var currentYear = new Date().getFullYear();
-                            <?php } ?>
+                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                            var currentYear = new Date().getFullYear() - 1;
+                        <?php } else { ?>
+                            var currentYear = new Date().getFullYear();
+                        <?php } ?>
 
-                            for (var i = 0; i < 5; i++) {
-                                var next = currentYear + 1;
-                                var year = currentYear + '-' + next;
-                                //next.toString().slice(-2) 
-                                $('#get_year').append(new Option(year, year));
-                                currentYear--;
-                            }
-                        </script>
+                        for (var i = 0; i < 5; i++) {
+                            var next = currentYear + 1;
+                            var year = currentYear + '-' + next;
+                            //next.toString().slice(-2) 
+                            $('#get_year').append(new Option(year, year));
+                            currentYear--;
+                        }
+                    </script>
                     <?php
                     echo '<table class="table">
           <thead>
@@ -256,7 +258,7 @@ $resultArr = pg_fetch_all($result);
             <td>' . $array['fullmarks'] . '</td>
             <td>' . $array['examname'] . '</td>
             <td>' . $array['topic'] . '</td>
-            <td><a href="' . $array['url'] . '" target="_blank"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
+            <td><a href="' . $array['url'] . '" target="_blank"><button type="button" id="btn" class="btn btn-sm" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
             </tr>';
                         } ?>
                     <?php

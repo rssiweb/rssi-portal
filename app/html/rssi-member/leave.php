@@ -245,22 +245,6 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                 ?>
                             </select>
                         </form>
-                        <script>
-                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                var currentYear = new Date().getFullYear() - 1;
-                            <?php } else { ?>
-                                var currentYear = new Date().getFullYear();
-                            <?php } ?>
-
-                            for (var i = 0; i < 5; i++) {
-                                var next = currentYear + 1;
-                                var year = currentYear + '-' + next;
-                                //next.toString().slice(-2) 
-                                $('#adj_academicyear').append(new Option(year, year));
-                                currentYear--;
-                            }
-                        </script>
-
                     </div>
                 </div>
 
@@ -323,7 +307,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
 
                             <div id="filter-checksh">
-                                <input type="checkbox" name="is_userh" id="is_userh" value="1"/>
+                                <input type="checkbox" name="is_userh" id="is_userh" value="1" />
                                 <label for="is_userh" style="font-weight: 400;">Half day</label>
                             </div>
 
@@ -420,6 +404,13 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                     <option>Approved</option>
                                     <option>Rejected</option>
                                     <option>ALL</option>
+                                </select>
+
+                                <select name="adj_academicyear" id="adj_academicyear_A" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                                    <?php if ($lyear != null) { ?>
+                                        <option hidden selected><?php echo $lyear ?></option>
+                                    <?php }
+                                    ?>
                                 </select>
                             </div>
                         </div>
@@ -523,6 +514,22 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
         </section>
     </section>
 </body>
+<script>
+    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+        var currentYear = new Date().getFullYear() - 1;
+    <?php } else { ?>
+        var currentYear = new Date().getFullYear();
+    <?php } ?>
+
+    for (var i = 0; i < 5; i++) {
+        var next = currentYear + 1;
+        var year = currentYear + '-' + next;
+        //next.toString().slice(-2) 
+        $('#adj_academicyear').append(new Option(year, year));
+        $('#adj_academicyear_A').append(new Option(year, year));
+        currentYear--;
+    }
+</script>
 <script>
     getPagination('#table-id');
 
