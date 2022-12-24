@@ -188,7 +188,7 @@ if (isset($_POST['login'])) {
         glowCookies.start('en', {
             analytics: 'G-S25QWTFJ2S',
             //facebookPixel: '',
-            policyLink: 'https://drive.google.com/file/d/1o-ULIIYDLv5ipSRfUa6ROzxJZyoEZhDF/view'
+            policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
     <style>
