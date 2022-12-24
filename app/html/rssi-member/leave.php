@@ -17,6 +17,14 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
+if ($role=='Member') {
+
+    echo '<script type="text/javascript">';
+    echo 'alert("Access Denied. You are not authorized to access this web page.");';
+    echo 'window.location.href = "home.php";';
+    echo '</script>';
+}
+
 if (date('m') == 1 || date('m') == 2 || date('m') == 3) { //Upto March
     $academic_year = (date('Y') - 1) . '-' . date('Y');
 } else { //After MARCH

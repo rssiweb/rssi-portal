@@ -9,6 +9,7 @@ if (!isLoggedIn("aid")) {
   exit;
 }
 
+
 @$status = $_POST['get_id'];
 
 if ($role == 'Admin') {

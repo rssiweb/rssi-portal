@@ -22,6 +22,7 @@ function afterlogin($con, $date)
     $password_updated_on = $row[81];
     $default_pass_updated_by = $row[82];
     $default_pass_updated_on = $row[83];
+    // $role = $row[62];
 
     // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
     $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$associatenumber','$_SERVER[HTTP_X_REAL_IP]','$date')";
@@ -44,7 +45,12 @@ function afterlogin($con, $date)
         header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
         unset($_SESSION["login_redirect"]);
     } else {
+        // Line 25 we have the role value
+        // if ($role !='Member') {
         header("Location: home.php");
+        // } else {
+        //     header("Location: myprofile.php");
+        // }
     }
 }
 if (isLoggedIn("aid")) {
@@ -259,13 +265,9 @@ if ($_POST) {
 
     <?php if ($login_failed_dialog) { ?>
         <div class="container">
-            <div class="col-md-4 col-md-offset-4">
-                <!-- <div class="col-md-4 col-md-offset-4" style="text-align: center;">
+            <div class="row">
+                <div class="col-md-4 col-md-offset-4" style="text-align: center;">
                     <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
-                </div> -->
-                <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                    <!-- <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a> -->
-                    <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>Error: Login failed. Please enter valid credentials.</span>
                 </div>
             </div>
         </div>

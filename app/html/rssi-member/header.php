@@ -84,10 +84,14 @@
                 <li class="profile dropdown">
                     <a href="#"> <i class="fas fa-sitemap"></i></a>
                     <ul class="dropdown-menu profile fadeIn" style="right:unset">
+                        <?php if (@$role != 'Member') {
+                        ?>
 
-                        <li style="height: unset;">
-                            <a style="font-size:13px;" href="student.php"><i class="fa-solid fa-user-graduate"></i>&nbsp;RSSI Student</a>
-                        </li>
+                            <li style="height: unset;">
+                                <a style="font-size:13px;" href="student.php"><i class="fa-solid fa-user-graduate"></i>&nbsp;RSSI Student</a>
+                            </li>
+                        <?php }
+                        ?>
                         <li style="height: unset;">
                             <a style="font-size:13px;" href="iexplore.php"><i class="fa-solid fa-arrow-up-a-z"></i>&nbsp;iExplore</a>
                         </li>
@@ -178,6 +182,11 @@
                             Last synced: <?php echo $lastupdatedon ?>
                         </a>
                     </li>
+                    <li>
+                        <a>
+                            Role assigned: <span class="label label-danger"><?php echo $role ?></span>
+                        </a>
+                    </li>
 
                     <li>
                         <a href="resetpassword.php">
@@ -185,12 +194,12 @@
                             Reset Password
                         </a>
                     </li>
-                    <li>
+                    <!-- <li>
                         <a href="myprofile.php">
                             <i class="fa fa-user"></i>
                             Profile
                         </a>
-                    </li>
+                    </li> -->
 
                     <li class="last">
                         <a href="logout.php">
@@ -258,20 +267,6 @@
                     <span class="menu-title">Class Details</span>
                 </a>
             </li>
-
-            <li><a href="leave.php" class="<?php echo $leave_active ?>"><span class="sidebar-icon"><i class="fas fa-plane-departure"></i></span> <span class="menu-title">Leave</span></a></li>
-            <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-calendar-check"></i></span> <span class="menu-title">My Allocation</span></a></li>
-
-            <li><a href="my_appraisal.php" class="<?php echo $appraisal_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-circle-nodes"></i></span> <span class="menu-title">My Appraisal</span></a></li>
-
-            <li><a href="document.php" class="<?php echo $document_active ?>"><span class="sidebar-icon"><i class="fas fa-folder-open"></i></i></span> <span class="menu-title">My Document</span></a></li>
-
-            <li><a href="medimate.php" class="<?php echo $medimate_active ?>"><span class="sidebar-icon"><i class="fas fa-hand-holding-medical"></i></span> <span class="menu-title">Medimate</span></a></li>
-
-            <li><a href="reimbursement.php" class="<?php echo $reimbursement_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span> <span class="menu-title">Reimbursement</span></a></li>
-
-            <!-- <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-book-open-reader"></i></i></span> <span class="menu-title">Library</span></a></li> -->
-
             <li>
                 <a href="exam.php" class="<?php echo $exam_active ?>">
                     <span class="sidebar-icon"><i class="fas fa-spell-check"></i>
@@ -280,6 +275,26 @@
                     <!--&nbsp;<span style="font-family:Arial, Helvetica, sans-serif" class="label label-warning">Update</span>-->
                 </a>
             </li>
+            <?php if (@$role != 'Member') {
+            ?>
+                <li><a href="leave.php" class="<?php echo $leave_active ?>"><span class="sidebar-icon"><i class="fas fa-plane-departure"></i></span> <span class="menu-title">Leave</span></a></li>
+            <?php }
+            ?>
+            <li><a href="allocation.php" class="<?php echo $allocation_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-calendar-check"></i></span> <span class="menu-title">My Allocation</span></a></li>
+            <?php if (@$role != 'Member') {
+            ?>
+                <li><a href="my_appraisal.php" class="<?php echo $appraisal_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-circle-nodes"></i></span> <span class="menu-title">My Appraisal</span></a></li>
+            <?php }
+            ?>
+            <li><a href="document.php" class="<?php echo $document_active ?>"><span class="sidebar-icon"><i class="fas fa-folder-open"></i></i></span> <span class="menu-title">My Document</span></a></li>
+            <?php if (@$role != 'Member') {
+            ?>
+                <li><a href="medimate.php" class="<?php echo $medimate_active ?>"><span class="sidebar-icon"><i class="fas fa-hand-holding-medical"></i></span> <span class="menu-title">Medimate</span></a></li>
+            <?php }
+            ?>
+            <li><a href="reimbursement.php" class="<?php echo $reimbursement_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span> <span class="menu-title">Reimbursement</span></a></li>
+
+            <!-- <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-book-open-reader"></i></i></span> <span class="menu-title">Library</span></a></li> -->
 
             <li><a href="myprofile.php" target="_blank" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-user"></i></span> <span class="menu-title">My Profile</span></a></li>
 

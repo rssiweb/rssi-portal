@@ -8,7 +8,7 @@ if (!isLoggedIn("aid")) {
   header("Location: index.php");
   exit;
 }
-if ($filterstatus != 'Active') {
+if ($filterstatus != 'Active' || $role == 'Member') {
 
   echo '<script type="text/javascript">';
   echo 'alert("Access Denied. You are not authorized to access this web page.");';

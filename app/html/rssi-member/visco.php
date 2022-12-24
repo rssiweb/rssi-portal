@@ -17,11 +17,11 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 
-if ($filterstatus != 'Active') {
+if ($filterstatus != 'Active' || $role=='Member') {
 
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "profile.php";';
+    echo 'window.location.href = "home.php";';
     echo '</script>';
 }
 
