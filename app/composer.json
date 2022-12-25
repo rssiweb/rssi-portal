@@ -1,4 +1,9 @@
 {
+    "config": {
+        "platform": {
+            "php": "8.1.1"
+        }
+    },
     "require": {
         "phpmailer/phpmailer": "^6.7",
         "paytm/paytmchecksum": "^1.1",
@@ -6,9 +11,18 @@
         "doctrine/dbal": "^3.2",
         "symfony/yaml": "^5.4",
         "symfony/cache": "^5.4",
-        "doctrine/annotations": "^1.13"
+        "doctrine/annotations": "^1.13",
+        "google/apiclient": "^2.13"
     },
     "autoload": {
-        "psr-0": {"": "models/"}
+        "psr-0": { "": "models/" }
+    },
+    "extra": {
+        "google/apiclient-services": [
+            "Drive"
+        ]
+    },
+    "scripts": {
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
     }
 }

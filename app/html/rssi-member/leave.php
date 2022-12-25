@@ -3,6 +3,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
 include("../../util/email.php");
+include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -59,6 +60,9 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$applicantid = $associatenumber;
     @$fromdate = $_POST['fromdate'];
     @$todate = $_POST['todate'];
+    //echo json_encode($_FILES);
+    @$uploadedFile = $_FILES['medicalcertificate'];
+    
 
     @$typeofleave = $_POST['typeofleave'];
     @$creason = $_POST['creason'];
@@ -79,7 +83,15 @@ if (@$_POST['form-type'] == "leaveapply") {
     }
     if (($slbalance >= $day && $typeofleave = "Sick Leave") || ($clbalance >= $day && $typeofleave = "Casual Leave")) {
 
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday)";
+        // send uploaded file to drive
+        // get the drive link
+        
+        $filename = "someid_userid_timestamp";
+        $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
+        // $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
+        $doclink='';
+
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink')";
 
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
@@ -289,7 +301,7 @@ $resultArr = pg_fetch_all($result);
 
 
 
-                    <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave.php" method="POST">
+                    <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave.php" method="POST" enctype="multipart/form-data">
                         <div class="form-group" style="display: inline-block;">
 
                             <input type="hidden" name="form-type" value="leaveapply">
@@ -316,6 +328,7 @@ $resultArr = pg_fetch_all($result);
                                 </select>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Leave Category*</small>
                             </span>
+                            <input type="file" name="medicalcertificate" class="form-control"/> 
 
                             <span class="input-help">
                                 <textarea type="text" name="applicantcomment" class="form-control" placeholder="Remarks" value=""></textarea>
