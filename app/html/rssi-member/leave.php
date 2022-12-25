@@ -328,7 +328,10 @@ $resultArr = pg_fetch_all($result);
                                 </select>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Leave Category*</small>
                             </span>
-                            <input type="file" name="medicalcertificate" class="form-control"/> 
+                            <span class="input-help">
+                            <input type="file" name="medicalcertificate" class="form-control"/>
+                            <small id="passwordHelpBlock" class="form-text text-muted">Document (Optional)</small>
+                            </span>
 
                             <span class="input-help">
                                 <textarea type="text" name="applicantcomment" class="form-control" placeholder="Remarks" value=""></textarea>
