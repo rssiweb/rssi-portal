@@ -328,8 +328,12 @@ $resultArr = pg_fetch_all($result);
                                 <input type="date" class="form-control" name="todate" id="todate" value="" onchange="cal()" required>
                                 <small id="passwordHelpBlock" class="form-text text-muted">To<span style="color:red">*</span></small>
                             </span>
+                            <div id="filter-checksh">
+                                <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal()" />
+                                <label for="is_userh" style="font-weight: 400;">Half day</label>
+                            </div>
                             <span class="input-help">
-                                <input type="text" class="form-control" name="numdays2" id="numdays2" value="" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" readonly>
+                                <input type="text" class="form-control" name="numdays2" id="numdays2" value="" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" size="10" readonly>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Days count</small>
                             </span>
                             <span class="input-help">
@@ -361,11 +365,6 @@ $resultArr = pg_fetch_all($result);
                             <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by" value="<?php echo $associatenumber ?>" required readonly>
 
                             <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
-
-                            <div id="filter-checksh">
-                                <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal()" />
-                                <label for="is_userh" style="font-weight: 400;">Half day</label>
-                            </div>
 
                         </div>
 
