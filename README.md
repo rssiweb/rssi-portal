@@ -127,3 +127,11 @@ FROM [Table to copy From]
 
 
 CREATE TABLE test_form (LIKE certificate INCLUDING ALL);
+
+UPDATE leavedb_leavedb
+SET doc = REPLACE(doc, 'https://drive.google.com/open?id=', 'https://drive.google.com/file/d/')
+WHERE doc is not null;
+
+UPDATE leavedb_leavedb
+SET doc = CONCAT(doc,'/view')
+WHERE doc is not null;

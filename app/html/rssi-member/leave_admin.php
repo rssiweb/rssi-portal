@@ -48,7 +48,7 @@ if (@$_POST['form-type'] == "leaveapply") {
 
         if ($halfday == 1) {
 
-            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1)/2;
+            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1) / 2;
         } else {
             @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
         }
@@ -108,11 +108,11 @@ date_default_timezone_set('Asia/Kolkata');
 // $date = date('Y-d-m h:i:s');
 
 if ($id != null) {
-    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE leaveid='$id' order by timestamp desc");
+    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE leaveid='$id' order by timestamp desc");
 } else if ($appid == null && $lyear != null) {
-    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE lyear='$lyear' order by timestamp desc");
+    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE lyear='$lyear' order by timestamp desc");
 } else if ($appid != null && $lyear != null) {
-    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE applicantid='$appid' AND lyear='$lyear' order by timestamp desc");
+    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id WHERE applicantid='$appid' AND lyear='$lyear' order by timestamp desc");
     $totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved')");
     $totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid' AND typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved')");
 
@@ -130,7 +130,7 @@ if ($id != null) {
     @$resultArr_cladj = pg_fetch_result($cladj, 0, 0); //cladjusted
     @$resultArr_sladj = pg_fetch_result($sladj, 0, 0); //sladjusted
 } else {
-    $result = pg_query($con, "select * from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id order by timestamp desc");
+    $result = pg_query($con, "select * , REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id order by timestamp desc");
 }
 
 $resultArr = pg_fetch_all($result);
@@ -467,7 +467,7 @@ if (!$result) {
 
                                 <?php if ($array['doc'] != null) { ?>
                                     <?php
-                                    echo '<td><span class="noticea"><a href="' . $array['doc'] . '" target="_blank">' . $array['leaveid'] . '</a></span></td>'
+                                    echo '<td><span class="noticea"><a href="javascript:void(0)" onclick="showpdf(\'' . $array['leaveid'] . '\')">' . $array['leaveid'] . '</a></span></td>'
                                     ?>
                                     <?php    } else { ?><?php
                                                         echo '<td>' . $array['leaveid'] . '</td>' ?>
@@ -755,7 +755,70 @@ if (!$result) {
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
+            } else if (event.target == modal1) {
+                modal1.style.display = "none";
             }
+        }
+    </script>
+    <div id="myModalpdf" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span id="closepdf" class="close">&times;</span>
+
+            <div style="width:100%; text-align:right">
+                <p id="status2" class="label " style="display: inline !important;"><span class="status"></span></p>
+            </div>
+
+            <p style="font-size: small;">
+                Leave Id: <span class="leaveid"></span><br>
+                <object name="docid" id="" data="" type="application/pdf" width="100%" height="450px"></object>
+            </p>
+        </div>
+
+    </div>
+    <script>
+        var data1 = <?php echo json_encode($resultArr) ?>
+
+        // Get the modal
+        var modal1 = document.getElementById("myModalpdf");
+        var closepdf = document.getElementById("closepdf");
+
+        function showpdf(id1) {
+            var mydata1 = undefined
+            data1.forEach(item1 => {
+                if (item1["leaveid"] == id1) {
+                    mydata1 = item1;
+                }
+            })
+            var keys1 = Object.keys(mydata1)
+            keys1.forEach(key => {
+                var span1 = modal1.getElementsByClassName(key)
+                if (span1.length > 0)
+                    span1[0].innerHTML = mydata1[key];
+            })
+            modal1.style.display = "block";
+
+            //class add 
+            var statuss = document.getElementById("status2")
+            if (mydata1["status"] === "Approved") {
+                statuss.classList.add("label-success")
+                statuss.classList.remove("label-danger")
+            } else if (mydata1["status"] === "Rejected") {
+                statuss.classList.remove("label-success")
+                statuss.classList.add("label-danger")
+            } else {
+                statuss.classList.remove("label-success")
+                statuss.classList.remove("label-danger")
+            }
+            //class add end
+            document.getElementsByName("docid")[0].id = "docid" + mydata1["leaveid"];
+
+            randomvar = document.getElementById("docid" + mydata1["leaveid"])
+            randomvar.data = mydata1["docp"]
+        }
+        closepdf.onclick = function() {
+            modal1.style.display = "none";
         }
     </script>
 

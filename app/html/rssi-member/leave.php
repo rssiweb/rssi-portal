@@ -62,8 +62,6 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$todate = $_POST['todate'];
     //echo json_encode($_FILES);
     @$uploadedFile = $_FILES['medicalcertificate'];
-
-
     @$typeofleave = $_POST['typeofleave'];
     @$creason = $_POST['creason'];
     @$comment = $_POST['comment'];
@@ -85,11 +83,13 @@ if (@$_POST['form-type'] == "leaveapply") {
 
         // send uploaded file to drive
         // get the drive link
-
-        $filename = "doc_" . $leaveid . "_" . $applicantid . "_" . time();
-        $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
-        $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
-
+        if ($uploadedFile == null) {
+            $doclink = null;
+        } else {
+            $filename = "doc_" . $leaveid . "_" . $applicantid . "_" . time();
+            $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
+            $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
+        }
 
         $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink')";
 
@@ -677,7 +677,7 @@ $resultArr = pg_fetch_all($result);
 
             <p style="font-size: small;">
                 Leave Id: <span class="leaveid"></span><br>
-                <object id="docid" data="#" type="application/pdf" width="100%" height="450px"></object>
+                <object name="docid" id="" data="#" type="application/pdf" width="100%" height="450px"></object>
             </p>
         </div>
 
@@ -717,8 +717,10 @@ $resultArr = pg_fetch_all($result);
                 statuss.classList.remove("label-danger")
             }
             //class add end
-            var docid = document.getElementById("docid")
-            docid.data = mydata1["docp"]
+            document.getElementsByName("docid")[0].id = "docid" + mydata1["leaveid"];
+
+            randomvar = document.getElementById("docid" + mydata1["leaveid"])
+            randomvar.data = mydata1["docp"]
         }
         closepdf.onclick = function() {
             modal1.style.display = "none";
