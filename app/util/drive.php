@@ -7,7 +7,7 @@ function uploadeToDrive($file, $parent, $filename)
 {
     // uploade to drive using credential file and return drive link
     $secretfile_path = "/var/tmp/drive-storage-cred";
-    $secretfile = fopen($secretfile_path, "w+") or die("Unable to open secret file!");
+    $secretfile = fopen($secretfile_path, "w") or die("Unable to open secret file!");
     fwrite($secretfile, getenv("STORAGE_CRED"));
     fclose($secretfile);
 
@@ -31,7 +31,7 @@ function uploadeToDrive($file, $parent, $filename)
     );
     // echo json_encode($udfile);
     $fileId = $udfile->getId();
-    $link = $fileId; // EDIT FILE URL
+    $link = "https://drive.google.com/file/d/".$fileId."/view"; // EDIT FILE URL
     unlink($secretfile_path);
     return $link;
 }
