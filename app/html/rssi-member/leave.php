@@ -18,7 +18,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
-if ($role=='Member') {
+if ($role == 'Member') {
 
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
@@ -62,7 +62,7 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$todate = $_POST['todate'];
     //echo json_encode($_FILES);
     @$uploadedFile = $_FILES['medicalcertificate'];
-    
+
 
     @$typeofleave = $_POST['typeofleave'];
     @$creason = $_POST['creason'];
@@ -85,11 +85,11 @@ if (@$_POST['form-type'] == "leaveapply") {
 
         // send uploaded file to drive
         // get the drive link
-        
+
         $filename = "someid_userid_timestamp";
         $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
-        // $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
-        $doclink='';
+        $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
+
 
         $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink')";
 
@@ -161,49 +161,52 @@ $resultArr = pg_fetch_all($result);
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>My Leave</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        .checkbox {
-            padding: 0;
-            margin: 0;
-            vertical-align: bottom;
-            position: relative;
-            top: 0px;
-            overflow: hidden;
-        }
+    .checkbox {
+        padding: 0;
+        margin: 0;
+        vertical-align: bottom;
+        position: relative;
+        top: 0px;
+        overflow: hidden;
+    }
 
-        .x-btn:focus,
-        .button:focus,
-        [type="submit"]:focus {
-            outline: none;
-        }
+    .x-btn:focus,
+    .button:focus,
+    [type="submit"]:focus {
+        outline: none;
+    }
 
-        #passwordHelpBlock {
-            font-size: x-small;
-            display: block;
-        }
+    #passwordHelpBlock {
+        font-size: x-small;
+        display: block;
+    }
 
-        .input-help {
-            vertical-align: top;
-            display: inline-block;
-        }
+    .input-help {
+        vertical-align: top;
+        display: inline-block;
+    }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous">
+    </script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://www.rssi.in/disclaimer'
-        });
+    glowCookies.start('en', {
+        analytics: 'G-S25QWTFJ2S',
+        //facebookPixel: '',
+        policyLink: 'https://www.rssi.in/disclaimer'
+    });
     </script>
 
 </head>
@@ -218,61 +221,81 @@ $resultArr = pg_fetch_all($result);
                 <div class="row">
                     <?php if (@$leaveid != null && @$cmdtuples == 0 && @$typeofleave == "Sick Leave") { ?>
 
-                        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <span class="blink_me"><i class="fa-solid fa-xmark"></i></span>&nbsp;&nbsp;<span>ERROR: Your SL request has not been submitted because you have applied for more than the leave balance.</span>
-                        </div>
+                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <span class="blink_me"><i class="fa-solid fa-xmark"></i></span>&nbsp;&nbsp;<span>ERROR: Your SL
+                            request has not been submitted because you have applied for more than the leave
+                            balance.</span>
+                    </div>
                     <?php } else if (@$leaveid != null && @$cmdtuples == 0 && @$typeofleave == "Casual Leave") { ?>
 
-                        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>ERROR: Your CL request has not been submitted because you have applied for more than the leave balance.</span>
-                        </div>
+                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>ERROR: Your
+                            CL request has not been submitted because you have applied for more than the leave
+                            balance.</span>
+                    </div>
                     <?php
                     } else if (@$cmdtuples == 1) { ?>
 
-                        <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
-                        </div>
-                        <script>
-                            if (window.history.replaceState) {
-                                window.history.replaceState(null, null, window.location.href);
-                            }
-                        </script>
+                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your
+                            request has been submitted. Leave id <?php echo $leaveid ?>.</span>
+                    </div>
+                    <script>
+                    if (window.history.replaceState) {
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                    </script>
                     <?php } ?>
                     <?php
                     if (($clbalance == 0 || @$clbalance < 0) && ($slbalance == 0 || $slbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
                     ?>
-                        <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                            <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Inadequate SL and CL balance. You are not eligible to take leave. Please take a makeup class to enable the apply leave option.
-                        </div>
+                    <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span
+                            class="blink_me"><i class="fas fa-exclamation-triangle"
+                                style="color: #A9444C;"></i></span>&nbsp;
+                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Inadequate SL and CL
+                        balance. You are not eligible to take leave. Please take a makeup class to enable the apply
+                        leave option.
+                    </div>
                     <?php
                     } else if ((@$clbalance == 0 || @$clbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
                     ?>
-                        <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                            <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient CL balance. You are not eligible for casual leave. Please take makeup class to increase CL balance.
-                        </div>
+                    <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span
+                            class="blink_me"><i class="fas fa-exclamation-triangle"
+                                style="color: #A9444C;"></i></span>&nbsp;
+                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient CL balance. You
+                        are not eligible for casual leave. Please take makeup class to increase CL balance.
+                    </div>
                     <?php
                     } else if ((@$slbalance == 0 || @$slbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
                     ?>
-                        <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="fas fa-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                            <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient SL balance. You are not eligible for sick leave. Please take makeup class to increase SL balance.
-                        </div>
+                    <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span
+                            class="blink_me"><i class="fas fa-exclamation-triangle"
+                                style="color: #A9444C;"></i></span>&nbsp;
+                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient SL balance. You
+                        are not eligible for sick leave. Please take makeup class to increase SL balance.
+                    </div>
                     <?php
                     } ?>
 
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / Leave</div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        <span class="noticea"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span> | <span class="noticea"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
+                        <span class="noticea"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>"
+                                target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span> | <span
+                            class="noticea"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear ?>"
+                                target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
                     </div>
 
                     <div class="col" style="display: inline-block; width:99%; text-align:left;margin-left:1.5%">
 
                         <form autocomplete="off" name="academicyear" id="academicyear" action="leave.php" method="POST">
-                            Academic year:&nbsp;<select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                            Academic year:&nbsp;<select name="adj_academicyear" id="adj_academicyear"
+                                onchange="this.form.submit()" class="form-control"
+                                style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
                                 <?php if ($lyear != null) { ?>
-                                    <option hidden selected><?php echo $lyear ?></option>
+                                <option hidden selected><?php echo $lyear ?></option>
                                 <?php }
                                 ?>
                             </select>
@@ -301,13 +324,15 @@ $resultArr = pg_fetch_all($result);
 
 
 
-                    <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave.php" method="POST" enctype="multipart/form-data">
+                    <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave.php" method="POST"
+                        enctype="multipart/form-data">
                         <div class="form-group" style="display: inline-block;">
 
                             <input type="hidden" name="form-type" value="leaveapply">
 
                             <span class="input-help">
-                                <input type="date" class="form-control" name="fromdate" id="fromdate" type="text" value="">
+                                <input type="date" class="form-control" name="fromdate" id="fromdate" type="text"
+                                    value="">
                                 <small id="passwordHelpBlock" class="form-text text-muted">From</small>
                             </span>
                             <span class="input-help">
@@ -315,7 +340,8 @@ $resultArr = pg_fetch_all($result);
                                 <small id="passwordHelpBlock" class="form-text text-muted">To</small>
                             </span>
                             <span class="input-help">
-                                <select name="typeofleave" id="typeofleave" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                                <select name="typeofleave" id="typeofleave" class="form-control"
+                                    style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
                                     <option value="" disabled selected hidden>Types of Leave</option>
                                     <option value="Sick Leave">Sick Leave</option>
                                     <option value="Casual Leave">Casual Leave</option>
@@ -329,18 +355,21 @@ $resultArr = pg_fetch_all($result);
                                 <small id="passwordHelpBlock" class="form-text text-muted">Leave Category*</small>
                             </span>
                             <span class="input-help">
-                            <input type="file" name="medicalcertificate" class="form-control"/>
-                            <small id="passwordHelpBlock" class="form-text text-muted">Document (Optional)</small>
+                                <input type="file" name="medicalcertificate" class="form-control" />
+                                <small id="passwordHelpBlock" class="form-text text-muted">Document (Optional)</small>
                             </span>
 
                             <span class="input-help">
-                                <textarea type="text" name="applicantcomment" class="form-control" placeholder="Remarks" value=""></textarea>
+                                <textarea type="text" name="applicantcomment" class="form-control" placeholder="Remarks"
+                                    value=""></textarea>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
                             </span>
 
-                            <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by" value="<?php echo $associatenumber ?>" required readonly>
+                            <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by"
+                                value="<?php echo $associatenumber ?>" required readonly>
 
-                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
+                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm"
+                                style="outline: none;">Apply</button>
 
                             <div id="filter-checksh">
                                 <input type="checkbox" name="is_userh" id="is_userh" value="1" />
@@ -352,66 +381,66 @@ $resultArr = pg_fetch_all($result);
                     </form>
 
                     <script>
-                        function getType() {
-                            var x = document.getElementById("typeofleave").value;
-                            var items;
-                            if (x === "Sick Leave") {
-                                items = ["Abdominal/Pelvic pain",
-                                    "Anemia",
-                                    "Appendicitis / Pancreatitis",
-                                    "Asthma / bronchitis / pneumonia",
-                                    "Burns",
-                                    "Cancer -Carcinoma/ Malignant neoplasm",
-                                    "Cardiac related ailments or Heart Disease",
-                                    "Chest Pain",
-                                    "Convulsions/ Epilepsy",
-                                    "Dental Related Ailments - Tooth Ache / Impacted Tooth",
-                                    "Emotional Well Being",
-                                    "Digestive System Disorders/Indigestion/Food Poisoning/Diarrhea/Dysentry/Gastritis & Enteritis",
-                                    "Excessive vomiting in pregnancy/Pregnancy induced hypertension",
-                                    "Eye Related Ailments -Low Vision/Blindness/Eye Infections",
-                                    "Fever/Cough/Cold",
-                                    "Fracture/Injury/Dislocation/Sprain/Strain of joints/Ligaments of knee/Internal derangement/Other Orthopedic related ailments",
-                                    "Gynecological Ailments/Disorders -Endometriosis/Fibroids",
-                                    "Haemorrhoids (Piles)/Fissure/Fistula",
-                                    "Headache/Nausea/Vomiting",
-                                    "Hernia - Inguinal / Umbilical / Ventral",
-                                    "Hepatitis",
-                                    "Liver Related Ailments",
-                                    "Maternity-Normal Delivery/Caesarean Section/Abortion",
-                                    "Nervous Disorders",
-                                    "Quarantine Leave",
-                                    "Respiratory Related Ailments-Sinusitis/Tonsillitis,/Chronic rhinitis/Nasopharyngitis and pharyngitis/Congenital malformations of nose bronchitis",
-                                    "Skin Related Ailments-Abscess/Swelling",
-                                    "Spondilitis/ Intervertebral Disc Disorders / Spondylosis",
-                                    "Urinary Tract Infections/Disorders",
-                                    "Varicose veins of other sites",
-                                ];
-                            } else if (x === "Casual Leave") {
-                                items = ["Other", "Timesheet leave"]
-                            } else {
-                                items = ["--Select--"]
-                            }
-                            var str = ""
-                            for (var item of items) {
-                                str += "<option>" + item + "</option>"
-                            }
-                            document.getElementById("creason").innerHTML = str;
+                    function getType() {
+                        var x = document.getElementById("typeofleave").value;
+                        var items;
+                        if (x === "Sick Leave") {
+                            items = ["Abdominal/Pelvic pain",
+                                "Anemia",
+                                "Appendicitis / Pancreatitis",
+                                "Asthma / bronchitis / pneumonia",
+                                "Burns",
+                                "Cancer -Carcinoma/ Malignant neoplasm",
+                                "Cardiac related ailments or Heart Disease",
+                                "Chest Pain",
+                                "Convulsions/ Epilepsy",
+                                "Dental Related Ailments - Tooth Ache / Impacted Tooth",
+                                "Emotional Well Being",
+                                "Digestive System Disorders/Indigestion/Food Poisoning/Diarrhea/Dysentry/Gastritis & Enteritis",
+                                "Excessive vomiting in pregnancy/Pregnancy induced hypertension",
+                                "Eye Related Ailments -Low Vision/Blindness/Eye Infections",
+                                "Fever/Cough/Cold",
+                                "Fracture/Injury/Dislocation/Sprain/Strain of joints/Ligaments of knee/Internal derangement/Other Orthopedic related ailments",
+                                "Gynecological Ailments/Disorders -Endometriosis/Fibroids",
+                                "Haemorrhoids (Piles)/Fissure/Fistula",
+                                "Headache/Nausea/Vomiting",
+                                "Hernia - Inguinal / Umbilical / Ventral",
+                                "Hepatitis",
+                                "Liver Related Ailments",
+                                "Maternity-Normal Delivery/Caesarean Section/Abortion",
+                                "Nervous Disorders",
+                                "Quarantine Leave",
+                                "Respiratory Related Ailments-Sinusitis/Tonsillitis,/Chronic rhinitis/Nasopharyngitis and pharyngitis/Congenital malformations of nose bronchitis",
+                                "Skin Related Ailments-Abscess/Swelling",
+                                "Spondilitis/ Intervertebral Disc Disorders / Spondylosis",
+                                "Urinary Tract Infections/Disorders",
+                                "Varicose veins of other sites",
+                            ];
+                        } else if (x === "Casual Leave") {
+                            items = ["Other", "Timesheet leave"]
+                        } else {
+                            items = ["--Select--"]
                         }
-                        document.getElementById("typeofleave").addEventListener("click", getType)
+                        var str = ""
+                        for (var item of items) {
+                            str += "<option>" + item + "</option>"
+                        }
+                        document.getElementById("creason").innerHTML = str;
+                    }
+                    document.getElementById("typeofleave").addEventListener("click", getType)
                     </script>
                     <script>
-                        if (<?php echo $slbalance ?> <= 0) {
-                            document.getElementById("typeofleave").options[1].disabled = true;
-                        } else {
-                            document.getElementById("typeofleave").options[1].disabled = false;
-                        }
+                    if (<?php echo $slbalance ?> <= 0) {
+                        document.getElementById("typeofleave").options[1].disabled = true;
+                    } else {
+                        document.getElementById("typeofleave").options[1].disabled = false;
+                    }
 
-                        if (<?php echo $clbalance ?> <= 0) {
-                            document.getElementById("typeofleave").options[2].disabled = true;
-                        } else {
-                            document.getElementById("typeofleave").options[2].disabled = false;
-                        }
+                    if (<?php echo $clbalance ?> <= 0) {
+                        document.getElementById("typeofleave").options[2].disabled = true;
+                    } else {
+                        document.getElementById("typeofleave").options[2].disabled = false;
+                    }
                     </script>
 
 
@@ -429,12 +458,13 @@ $resultArr = pg_fetch_all($result);
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
-                                <select name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
+                                <select name="get_status" class="form-control"
+                                    style="width:max-content; display:inline-block" placeholder="Appraisal type">
                                     <?php if ($status == null) { ?>
-                                        <option value="" disabled selected hidden>Select Status</option>
+                                    <option value="" disabled selected hidden>Select Status</option>
                                     <?php
                                     } else { ?>
-                                        <option hidden selected><?php echo $status ?></option>
+                                    <option hidden selected><?php echo $status ?></option>
                                     <?php }
                                     ?>
                                     <option>Approved</option>
@@ -442,16 +472,18 @@ $resultArr = pg_fetch_all($result);
                                     <option>ALL</option>
                                 </select>
 
-                                <select name="adj_academicyear" id="adj_academicyear_A" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+                                <select name="adj_academicyear" id="adj_academicyear_A" class="form-control"
+                                    style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
                                     <?php if ($lyear != null) { ?>
-                                        <option hidden selected><?php echo $lyear ?></option>
+                                    <option hidden selected><?php echo $lyear ?></option>
                                     <?php }
                                     ?>
                                 </select>
                             </div>
                         </div>
                         <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
+                            <button type="submit" name="search_by_id" class="btn btn-primary btn-sm"
+                                style="outline: none;">
                                 <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                         </div>
                     </form>
@@ -486,23 +518,23 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
-                        <?php
+                    <?php
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
                             echo '<tr>'
-                        ?>
+                            ?>
 
-                            <?php if ($array['doc'] != null) { ?>
-                                <?php
+                    <?php if ($array['doc'] != null) { ?>
+                    <?php
                                 echo '<td><span class="noticea"><a href="' . $array['doc'] . '" target="_blank">' . $array['leaveid'] . '</a></span></td>'
-                                ?>
-                                <?php    } else { ?><?php
-                                                    echo '<td>' . $array['leaveid'] . '</td>' ?>
-                            <?php } ?>
-                        <?php
+                                    ?>
+                    <?php } else { ?><?php
+                                echo '<td>' . $array['leaveid'] . '</td>' ?>
+                    <?php } ?>
+                    <?php
                             echo '
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
-                                <td>' .  @date("d/m/Y", strtotime($array['fromdate'])) . '—' .  @date("d/m/Y", strtotime($array['todate'])) . '</td>
+                                <td>' . @date("d/m/Y", strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])) . '</td>
                                 <td>' . $array['days'] . '</td>
                                 <td>' . $array['typeofleave'] . '<br>
                                 ' . $array['creason'] . '<br>
@@ -514,15 +546,15 @@ $resultArr = pg_fetch_all($result);
                     <?php
                     } else if ($lyear == null && $status == null) {
                     ?>
-                        <tr>
-                            <td colspan="5">Please select Filter value.</td>
-                        </tr>
+                    <tr>
+                        <td colspan="5">Please select Filter value.</td>
+                    </tr>
                     <?php
                     } else {
                     ?>
-                        <tr>
-                            <td colspan="5">No record was found for the selected filter value.</td>
-                        </tr>
+                    <tr>
+                        <td colspan="5">No record was found for the selected filter value.</td>
+                    </tr>
                     <?php }
 
                     echo '</tbody>
@@ -551,149 +583,151 @@ $resultArr = pg_fetch_all($result);
     </section>
 </body>
 <script>
-    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-        var currentYear = new Date().getFullYear() - 1;
-    <?php } else { ?>
-        var currentYear = new Date().getFullYear();
-    <?php } ?>
+<?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+var currentYear = new Date().getFullYear() - 1;
+<?php } else { ?>
+var currentYear = new Date().getFullYear();
+<?php } ?>
 
-    for (var i = 0; i < 5; i++) {
-        var next = currentYear + 1;
-        var year = currentYear + '-' + next;
-        //next.toString().slice(-2) 
-        $('#adj_academicyear').append(new Option(year, year));
-        $('#adj_academicyear_A').append(new Option(year, year));
-        currentYear--;
-    }
+for (var i = 0; i < 5; i++) {
+    var next = currentYear + 1;
+    var year = currentYear + '-' + next;
+    //next.toString().slice(-2) 
+    $('#adj_academicyear').append(new Option(year, year));
+    $('#adj_academicyear_A').append(new Option(year, year));
+    currentYear--;
+}
 </script>
 <script>
-    getPagination('#table-id');
+getPagination('#table-id');
 
-    function getPagination(table) {
-        var lastPage = 1;
+function getPagination(table) {
+    var lastPage = 1;
 
-        $('#maxRows')
-            .on('change', function(evt) {
-                //$('.paginationprev').html('');						// reset pagination
+    $('#maxRows')
+        .on('change', function(evt) {
+            //$('.paginationprev').html('');						// reset pagination
 
-                lastPage = 1;
-                $('.pagination')
-                    .find('li')
-                    .slice(1, -1)
-                    .remove();
-                var trnum = 0; // reset tr counter
-                var maxRows = parseInt($(this).val()); // get Max Rows from select option
+            lastPage = 1;
+            $('.pagination')
+                .find('li')
+                .slice(1, -1)
+                .remove();
+            var trnum = 0; // reset tr counter
+            var maxRows = parseInt($(this).val()); // get Max Rows from select option
 
-                if (maxRows == 5000) {
-                    $('.pagination').hide();
-                } else {
-                    $('.pagination').show();
+            if (maxRows == 5000) {
+                $('.pagination').hide();
+            } else {
+                $('.pagination').show();
+            }
+
+            var totalRows = $(table + ' tbody tr').length; // numbers of rows
+            $(table + ' tr:gt(0)').each(function() {
+                // each TR in  table and not the header
+                trnum++; // Start Counter
+                if (trnum > maxRows) {
+                    // if tr number gt maxRows
+
+                    $(this).hide(); // fade it out
                 }
-
-                var totalRows = $(table + ' tbody tr').length; // numbers of rows
-                $(table + ' tr:gt(0)').each(function() {
-                    // each TR in  table and not the header
-                    trnum++; // Start Counter
-                    if (trnum > maxRows) {
-                        // if tr number gt maxRows
-
-                        $(this).hide(); // fade it out
-                    }
-                    if (trnum <= maxRows) {
-                        $(this).show();
-                    } // else fade in Important in case if it ..
-                }); //  was fade out to fade it in
-                if (totalRows > maxRows) {
-                    // if tr total rows gt max rows option
-                    var pagenum = Math.ceil(totalRows / maxRows); // ceil total(rows/maxrows) to get ..
-                    //	numbers of pages
-                    for (var i = 1; i <= pagenum;) {
-                        // for each page append pagination li
-                        $('.pagination #prev')
-                            .before(
-                                '<li data-page="' +
-                                i +
-                                '">\
+                if (trnum <= maxRows) {
+                    $(this).show();
+                } // else fade in Important in case if it ..
+            }); //  was fade out to fade it in
+            if (totalRows > maxRows) {
+                // if tr total rows gt max rows option
+                var pagenum = Math.ceil(totalRows / maxRows); // ceil total(rows/maxrows) to get ..
+                //	numbers of pages
+                for (var i = 1; i <= pagenum;) {
+                    // for each page append pagination li
+                    $('.pagination #prev')
+                        .before(
+                            '<li data-page="' +
+                            i +
+                            '">\
 								  <span>' +
-                                i++ +
-                                '<span class="sr-only">(current)</span></span>\
+                            i++ +
+                            '<span class="sr-only">(current)</span></span>\
 								</li>'
-                            )
-                            .show();
-                    } // end for i
-                } // end if row count > max rows
-                $('.pagination [data-page="1"]').addClass('active'); // add active class to the first li
-                $('.pagination li').on('click', function(evt) {
-                    // on click each page
-                    evt.stopImmediatePropagation();
-                    evt.preventDefault();
-                    var pageNum = $(this).attr('data-page'); // get it's number
+                        )
+                        .show();
+                } // end for i
+            } // end if row count > max rows
+            $('.pagination [data-page="1"]').addClass('active'); // add active class to the first li
+            $('.pagination li').on('click', function(evt) {
+                // on click each page
+                evt.stopImmediatePropagation();
+                evt.preventDefault();
+                var pageNum = $(this).attr('data-page'); // get it's number
 
-                    var maxRows = parseInt($('#maxRows').val()); // get Max Rows from select option
+                var maxRows = parseInt($('#maxRows').val()); // get Max Rows from select option
 
-                    if (pageNum == 'prev') {
-                        if (lastPage == 1) {
-                            return;
-                        }
-                        pageNum = --lastPage;
+                if (pageNum == 'prev') {
+                    if (lastPage == 1) {
+                        return;
                     }
-                    if (pageNum == 'next') {
-                        if (lastPage == $('.pagination li').length - 2) {
-                            return;
-                        }
-                        pageNum = ++lastPage;
+                    pageNum = --lastPage;
+                }
+                if (pageNum == 'next') {
+                    if (lastPage == $('.pagination li').length - 2) {
+                        return;
                     }
-
-                    lastPage = pageNum;
-                    var trIndex = 0; // reset tr counter
-                    $('.pagination li').removeClass('active'); // remove active class from all li
-                    $('.pagination [data-page="' + lastPage + '"]').addClass('active'); // add active class to the clicked
-                    // $(this).addClass('active');					// add active class to the clicked
-                    limitPagging();
-                    $(table + ' tr:gt(0)').each(function() {
-                        // each tr in table not the header
-                        trIndex++; // tr index counter
-                        // if tr index gt maxRows*pageNum or lt maxRows*pageNum-maxRows fade if out
-                        if (
-                            trIndex > maxRows * pageNum ||
-                            trIndex <= maxRows * pageNum - maxRows
-                        ) {
-                            $(this).hide();
-                        } else {
-                            $(this).show();
-                        } //else fade in
-                    }); // end of for each tr in table
-                }); // end of on click pagination list
-                limitPagging();
-            })
-            .val(5)
-            .change();
-
-        // end of on select change
-
-        // END OF PAGINATION
-    }
-
-    function limitPagging() {
-        // alert($('.pagination li').length)
-
-        if ($('.pagination li').length > 7) {
-            if ($('.pagination li.active').attr('data-page') <= 3) {
-                $('.pagination li:gt(5)').hide();
-                $('.pagination li:lt(5)').show();
-                $('.pagination [data-page="next"]').show();
-            }
-            if ($('.pagination li.active').attr('data-page') > 3) {
-                $('.pagination li:gt(0)').hide();
-                $('.pagination [data-page="next"]').show();
-                for (let i = (parseInt($('.pagination li.active').attr('data-page')) - 2); i <= (parseInt($('.pagination li.active').attr('data-page')) + 2); i++) {
-                    $('.pagination [data-page="' + i + '"]').show();
-
+                    pageNum = ++lastPage;
                 }
 
+                lastPage = pageNum;
+                var trIndex = 0; // reset tr counter
+                $('.pagination li').removeClass('active'); // remove active class from all li
+                $('.pagination [data-page="' + lastPage + '"]').addClass(
+                'active'); // add active class to the clicked
+                // $(this).addClass('active');					// add active class to the clicked
+                limitPagging();
+                $(table + ' tr:gt(0)').each(function() {
+                    // each tr in table not the header
+                    trIndex++; // tr index counter
+                    // if tr index gt maxRows*pageNum or lt maxRows*pageNum-maxRows fade if out
+                    if (
+                        trIndex > maxRows * pageNum ||
+                        trIndex <= maxRows * pageNum - maxRows
+                    ) {
+                        $(this).hide();
+                    } else {
+                        $(this).show();
+                    } //else fade in
+                }); // end of for each tr in table
+            }); // end of on click pagination list
+            limitPagging();
+        })
+        .val(5)
+        .change();
+
+    // end of on select change
+
+    // END OF PAGINATION
+}
+
+function limitPagging() {
+    // alert($('.pagination li').length)
+
+    if ($('.pagination li').length > 7) {
+        if ($('.pagination li.active').attr('data-page') <= 3) {
+            $('.pagination li:gt(5)').hide();
+            $('.pagination li:lt(5)').show();
+            $('.pagination [data-page="next"]').show();
+        }
+        if ($('.pagination li.active').attr('data-page') > 3) {
+            $('.pagination li:gt(0)').hide();
+            $('.pagination [data-page="next"]').show();
+            for (let i = (parseInt($('.pagination li.active').attr('data-page')) - 2); i <= (parseInt($(
+                    '.pagination li.active').attr('data-page')) + 2); i++) {
+                $('.pagination [data-page="' + i + '"]').show();
+
             }
+
         }
     }
+}
 </script>
 
 </html>
