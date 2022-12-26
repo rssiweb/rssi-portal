@@ -83,7 +83,7 @@ if (@$_POST['form-type'] == "leaveapply") {
 
         // send uploaded file to drive
         // get the drive link
-        if ($uploadedFile == null) {
+        if(empty($_FILES['medicalcertificate']['name'])) {
             $doclink = null;
         } else {
             $filename = "doc_" . $leaveid . "_" . $applicantid . "_" . time();
