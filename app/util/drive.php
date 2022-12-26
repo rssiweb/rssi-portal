@@ -32,6 +32,6 @@ function uploadeToDrive($file, $parent, $filename)
     // echo json_encode($udfile);
     $fileId = $udfile->getId();
     $link = $fileId; // EDIT FILE URL
-    unlink($secretfile);
+    unlink($secretfile_path);
     return $link;
 }
