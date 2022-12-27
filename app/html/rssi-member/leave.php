@@ -102,32 +102,32 @@ if (@$_POST['form-type'] == "leaveapply") {
             @$clbalance = $clbalance - $day;
         }
     }
-    if ($email != "" && $halfday != 1) {
-        sendEmail("leaveapply", array(
-            "leaveid" => $leaveid,
-            "applicantid" => $applicantid,
-            "applicantname" => @$fullname,
-            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-            "todate" => @date("d/m/Y", strtotime($todate)),
-            "typeofleave" => $typeofleave,
-            "category" => $creason,
-            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
-            "now" => @date("d/m/Y g:i a", strtotime($now))
-        ), $email);
-    }
-    if ($email != "" && $halfday == 1) {
-        sendEmail("leaveapply", array(
-            "leaveid" => $leaveid,
-            "applicantid" => $applicantid,
-            "applicantname" => @$fullname,
-            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-            "todate" => @date("d/m/Y", strtotime($todate)),
-            "typeofleave" => $typeofleave,
-            "category" => $creason,
-            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2,
-            "now" => @date("d/m/Y g:i a", strtotime($now))
-        ), $email);
-    }
+    // if ($email != "" && $halfday != 1) {
+    //     sendEmail("leaveapply", array(
+    //         "leaveid" => $leaveid,
+    //         "applicantid" => $applicantid,
+    //         "applicantname" => @$fullname,
+    //         "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+    //         "todate" => @date("d/m/Y", strtotime($todate)),
+    //         "typeofleave" => $typeofleave,
+    //         "category" => $creason,
+    //         "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
+    //         "now" => @date("d/m/Y g:i a", strtotime($now))
+    //     ), $email);
+    // }
+    // if ($email != "" && $halfday == 1) {
+    //     sendEmail("leaveapply", array(
+    //         "leaveid" => $leaveid,
+    //         "applicantid" => $applicantid,
+    //         "applicantname" => @$fullname,
+    //         "fromdate" => @date("d/m/Y", strtotime($fromdate)),
+    //         "todate" => @date("d/m/Y", strtotime($todate)),
+    //         "typeofleave" => $typeofleave,
+    //         "category" => $creason,
+    //         "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2,
+    //         "now" => @date("d/m/Y g:i a", strtotime($now))
+    //     ), $email);
+    // }
 }
 
 
@@ -346,7 +346,7 @@ $resultArr = pg_fetch_all($result);
                             </span>
                             <span class="input-help">
                                 <select name="creason" id='creason' class="form-control" required>
-                                    <option>--Select--</option>
+                                    <option disabled selected hidden>--Select--</option>
                                 </select>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Leave Category<span style="color:red">*</span></small>
                             </span>
