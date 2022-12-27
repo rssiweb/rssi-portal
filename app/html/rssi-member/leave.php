@@ -210,6 +210,7 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <!---change option value based on other dropdown PHP, Have created another file process-request.php to get the creason option---->
     <script type="text/javascript" src="http://code.jquery.com/jquery.js"> </script>
     <script type="text/javascript">
         $(document).ready(function() {
@@ -384,7 +385,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
 
                     </form>
-                    
+
                     <script>
                         if (<?php echo $slbalance ?> <= 0) {
                             document.getElementById("typeofleave").options[1].disabled = true;
