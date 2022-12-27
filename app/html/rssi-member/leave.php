@@ -356,8 +356,8 @@ $resultArr = pg_fetch_all($result);
                             </span>
 
                             <span class="input-help">
-                                <select name="typeofleave" id="typeofleave" class="country form-control">
-                                    <option>Select</option>
+                                <select name="typeofleave" id="typeofleave" class="country form-control" required>
+                                    <option disabled selected hidden value="">Select</option>
                                     <option value="Sick Leave">Sick Leave</option>
                                     <option value="Casual Leave">Casual Leave</option>
                                     <!-- <option value="uk">United Kingdom</option> -->

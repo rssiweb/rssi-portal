@@ -35,6 +35,7 @@ $countryArr = array("Sick Leave" => array("Abdominal/Pelvic pain",
 if($country !== 'Select'){
         echo "<span class='input-help'>";
         echo "<select name='creason' id='creason' class='form-control' required>";
+        echo "<option disabled selected hidden value=''>Select</option>";
         foreach($countryArr[$country] as $value){
             echo "<option>". $value . "</option>";
         }
