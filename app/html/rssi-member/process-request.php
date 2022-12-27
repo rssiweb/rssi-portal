@@ -1,7 +1,7 @@
 <?php
-if(isset($_POST["country"])){
-$country = $_POST["country"];
-$countryArr = array("Sick Leave" => array("Abdominal/Pelvic pain",
+if(isset($_POST["typeofleave"])){
+$typeofleave = $_POST["typeofleave"];
+$typeofleaveArr = array("Sick Leave" => array("Abdominal/Pelvic pain",
 "Anemia",
 "Appendicitis / Pancreatitis",
 "Asthma / bronchitis / pneumonia",
@@ -32,11 +32,11 @@ $countryArr = array("Sick Leave" => array("Abdominal/Pelvic pain",
 "Urinary Tract Infections/Disorders",
 "Varicose veins of other sites",),
                     "Casual Leave" => array("Other", "Timesheet leave"));
-if($country !== 'Select'){
+if($typeofleave !== 'Select'){
         echo "<span class='input-help'>";
         echo "<select name='creason' id='creason' class='form-control' required>";
         echo "<option disabled selected hidden value=''>Select</option>";
-        foreach($countryArr[$country] as $value){
+        foreach($typeofleaveArr[$typeofleave] as $value){
             echo "<option>". $value . "</option>";
         }
         echo "</select>

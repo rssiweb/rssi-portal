@@ -67,6 +67,7 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$comment = $_POST['comment'];
     @$appliedby = $_POST['appliedby'];
     @$applicantcomment = $_POST['applicantcomment'];
+    @$ack = $_POST['ack'] ?? 0;
     @$halfday = $_POST['is_userh'] ?? 0;
     @$email = $email;
 
@@ -79,7 +80,7 @@ if (@$_POST['form-type'] == "leaveapply") {
             @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
         }
     }
-    if (($slbalance >= $day && $typeofleave = "Sick Leave") || ($clbalance >= $day && $typeofleave = "Casual Leave")) {
+    if (($slbalance >= $day && $typeofleave == "Sick Leave") || ($clbalance >= $day && $typeofleave == "Casual Leave")) {
 
         // send uploaded file to drive
         // get the drive link
@@ -90,15 +91,14 @@ if (@$_POST['form-type'] == "leaveapply") {
             $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
             $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
         }
-
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink')";
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc,ack) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink','$ack')";
 
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
 
-        if ($typeofleave = "Sick Leave") {
+        if ($typeofleave == "Sick Leave") {
             @$slbalance = $slbalance - $day;
-        } else if ($typeofleave = "Casual Leave") {
+        } else if ($typeofleave == "Casual Leave") {
             @$clbalance = $clbalance - $day;
         }
     }
@@ -213,15 +213,16 @@ $resultArr = pg_fetch_all($result);
     </script>
     <!---change option value based on other dropdown PHP, Have created another file process-request.php to get the creason option---->
     <script type="text/javascript" src="http://code.jquery.com/jquery.js"> </script>
+    <!--Here .typeofleave is a class and has been assigned to the input filed id=typeofleave-->
     <script type="text/javascript">
         $(document).ready(function() {
-            $("select.country").change(function() {
-                var selectedCountry = $(".country option:selected").val();
+            $("select.typeofleave").change(function() {
+                var selectedtypeofleave = $(".typeofleave option:selected").val();
                 $.ajax({
                     type: "POST",
                     url: "process-request.php",
                     data: {
-                        country: selectedCountry
+                        typeofleave: selectedtypeofleave
                     }
                 }).done(function(data) {
                     $("#response").html(data);
@@ -357,7 +358,7 @@ $resultArr = pg_fetch_all($result);
                             </span>
 
                             <span class="input-help">
-                                <select name="typeofleave" id="typeofleave" class="country form-control" required>
+                                <select name="typeofleave" id="typeofleave" class="typeofleave form-control" required>
                                     <option disabled selected hidden value="">Select</option>
                                     <option value="Sick Leave">Sick Leave</option>
                                     <option value="Casual Leave">Casual Leave</option>
@@ -383,7 +384,7 @@ $resultArr = pg_fetch_all($result);
 
                             <span name="hidden-panel_ack" id="hidden-panel_ack">
                                 <div id="filter-checksh">
-                                    <input type="checkbox" name="ack" id="ack" value="" />
+                                    <input type="checkbox" name="ack" id="ack" value="1" />
                                     <label for="ack" style="font-weight: 400;"> I hereby confirm submitting the relevant supporting medical documents if the leave duration is more than 2 days.</label>
                                 </div>
                             </span>
@@ -448,15 +449,14 @@ $resultArr = pg_fetch_all($result);
                             })
                         });
                     </script>
+                    <!--To make a filed (acknowledgement) required based on a dropdown value (sick leave)-->
                     <script>
                         if (document.getElementById('typeofleave').value == "Sick Leave") {
 
                             document.getElementById("ack").required = true;
-                            document.getElementById("ack").value = 1;
                         } else {
 
                             document.getElementById("ack").required = false;
-                            document.getElementById("ack").value = 0;
                         }
 
                         const randvar = document.getElementById('typeofleave');
@@ -464,10 +464,8 @@ $resultArr = pg_fetch_all($result);
                         randvar.addEventListener('change', (event) => {
                             if (document.getElementById('typeofleave').value == "Casual Leave") {
                                 document.getElementById("ack").required = false;
-                                document.getElementById("ack").value = 0;
                             } else {
                                 document.getElementById("ack").required = true;
-                                document.getElementById("ack").value = 1;
                             }
                         })
                     </script>
