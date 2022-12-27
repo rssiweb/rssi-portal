@@ -191,7 +191,8 @@ $resultArr = pg_fetch_all($result);
             display: inline-block;
         }
 
-        #hidden-panel {
+        #hidden-panel,
+        #hidden-panel_ack {
             display: none;
         }
     </style>
@@ -380,6 +381,13 @@ $resultArr = pg_fetch_all($result);
 
                             <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by" value="<?php echo $associatenumber ?>" required readonly>
 
+                            <span name="hidden-panel_ack" id="hidden-panel_ack">
+                                <div id="filter-checksh">
+                                    <input type="checkbox" name="ack" id="ack" value="" />
+                                    <label for="ack" style="font-weight: 400;"> I hereby confirm submitting the relevant supporting medical documents if the leave duration is more than 2 days.</label>
+                                </div>
+                            </span>
+                            <br>
                             <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
 
                         </div>
@@ -432,13 +440,37 @@ $resultArr = pg_fetch_all($result);
                             $("#typeofleave").change(function() {
                                 if ($("#typeofleave").val() == "Sick Leave") {
                                     $("#hidden-panel").show()
+                                    $("#hidden-panel_ack").show()
                                 } else {
                                     $("#hidden-panel").hide()
+                                    $("#hidden-panel_ack").hide()
                                 }
                             })
                         });
                     </script>
+                    <script>
+                        if (document.getElementById('typeofleave').value == "Sick Leave") {
 
+                            document.getElementById("ack").required = true;
+                            document.getElementById("ack").value = 1;
+                        } else {
+
+                            document.getElementById("ack").required = false;
+                            document.getElementById("ack").value = 0;
+                        }
+
+                        const randvar = document.getElementById('typeofleave');
+
+                        randvar.addEventListener('change', (event) => {
+                            if (document.getElementById('typeofleave').value == "Casual Leave") {
+                                document.getElementById("ack").required = false;
+                                document.getElementById("ack").value = 0;
+                            } else {
+                                document.getElementById("ack").required = true;
+                                document.getElementById("ack").value = 1;
+                            }
+                        })
+                    </script>
 
                     <table class="table">
                         <thead>
