@@ -83,7 +83,7 @@ if (@$_POST['form-type'] == "leaveapply") {
 
         // send uploaded file to drive
         // get the drive link
-        if(empty($_FILES['medicalcertificate']['name'])) {
+        if (empty($_FILES['medicalcertificate']['name'])) {
             $doclink = null;
         } else {
             $filename = "doc_" . $leaveid . "_" . $applicantid . "_" . time();
@@ -208,6 +208,23 @@ $resultArr = pg_fetch_all($result);
             analytics: 'G-S25QWTFJ2S',
             //facebookPixel: '',
             policyLink: 'https://www.rssi.in/disclaimer'
+        });
+    </script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery.js"> </script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("select.country").change(function() {
+                var selectedCountry = $(".country option:selected").val();
+                $.ajax({
+                    type: "POST",
+                    url: "process-request.php",
+                    data: {
+                        country: selectedCountry
+                    }
+                }).done(function(data) {
+                    $("#response").html(data);
+                });
+            });
         });
     </script>
 
@@ -336,20 +353,18 @@ $resultArr = pg_fetch_all($result);
                                 <input type="text" class="form-control" name="numdays2" id="numdays2" value="" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" size="10" readonly>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Days count</small>
                             </span>
+
                             <span class="input-help">
-                                <select name="typeofleave" id="typeofleave" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-                                    <option value="" disabled selected hidden>Types of Leave</option>
+                                <select name="typeofleave" id="typeofleave" class="country form-control">
+                                    <option>Select</option>
                                     <option value="Sick Leave">Sick Leave</option>
                                     <option value="Casual Leave">Casual Leave</option>
+                                    <!-- <option value="uk">United Kingdom</option> -->
                                 </select>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Types of Leave<span style="color:red">*</span></small>
                             </span>
-                            <span class="input-help">
-                                <select name="creason" id='creason' class="form-control" required>
-                                    <option disabled selected hidden>--Select--</option>
-                                </select>
-                                <small id="passwordHelpBlock" class="form-text text-muted">Leave Category<span style="color:red">*</span></small>
-                            </span>
+                            <span id="response"></span>
+
                             <span name="hidden-panel" id="hidden-panel">
                                 <span class="input-help">
                                     <input type="file" name="medicalcertificate" class="form-control" />
@@ -369,56 +384,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
 
                     </form>
-
-                    <script>
-                        function getType() {
-                            var x = document.getElementById("typeofleave").value;
-                            var items;
-                            if (x === "Sick Leave") {
-                                items = ["Abdominal/Pelvic pain",
-                                    "Anemia",
-                                    "Appendicitis / Pancreatitis",
-                                    "Asthma / bronchitis / pneumonia",
-                                    "Burns",
-                                    "Cancer -Carcinoma/ Malignant neoplasm",
-                                    "Cardiac related ailments or Heart Disease",
-                                    "Chest Pain",
-                                    "Convulsions/ Epilepsy",
-                                    "Dental Related Ailments - Tooth Ache / Impacted Tooth",
-                                    "Emotional Well Being",
-                                    "Digestive System Disorders/Indigestion/Food Poisoning/Diarrhea/Dysentry/Gastritis & Enteritis",
-                                    "Excessive vomiting in pregnancy/Pregnancy induced hypertension",
-                                    "Eye Related Ailments -Low Vision/Blindness/Eye Infections",
-                                    "Fever/Cough/Cold",
-                                    "Fracture/Injury/Dislocation/Sprain/Strain of joints/Ligaments of knee/Internal derangement/Other Orthopedic related ailments",
-                                    "Gynecological Ailments/Disorders -Endometriosis/Fibroids",
-                                    "Haemorrhoids (Piles)/Fissure/Fistula",
-                                    "Headache/Nausea/Vomiting",
-                                    "Hernia - Inguinal / Umbilical / Ventral",
-                                    "Hepatitis",
-                                    "Liver Related Ailments",
-                                    "Maternity-Normal Delivery/Caesarean Section/Abortion",
-                                    "Nervous Disorders",
-                                    "Quarantine Leave",
-                                    "Respiratory Related Ailments-Sinusitis/Tonsillitis,/Chronic rhinitis/Nasopharyngitis and pharyngitis/Congenital malformations of nose bronchitis",
-                                    "Skin Related Ailments-Abscess/Swelling",
-                                    "Spondilitis/ Intervertebral Disc Disorders / Spondylosis",
-                                    "Urinary Tract Infections/Disorders",
-                                    "Varicose veins of other sites",
-                                ];
-                            } else if (x === "Casual Leave") {
-                                items = ["Other", "Timesheet leave"]
-                            } else {
-                                items = ["--Select--"]
-                            }
-                            var str = ""
-                            for (var item of items) {
-                                str += "<option>" + item + "</option>"
-                            }
-                            document.getElementById("creason").innerHTML = str;
-                        }
-                        document.getElementById("typeofleave").addEventListener("click", getType)
-                    </script>
+                    
                     <script>
                         if (<?php echo $slbalance ?> <= 0) {
                             document.getElementById("typeofleave").options[1].disabled = true;
