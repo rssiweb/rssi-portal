@@ -503,7 +503,7 @@ if (!$result) {
                                 <input type="hidden" name="data[applicantname]" type="text" value="' . $array['fullname'] . $array['studentname'] . '">
                                 <input type="hidden" name="data[category]" type="text" value="' . $array['creason'] . '">
                                 <input type="hidden" name="data[comment]" type="text" value="' . $array['comment'] . '">
-                                <input type="hidden" name="data[day]" type="text" value="' . $array['day'] . '">
+                                <input type="hidden" name="data[day]" type="text" value="' . $array['days'] . '">
                                 <input type="hidden" name="data[fromdate]" type="text" value="' . @date("d/m/Y", strtotime($array['fromdate'])) . '">
                                 <input type="hidden" name="data[todate]" type="text" value="' . @date("d/m/Y", strtotime($array['todate'])) . '">
                                 <input type="hidden" name="data[status]" type="text" value="' . @strtoupper($array['status']) . '">
