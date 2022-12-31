@@ -329,7 +329,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                             <td>' . @date("d/m/Y", strtotime($array['date'])) . '</td>
                         <td>' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . '</td>
                         <td>' . $array['category'] . '</td>   
-                        <td>' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . '</td>  
+                        <td>' . date('F', mktime(0, 0, 0, $array['month'], 10)) . '</td>  
                         <td>' . $array['fees'] . '</td>
                         <td>' . $array['ptype'] . '</td>
                         <td>' . $array['fullname'] . '</td>
