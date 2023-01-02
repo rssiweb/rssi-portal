@@ -92,4 +92,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $password_updated_on= $row[81];
         $default_pass_updated_by= $row[82];
         $default_pass_updated_on= $row[83];
-        $onleave= $row[85];}
+        $job_type= $row[84];
+        $salary= $row[85];
+        $onleave= $row[86];}
