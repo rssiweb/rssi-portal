@@ -450,6 +450,8 @@ $resultArr = pg_fetch_all($result);
             <div style="width:100%; text-align:right">
                 <p id="status" class="label " style="display: inline !important;"><span class="fullname"></span></p>
             </div>
+            <span class="noticea"><a id="offer_letter" href="#" target="_blank">Offer Letter</a></span><br>
+            <span class="noticea"><a id="joining_letter" href="#" target="_blank">Joining Letter</a></span><br>
 
             WBT Completed:&nbsp;<span class="attd"></span>
             <div class="col" style="display: inline-block; text-align:right"><a id="wbt_details" href="#" target="_blank"><i class="fa-regular fa-eye" style="font-size: 20px ;color:#777777" title="WBT Details"></i></a></div><br>
@@ -500,12 +502,17 @@ $resultArr = pg_fetch_all($result);
 
             var profile = document.getElementById("wbt_details")
             profile.href = "/rssi-member/my_learning.php?get_aid=" + mydata["associatenumber"]
+            profile = document.getElementById("offer_letter")
+            profile.href = "/rssi-member/offerletter.php?get_id=" + mydata["associatenumber"]
             profile = document.getElementById("certificate_issue")
             profile.href = "/rssi-member/my_certificate.php?awarded_to_id=" + mydata["associatenumber"] + "&awarded_to_name=" + mydata["fullname"]
             profile = document.getElementById("certificate_view")
             profile.href = "/rssi-member/my_certificate.php?get_nomineeid=" + mydata["associatenumber"]
             profile = document.getElementById("experience_letter")
             profile.href = "/rssi-member/expletter.php?get_id=" + mydata["associatenumber"]
+            profile = document.getElementById("joining_letter")
+            profile.href = "/rssi-member/joiningletter.php?get_id=" + mydata["associatenumber"]
+
 
         }
         // When the user clicks the button, open the modal 
