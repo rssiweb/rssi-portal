@@ -55,8 +55,12 @@
 </div>
 <?php
 
-@$scode = $_GET['scode'];
-$result = pg_query($con, "SELECT * FROM certificate LEFT JOIN (SELECT associatenumber, scode FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber WHERE (scode='$scode' AND scode!='') AND badge_name != 'Experience Letter'");
+@$urlscode = $_GET['scode'];
+if (@$urlscode != '') {
+    $result = pg_query($con, "SELECT * FROM certificate LEFT JOIN (SELECT associatenumber, scode FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber WHERE (scode='$urlscode' OR out_scode='$urlscode') AND badge_name != 'Experience Letter' AND badge_name != 'Offer Letter' AND badge_name != 'Joining Letter'");
+} else {
+    $result = pg_query($con, "SELECT * FROM certificate LEFT JOIN (SELECT associatenumber, scode FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber WHERE certificate_no=''");
+}
 if (!$result) {
     echo "An error occurred.\n";
     exit;

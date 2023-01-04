@@ -36,7 +36,7 @@ include("../../util/email.php");
         @$out_phone = $_POST['out_phone'];
         @$out_email = $_POST['out_email'];
         @$out_scode = $_POST['out_scode'];
-        @$out_flag = $_POST['is_user'] ?? 0;
+        @$out_flag = $_POST['is_users'] ?? 0;
         @$uploadedFile = $_FILES['certificate_url'];
 
         @$now = date('Y-m-d H:i:s');
