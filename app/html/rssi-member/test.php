@@ -1,1 +1,0 @@
-<img src="https://login.rssi.in/img/brand_logo.png" alt="BrandSig.png" width="163" height="67">
