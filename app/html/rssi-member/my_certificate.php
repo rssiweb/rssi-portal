@@ -40,14 +40,24 @@ include("../../util/email.php");
         @$uploadedFile = $_FILES['certificate_url'];
 
         @$now = date('Y-m-d H:i:s');
+
         if ($certificate_no != "") {
             // send uploaded file to drive
             // get the drive link
             if (empty($_FILES['certificate_url']['name'])) {
                 $doclink = null;
             } else {
-                $filename = $certificate_no . "_" . $badge_name . "_" . $awarded_to_id;
-                $parent = '1Qsogy6nZHd5MgnPHcKyiYmnhefkNjGln';
+
+                if ($badge_name == 'Offer Letter') {
+                    $parent = '1ax2QbjgC3yjJK3ezbrS9ZtOllRlUHOR8';
+                    $filename = $awarded_to_id . "_" . $badge_name . "_" . time();
+                } else if ($badge_name == 'Joining Letter') {
+                    $parent = '1ax2QbjgC3yjJK3ezbrS9ZtOllRlUHOR8';
+                    $filename = $awarded_to_id . "_" . $badge_name . "_" . time();
+                } else {
+                    $parent = '1Qsogy6nZHd5MgnPHcKyiYmnhefkNjGln';
+                    $filename = $certificate_no . "_" . $badge_name . "_" . $awarded_to_id;
+                }
                 $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
             }
             $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby,awarded_to_name,out_phone,out_email,out_scode,out_flag) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$doclink','$issuedby','$awarded_to_name','$out_phone','$out_email','$out_scode','$out_flag')";
@@ -65,7 +75,14 @@ include("../../util/email.php");
             $fullname_nominee = $nameassociate . $namestudent . $awarded_to_name;
             $email_nominee = $emailassociate . $emailstudent . $out_email;
 
-            sendEmail("badge", array(
+            if ($badge_name == 'Offer Letter') {
+                $emailtemplate = 'offerletter';
+            } else if ($badge_name == 'Joining Letter') {
+                $emailtemplate = 'joiningletter';
+            } else {
+                $emailtemplate = 'badge';
+            }
+            sendEmail($emailtemplate, array(
                 "badge_name" => $badge_name,
                 "awarded_to_id" => $awarded_to_id,
                 "fullname" => $fullname_nominee,
@@ -296,8 +313,8 @@ include("../../util/email.php");
                                     </span>
 
                                     <span class="input-help">
-                                        <input type="number" name="out_scode" id="out_scode" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee scode" value="<?php echo @$_GET['out_scode']; ?>" required>
-                                        <small id="passwordHelpBlock_out_scode" class="form-text text-muted">Nominee scode*</small>
+                                        <input type="number" name="out_scode" id="out_scode" class="form-control" style="width:max-content; display:inline-block" placeholder="Scode" value="<?php echo @$_GET['out_scode']; ?>" required>
+                                        <small id="passwordHelpBlock_out_scode" class="form-text text-muted">Scode*</small>
                                     </span>
                                     <span class="input-help">
                                         <select name="badge_name" class="form-control" style="width:max-content; display:inline-block" required>
@@ -312,7 +329,9 @@ include("../../util/email.php");
                                             <option>Certificate Of Appreciation (Smile)</option>
                                             <option>Completion Certificate</option>
                                             <option>Experience Letter</option>
+                                            <option>Joining Letter</option>
                                             <option>Learning Achievement Award</option>
+                                            <option>Offer Letter</option>
                                             <option>Provisional Certificate</option>
                                             <option>Service & Commitment Award</option>
                                             <option>Smile</option>
@@ -581,7 +600,7 @@ include("../../util/email.php");
 
                                 <td>' ?>
                                     <?php if (@$array['phone'] != null || @$array['out_phone'] != null || @$array['contact'] != null) { ?>
-                                        <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] .' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0A' . $array['certificate_url'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                        <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0A' . $array['certificate_url'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '"></i></a>' ?>
                                     <?php } else { ?>
                                         <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
