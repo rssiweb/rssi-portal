@@ -209,6 +209,28 @@ include("../../util/email.php");
             <div class="col-md-12">
                 <div class="row">
                     <?php if ($role == 'Admin') { ?>
+                        <?php if (@$certificate_no != null && @$cmdtuples == 0) { ?>
+
+                            <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                            </div>
+                        <?php
+                        } else if (@$cmdtuples == 1) { ?>
+
+                            <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Certificate no <?php echo @$certificate_no ?> has been added.</span>
+                            </div>
+                            <script>
+                                if (window.history.replaceState) {
+                                    window.history.replaceState(null, null, window.location.href);
+                                }
+                            </script>
+                        <?php } ?>
+                    <?php } ?>
+
+                    <?php if ($role == 'Admin') { ?>
                         <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / <span class="noticea"><a href="document.php">My Document</a></span> / Certificate Management System (CMS)
                         </div>
                     <?php } else { ?>
@@ -247,27 +269,7 @@ include("../../util/email.php");
                 </div>
                 <?php if ($resultArrr == null) { ?>
                 <?php } ?>
-                <?php if ($role == 'Admin') { ?>
-                    <?php if (@$certificate_no != null && @$cmdtuples == 0) { ?>
 
-                        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
-                        </div>
-                    <?php
-                    } else if (@$cmdtuples == 1) { ?>
-
-                        <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Certificate no <?php echo @$certificate_no ?> has been added.</span>
-                        </div>
-                        <script>
-                            if (window.history.replaceState) {
-                                window.history.replaceState(null, null, window.location.href);
-                            }
-                        </script>
-                    <?php } ?>
-                <?php } ?>
                 <div class="row">
                     <section class="box" style="padding: 2%;">
 
@@ -579,7 +581,7 @@ include("../../util/email.php");
 
                                 <td>' ?>
                                     <?php if (@$array['phone'] != null || @$array['out_phone'] != null || @$array['contact'] != null) { ?>
-                                        <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['phone'] . @$array['contact'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                        <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] .' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0A' . $array['certificate_url'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '"></i></a>' ?>
                                     <?php } else { ?>
                                         <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
