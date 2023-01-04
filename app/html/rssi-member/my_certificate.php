@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -24,15 +25,32 @@ include("../../util/email.php");
 
     if ($_POST) {
         @$certificate_no = 'RSC' . time();
-        @$awarded_to_id = strtoupper($_POST['awarded_to_id']);
+        @$awarded_to_id = strtoupper($_POST['awarded_to_id'] ?? "na");
         @$badge_name = $_POST['badge_name'];
         @$comment = $_POST['comment'];
         @$gems = $_POST['gems'];
         @$certificate_url = $_POST['certificate_url'];
-        @$issuedby = $_POST['issuedby'];
+        @$issuedby = $fullname;
+
+        @$awarded_to_name = $_POST['out_name'];
+        @$out_phone = $_POST['out_phone'];
+        @$out_email = $_POST['out_email'];
+        @$out_scode = $_POST['out_scode'];
+        @$out_flag = $_POST['is_user'] ?? 0;
+        @$uploadedFile = $_FILES['certificate_url'];
+
         @$now = date('Y-m-d H:i:s');
         if ($certificate_no != "") {
-            $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$certificate_url','$issuedby')";
+            // send uploaded file to drive
+            // get the drive link
+            if (empty($_FILES['certificate_url']['name'])) {
+                $doclink = null;
+            } else {
+                $filename = $certificate_no . "_" . $badge_name . "_" . $awarded_to_id;
+                $parent = '1Qsogy6nZHd5MgnPHcKyiYmnhefkNjGln';
+                $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
+            }
+            $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby,awarded_to_name,out_phone,out_email,out_scode,out_flag) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$doclink','$issuedby','$awarded_to_name','$out_phone','$out_email','$out_scode','$out_flag')";
             $result = pg_query($con, $certificate);
             $cmdtuples = pg_affected_rows($result);
 
@@ -44,14 +62,15 @@ include("../../util/email.php");
             @$namestudent = pg_fetch_result($resulttt, 0, 0);
             @$emailstudent = pg_fetch_result($resulttt, 0, 1);
 
-            $fullname = $nameassociate . $namestudent;
-            $email = $emailassociate . $emailstudent;
+            $fullname_nominee = $nameassociate . $namestudent . $awarded_to_name;
+            $email_nominee = $emailassociate . $emailstudent . $out_email;
 
             sendEmail("badge", array(
                 "badge_name" => $badge_name,
                 "awarded_to_id" => $awarded_to_id,
-                "fullname" => $fullname,
-            ), $email);
+                "fullname" => $fullname_nominee,
+                "doclink" => $doclink,
+            ), $email_nominee);
         }
     }
 
@@ -133,7 +152,7 @@ include("../../util/email.php");
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -166,7 +185,12 @@ include("../../util/email.php");
             outline: none;
         }
 
-        #passwordHelpBlock {
+        #passwordHelpBlock,
+        #passwordHelpBlock_awarded_to_id,
+        #passwordHelpBlock_out_name,
+        #passwordHelpBlock_out_phone,
+        #passwordHelpBlock_out_email,
+        #passwordHelpBlock_out_scode {
             font-size: x-small;
             display: block;
         }
@@ -249,12 +273,29 @@ include("../../util/email.php");
 
                         <?php if ($role == 'Admin') { ?>
 
-                            <form autocomplete="off" name="cms" id="cms" action="my_certificate.php" method="POST">
+                            <form autocomplete="off" name="cms" id="cms" action="my_certificate.php" method="POST" enctype="multipart/form-data">
                                 <div class="form-group" style="display: inline-block;">
 
                                     <span class="input-help">
-                                        <input type="text" name="awarded_to_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee id" value="<?php echo @$_GET['awarded_to_id']; ?>" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Nominee id*</small>
+                                        <input type="text" name="awarded_to_id" id="awarded_to_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee id" value="<?php echo @$_GET['awarded_to_id']; ?>" required>
+                                        <small id="passwordHelpBlock_awarded_to_id" class="form-text text-muted">Nominee id*</small>
+                                    </span>
+                                    <span class="input-help">
+                                        <input type="text" name="out_name" id="out_name" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee name" value="<?php echo @$_GET['awarded_to_name']; ?>" required>
+                                        <small id="passwordHelpBlock_out_name" class="form-text text-muted">Nominee name*</small>
+                                    </span>
+                                    <span class="input-help">
+                                        <input type="email" name="out_email" id="out_email" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee email" value="<?php echo @$_GET['out_email']; ?>" required>
+                                        <small id="passwordHelpBlock_out_email" class="form-text text-muted">Nominee email*</small>
+                                    </span>
+                                    <span class="input-help">
+                                        <input type="number" name="out_phone" id="out_phone" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee phone" value="<?php echo @$_GET['out_phone']; ?>" required>
+                                        <small id="passwordHelpBlock_out_phone" class="form-text text-muted">Nominee phone*</small>
+                                    </span>
+
+                                    <span class="input-help">
+                                        <input type="number" name="out_scode" id="out_scode" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee scode" value="<?php echo @$_GET['out_scode']; ?>" required>
+                                        <small id="passwordHelpBlock_out_scode" class="form-text text-muted">Nominee scode*</small>
                                     </span>
                                     <span class="input-help">
                                         <select name="badge_name" class="form-control" style="width:max-content; display:inline-block" required>
@@ -290,19 +331,104 @@ include("../../util/email.php");
                                         <small id="passwordHelpBlock" class="form-text text-muted">Gems</small>
                                     </span>
 
-                                    <span class="input-help">
+                                    <!-- <span class="input-help">
                                         <input type="url" name="certificate_url" class="form-control" placeholder="Certificate url" value="">
                                         <small id="passwordHelpBlock" class="form-text text-muted">Certificate url</small>
-                                    </span>
+                                    </span> -->
 
-                                    <input type="hidden" name="issuedby" class="form-control" placeholder="Issued by" value="<?php echo $fullname ?>" required readonly>
+                                    <span class="input-help">
+                                        <input type="file" name="certificate_url" class="form-control" />
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Documents</small>
+                                    </span>
 
                                     <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
                                         <i class="fa-solid fa-plus"></i>&nbsp;&nbsp;Add</button>
 
                                 </div>
+                                <div id="filter-checkss">
+                                    <input type="checkbox" name="is_users" id="is_users" value="1" <?php if (isset($_GET['is_users'])) echo "checked='checked'"; ?> />
+                                    <label for="is_users" style="font-weight: 400;">Non registered candidate</label>
+                                </div>
+
 
                             </form>
+
+                            <script>
+                                if ($('#is_users').not(':checked').length > 0) {
+                                    document.getElementById("awarded_to_id").disabled = false;
+                                    $('#awarded_to_id').get(0).type = 'text';
+                                    document.getElementById("passwordHelpBlock_awarded_to_id").classList.remove("hidden");
+                                    document.getElementById("out_name").disabled = true;
+                                    document.getElementById("out_phone").disabled = true;
+                                    document.getElementById("out_email").disabled = true;
+                                    document.getElementById("out_scode").disabled = true;
+                                    $('#out_name').get(0).type = 'hidden';
+                                    $('#out_phone').get(0).type = 'hidden';
+                                    $('#out_email').get(0).type = 'hidden';
+                                    $('#out_scode').get(0).type = 'hidden';
+                                    document.getElementById("passwordHelpBlock_out_name").classList.add("hidden");
+                                    document.getElementById("passwordHelpBlock_out_phone").classList.add("hidden");
+                                    document.getElementById("passwordHelpBlock_out_email").classList.add("hidden");
+                                    document.getElementById("passwordHelpBlock_out_scode").classList.add("hidden");
+
+                                } else {
+
+                                    document.getElementById("awarded_to_id").disabled = true;
+                                    $('#awarded_to_id').get(0).type = 'hidden';
+                                    document.getElementById("passwordHelpBlock_awarded_to_id").classList.add("hidden");
+                                    document.getElementById("out_name").disabled = false;
+                                    document.getElementById("out_phone").disabled = false;
+                                    document.getElementById("out_email").disabled = false;
+                                    document.getElementById("out_scode").disabled = false;
+                                    $('#out_name').get(0).type = 'text';
+                                    $('#out_phone').get(0).type = 'number';
+                                    $('#out_email').get(0).type = 'email';
+                                    $('#out_scode').get(0).type = 'text';
+                                    document.getElementById("passwordHelpBlock_out_name").classList.remove("hidden");
+                                    document.getElementById("passwordHelpBlock_out_phone").classList.remove("hidden");
+                                    document.getElementById("passwordHelpBlock_out_email").classList.remove("hidden");
+                                    document.getElementById("passwordHelpBlock_out_scode").classList.remove("hidden");
+                                }
+
+                                const checkboxs = document.getElementById('is_users');
+
+                                checkboxs.addEventListener('change', (event) => {
+                                    if (event.target.checked) {
+
+                                        document.getElementById("awarded_to_id").disabled = true;
+                                        $('#awarded_to_id').get(0).type = 'hidden';
+                                        document.getElementById("passwordHelpBlock_awarded_to_id").classList.add("hidden");
+                                        document.getElementById("out_name").disabled = false;
+                                        document.getElementById("out_phone").disabled = false;
+                                        document.getElementById("out_email").disabled = false;
+                                        document.getElementById("out_scode").disabled = false;
+                                        $('#out_name').get(0).type = 'text';
+                                        $('#out_phone').get(0).type = 'number';
+                                        $('#out_email').get(0).type = 'email';
+                                        $('#out_scode').get(0).type = 'text';
+                                        document.getElementById("passwordHelpBlock_out_name").classList.remove("hidden");
+                                        document.getElementById("passwordHelpBlock_out_phone").classList.remove("hidden");
+                                        document.getElementById("passwordHelpBlock_out_email").classList.remove("hidden");
+                                        document.getElementById("passwordHelpBlock_out_scode").classList.remove("hidden");
+                                    } else {
+                                        document.getElementById("awarded_to_id").disabled = false;
+                                        $('#awarded_to_id').get(0).type = 'text';
+                                        document.getElementById("passwordHelpBlock_awarded_to_id").classList.remove("hidden");
+                                        document.getElementById("out_name").disabled = true;
+                                        document.getElementById("out_phone").disabled = true;
+                                        document.getElementById("out_email").disabled = true;
+                                        document.getElementById("out_scode").disabled = true;
+                                        $('#out_name').get(0).type = 'hidden';
+                                        $('#out_phone').get(0).type = 'hidden';
+                                        $('#out_email').get(0).type = 'hidden';
+                                        $('#out_scode').get(0).type = 'hidden';
+                                        document.getElementById("passwordHelpBlock_out_name").classList.add("hidden");
+                                        document.getElementById("passwordHelpBlock_out_phone").classList.add("hidden");
+                                        document.getElementById("passwordHelpBlock_out_email").classList.add("hidden");
+                                        document.getElementById("passwordHelpBlock_out_scode").classList.add("hidden");
+                                    }
+                                })
+                            </script>
 
                             <?php if ($get_nomineeid != null) { ?>
                                 <div class="col" style="display: inline-block; width:100%; text-align:right">
@@ -414,7 +540,7 @@ include("../../util/email.php");
                             <tr>
                                 <td>' . $array['certificate_no'] . '</td>' ?>
                                 <?php if ($role == 'Admin') { ?>
-                                    <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . @$array['fullname'] . @$array['studentname'] . '</td>' ?>
+                                    <?php echo '<td>' . $array['awarded_to_id'] . '<br>' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] . '</td>' ?>
                                 <?php } ?>
                                 <?php echo '<td>' . $array['badge_name'] . '</td><td>' ?>
 
@@ -452,15 +578,15 @@ include("../../util/email.php");
                                     <?php echo '
 
                                 <td>' ?>
-                                    <?php if (@$array['phone'] != null || @$array['contact'] != null) { ?>
+                                    <?php if (@$array['phone'] != null || @$array['out_phone'] != null || @$array['contact'] != null) { ?>
                                         <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['phone'] . @$array['contact'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0Ahttps://login.rssi.in/rssi-member/my_certificate.php?get_nomineeid=' . $array['awarded_to_id'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['phone'] . @$array['contact'] . '"></i></a>' ?>
+                                " target="_blank"><i class="fa-brands fa-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '"></i></a>' ?>
                                     <?php } else { ?>
                                         <?php echo '<i class="fa-brands fa-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                                        <?php } ?>
+                                    <?php } ?>
 
 
-                                        <!-- &nbsp;&nbsp;<?php if (@$array['email'] != null || @$array['emailaddress'] != null) { ?>
+                                    <!-- &nbsp;&nbsp;<?php if (@$array['email'] != null || @$array['emailaddress'] != null) { ?>
                                             <?php echo '<form  action="#" name="email-form-' . $array['certificate_no'] . '" method="POST" style="display: -webkit-inline-box;" >
                                     <input type="hidden" name="template" type="text" value="badge">
                                     <input type="hidden" name="data[badge_name]" type="text" value="' . $array['badge_name'] . '">
@@ -474,50 +600,50 @@ include("../../util/email.php");
                                             <?php echo '<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
                                         <?php } ?> -->
 
-                                        <?php echo '&nbsp;&nbsp;&nbsp;<form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                    <?php echo '&nbsp;&nbsp;&nbsp;<form name="cmsdelete_' . $array['certificate_no'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="cmsdelete">
                                 <input type="hidden" name="cmsid" id="cmsid" type="text" value="' . $array['certificate_no'] . '">
                                 
                                 <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['certificate_no'] . '"><i class="fa-solid fa-xmark"></i></button> </form>
                                 </td>' ?>
-                                    <?php } ?>
-                                <?php }
+                                <?php } ?>
+                            <?php }
                             echo '</tr>' ?>
-                            <?php
+                        <?php
                         } else if (@$get_certificate_no == "" && @$get_nomineeid == "") {
-                            ?>
-                                <tr>
-                                    <td colspan="5">Please select Filter value.</td>
-                                </tr>
-                            <?php
+                        ?>
+                            <tr>
+                                <td colspan="5">Please select Filter value.</td>
+                            </tr>
+                        <?php
                         } else if (sizeof($resultArr) == 0 || (@$get_certificate_no != "" || @$get_nomineeid != "")) { ?>
-                                <?php echo '<tr>
+                            <?php echo '<tr>
                                     <td colspan="5">No record found for ' ?><?php echo $get_certificate_no ?><?php echo $get_nomineeid ?><?php echo '.</td>
                                 </tr>' ?>
-                            <?php
+                        <?php
                         }
                         echo '</tbody>
                     </table>'
-                            ?>
+                        ?>
 
 
-                            <!--		Start Pagination -->
-                            <div class='pagination-container'>
-                                <nav>
-                                    <ul class="pagination">
+                        <!--		Start Pagination -->
+                        <div class='pagination-container'>
+                            <nav>
+                                <ul class="pagination">
 
-                                        <li data-page="prev">
-                                            <span>
-                                                < <span class="sr-only">(current)
-                                            </span></span>
-                                        </li>
-                                        <!--	Here the JS Function Will Add the Rows -->
-                                        <li data-page="next" id="prev">
-                                            <span> > <span class="sr-only">(current)</span></span>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
+                                    <li data-page="prev">
+                                        <span>
+                                            < <span class="sr-only">(current)
+                                        </span></span>
+                                    </li>
+                                    <!--	Here the JS Function Will Add the Rows -->
+                                    <li data-page="next" id="prev">
+                                        <span> > <span class="sr-only">(current)</span></span>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                     </section>
 
                     <script>
