@@ -3,26 +3,9 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
 
-
 define('SITE_KEY', '6LfJRc0aAAAAAEhNPCD7ju6si7J4qRUCBSN_8RsL');
 define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
 
-if ($_POST) {
-    function getCaptcha($SecretKey)
-    {
-        $Response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" . SECRET_KEY . "&response={$SecretKey}");
-        $Return = json_decode($Response);
-        return $Return;
-    }
-    $Return = getCaptcha($_POST['g-recaptcha-response']);
-    if ($Return->success == true && $Return->score > 0.5) {
-        // echo "Succes!";
-    } else {
-        //echo "You are a Robot!!";
-    }
-}
-
-date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = false;
 
@@ -39,8 +22,7 @@ function afterlogin($con, $date)
     $password_updated_on = $row[48];
     $default_pass_updated_by = $row[52];
     $default_pass_updated_on = $row[53];
-
-    $_SESSION['password_updated_by'] = $password_updated_by;
+    // $role = $row[62];
 
     // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
     $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$student_id','$_SERVER[HTTP_X_REAL_IP]','$date')";
@@ -63,17 +45,22 @@ function afterlogin($con, $date)
         header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
         unset($_SESSION["login_redirect"]);
     } else {
+        // Line 25 we have the role value
+        // if ($role !='Member') {
         header("Location: home.php");
+        // } else {
+        //     header("Location: myprofile.php");
+        // }
     }
 }
-
 if (isLoggedIn("sid")) {
     afterlogin($con, $date);
     exit;
 }
 
-if (isset($_POST['login'])) {
-
+function checkLogin($con, $date)
+{
+    global $login_failed_dialog;
     $student_id = strtoupper($_POST['sid']);
     $colors = $_POST['pass'];
 
@@ -93,6 +80,33 @@ if (isset($_POST['login'])) {
         $login_failed_dialog = true;
     }
 }
+
+function getCaptcha($SecretKey)
+{
+    $Response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" . SECRET_KEY . "&response={$SecretKey}");
+    $Return = json_decode($Response);
+    return $Return;
+}
+
+if ($_POST) {
+    $islocal = $_ENV['IS_LOCAL'] ?? "false";
+    if ($islocal == "true") {
+        if (isset($_POST['login'])) {
+            checkLogin($con, $date);
+        }
+    } else {
+        $Return = getCaptcha($_POST['g-recaptcha-response']);
+        if ($Return->success == true && $Return->score > 0.5) {
+            if (isset($_POST['login'])) {
+                checkLogin($con, $date);
+            }
+        } else {
+            $login_failed_dialog = true;
+        }
+    }
+}
+
+
 ?>
 
 <html>
@@ -109,12 +123,10 @@ if (isset($_POST['login'])) {
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    
+
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/addstyle.css">
     <style>
-        
-
         label {
             display: block;
             padding-left: 15px;
@@ -311,12 +323,12 @@ if (isset($_POST['login'])) {
 
     <!--<div id="thoverX" class="thover"></div>
 <div id="tpopupX" class="tpopup">
-     <img src="/images/pride3.jpg" class="img-fluid img-responsive hidden-xs" style="display: block;margin-left: auto;margin-right: auto;">
+    <img src="/images/pride3.jpg" class="img-fluid img-responsive hidden-xs" style="display: block;margin-left: auto;margin-right: auto;">
     <p style="display: block; margin-left: 5%;margin-right: 5%; text-align: left;">This Pride Month, RSSI launches #AgarTumSaathHo, to bring together LGBTQ Community and their straight allies.<br><br> Families and friends really matter! We know that most young people from the LGBTQ community grow up having to hide their identity
         because they fear being judged and rejected even by their loved ones. But this has a severe impact on their self-esteem and sense of self-worth. Supportive parents, families, friends, teachers, and peers can all play an important role in helping
         build self-esteem and a positive sense of self among LGBTQ youth, including gender non-conforming teens. This Pride month, RSSI NGO aims to bring forward and celebrate these stories of support, courage, love, and of understanding.</p>
     <div class="embed-responsive embed-responsive-16by9">
-        <iframe class="embed-responsive-item" src="/images/imp.mp4" allowfullscreen></iframe>
+        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/e677aw0T0Pk" allowfullscreen></iframe>
     </div>
 
     <div id="tcloseX" class="tclose notranslate">X</div>
@@ -331,7 +343,7 @@ if (isset($_POST['login'])) {
             $("#thoverX").toggleClass('hidden');
         });
     </script>
-</div> -->
+</div>-->
     <?php include("../../util/footer.php"); ?>
 </body>
 
