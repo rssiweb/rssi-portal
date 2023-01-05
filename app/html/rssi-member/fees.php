@@ -307,10 +307,9 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                     <script>
                                                 var currentYear = new Date().getFullYear();
                                             for (var i = 0; i < 5; i++) {
-                                                var next = currentYear + 1;
-                                                var year = currentYear + '-' + next;
+                                                var year = currentYear;
                                                 //next.toString().slice(-2)
-                                                $('#get_aid').append(new Option(year, year));
+                                                $('#get_aid').append(new Option(year));
                                                 currentYear--;
                                             }
                                         </script>
