@@ -192,7 +192,6 @@ if (!$result) {
                         <tbody>
                             <?php echo '<tr>
                            <td>
-
 <p style="text-align: center;"><b><u>JOINING LETTER</u></b></p>
 
 Dear ' . strtok($array['fullname'], ' ') . ',<br><br>
@@ -202,55 +201,6 @@ Dear ' . strtok($array['fullname'], ' ') . ',<br><br>
 <p><b><u>Detailed Information:</u></b></p>
 
 <p>Associate Number:  <b>' . $array['associatenumber'] . '</b></p>
-
-
-<table class="details">
-<tr>
-<td>Name of the Associate</td>
-<td>' . $array['fullname'] . '</td>
-</tr>
-<tr>
-<td>Gender</td>
-<td>' . $array['gender'] . '</td>
-</tr>
-<tr>
-<td>Date of Birth</td>
-<td>' . $array['dateofbirth'] . '</td>
-</tr>
-<tr>
-<td>Original Join Date</td>
-<td>' . $array['doj'] . '</td>
-</tr>
-
-<tr>
-<td>National Identifier</td>
-<td>' . $array['nationalidentifier'] . ' - ' . $array['identifier'] . '</td>
-</tr>
-<tr>
-<td>Telephone Number (Verified)</td>
-<td>' . $array['phone'] . '</td>
-</tr>
-<tr>
-<td>Email Address (Verified)</td>
-<td>' . $array['email'] . '</td>
-</tr>
-<tr>
-<td>Current Address</td>
-<td>' . $array['currentaddress'] . '</td>
-</tr>
-<tr>
-<td>Highest Educational Qualification</td>
-<td>' . $array['eduq'] . '</td>
-</tr>
-<tr>
-<td>Work Experience</td>
-<td>' . $array['workexperience'] . '</td>
-</tr>
-<tr>
-<td>Language(s) you can work with</td>
-<td>हिन्दी: ' . $array['languagedetailshindi'] . ', English: ' . $array['languagedetailsenglish'] . '.</td>
-</tr>
-</table><br>
 
                             <p>Sincerely,</p> 
                             <p><b>For Rina Shiksha Sahayak Foundation</b></p>
@@ -270,8 +220,10 @@ Dear ' . strtok($array['fullname'], ' ') . ',<br><br>
                         <tfoot>
                             <tr>
                                 <td>
-                                    <p class="report-footer"><?php echo 'The date printed in the document is in dd/mm/yyyy format.</p>' ?>
-                                        <?php echo '<p><b><u>Disclaimer:</u></b></p>
+                                    <p class="report-footer">
+                                        <?php echo 'Private and Confidential' ?>
+                                    </p>
+                                    <?php echo '<p><b><u>Disclaimer:</u></b></p>
 
 <p>I acknowledge that I have read and agree to the Terms and Conditions. Also, I give my consent to processing my data by the RSSI. My consent applies to the following information: my surname, name, telephone, email, and any other information relating to my personality.
 </p>
@@ -280,9 +232,9 @@ Dear ' . strtok($array['fullname'], ' ') . ',<br><br>
                             </tr>
                       </tfoot>  
                     </table>' ?>
-                                    <?php }
-                            } else { ?>
-                                    <p class="no-print">Please enter Associate ID.</p> <?php } ?>
+                                <?php }
+                        } else { ?>
+                                <p class="no-print">Please enter Associate ID.</p> <?php } ?>
         </section>
     </div>
 </body>
