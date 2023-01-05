@@ -214,9 +214,6 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                                         <option hidden selected><?php echo $id ?></option>
                                     <?php }
                                     ?>
-                                    <option>2023</option>
-                                    <option>2022</option>
-                                    <option>2021</option>
                                 </select>
 
                                 <select name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year">
