@@ -304,6 +304,16 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                             }
                         })
                     </script>
+                    <script>
+                                                var currentYear = new Date().getFullYear();
+                                            for (var i = 0; i < 5; i++) {
+                                                var next = currentYear + 1;
+                                                var year = currentYear + '-' + next;
+                                                //next.toString().slice(-2)
+                                                $('#get_aid').append(new Option(year, year));
+                                                currentYear--;
+                                            }
+                                        </script>
                     <?php echo '
                         <table class="table">
                             <thead>
