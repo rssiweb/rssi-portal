@@ -190,51 +190,54 @@ if (!$result) {
 
 
                         <tbody>
-                            <?php echo '<tr>
-                           <td>
-<p style="text-align: center;"><b><u>JOINING LETTER</u></b></p>
+                            <tr>
+                                <td>
+                                    <?php echo @date("d/m/Y", strtotime($date)) . '<br>RSSI/' . $array['associatenumber'] . '/' . $array['depb'] . '<br><br>
 
-Dear ' . strtok($array['fullname'], ' ') . ',<br><br>
+                                        ' . $array['fullname'] . '<br>
+                                        ' . $array['currentaddress'] . '<br><br>
 
-<p>We are pleased to offer you the position of ' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ') in the division of ' . $array['depb'] . '. This appointment will be effective from ' . $array['doj'] . '.</p>
+                                        <b>Sub: Joining Letter</b><br><br>'
+                                    ?>
 
-<p><b><u>Detailed Information:</u></b></p>
+                                    Dear <?php echo strtok($array['fullname'], ' ')  ?>,<br><br>
 
-<p>Associate Number:  <b>' . $array['associatenumber'] . '</b></p>
+                                    <p>We would like to take this opportunity to extend a very warm welcome to Rina Shiksha Sahayak Foundation (RSSI) family.</p>
+                                    <?php echo '<p>We are pleased to offer you the position of <b>' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ')</b> in the division of <b>' . $array['depb'] . '</b>. This appointment will be effective from <b>' . date_format(date_create_from_format('d/m/Y',  $array['doj']), 'd-M-Y') . '</b>' ?>.</p>
+                                    <p>You are now set to experience learning through our coveted WBT Program. RSSI HR Team will reach out to you over email in the next few days to guide you further on the web-based mandatory training process and steps to be taken to prepare yourself for onboarding.</p>
+                                    <p>
+                                    <p><b><u>Reporting Address</u></b></p>
+                                        Rina Shiksha Sahayak Foundation (RSSI)<br>
+                                        624B/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
+                                        Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
+                                    </p>
 
-                            <p>Sincerely,</p> 
-                            <p><b>For Rina Shiksha Sahayak Foundation</b></p>
-                            <img src="../img/' ?><?php echo $associatenumber ?><?php echo '.png" width="65px" style="margin-bottom:-5px"><br>
-                            <p style="line-height: 2;">' ?><?php echo $fullname ?><br>
+                                    <p>Warm regards,</p>
+                                    <p><b>For Rina Shiksha Sahayak Foundation</b></p>
+                                    <img src="../img/<?php echo $associatenumber ?>.png" width="65px" style="margin-bottom:-5px"><br>
+                                    <p style="line-height: 2;"><?php echo $fullname ?><br>
 
-                            <?php if (str_contains($position, "Talent")) { ?>
-                                <?php echo 'Talent Acquisition & Academic Interface Program (AIP)' ?>
-                            <?php } else { ?>
-                                <?php echo $engagement ?>
-                            <?php } ?>
+                                        <?php if (str_contains($position, "Talent")) { ?>
+                                            <?php echo 'Talent Acquisition & Academic Interface Program (AIP)' ?>
+                                        <?php } else { ?>
+                                            <?php echo $engagement ?>
+                                        <?php } ?>
 
-                            </p>
-                            </td>
+                                    </p>
+                                </td>
                             </tr>
                         </tbody>
                         <tfoot>
                             <tr>
                                 <td>
-                                    <p class="report-footer">
-                                        <?php echo 'Private and Confidential' ?>
-                                    </p>
-                                    <?php echo '<p><b><u>Disclaimer:</u></b></p>
-
-<p>I acknowledge that I have read and agree to the Terms and Conditions. Also, I give my consent to processing my data by the RSSI. My consent applies to the following information: my surname, name, telephone, email, and any other information relating to my personality.
-</p>
-<p style="margin-top:5%;">Signature of the Associate</p><p>Date&nbsp;(dd/mm/yyyy)&nbsp;&#8212;</p>
-                            </td>
+                                    <p class=" report-footer">Private and Confidential</p>
+                                </td>
                             </tr>
-                      </tfoot>  
-                    </table>' ?>
-                                <?php }
-                        } else { ?>
-                                <p class="no-print">Please enter Associate ID.</p> <?php } ?>
+                        </tfoot>
+                    </table>
+                <?php }
+            } else { ?>
+                <p class="no-print">Please enter Associate ID.</p> <?php } ?>
         </section>
     </div>
 </body>

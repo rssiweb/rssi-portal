@@ -368,7 +368,7 @@ if (!$result) {
                         <tfoot>
                             <tr>
                                 <td>
-                                    <p class="report-footer">RSSI/<?php echo $array['associatenumber'] . '/' . $array['depb'] ?> </p>
+                                    <p class=" report-footer">Private and Confidential</p>
                                     <p style="margin-top:5%;">Signature of the Associate</p>
                                 </td>
                             </tr>
