@@ -66,6 +66,12 @@ if ($_POST['form-type'] == "leavedelete") {
   $result = pg_query($con, $leavedelete);
 }
 
+if ($_POST['form-type'] == "claimdelete") {
+  @$claimdeleteid = $_POST['claimdeleteid'];
+  $claimdelete = "DELETE from claim WHERE reimbid = '$claimdeleteid'";
+  $result = pg_query($con, $claimdelete);
+}
+
 if ($_POST['form-type'] == "leaveadjdelete") {
   @$leaveadjdeleteid = $_POST['leaveadjdeleteid'];
   $leaveadjdelete = "DELETE from leaveadjustment WHERE leaveadjustmentid = '$leaveadjdeleteid'";
@@ -155,16 +161,13 @@ if ($_POST['form-type'] == "leavereviewform") {
   @$todate = $_POST['todate'];
   @$halfdayhr = $_POST['is_userhr'] ?? 0;
   $now = date('Y-m-d H:i:s');
-?>
 
-<?php if ($halfdayhr != '' && $halfdayhr != 0) {
+  if ($halfdayhr != '' && $halfdayhr != 0) {
 
     @$day = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2;
   } else {
     @$day = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1);
-  } ?>
-
-<?php
+  }
   $leaveapproval = "UPDATE leavedb_leavedb SET  status = '$status', fromdate = '$fromdate',  todate = '$todate', comment = '$comment',reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name', days = '$day', halfday = $halfdayhr WHERE leaveid = '$leaveid'";
 
   $result = pg_query($con, $leaveapproval);
@@ -194,6 +197,27 @@ if ($_POST['form-type'] == "leavereviewform") {
   //   "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
   //   "comment" => $comment,
   // ), $email);
+}
+
+if ($_POST['form-type'] == "claimreviewform") {
+  @$reviewer_id = $_POST['reviewer_id'];
+  @$reviewer_name = $_POST['reviewer_name'];
+  @$reimbidd = $_POST['reimbid'];
+  @$claimstatus = $_POST['claimstatus'];
+  @$approvedamount = $_POST['approvedamount'] ?? 0;
+  @$transactionid = $_POST['transactionid'];
+  @$transfereddate = $_POST['transfereddate'];
+  @$closedon = $_POST['closedon'];
+  @$mediremarks = $_POST['mediremarks'];
+  $now = date('Y-m-d H:i:s');
+
+  if ($claimstatus != "Rejected" && $claimstatus != "Under review") {
+
+    $claimapproval = "UPDATE claim SET  reviewer_id = '$reviewer_id', reviewer_name = '$reviewer_name',  updatedon = '$now', claimstatus = '$claimstatus',approvedamount = $approvedamount,  transactionid = '$transactionid', transfereddate = '$transfereddate', closedon = '$closedon', mediremarks = '$mediremarks' WHERE reimbid = '$reimbidd'";
+  } else {
+    $claimapproval = "UPDATE claim SET  reviewer_id = '$reviewer_id', reviewer_name = '$reviewer_name',  updatedon = '$now', claimstatus = '$claimstatus', mediremarks = '$mediremarks', approvedamount = null,  transactionid = null, transfereddate = null WHERE reimbid = '$reimbidd'";
+  }
+  $result = pg_query($con, $claimapproval);
 }
 
 if ($_POST['form-type'] == "ipfclose") {

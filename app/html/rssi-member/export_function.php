@@ -25,7 +25,7 @@ if ($export_type == "fees") {
 
 function fees_export()
 {
-  global $con
+  global $con;
   @$id = $_POST['id'];
   @$status = $_POST['status'];
   @$section = $_POST['section'];
@@ -95,7 +95,7 @@ function donation_export()
 {
 
 
-  global $con
+  global $con;
   @$id = $_POST['invoice'];
   @$status = $_POST['fyear'];
 
@@ -136,7 +136,7 @@ function gps_export()
 {
 
 
-  global $con
+  global $con;
   @$taggedto = $_POST['taggedto'];
   @$item_type = $_POST['item_type'];
 
@@ -174,7 +174,7 @@ function reimb_export()
 {
 
 
-  global $con
+  global $con;
   @$status = $_POST['status'];
   @$role = $_POST['role'];
   @$user_check = $_POST['user_check'];
@@ -183,27 +183,57 @@ function reimb_export()
 
     @$id = strtoupper($_POST['id']);
 
-    if ($id == null && $status == 'ALL') {
-      $result = pg_query($con, "SELECT * FROM claim order by id desc");
-    } else if ($id == null && $status != 'ALL') {
-      $result = pg_query($con, "SELECT * FROM claim WHERE year='$status' order by id desc");
-    } else if ($id > 0 && $status != 'ALL') {
-      $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' AND year='$status' order by id desc");
-    } else if ($id > 0 && $status == 'ALL') {
-      $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$id' order by id desc");
-    } else {
-      $result = pg_query($con, "SELECT * FROM claim order by id desc");
+    @$id = strtoupper($_POST['get_aid']);
+
+    if ($id == null && ($status == 'ALL' || $status == null)) {
+      $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
+      left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
+      left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
+      order by timestamp desc");
+      $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim");
+      $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus!='Rejected'");
+    } else if ($id == null && ($status != 'ALL' && $status != null)) {
+      $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
+      left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
+      left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
+      WHERE year='$status' order by timestamp desc");
+      $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
+      $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE year='$status' AND claimstatus!='Rejected'");
+    } else if ($id > 0 && ($status != 'ALL' && $status != null)) {
+      $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
+      left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
+      left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
+      WHERE registrationid='$id' AND year='$status' order by timestamp desc");
+      $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id' AND year='$status'");
+      $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND year='$status' AND claimstatus!='Rejected'");
+    } else if ($id > 0 && ($status == 'ALL' || $status == null)) {
+      $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
+      left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
+      left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
+      WHERE registrationid='$id' order by timestamp desc");
+      $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id'");
+      $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND claimstatus!='Rejected'");
     }
   }
 
   if ($role != 'Admin' && $status != 'ALL') {
 
-    $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$user_check' order by id desc");
+    $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
+    left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members WHERE associatenumber='$user_check') faculty ON claim.registrationid=faculty.associatenumber
+    left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student WHERE student_id='$user_check') student ON claim.registrationid=student.student_id
+    WHERE registrationid='$user_check' AND year='$status' order by timestamp desc");
+    $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check' AND year='$status'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check' AND year='$status' AND claimstatus!='rejected'");
   }
-
+  
   if ($role != 'Admin' && $status == 'ALL') {
-
-    $result = pg_query($con, "SELECT * FROM claim WHERE registrationid='$user_check' order by id desc");
+  
+    $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
+    left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members WHERE associatenumber='$user_check') faculty ON claim.registrationid=faculty.associatenumber
+    left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student WHERE student_id='$user_check') student ON claim.registrationid=student.student_id
+    WHERE registrationid='$user_check' order by timestamp desc");
+    $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check'AND claimstatus!='rejected'");
   }
 
   if (!$result) {
@@ -217,7 +247,7 @@ function reimb_export()
 
   foreach ($resultArr as $array) {
 
-    echo $array['reimbid'] . ',"' . substr($array['timestamp'], 0, 10) . '",' .  $array['registrationid'] . '/' . strtok($array['name'], ' ') . ',' . $array['selectclaimheadfromthelistbelow'] . ',"' . $array['claimheaddetails'] . '",' . $array['totalbillamount'] . ',' . $array['approvedamount'] . ',' . $array['claimstatus'] . ',' . $array['transfereddate'] . ',' . $array['uploadeddocuments'] . ',"' . $array['mediremarks'] . '"' . "\n";
+    echo $array['reimbid'] . ',"' . substr($array['timestamp'], 0, 10) . '",' .  $array['registrationid'] . '/' . strtok($array['fullname'], ' ') . ',' . $array['selectclaimheadfromthelistbelow'] . ',"' . $array['claimheaddetails'] . '",' . $array['totalbillamount'] . ',' . $array['approvedamount'] . ',' . $array['claimstatus'] . ',' . $array['transfereddate'] . ',' . $array['uploadeddocuments'] . ',"' . $array['mediremarks'] . '"' . "\n";
   }
 }
 
@@ -225,7 +255,7 @@ function student_export()
 {
 
 
-  global $con
+  global $con;
   @$module = $_POST['module'];
   @$id = $_POST['id'];
   @$category = $_POST['category'];
