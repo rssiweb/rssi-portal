@@ -38,7 +38,7 @@ function fees_export()
         left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
         left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
         
-        WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id AND student.category='$section' order by id desc");
+        WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category='$section' order by id desc");
   }
 
 
@@ -49,7 +49,7 @@ function fees_export()
         left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
         left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
         
-        WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND DATE_PART('year', date::date)=$id order by id desc");
+        WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id order by id desc");
   }
 
   if (($section != null && $section != 'ALL') && $status == 'ALL') {
@@ -59,7 +59,7 @@ function fees_export()
         left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
         left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
         
-        WHERE DATE_PART('year', date::date)=$id AND student.category='$section' order by id desc");
+        WHERE feeyear=$id AND student.category='$section' order by id desc");
   }
 
   if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == null) && $id != null) {
@@ -69,7 +69,7 @@ function fees_export()
         left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
         left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
         
-        WHERE DATE_PART('year', date::date)=$id order by id desc");
+        WHERE feeyear=$id order by id desc");
   }
 
 
@@ -83,11 +83,11 @@ function fees_export()
 
   $resultArr = pg_fetch_all($result);
 
-  echo 'Fees collection date,ID/F Name,Category,Month,Amount,Collected by,Status' . "\n";
+  echo 'Fees collection date,ID,F Name,Category,Month,Amount,Collected by,Status' . "\n";
 
   foreach ($resultArr as $array) {
 
-    echo substr($array['date'], 0, 10) . ',' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . ',' . $array['category'] . ',' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . ',' . $array['fees'] . ',' . $array['fullname'] . ',' . $array['pstatus'] . "\n";
+    echo substr($array['date'], 0, 10) . ',' . $array['studentid'] . ',' . strtok($array['studentname'], ' ') . ',' . $array['category'] . ',' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . ',' . $array['fees'] . ',' . $array['fullname'] . ',' . $array['pstatus'] . "\n";
   }
 }
 

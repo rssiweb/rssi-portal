@@ -15,8 +15,9 @@ if ($_POST['form-type'] == "payment") {
   @$month = $_POST['month'];
   @$collectedby = $_POST['collectedby'];
   @$ptype = $_POST['ptype'];
+  @$feeyear = $_POST['year'];
   $now = date('Y-m-d H:i:s');
-  $feesupdate = "INSERT INTO fees (date, sname, studentid, fees, month, collectedby, ptype) VALUES ('$now','$sname','$studentid','$fees','$month','$collectedby','$ptype')";
+  $feesupdate = "INSERT INTO fees (date, sname, studentid, fees, month, collectedby, ptype,feeyear) VALUES ('$now','$sname','$studentid','$fees','$month','$collectedby','$ptype','$feeyear')";
   $result = pg_query($con, $feesupdate);
   // echo json_encode($result);
 }

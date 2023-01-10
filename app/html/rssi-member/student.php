@@ -28,71 +28,60 @@ if ($filterstatus != 'Active' || $role == 'Member') {
 
 if ($id == 'ALL' && $category == 'ALL' && ($class == 'ALL' || $class == null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-  left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE module='$module' order by filterstatus asc, category asc, studentname asc");
 }
 
 if ($id == 'ALL' && $category == 'ALL' && ($class != 'ALL' && $class != null)) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student
-  left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE class='$class' AND module='$module' order by category asc, studentname asc");
 }
 
 if ($id != 'ALL' && $category == 'ALL' && ($class == null || $class == 'ALL')) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-  left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE filterstatus='$id' AND module='$module' order by category asc, studentname asc");
 }
 
 if ($id != 'ALL' && $category != 'ALL' && ($class != 'ALL' && $class != null)) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc, studentname asc");
 }
 
 if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc, studentname asc");
 }
 
 if ($id != 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc, studentname asc");
 }
 
 if ($id != 'ALL' && $category == 'ALL' && $class == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE module='$module' AND filterstatus='$id' order by category asc, studentname asc");
 }
 
 if ($id != 'ALL' && $category == 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc, studentname asc");
 }
 
 if ($id != 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class == null)) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc, studentname asc");
 }
 
 if ($id == 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class == null)) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE module='$module' AND category='$category' order by category asc, studentname asc");
 }
 
 if ($stid != null && $module == null  && $id == null && $category == null && $class == null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-  left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-    ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
   WHERE student_id='$stid' order by filterstatus asc, category asc, studentname asc");
 }
 
@@ -527,6 +516,10 @@ $resultArr = pg_fetch_all($result);
           <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
           <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
 
+          <select name="year" id="year" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
+            <!-- <option value="" disabled selected hidden>Select Year</option> -->
+          </select>
+
           <select name="ptype" id="ptype" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
             <option value="" disabled selected hidden>Select Type</option>
             <option value="Fees" selected>Fees</option>
@@ -555,6 +548,15 @@ $resultArr = pg_fetch_all($result);
           <br><br>
           <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;&nbsp;Update</button>
         </form><br>
+        <script>
+          var currentYear = new Date().getFullYear();
+          for (var i = 0; i < 5; i++) {
+            var year = currentYear;
+            //next.toString().slice(-2)
+            $('#year').append(new Option(year));
+            currentYear--;
+          }
+        </script>
         <script>
           const scriptURL = 'payment-api.php'
           const form = document.forms['payment']
