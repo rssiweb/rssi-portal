@@ -29,8 +29,9 @@ setlocale(LC_TIME, 'fr_FR.UTF-8');
 @$stid = $_POST['get_stid'];
 @$is_user = $_POST['is_user'];
 
+
 if (($section != null && $section != 'ALL') && ($status != null && $status != 'ALL')) {
-    $sections=implode("','", $section);
+    @$sections=implode("','", $section);
     $result = pg_query($con, "SELECT * FROM fees 
     
     left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
@@ -131,6 +132,18 @@ if (!$result) {
 $resultArr = pg_fetch_all($result);
 $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
 $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
+
+$categories = ["LG2-A", 
+"LG2-B",
+"LG2-C",
+"LG3",
+"LG4",
+"LG4S1",
+"LG4S2",
+"WLG3",
+"WLG4S1",
+'Undefined',
+"ALL"]
 ?>
 
 
@@ -242,22 +255,23 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                                 <select name="get_category[]" id="get_category" class="form-control" style="width:max-content;display:inline-block" multiple>
                                     <?php if ($section == null) { ?>
                                         <option value="" disabled selected hidden>Select Category</option>
+
+                                        <?php foreach ($categories as $cat) { ?>
+                                            <option><?php echo $cat ?></option>
+                                        <?php }?>
+
                                     <?php
-                                    } else { ?>
-                                        <option hidden selected><?php echo $section ?></option>
+                                    } else { 
+
+                                    foreach ($categories as $cat) { ?>
+                                        <option 
+                                        <?php if (in_array($cat, $section)) {echo "selected";} ?>
+                                        ><?php echo $cat ?></option>    
                                     <?php }
+
+                                    }
                                     ?>
-                                    <option>LG2-A</option>
-                                    <option>LG2-B</option>
-                                    <option>LG2-C</option>
-                                    <option>LG3</option>
-                                    <option>LG4</option>
-                                    <option>LG4S1</option>
-                                    <option>LG4S2</option>
-                                    <option>WLG3</option>
-                                    <option>WLG4S1</option>
-                                    <option>Undefined</option>
-                                    <option>ALL</option>
+
                                 </select>
                                 <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>" required>
                             </div>
