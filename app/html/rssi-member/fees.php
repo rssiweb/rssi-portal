@@ -30,21 +30,21 @@ setlocale(LC_TIME, 'fr_FR.UTF-8');
 @$is_user = $_POST['is_user'];
 
 if (($section != null && $section != 'ALL') && ($status != null && $status != 'ALL')) {
-
+    $sections=implode("','", $section);
     $result = pg_query($con, "SELECT * FROM fees 
     
     left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
     left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
     
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category='$section' order by id desc");
+    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections') order by id desc");
 
     $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
     left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category='$section'");
+    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections')");
 
     $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees
     left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category='$section' AND pstatus='transferred'");
+    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections') AND pstatus='transferred'");
 }
 
 
@@ -239,7 +239,7 @@ $resultArrrr = pg_fetch_result($totaltransferredamount, 0, 0);
                                     <option>ALL</option>
                                 </select>
 
-                                <select name="get_category" id="get_category" class="form-control" style="width:max-content;display:inline-block">
+                                <select name="get_category[]" id="get_category" class="form-control" style="width:max-content;display:inline-block" multiple>
                                     <?php if ($section == null) { ?>
                                         <option value="" disabled selected hidden>Select Category</option>
                                     <?php
