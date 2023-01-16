@@ -144,73 +144,71 @@ if (!$result) {
 
             <?php if ($resultArr != null) { ?>
 
-                <?php foreach ($resultArr as $array) {?>
+                <?php foreach ($resultArr as $array) { ?>
 
                     <table class="table" border="0">
-                <thead>
-                    <tr>
-                        <td>
-                            <div class="row">
-                                <div class="col" style="display: inline-block; width:65%;">
+                        <thead>
+                            <tr>
+                                <td>
+                                    <div class="row">
+                                        <div class="col" style="display: inline-block; width:65%;">
 
-                                    <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
-                                    <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
-                                    <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
-                                </div>
-                                <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
-                                    Scan QR code to check authenticity
-                                    <?php 
-                                    
-                                    $a='https://login.rssi.in/rssi-member/getdetails.php?scode=';
-                                    $b= $array['scode'];
-                                    $c= $array['photo'];
-                                    
-                                    $url = $a.$b;
-                                    $url = urlencode($url); ?>
-                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
-                                    <img src=<?php echo $c ?> width=80px height=80px />
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </thead>
+                                            <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
+                                            <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
+                                            <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
+                                        </div>
+                                        <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
+                                            Scan QR code to check authenticity
+                                            <?php
 
-                       
+                                            $a = 'https://login.rssi.in/rssi-member/getdetails.php?scode=';
+                                            $b = $array['scode'];
+                                            $c = $array['photo'];
 
-                        <?php echo '<tr>
-                           <td> <p><b>' . $array['fullname'] . '</b><br>' . $array['currentaddress'] . '<br>Contact Number:&nbsp;' . $array['phone'] . '
-                           <br>Email:&nbsp;' . $array['email'] . '<br>Date:&nbsp;' ?><?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p><br>
-
-                    <p style="text-align: center;"><?php echo '<b><u>TO WHOMSOEVER IT MAY CONCERN</u></b></p><br>
-
-<p>This is to certify that ' . $array['fullname'] . ' has worked with us for the tenure of ' . $array['yos'] . '. ' ?>
-                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?>
-
-                        <?php echo 'has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of ' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' from ' . $array['doj'] . ' to' ?> <?php if ($array['associationstatus'] != null) { ?>
-                            <?php echo $array['effectivedate'] ?>
-                        <?php } else { ?> <?php echo 'Present' ?>
-                        <?php } ?> <?php echo '(date in dd/mm/yyyy).<br><br>
-During the tenure mentioned above, ' . $array['fullname'] . ' has remained involved with ' ?>
-                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> <?php echo 'duties and responsibilities assigned to ' ?>
-                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> <?php echo '. We found ' ?>
-                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> <?php echo ' competent and active with sincerity and determination. ' ?>
-                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?> <?php echo ' is professionally sound and hard-working whose dedication in taking contribution and initiative for the organization has proven helpful in the establishment repeatedly.<br><br>
-We wish ' ?>
-                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> <?php echo ' all the best in ' ?>
-                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> <?php echo ' future endeavours.</p><br>
-
-Sincerely,<br><br><br><br>' ?>
-
-                        <?php echo $fullname ?><br>
-                        <?php echo $engagement ?><br>
-                        Rina Shiksha Sahayak Foundation (RSSI)
+                                            $url = $a . $b;
+                                            $url = urlencode($url); ?>
+                                            <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
+                                            <img src=<?php echo $c ?> width=80px height=80px />
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </thead>
 
 
 
-                        </td>
+                        <tr>
+                            <td>
+                                <p><b><?php echo $array['fullname'] ?></b><br><?php echo $array['currentaddress'] ?><br>Contact Number:&nbsp;<?php echo $array['phone'] ?>
+                                    <br>Email:&nbsp;<?php echo $array['email'] ?><br>Date:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?>
+                                </p><br>
+
+                                <p style="text-align: center;"><b><u>TO WHOMSOEVER IT MAY CONCERN</u></b></p><br>
+
+                                <p>This is to certify that <?php echo $array['fullname'] ?> has worked with us for the tenure of <?php echo $array['yos'] ?>.
+                                    <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?>
+
+                                    has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?> from <?php echo $array['doj'] ?> to <?php if ($array['associationstatus'] != null) { ?>
+                                        <?php echo $array['effectivedate'] ?>
+                                    <?php } else { ?> <?php echo 'Present' ?>
+                                        <?php } ?>(date in dd/mm/yyyy).<br><br>
+
+                                        <?php echo $array['fullname'] ?> has been an exemplary associate and has always worked diligently to complete tasks assigned to
+                                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?>. <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?> has been a valuable asset to the team and has consistently met the required goals and expectations. We appreciate <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> commitment to excellence, hard work and dedication.<br><br>
+                                        We wish <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> all the best for <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> future endeavors.<br><br>
+
+                                        Sincerely,<br><br><br><br>
+
+                                        <?php echo $fullname ?><br>
+                                        <?php echo $engagement ?><br>
+                                        Rina Shiksha Sahayak Foundation (RSSI)
+
+
+
+                            </td>
                         </tr>
 
-                        </table>
+                    </table>
 
                     <div class="footer no-display">
                         <p style="text-align:right;">Document generated on:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?><?php echo '</p>
