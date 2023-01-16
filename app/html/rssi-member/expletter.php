@@ -95,6 +95,17 @@ if (!$result) {
             .no-print * {
                 display: none !important;
             }
+
+            .report-footer {
+                position: fixed;
+                bottom: 0px;
+                height: 20px;
+                display: block;
+                width: 90%;
+                border-top: solid 1px #ccc;
+                overflow: visible;
+            }
+
         }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -175,47 +186,48 @@ if (!$result) {
                             </tr>
                         </thead>
 
+                        <tbody>
+
+                            <tr>
+                                <td>
+                                    <p><b><?php echo $array['fullname'] ?></b><br><?php echo $array['currentaddress'] ?><br>Contact Number:&nbsp;<?php echo $array['phone'] ?>
+                                        <br>Email:&nbsp;<?php echo $array['email'] ?><br>Date:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?>
+                                    </p><br>
+
+                                    <p style="text-align: center;"><b><u>TO WHOMSOEVER IT MAY CONCERN</u></b></p><br>
+
+                                    <p>This is to certify that <?php echo $array['fullname'] ?> has worked with us for the tenure of <?php echo $array['yos'] ?>.
+                                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?>
+
+                                        has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?> from <?php echo $array['doj'] ?> to <?php if ($array['associationstatus'] != null) { ?>
+                                            <?php echo $array['effectivedate'] ?>
+                                        <?php } else { ?> <?php echo 'Present' ?>
+                                            <?php } ?>(date in dd/mm/yyyy).<br><br>
+
+                                            <?php echo $array['fullname'] ?> has been an exemplary associate and has always worked diligently to complete tasks assigned to
+                                            <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?>. <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?> has been a valuable asset to the team and has consistently met the required goals and expectations. We appreciate <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> commitment to excellence, hard work and dedication.<br><br>
+                                            We wish <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> all the best for <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> future endeavors.<br><br>
+
+                                            Sincerely,<br><br><br><br>
+
+                                            <?php echo $fullname ?><br>
+                                            <?php echo $engagement ?><br>
+                                            Rina Shiksha Sahayak Foundation (RSSI)
 
 
-                        <tr>
-                            <td>
-                                <p><b><?php echo $array['fullname'] ?></b><br><?php echo $array['currentaddress'] ?><br>Contact Number:&nbsp;<?php echo $array['phone'] ?>
-                                    <br>Email:&nbsp;<?php echo $array['email'] ?><br>Date:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?>
-                                </p><br>
 
-                                <p style="text-align: center;"><b><u>TO WHOMSOEVER IT MAY CONCERN</u></b></p><br>
+                                </td>
+                            </tr>
 
-                                <p>This is to certify that <?php echo $array['fullname'] ?> has worked with us for the tenure of <?php echo $array['yos'] ?>.
-                                    <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?>
+                        </tbody>
 
-                                    has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?> from <?php echo $array['doj'] ?> to <?php if ($array['associationstatus'] != null) { ?>
-                                        <?php echo $array['effectivedate'] ?>
-                                    <?php } else { ?> <?php echo 'Present' ?>
-                                        <?php } ?>(date in dd/mm/yyyy).<br><br>
-
-                                        <?php echo $array['fullname'] ?> has been an exemplary associate and has always worked diligently to complete tasks assigned to
-                                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?>. <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?> has been a valuable asset to the team and has consistently met the required goals and expectations. We appreciate <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> commitment to excellence, hard work and dedication.<br><br>
-                                        We wish <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> all the best for <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> future endeavors.<br><br>
-
-                                        Sincerely,<br><br><br><br>
-
-                                        <?php echo $fullname ?><br>
-                                        <?php echo $engagement ?><br>
-                                        Rina Shiksha Sahayak Foundation (RSSI)
-
-
-
-                            </td>
-                        </tr>
-
+                        <div class="report-footer">
+                            <p style="text-align:right;">Document generated on:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p>
+                        </div>
+                    <?php }
+            } else { ?>
+                    <p class="no-print">Please enter Associate ID.</p> <?php } ?>
                     </table>
-
-                    <div class="footer no-display">
-                        <p style="text-align:right;">Document generated on:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?><?php echo '</p>
-                    </div>' ?>
-                        <?php }
-                } else { ?>
-                        <p class="no-print">Please enter Associate ID.</p> <?php } ?>
         </section>
     </div>
 </body>
