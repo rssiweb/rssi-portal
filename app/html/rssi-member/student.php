@@ -37,13 +37,15 @@ if ($category != null && $class == null) {
 }
 
 if ($category == null && $class != null) {
+  @$classs = implode("','", $class);
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE filterstatus='$id' AND module='$module' AND class='$class' order by category asc, class asc, studentname asc");
+  WHERE filterstatus='$id' AND module='$module' AND class IN ('$classs') order by category asc, class asc, studentname asc");
 }
 
 if ($category != null && $class != null) {
+  @$classs = implode("','", $class);
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE filterstatus='$id' AND module='$module' AND class='$class' AND category='$category' order by category asc, class asc, studentname asc");
+  WHERE filterstatus='$id' AND module='$module' AND class IN ('$classs') AND category='$category' order by category asc, class asc, studentname asc");
 }
 
 if ($stid != null) {
@@ -59,6 +61,22 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
+$classlist = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  '10',
+  "11",
+  "12",
+  "Vocational training",
+  "x"
+]
 ?>
 
 <!DOCTYPE html>
@@ -259,32 +277,28 @@ $resultArr = pg_fetch_all($result);
                   <small id="passwordHelpBlock" class="form-text text-muted">Category</small>
                 </span>
                 <span class="input-help">
-                  <select name="get_class" id="get_class" class="form-control" style="width:max-content; display:inline-block">
+                  <select name="get_class[]" id="get_class" class="form-control" style="width:max-content; display:inline-block" multiple>
                     <?php if ($class == null) { ?>
                       <option value="" disabled selected hidden>Select Class</option>
-                    <?php
-                    } else { ?>
-                      <option hidden selected><?php echo $class ?></option>
+
+                      <?php foreach ($classlist as $cls) { ?>
+                        <option><?php echo $cls ?></option>
+                      <?php } ?>
+
+                      <?php
+                    } else {
+
+                      foreach ($classlist as $cls) { ?>
+                        <option <?php if (in_array($cls, $class)) {
+                                  echo "selected";
+                                } ?>><?php echo $cls ?></option>
                     <?php }
+                    }
                     ?>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
-                    <option>6</option>
-                    <option>7</option>
-                    <option>8</option>
-                    <option>9</option>
-                    <option>10</option>
-                    <option>11</option>
-                    <option>12</option>
-                    <option>Vocational training</option>
-                    <option>x</option>
                   </select>
-                    <small id="passwordHelpBlock" class="form-text text-muted">Class</small>
-                  </span>
-                  <span class="input-help">
+                  <small id="passwordHelpBlock" class="form-text text-muted">Class</small>
+                </span>
+                <span class="input-help">
                   <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>" required>
                   <small id="passwordHelpBlock" class="form-text text-muted">Student Id<span style="color:red">*</span></small>
                 </span>
