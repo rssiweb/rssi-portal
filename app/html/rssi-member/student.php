@@ -25,64 +25,31 @@ if ($filterstatus != 'Active' || $role == 'Member') {
 // $categories = "'".implode("','", $category)."'";
 
 
-
-if ($id == 'ALL' && $category == 'ALL' && ($class == 'ALL' || $class == null)) {
+if ($category == null && $class == null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
   left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE module='$module' order by filterstatus asc, category asc, studentname asc");
+  WHERE filterstatus='$id' AND module='$module' order by category asc, class asc, studentname asc");
 }
 
-if ($id == 'ALL' && $category == 'ALL' && ($class != 'ALL' && $class != null)) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student
-  left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE class='$class' AND module='$module' order by category asc, studentname asc");
+if ($category != null && $class == null) {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc, class asc, studentname asc");
 }
 
-if ($id != 'ALL' && $category == 'ALL' && ($class == null || $class == 'ALL')) {
+if ($category == null && $class != null) {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE filterstatus='$id' AND module='$module' AND class='$class' order by category asc, class asc, studentname asc");
+}
+
+if ($category != null && $class != null) {
+  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+  WHERE filterstatus='$id' AND module='$module' AND class='$class' AND category='$category' order by category asc, class asc, studentname asc");
+}
+
+if ($stid != null) {
   $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
   left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE filterstatus='$id' AND module='$module' order by category asc, studentname asc");
-}
-
-if ($id != 'ALL' && $category != 'ALL' && ($class != 'ALL' && $class != null)) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc, studentname asc");
-}
-
-if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc, studentname asc");
-}
-
-if ($id != 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc, studentname asc");
-}
-
-if ($id != 'ALL' && $category == 'ALL' && $class == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE module='$module' AND filterstatus='$id' order by category asc, studentname asc");
-}
-
-if ($id != 'ALL' && $category == 'ALL' && $class != 'ALL' && $class != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc, studentname asc");
-}
-
-if ($id != 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class == null)) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc, studentname asc");
-}
-
-if ($id == 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class == null)) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE module='$module' AND category='$category' order by category asc, studentname asc");
-}
-
-if ($stid != null && $module == null  && $id == null && $category == null && $class == null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-  left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE student_id='$stid' order by filterstatus asc, category asc, studentname asc");
+  WHERE student_id='$stid'");
 }
 
 
@@ -185,6 +152,16 @@ $resultArr = pg_fetch_all($result);
     #yes {
       border: none !important;
     }
+
+    #passwordHelpBlock {
+      font-size: x-small;
+      display: block;
+    }
+
+    .input-help {
+      vertical-align: top;
+      display: inline-block;
+    }
   </style>
 
 </head>
@@ -212,6 +189,7 @@ $resultArr = pg_fetch_all($result);
                 <input type="hidden" value="<?php echo $id ?>" name="id" />
                 <input type="hidden" value="<?php echo $category ?>" name="category" />
                 <input type="hidden" value="<?php echo $class ?>" name="class" />
+                <input type="hidden" value="<?php echo $stid ?>" name="stid" />
 
                 <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
@@ -225,78 +203,91 @@ $resultArr = pg_fetch_all($result);
           <?php } ?>
         </div>
         <section class="box" style="padding: 2%;">
+          <span style="color:red;font-style: oblique; font-family:'Times New Roman', Times, serif;">All (*) marked fields are mandatory</span>
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
                 <input type="hidden" name="form-type" type="text" value="search">
-                <select name="get_module" id="get_module" class="form-control" style="width:max-content; display:inline-block" required>
-                  <?php if ($module == null) { ?>
-                    <option value="" disabled selected hidden>Select Module</option>
-                  <?php
-                  } else { ?>
-                    <option hidden selected><?php echo $module ?></option>
-                  <?php }
-                  ?>
-                  <option>National</option>
-                  <option>State</option>
-                </select>
-                <select name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" required>
-                  <?php if ($id == null) { ?>
-                    <option value="" disabled selected hidden>Select Status</option>
-                  <?php
-                  } else { ?>
-                    <option hidden selected><?php echo $id ?></option>
-                  <?php }
-                  ?>
-                  <option>Active</option>
-                  <option>Inactive</option>
-                  <option>ALL</option>
-                </select>
-                <select name="get_category" id="get_category" class="form-control" style="width:max-content;display:inline-block" required>
-                  <?php if ($category == null) { ?>
-                    <option value="" disabled selected hidden>Select Category</option>
-                  <?php
-                  } else { ?>
-                    <option hidden selected><?php echo $category ?></option>
-                  <?php }
-                  ?>
-                  <option>LG2-A</option>
-                  <option>LG2-B</option>
-                  <option>LG2-C</option>
-                  <option>LG3</option>
-                  <option>LG4</option>
-                  <option>LG4S1</option>
-                  <option>LG4S2</option>
-                  <option>WLG3</option>
-                  <option>WLG4S1</option>
-                  <option>Undefined</option>
-                  <option>ALL</option>
-                </select>
-                <select name="get_class" id="get_class" class="form-control" style="width:max-content; display:inline-block">
-                  <?php if ($class == null) { ?>
-                    <option value="" disabled selected hidden>Select Class</option>
-                  <?php
-                  } else { ?>
-                    <option hidden selected><?php echo $class ?></option>
-                  <?php }
-                  ?>
-                  <option>1</option>
-                  <option>2</option>
-                  <option>3</option>
-                  <option>4</option>
-                  <option>5</option>
-                  <option>6</option>
-                  <option>7</option>
-                  <option>8</option>
-                  <option>9</option>
-                  <option>10</option>
-                  <option>11</option>
-                  <option>12</option>
-                  <option>Vocational training</option>
-                  <option>x</option>
-                  <option>ALL</option>
-                </select>
-                <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>" required>
+                <span class="input-help">
+                  <select name="get_module" id="get_module" class="form-control" style="width:max-content; display:inline-block" required>
+                    <?php if ($module == null) { ?>
+                      <option value="" disabled selected hidden>Select Module</option>
+                    <?php
+                    } else { ?>
+                      <option hidden selected><?php echo $module ?></option>
+                    <?php }
+                    ?>
+                    <option>National</option>
+                    <option>State</option>
+                  </select>
+                  <small id="passwordHelpBlock" class="form-text text-muted">Module<span style="color:red">*</span></small>
+                </span>
+                <span class="input-help">
+                  <select name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" required>
+                    <?php if ($id == null) { ?>
+                      <option value="" disabled selected hidden>Select Status</option>
+                    <?php
+                    } else { ?>
+                      <option hidden selected><?php echo $id ?></option>
+                    <?php }
+                    ?>
+                    <option>Active</option>
+                    <option>Inactive</option>
+                  </select>
+                  <small id="passwordHelpBlock" class="form-text text-muted">Status<span style="color:red">*</span></small>
+                </span>
+                <span class="input-help">
+                  <select name="get_category" id="get_category" class="form-control" style="width:max-content;display:inline-block">
+                    <?php if ($category == null) { ?>
+                      <option value="" disabled selected hidden>Select Category</option>
+                    <?php
+                    } else { ?>
+                      <option hidden selected><?php echo $category ?></option>
+                    <?php }
+                    ?>
+                    <option>LG2-A</option>
+                    <option>LG2-B</option>
+                    <option>LG2-C</option>
+                    <option>LG3</option>
+                    <option>LG4</option>
+                    <option>LG4S1</option>
+                    <option>LG4S2</option>
+                    <option>WLG3</option>
+                    <option>WLG4S1</option>
+                    <option>Undefined</option>
+                  </select>
+                  <small id="passwordHelpBlock" class="form-text text-muted">Category</small>
+                </span>
+                <span class="input-help">
+                  <select name="get_class" id="get_class" class="form-control" style="width:max-content; display:inline-block">
+                    <?php if ($class == null) { ?>
+                      <option value="" disabled selected hidden>Select Class</option>
+                    <?php
+                    } else { ?>
+                      <option hidden selected><?php echo $class ?></option>
+                    <?php }
+                    ?>
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option>4</option>
+                    <option>5</option>
+                    <option>6</option>
+                    <option>7</option>
+                    <option>8</option>
+                    <option>9</option>
+                    <option>10</option>
+                    <option>11</option>
+                    <option>12</option>
+                    <option>Vocational training</option>
+                    <option>x</option>
+                  </select>
+                    <small id="passwordHelpBlock" class="form-text text-muted">Class</small>
+                  </span>
+                  <span class="input-help">
+                  <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>" required>
+                  <small id="passwordHelpBlock" class="form-text text-muted">Student Id<span style="color:red">*</span></small>
+                </span>
               </div>
             </div>
             <div class="col2 left" style="display: inline-block;">

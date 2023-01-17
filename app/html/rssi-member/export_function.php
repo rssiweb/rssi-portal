@@ -225,9 +225,9 @@ function reimb_export()
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check' AND year='$status'");
     $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check' AND year='$status' AND claimstatus!='rejected'");
   }
-  
+
   if ($role != 'Admin' && $status == 'ALL') {
-  
+
     $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
     left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members WHERE associatenumber='$user_check') faculty ON claim.registrationid=faculty.associatenumber
     left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student WHERE student_id='$user_check') student ON claim.registrationid=student.student_id
@@ -260,69 +260,34 @@ function student_export()
   @$id = $_POST['id'];
   @$category = $_POST['category'];
   @$class = $_POST['class'];
+  @$stid = $_POST['stid'];
 
 
-  if ($id == 'ALL' && $category == 'ALL' && ($class == 'ALL' || $class == null)) {
+  if ($category == null && $class == null) {
     $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-        left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE module='$module' order by filterstatus asc, category asc");
+    left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+    WHERE filterstatus='$id' AND module='$module' order by category asc, class asc, studentname asc");
   }
 
-  if ($id == 'ALL' && $category == 'ALL' && ($class != 'ALL' && $class != null)) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student
-        left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE class='$class' AND module='$module' order by category asc");
+  if ($category != null && $class == null) {
+    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+    WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc, class asc, studentname asc");
   }
 
-  if ($id != 'ALL' && $category == 'ALL' && ($class == null || $class == 'ALL')) {
+  if ($category == null && $class != null) {
+    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+    WHERE filterstatus='$id' AND module='$module' AND class='$class' order by category asc, class asc, studentname asc");
+  }
+
+  if ($category != null && $class != null) {
+    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+    WHERE filterstatus='$id' AND module='$module' AND class='$class' AND category='$category' order by category asc, class asc, studentname asc");
+  }
+
+  if ($stid != null) {
     $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-        left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE filterstatus='$id' AND module='$module' order by category asc");
-  }
-
-  if ($id != 'ALL' && $category != 'ALL' && ($class != 'ALL' && $class != null)) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc");
-  }
-
-  if ($id == 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE class='$class' AND module='$module' AND category='$category' order by filterstatus asc,category asc");
-  }
-
-  if ($id != 'ALL' && $category != 'ALL' && $class != 'ALL' && $class != null) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE class='$class' AND module='$module' AND filterstatus='$id' AND category='$category' order by category asc");
-  }
-
-  if ($id != 'ALL' && $category == 'ALL' && $class == 'ALL') {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE module='$module' AND filterstatus='$id' order by category asc");
-  }
-
-  if ($id != 'ALL' && $category == 'ALL' && $class != 'ALL' && $class != null) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE class='$class' AND module='$module' AND filterstatus='$id' order by category asc");
-  }
-
-  if ($id != 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class == null)) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE category='$category' AND module='$module' AND filterstatus='$id' order by category asc");
-  }
-
-  if ($id == 'ALL' && $category != 'ALL' && ($class == 'ALL' || $class == null)) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, TO_CHAR(TO_DATE (max(month)::text, 'MM'), 'Mon'
-          ) AS maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-        WHERE module='$module' AND category='$category' order by category asc");
+    left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+    WHERE student_id='$stid'");
   }
 
   if (!$result) {
