@@ -7,7 +7,7 @@ use PHPMailer\PHPMailer\Exception;
 
 function template($string, $hash) {
     foreach ( $hash as $ind=>$val ) {
-        $string = str_replace('{{'.$ind.'}}',$val,$string);
+        @$string = str_replace('{{'.$ind.'}}',$val,$string);
     }   
     $string = preg_replace('/\{\{(.*?)\}\}/is','',$string);
     return $string;

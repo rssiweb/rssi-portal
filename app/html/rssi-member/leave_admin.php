@@ -253,6 +253,7 @@ if (!$result) {
                                         <option value="" disabled selected hidden>Types of Leave</option>
                                         <option value="Sick Leave">Sick Leave</option>
                                         <option value="Casual Leave">Casual Leave</option>
+                                        <option value="Casual Leave">Leave Without Pay</option>
                                     </select>
                                     <small id="passwordHelpBlock" class="form-text text-muted">Types of Leave</small>
                                 </span>

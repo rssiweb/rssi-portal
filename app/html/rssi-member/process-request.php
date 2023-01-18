@@ -31,10 +31,16 @@ $typeofleaveArr = array("Sick Leave" => array("Abdominal/Pelvic pain",
 "Spondilitis/ Intervertebral Disc Disorders / Spondylosis",
 "Urinary Tract Infections/Disorders",
 "Varicose veins of other sites",),
-                    "Casual Leave" => array("Other", "Timesheet leave"));
+                    "Casual Leave" => array("Other", "Timesheet leave"),
+                    "Leave Without Pay" => array(""));
+                    
 if($typeofleave !== 'Select'){
         echo "<span class='input-help'>";
+        if($typeofleave !== 'Leave Without Pay'){
         echo "<select name='creason' id='creason' class='form-control' required>";
+        } else {
+        echo "<select name='creason' id='creason' class='form-control'>";
+        }
         echo "<option disabled selected hidden value=''>Select</option>";
         foreach($typeofleaveArr[$typeofleave] as $value){
             echo "<option>". $value . "</option>";

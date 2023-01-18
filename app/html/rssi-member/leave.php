@@ -102,6 +102,29 @@ if (@$_POST['form-type'] == "leaveapply") {
             @$clbalance = $clbalance - $day;
         }
     }
+    if ($typeofleave == "Leave Without Pay") {
+
+        // send uploaded file to drive
+        // get the drive link
+        if (empty($_FILES['medicalcertificate']['name'])) {
+            $doclink = null;
+        } else {
+            $filename = "doc_" . $leaveid . "_" . $applicantid . "_" . time();
+            $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
+            $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
+        }
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc,ack) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink','$ack')";
+
+        $result = pg_query($con, $leave);
+        $cmdtuples = pg_affected_rows($result);
+
+        if ($typeofleave == "Sick Leave") {
+            @$slbalance = $slbalance - $day;
+        } else if ($typeofleave == "Casual Leave") {
+            @$clbalance = $clbalance - $day;
+        }
+    }
+    
     if ($email != "" && $halfday != 1) {
         sendEmail("leaveapply", array(
             "leaveid" => $leaveid,
@@ -192,7 +215,8 @@ $resultArr = pg_fetch_all($result);
         }
 
         #hidden-panel,
-        #hidden-panel_ack {
+        #hidden-panel_ack,
+        #hidden-panel_creason {
             display: none;
         }
     </style>
@@ -362,11 +386,14 @@ $resultArr = pg_fetch_all($result);
                                     <option disabled selected hidden value="">Select</option>
                                     <option value="Sick Leave">Sick Leave</option>
                                     <option value="Casual Leave">Casual Leave</option>
+                                    <option value="Leave Without Pay">Leave Without Pay</option>
                                     <!-- <option value="uk">United Kingdom</option> -->
                                 </select>
                                 <small id="passwordHelpBlock" class="form-text text-muted">Types of Leave<span style="color:red">*</span></small>
                             </span>
-                            <span id="response"></span>
+                            <span name="hidden-panel_creason" id="hidden-panel_creason">
+                                <span id="response"></span>
+                            </span>
 
                             <span name="hidden-panel" id="hidden-panel">
                                 <span class="input-help">
@@ -442,30 +469,43 @@ $resultArr = pg_fetch_all($result);
                                 if ($("#typeofleave").val() == "Sick Leave") {
                                     $("#hidden-panel").show()
                                     $("#hidden-panel_ack").show()
+                                    $("#hidden-panel_creason").show()
+                                } else if ($("#typeofleave").val() == "Casual Leave") {
+                                    $("#hidden-panel").hide()
+                                    $("#hidden-panel_ack").hide()
+                                    $("#hidden-panel_creason").show()
+                                } else if ($("#typeofleave").val() == "Leave Without Pay") {
+                                    $("#hidden-panel").hide()
+                                    $("#hidden-panel_ack").hide()
+                                    $("#hidden-panel_creason").hide()
                                 } else {
                                     $("#hidden-panel").hide()
                                     $("#hidden-panel_ack").hide()
+                                    $("#hidden-panel_creason").hide()
                                 }
                             })
                         });
                     </script>
                     <!--To make a filed (acknowledgement) required based on a dropdown value (sick leave)-->
                     <script>
-                        if (document.getElementById('typeofleave').value == "Sick Leave") {
-
-                            document.getElementById("ack").required = true;
-                        } else {
+                        if (document.getElementById('typeofleave').value == "Leave Without Pay" && document.getElementById('typeofleave').value == "Casual Leave") {
 
                             document.getElementById("ack").required = false;
+                        } else {
+
+                            document.getElementById("ack").required = true;
                         }
 
                         const randvar = document.getElementById('typeofleave');
 
                         randvar.addEventListener('change', (event) => {
-                            if (document.getElementById('typeofleave').value == "Casual Leave") {
-                                document.getElementById("ack").required = false;
-                            } else {
+                            if (document.getElementById('typeofleave').value == "Sick Leave") {
+
                                 document.getElementById("ack").required = true;
+
+                            } else {
+
+                                document.getElementById("ack").required = false;
                             }
                         })
                     </script>
