@@ -207,6 +207,8 @@ $categories = ["LG2-A",
                             <input type="hidden" value="<?php echo $id ?>" name="id" />
                             <input type="hidden" value="<?php echo $status ?>" name="status" />
                             <input type="hidden" value="<?php echo $section ?>" name="section" />
+                            <input type="hidden" value="<?php echo $sections ?>" name="sections" />
+                            <input type="hidden" value="<?php echo $stid ?>" name="stid" />
 
                             <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;

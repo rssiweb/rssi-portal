@@ -139,9 +139,7 @@ $classlist = [
     @media (max-width:767px) {
 
       #cw,
-      #cw1,
-      #cw2,
-      #cw3 {
+      #cw1 {
         width: 100% !important;
       }
 
@@ -153,22 +151,6 @@ $classlist = [
 
     #cw1 {
       width: 20%;
-    }
-
-    #cw2 {
-      width: 8%;
-    }
-
-    #cw3 {
-      width: 15%;
-    }
-
-    #cw4 {
-      width: 10%;
-    }
-
-    #yes {
-      border: none !important;
     }
 
     #passwordHelpBlock {
@@ -206,6 +188,7 @@ $classlist = [
                 <input type="hidden" value="<?php echo $module ?>" name="module" />
                 <input type="hidden" value="<?php echo $id ?>" name="id" />
                 <input type="hidden" value="<?php echo $category ?>" name="category" />
+                <input type="hidden" value="<?php echo $classs ?>" name="classs" />
                 <input type="hidden" value="<?php echo $class ?>" name="class" />
                 <input type="hidden" value="<?php echo $stid ?>" name="stid" />
 
@@ -221,7 +204,7 @@ $classlist = [
           <?php } ?>
         </div>
         <section class="box" style="padding: 2%;">
-          <span style="color:red;font-style: oblique; font-family:'Times New Roman', Times, serif;">All (*) marked fields are mandatory</span>
+          <!-- <span style="color:red;font-style: oblique; font-family:'Times New Roman', Times, serif;">All (*) marked fields are mandatory</span> -->
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
@@ -401,13 +384,13 @@ $classlist = [
           } else if ($module == "" && $stid == "") {
             ?>
               <tr>
-                <td colspan="5">Please select Filter value.</td>
+                <td colspan="5">Please select a Module and Status from the dropdown menus to view the results.</td>
               </tr>
             <?php
           } else if (sizeof($resultArr) == 0 && $stid == "") {
             ?>
               <tr>
-                <td colspan="5">No record found for <?php echo $module ?>, <?php echo $id ?> and <?php echo $category ?>&nbsp;<?php echo $class ?></td>
+                <td colspan="5">No record found for <?php echo $module ?>, <?php echo $id ?> and <?php echo $category ?>&nbsp;<?php echo str_replace("'", "", $classs) ?></td>
               </tr>
 
             <?php } else if (sizeof($resultArr) == 0 && $stid != "") {
