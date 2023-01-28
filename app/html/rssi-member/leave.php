@@ -124,7 +124,7 @@ if (@$_POST['form-type'] == "leaveapply") {
             @$clbalance = $clbalance - $day;
         }
     }
-    
+
     if ($email != "" && $halfday != 1) {
         sendEmail("leaveapply", array(
             "leaveid" => $leaveid,
@@ -365,15 +365,15 @@ $resultArr = pg_fetch_all($result);
                             <input type="hidden" name="form-type" value="leaveapply">
 
                             <span class="input-help">
-                                <input type="date" class="form-control" name="fromdate" id="fromdate" value="" onchange="cal()" required>
+                                <input type="date" class="form-control" name="fromdate" id="fromdate" value="" onchange="cal();" required>
                                 <small id="passwordHelpBlock" class="form-text text-muted">From<span style="color:red">*</span></small>
                             </span>
                             <span class="input-help">
-                                <input type="date" class="form-control" name="todate" id="todate" value="" onchange="cal()" required>
+                                <input type="date" class="form-control" name="todate" id="todate" value="" min="" onchange="cal();" required>
                                 <small id="passwordHelpBlock" class="form-text text-muted">To<span style="color:red">*</span></small>
                             </span>
                             <div id="filter-checksh">
-                                <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal()" />
+                                <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal()" disabled />
                                 <label for="is_userh" style="font-weight: 400;">Half day</label>
                             </div>
                             <span class="input-help">
@@ -436,32 +436,43 @@ $resultArr = pg_fetch_all($result);
                         }
                     </script>
                     <script>
-                        //Showing days count
-                        function GetDays() {
-                            var todate = new Date(document.getElementById("todate").value);
-                            var fromdate = new Date(document.getElementById("fromdate").value);
-
-                            if ($('#is_userh').not(':checked').length > 0) {
-                                return ((todate - fromdate) / (24 * 3600 * 1000) + 1);
-
-                            } else {
-                                return (((todate - fromdate) / (24 * 3600 * 1000) + 1) / 2);
-                            }
-                            const checkbox = document.getElementById('is_userh');
-                            checkbox.addEventListener('change', (event) => {
-                                if (event.target.checked) {
-                                    return (((todate - fromdate) / (24 * 3600 * 1000) + 1) / 2);
-                                } else {
-                                    return ((todate - fromdate) / (24 * 3600 * 1000) + 1);
-                                }
-                            })
-                        }
-
                         function cal() {
-                            if (document.getElementById("todate")) {
+                            if (document.getElementById("todate") || document.getElementById("fromdate")) {
+                                function GetDays() {
+                                    var todate = new Date(document.getElementById("todate").value);
+                                    var fromdate = new Date(document.getElementById("fromdate").value);
+                                    var diffDays = (todate - fromdate) / (24 * 3600 * 1000) + 1;
+
+                                    var todatecheck = document.forms["leaveapply"]["todate"].value;
+                                    var fromdatecheck = document.forms["leaveapply"]["fromdate"].value;
+
+                                    if ((todatecheck == null || fromdatecheck == null) || diffDays !== 1) {
+                                        document.getElementById("is_userh").disabled = true;
+                                        document.getElementById("is_userh").checked = false;
+                                    } else {
+                                        document.getElementById("is_userh").disabled = false;
+                                    }
+                                    if ($('#is_userh').not(':checked').length > 0) {
+                                        return (diffDays);
+
+                                    } else if (event.target.checked) {
+                                        return (diffDays / 2);
+                                    }
+                                    const checkbox = document.getElementById('is_userh');
+                                    checkbox.addEventListener('change', (event) => {
+                                        if (event.target.checked) {
+                                            return (diffDays / 2);
+                                        } else if ($('#is_userh').not(':checked').length > 0) {
+                                            return (diffDays);
+                                        }
+                                    })
+                                }
                                 document.getElementById("numdays2").value = GetDays();
+
+                                document.getElementById("todate").min = document.getElementById("fromdate").value;
                             }
                         }
+
 
                         //Showing document upload for sick leave only 
                         $(document).ready(function() {

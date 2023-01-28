@@ -278,7 +278,7 @@ while ($row = pg_fetch_array($run)) {
                             <thead>
                                 <tr>
                                     <th scope="col" id="cw3">Feedback<br>(5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied)</th>
-                                    <th scope="col">Remarks<br>(Based on general observations, system-generated reports, and student feedback)</th>
+                                    <th scope="col">Remarks</th>
                                 </tr>
                             </thead>
                             <thead>
