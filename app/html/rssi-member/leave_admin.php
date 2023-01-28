@@ -122,6 +122,9 @@ if ($id != null) {
     $cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
     $sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
 
+    $lwptaken = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$appid'AND typeofleave='Leave Without Pay' AND lyear='$lyear' AND (status='Approved')");
+    $lwpadj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$appid'AND adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear'");
+
 
     $resultArrsl = pg_fetch_result($totalsl, 0, 0); //sltaken        (resultArrrsl+resultArr_sladj)-$resultArrsl
     $resultArrcl = pg_fetch_result($totalcl, 0, 0); //cltaken
@@ -129,6 +132,8 @@ if ($id != null) {
     @$resultArrrsl = pg_fetch_result($allosl, 0, 0); //slallocate
     @$resultArr_cladj = pg_fetch_result($cladj, 0, 0); //cladjusted
     @$resultArr_sladj = pg_fetch_result($sladj, 0, 0); //sladjusted
+    @$resultArr_lwptaken = pg_fetch_result($lwptaken, 0, 0); //sladjusted
+    @$resultArr_lwpadj = pg_fetch_result($lwpadj, 0, 0); //sladjusted
 } else {
     $result = pg_query($con, "select * , REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leavedb_leavedb.applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leavedb_leavedb.applicantid=student.student_id order by timestamp desc");
 }
@@ -419,6 +424,9 @@ if (!$result) {
 
                                             Sick Leave - (<?php echo ($resultArrrsl + $resultArr_sladj) - $resultArrsl ?>)
                                             <br>Casual Leave - (<?php echo ($resultArrrcl + $resultArr_cladj) - $resultArrcl ?>)
+                                            <br>Leave Without Pay - (<?php echo $resultArr_lwptaken - $resultArr_lwpadj?>)
+                                            <!-- <?php echo $resultArr_lwptaken?>
+                                            <?php echo $resultArr_lwpadj?> -->
 
                                         <?php } ?>
                                     </td>

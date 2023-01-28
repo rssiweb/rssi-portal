@@ -43,6 +43,8 @@ if ($id != null) {
 
     left join (SELECT applicantid, COALESCE(SUM(days),0) as cltd FROM leavedb_leavedb WHERE typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber=cltaken.applicantid
 
+    left join (SELECT applicantid, COALESCE(SUM(days),0) as lwptd FROM leavedb_leavedb WHERE typeofleave='Leave Without Pay' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) lwptaken ON rssimyaccount_members.associatenumber=lwptaken.applicantid
+
     left join (SELECT applicantid, 1 as onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved') onleave ON rssimyaccount_members.associatenumber=onleave.applicantid
 
     left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as slad FROM leaveallocation WHERE allo_leavetype='Sick Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber=slallo.allo_applicantid
@@ -52,6 +54,8 @@ if ($id != null) {
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as sladd FROM leaveadjustment WHERE adj_leavetype='Sick Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) sladj ON rssimyaccount_members.associatenumber=sladj.adj_applicantid
 
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as cladd FROM leaveadjustment WHERE adj_leavetype='Casual Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber=cladj.adj_applicantid
+
+    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
 
     WHERE filterstatus='$id' order by filterstatus asc,today desc");
 } else if ($aaid != null) {
@@ -64,6 +68,8 @@ if ($id != null) {
 
     left join (SELECT applicantid, COALESCE(SUM(days),0) as cltd FROM leavedb_leavedb WHERE typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber=cltaken.applicantid
 
+    left join (SELECT applicantid, COALESCE(SUM(days),0) as lwptd FROM leavedb_leavedb WHERE typeofleave='Leave Without Pay' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) lwptaken ON rssimyaccount_members.associatenumber=lwptaken.applicantid
+
     left join (SELECT applicantid, 1 as onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved') onleave ON rssimyaccount_members.associatenumber=onleave.applicantid
 
     left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as slad FROM leaveallocation WHERE allo_leavetype='Sick Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber=slallo.allo_applicantid
@@ -73,6 +79,8 @@ if ($id != null) {
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as sladd FROM leaveadjustment WHERE adj_leavetype='Sick Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) sladj ON rssimyaccount_members.associatenumber=sladj.adj_applicantid
 
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as cladd FROM leaveadjustment WHERE adj_leavetype='Casual Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber=cladj.adj_applicantid
+
+    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
     
     WHERE associatenumber='$aaid' order by filterstatus asc,today desc");
 } else {
@@ -330,7 +338,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php } ?>
 
                                 <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br><br>s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
             
             
             <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">

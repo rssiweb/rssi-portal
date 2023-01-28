@@ -365,7 +365,7 @@ $resultArr = pg_fetch_all($result);
                             <input type="hidden" name="form-type" value="leaveapply">
 
                             <span class="input-help">
-                                <input type="date" class="form-control" name="fromdate" id="fromdate" value="" onchange="cal();" required>
+                                <input type="date" class="form-control" name="fromdate" id="fromdate" value="" max="" onchange="cal();" required>
                                 <small id="passwordHelpBlock" class="form-text text-muted">From<span style="color:red">*</span></small>
                             </span>
                             <span class="input-help">
@@ -470,6 +470,7 @@ $resultArr = pg_fetch_all($result);
                                 document.getElementById("numdays2").value = GetDays();
 
                                 document.getElementById("todate").min = document.getElementById("fromdate").value;
+                                document.getElementById("fromdate").max = document.getElementById("todate").value;
                             }
                         }
 

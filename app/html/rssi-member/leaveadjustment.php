@@ -16,7 +16,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';
 }
-if ($role=='Member') {
+if ($role == 'Member') {
 
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
@@ -244,11 +244,11 @@ $resultArr = pg_fetch_all($result);
                                         <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
                                     </span>
                                     <span class="input-help">
-                                        <input type="date" class="form-control" name="adj_fromdate" id="adj_fromdate" type="text" value="" required>
+                                        <input type="date" class="form-control" name="adj_fromdate" id="adj_fromdate" value="" max="" onchange="cal();" required>
                                         <small id="passwordHelpBlock_from" class="form-text text-muted">From*</small>
                                     </span>
                                     <span class="input-help">
-                                        <input type="date" class="form-control" name="adj_todate" id="adj_todate" type="text" value="" required>
+                                        <input type="date" class="form-control" name="adj_todate" id="adj_todate" value="" min="" onchange="cal();" required>
                                         <small id="passwordHelpBlock_to" class="form-text text-muted">To*</small>
                                     </span>
                                     <span class="input-help">
@@ -260,6 +260,7 @@ $resultArr = pg_fetch_all($result);
                                             <option value="" disabled selected hidden>Types of Leave</option>
                                             <option value="Sick Leave">Sick Leave</option>
                                             <option value="Casual Leave">Casual Leave</option>
+                                            <option value="Casual Leave">Leave Without Pay</option>
                                         </select>
                                         <small id="passwordHelpBlock" class="form-text text-muted">Adjusted Leave Type</small>
                                     </span>
@@ -339,6 +340,13 @@ $resultArr = pg_fetch_all($result);
                                         document.getElementById("passwordHelpBlock_to").classList.remove("hidden");
                                     }
                                 })
+
+                                function cal() {
+                                    if (document.getElementById("adj_todate") || document.getElementById("adj_fromdate")) {
+                                        document.getElementById("adj_todate").min = document.getElementById("adj_fromdate").value;
+                                        document.getElementById("adj_fromdate").max = document.getElementById("adj_todate").value;
+                                    }
+                                }
                             </script>
                             <script>
                                 <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
