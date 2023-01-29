@@ -135,3 +135,10 @@ WHERE doc is not null;
 UPDATE leavedb_leavedb
 SET doc = CONCAT(doc,'/view')
 WHERE doc is not null;
+
+<!--How to create auto serial number -->
+
+CREATE SEQUENCE result_id_seq;
+
+CREATE TABLE result(
+id integer NOT NULL DEFAULT nextval('result_id_seq'),

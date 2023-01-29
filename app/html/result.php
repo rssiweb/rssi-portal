@@ -7,8 +7,8 @@ date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 @$id = $_GET['get_id'];
 @$stid = $_GET['get_stid'];
-$view_users_query = "select * from new_result WHERE studentid='$stid' AND examname='$id'"; //select query for viewing users.
-$view_users_queryy = "select * from rssimyprofile_student WHERE student_id='$stid'";
+$view_users_query = "select * from result WHERE studentid='$stid' AND examname='$id'"; //select query for viewing users.
+$view_users_queryy = "select student_id,studentname,dateofbirth,photourl from rssimyprofile_student WHERE student_id='$stid'";
 $run = pg_query($con, $view_users_query); //here run the sql query.
 $runn = pg_query($con, $view_users_queryy);
 
@@ -18,39 +18,52 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $studentid = $row[1];
     $category = $row[2];
     $class = $row[3];
-    $dob = $row[4];
+    $hnd_o = $row[4];
     $hnd = $row[5];
-    $eng = $row[6];
-    $mth = $row[7];
-    $sce = $row[8];
-    $gka = $row[9];
-    $ssc = $row[10];
-    $phy = $row[11];
-    $chm = $row[12];
-    $bio = $row[13];
-    $com = $row[14];
-    $hd = $row[15];
-    $acc = $row[16];
-    $pt = $row[17];
-    $total = $row[18];
-    $mm = $row[19];
-    $op = $row[20];
-    $grade = $row[21];
-    $result = $row[22];
-    $position = $row[23];
-    $attd = $row[24];
-    $examname = $row[25];
-    $fullmarks = $row[26];
-    $month = $row[27];
-    $language1 = $row[28];
+    $eng_o = $row[6];
+    $eng = $row[7];
+    $mth_o = $row[8];
+    $mth = $row[9];
+    $sce_o = $row[10];
+    $sce = $row[11];
+    $gka_o = $row[12];
+    $gka = $row[13];
+    $ssc_o = $row[14];
+    $ssc = $row[15];
+    $phy_o = $row[16];
+    $phy = $row[17];
+    $chm_o = $row[18];
+    $chm = $row[19];
+    $bio_o = $row[20];
+    $bio = $row[21];
+    $com_o = $row[22];
+    $com = $row[23];
+    $hd_o = $row[24];
+    $hd = $row[25];
+    $acc_o = $row[26];
+    $acc = $row[27];
+    $pt_o = $row[28];
+    $pt = $row[29];
+    $total = $row[30];
+    $mm = $row[31];
+    $op = $row[32];
+    $grade = $row[33];
+    $result = $row[34];
+    $position = $row[35];
+    $fullmarks_o = $row[36];
+    $fullmarks = $row[37];
+    $examname = $row[38];
+    $language1 = $row[39];
+    $attd = $row[40];
+    $month = $row[41];
 }
 
 while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store in a array $row.  
 {
-    $student_id = $roww[1];
-    $studentname = $roww[3];
-    $photourl = $roww[24];
-
+    $student_id = $roww[0];
+    $studentname = $roww[1];
+    $dateofbirth = $roww[2];
+    $photourl = $roww[3];
 }
 
 ?>
@@ -222,25 +235,43 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     </tr>
                     <tr>
                         <td> Date Of Birth </td>
-                        <th><?php echo $dob ?></th>
+                        <th><?php echo $dateofbirth ?></th>
                         <td colspan="2"></td>
                     </tr>
                 </tbody>
-            </table><br>
+            </table>
 
-            <table class="table" border="0" align="center" style="width: 80%;">
+            <table class="table" border="1" align="center" style="width: 100%;">
                 <tbody>
                     <tr bgcolor="#428BCA" style="color: #fff;">
                         <th style="text-align:left">Subject</th>
-                        <th style="text-align:left"> Full Marks </th>
-                        <th style="text-align:left"> Marks Obtained </th>
+                        <th style="text-align:left" colspan="2"> Full Marks </th>
+                        <th style="text-align:left" colspan="2"> Marks Obtained </th>
+                        <th style="text-align:left"> Total Marks Obtained </th>
                         <th style="text-align:left"> Positional grade </th>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left"></th>
+                        <th style="text-align:left"> Viva</th>
+                        <th style="text-align:left"> Written</th>
+                        <th style="text-align:left"> Viva</th>
+                        <th style="text-align:left"> Written</th>
+                        <th style="text-align:left"></th>
                     </tr>
                     <?php if (@$hnd != null && @$hnd != "-") { ?>
                         <tr>
                             <td style="text-align:left"> Language I </td>
+                            <td style="text-align:left"><?php echo $fullmarks_o ?> </td>
                             <td style="text-align:left"><?php echo $fullmarks ?> </td>
+                            <th style="text-align:left"> <?php echo $hnd_o ?> </th>
                             <th style="text-align:left"> <?php echo $hnd ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($hnd_o == null || $hnd == null) || ($hnd_o == 'A' || $hnd == 'A')) {
+                                    echo $hnd_o . $hnd;
+                                } else {
+                                    echo $hnd_o + $hnd;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -248,8 +279,17 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$eng != null && @$eng != '-') { ?>
                         <tr>
                             <td style="text-align:left"> English </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
                             <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <th style="text-align:left"> <?php echo $eng_o ?> </th>
                             <th style="text-align:left"> <?php echo $eng ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($eng_o == null || $eng == null) || ($eng_o == 'A' || $eng == 'A')) {
+                                    echo $eng_o . $eng;
+                                } else {
+                                    echo $eng_o + $eng;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -257,8 +297,17 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$mth != null && @$mth != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Mathematics </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?></td>
                             <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $mth_o ?> </th>
                             <th style="text-align:left"> <?php echo $mth ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($mth_o == null || $mth == null) || ($mth_o == 'A' || $mth == 'A')) {
+                                    echo $mth_o . $mth;
+                                } else {
+                                    echo $mth_o + $mth;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -266,8 +315,16 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$sce != null && @$sce != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Science </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $sce_o ?> </th>
                             <th style="text-align:left"> <?php echo $sce ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($sce_o == null || $sce == null) || ($sce_o == 'A' || $sce == 'A')) {
+                                    echo $sce_o . $sce;
+                                } else {
+                                    echo $sce_o + $sce;
+                                } ?></th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -275,17 +332,42 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$ssc != null && @$ssc != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Social Science </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $ssc_o ?> </th>
                             <th style="text-align:left"> <?php echo $ssc ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($ssc_o == null || $ssc == null) || ($ssc_o == 'A' || $ssc == 'A')) {
+                                    echo $ssc_o . $ssc;
+                                } else {
+                                    echo $ssc_o + $ssc;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
                     } ?>
                     <?php if (@$gka != null && @$gka != '-') { ?>
                         <tr>
-                            <td style="text-align:left"> General Knowledge </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left">
+                                <?php if ($class == 1) {
+                                    echo "General knowledge";
+                                } else {
+                                    echo "Hamara Parivesh";
+                                }
+                                ?>
+                            </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $gka_o ?> </th>
                             <th style="text-align:left"> <?php echo $gka ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($gka_o == null || $gka == null) || ($gka_o == 'A' || $gka == 'A')) {
+                                    echo $gka_o . $gka;
+                                } else {
+                                    echo $gka_o + $gka;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -293,8 +375,17 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$com != null && @$com != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Computer </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $com_o ?> </th>
                             <th style="text-align:left"> <?php echo $com ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($com_o == null || $com == null) || ($com_o == 'A' || $com == 'A')) {
+                                    echo $com_o . $com;
+                                } else {
+                                    echo $com_o + $com;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -302,8 +393,17 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$bio != null && @$bio != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Biology/Life science </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $bio_o ?> </th>
                             <th style="text-align:left"> <?php echo $bio ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($bio_o == null || $bio == null) || ($bio_o == 'A' || $bio == 'A')) {
+                                    echo $bio_o . $bio;
+                                } else {
+                                    echo $bio_o + $bio;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -311,8 +411,17 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$phy != null && @$phy != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Physics/Physical science </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $phy_o ?> </th>
                             <th style="text-align:left"> <?php echo $phy ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($phy_o == null || $phy == null) || ($phy_o == 'A' || $phy == 'A')) {
+                                    echo $phy_o . $phy;
+                                } else {
+                                    echo $phy_o + $phy;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -320,8 +429,17 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$chm != null && @$chm != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Chemistry </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $chm_o ?> </th>
                             <th style="text-align:left"> <?php echo $chm ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($chm_o == null || $chm == null) || ($chm_o == 'A' || $chm == 'A')) {
+                                    echo $chm_o . $chm;
+                                } else {
+                                    echo $chm_o + $chm;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -329,8 +447,17 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$acc != null && @$acc != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Accountancy </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $acc_o ?> </th>
                             <th style="text-align:left"> <?php echo $acc ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($acc_o == null || $acc == null) || ($acc_o == 'A' || $acc == 'A')) {
+                                    echo $acc_o . $acc;
+                                } else {
+                                    echo $acc_o + $acc;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -338,8 +465,17 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$hd != null && @$hd != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Arts & Crafts </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $hd_o ?> </th>
                             <th style="text-align:left"> <?php echo $hd ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($hd_o == null || $hd == null) || ($hd_o == 'A' || $hd == 'A')) {
+                                    echo $hd_o . $hd;
+                                } else {
+                                    echo $hd_o + $hd;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -347,30 +483,43 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if (@$pt != null && @$pt != '-') { ?>
                         <tr>
                             <td style="text-align:left"> Physical Fitness </td>
-                            <td style="text-align:left"> <?php echo $fullmarks ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks_o ?> </td>
+                            <td style="text-align:left"> <?php echo $fullmarks ?></td>
+                            <th style="text-align:left"> <?php echo $pt_o ?> </th>
                             <th style="text-align:left"> <?php echo $pt ?> </th>
+                            <th style="text-align:left">
+                                <?php if (($pt_o == null || $pt == null) || ($pt_o == 'A' || $pt == 'A')) {
+                                    echo $pt_o . $pt;
+                                } else {
+                                    echo $pt_o + $pt;
+                                } ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
                     } ?>
                     <tr bgcolor="#428BCA" style="color: #fff;">
                         <th style="text-align:left"></th>
-                        <th style="text-align:left"> <?php echo $mm ?> </th>
+                        <th style="text-align:left" colspan="2"> <?php echo $mm ?> </th>
+                        <th style="text-align:left" colspan="2"></th>
                         <th style="text-align:left"> <?php echo $total ?> (<?php echo $op ?>%) </th>
                         <th style="text-align:left"> <?php echo $grade ?> </th>
                     </tr>
-                    <?php if (@$hnd != null && @$hnd != '-') { ?>
-                        <tr>
-                            <td style="text-align:left" colspan="4">* Language I - <?php echo $language1 ?></td>
-                        </tr>
-                    <?php } else { ?>
-                        <tr>
-                            <td style="text-align:left" colspan="4"></td>
-                        </tr>
-                    <?php } ?>
-
                 </tbody>
             </table>
+            <table border="0" align="center" style="width: 100%;">
+                <?php if (@$hnd != null && @$hnd != '-') { ?>
+                    <tr>
+                        <td style="text-align:left">* Language I - <?php echo $language1 ?></td>
+                    </tr>
+                <?php } else { ?>
+                    <tr>
+                        <td style="text-align:left"></td>
+                    </tr>
+                <?php } ?>
+            </table>
+            <br>
+
             <table class="table" border="0" align="center" style="width: 50%;">
                 <tbody>
                     <tr>
