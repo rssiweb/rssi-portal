@@ -246,11 +246,11 @@ if (!$result) {
                                     <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
                                 </span>
                                 <span class="input-help">
-                                    <input type="date" class="form-control" name="fromdate" id="fromdate" type="text" value="">
+                                    <input type="date" class="form-control" name="fromdate" id="fromdate" value="" max="" onchange="cal();" required>
                                     <small id="passwordHelpBlock" class="form-text text-muted">From</small>
                                 </span>
                                 <span class="input-help">
-                                    <input type="date" class="form-control" name="todate" id="todate" type="text" value="">
+                                    <input type="date" class="form-control" name="todate" id="todate" value="" min="" onchange="cal();" required>
                                     <small id="passwordHelpBlock" class="form-text text-muted">To</small>
                                 </span>
                                 <span class="input-help">
@@ -284,6 +284,13 @@ if (!$result) {
                             </div>
 
                         </form>
+
+                        <script>
+                            function cal() {
+                            document.getElementById("todate").min = document.getElementById("fromdate").value;
+                            document.getElementById("fromdate").max = document.getElementById("todate").value;
+                            }
+                        </script>
 
                         <script>
                             function getType() {
@@ -322,7 +329,7 @@ if (!$result) {
                                         "Varicose veins of other sites",
                                     ];
                                 } else if (x === "Casual Leave") {
-                                    items = ["Other", "Timesheet leave"]
+                                    items = ["Late entry", "Timesheet leave", "Earned/Vacation/Privilege Leave", "Sabbatical Leave", "Marriage leave", "Compensatory leaves", "Maternity Leave", "Paternity leaves", "Compassionate leaves", "Other"]
                                 } else {
                                     items = ["--Select--"]
                                 }
@@ -334,9 +341,6 @@ if (!$result) {
                             }
                             document.getElementById("typeofleave").addEventListener("click", getType)
                         </script>
-
-
-
 
                         <table class="table">
                             <thead>
@@ -424,9 +428,9 @@ if (!$result) {
 
                                             Sick Leave - (<?php echo ($resultArrrsl + $resultArr_sladj) - $resultArrsl ?>)
                                             <br>Casual Leave - (<?php echo ($resultArrrcl + $resultArr_cladj) - $resultArrcl ?>)
-                                            <br>Leave Without Pay - (<?php echo $resultArr_lwptaken - $resultArr_lwpadj?>)
-                                            <!-- <?php echo $resultArr_lwptaken?>
-                                            <?php echo $resultArr_lwpadj?> -->
+                                            <br>Leave Without Pay - (<?php echo $resultArr_lwptaken - $resultArr_lwpadj ?>)
+                                            <!-- <?php echo $resultArr_lwptaken ?>
+                                            <?php echo $resultArr_lwpadj ?> -->
 
                                         <?php } ?>
                                     </td>

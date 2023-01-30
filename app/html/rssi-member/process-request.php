@@ -31,7 +31,7 @@ $typeofleaveArr = array("Sick Leave" => array("Abdominal/Pelvic pain",
 "Spondilitis/ Intervertebral Disc Disorders / Spondylosis",
 "Urinary Tract Infections/Disorders",
 "Varicose veins of other sites",),
-                    "Casual Leave" => array("Other", "Timesheet leave"),
+                    "Casual Leave" => array("Earned/Vacation/Privilege Leave","Sabbatical Leave","Marriage leave","Compensatory leaves","Maternity Leave","Paternity leaves","Compassionate leaves","Other"),
                     "Leave Without Pay" => array(""));
                     
 if($typeofleave !== 'Select'){
