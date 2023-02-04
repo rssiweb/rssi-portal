@@ -262,6 +262,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <th style="text-align:left"> Viva</th>
                         <th style="text-align:left"> Written</th>
                         <th style="text-align:left"></th>
+                        <th style="text-align:left"></th>
                     </tr>
                     <?php if (@$hnd != null && @$hnd != "-") { ?>
                         <tr>
