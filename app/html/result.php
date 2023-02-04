@@ -5,8 +5,9 @@ include(__DIR__ . "/../util/login_util.php");
 
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
-@$id = $_GET['get_id'];
+@$id = "QT2/2022";//$_GET['get_id'];
 @$stid = $_GET['get_stid'];
+
 $view_users_query = "select * from result WHERE studentid='$stid' AND examname='$id'"; //select query for viewing users.
 $view_users_queryy = "select student_id,studentname,dateofbirth,photourl from rssimyprofile_student WHERE student_id='$stid'";
 $run = pg_query($con, $view_users_query); //here run the sql query.
