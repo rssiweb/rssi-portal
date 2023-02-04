@@ -5,8 +5,10 @@ include(__DIR__ . "/../util/login_util.php");
 
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
-@$id = "QT2/2022";//$_GET['get_id'];
+
+@$id = isset($_GET["get_id"]) ? $_GET["get_id"] : "QT2/2022"; //$_GET['get_id'];
 @$stid = $_GET['get_stid'];
+@$print = (isset($_GET["print"]) ? $_GET["print"] : "False") == "True";
 
 $view_users_query = "select * from result WHERE studentid='$stid' AND examname='$id'"; //select query for viewing users.
 $view_users_queryy = "select student_id,studentname,dateofbirth,photourl from rssimyprofile_student WHERE student_id='$stid'";
@@ -146,56 +148,58 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
 <body>
     <div class="col-md-12">
 
+        <?php if ($print == FALSE) { ?>
+            <div class="noprint top">
+                <div style="font-family:Poppins; text-align:Center;font-size:20px;">Rina Shiksha Sahayak Foundation (RSSI)</div>
+                <div style="font-family:Roboto; text-align:Center;font-size:20px; line-height:2">Online Result Portal</div><br>
+            </div>
 
-        <div class="noprint top">
-            <div style="font-family:Poppins; text-align:Center;font-size:20px;">Rina Shiksha Sahayak Foundation (RSSI)</div>
-            <div style="font-family:Roboto; text-align:Center;font-size:20px; line-height:2">Online Result Portal</div><br>
-        </div>
+            <div class="noprint">
 
-        <div class="noprint">
+                <form action="" method="GET" id="formid">
 
-            <form action="" method="GET" id="formid">
+                    <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo @$stid ?>">
 
-                <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo @$stid ?>">
+                    <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
+                        <?php if ($id == null) { ?>
+                            <option value="" disabled selected hidden>Select Exam name</option>
+                        <?php
+                        } else { ?>
+                            <option hidden selected><?php echo $id ?></option>
+                        <?php }
+                        ?>
+                        <option value="QT2/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT2/2022') {
+                                                        echo ('selected="QT2/2022"');
+                                                    } ?>>QT2/2022</option>
+                        <option value="QT1/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT1/2022') {
+                                                        echo ('selected="QT1/2022"');
+                                                    } ?>>QT1/2022</option>
+                        <option value="QT3/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT3/2022') {
+                                                        echo ('selected="QT3/2022"');
+                                                    } ?>>QT3/2022</option>
+                        <option value="QT2/2021" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT2/2021') {
+                                                        echo ('selected="QT2/2021"');
+                                                    } ?>>QT2/2021</option>
+                        <option value="QT1/2021" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT1/2021') {
+                                                        echo ('selected="QT1/2021"');
+                                                    } ?>>QT1/2021</option>
+                    </select>
+                    <div class="col topbutton" style="display: inline-block;">
+                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                            <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                        <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;">
+                            <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
+                    </div>
+                </form><br>
+            </div>
 
-                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
-                    <?php if ($id == null) { ?>
-                        <option value="" disabled selected hidden>Select Exam name</option>
-                    <?php
-                    } else { ?>
-                        <option hidden selected><?php echo $id ?></option>
-                    <?php }
-                    ?>
-                    <option value="QT2/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT2/2022') {
-                                                    echo ('selected="QT2/2022"');
-                                                } ?>>QT2/2022</option>
-                    <option value="QT1/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT1/2022') {
-                                                    echo ('selected="QT1/2022"');
-                                                } ?>>QT1/2022</option>
-                    <option value="QT3/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT3/2022') {
-                                                    echo ('selected="QT3/2022"');
-                                                } ?>>QT3/2022</option>
-                    <option value="QT2/2021" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT2/2021') {
-                                                    echo ('selected="QT2/2021"');
-                                                } ?>>QT2/2021</option>
-                    <option value="QT1/2021" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT1/2021') {
-                                                    echo ('selected="QT1/2021"');
-                                                } ?>>QT1/2021</option>
-                </select>
-                <div class="col topbutton" style="display: inline-block;">
-                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                        <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                    <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;">
-                        <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
-                </div>
-            </form><br>
-        </div>
+        <?php } ?>
 
 
         <?php if (@$examname > 0) {
         ?>
             <table class="table" border="0">
-                <thead class="no-display">
+                <thead> <!--class="no-display"-->
                     <tr>
                         <td colspan=4>
                             <div class="row">
