@@ -124,21 +124,17 @@ if (@$_POST['form-type'] == "leaveapply") {
             @$clbalance = $clbalance - $day;
         }
     }
+    $emaildaycount = "undefined";
+    if (@$cmdtuples == 1 && $email != "" && $halfday != 1) {
 
-    if ($email != "" && $halfday != 1) {
-        sendEmail("leaveapply", array(
-            "leaveid" => $leaveid,
-            "applicantid" => $applicantid,
-            "applicantname" => @$fullname,
-            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-            "todate" => @date("d/m/Y", strtotime($todate)),
-            "typeofleave" => $typeofleave,
-            "category" => $creason,
-            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
-            "now" => @date("d/m/Y g:i a", strtotime($now))
-        ), $email);
+        $emaildaycount = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1);
     }
-    if ($email != "" && $halfday == 1) {
+    if (@$cmdtuples == 1 && $email != "" && $halfday == 1) {
+
+        $emaildaycount = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2;
+    }
+
+    if (@$cmdtuples == 1 && $email != "") {
         sendEmail("leaveapply", array(
             "leaveid" => $leaveid,
             "applicantid" => $applicantid,
@@ -147,7 +143,7 @@ if (@$_POST['form-type'] == "leaveapply") {
             "todate" => @date("d/m/Y", strtotime($todate)),
             "typeofleave" => $typeofleave,
             "category" => $creason,
-            "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2,
+            "day" => $emaildaycount,
             "now" => @date("d/m/Y g:i a", strtotime($now))
         ), $email);
     }

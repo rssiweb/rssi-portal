@@ -267,6 +267,7 @@
                     <span class="menu-title">Class Details</span>
                 </a>
             </li>
+            <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-book-open-reader"></i></i></span> <span class="menu-title">Library</span></a></li>
             <li>
                 <a href="exam.php" class="<?php echo $exam_active ?>">
                     <span class="sidebar-icon"><i class="fas fa-spell-check"></i>
@@ -293,8 +294,6 @@
             <?php }
             ?>
             <li><a href="reimbursement.php" class="<?php echo $reimbursement_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span> <span class="menu-title">Reimbursement</span></a></li>
-
-            <!-- <li><a href="library.php" class="<?php echo $library_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-book-open-reader"></i></i></span> <span class="menu-title">Library</span></a></li> -->
 
             <li><a href="myprofile.php" target="_blank" class="<?php echo $profile_active ?>"><span class="sidebar-icon"><i class="fa-solid fa-user"></i></span> <span class="menu-title">My Profile</span></a></li>
 

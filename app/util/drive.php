@@ -15,8 +15,10 @@ function uploadeToDrive($file, $parent, $filename)
     $client = new Google_Client();
     $client->setAuthConfig($secretfile_path);
     $client->setScopes(['https://www.googleapis.com/auth/drive']);
+    $client->setSubject("info@rssi.in");
     $client->authorize();
     $service = new Google_Service_Drive($client);
+
     $filemeta = new Google_Service_Drive_DriveFile();
     $filemeta->setName($filename . '.' . $ext);
     $filemeta->setParents(array($parent));
@@ -31,7 +33,8 @@ function uploadeToDrive($file, $parent, $filename)
     );
     // echo json_encode($udfile);
     $fileId = $udfile->getId();
-    $link = "https://drive.google.com/file/d/".$fileId."/view"; // EDIT FILE URL
+
+    $link = "https://drive.google.com/file/d/" . $fileId . "/view"; // EDIT FILE URL
     unlink($secretfile_path);
     return $link;
 }
