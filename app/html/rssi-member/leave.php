@@ -125,11 +125,11 @@ if (@$_POST['form-type'] == "leaveapply") {
         }
     }
     $emaildaycount = "undefined";
-    if (@$cmdtuples == 1 && $email != "" && $halfday != 1) {
+    if (@$cmdtuples == 1 && $halfday != 1) {
 
         $emaildaycount = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1);
     }
-    if (@$cmdtuples == 1 && $email != "" && $halfday == 1) {
+    if (@$cmdtuples == 1 && $halfday == 1) {
 
         $emaildaycount = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2;
     }

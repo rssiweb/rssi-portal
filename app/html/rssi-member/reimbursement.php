@@ -62,7 +62,7 @@ if (@$_POST['form-type'] == "reimbursementapply") {
         $result = pg_query($con, $claimsubmit);
         $cmdtuples = pg_affected_rows($result);
     }
-    if ($email != "") {
+    if (@$cmdtuples == 1 && $email != "") {
         sendEmail("claimapply", array(
             "reimbid" => $claimid,
             "registrationid" => @$associatenumber,

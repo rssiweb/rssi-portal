@@ -61,34 +61,39 @@ if ($role == "Admin") {
             @$namestudent = pg_fetch_result($resulttt, 0, 0);
             @$emailstudent = pg_fetch_result($resulttt, 0, 1);
 
-            $fullname = $nameassociate . $namestudent;
-            $email = $emailassociate . $emailstudent;
+            $emailfullname = $nameassociate . $namestudent;
+            $emailemail = $emailassociate . $emailstudent;
 
-            if ($adj_day != "") {
-                sendEmail("leaveadjustment", array(
-                    "leaveadjustmentid" => $leaveadjustmentid,
-                    "adj_applicantid" => $adj_applicantid,
-                    "adj_applicantname" => @$fullname . @$studentname,
-                    "adj_day" => $adj_day,
-                    "adj_leavetype" => $adj_leavetype,
-                    "now" => @date("d/m/Y g:i a", strtotime($now)),
-                    "adj_appliedby" => $adj_appliedby,
-                    "adj_reason" => $adj_reason,
-                ), $email);
+            $emailadj_fromdate = "undefined";
+            $emailadj_todate = "undefined";
+            $emailadj_day = "undefined";
+            if (@$cmdtuples == 1 && $adj_day == "") {
+
+                $emailadj_fromdate = @date("d/m/Y", strtotime($adj_fromdate));
+                $emailadj_todate = @date("d/m/Y", strtotime($adj_todate));
+                $emailadj_day = $day;
             }
-            if ($adj_day == "") {
+            if (@$cmdtuples == 1 && $adj_day != "") {
+
+                $emailadj_fromdate = null;
+                $emailadj_todate = null;
+                $emailadj_day = $adj_day;
+            }
+
+
+            if (@$cmdtuples == 1 && $emailemail != "") {
                 sendEmail("leaveadjustment", array(
                     "leaveadjustmentid" => $leaveadjustmentid,
                     "adj_applicantid" => $adj_applicantid,
-                    "adj_applicantname" => @$fullname . @$studentname,
-                    "adj_fromdate" => @date("d/m/Y", strtotime($adj_fromdate)),
-                    "adj_todate" => @date("d/m/Y", strtotime($adj_todate)),
-                    "adj_day" => $day,
+                    "adj_applicantname" => $emailfullname,
+                    "adj_fromdate" => $emailadj_fromdate,
+                    "adj_todate" => $emailadj_todate,
+                    "adj_day" => $emailadj_day,
                     "adj_leavetype" => $adj_leavetype,
                     "now" => @date("d/m/Y g:i a", strtotime($now)),
                     "adj_appliedby" => $adj_appliedby,
                     "adj_reason" => $adj_reason,
-                ), $email);
+                ), $emailemail);
             }
         }
     }
