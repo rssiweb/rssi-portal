@@ -130,7 +130,7 @@ if ($filterstatus != 'Active') {
                                         <tr>
                                             <td style="border:1px solid black">Annual Exam (QT3)</td>
                                             <td style="border:1px solid black">March</td>
-                                            <td style="border:1px solid black">50</td>
+                                            <td style="border:1px solid black">100</td>
                                         </tr>
                                     </table>
                                     <!--<br>
