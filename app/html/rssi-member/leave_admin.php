@@ -330,6 +330,8 @@ if (!$result) {
                                     ];
                                 } else if (x === "Casual Leave") {
                                     items = ["Late entry", "Timesheet leave", "Earned/Vacation/Privilege Leave", "Sabbatical Leave", "Marriage leave", "Compensatory leaves", "Maternity Leave", "Paternity leaves", "Compassionate leaves", "Other"]
+                                } else if (x === "Leave Without Pay") {
+                                    items = ["Late entry", "Timesheet leave", "Earned/Vacation/Privilege Leave", "Sabbatical Leave", "Marriage leave", "Compensatory leaves", "Maternity Leave", "Paternity leaves", "Compassionate leaves", "Other"]
                                 } else {
                                     items = ["--Select--"]
                                 }
