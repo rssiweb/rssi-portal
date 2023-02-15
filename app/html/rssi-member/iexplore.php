@@ -43,17 +43,17 @@ if ($role == 'Admin') {
 @$language1 = $_GET['language1'];
 
 if (($courseid1 == null && $language1 == 'ALL')) {
-    $result1 = pg_query($con, "select * from wbt order by date desc");
+    $result1 = pg_query($con, "select * from wbt order by language desc");
 } else if (($courseid1 == null && ($language1 != 'ALL' && $language1 != null))) {
-    $result1 = pg_query($con, "select * from wbt where language='$language1' order by date desc");
+    $result1 = pg_query($con, "select * from wbt where language='$language1' order by language desc");
 }  else if (($courseid1 != null && ($language1 == null || $language1 == 'ALL'))) {
-    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' order by date desc");
+    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' order by language desc");
 } else if (($courseid1 != null && ($language1 != 'ALL' && $language1 != null))) {
-    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' AND language='$language1' order by date desc");
+    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' AND language='$language1' order by language desc");
 }
 
 else {
-    $result1 = pg_query($con, "select * from wbt order by date desc");
+    $result1 = pg_query($con, "select * from wbt order by language desc");
 }
 if (!$result1) {
     echo "An error occurred.\n";
