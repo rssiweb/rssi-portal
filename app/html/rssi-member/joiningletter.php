@@ -208,7 +208,7 @@ if (!$result) {
                                     <p>
                                     <p><b><u>Reporting Address</u></b></p>
                                         Rina Shiksha Sahayak Foundation (RSSI)<br>
-                                        624B/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
+                                        624V/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
                                         Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
                                     </p>
 

@@ -206,7 +206,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 <div class="col" style="display: inline-block; width:65%;">
 
                                     <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
-                                    <p style="font-size: small;">624B/195/01, Vijayipur, Vijaipur Village, Vishesh Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>
+                                    <p style="font-size: small;">624V/195/01, Vijayipur, Vijaipur Village, Vishesh Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>
                                     <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
                                 </div>
                                 <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
