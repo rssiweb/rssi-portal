@@ -62,6 +62,7 @@ if (!$result) {
 
 $resultArr = pg_fetch_all($result);
 $classlist = [
+  "Pre-school",
   "1",
   "2",
   "3",
