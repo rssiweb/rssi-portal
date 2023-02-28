@@ -265,7 +265,7 @@ $resultArr = pg_fetch_all($result);
                                             <option value="" disabled selected hidden>Types of Leave</option>
                                             <option value="Sick Leave">Sick Leave</option>
                                             <option value="Casual Leave">Casual Leave</option>
-                                            <option value="Casual Leave">Leave Without Pay</option>
+                                            <option value="Leave Without Pay">Leave Without Pay</option>
                                         </select>
                                         <small id="passwordHelpBlock" class="form-text text-muted">Adjusted Leave Type</small>
                                     </span>
