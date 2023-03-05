@@ -286,7 +286,7 @@ $resultArr1 = pg_fetch_all($result1);
                                 <td>' . $array['language'] . '</td>
                                 <td>' . $array['passingmarks'] . '%</td>
                                 <td>' . $array['validity'] . '</td>
-                                <td><a href="' . $array['url'] . '" target="_blank" title="'.$array['coursename'].'-'.$array['language'].'"><button type="button" id="btn" class="btn btn-warning btn-sm" style="outline: none; color:#fff"></span>Launch&nbsp;'.$array['courseid'].'</button></a></td>
+                                <td><a href="' . $array['url'] ?><?php echo $associatenumber ?><?php echo '" target="_blank" title="'.$array['coursename'].'-'.$array['language'].'"><button type="button" id="btn" class="btn btn-warning btn-sm" style="outline: none; color:#fff"></span>Launch&nbsp;'.$array['courseid'].'</button></a></td>
                             </tr>';
                             }
                         } else if ($courseid1 == null && $language1 == null) {
