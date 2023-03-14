@@ -156,7 +156,8 @@ if ($filterstatus != 'Active') {
 
                                        
                                         
-                                        <a href="https://drive.google.com/file/d/1HLDkoKij0UZ1ImFYXAfobHFdKOy-U4vy/view" target="_blank">Guidelines for Exam invigilator (Offline)</i></a><br>
+                                        <a href="https://drive.google.com/file/d/1q-7GP-0qV50Dw6BJyg9YVt4adrIYWxm3/view" target="_blank">Guidelines for Exam invigilator (Offline)</i></a><br>
+                                        <a href="https://drive.google.com/file/d/11NrSzM4EJvoVA16eQ73qtzpANZEl80iA/view" target="_blank">Examiner User Guide (Offline)</i></a><br>
                                         <a href="https://drive.google.com/file/d/1Dr3SOmKUPe7gjaQg_V1Y7VAwufrOWJdj/view" target="_blank">Guidelines for Exam invigilator (Online)</i></a><br>
                                         <a href="https://drive.google.com/file/d/13cH8Rd4aPYHPe0ltzQzQDNFAH1GRTruY/view" target="_blank">Examiner User Guide (Online)</i></a>
                                     </span>
