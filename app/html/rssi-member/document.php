@@ -31,7 +31,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -71,8 +71,11 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                             <tr>
 
                                 <td style="line-height: 2;">
-                                <span class="noticea"><a href="<?php echo $profile ?>" target="_blank" title="<?php echo $filename ?>">Letter of Offer</a><br>
-                                <a href="my_certificate.php">My Certificate</a></span>
+                                    <span class="noticea">
+                                        <?php if ($profile != null) { ?>
+                                            <a href="<?php echo $profile ?>" target="_blank" title="<?php echo $filename ?>">Letter of Offer</a><br>
+                                        <?php } ?>
+                                        <a href="my_certificate.php">My Certificate</a></span>
                                 </td>
                                 <td style="line-height: 2;"><span class="noticea"><a href="payslip.php" target="_self">Payslip</a></span></td>
                                 <td style="line-height: 2;"><span class="noticea"><a href="idcard.php" target="_blank">RSSI Identity Card</a><br>
