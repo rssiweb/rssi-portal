@@ -118,23 +118,24 @@ if ($filterstatus != 'Active') {
                                             <th style="border:1px solid black">Max. Marks</th>
                                         </tr>
                                         <tr>
-                                            <td style="border:1px solid black">First Term Exam (QT1)</td>
+                                            <td style="border:1px solid black">First Term Exam</td>
                                             <td style="border:1px solid black">July</td>
-                                            <td style="border:1px solid black">30</td>
+                                            <td style="border:1px solid black">50</td>
                                         </tr>
                                         <tr>
-                                            <td style="border:1px solid black">Half Yearly Exam (QT1)</td>
+                                            <td style="border:1px solid black">Half Yearly Exam</td>
                                             <td style="border:1px solid black">November</td>
                                             <td style="border:1px solid black">50</td>
                                         </tr>
                                         <tr>
-                                            <td style="border:1px solid black">Annual Exam (QT3)</td>
+                                            <td style="border:1px solid black">Annual Exam</td>
                                             <td style="border:1px solid black">March</td>
                                             <td style="border:1px solid black">100</td>
                                         </tr>
                                     </table>
-                                    <!--<br>
-                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper. You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br><br>
+                                    <br>
+                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.
+                                    <!--You can download question paper template from your profile. Please keep the same format (Font style, size, color, text alignment etc.) as shared in your profile.<br><br>
                                     <img src="../images/qp.png" width=70%><br><br>
 
                                     After setting the question paper, teachers are requested to email the editable version (.docx file) of the question paper at&nbsp;<span class="noticea"><a href="mailto: info@rssi.in">info@rssi.in</a></span>. -->

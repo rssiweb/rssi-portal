@@ -61,7 +61,7 @@ $resultArr = pg_fetch_all($result);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -153,6 +153,8 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $category ?></option>
                                     <?php }
                                     ?>
+                                    <option>LG2A</option>
+                                    <option>LG2B</option>
                                     <option>LG3</option>
                                     <option>LG4</option>
                                     <option>LG4S1</option>
@@ -202,14 +204,10 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $exam ?></option>
                                     <?php }
                                     ?>
-                                    <option> 1/CT01 </option>
-                                    <option> 1/CT02 </option>
-                                    <option> QT1 </option>
-                                    <option> 2/CT01 </option>
-                                    <option> 2/CT02 </option>
-                                    <option> QT2 </option>
-                                    <option> QT3 </option>
-                                    <option> ALL </option>
+                                    <option>First Term Exam</option>
+                                    <option>Half Yearly Exam</option>
+                                    <option>Annual Exam</option>
+                                    <option>ALL</option>
                                 </select>
                             </div>
                         </div>
@@ -243,7 +241,7 @@ $resultArr = pg_fetch_all($result);
             <td>' . $array['examname'] . '</td>
             <td>' . $array['topic'] . '</td>' ?>
 
-                            <?php if (strtotime($date) - strtotime($array['flag']) > 0) { ?>
+                            <?php if (@strtotime($date) - @strtotime($array['flag']) > 0) { ?>
                                 <?php echo '<td><a href="' . $array['url'] . '" target="_blank"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
             </tr>' ?>
                             <?php } else { ?>

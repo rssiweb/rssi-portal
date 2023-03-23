@@ -38,7 +38,7 @@ if ($feesflag == 'd') {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -103,26 +103,36 @@ if ($feesflag == 'd') {
                         </thead>
                         <tbody>
                             <tr>
-                                <td id=cw>Annual Examination (QT3/2022)- Online, Max. Time - 3 hours 15 minutes<br><br>
-
+                                <td id="cw">
                                     <table style="border:1px solid black; width:80%">
                                         <tr style="border:1px solid black">
-                                            <th style="border:1px solid black">National module</th>
-                                            <th style="border:1px solid black">State module</th>
+                                            <th style="border:1px solid black">Name of exam</th>
+                                            <th style="border:1px solid black">Month</th>
+                                            <th style="border:1px solid black">Max. Marks</th>
                                         </tr>
                                         <tr>
-                                            <td style="border:1px solid black">Written exam - 70<br>Project/VIVA - 30</td>
-                                            <td style="border:1px solid black">Written exam - 90<br>Project/VIVA - 10</td>
+                                            <td style="border:1px solid black">First Term Exam</td>
+                                            <td style="border:1px solid black">July</td>
+                                            <td style="border:1px solid black">50</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border:1px solid black">Half Yearly Exam</td>
+                                            <td style="border:1px solid black">November</td>
+                                            <td style="border:1px solid black">50</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border:1px solid black">Annual Exam</td>
+                                            <td style="border:1px solid black">March</td>
+                                            <td style="border:1px solid black">100</td>
                                         </tr>
                                     </table>
                                     <br>
-
-                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.<br><br>
+                                    The written test will be descriptive as per the Board/School exam pattern. The concerned subject teacher will set the question paper.
                                 </td>
 
                                 <td style="line-height: 2"><span class="noticea">
-                                        <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br>
-                                        <a href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Guidelines for Student</i></a>
+                                        <!-- <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br> -->
+                                        <a href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Guidelines for Student (Online Exam)</i></a>
                                     </span>
                                 </td>
                             </tr>
@@ -143,7 +153,7 @@ if ($feesflag == 'd') {
                                 <!--<td><span class="noticea"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>-->
                                 <td><span class="noticea">
                                         <!-- <a href="https://drive.google.com/file/d/1B0sONvc9bb5igUOo1gVO_INfIod9sfIW/view" title="Download" target="_blank">State module</a><br> -->
-                                        <a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" title="Download" target="_blank">National module</a><br></td>
+                                        <a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" title="Cover page" target="_blank">Download</a><br></td>
                                 <td><span class="noticea"><a href="question.php">Question paper</i></a></span></td>
                                 <td><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
                             </tr>

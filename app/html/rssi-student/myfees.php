@@ -22,7 +22,7 @@ $result = pg_query($con, "SELECT * FROM fees
     
     left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
     left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    where student_id='$user_check'");
+    where student_id='$user_check' order by id desc");
 
 $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE fees.studentid='$user_check'");
 
@@ -77,7 +77,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total fees submitted:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        <span class="noticea"><a href="home.php" target="_self">Home</a></span> / My Fees
+                        <span class="noticea"><a href="home.php" target="_self">Home</a></span> / Payment history
                     </div>
                 </div><br>
 
@@ -86,9 +86,9 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                         <thead>
                             <tr>
                                 <th scope="col">Reference number</th>
+                                <th scope="col">Submitted on</th>
                                 <th scope="col">Month</th>
                                 <th scope="col">Amount</th>
-                                <th scope="col">Submitted on</th>
                                 <th scope="col">Collected by</th>
                             </tr>
                         </thead>' ?>
@@ -98,9 +98,9 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
                     foreach ($resultArr as $array) {
                         echo '<tr>
                                 <td>' . $array['id'] . '</td>
-                                <td>' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . '</td>
+                                <td>' . @date("d/m/Y", strtotime($array['date'])) . '</td>
+                                <td>' . date('F', mktime(0, 0, 0, $array['month'], 10)) . '-'. $array['feeyear']  . '</td>
                                 <td>' . $array['fees'] . '</td>
-                                <td>' . $array['date'] . '</td>
                                 <td>' . $array['fullname'] . '</td>
                             </tr>';
                     } ?>

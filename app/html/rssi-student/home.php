@@ -106,20 +106,23 @@ if ($feesflag == 'd') {
                             <tr>
                                 <th scope="col">Class URL</th>
                                 <th scope="col">Quick link</th>
-                                <th scope="col">Payment</th>
                                 <th scope="col">Fee Details</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td style="line-height: 2;"><?php echo $classurl ?></td>
-                                <td style="line-height: 2;"><span class=noticea><a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br><a href="visco.php">Visco</a><br><a href="https://drive.google.com/file/d/1b3AcN68TJa7gIai_RTyJ5989Te-TXCbq/view" target=_blank>Class schedule</a></span>
+                                <td style="line-height: 2;"><span class=noticea>
+                                        <!-- <a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br> -->
+                                        <a href="https://drive.google.com/drive/u/0/folders/14FVzPdcCP-w1Oy22Xwrexn7_XWSFqTaI" target=_blank>Class schedule</a><br>
+                                        <a href="visco.php">VISCO - Digital Learning portal</a></span>
                                 </td>
                                 <td>
-                                <span class=noticea><a href="payment.php" target="_self">Fee deposit</a></span>
+                                    <span class=noticea style="line-height: 2;">
+                                        <a href="payment.php" target="_self">Fee deposit</a><br>
+                                        <a href="myfees.php" target="_self">Payment history</a>
+                                    </span>
                                 </td>
-
-                                <td style="line-height: 2;"><span class="noticea"><a href="myfees.php" target="_self">My fees</a></span></td>
                             </tr>
                         </tbody>
                     </table>

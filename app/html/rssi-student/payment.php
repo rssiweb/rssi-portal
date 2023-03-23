@@ -31,7 +31,7 @@ $url = ""
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -119,9 +119,12 @@ $url = ""
     <section id="main-content">
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-            <div class="col" style="display: inline-block; width:100%; text-align:right">
+                <div class="col" style="display: inline-block; width:100%; text-align:right">
+                    <span class="noticea"><a href="home.php" target="_self">Home</a></span> / Fee deposit
+                </div>
+                <!-- <div class="col" style="display: inline-block; width:100%; text-align:right">
                             <span class="noticea" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
-                        </div>
+                        </div> -->
                 <section class="box" style="padding: 2%;">
                     <div class="tabset">
                         <!-- Tab 1 -->

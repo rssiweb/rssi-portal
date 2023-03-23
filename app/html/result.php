@@ -6,11 +6,12 @@ include(__DIR__ . "/../util/login_util.php");
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 
-@$id = isset($_GET["get_id"]) ? $_GET["get_id"] : "QT2/2022"; //$_GET['get_id'];
+@$id = isset($_GET["get_id"]) ? $_GET["get_id"] : "Half Yearly Exam"; //$_GET['get_id'];
 @$stid = $_GET['get_stid'];
 @$print = (isset($_GET["print"]) ? $_GET["print"] : "False") == "True";
+@$year = $_GET['get_year'];
 
-$view_users_query = "select * from result WHERE studentid='$stid' AND examname='$id'"; //select query for viewing users.
+$view_users_query = "select * from result WHERE studentid='$stid' AND examname='$id' AND academicyear='$year'"; //select query for viewing users.
 $view_users_queryy = "select student_id,studentname,dateofbirth,photourl from rssimyprofile_student WHERE student_id='$stid'";
 $run = pg_query($con, $view_users_query); //here run the sql query.
 $runn = pg_query($con, $view_users_queryy);
@@ -59,6 +60,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $language1 = $row[39];
     $attd = $row[40];
     $month = $row[41];
+    $academicyear = $row[43];
 }
 
 while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store in a array $row.  
@@ -168,22 +170,28 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                             <option hidden selected><?php echo $id ?></option>
                         <?php }
                         ?>
-                        <option value="QT2/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT2/2022') {
-                                                        echo ('selected="QT2/2022"');
-                                                    } ?>>QT2/2022</option>
-                        <option value="QT1/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT1/2022') {
-                                                        echo ('selected="QT1/2022"');
-                                                    } ?>>QT1/2022</option>
-                        <option value="QT3/2022" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT3/2022') {
-                                                        echo ('selected="QT3/2022"');
-                                                    } ?>>QT3/2022</option>
-                        <option value="QT2/2021" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT2/2021') {
-                                                        echo ('selected="QT2/2021"');
-                                                    } ?>>QT2/2021</option>
-                        <option value="QT1/2021" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'QT1/2021') {
-                                                        echo ('selected="QT1/2021"');
-                                                    } ?>>QT1/2021</option>
+                        <option value="First Term Exam" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'First Term Exam') {
+                                                        echo ('selected="First Term Exam"');
+                                                    } ?>>First Term Exam</option>
+                        <option value="Half Yearly Exam" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'Half Yearly Exam') {
+                                                        echo ('selected="Half Yearly Exam"');
+                                                    } ?>>Half Yearly Exam</option>
+                        <option value="Annual Exam" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'Annual Exam') {
+                                                        echo ('selected="Annual Exam"');
+                                                    } ?>>Annual Exam</option>
                     </select>
+                    <select name="get_year" class="form-control" style="width:max-content;display:inline-block" required>
+                                    <?php if ($year == null) { ?>
+                                        <option value="" disabled selected hidden>Select Year</option>
+                                    <?php
+                                    } else { ?>
+                                        <option hidden selected><?php echo $year ?></option>
+                                    <?php }
+                                    ?>
+                                    <option>2022-2023</option>
+                                    <option>2021-2022</option>
+                                    <option>2020-2021</option>
+                                </select>
                     <div class="col topbutton" style="display: inline-block;">
                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                             <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
@@ -236,7 +244,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <td> Name </td>
                         <th><?php echo $studentname ?></th>
                         <td>Name of the examination</td>
-                        <th><?php echo $examname ?></th>
+                        <th><?php echo $examname ?><br><?php echo $academicyear ?></th>
                     </tr>
                     <tr>
                         <td> Date Of Birth </td>
@@ -542,7 +550,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     </tr>
                 </tbody>
             </table>
-            <table class="table" border="0" align="left" style="width: 30%; margin-left:10%; margin-top:5%;">
+            <table class="table" border="0" align="left" style="width: 30%; margin-left:0%; margin-top:2;">
                 <tbody>
                     <tr>
                         <td style="text-align:left">Signature of Class Teacher / Center In-charge<br><br>Date:</td>
@@ -561,7 +569,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
         <?php
         } else {
         ?>
-            No record found for <?php echo $stid ?>&nbsp;<?php echo $id ?>
+            No record found for <?php echo $stid ?>&nbsp;<?php echo $id ?>&nbsp;<?php echo $year ?>
 
         <?php }
         ?>
