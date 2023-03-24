@@ -115,7 +115,7 @@ if ($feesflag == 'd') {
                                 <td style="line-height: 2;"><span class=noticea>
                                         <!-- <a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br> -->
                                         <a href="https://drive.google.com/drive/u/0/folders/14FVzPdcCP-w1Oy22Xwrexn7_XWSFqTaI" target=_blank>Class schedule</a><br>
-                                        <a href="visco.php">VISCO - Digital Learning portal</a></span>
+                                        <a href="visco.php">VISCO - Digital Learning Portal</a></span>
                                 </td>
                                 <td>
                                     <span class=noticea style="line-height: 2;">

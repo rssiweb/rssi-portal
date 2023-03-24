@@ -132,7 +132,7 @@ if ($feesflag == 'd') {
 
                                 <td style="line-height: 2"><span class="noticea">
                                         <!-- <a href="https://drive.google.com/file/d/1Q_pWvJCGxz1U5YbSL1fevzp801pX9FOy/view" target="_blank">Examination Schedule</i></a><br> -->
-                                        <a href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Guidelines for Student (Online Exam)</i></a>
+                                        <a href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Online Exams: Essential Guidelines for Students</i></a>
                                     </span>
                                 </td>
                             </tr>
@@ -143,9 +143,9 @@ if ($feesflag == 'd') {
                     <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Answersheet (Cover page)</th>
-                                <th scope="col">Question paper</th>
-                                <th scope="col">Upload Answersheet</th>
+                                <th scope="col">Download</th>
+                                <th scope="col">Question Portal</th>
+                                <th scope="col">Answersheet Submission</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -153,9 +153,9 @@ if ($feesflag == 'd') {
                                 <!--<td><span class="noticea"><a href="javascript:void(0)" target="_self">Download coverpage</i></a></span></td>-->
                                 <td><span class="noticea">
                                         <!-- <a href="https://drive.google.com/file/d/1B0sONvc9bb5igUOo1gVO_INfIod9sfIW/view" title="Download" target="_blank">State module</a><br> -->
-                                        <a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" title="Cover page" target="_blank">Download</a><br></td>
-                                <td><span class="noticea"><a href="question.php">Question paper</i></a></span></td>
-                                <td><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Upload answersheet</i></a></span></td>
+                                        <a href="https://drive.google.com/file/d/184NK-U45sxlPMTP35JH_YAdAa38gcBVb/view" title="Cover page" target="_blank">Answer Book Front Page</a><br></td>
+                                <td><span class="noticea"><a href="question.php">Question Papers</i></a></span></td>
+                                <td><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLSepC8KPD0l0jblstx38F8OUGKZhCKKGUFPZx685wLDu6hsoqw/viewform?usp=pp_url&entry.77886097=<?php echo $studentname ?>/<?php echo $student_id ?>&entry.547244582=<?php echo $category ?>&entry.1683740731=<?php echo $class ?>" target="_blank">Submission Form</button></i></a></span></td>
                             </tr>
                         </tbody>
                     </table>

@@ -57,7 +57,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Question paper</title>
+    <title>Question Portal</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
@@ -138,7 +138,7 @@ $resultArr = pg_fetch_all($result);
                         Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / Examination / Question paper
+                    <span class="noticea"><a href="home.php" target="_self">Home</a></span> / <span class="noticea"><a href="exam.php" target="_self">Examination</a></span> / Question Portal
                     </div>
                 </div>
                 <section class="box" style="padding: 2%;">
@@ -184,7 +184,7 @@ $resultArr = pg_fetch_all($result);
                                     <option> Computer </option>
                                     <option> GK </option>
                                 </select>
-                                <select name="get_year" class="form-control" style="width:max-content;display:inline-block" required>
+                                <select name="get_year" id="get_year" class="form-control" style="width:max-content;display:inline-block" required>
                                     <?php if ($year == null) { ?>
                                         <option value="" disabled selected hidden>Select Year</option>
                                     <?php
@@ -192,9 +192,6 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $year ?></option>
                                     <?php }
                                     ?>
-                                    <option>2022-2023</option>
-                                    <option>2021-2022</option>
-                                    <option>2020-2021</option>
                                 </select>
                                 <select name="get_exam" class="form-control" style="width:max-content;display:inline-block">
                                     <?php if ($exam == null) { ?>
@@ -216,6 +213,21 @@ $resultArr = pg_fetch_all($result);
                                 <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                         </div>
                     </form>
+                    <script>
+                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                            var currentYear = new Date().getFullYear() - 1;
+                        <?php } else { ?>
+                            var currentYear = new Date().getFullYear();
+                        <?php } ?>
+
+                        for (var i = 0; i < 5; i++) {
+                            var next = currentYear + 1;
+                            var year = currentYear + '-' + next;
+                            //next.toString().slice(-2) 
+                            $('#get_year').append(new Option(year, year));
+                            currentYear--;
+                        }
+                    </script>
                     <?php
                     echo '<table class="table">
           <thead>
@@ -242,10 +254,10 @@ $resultArr = pg_fetch_all($result);
             <td>' . $array['topic'] . '</td>' ?>
 
                             <?php if (@strtotime($date) - @strtotime($array['flag']) > 0) { ?>
-                                <?php echo '<td><a href="' . $array['url'] . '" target="_blank"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
+                                <?php echo '<td><a href="' . $array['url'] . '" target="_blank"><button type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
             </tr>' ?>
                             <?php } else { ?>
-                                <?php echo '<td><a href="' . $array['url'] . '" target="_blank" class="disabled"><button type="button" id="btn" class="btn" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
+                                <?php echo '<td><a href="' . $array['url'] . '" target="_blank" class="disabled"><button type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
             </tr>' ?>
                             <?php } ?>
 

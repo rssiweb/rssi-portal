@@ -6,7 +6,7 @@ include(__DIR__ . "/../util/login_util.php");
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 
-@$id = isset($_GET["get_id"]) ? $_GET["get_id"] : "Half Yearly Exam"; //$_GET['get_id'];
+@$id = $_GET['get_id']; //$_GET['get_id'];isset($_GET["get_id"]) ? $_GET["get_id"] : "Half Yearly Exam"
 @$stid = $_GET['get_stid'];
 @$print = (isset($_GET["print"]) ? $_GET["print"] : "False") == "True";
 @$year = $_GET['get_year'];
@@ -170,36 +170,52 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                             <option hidden selected><?php echo $id ?></option>
                         <?php }
                         ?>
-                        <option value="First Term Exam" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'First Term Exam') {
-                                                        echo ('selected="First Term Exam"');
-                                                    } ?>>First Term Exam</option>
+                        <!-- <option value="First Term Exam" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'First Term Exam') {
+                                                                    echo ('selected="First Term Exam"');
+                                                                } ?>>First Term Exam</option>
                         <option value="Half Yearly Exam" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'Half Yearly Exam') {
-                                                        echo ('selected="Half Yearly Exam"');
-                                                    } ?>>Half Yearly Exam</option>
+                                                                echo ('selected="Half Yearly Exam"');
+                                                            } ?>>Half Yearly Exam</option>
                         <option value="Annual Exam" <?php if (isset($_GET['get_id']) and $_GET['get_id'] == 'Annual Exam') {
                                                         echo ('selected="Annual Exam"');
-                                                    } ?>>Annual Exam</option>
+                                                    } ?>>Annual Exam</option> -->
+                        <option>First Term Exam</option>
+                        <option>Half Yearly Exam</option>
+                        <option>Annual Exam</option>
                     </select>
-                    <select name="get_year" class="form-control" style="width:max-content;display:inline-block" required>
-                                    <?php if ($year == null) { ?>
-                                        <option value="" disabled selected hidden>Select Year</option>
-                                    <?php
-                                    } else { ?>
-                                        <option hidden selected><?php echo $year ?></option>
-                                    <?php }
-                                    ?>
-                                    <option>2022-2023</option>
-                                    <option>2021-2022</option>
-                                    <option>2020-2021</option>
-                                </select>
+                    <select name="get_year" id="get_year" class="form-control" style="width:max-content;display:inline-block" required>
+                        <?php if ($year == null) { ?>
+                            <option value="" disabled selected hidden>Select Year</option>
+                        <?php
+                        } else { ?>
+                            <option hidden selected><?php echo $year ?></option>
+                        <?php }
+                        ?>
+                    </select>
                     <div class="col topbutton" style="display: inline-block;">
                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                             <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                         <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;">
                             <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
                     </div>
-                </form><br>
+                </form>
+                <br>
             </div>
+            <script>
+                <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                    var currentYear = new Date().getFullYear() - 1;
+                <?php } else { ?>
+                    var currentYear = new Date().getFullYear();
+                <?php } ?>
+
+                for (var i = 0; i < 5; i++) {
+                    var next = currentYear + 1;
+                    var year = currentYear + '-' + next;
+                    //next.toString().slice(-2) 
+                    $('#get_year').append(new Option(year, year));
+                    currentYear--;
+                }
+            </script>
 
         <?php } ?>
 

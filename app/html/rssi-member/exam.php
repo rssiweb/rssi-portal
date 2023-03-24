@@ -169,7 +169,7 @@ if ($filterstatus != 'Active') {
                     <table class="table" style="font-size: 13px">
                         <thead>
                             <tr>
-                                <th scope="col">Question paper</th>
+                                <th scope="col">Question Portal</th>
                                 <!-- &nbsp;<i class="far fa-question-circle" title="The submitted question paper will appear on the portal after 24 hours of submission."></i> -->
                                 <th scope="col">Evaluation Path</th>
                                 <th scope="col">Marks upload</th>
@@ -178,7 +178,7 @@ if ($filterstatus != 'Active') {
                         </thead>
                         <tbody>
                             <tr>
-                                <td id=cw1><span class="noticea"><a href="question.php">Question portal</i></a></span></td>
+                                <td id=cw1><span class="noticea"><a href="question.php">Question Papers</i></a></span></td>
                                 <td style="line-height: 2;"><span class=noticea><a href="https://docs.google.com/spreadsheets/d/1d1dfSWWh_aM7Eq2rZc3ZxXJ2uMpqKfchy0ciNSF4KxU/edit?usp=sharing" target=_blank>Homework, QT Exam</a>
                                         <!-- <br><a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vS7xMLLw8oFxfw9x8PSjCyB_-D-vdE_zVfgeHqXsE74QIdoEh60jiybeKVNT9XeBFDXqZB0Fe0cVmrQ/pubhtml?gid=1995146093&single=true" target=_blank>Online Exam</a></span> -->
                                 </td>
