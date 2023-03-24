@@ -135,7 +135,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                                             <a href="https://ncert.nic.in/textbook.php" target=_blank>NCERT Textbooks PDF (I-XII)</a><br>
                                             <!-- <a href="https://www.rssi.in/digital-library" target=_blank>Digital Library</a><br> -->
                                             <a href=visco.php>VISCO - Digital Learning Portal</a><br>
-                                            <a href="policy.php">RSSI HR Policies</a>
+                                            <a href="policy.php">HR Policies</a>
                                         </span>
                                     </td>
                                 </tr>
