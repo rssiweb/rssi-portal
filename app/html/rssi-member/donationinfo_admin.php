@@ -116,17 +116,14 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
                 <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Invoice number" value="<?php echo $id ?>">
-                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select year" required>
+                <select name="get_id" id="get_id" class="form-control" style="width:max-content;display:inline-block" required>
                   <?php if ($status == null) { ?>
-                    <option value="" hidden selected>Select financial year</option>
+                    <option value="" disabled selected hidden>Select Year</option>
                   <?php
                   } else { ?>
                     <option hidden selected><?php echo $status ?></option>
                   <?php }
                   ?>
-                  <option>2022-2023</option>
-                  <option>2021-2022</option>
-                  <option>ALL</option>
                 </select>
               </div>
             </div>
@@ -160,12 +157,12 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
               <?php
               echo '
 
-                                <td>' . date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
+                                <td>' . date("d/m/Y", strtotime($array['timestamp'])) . '</td>
                                 <td>' . $array['firstname'] . '&nbsp;' . $array['lastname'] . '</td>   
                                     <td>' . $array['mobilenumber'] . '<br>' . $array['emailaddress'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>
                                     <td>' . $array['currencyofthedonatedamount'] . '&nbsp;' . $array['donatedamount'] . '</td>
-                                    <td>' . $array['uitype'] . '/'. $array['uinumber'] .'</td>
+                                    <td>' . $array['uitype'] . '/' . $array['uinumber'] . '</td>
                                     <td>' . $array['modeofpayment'] . '</td>
                                     <td>' . $array['youwantustospendyourdonationfor'] . '</td>' ?>
 
@@ -223,6 +220,22 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
     </div>
   </section>
   </section>
+
+  <script>
+    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+      var currentYear = new Date().getFullYear() - 1;
+    <?php } else { ?>
+      var currentYear = new Date().getFullYear();
+    <?php } ?>
+
+    for (var i = 0; i < 5; i++) {
+      var next = currentYear + 1;
+      var status = currentYear + '-' + next;
+      //next.toString().slice(-2) 
+      $('#get_id').append(new Option(status, status));
+      currentYear--;
+    }
+  </script>
 
 
   <!-- Back top -->
