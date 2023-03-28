@@ -162,12 +162,8 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
     <div class="col-md-12">
 
         <?php if ($print == FALSE) { ?>
-            <div class="noprint top">
-                <div style="text-align:Center;font-size:20px;">Rina Shiksha Sahayak Foundation (RSSI NGO)</div>
-                <div style="text-align:Center;font-size:20px; line-height:2">Online Result Portal</div><br>
-            </div>
 
-            <div class="noprint">
+            <div class="noprint" style="display: flex; justify-content: flex-end; margin-top: 2%;">
 
                 <form action="" method="GET" id="formid">
 
@@ -197,8 +193,8 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <div class="col topbutton" style="display: inline-block;">
                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                             <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                        <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;">
-                            <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
+                        <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;">
+                            <i class="fa-solid fa-print"></i>&nbsp;Save</button>
                     </div>
                 </form>
                 <br>
@@ -236,7 +232,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
                                 </div>
                                 <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
-                                <p style="font-size: small;">Scan QR code to check authenticity</p>
+                                    <p style="font-size: small;">Scan QR code to check authenticity</p>
                                     <?php $url = "https://login.rssi.in/result.php?get_stid=$stid&get_id=$id";
                                     $url = urlencode($url); ?>
                                     <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
@@ -265,7 +261,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <th><?php echo $dateofbirth ?></th>
                     </tr>
                     <tr>
-                    <td colspan="2"></td>
+                        <td colspan="2"></td>
                         <th colspan="2"><?php echo $examname ?>&nbsp;&nspar;&nbsp;Academic Year:&nbsp;<?php echo $academicyear ?></th>
                     </tr>
                 </tbody>
@@ -1008,14 +1004,14 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     </tr>
                 </tbody>
             </table>
-            <table class="table" border="0" align="left" style="width: 40%; margin-left:0%; margin-top:20%;">
+            <table class="table visible-xs" border="0" align="left" style="width: 40%; margin-left:0%; margin-top:20%;">
                 <tbody>
                     <tr>
                         <td style="text-align:left">Signature of Class Teacher / Center In-charge<br><br>Date:</td>
                     </tr>
                 </tbody>
             </table>
-            <p class="report-footer" style="text-align: right;">A - Absent denotes that the student was absent during the exam for that particular subject.</p>
+            <p class="report-footer visible-xs" style="text-align: right;">A - Absent denotes that the student was absent during the exam for that particular subject.</p>
 
             <!-- <div class="footer no-display" style="width: 97%;">
                 <p style="text-align: left;">Report card generated:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?></p>
@@ -1024,7 +1020,64 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
         <?php
         } else if ($id == "" && $stid == "") {
         ?>
-            Please select Filter value.
+            <div class="noprint">
+
+                <style>
+                    /* CSS styles for the welcome message */
+                    h1 {
+                        font-size: 36px;
+                        text-align: center;
+                        margin-top: 50px;
+                    }
+
+                    p {
+                        font-size: 24px;
+                        text-align: center;
+                        margin-top: 20px;
+                    }
+
+                    /* CSS styles for the form */
+                    form {
+                        margin: 50px auto;
+                        width: 400px;
+                        border: 2px solid #ccc;
+                        padding: 20px;
+                        border-radius: 10px;
+                    }
+
+                    label {
+                        display: block;
+                        font-size: 20px;
+                        margin-bottom: 10px;
+                    }
+
+                    input[type=text] {
+                        font-size: 18px;
+                        padding: 5px 10px;
+                        border-radius: 5px;
+                        border: 2px solid #ccc;
+                        width: 100%;
+                        margin-bottom: 20px;
+                    }
+
+                    input[type=submit] {
+                        background-color: #4CAF50;
+                        color: white;
+                        font-size: 18px;
+                        padding: 10px 20px;
+                        border-radius: 5px;
+                        border: none;
+                        cursor: pointer;
+                    }
+                </style>
+
+                <!-- Welcome message -->
+                <h1>Welcome to the Online Result Portal</h1>
+                <p>Please enter your student ID, name of the examination, and year to view your results.</p>
+
+                <!-- Form for entering student ID, name of the examination, and year -->
+
+            </div>
         <?php
         } else {
         ?>
