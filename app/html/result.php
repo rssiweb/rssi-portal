@@ -90,7 +90,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
         @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Comfortaa');
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap');
 
         body {
             background: #ffffff;
@@ -236,7 +236,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
                                 </div>
                                 <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
-                                    Scan QR code to check authenticity
+                                <p style="font-size: small;">Scan QR code to check authenticity</p>
                                     <?php $url = "https://login.rssi.in/result.php?get_stid=$stid&get_id=$id";
                                     $url = urlencode($url); ?>
                                     <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
@@ -253,21 +253,20 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         </td>
                     </tr>
                     <tr>
-                        <td>Registration Number </td>
+                        <td>STUDENT ID</td>
                         <th><?php echo $studentid ?></th>
-                        <td> Learning Group/Class </td>
+                        <td> LEARNING GROUP/CLASS </td>
                         <th><?php echo $category ?>/<?php echo $class ?></th>
                     </tr>
                     <tr>
-                        <td> Name </td>
+                        <td>NAME OF STUDENT</td>
                         <th><?php echo $studentname ?></th>
-                        <td>Name of the examination</td>
-                        <th><?php echo $examname ?><br><?php echo $academicyear ?></th>
+                        <td>DATE OF BIRTH</td>
+                        <th><?php echo $dateofbirth ?></th>
                     </tr>
                     <tr>
-                        <td> Date Of Birth </td>
-                        <th><?php echo $dateofbirth ?></th>
-                        <td colspan="2"></td>
+                    <td colspan="2"></td>
+                        <th colspan="2"><?php echo $examname ?>&nbsp;&nspar;&nbsp;Academic Year:&nbsp;<?php echo $academicyear ?></th>
                     </tr>
                 </tbody>
             </table>
@@ -997,7 +996,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                 <tbody>
                     <tr>
                         <td style="text-align:left"> Result </td>
-                        <th style="text-align:left"><?php echo $result ?></th>
+                        <th style="text-align:left"><?php echo strtoupper($result) ?></th>
                     </tr>
                     <tr>
                         <td style="text-align:left"> Overall ranking </th>
