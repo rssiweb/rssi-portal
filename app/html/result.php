@@ -194,7 +194,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                             <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                         <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;">
-                            <i class="fa-solid fa-print"></i>&nbsp;Save</button>
+                            <i class="fa-solid fa-print"></i>&nbsp;Print</button>
                     </div>
                 </form>
                 <br>
@@ -1043,31 +1043,6 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         border: 2px solid #ccc;
                         padding: 20px;
                         border-radius: 10px;
-                    }
-
-                    label {
-                        display: block;
-                        font-size: 20px;
-                        margin-bottom: 10px;
-                    }
-
-                    input[type=text] {
-                        font-size: 18px;
-                        padding: 5px 10px;
-                        border-radius: 5px;
-                        border: 2px solid #ccc;
-                        width: 100%;
-                        margin-bottom: 20px;
-                    }
-
-                    input[type=submit] {
-                        background-color: #4CAF50;
-                        color: white;
-                        font-size: 18px;
-                        padding: 10px 20px;
-                        border-radius: 5px;
-                        border: none;
-                        cursor: pointer;
                     }
                 </style>
 
