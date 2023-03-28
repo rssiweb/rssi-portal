@@ -233,9 +233,11 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 </div>
                                 <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
                                     <p style="font-size: small;">Scan QR code to check authenticity</p>
-                                    <?php $url = "https://login.rssi.in/result.php?get_stid=$stid&get_id=$id";
-                                    $url = urlencode($url); ?>
-                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
+                                    <?php 
+                                    $exam = str_replace(" ","%20",$id);
+                                    $url = "https://login.rssi.in/result.php?get_stid=$stid&get_id=$exam&get_year=$year";
+                                    $url_u = urlencode($url); ?>
+                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=<?php echo $url_u ?>"/>
                                     <img src=<?php echo $photourl ?> width=80px height=80px />
                                 </div>
                             </div>
