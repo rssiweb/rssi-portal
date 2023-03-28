@@ -1049,8 +1049,8 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                 </style>
 
                 <!-- Welcome message -->
-                <h1>Welcome to the Online Result Portal</h1>
-                <p>Please enter your student ID, name of the examination, and year to view your results.</p>
+                <h1>Welcome to the Online Result Portal of RSSI NGO</h1>
+                <p>Please enter your Student ID, Exam Name and Year to view your result.</p>
 
                 <!-- Form for entering student ID, name of the examination, and year -->
 
