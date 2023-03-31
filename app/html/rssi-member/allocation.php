@@ -232,7 +232,7 @@ $resultArrc = pg_fetch_all($resultc);
                             <td style="line-height: 2;">' . $array['hallocationdate'] . '</td>
                             <td style="line-height: 2;">' . $array['hmaxclass'] . '</td>
                             <td style="line-height: 2;">' . $array['hclasstaken'] ?>
-                                    <?php if ($array['hmaxclass'] != "Unallocated") { ?>
+                                    <?php if ($array['hmaxclass'] != "Unallocated" && $array['hmaxclass'] != 0 && $array['hclasstaken'] != 0) { ?>
                                         <?php echo   '&nbsp;(' . number_format($array['hclasstaken'] / $array['hmaxclass'] * '100', '2', '.', '') . '%)' ?>
                                         <?php
                                     } else {
