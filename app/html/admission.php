@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
-
 include(__DIR__ . "/../util/login_util.php");
 ?>
 
@@ -284,7 +283,7 @@ include(__DIR__ . "/../util/login_util.php");
                     <small id="online-declaration-help" class="form-text text-muted">Please enter the transaction ID if you have paid the admission fee online.</small>
                 </div>
             </div>
-
+            <div class="g-recaptcha" data-sitekey="6Lckv18lAAAAAGOd42uVMOfkCzdvOMDTP81nuCLr"></div><br>
             <button type="submit" class="btn btn-primary">Submit</button><br><br>
         </form>
 
@@ -296,8 +295,7 @@ include(__DIR__ . "/../util/login_util.php");
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
-        const aadharYes = document.getElementById('aadhar-yes');
-        const aadharNo = document.getElementById('aadhar-no');
+        const aadharDropdown = document.getElementById('aadhar-card');
         const hiddenPanel = document.getElementById('hidden-panel');
         const hiddenpanelguardianaadhar = document.getElementById('hidden-panel-guardian-aadhar');
         const aadharNumber = document.getElementById('aadhar-number');
@@ -305,11 +303,12 @@ include(__DIR__ . "/../util/login_util.php");
         const guardianaadharNumber = document.getElementById('guardian-aadhar-number');
 
         function handleAadharChange() {
-            if (aadharYes.checked) {
+            if (aadharDropdown.value === 'Yes') {
                 hiddenPanel.style.display = 'block';
                 hiddenpanelguardianaadhar.style.display = 'none';
                 aadharNumber.required = true;
                 aadharCardUpload.required = true;
+                guardianaadharNumber.required = false;
             } else {
                 hiddenPanel.style.display = 'none';
                 hiddenpanelguardianaadhar.style.display = 'block';
@@ -319,8 +318,7 @@ include(__DIR__ . "/../util/login_util.php");
             }
         }
 
-        aadharYes.addEventListener('change', handleAadharChange);
-        aadharNo.addEventListener('change', handleAadharChange);
+        aadharDropdown.addEventListener('change', handleAadharChange);
     </script>
     <script>
         $(document).ready(function() {
@@ -364,8 +362,40 @@ include(__DIR__ . "/../util/login_util.php");
             }
         });
     </script>
-
-
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    
+    <script>
+        function handleSubmit(event) {
+            event.preventDefault();
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (recaptchaResponse) {
+                fetch('https://www.google.com/recaptcha/api/siteverify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `secret=6Lckv18lAAAAAEsf0MTjTe76L3XLB4kWB8W5ilYu&response=${recaptchaResponse}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Submit the form
+                            document.getElementById('my-form').submit();
+                        } else {
+                            // Show an error message
+                            alert('reCAPTCHA verification failed!');
+                        }
+                    });
+            } else {
+                // Show an error message
+                alert('Please complete the reCAPTCHA!');
+            }
+        }
+    </script>
+    <script>
+        const submitButton = document.getElementById('submit-button');
+        submitButton.addEventListener('click', handleSubmit);
+    </script>
 
 </body>
 
