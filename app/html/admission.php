@@ -70,8 +70,6 @@ if (@$_POST['form-type'] == "admission") {
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
     <!------ Include the above in your HEAD tag ---------->
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
@@ -157,13 +155,11 @@ if (@$_POST['form-type'] == "admission") {
                 <img src="camera-icon.png" alt="Camera Icon">
             </label>
             <input type="file" id="photo-upload" name="photo" accept="image/*" capture> -->
-
-            <label for="student-photo">
-            <i class="fa-solid fa-camera"></i>
-            </label>
-            <input type="file" class="form-control-file" id="student-photo" name="student-photo" required accept="image/*" capture>
-            <small id="student-photo-help" class="form-text text-muted">Please upload a recent passport size photograph of the student.</small>
-
+            <div class="form-group">
+                <label for="student-photo">Upload Student Photo:<span style="color: red">*</span></label>
+                <input type="file" class="form-control-file" id="student-photo" name="student-photo" required accept="image/*;capture=camera">
+                <small id="student-photo-help" class="form-text text-muted">Please upload a recent passport size photograph of the student.</small>
+            </div>
 
             <div class="form-group">
                 <label for="aadhar-card">Aadhar Card Available?:<span style="color: red">*</span></label>
