@@ -3,10 +3,21 @@ require_once __DIR__ . '/../bootstrap.php';
 include(__DIR__ . "/../util/login_util.php");
 include(__DIR__ . "../../util/drive.php");
 
+// Get the current date/time
+$now = new DateTime();
+
+// Generate a random number between 0 and 9999
+$randomNum = rand(0, 9999);
+
+// Concatenate the date/time and random number to create the ID
+$studentid = 'SID' . $now->format('YmdHis') . str_pad($randomNum, 4, '0', STR_PAD_LEFT);
+
+$_POST['student-id'] = $studentid;
+
 
 
 if (@$_POST['form-type'] == "admission") {
-
+    $studentid = $_POST['student-id'];
     $type_of_admission = $_POST['type-of-admission'];
     $student_name = $_POST['student-name'];
     $date_of_birth = $_POST['date-of-birth'];
@@ -51,7 +62,7 @@ if (@$_POST['form-type'] == "admission") {
         $doclink_student_photo = uploadeToDrive($uploadedFile_student_photo, $parent_student_photo, $filename_student_photo);
     }
 
-    $student = "INSERT INTO student (type_of_admission,student_name,date_of_birth,gender,student_photo,aadhar_available,student_aadhar,aadhar_card,guardian_name,guardian_relation,guardian_aadhar,state_of_domicile,postal_address,telephone_number,email_address,preferred_branch,class,school_admission_required,school_name,board_name,medium,family_monthly_income,total_family_members,payment_mode,c_authentication_code,transaction_id) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id')";
+    $student = "INSERT INTO student (type_of_admission,student_name,date_of_birth,gender,student_photo,aadhar_available,student_aadhar,aadhar_card,guardian_name,guardian_relation,guardian_aadhar,state_of_domicile,postal_address,telephone_number,email_address,preferred_branch,class,school_admission_required,school_name,board_name,medium,family_monthly_income,total_family_members,payment_mode,c_authentication_code,transaction_id,studentid) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$studentid')";
 
     $result = pg_query($con, $student);
     $cmdtuples = pg_affected_rows($result);
@@ -98,7 +109,7 @@ if (@$_POST['form-type'] == "admission") {
 
         <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>Success! Your admission form has been submitted and is now under review.</span>
+            <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>Success! Your admission form has been submitted and is now under review. Student Id <?php echo $studentid ?></span>
         </div>
         <script>
             if (window.history.replaceState) {
@@ -146,15 +157,8 @@ if (@$_POST['form-type'] == "admission") {
                 </select>
                 <small id="gender-help" class="form-text text-muted">Please select the gender of the student.</small>
             </div>
-            <!-- <div class="form-group">
-                <label for="student-photo">Upload Student Photo:<span style="color: red">*</span></label>
-                <input type="file" class="form-control-file" id="student-photo" name="student-photo" required>
-                <small id="student-photo-help" class="form-text text-muted">Please upload a recent passport size photograph of the student.</small>
-            </div>
-            <label for="photo-upload">
-                <img src="camera-icon.png" alt="Camera Icon">
-            </label>
-            <input type="file" id="photo-upload" name="photo" accept="image/*" capture> -->
+
+            <!-- <input type="file" id="photo-upload" name="photo" accept="image/*" capture> -->
             <div class="form-group">
                 <label for="student-photo">Upload Student Photo:<span style="color: red">*</span></label>
                 <input type="file" class="form-control-file" id="student-photo" name="student-photo" required accept="image/*;capture=camera">
