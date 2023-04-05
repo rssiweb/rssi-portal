@@ -1,6 +1,61 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
 include(__DIR__ . "/../util/login_util.php");
+include(__DIR__ . "../../util/drive.php");
+
+
+
+if (@$_POST['form-type'] == "admission") {
+
+    $type_of_admission = $_POST['type-of-admission'];
+    $student_name = $_POST['student-name'];
+    $date_of_birth = $_POST['date-of-birth'];
+    $gender = $_POST['gender'];
+    $uploadedFile_student_photo = $_FILES['student-photo'];
+    $aadhar_available = $_POST['aadhar-card'];
+    $aadhar_card = $_POST['aadhar-number'];
+    $uploadedFile_aadhar_card = $_FILES['aadhar-card-upload'];
+    $guardian_name = $_POST['guardian-name'];
+    $guardian_relation = $_POST['relation'];
+    $guardian_aadhar = $_POST['guardian-aadhar-number'];
+    $state_of_domicile = $_POST['state'];
+    $postal_address = $_POST['postal-address'];
+    $telephone_number = $_POST['telephone'];
+    $email_address = $_POST['email'];
+    $preferred_branch = $_POST['branch'];
+    $class = $_POST['class'];
+    $school_admission_required = $_POST['school-required'];
+    $school_name = $_POST['school-name'];
+    $board_name = $_POST['board-name'];
+    $medium = $_POST['medium'];
+    $family_monthly_income = $_POST['income'];
+    $total_family_members = $_POST['family-members'];
+    $payment_mode = $_POST['payment-mode'];
+    $c_authentication_code = $_POST['c-authentication-code'];
+    $transaction_id = $_POST['transaction-id'];
+
+    // send uploaded file to drive
+    // get the drive link
+    if (empty($_FILES['aadhar-card-upload']['name'])) {
+        $doclink_aadhar_card = null;
+    } else {
+        $filename_aadhar_card = "doc_" . $student_name . "_" . time();
+        $parent_aadhar_card = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+        $doclink_aadhar_card = uploadeToDrive($uploadedFile_aadhar_card, $parent_aadhar_card, $filename_aadhar_card);
+    }
+    if (empty($_FILES['student-photo']['name'])) {
+        $doclink_student_photo = null;
+    } else {
+        $filename_student_photo = "doc_" . $student_name . "_" . time();
+        $parent_student_photo = '1ziDLJgSG7zTYG5i0LzrQ6pNq9--LQx3_t0_SoSR2tSJW8QTr-7EkPUBR67zn0os5NRfgeuDH';
+        $doclink_student_photo = uploadeToDrive($uploadedFile_student_photo, $parent_student_photo, $filename_student_photo);
+    }
+
+    $student = "INSERT INTO student (type_of_admission,student_name,date_of_birth,gender,student_photo,aadhar_available,student_aadhar,aadhar_card,guardian_name,guardian_relation,guardian_aadhar,state_of_domicile,postal_address,telephone_number,email_address,preferred_branch,class,school_admission_required,school_name,board_name,medium,family_monthly_income,total_family_members,payment_mode,c_authentication_code,transaction_id) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id')";
+
+    $result = pg_query($con, $student);
+    $cmdtuples = pg_affected_rows($result);
+}
 ?>
 
 <head>
@@ -15,6 +70,7 @@ include(__DIR__ . "/../util/login_util.php");
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
     <!------ Include the above in your HEAD tag ---------->
+    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -34,6 +90,24 @@ include(__DIR__ . "/../util/login_util.php");
 </head>
 
 <body>
+    <?php if (@$type_of_admission != null && @$cmdtuples == 0) { ?>
+
+        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            <span class="blink_me"><i class="fa-solid fa-xmark"></i></span>&nbsp;&nbsp;<span>Error: Your admission form has not been submitted. Please ensure that all required fields are completed and try again. If the issue persists, please contact the admissions office for assistance.</span>
+        </div>
+    <?php } else if (@$cmdtuples == 1) { ?>
+
+        <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>Success! Your admission form has been submitted and is now under review.</span>
+        </div>
+        <script>
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+    <?php } ?>
     <div class="container mt-5">
         <!-- <h2 class="text-center mb-4">RSSI Shiksha Admission form</h2> -->
         <!-- <h2 class="text-center mb-4" style="color: #CE1212; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; text-shadow: 1px 1px 0px #FFFFFF;">RSSI Shiksha Admission Form</h2> -->
@@ -43,7 +117,8 @@ include(__DIR__ . "/../util/login_util.php");
         <p>Unique Id: WB/2021/0282726 (NGO Darpan, NITI Aayog, Government of India)</p>
         <p>The admission fee is ₹100. The admission fee is one-time, non-refundable, and has to be paid at the time of admission.</p>
         <hr>
-        <form action="submit-form.php" method="post" enctype="multipart/form-data">
+        <form name="admission" id="admission" action="admission.php" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="form-type" value="admission">
             <div class="form-group">
                 <label for="type-of-admission">Type of Admission:<span style="color: red">*</span></label>
                 <select class="form-control" id="type-of-admission" name="type-of-admission" required>
@@ -73,11 +148,23 @@ include(__DIR__ . "/../util/login_util.php");
                 </select>
                 <small id="gender-help" class="form-text text-muted">Please select the gender of the student.</small>
             </div>
-            <div class="form-group">
+            <!-- <div class="form-group">
                 <label for="student-photo">Upload Student Photo:<span style="color: red">*</span></label>
                 <input type="file" class="form-control-file" id="student-photo" name="student-photo" required>
                 <small id="student-photo-help" class="form-text text-muted">Please upload a recent passport size photograph of the student.</small>
             </div>
+            <label for="photo-upload">
+                <img src="camera-icon.png" alt="Camera Icon">
+            </label>
+            <input type="file" id="photo-upload" name="photo" accept="image/*" capture> -->
+
+            <label for="student-photo">
+            <i class="fa-solid fa-camera"></i>
+            </label>
+            <input type="file" class="form-control-file" id="student-photo" name="student-photo" required accept="image/*" capture>
+            <small id="student-photo-help" class="form-text text-muted">Please upload a recent passport size photograph of the student.</small>
+
+
             <div class="form-group">
                 <label for="aadhar-card">Aadhar Card Available?:<span style="color: red">*</span></label>
                 <select class="form-control" id="aadhar-card" name="aadhar-card" required>
@@ -249,12 +336,12 @@ include(__DIR__ . "/../util/login_util.php");
 
             <div class="form-group">
                 <label for="income">Family Monthly Income</label>
-                <input type="number" class="form-control" id="income" name="income" required>
+                <input type="number" class="form-control" id="income" name="income">
                 <small id="income-help" class="form-text text-muted">Please enter the total monthly income of the student's family.</small>
             </div>
             <div class="form-group">
                 <label for="family-members">Total Number of Family Members</label>
-                <input type="number" class="form-control" id="family-members" name="family-members" required>
+                <input type="number" class="form-control" id="family-members" name="family-members">
                 <small id="family-members-help" class="form-text text-muted">Please enter the total number of members in the student's family.</small>
             </div>
             <div class="form-group">
@@ -315,6 +402,8 @@ include(__DIR__ . "/../util/login_util.php");
                 aadharNumber.required = false;
                 aadharCardUpload.required = false;
                 guardianaadharNumber.required = true;
+                aadharNumber.value = "";
+                aadharCardUpload.value = "";
             }
         }
 
@@ -340,6 +429,8 @@ include(__DIR__ . "/../util/login_util.php");
     </script>
 
     <script>
+        const transactionIdInput = document.getElementById("transaction-id");
+        const cashAuthCodeDiv = document.getElementById("c-authentication-code");
         // show/hide payment fields based on payment mode selection
         var paymentModeSelect = document.getElementById("payment-mode");
         paymentModeSelect.addEventListener("change", function() {
@@ -349,21 +440,25 @@ include(__DIR__ . "/../util/login_util.php");
                 document.getElementById("c-authentication-code").required = true;
                 document.getElementById("online-declaration").style.display = "none";
                 document.getElementById("transaction-id").required = false;
+                transactionIdInput.value = "";
             } else if (selectedOption === "online") {
                 document.getElementById("cash-authentication-code").style.display = "none";
                 document.getElementById("c-authentication-code").required = false;
                 document.getElementById("online-declaration").style.display = "block";
                 document.getElementById("transaction-id").required = true;
+                cashAuthCodeDiv.value = "";
             } else {
                 document.getElementById("cash-authentication-code").style.display = "none";
                 document.getElementById("c-authentication-code").required = false;
                 document.getElementById("online-declaration").style.display = "none";
                 document.getElementById("transaction-id").required = false;
+                cashAuthCodeDiv.value = "";
+                transactionIdInput.value = "";
             }
         });
     </script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    
+
     <script>
         function handleSubmit(event) {
             event.preventDefault();
