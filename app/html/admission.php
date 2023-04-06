@@ -1,23 +1,11 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
 include(__DIR__ . "/../util/login_util.php");
-include(__DIR__ . "../../util/drive.php");
-
-// Get the current date/time
-$now = new DateTime();
-
-// Generate a random number between 0 and 9999
-$randomNum = rand(0, 9999);
-
-// Concatenate the date/time and random number to create the ID
-$studentid = 'SID' . $now->format('YmdHis') . str_pad($randomNum, 4, '0', STR_PAD_LEFT);
-
-$_POST['student-id'] = $studentid;
-
-
+include(__DIR__ . "/../util/drive.php");
+include(__DIR__ . "/../util/email.php");
 
 if (@$_POST['form-type'] == "admission") {
-    $studentid = $_POST['student-id'];
+
     $type_of_admission = $_POST['type-of-admission'];
     $student_name = $_POST['student-name'];
     $date_of_birth = $_POST['date-of-birth'];
@@ -44,6 +32,40 @@ if (@$_POST['form-type'] == "admission") {
     $payment_mode = $_POST['payment-mode'];
     $c_authentication_code = $_POST['c-authentication-code'];
     $transaction_id = $_POST['transaction-id'];
+    @$timestamp = date('Y-m-d H:i:s');
+
+    // Determine if student is new admission or not
+    $is_new_admission = ''; // Set to true if new admission, false otherwise
+
+    if ($type_of_admission == 'New Admission') {
+        $is_new_admission = 'A';
+    } else {
+        $is_new_admission = 'B';
+    }
+
+    // Determine branch code
+    $branch = ''; // Set branch code (LKO for Lucknow, KOL for West Bengal)
+
+    // Replace with the correct branch code based on the branch location
+    if ($preferred_branch == 'Lucknow') {
+        $branch = 'LKO';
+    } elseif ($preferred_branch == 'West Bengal') {
+        $branch = 'KOL';
+    }
+
+    // Determine current year
+    $current_year = date('y'); // Two-digit year from current date
+
+    // Generate a random 3-digit number
+    $random_number = str_pad(rand(0, 999), 3, '0', STR_PAD_LEFT);
+
+    // Generate student ID
+    $logic_1 = $is_new_admission; // Logic 1
+    $logic_2 = $branch; // Logic 2
+    $logic_3 = $current_year; // Logic 3
+    $logic_4 = $random_number; // Logic 4
+
+    $student_id = $logic_1 . $logic_2 . $logic_3 . $logic_4; // Concatenate all four logics
 
     // send uploaded file to drive
     // get the drive link
@@ -62,10 +84,18 @@ if (@$_POST['form-type'] == "admission") {
         $doclink_student_photo = uploadeToDrive($uploadedFile_student_photo, $parent_student_photo, $filename_student_photo);
     }
 
-    $student = "INSERT INTO student (type_of_admission,student_name,date_of_birth,gender,student_photo,aadhar_available,student_aadhar,aadhar_card,guardian_name,guardian_relation,guardian_aadhar,state_of_domicile,postal_address,telephone_number,email_address,preferred_branch,class,school_admission_required,school_name,board_name,medium,family_monthly_income,total_family_members,payment_mode,c_authentication_code,transaction_id,studentid) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$studentid')";
+    $student = "INSERT INTO student (type_of_admission,student_name,date_of_birth,gender,student_photo,aadhar_available,student_aadhar,aadhar_card,guardian_name,guardian_relation,guardian_aadhar,state_of_domicile,postal_address,telephone_number,email_address,preferred_branch,class,school_admission_required,school_name,board_name,medium,family_monthly_income,total_family_members,payment_mode,c_authentication_code,transaction_id,student_id) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id')";
 
     $result = pg_query($con, $student);
     $cmdtuples = pg_affected_rows($result);
+
+    if (@$cmdtuples == 1 && $email_address != "") {
+        sendEmail("admission_success", array(
+            "student_id" => $student_id,
+            "student_name" => $student_name,
+            "timestamp" => @date("d/m/Y g:i a", strtotime($timestamp))
+        ), $email_address);
+    }
 }
 ?>
 
@@ -109,7 +139,7 @@ if (@$_POST['form-type'] == "admission") {
 
         <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>Success! Your admission form has been submitted and is now under review. Student Id <?php echo $studentid ?></span>
+            <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>Success! Your admission form has been submitted and is now under review. Student Id <?php echo $student_id ?></span>
         </div>
         <script>
             if (window.history.replaceState) {
