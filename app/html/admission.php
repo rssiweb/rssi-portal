@@ -32,6 +32,7 @@ if (@$_POST['form-type'] == "admission") {
     $payment_mode = $_POST['payment-mode'];
     $c_authentication_code = $_POST['c-authentication-code'];
     $transaction_id = $_POST['transaction-id'];
+    $subject_select = $_POST['subject-select'];
     @$timestamp = date('Y-m-d H:i:s');
 
     // Determine if student is new admission or not
@@ -57,7 +58,7 @@ if (@$_POST['form-type'] == "admission") {
     $current_year = date('y'); // Two-digit year from current date
 
     // Generate a random 3-digit number
-    $random_number = str_pad(rand(0, 999), 3, '0', STR_PAD_LEFT);
+    $random_number = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
 
     // Generate student ID
     $logic_1 = $is_new_admission; // Logic 1
@@ -84,7 +85,7 @@ if (@$_POST['form-type'] == "admission") {
         $doclink_student_photo = uploadeToDrive($uploadedFile_student_photo, $parent_student_photo, $filename_student_photo);
     }
 
-    $student = "INSERT INTO student (type_of_admission,student_name,date_of_birth,gender,student_photo,aadhar_available,student_aadhar,aadhar_card,guardian_name,guardian_relation,guardian_aadhar,state_of_domicile,postal_address,telephone_number,email_address,preferred_branch,class,school_admission_required,school_name,board_name,medium,family_monthly_income,total_family_members,payment_mode,c_authentication_code,transaction_id,student_id) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id')";
+    $student = "INSERT INTO student (type_of_admission,student_name,date_of_birth,gender,student_photo,aadhar_available,student_aadhar,aadhar_card,guardian_name,guardian_relation,guardian_aadhar,state_of_domicile,postal_address,telephone_number,email_address,preferred_branch,class,school_admission_required,school_name,board_name,medium,family_monthly_income,total_family_members,payment_mode,c_authentication_code,transaction_id,student_id,subject_select) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id','$subject_select')";
 
     $result = pg_query($con, $student);
     $cmdtuples = pg_affected_rows($result);
@@ -159,7 +160,7 @@ if (@$_POST['form-type'] == "admission") {
         <form name="admission" id="admission" action="admission.php" method="post" enctype="multipart/form-data">
             <input type="hidden" name="form-type" value="admission">
             <div class="form-group">
-                <label for="type-of-admission">Type of Admission:<span style="color: red">*</span></label>
+                <label for="type-of-admission">Type of Admission:</label>
                 <select class="form-control" id="type-of-admission" name="type-of-admission" required>
                     <option value="">--Select Type of Admission--</option>
                     <option value="New Admission">New Admission</option>
@@ -168,18 +169,18 @@ if (@$_POST['form-type'] == "admission") {
                 <small id="type-of-admission-help" class="form-text text-muted">Please select the type of admission you are applying for.</small>
             </div>
             <div class="form-group">
-                <label for="student-name">Student Name:<span style="color: red">*</span></label>
+                <label for="student-name">Student Name:</label>
                 <input type="text" class="form-control" id="student-name" name="student-name" placeholder="Enter student name" required>
                 <small id="student-name-help" class="form-text text-muted">Please enter the name of the student.</small>
             </div>
             <div class="form-group">
-                <label for="date-of-birth">Date of Birth:<span style="color: red">*</span></label>
+                <label for="date-of-birth">Date of Birth:</label>
                 <input type="date" class="form-control" id="date-of-birth" name="date-of-birth" required>
                 <small id="date-of-birth-help" class="form-text text-muted">Please enter the date of birth of the student.</small>
             </div>
             <div class="form-group">
-                <label for="gender">Gender:<span style="color: red">*</span></label>
-                <select class="form-control" id="gender" name="gender">
+                <label for="gender">Gender:</label>
+                <select class="form-control" id="gender" name="gender" required>
                     <option value="">--Select Gender--</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -190,13 +191,13 @@ if (@$_POST['form-type'] == "admission") {
 
             <!-- <input type="file" id="photo-upload" name="photo" accept="image/*" capture> -->
             <div class="form-group">
-                <label for="student-photo">Upload Student Photo:<span style="color: red">*</span></label>
+                <label for="student-photo">Upload Student Photo:</label>
                 <input type="file" class="form-control-file" id="student-photo" name="student-photo" required accept="image/*;capture=camera">
                 <small id="student-photo-help" class="form-text text-muted">Please upload a recent passport size photograph of the student.</small>
             </div>
 
             <div class="form-group">
-                <label for="aadhar-card">Aadhar Card Available?:<span style="color: red">*</span></label>
+                <label for="aadhar-card">Aadhar Card Available?:</label>
                 <select class="form-control" id="aadhar-card" name="aadhar-card" required>
                     <option value="">--Select--</option>
                     <option value="Yes">Yes</option>
@@ -208,24 +209,24 @@ if (@$_POST['form-type'] == "admission") {
 
             <div id="hidden-panel" style="display: none;">
                 <div class="form-group">
-                    <label for="aadhar-number">Aadhar of the Student:<span style="color: red">*</span></label>
-                    <input type="text" class="form-control" id="aadhar-number" name="aadhar-number" placeholder="Enter Aadhar number">
+                    <label for="aadhar-number">Aadhar of the Student:</label>
+                    <input type="text" class="form-control" id="aadhar-number" name="aadhar-number" placeholder="Enter Aadhar number" required>
                     <small id="aadhar-number-help" class="form-text text-muted">Please enter the Aadhar number of the student.</small>
                 </div>
                 <div class="form-group">
-                    <label for="aadhar-card-upload">Upload Aadhar Card:<span style="color: red">*</span></label>
-                    <input type="file" class="form-control-file" id="aadhar-card-upload" name="aadhar-card-upload">
+                    <label for="aadhar-card-upload">Upload Aadhar Card:</label>
+                    <input type="file" class="form-control-file" id="aadhar-card-upload" name="aadhar-card-upload" required>
                     <small id="aadhar-card-upload-help" class="form-text text-muted">Please upload a scanned copy of the Aadhar card (if available).</small>
                 </div>
             </div>
             <div class="form-group">
-                <label for="guardian-name">Guardian's Name:<span style="color: red">*</span></label>
+                <label for="guardian-name">Guardian's Name:</label>
                 <input type="text" class="form-control" id="guardian-name" name="guardian-name" placeholder="Enter guardian name" required>
                 <small id="guardian-name-help" class="form-text text-muted">Please enter the name of the student's guardian.</small>
             </div>
 
             <div class="form-group">
-                <label for="relation">Relation with Student:<span style="color: red">*</span></label>
+                <label for="relation">Relation with Student:</label>
                 <select class="form-control" id="relation" name="relation" required>
                     <option value="">--Select Type of Relation--</option>
                     <option value="Mother">Mother</option>
@@ -237,13 +238,13 @@ if (@$_POST['form-type'] == "admission") {
             </div>
             <div id="hidden-panel-guardian-aadhar" style="display: none;">
                 <div class="form-group">
-                    <label for="guardian-aadhar-number">Aadhar of Guardian:<span style="color: red">*</span></label>
+                    <label for="guardian-aadhar-number">Aadhar of Guardian:</label>
                     <input type="text" class="form-control" id="guardian-aadhar-number" name="guardian-aadhar-number" placeholder="Enter Aadhar number">
                     <small id="guardian-aadhar-number-help" class="form-text text-muted">Please enter the Aadhar number of the guardian.</small>
                 </div>
             </div>
             <div class="form-group">
-                <label for="state">State of Domicile:<span style="color: red">*</span></label>
+                <label for="state">State of Domicile:</label>
                 <select class="form-control" id="state" name="state" required>
                     <option value="">--Select State--</option>
                     <option value="Andhra Pradesh">Andhra Pradesh</option>
@@ -279,22 +280,22 @@ if (@$_POST['form-type'] == "admission") {
                 <small id="state-help" class="form-text text-muted">Please select the state where the student resides.</small>
             </div>
             <div class="form-group">
-                <label for="postal-address">Postal Address:<span style="color: red">*</span></label>
+                <label for="postal-address">Postal Address:</label>
                 <textarea class="form-control" id="postal-address" name="postal-address" rows="3" placeholder="Enter postal address" required></textarea>
                 <small id="postal-address-help" class="form-text text-muted">Please enter the complete postal address of the student.</small>
             </div>
             <div class="form-group">
-                <label for="telephone">Telephone Number:<span style="color: red">*</span></label>
+                <label for="telephone">Telephone Number:</label>
                 <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="Enter telephone number" required>
                 <small id="telephone-help" class="form-text text-muted">Please enter a valid telephone number.</small>
             </div>
             <div class="form-group">
-                <label for="email">Email Address:<span style="color: red">*</span></label>
+                <label for="email">Email Address:</label>
                 <input type="email" class="form-control" id="email" name="email" placeholder="Enter email address" required>
                 <small id="email-help" class="form-text text-muted">Please enter a valid email address.</small>
             </div>
             <div class="form-group">
-                <label for="branch">Preferred Branch:<span style="color: red">*</span></label>
+                <label for="branch">Preferred Branch:</label>
                 <select class="form-control" id="branch" name="branch" required>
                     <option value="">--Select Branch--</option>
                     <option value="Lucknow">Lucknow</option>
@@ -304,7 +305,7 @@ if (@$_POST['form-type'] == "admission") {
             </div>
 
             <div class="form-group">
-                <label for="class">Class:<span style="color: red">*</span></label>
+                <label for="class">Class:</label>
                 <select class="form-control" id="class" name="class" required>
                     <option value="">--Select Class--</option>
                     <option value="Pre-school">Pre-school</option>
@@ -320,11 +321,24 @@ if (@$_POST['form-type'] == "admission") {
                     <option value="10">Class 10</option>
                     <option value="11">Class 11</option>
                     <option value="12">Class 12</option>
+                    <option value="Vocational training">Vocational training</option>
                 </select>
                 <small id="class-help" class="form-text text-muted">Please select the class the student wants to join.</small>
             </div>
+
             <div class="form-group">
-                <label for="school-required">School Admission Required:<span style="color: red">*</span></label>
+                <label for="subject-select">Select subject(s): </label>
+                <select class="form-control" id="subject-select" name="subject-select" required>
+                    <option value="">--Select Subject--</option>
+                    <option value="ALL Subjects">ALL Subjects</option>
+                    <option value="English">English</option>
+                    <option value="Embroidery">Embroidery</option>
+                </select>
+                <small class="form-text text-muted">Please select the subject(s) that you want to study from the drop-down list.</small>
+            </div>
+
+            <div class="form-group" id="school-required-group">
+                <label for="school-required">School Admission Required:</label>
                 <select class="form-control" id="school-required" name="school-required" required>
                     <option value="">--Select--</option>
                     <option value="Yes">Yes</option>
@@ -333,15 +347,16 @@ if (@$_POST['form-type'] == "admission") {
                 <small id="school-required-help" class="form-text text-muted">Do you require admission in a new school?</small>
             </div>
 
-            <div id="school-details" style="display: none;">
+
+            <div id="school-details">
                 <div class="form-group">
-                    <label for="school-name">Name Of The School:<span style="color: red">*</span></label>
+                    <label for="school-name">Name Of The School:</label>
                     <input type="text" class="form-control" id="school-name" name="school-name" placeholder="Enter name of the school" required>
                     <small id="school-name-help" class="form-text text-muted">Please enter the name of the current school or the new school you want to join.</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="board-name">Name Of The Board:<span style="color: red">*</span></label>
+                    <label for="board-name">Name Of The Board:</label>
                     <select class="form-control" id="board-name" name="board-name" required>
                         <option value="">--Select--</option>
                         <option value="CBSE">CBSE</option>
@@ -353,7 +368,7 @@ if (@$_POST['form-type'] == "admission") {
                 </div>
 
                 <div class="form-group">
-                    <label for="medium">Medium:<span style="color: red">*</span></label>
+                    <label for="medium">Medium:</label>
                     <select class="form-control" id="medium" name="medium" required>
                         <option value="">--Select Medium--</option>
                         <option value="English">English</option>
@@ -375,7 +390,7 @@ if (@$_POST['form-type'] == "admission") {
                 <small id="family-members-help" class="form-text text-muted">Please enter the total number of members in the student's family.</small>
             </div>
             <div class="form-group">
-                <label for="payment-mode">Payment Mode:<span style="color: red">*</span></label>
+                <label for="payment-mode">Payment Mode:</label>
                 <select class="form-control" id="payment-mode" name="payment-mode" required>
                     <option value="">--Select--</option>
                     <option value="cash">Cash</option>
@@ -385,7 +400,7 @@ if (@$_POST['form-type'] == "admission") {
             </div>
 
             <div class="form-group" id="cash-authentication-code" style="display:none;">
-                <label for="c-authentication-code">C-Authentication Code:<span style="color: red">*</span></label>
+                <label for="c-authentication-code">C-Authentication Code:</label>
                 <input type="text" class="form-control" id="c-authentication-code" name="c-authentication-code" placeholder="Enter C-Authentication code">
                 <small id="c-authentication-code-help" class="form-text text-muted">Please enter the C-Authentication code if you are paying by cash.</small>
             </div>
@@ -395,7 +410,7 @@ if (@$_POST['form-type'] == "admission") {
                 <p>Click <a href="https://paytm.me/7Nu-Znk" target="_blank">https://paytm.me/7Nu-Znk</a> to complete the payment. Please note that if you submit the form without completing the payment or with an incorrect transaction ID, your application will be placed on hold for the next two business days. After this period, if the admission fee has not been received, your submission will be cancelled.</p>
 
                 <div class="form-group">
-                    <label for="transaction-id">Transaction ID:<span style="color: red">*</span></label>
+                    <label for="transaction-id">Transaction ID:</label>
                     <input type="text" class="form-control" id="transaction-id" name="transaction-id" required>
                     <small id="online-declaration-help" class="form-text text-muted">Please enter the transaction ID if you have paid the admission fee online.</small>
                 </div>
@@ -439,24 +454,6 @@ if (@$_POST['form-type'] == "admission") {
 
         aadharDropdown.addEventListener('change', handleAadharChange);
     </script>
-    <script>
-        $(document).ready(function() {
-            $('#school-required').change(function() {
-                var selectedValue = $(this).val();
-                if (selectedValue === 'No') {
-                    $('#school-details').show();
-                    $('#school-name').attr('required', 'required');
-                    $('#board-name').attr('required', 'required');
-                    $('#medium').attr('required', 'required');
-                } else {
-                    $('#school-details').hide();
-                    $('#school-name').removeAttr('required');
-                    $('#board-name').removeAttr('required');
-                    $('#medium').removeAttr('required');
-                }
-            });
-        });
-    </script>
 
     <script>
         const transactionIdInput = document.getElementById("transaction-id");
@@ -487,6 +484,80 @@ if (@$_POST['form-type'] == "admission") {
             }
         });
     </script>
+    <script>
+        // Select the necessary HTML elements
+        const subjectSelect = document.querySelector('#subject-select');
+        const schoolRequiredGroup = document.querySelector('#school-required-group');
+        const schoolDetailsGroup = document.querySelector('#school-details');
+        const schoolRequiredSelect = document.querySelector('#school-required');
+        const schoolNameInput = document.querySelector('#school-name');
+        const boardNameSelect = document.querySelector('#board-name');
+        const mediumSelect = document.querySelector('#medium');
+
+        // Hide school-required-group and school-details-group initially
+        schoolRequiredGroup.style.display = 'none';
+        schoolDetailsGroup.style.display = 'none';
+
+        // Set required attributes for school-required-group and its options
+        const schoolRequiredOptions = schoolRequiredSelect.querySelectorAll('option');
+        for (let i = 0; i < schoolRequiredOptions.length; i++) {
+            schoolRequiredOptions[i].setAttribute('required', '');
+        }
+
+        // Function to reset values and attributes of fields
+        function resetFields() {
+            schoolRequiredSelect.value = '';
+            schoolNameInput.value = '';
+            boardNameSelect.value = '';
+            mediumSelect.value = '';
+            schoolRequiredGroup.removeAttribute('required');
+            schoolDetailsGroup.removeAttribute('required');
+            schoolDetailsGroup.style.display = 'none';
+            schoolNameInput.removeAttribute('required');
+            boardNameSelect.removeAttribute('required');
+            mediumSelect.removeAttribute('required');
+        }
+
+        // Add change event listener to subjectSelect
+        subjectSelect.addEventListener('change', function() {
+            const selectedSubject = subjectSelect.value;
+
+            // Check if subject is blank or Embroidery
+            if (selectedSubject === '' || selectedSubject === 'Embroidery') {
+                schoolRequiredGroup.style.display = 'none';
+                schoolDetailsGroup.style.display = 'none';
+                $('#school-required-group :input').prop('required', false);
+                resetFields();
+            } else {
+                schoolRequiredGroup.style.display = 'block';
+                schoolDetailsGroup.style.display = 'none';
+                resetFields();
+
+                // Add change event listener to schoolRequiredSelect
+                schoolRequiredSelect.addEventListener('change', function() {
+                    const selectedSchoolRequired = schoolRequiredSelect.value;
+
+                    if (selectedSchoolRequired === 'No') {
+                        schoolDetailsGroup.style.display = 'block';
+                        schoolRequiredGroup.setAttribute('required', '');
+                        schoolDetailsGroup.setAttribute('required', '');
+                        schoolNameInput.setAttribute('required', '');
+                        boardNameSelect.setAttribute('required', '');
+                        mediumSelect.setAttribute('required', '');
+                    } else {
+                        schoolRequiredGroup.setAttribute('required', '');
+                        schoolRequiredGroup.removeAttribute('required');
+                        schoolDetailsGroup.removeAttribute('required');
+                        schoolDetailsGroup.style.display = 'none';
+                        schoolNameInput.removeAttribute('required');
+                        boardNameSelect.removeAttribute('required');
+                        mediumSelect.removeAttribute('required');
+                    }
+                });
+            }
+        });
+    </script>
+
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <script>
@@ -520,6 +591,13 @@ if (@$_POST['form-type'] == "admission") {
     <script>
         const submitButton = document.getElementById('submit-button');
         submitButton.addEventListener('click', handleSubmit);
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('input[required], select[required], textarea[required]').each(function() {
+                $(this).closest('.form-group').find('label').append(' <span style="color: red">*</span>');
+            });
+        });
     </script>
 
 </body>
