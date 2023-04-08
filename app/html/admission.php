@@ -239,7 +239,7 @@ if (@$_POST['form-type'] == "admission") {
             <div id="hidden-panel-guardian-aadhar" style="display: none;">
                 <div class="form-group">
                     <label for="guardian-aadhar-number">Aadhar of Guardian:</label>
-                    <input type="text" class="form-control" id="guardian-aadhar-number" name="guardian-aadhar-number" placeholder="Enter Aadhar number">
+                    <input type="text" class="form-control" id="guardian-aadhar-number" name="guardian-aadhar-number" placeholder="Enter Aadhar number" required>
                     <small id="guardian-aadhar-number-help" class="form-text text-muted">Please enter the Aadhar number of the guardian.</small>
                 </div>
             </div>
@@ -401,7 +401,7 @@ if (@$_POST['form-type'] == "admission") {
 
             <div class="form-group" id="cash-authentication-code" style="display:none;">
                 <label for="c-authentication-code">C-Authentication Code:</label>
-                <input type="text" class="form-control" id="c-authentication-code" name="c-authentication-code" placeholder="Enter C-Authentication code">
+                <input type="text" class="form-control" id="c-authentication-code" name="c-authentication-code" placeholder="Enter C-Authentication code" required>
                 <small id="c-authentication-code-help" class="form-text text-muted">Please enter the C-Authentication code if you are paying by cash.</small>
             </div>
 
@@ -415,12 +415,10 @@ if (@$_POST['form-type'] == "admission") {
                     <small id="online-declaration-help" class="form-text text-muted">Please enter the transaction ID if you have paid the admission fee online.</small>
                 </div>
             </div>
-            <div class="g-recaptcha" data-sitekey="6Lckv18lAAAAAGOd42uVMOfkCzdvOMDTP81nuCLr"></div><br>
-            <button type="submit" class="btn btn-primary">Submit</button><br><br>
+            <button type="submit" class="btn btn-primary" id="btnSubmit">Submit</button>
         </form>
+    </div>
 
-    </div>
-    </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper">
     </script>
@@ -558,36 +556,6 @@ if (@$_POST['form-type'] == "admission") {
         });
     </script>
 
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
-    <script>
-        function handleSubmit(event) {
-            event.preventDefault();
-            const recaptchaResponse = grecaptcha.getResponse();
-            if (recaptchaResponse) {
-                fetch('https://www.google.com/recaptcha/api/siteverify', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: `secret=6Lckv18lAAAAAEsf0MTjTe76L3XLB4kWB8W5ilYu&response=${recaptchaResponse}`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Submit the form
-                            document.getElementById('my-form').submit();
-                        } else {
-                            // Show an error message
-                            alert('reCAPTCHA verification failed!');
-                        }
-                    });
-            } else {
-                // Show an error message
-                alert('Please complete the reCAPTCHA!');
-            }
-        }
-    </script>
     <script>
         const submitButton = document.getElementById('submit-button');
         submitButton.addEventListener('click', handleSubmit);
