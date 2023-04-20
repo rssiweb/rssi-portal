@@ -161,9 +161,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
                             echo '<tr>
-                                <td>
-                                <span class="noticeas"><a href="gps_history.php?assetid=' . $array['itemid'] . '" target="_blank" title="Asset History">' . $array['itemid'] . '</a></span>
-                                </td><td>' ?>
+                                <td>' . $array['itemid'] . '</td><td>' ?>
 
                             <?php if (@strlen($array['itemname']) <= 50) {
 

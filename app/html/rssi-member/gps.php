@@ -331,6 +331,7 @@ $resultArr = pg_fetch_all($result);
                                 <input type="hidden" value="gps" name="export_type" />
                                 <input type="hidden" value="<?php echo @$item_type ?>" name="item_type" />
                                 <input type="hidden" value="<?php echo @$taggedto ?>" name="taggedto" />
+                                <input type="hidden" value="<?php echo @$assetid ?>" name="assetid" />
 
                                 <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;

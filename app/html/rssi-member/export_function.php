@@ -48,10 +48,10 @@ function fees_export()
     $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees
     left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
     WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections') AND pstatus='transferred'");
-}
+  }
 
 
-if (($section == 'ALL' || $section == null) && ($status != null && $status != 'ALL')) {
+  if (($section == 'ALL' || $section == null) && ($status != null && $status != 'ALL')) {
 
     $result = pg_query($con, "SELECT * FROM fees 
     
@@ -66,9 +66,9 @@ if (($section == 'ALL' || $section == null) && ($status != null && $status != 'A
     $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
     left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
     WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND pstatus='transferred'");
-}
+  }
 
-if (($section != null && $section != 'ALL') && ($status == 'ALL' || $status == null)) {
+  if (($section != null && $section != 'ALL') && ($status == 'ALL' || $status == null)) {
 
     $result = pg_query($con, "SELECT * FROM fees 
     
@@ -83,9 +83,9 @@ if (($section != null && $section != 'ALL') && ($status == 'ALL' || $status == n
     $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
     left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
     WHERE feeyear=$id AND student.category='$section' AND pstatus='transferred'");
-}
+  }
 
-if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == null) && $id != null) {
+  if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == null) && $id != null) {
 
     $result = pg_query($con, "SELECT * FROM fees 
     
@@ -100,9 +100,9 @@ if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == n
     $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
     left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
     WHERE feeyear=$id AND pstatus='transferred'");
-}
+  }
 
-if ($stid != null && $status == null && $section == null && $id == null) {
+  if ($stid != null && $status == null && $section == null && $id == null) {
 
     $result = pg_query($con, "SELECT * FROM fees 
     
@@ -118,13 +118,13 @@ if ($stid != null && $status == null && $section == null && $id == null) {
     $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees
     left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
     WHERE fees.studentid='$stid' AND pstatus='transferred'");
-}
+  }
 
-if ($stid == null && $status == null && $section == null && $id == null) {
+  if ($stid == null && $status == null && $section == null && $id == null) {
     $result = pg_query($con, "SELECT * FROM fees WHERE month='0'");
     $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
     $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
-}
+  }
 
   if (!$result) {
     echo "An error occurred.\n";
@@ -189,18 +189,21 @@ function gps_export()
   global $con;
   @$taggedto = $_POST['taggedto'];
   @$item_type = $_POST['item_type'];
+  @$assetid = $_POST['assetid'];
 
 
-  if ($item_type == 'ALL' && $taggedto == "") {
-    $gpsdetails = "SELECT * from gps order by date desc";
-  } else if (($item_type == 'ALL' && $taggedto != "") || ($item_type == "" && $taggedto != "")) {
-    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' order by date desc";
-  } else if ($item_type != "ALL" && $item_type != "" && $taggedto != "") {
-    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' and itemtype='$item_type' order by date desc";
-  } else if ($item_type != "ALL" && $item_type != "" && $taggedto == "") {
-    $gpsdetails = "SELECT * from gps where itemtype='$item_type' order by date desc";
+  if ($item_type == 'ALL' && $taggedto == "" && $assetid == "") {
+    $gpsdetails = "SELECT * from gps order by itemname asc";
+  } else if (($item_type == 'ALL' && $taggedto != "") || ($item_type == "" && $taggedto != "" && $assetid == "")) {
+    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' order by itemname asc";
+  } else if ($item_type != "ALL" && $item_type != "" && $taggedto != "" && $assetid == "") {
+    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' and itemtype='$item_type' order by itemname asc";
+  } else if ($item_type != "ALL" && $item_type != "" && $taggedto == "" && $assetid == "") {
+    $gpsdetails = "SELECT * from gps where itemtype='$item_type' order by itemname asc";
+  } else if ($assetid != "" && $item_type == "" && $taggedto == "") {
+    $gpsdetails = "SELECT * from gps where assetid='$assetid' order by itemname asc";
   } else {
-    $gpsdetails = "SELECT * from gps where itemid=''";
+    $gpsdetails = "SELECT * from gps";
   }
 
   $result = pg_query($con, $gpsdetails);
@@ -319,22 +322,22 @@ function student_export()
     left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
     WHERE filterstatus='$id' AND module='$module' order by category asc, class asc, studentname asc");
   }
-  
+
   if ($category != null && $class == null) {
     $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
     WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc, class asc, studentname asc");
   }
-  
+
   if ($category == null && $class != null) {
     $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
     WHERE filterstatus='$id' AND module='$module' AND class IN ('$classs') order by category asc, class asc, studentname asc");
   }
-  
+
   if ($category != null && $class != null) {
     $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
     WHERE filterstatus='$id' AND module='$module' AND class IN ('$classs') AND category='$category' order by category asc, class asc, studentname asc");
   }
-  
+
   if ($stid != null) {
     $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
     left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
