@@ -6,6 +6,7 @@ include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -40,36 +41,43 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 
     @$taggedto = strtoupper($_GET['taggedto']);
     @$item_type = $_GET['item_type'];
+    @$assetid = $_GET['assetid'];
+    @$is_user = $_GET['is_user'];
 
-    if ($item_type == 'ALL' && $taggedto == "") {
+    if ($item_type == 'ALL' && $taggedto == "" && $assetid == "") {
         $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
     left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
-    order by date desc";
-    } else if ($item_type == 'ALL' && $taggedto != "") {
+    order by itemname asc";
+    } else if ($item_type == 'ALL' && $taggedto != "" && $assetid == "") {
         $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
     left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
-    where taggedto='$taggedto' order by date desc";
-    } else if ($item_type == "" && $taggedto != "") {
+    where taggedto='$taggedto' order by itemname asc";
+    } else if ($item_type == "" && $taggedto != "" && $assetid == "") {
         $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
     left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  
-    where taggedto='$taggedto' order by date desc";
-    } else if ($item_type != "ALL" && $item_type != "" && $taggedto != "") {
+    where taggedto='$taggedto' order by itemname asc";
+    } else if ($item_type != "ALL" && $item_type != "" && $taggedto != "" && $assetid == "") {
         $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
     left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  
-    where taggedto='$taggedto' and itemtype='$item_type' order by date desc";
-    } else if ($item_type != "ALL" && $item_type != "" && $taggedto == "") {
+    where taggedto='$taggedto' and itemtype='$item_type' order by itemname asc";
+    } else if ($item_type != "ALL" && $item_type != "" && $taggedto == "" && $assetid == "") {
         $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
     left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
-    where itemtype='$item_type' order by date desc";
+    where itemtype='$item_type' order by itemname asc";
+    } else if ($assetid != "") {
+        $gpsdetails = "SELECT * from gps 
+    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
+    where itemid='$assetid' order by itemname asc";
     } else {
         $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  order by date desc";
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  order by itemname asc";
     }
 } ?>
 
@@ -79,7 +87,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
 
     $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  where taggedto='$associatenumber' order by date desc";
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  where taggedto='$associatenumber' order by itemname asc";
 } ?>
 <?php
 $result = pg_query($con, $gpsdetails);
@@ -105,7 +113,7 @@ $resultArr = pg_fetch_all($result);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
@@ -123,15 +131,6 @@ $resultArr = pg_fetch_all($result);
     </script>
 
     <style>
-        .checkbox {
-            padding: 0;
-            margin: 0;
-            vertical-align: bottom;
-            position: relative;
-            top: 0px;
-            overflow: hidden;
-        }
-
         .x-btn:focus,
         .button:focus,
         [type="submit"]:focus {
@@ -146,6 +145,23 @@ $resultArr = pg_fetch_all($result);
         .input-help {
             vertical-align: top;
             display: inline-block;
+        }
+
+        @media (max-width:767px) {
+
+            #cw,
+            #cw1 {
+                width: 100% !important;
+            }
+
+        }
+
+        #cw {
+            width: 15%;
+        }
+
+        #cw1 {
+            width: 20%;
         }
     </style>
 </head>
@@ -257,13 +273,57 @@ $resultArr = pg_fetch_all($result);
                                             <option>ALL</option>
                                         </select>&nbsp;
                                         <input type="text" name="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="<?php echo $taggedto ?>">
+
+                                        &nbsp;
+                                        <span class="input-help">
+                                            <input type="text" name="assetid" class="form-control" style="width:max-content; display:inline-block" placeholder="Asset id" value="<?php echo $assetid ?>" required>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Asset id</small>
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="col2 left" style="display: inline-block;">
                                     <button type="submit" name="search_by_id2" class="btn btn-primary btn-sm" style="outline: none;">
                                         <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
                                 </div>
+                                <div id="filter-checks">
+                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                    <label for="is_user" style="font-weight: 400;">Search by Asset ID</label>
+                                </div>
                             </form>
+                            <script>
+                                const checkbox = document.getElementById('is_user');
+                                const assetIdInput = document.getElementsByName('assetid')[0];
+                                const itemTypeInput = document.getElementsByName('item_type')[0];
+                                const taggedToInput = document.getElementsByName('taggedto')[0];
+
+                                if ($('#is_user').not(':checked').length > 0) {
+
+                                    assetIdInput.disabled = true;
+                                    itemTypeInput.disabled = false;
+                                    taggedToInput.disabled = false;
+
+                                } else {
+
+                                    assetIdInput.disabled = false;
+                                    itemTypeInput.disabled = true;
+                                    taggedToInput.disabled = true;
+
+                                }
+                                checkbox.addEventListener('change', (event) => {
+                                    if (event.target.checked) {
+                                        assetIdInput.disabled = false;
+                                        itemTypeInput.disabled = true;
+                                        taggedToInput.disabled = true;
+
+                                    } else {
+                                        assetIdInput.disabled = true;
+                                        itemTypeInput.disabled = false;
+                                        taggedToInput.disabled = false;
+
+                                    }
+                                });
+                            </script>
+
                         <?php } ?>
                         <div class="col" style="display: inline-block; width:99%; text-align:right">
                             Record count:&nbsp;<?php echo sizeof($resultArr) ?><br><br>
@@ -296,17 +356,18 @@ $resultArr = pg_fetch_all($result);
                         <thead>
                             <tr>
                                 <th scope="col">Asset Id</th>
-                                <th scope="col" width="15%">Asset name</th>
+                                <th scope="col" id="cw">Asset name</th>
                                 <th scope="col">Quantity</th>' ?>
                         <?php if ($role == 'Admin') { ?>
                             <?php echo '
                                 <th scope="col">Asset type</th>
-                                <th scope="col" width="20%">Remarks</th>' ?>
+                                <th scope="col" id="cw1">Remarks</th>' ?>
                         <?php }
                         echo '
                                 <th scope="col">Issued by</th>
                                 <th scope="col">Tagged to</th>
-                                <th scope="col">Last updated on</th></tr>
+                                <th scope="col">Last updated on</th>
+                                <th scope="col"></th></tr>
                         </thead>' ?>
                         <?php if (sizeof($resultArr) > 0) { ?>
                             <?php
@@ -396,7 +457,7 @@ $resultArr = pg_fetch_all($result);
                                         <?php echo '&nbsp;<i class="fa-regular fa-envelope" style="color:#A2A2A2;" title="Send Email"></i>' ?>
                                     <?php } ?>
 
-                                    <?php if ($array['collectedby'] == $associatenumber) { ?>
+                                    <!-- <?php if ($array['collectedby'] == $associatenumber) { ?>
                                         <?php echo '
                                 <form id="gpsdelete" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="gpsdelete">
@@ -405,13 +466,13 @@ $resultArr = pg_fetch_all($result);
                                 &nbsp;<button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['itemid'] . '"><i class="fa-solid fa-xmark"></i></button> </form>' ?>
                                     <?php } else { ?>
                                         <?php echo '&nbsp;<i class="fa-solid fa-xmark" style="color:#A2A2A2;" title="Delete ' . $array['itemid'] . '"></i>' ?>
-                                    <?php } ?>
+                                    <?php } ?> -->
 
                             <?php echo '</td></tr>';
                                 }
                             } ?>
                         <?php
-                        } else if ($taggedto == null && $item_type == null) {
+                        } else if ($taggedto == null && $item_type == null && $assetid == null) {
                         ?>
                             <tr>
                                 <td colspan="5">Please select Filter value.</td>
@@ -767,27 +828,27 @@ $resultArr = pg_fetch_all($result);
         //For form submission - to update Remarks
         const scriptURL = 'payment-api.php'
 
-        function validateForm() {
-            if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+        // function validateForm() {
+        //     if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
 
-                const form = document.getElementById('gpsdelete')
-                form.addEventListener('submit', e => {
-                    e.preventDefault()
-                    fetch(scriptURL, {
-                            method: 'POST',
-                            body: new FormData(document.getElementById('gpsdelete'))
-                        })
-                        .then(response =>
-                            alert("Record has been updated.") +
-                            location.reload()
-                        )
-                        .catch(error => console.error('Error!', error.message))
-                })
-            } else {
-                alert("Record has NOT been deleted.");
-                return false;
-            }
-        }
+        //         const form = document.getElementById('gpsdelete')
+        //         form.addEventListener('submit', e => {
+        //             e.preventDefault()
+        //             fetch(scriptURL, {
+        //                     method: 'POST',
+        //                     body: new FormData(document.getElementById('gpsdelete'))
+        //                 })
+        //                 .then(response =>
+        //                     alert("Record has been updated.") +
+        //                     location.reload()
+        //                 )
+        //                 .catch(error => console.error('Error!', error.message))
+        //         })
+        //     } else {
+        //         alert("Record has NOT been deleted.");
+        //         return false;
+        //     }
+        // }
 
         const form = document.getElementById('gpsform')
         form.addEventListener('submit', e => {
@@ -920,7 +981,7 @@ $resultArr = pg_fetch_all($result);
                     }); // end of on click pagination list
                     limitPagging();
                 })
-                .val(5)
+                .val(5000)
                 .change();
 
             // end of on select change

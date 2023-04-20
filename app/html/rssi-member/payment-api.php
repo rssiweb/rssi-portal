@@ -97,11 +97,11 @@ if ($_POST['form-type'] == "gemsdelete") {
   $result = pg_query($con, $gemsdelete);
 }
 
-if ($_POST['form-type'] == "gpsdelete") {
-  @$gpsid = $_POST['gpsid'];
-  $gpsdelete = "DELETE from gps WHERE itemid = '$gpsid'";
-  $result = pg_query($con, $gpsdelete);
-}
+// if ($_POST['form-type'] == "gpsdelete") {
+//   @$gpsid = $_POST['gpsid'];
+//   $gpsdelete = "DELETE from gps WHERE itemid = '$gpsid'";
+//   $result = pg_query($con, $gpsdelete);
+// }
 
 
 if ($_POST['form-type'] == "gpsedit") {
