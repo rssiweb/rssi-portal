@@ -23,28 +23,28 @@ if ($role == 'Admin') {
     left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
     order by timestamp desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus!='Rejected'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus IS NULL OR claimstatus<>'Rejected'");
   } else if ($id == null && ($status != 'ALL' && $status != null)) {
     $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
     left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
     left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
     WHERE year='$status' order by timestamp desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE year='$status' AND claimstatus!='Rejected'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE year='$status' AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
   } else if ($id > 0 && ($status != 'ALL' && $status != null)) {
     $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
     left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
     left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
     WHERE registrationid='$id' AND year='$status' order by timestamp desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id' AND year='$status'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND year='$status' AND claimstatus!='Rejected'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND year='$status' AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
   } else if ($id > 0 && ($status == 'ALL' || $status == null)) {
     $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
     left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
     left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
     WHERE registrationid='$id' order by timestamp desc");
     $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND claimstatus!='Rejected'");
+    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
   }
 }
 
@@ -55,7 +55,7 @@ if ($role != 'Admin' && $status != 'ALL') {
   left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student WHERE student_id='$user_check') student ON claim.registrationid=student.student_id
   WHERE registrationid='$user_check' AND year='$status' order by timestamp desc");
   $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check' AND year='$status'");
-  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check' AND year='$status' AND claimstatus!='rejected'");
+  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check' AND year='$status' AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
 }
 
 if ($role != 'Admin' && $status == 'ALL') {
@@ -65,7 +65,7 @@ if ($role != 'Admin' && $status == 'ALL') {
   left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student WHERE student_id='$user_check') student ON claim.registrationid=student.student_id
   WHERE registrationid='$user_check' order by timestamp desc");
   $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check'");
-  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check'AND claimstatus!='rejected'");
+  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check'AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
 }
 
 if (!$result) {
