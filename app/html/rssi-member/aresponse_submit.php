@@ -42,6 +42,8 @@ if (@$_POST['form-type'] == "appraisee_response_update") {
     $appraisee_response_18 = $_POST['appraisee_response_18'];
     $appraisee_response_19 = $_POST['appraisee_response_19'];
     $appraisee_response_20 = $_POST['appraisee_response_20'];
+    $goalsheet_submitted_by = $associatenumber;
+    $goalsheet_submitted_on = date('Y-m-d H:i:s');
 
 
 
@@ -66,7 +68,9 @@ if (@$_POST['form-type'] == "appraisee_response_update") {
         appraisee_response_17 = '$appraisee_response_17',
         appraisee_response_18 = '$appraisee_response_18',
         appraisee_response_19 = '$appraisee_response_19',
-        appraisee_response_20 = '$appraisee_response_20'
+        appraisee_response_20 = '$appraisee_response_20',
+        goalsheet_submitted_by = '$goalsheet_submitted_by',
+        goalsheet_submitted_on = '$goalsheet_submitted_on'
         WHERE goalsheetid='$goalsheetid'";
 
     $result = pg_query($con, $appraisee_response_update);

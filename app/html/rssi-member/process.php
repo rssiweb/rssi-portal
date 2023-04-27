@@ -112,6 +112,8 @@ if (@$_POST['form-type'] == "appraisee_response") {
     $parameter_20 = $_POST['parameter_20'];
     $expectation_20 = $_POST['expectation_20'];
     $max_rating_20 = $_POST['max_rating_20'];
+    $goalsheet_created_by = $associatenumber;
+    $goalsheet_created_on = date('Y-m-d H:i:s');
 
 
     $appraisee_response = "INSERT INTO appraisee_response (
@@ -181,8 +183,9 @@ if (@$_POST['form-type'] == "appraisee_response") {
         max_rating_19,
         parameter_20, 
         expectation_20, 
-        max_rating_20
-
+        max_rating_20,
+        goalsheet_created_by,
+        goalsheet_created_on
       ) VALUES (
         '$goalsheetid',
 '$appraisee_associatenumber',
@@ -250,7 +253,9 @@ if (@$_POST['form-type'] == "appraisee_response") {
 '$max_rating_19',
 '$parameter_20',
 '$expectation_20',
-'$max_rating_20')";
+'$max_rating_20',
+'$goalsheet_created_by',
+'$goalsheet_created_on')";
 
     $result = pg_query($con, $appraisee_response);
     $cmdtuples = pg_affected_rows($result);
