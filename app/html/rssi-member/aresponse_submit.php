@@ -99,7 +99,7 @@ if (@$_POST['form-type'] == "appraisee_response_update") {
             <h4 class="alert-heading">Error submitting Goal Sheet!</h4>
             <hr>
             <p>Unfortunately, there was an error submitting your goal sheet. Please try again later or contact support for assistance.</p>
-            <a href="feedback.php?goalsheetid=<?php echo $goalsheetid ?>" class="btn btn-primary">Back to Goal Sheet</a>
+            <a href="appraisee_response.php?goalsheetid=<?php echo $goalsheetid ?>" class="btn btn-primary">Back to Goal Sheet</a>
         </div>
     </div>
 
@@ -110,7 +110,7 @@ if (@$_POST['form-type'] == "appraisee_response_update") {
             <h4 class="alert-heading">Goal Sheet has been submitted successfully!</h4>
             <hr>
             <p>Your goal sheet has been submitted. The unique goal sheet ID is <?php echo $goalsheetid ?>.</p>
-            <a href="feedback.php?goalsheetid=<?php echo $goalsheetid ?>" class="btn btn-primary">Back to Goal Sheet</a>
+            <a href="appraisee_response.php?goalsheetid=<?php echo $goalsheetid ?>" class="btn btn-primary">Back to Goal Sheet</a>
         </div>
     </div>
 

@@ -24,9 +24,9 @@ if ($role != 'Admin') {
     echo '</script>';
 }
 include("../../util/email.php");
-if (date('m') <= 4) { //Upto June 2014-2015
+if (date('m') == 1 || date('m') == 2 || date('m') == 3) { //Upto March
     $academic_year = (date('Y') - 1) . '-' . date('Y');
-} else { //After June 2015-2016
+} else { //After MARCH
     $academic_year = date('Y') . '-' . (date('Y') + 1);
 }
 
@@ -287,8 +287,8 @@ if (!$result) {
 
                         <script>
                             function cal() {
-                            document.getElementById("todate").min = document.getElementById("fromdate").value;
-                            document.getElementById("fromdate").max = document.getElementById("todate").value;
+                                document.getElementById("todate").min = document.getElementById("fromdate").value;
+                                document.getElementById("fromdate").max = document.getElementById("todate").value;
                             }
                         </script>
 
