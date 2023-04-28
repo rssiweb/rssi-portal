@@ -129,7 +129,7 @@ if (!$result) {
         <hr>
         <?php if (sizeof($resultArr) > 0) { ?>
             <?php foreach ($resultArr as $array) { ?>
-                <?php if ($array['reviewer_associatenumber'] == $associatenumber || $role == 'Admin') { ?>
+                <?php if (($array['manager_evaluation_complete'] == "yes" && $array['reviewer_associatenumber'] == $associatenumber) || $role == 'Admin') { ?>
                     <form method="post" name="r_response" id="r_response">
 
                         <input type="hidden" name="form-type" value="reviewer_remarks_update">
@@ -795,6 +795,7 @@ if (!$result) {
                 <?php } ?>
             <?php } ?>
             <?php if ($array['reviewer_associatenumber'] != $associatenumber && $role != 'Admin') { ?><p>Oops! It looks like you're trying to access a goal sheet that doesn't belong to you.</p><?php } ?>
+            <?php if ($array['manager_evaluation_complete'] != 'yes' && $array['reviewer_associatenumber'] == $associatenumber && $role != 'Admin') { ?><p>The goal sheet you are trying to access is currently in either the self-assessment or manager evaluation phase. You will be able to access the goal sheet once the manager evaluation phase is completed.</p><?php } ?>
         <?php
         } else if ($goalsheetid == null) {
         ?>
