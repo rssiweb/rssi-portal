@@ -150,6 +150,8 @@ if (!$result) {
                             <input type="hidden" name="goalsheetid" Value="<?php echo $array['goalsheetid'] ?>" readonly>
                             <input type="hidden" name="appraisee_associatenumber" Value="<?php echo $array['appraisee_associatenumber'] ?>" readonly>
                             <input type="hidden" name="manager_associatenumber" Value="<?php echo $array['manager_associatenumber'] ?>" readonly>
+                            <input type="hidden" id="average-rating-input" name="average-rating" readonly>
+
                             <table class="table">
                                 <tr>
                                     <td>
@@ -168,7 +170,7 @@ if (!$result) {
                                     </td>
                                     <td>
                                         <label for="appraisal_type" class="form-label">Appraisal Type:</label>
-                                        <?php echo $array['appraisaltype'] ?>
+                                        <?php echo $array['appraisaltype'] ?>&nbsp;<?php echo $array['appraisalyear'] ?>
                                         </select>
                                     </td>
                                 </tr>
@@ -179,8 +181,9 @@ if (!$result) {
                                         &nbsp;<?php echo $reviewer_name ?> (<?php echo $array['reviewer_associatenumber'] ?>)
                                     </td>
                                     <td>
-                                        <label for="appraisal_year" class="form-label">Appraisal Year:</label>
-                                        <?php echo $array['appraisalyear'] ?>
+                                        <label for="appraisal_year" class="form-label">IPF:</label>
+                                        <?php echo $array['ipf'] ?>
+                                        <span id="rating-average"></span>
                                     </td>
                                 </tr>
                             </table>
@@ -219,7 +222,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_1'] ?></td>
                                         <td><textarea name="appraisee_response_1" id="appraisee_response_1" disabled><?php echo $array['appraisee_response_1'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_1" id="rating_obtained_1" class="form-select">
+                                            <select name="rating_obtained_1" id="rating_obtained_1" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_1'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -245,7 +248,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_2'] ?></td>
                                         <td><textarea name="appraisee_response_2" id="appraisee_response_2" disabled><?php echo $array['appraisee_response_2'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_2" id="rating_obtained_2" class="form-select">
+                                            <select name="rating_obtained_2" id="rating_obtained_2" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_2'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -270,7 +273,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_3'] ?></td>
                                         <td><textarea name="appraisee_response_3" id="appraisee_response_3" disabled><?php echo $array['appraisee_response_3'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_3" id="rating_obtained_3" class="form-select">
+                                            <select name="rating_obtained_3" id="rating_obtained_3" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_3'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -295,7 +298,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_4'] ?></td>
                                         <td><textarea name="appraisee_response_4" id="appraisee_response_4" disabled><?php echo $array['appraisee_response_4'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_4" id="rating_obtained_4" class="form-select">
+                                            <select name="rating_obtained_4" id="rating_obtained_4" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_4'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -320,7 +323,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_5'] ?></td>
                                         <td><textarea name="appraisee_response_5" id="appraisee_response_5" disabled><?php echo $array['appraisee_response_5'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_5" id="rating_obtained_5" class="form-select">
+                                            <select name="rating_obtained_5" id="rating_obtained_5" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_5'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -345,7 +348,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_6'] ?></td>
                                         <td><textarea name="appraisee_response_6" id="appraisee_response_6" disabled><?php echo $array['appraisee_response_6'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_6" id="rating_obtained_6" class="form-select">
+                                            <select name="rating_obtained_6" id="rating_obtained_6" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_6'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -370,7 +373,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_7'] ?></td>
                                         <td><textarea name="appraisee_response_7" id="appraisee_response_7" disabled><?php echo $array['appraisee_response_7'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_7" id="rating_obtained_7" class="form-select">
+                                            <select name="rating_obtained_7" id="rating_obtained_7" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_7'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -395,7 +398,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_8'] ?></td>
                                         <td><textarea name="appraisee_response_8" id="appraisee_response_8" disabled><?php echo $array['appraisee_response_8'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_8" id="rating_obtained_8" class="form-select">
+                                            <select name="rating_obtained_8" id="rating_obtained_8" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_8'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -420,7 +423,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_9'] ?></td>
                                         <td><textarea name="appraisee_response_9" id="appraisee_response_9" disabled><?php echo $array['appraisee_response_9'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_9" id="rating_obtained_9" class="form-select">
+                                            <select name="rating_obtained_9" id="rating_obtained_9" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_9'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -445,7 +448,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_10'] ?></td>
                                         <td><textarea name="appraisee_response_10" id="appraisee_response_10" disabled><?php echo $array['appraisee_response_10'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_10" id="rating_obtained_10" class="form-select">
+                                            <select name="rating_obtained_10" id="rating_obtained_10" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_10'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -489,7 +492,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_11'] ?></td>
                                         <td><textarea name="appraisee_response_11" id="appraisee_response_11" disabled><?php echo $array['appraisee_response_11'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_11" id="rating_obtained_11" class="form-select">
+                                            <select name="rating_obtained_11" id="rating_obtained_11" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_11'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -514,7 +517,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_12'] ?></td>
                                         <td><textarea name="appraisee_response_12" id="appraisee_response_12" disabled><?php echo $array['appraisee_response_12'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_12" id="rating_obtained_12" class="form-select">
+                                            <select name="rating_obtained_12" id="rating_obtained_12" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_12'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -539,7 +542,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_13'] ?></td>
                                         <td><textarea name="appraisee_response_13" id="appraisee_response_13" disabled><?php echo $array['appraisee_response_13'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_13" id="rating_obtained_13" class="form-select">
+                                            <select name="rating_obtained_13" id="rating_obtained_13" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_13'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -564,7 +567,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_14'] ?></td>
                                         <td><textarea name="appraisee_response_14" id="appraisee_response_14" disabled><?php echo $array['appraisee_response_14'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_14" id="rating_obtained_14" class="form-select">
+                                            <select name="rating_obtained_14" id="rating_obtained_14" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_14'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -589,7 +592,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_15'] ?></td>
                                         <td><textarea name="appraisee_response_15" id="appraisee_response_15" disabled><?php echo $array['appraisee_response_15'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_15" id="rating_obtained_15" class="form-select">
+                                            <select name="rating_obtained_15" id="rating_obtained_15" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_15'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -614,7 +617,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_16'] ?></td>
                                         <td><textarea name="appraisee_response_16" id="appraisee_response_16" disabled><?php echo $array['appraisee_response_16'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_16" id="rating_obtained_16" class="form-select">
+                                            <select name="rating_obtained_16" id="rating_obtained_16" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_16'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -639,7 +642,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_17'] ?></td>
                                         <td><textarea name="appraisee_response_17" id="appraisee_response_17" disabled><?php echo $array['appraisee_response_17'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_17" id="rating_obtained_17" class="form-select">
+                                            <select name="rating_obtained_17" id="rating_obtained_17" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_17'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -664,7 +667,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_18'] ?></td>
                                         <td><textarea name="appraisee_response_18" id="appraisee_response_18" disabled><?php echo $array['appraisee_response_18'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_18" id="rating_obtained_18" class="form-select">
+                                            <select name="rating_obtained_18" id="rating_obtained_18" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_18'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -689,7 +692,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_19'] ?></td>
                                         <td><textarea name="appraisee_response_19" id="appraisee_response_19" disabled><?php echo $array['appraisee_response_19'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_19" id="rating_obtained_19" class="form-select">
+                                            <select name="rating_obtained_19" id="rating_obtained_19" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_19'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -714,7 +717,7 @@ if (!$result) {
                                         <td><?php echo $array['max_rating_20'] ?></td>
                                         <td><textarea name="appraisee_response_20" id="appraisee_response_20" disabled><?php echo $array['appraisee_response_20'] ?></textarea></td>
                                         <td>
-                                            <select name="rating_obtained_20" id="rating_obtained_20" class="form-select">
+                                            <select name="rating_obtained_20" id="rating_obtained_20" class="form-select rating-select">
 
                                                 <?php if ($array['rating_obtained_20'] == null) { ?>
                                                     <option value="" disabled selected hidden>Select</option>
@@ -820,6 +823,49 @@ if (!$result) {
             select.classList.add('form-select');
         });
     </script>
+
+    <script>
+        // Find all the rating select fields
+        const ratingSelects = document.querySelectorAll('.rating-select');
+        // Find the input field to store the average rating
+        const averageRatingInput = document.getElementById('average-rating-input');
+
+        // Add an event listener to each select field
+        ratingSelects.forEach(select => {
+            select.addEventListener('input', calculateRatingAverage);
+        });
+
+        // Calculate the average of the rating fields
+        function calculateRatingAverage() {
+            // Get the value of each rating select field
+            const ratings = [];
+            ratingSelects.forEach(select => {
+                if (select.value !== '') {
+                    ratings.push(parseInt(select.value));
+                }
+            });
+
+            // Calculate the average of the ratings, if there are non-empty values
+            if (ratings.length > 0) {
+                const average = ratings.reduce((total, rating) => total + rating) / ratings.length;
+
+                // Display the average in the span element
+                const averageElement = document.getElementById('rating-average');
+                averageElement.textContent = `Live Calculation: ${average.toFixed(2)}`;
+                // Set the value of the input field to the average rating
+                averageRatingInput.value = average.toFixed(2);
+            } else {
+                // Clear the span element if all the values are empty
+                const averageElement = document.getElementById('rating-average');
+                averageElement.textContent = '';
+                // Clear the value of the input field if all the values are empty
+                averageRatingInput.value = '';
+            }
+        }
+    </script>
+
+
+
 
     <script>
         var form = document.getElementById('m_response');

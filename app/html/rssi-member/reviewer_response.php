@@ -170,7 +170,7 @@ if (!$result) {
                                     </td>
                                     <td>
                                         <label for="appraisal_type" class="form-label">Appraisal Type:</label>
-                                        <?php echo $array['appraisaltype'] ?>
+                                        <?php echo $array['appraisaltype'] ?>&nbsp;<?php echo $array['appraisalyear'] ?>
                                         </select>
                                     </td>
                                 </tr>
@@ -181,8 +181,8 @@ if (!$result) {
                                         &nbsp;<?php echo $reviewer_name ?> (<?php echo $array['reviewer_associatenumber'] ?>)
                                     </td>
                                     <td>
-                                        <label for="appraisal_year" class="form-label">Appraisal Year:</label>
-                                        <?php echo $array['appraisalyear'] ?>
+                                        <label for="appraisal_year" class="form-label">IPF:</label>
+                                        <?php echo $array['ipf'] ?>
                                     </td>
                                 </tr>
                             </table>
