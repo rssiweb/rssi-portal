@@ -76,13 +76,46 @@ $resultArrr = pg_fetch_all($resultr);
 if (!$resultr) {
     echo "An error occurred.\n";
     exit;
+} ?>
+
+<?php
+function getAssessmentStatus($array)
+{
+    if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
+        return '<span class="label label-danger float-end">Self-assessment</span>';
+    } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
+        return '<span class="label label-warning float-end">Manager assessment in progress</span>';
+    } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") {
+        return '<span class="label label-primary float-end">Reviewer assessment in progress</span>';
+    } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
+        return '<span class="label label-success float-end">IPF released</span>';
+    } else if ($array['ipf_response'] == 'accepted') {
+        return '<span class="label label-success float-end">IPF Accepted</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
+    } else if ($array['ipf_response'] == 'rejected') {
+        return '<span class="label label-danger float-end">IPF Rejected</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
+    }
 }
-
-
-
-
-
 ?>
+
+<?php function displayTDs($array)
+{
+    $td1 = '<td>' . $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')<br>' . $array['aemail'] 
+    // . '<br>' . (($array['goalsheet_submitted_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_submitted_on'])) . ' by ' . $array['goalsheet_submitted_by'] : '') 
+    . '</td>';
+    $td2 = '<td>' . $array['mname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['memail'] 
+    // . '<br>' . (($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '') 
+    . '</td>';
+    $td3 = '<td>' . $array['rname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['remail']
+    // . '<br>' . (($array['goalsheet_reviewed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_reviewed_on'])) . ' by ' . $array['goalsheet_reviewed_by'] : '') 
+    . '</td>';
+    $td4 = '<td>' . $array['appraisaltype'] . '<br>' . $array['appraisalyear'] . '</td>';
+
+    return $td1 . $td2 . $td3 . $td4;
+} ?>
+
+
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -174,6 +207,27 @@ if (!$resultr) {
         .tab-panel {
             padding: 30px 0;
             border-top: 1px solid #ccc;
+        }
+
+
+        #footer {
+            position: fixed;
+            bottom: 0;
+            width: 81%;
+            background-color: #f9f9f9;
+        }
+
+        #close {
+            float: right;
+            padding: 2px 5px;
+            background: #ccc;
+        }
+
+        #close:hover {
+            float: right;
+            padding: 2px 5px;
+            background: #ccc;
+            color: #fff;
         }
     </style>
 </head>
@@ -272,9 +326,9 @@ if (!$resultr) {
                                                 <thead>
                                                     <tr>
                                                         <th scope="col">Goal sheet ID</th>
-                                                        <th scope="col">Associate details</th>
-                                                        <th scope="col">Manager details</th>
-                                                        <th scope="col">Reviewer details</th>
+                                                        <th scope="col">Appraisee</th>
+                                                        <th scope="col">Manager</th>
+                                                        <th scope="col">Reviewer</th>
                                                         <th scope="col">Appraisal details</th>
                                                         <th scope="col">Status</th>
                                                         <th scope="col">IPF</th>
@@ -285,42 +339,14 @@ if (!$resultr) {
                                                     <tr>
 
                                                         <td><?php echo $array['goalsheetid'] ?></td>
+                                                        <?php echo displayTDs($array); ?>
                                                         <td>
-                                                            <?php echo $array['aname'] ?>
-                                                            (<?php echo $array['appraisee_associatenumber'] ?>)<br>
-                                                            <?php echo $array['aemail'] ?><br>
-                                                            <?php echo ($array['goalsheet_submitted_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_submitted_on'])) . ' by ' . $array['goalsheet_submitted_by'] : '' ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['mname'] ?>
-                                                            (<?php echo $array['manager_associatenumber'] ?>)<br>
-                                                            <?php echo $array['memail'] ?><br>
-                                                            <?php echo ($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '' ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['rname'] ?>
-                                                            (<?php echo $array['manager_associatenumber'] ?>)<br>
-                                                            <?php echo $array['remail'] ?><br>
-                                                            <?php echo ($array['goalsheet_reviewed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_reviewed_on'])) . ' by ' . $array['goalsheet_reviewed_by'] : '' ?>
-                                                        </td>
-                                                        <td><?php echo $array['appraisaltype'] ?><br><?php echo $array['appraisalyear'] ?></td>
-                                                        <td>
-                                                            <?php if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") { ?>
-                                                                <span class="label label-danger float-end">Self-assessment</span>
-                                                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") { ?>
-                                                                <span class="label label-warning float-end">Manager assessment in progress</span>
-                                                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") { ?>
-                                                                <span class="label label-primary float-end">Reviewer assessment in progress</span>
-                                                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes") { ?>
-                                                                <span class="label label-success float-end">IPF released</span>
-
-
-                                                            <?php } ?>
+                                                            <?php echo getAssessmentStatus($array); ?>
                                                         </td>
                                                         <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
                                                         <td>
                                                             <span class="noticet">
-                                                                <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Edit Goal Sheet">Edit</a>
+                                                                <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -384,9 +410,9 @@ if (!$resultr) {
                                                 <thead>
                                                     <tr>
                                                         <th scope="col">Goal sheet ID</th>
-                                                        <th scope="col">Associate details</th>
-                                                        <th scope="col">Manager details</th>
-                                                        <th scope="col">Reviewer details</th>
+                                                        <th scope="col">Appraisee</th>
+                                                        <th scope="col">Manager</th>
+                                                        <th scope="col">Reviewer</th>
                                                         <th scope="col">Appraisal details</th>
                                                         <th scope="col">Status</th>
                                                         <th scope="col">IPF</th>
@@ -396,42 +422,14 @@ if (!$resultr) {
                                                 <tbody>
                                                     <tr>
                                                         <td><?php echo $array['goalsheetid'] ?></td>
+                                                        <?php echo displayTDs($array); ?>
                                                         <td>
-                                                            <?php echo $array['aname'] ?>
-                                                            (<?php echo $array['appraisee_associatenumber'] ?>)<br>
-                                                            <?php echo $array['aemail'] ?><br>
-                                                            <?php echo ($array['goalsheet_submitted_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_submitted_on'])) . ' by ' . $array['goalsheet_submitted_by'] : '' ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['mname'] ?>
-                                                            (<?php echo $array['manager_associatenumber'] ?>)<br>
-                                                            <?php echo $array['memail'] ?><br>
-                                                            <?php echo ($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '' ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['rname'] ?>
-                                                            (<?php echo $array['manager_associatenumber'] ?>)<br>
-                                                            <?php echo $array['remail'] ?><br>
-                                                            <?php echo ($array['goalsheet_reviewed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_reviewed_on'])) . ' by ' . $array['goalsheet_reviewed_by'] : '' ?>
-                                                        </td>
-                                                        <td><?php echo $array['appraisaltype'] ?><br><?php echo $array['appraisalyear'] ?></td>
-                                                        <td>
-                                                            <?php if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") { ?>
-                                                                <span class="label label-danger float-end">Self-assessment</span>
-                                                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") { ?>
-                                                                <span class="label label-warning float-end">Manager assessment in progress</span>
-                                                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") { ?>
-                                                                <span class="label label-primary float-end">Reviewer assessment in progress</span>
-                                                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes") { ?>
-                                                                <span class="label label-success float-end">IPF released</span>
-
-
-                                                            <?php } ?>
+                                                            <?php echo getAssessmentStatus($array); ?>
                                                         </td>
                                                         <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
                                                         <td>
                                                             <span class="noticet">
-                                                                <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Edit Goal Sheet">Edit</a>
+                                                                <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -498,9 +496,9 @@ if (!$resultr) {
                                                 <thead>
                                                     <tr>
                                                         <th scope="col">Goal sheet ID</th>
-                                                        <th scope="col">Associate details</th>
-                                                        <th scope="col">Manager details</th>
-                                                        <th scope="col">Reviewer details</th>
+                                                        <th scope="col">Appraisee</th>
+                                                        <th scope="col">Manager</th>
+                                                        <th scope="col">Reviewer</th>
                                                         <th scope="col">Appraisal details</th>
                                                         <th scope="col">Status</th>
                                                         <th scope="col">IPF</th>
@@ -510,42 +508,14 @@ if (!$resultr) {
                                                 <tbody>
                                                     <tr>
                                                         <td><?php echo $array['goalsheetid'] ?></td>
+                                                        <?php echo displayTDs($array); ?>
                                                         <td>
-                                                            <?php echo $array['aname'] ?>
-                                                            (<?php echo $array['appraisee_associatenumber'] ?>)<br>
-                                                            <?php echo $array['aemail'] ?><br>
-                                                            <?php echo ($array['goalsheet_submitted_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_submitted_on'])) . ' by ' . $array['goalsheet_submitted_by'] : '' ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['mname'] ?>
-                                                            (<?php echo $array['manager_associatenumber'] ?>)<br>
-                                                            <?php echo $array['memail'] ?><br>
-                                                            <?php echo ($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '' ?>
-                                                        </td>
-                                                        <td>
-                                                            <?php echo $array['rname'] ?>
-                                                            (<?php echo $array['manager_associatenumber'] ?>)<br>
-                                                            <?php echo $array['remail'] ?><br>
-                                                            <?php echo ($array['goalsheet_reviewed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_reviewed_on'])) . ' by ' . $array['goalsheet_reviewed_by'] : '' ?>
-                                                        </td>
-                                                        <td><?php echo $array['appraisaltype'] ?><br><?php echo $array['appraisalyear'] ?></td>
-                                                        <td>
-                                                            <?php if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") { ?>
-                                                                <span class="label label-danger float-end">Self-assessment</span>
-                                                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") { ?>
-                                                                <span class="label label-warning float-end">Manager assessment in progress</span>
-                                                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") { ?>
-                                                                <span class="label label-primary float-end">Reviewer assessment in progress</span>
-                                                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes") { ?>
-                                                                <span class="label label-success float-end">IPF released</span>
-
-
-                                                            <?php } ?>
+                                                            <?php echo getAssessmentStatus($array); ?>
                                                         </td>
                                                         <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
                                                         <td>
                                                             <span class="noticet">
-                                                                <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Edit Goal Sheet">Edit</a>
+                                                                <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                             </span>
                                                         </td>
 
@@ -568,8 +538,76 @@ if (!$resultr) {
                         </div>
 
 
+                        <?php if (@$_GET['form-type'] == "appraisee" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) { ?>
+                            <div id="footer">
+                                <form name="ipfsubmission" action="#" method="POST">
+                                    <span id='close'>x</span>
+                                    <input type="hidden" name="form-type" type="text" value="ipfsubmission">
+                                    <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                                    <input type="hidden" type="text" name="ipfid" id="ipfid" value="<?php echo $array['goalsheetid'] ?>" readonly required>
+                                    <input type="hidden" type="text" name="ipf_response_by" id="ipf_response_by" value="<?php echo $associatenumber ?>" readonly required>
+                                    <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with the outcome of your appraisal discussion and the Individual Performance Factor (IPF) issued against the Goal Sheet ID <strong><?php echo $array['goalsheetid'] ?></strong>, you have the option to reject the IPF. If you choose to reject it, another round of discussion will be scheduled with the concerned team to address your concerns and ensure that the IPF accurately reflects your performance.<br>
+                                        Please note that if we do not receive a response from you by <?php echo date('d/m/y h:i:s a', strtotime('+3 days', strtotime($array['goalsheet_reviewed_on']))) ?>, the Goal Sheet will be auto-closed.</p>
+                                    <div style="margin-left:5%;">
+                                        <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
+                                        <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-times" style="font-size: 17px;"></i> Reject</button>
+                                    </div><br>
+                                </form>
+                            </div>
+                        <?php } ?>
+
                     </section>
         </section>
+
+        <script>
+            $('#yes').click(function() {
+                $('#count2').val('accepted');
+            });
+
+            $('#no').click(function() {
+                $('#count2').val('rejected');
+            });
+        </script>
+
+        <script>
+            const scriptURL = 'payment-api.php'
+            const form = document.forms['ipfsubmission']
+
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['ipfsubmission'])
+                    })
+                    .then(response =>
+                        alert("Your response has been recorded.") +
+                        location.reload()
+                    )
+                    .catch(error => console.error('Error!', error.message))
+            })
+        </script>
+        <script>
+            $(document).ready(function() {
+
+                $('.close-button2').click(function(e) {
+
+                    $('#footer').delay(10).fadeOut(700);
+                    e.stopPropagation();
+                });
+            });
+        </script>
+
+        <script>
+            window.addEventListener("load", function() {
+                {
+                    document.getElementById('close').onclick = function() {
+                        this.parentNode.parentNode.parentNode
+                            .removeChild(this.parentNode.parentNode);
+                        return false;
+                    };
+                };
+            }, false);
+        </script>
 
         <!-- Back top -->
         <script>

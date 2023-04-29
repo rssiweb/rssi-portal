@@ -122,22 +122,23 @@ if ($_POST['form-type'] == "gpsedit") {
 
 
 
-if ($_POST['form-type'] == "ipfpush") {
-  @$membername2 = $_POST['membername2'];
-  @$memberid2 = $_POST['memberid2'];
-  @$ipf = $_POST['ipf'];
-  @$flag = $_POST['flag'];
-  $now = date('Y-m-d H:i:s');
-  $ipfpush = "INSERT INTO ipfsubmission VALUES ('$now','$memberid2','$membername2','$ipf','$flag')";
-  $result = pg_query($con, $ipfpush);
-}
+// if ($_POST['form-type'] == "ipfpush") {
+//   @$membername2 = $_POST['membername2'];
+//   @$memberid2 = $_POST['memberid2'];
+//   @$ipf = $_POST['ipf'];
+//   @$flag = $_POST['flag'];
+//   $now = date('Y-m-d H:i:s');
+//   $ipfpush = "INSERT INTO ipfsubmission VALUES ('$now','$memberid2','$membername2','$ipf','$flag')";
+//   $result = pg_query($con, $ipfpush);
+// }
 
 
 if ($_POST['form-type'] == "ipfsubmission") {
   @$ipfid = $_POST['ipfid'];
   @$status2 = $_POST['status2'];
+  @$ipf_response_by= $_POST['ipf_response_by'];
   $now = date('Y-m-d H:i:s');
-  $ipfclose = "UPDATE ipfsubmission SET  status2 = '$status2', respondedon = '$now' WHERE id = $ipfid";
+  $ipfclose = "UPDATE appraisee_response SET  ipf_response = '$status2', ipf_response_on = '$now', ipf_response_by='$ipf_response_by' WHERE goalsheetid = '$ipfid'";
   $result = pg_query($con, $ipfclose);
 }
 
