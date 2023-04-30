@@ -109,16 +109,17 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
     @$appraisalyear = pg_fetch_result($result_appraisal_details, 0, 1);
     @$appraisee_associatenumber = pg_fetch_result($result_appraisal_details, 0, 2);
 
-
-    sendEmail("goal_sheet_evaluation_request", array(
-        "goalsheetid" => $goalsheetid,
-        "appraisaltype" => @$appraisaltype,
-        "appraisalyear" => @$appraisalyear,
-        "appraisee_name" => @$appraisee_name,
-        "appraiseeemail" => @$appraisee_email,
-        "appraiseeid" => @$appraisee_associatenumber,
-        "manager_name" => @$manager_name,
-    ), $manager_email);
+    if (@$cmdtuples == 1 && $manager_email != "") {
+        sendEmail("goal_sheet_evaluation_request", array(
+            "goalsheetid" => $goalsheetid,
+            "appraisaltype" => @$appraisaltype,
+            "appraisalyear" => @$appraisalyear,
+            "appraisee_name" => @$appraisee_name,
+            "appraiseeemail" => @$appraisee_email,
+            "appraiseeid" => @$appraisee_associatenumber,
+            "manager_name" => @$manager_name,
+        ), $manager_email);
+    }
 } ?>
 
 <head>

@@ -1,16 +1,15 @@
-New Goal Sheet Submitted by Appraisee - Goal Sheet ID: {{goalsheetid}}
+Request to review goal sheet evaluation for ID: {{goalsheetid}}
 <!-- You have earned a badge -->
 <!DOCTYPE html>
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <title>New Goal Sheet Submitted</title>
+    <title>Goal Sheet Review Request</title>
 </head>
 
 <body>
-    <p>Dear {{manager_name}},</p>
-    <p>A new goal sheet has been submitted by the appraisee:</p>
+    <p>Dear {{reviewer_name}},</p>
+    <p>The manager has completed the evaluation for the following goal sheet and has requested your review:</p>
     <table>
         <tr>
             <td><b>Goal Sheet ID:</b></td>
@@ -40,9 +39,8 @@ New Goal Sheet Submitted by Appraisee - Goal Sheet ID: {{goalsheetid}}
             <td>{{appraiseeid}}</td>
         </tr>
     </table>
-
-    <p>Please start the evaluation of the goal sheet at your earliest convenience.</p>
-    <p>You can access the goal sheet using the following link: https://login.rssi.in/rssi-member/my_appraisal.php?form-type=manager&r&get_yearm={{appraisalyear}}
+    <p>Please review the goal sheet at your earliest convenience and provide your feedback.</p>
+    <p>You can access the goal sheet using the following link: https://login.rssi.in/rssi-member/my_appraisal.php?form-type=reviewer&get_yearr={{appraisalyear}}
     </p>
     <p>--RSSI HR team</p>
     <p>This is a system generated email.</p>

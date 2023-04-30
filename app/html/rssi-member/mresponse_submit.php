@@ -124,6 +124,45 @@ if (@$_POST['form-type'] == "manager_remarks_update") {
     }
 
     $resultArr = pg_fetch_all($result);
+
+    $result_a = pg_query($con, "SELECT fullname,email
+FROM appraisee_response
+LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appraisee_response.appraisee_associatenumber WHERE goalsheetid = '$goalsheetid'");
+    @$appraisee_name = pg_fetch_result($result_a, 0, 0);
+    @$appraisee_email = pg_fetch_result($result_a, 0, 1);
+
+
+    $result_m = pg_query($con, "SELECT fullname, email
+FROM appraisee_response
+LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appraisee_response.manager_associatenumber WHERE goalsheetid = '$goalsheetid'");
+    @$manager_name = pg_fetch_result($result_m, 0, 0);
+    @$manager_email = pg_fetch_result($result_m, 0, 1);
+
+
+    $result_r = pg_query($con, "SELECT fullname, email
+FROM appraisee_response
+LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appraisee_response.reviewer_associatenumber WHERE goalsheetid = '$goalsheetid'");
+    @$reviewer_name = pg_fetch_result($result_r, 0, 0);
+    @$reviewer_email = pg_fetch_result($result_r, 0, 1);
+
+
+    $result_appraisal_details = pg_query($con, "SELECT appraisaltype, appraisalyear, appraisee_associatenumber FROM appraisee_response WHERE goalsheetid = '$goalsheetid'");
+    @$appraisaltype = pg_fetch_result($result_appraisal_details, 0, 0);
+    @$appraisalyear = pg_fetch_result($result_appraisal_details, 0, 1);
+    @$appraisee_associatenumber = pg_fetch_result($result_appraisal_details, 0, 2);
+
+    if (@$cmdtuples == 1 && $reviewer_email != "") {
+        sendEmail("goal_sheet_reviewer_request", array(
+            "goalsheetid" => $goalsheetid,
+            "appraisaltype" => @$appraisaltype,
+            "appraisalyear" => @$appraisalyear,
+            "appraisee_name" => @$appraisee_name,
+            "appraiseeemail" => @$appraisee_email,
+            "appraiseeid" => @$appraisee_associatenumber,
+            "manager_name" => @$manager_name,
+            "reviewer_name" => @$reviewer_name,
+        ), $reviewer_email);
+    }
 } ?>
 
 <head>
