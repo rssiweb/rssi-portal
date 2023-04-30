@@ -67,8 +67,12 @@ if (@$_POST['form-type'] == "manager_remarks_update") {
 
     $values = array($rating_obtained_1, $rating_obtained_2, $rating_obtained_3, $rating_obtained_4, $rating_obtained_5, $rating_obtained_6, $rating_obtained_7, $rating_obtained_8, $rating_obtained_9, $rating_obtained_10, $rating_obtained_11, $rating_obtained_12, $rating_obtained_13, $rating_obtained_14, $rating_obtained_15, $rating_obtained_16, $rating_obtained_17, $rating_obtained_18, $rating_obtained_19, $rating_obtained_20);
 
-    if (count($values) > 0) {
-        $average = array_sum($values) / count($values);
+    $values_without_null = array_filter($values, function ($value) {
+        return $value != 'NULL';
+    });
+
+    if (count($values_without_null) > 0) {
+        $average = array_sum($values_without_null) / count($values_without_null);
     } else {
         $average = 'NULL';
     }

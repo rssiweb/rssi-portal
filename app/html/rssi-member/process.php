@@ -210,14 +210,14 @@ if (@$_POST['form-type'] == "appraisee_response") {
     @$reviewer_contact = pg_fetch_result($resultttt, 0, 0);
     @$reviewer_email = pg_fetch_result($resultttt, 0, 1);
 
-    if (@$cmdtuples == 1 && $appraisee_email != "") {
-        sendEmail("goal_sheet_creation_appraisee", array(
-            "goalsheetid" => $goalsheetid,
-            "appraisaltype" => @$appraisaltype,
-            "appraisalyear" => @$appraisalyear,
-            "appraisee_name" => @$appraisee_name,
-        ), $appraisee_email);
-    }
+    // if (@$cmdtuples == 1 && $appraisee_email != "") {
+    //     sendEmail("goal_sheet_creation_appraisee", array(
+    //         "goalsheetid" => $goalsheetid,
+    //         "appraisaltype" => @$appraisaltype,
+    //         "appraisalyear" => @$appraisalyear,
+    //         "appraisee_name" => @$appraisee_name,
+    //     ), $appraisee_email);
+    // }
 } ?>
 
 

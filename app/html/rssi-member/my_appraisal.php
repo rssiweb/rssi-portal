@@ -32,7 +32,7 @@ if (@$_GET['form-type'] == "appraisee") {
     $result = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
-    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.manager_associatenumber
+    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
     WHERE appraisee_associatenumber='$associatenumber' AND appraisaltype='$type' AND appraisalyear='$year'");
 } else {
     $result = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
@@ -50,8 +50,8 @@ if (@$_GET['form-type'] == "manager") {
     $resultm = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
-    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.manager_associatenumber
-    WHERE manager_associatenumber='$associatenumber'AND appraisalyear='$yearm' order by manager_evaluation_complete asc");
+    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
+    WHERE manager_associatenumber='$associatenumber'AND appraisalyear='$yearm' order by manager_evaluation_complete desc");
 } else {
     $resultm = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
 }
@@ -68,8 +68,8 @@ if (@$_GET['form-type'] == "reviewer") {
     $resultr = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
-    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.manager_associatenumber
-    WHERE reviewer_associatenumber='$associatenumber'AND appraisalyear='$yearr' order by reviewer_response_complete asc");
+    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
+    WHERE reviewer_associatenumber='$associatenumber'AND appraisalyear='$yearr' order by reviewer_response_complete desc");
 } else {
     $resultr = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
 }
@@ -100,9 +100,9 @@ function getAssessmentStatus($array)
 
 <?php function displayTDs($array)
 {
-    $td1 = '<td>' . $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')<br>' . $array['aemail']. '</td>';
-    $td2 = '<td>' . $array['mname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['memail']. '</td>';
-    $td3 = '<td>' . $array['rname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['remail']. '</td>';
+    $td1 = '<td>' . $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')<br>' . $array['aemail'] . '</td>';
+    $td2 = '<td>' . $array['mname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['memail'] . '</td>';
+    $td3 = '<td>' . $array['rname'] . ' (' . $array['reviewer_associatenumber'] . ')<br>' . $array['remail'] . '</td>';
     $td4 = '<td>' . $array['appraisaltype'] . '<br>' . $array['appraisalyear'] . '</td>';
 
     return $td1 . $td2 . $td3 . $td4;
@@ -240,7 +240,7 @@ function getAssessmentStatus($array)
                     <?php
                     if ($role == 'Admin') { ?>
                         <div class="col" style="display: inline-block; width:100%; text-align:right">
-                            <span class="noticea"><a href="process.php" target="_blank" title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" title="Appraisal Workflow">Appraisal Workflow</a></span>
+                            <span class="noticea"><a href="process.php" target="_blank" title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" target="_blank" title="Appraisal Workflow">Appraisal Workflow</a></span>
                         </div>
                     <?php } ?>
                     <section class="box" style="padding: 2%;">
@@ -312,24 +312,24 @@ function getAssessmentStatus($array)
                                         }
                                     </script>
                                     <?php if (sizeof($resultArr) > 0) { ?>
-                                        <?php
-                                        foreach ($resultArr as $array) {
-                                        ?>
 
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col">Goal sheet ID</th>
-                                                        <th scope="col">Appraisee</th>
-                                                        <th scope="col">Manager</th>
-                                                        <th scope="col">Reviewer</th>
-                                                        <th scope="col">Appraisal details</th>
-                                                        <th scope="col">Status</th>
-                                                        <th scope="col">IPF</th>
-                                                        <th scope="col">Goal Sheet</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Goal sheet ID</th>
+                                                    <th scope="col">Appraisee</th>
+                                                    <th scope="col">Manager</th>
+                                                    <th scope="col">Reviewer</th>
+                                                    <th scope="col">Appraisal details</th>
+                                                    <th scope="col">Status</th>
+                                                    <th scope="col">IPF</th>
+                                                    <th scope="col">Goal Sheet</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                foreach ($resultArr as $array) {
+                                                ?>
                                                     <tr>
 
                                                         <td><?php echo $array['goalsheetid'] ?></td>
@@ -339,18 +339,18 @@ function getAssessmentStatus($array)
                                                         </td>
                                                         <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
                                                         <td>
-                                                            <span class="noticet">
+                                                            <span class="noticea">
                                                                 <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                             </span>
                                                         </td>
                                                     </tr>
-                                                </tbody>
-                                            </table>
+                                                <?php } ?>
+                                            </tbody>
+                                        </table>
 
-                                        <?php
-                                        }
+                                    <?php
                                     } else if ($type == null && $year == null) {
-                                        ?>
+                                    ?>
                                         <p>Please enter the appraisal type and year.</p>
                                     <?php
                                     } else {
@@ -396,24 +396,25 @@ function getAssessmentStatus($array)
                                         }
                                     </script>
                                     <?php if (sizeof($resultArrm) > 0) { ?>
-                                        <?php
-                                        foreach ($resultArrm as $array) {
-                                        ?>
 
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col">Goal sheet ID</th>
-                                                        <th scope="col">Appraisee</th>
-                                                        <th scope="col">Manager</th>
-                                                        <th scope="col">Reviewer</th>
-                                                        <th scope="col">Appraisal details</th>
-                                                        <th scope="col">Status</th>
-                                                        <th scope="col">IPF</th>
-                                                        <th scope="col">Goal Sheet</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Goal sheet ID</th>
+                                                    <th scope="col">Appraisee</th>
+                                                    <th scope="col">Manager</th>
+                                                    <th scope="col">Reviewer</th>
+                                                    <th scope="col">Appraisal details</th>
+                                                    <th scope="col">Status</th>
+                                                    <th scope="col">IPF</th>
+                                                    <th scope="col">Goal Sheet</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                foreach ($resultArrm as $array) {
+                                                ?>
+
                                                     <tr>
                                                         <td><?php echo $array['goalsheetid'] ?></td>
                                                         <?php echo displayTDs($array); ?>
@@ -422,18 +423,18 @@ function getAssessmentStatus($array)
                                                         </td>
                                                         <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
                                                         <td>
-                                                            <span class="noticet">
+                                                            <span class="noticea">
                                                                 <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                             </span>
                                                         </td>
                                                     </tr>
-                                                </tbody>
-                                            </table>
+                                                <?php } ?>
+                                            </tbody>
+                                        </table>
 
-                                        <?php
-                                        }
+                                    <?php
                                     } else if ($yearm == null) {
-                                        ?>
+                                    ?>
                                         <p>Please enter the appraisal year.</p>
                                     <?php
                                     } else {
@@ -482,24 +483,24 @@ function getAssessmentStatus($array)
                                         }
                                     </script>
                                     <?php if (sizeof($resultArrr) > 0) { ?>
-                                        <?php
-                                        foreach ($resultArrr as $array) {
-                                        ?>
 
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col">Goal sheet ID</th>
-                                                        <th scope="col">Appraisee</th>
-                                                        <th scope="col">Manager</th>
-                                                        <th scope="col">Reviewer</th>
-                                                        <th scope="col">Appraisal details</th>
-                                                        <th scope="col">Status</th>
-                                                        <th scope="col">IPF</th>
-                                                        <th scope="col">Goal Sheet</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Goal sheet ID</th>
+                                                    <th scope="col">Appraisee</th>
+                                                    <th scope="col">Manager</th>
+                                                    <th scope="col">Reviewer</th>
+                                                    <th scope="col">Appraisal details</th>
+                                                    <th scope="col">Status</th>
+                                                    <th scope="col">IPF</th>
+                                                    <th scope="col">Goal Sheet</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                foreach ($resultArrr as $array) {
+                                                ?>
                                                     <tr>
                                                         <td><?php echo $array['goalsheetid'] ?></td>
                                                         <?php echo displayTDs($array); ?>
@@ -508,19 +509,19 @@ function getAssessmentStatus($array)
                                                         </td>
                                                         <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
                                                         <td>
-                                                            <span class="noticet">
+                                                            <span class="noticea">
                                                                 <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
                                                             </span>
                                                         </td>
 
                                                     </tr>
-                                                </tbody>
-                                            </table>
+                                                <?php } ?>
+                                            </tbody>
+                                        </table>
 
-                                        <?php
-                                        }
+                                    <?php
                                     } else if ($yearr == null) {
-                                        ?>
+                                    ?>
                                         <p>Please enter the appraisal year.</p>
                                     <?php
                                     } else {
