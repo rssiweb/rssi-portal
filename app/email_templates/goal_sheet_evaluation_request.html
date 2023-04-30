@@ -1,0 +1,52 @@
+New Goal Sheet Submitted by Appraisee - Goal Sheet ID: {{goalsheetid}}
+<!-- You have earned a badge -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>New Goal Sheet Submitted</title>
+</head>
+
+<body>
+    <p>Dear {{manager_name}},</p>
+    <p>A new goal sheet has been submitted by the appraisee:</p>
+    <table>
+        <tr>
+            <td><b>Goal Sheet ID:</b></td>
+            <td>{{goalsheetid}}</td>
+        </tr>
+        <tr>
+            <td><b>Appraisal Type:</b></td>
+            <td>{{appraisaltype}}</td>
+        </tr>
+        <tr>
+            <td><b>Appraisal Year:</b></td>
+            <td>{{appraisalyear}}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><b>Appraisee Details:</b></td>
+        </tr>
+        <tr>
+            <td>Name:</td>
+            <td>{{appraisee_name}}</td>
+        </tr>
+        <tr>
+            <td>Email:</td>
+            <td>{{appraiseeemail}}</td>
+        </tr>
+        <tr>
+            <td>Employee ID:</td>
+            <td>{{appraiseeid}}</td>
+        </tr>
+    </table>
+
+    <p>Please start the evaluation of the goal sheet at your earliest convenience.</p>
+    <p>You can access the goal sheet using the following link: https://login.rssi.in/rssi-member/my_appraisal.php?form-type=manager&r&get_yearm={{appraisalyear}}
+        </a>
+    </p>
+    <p>--RSSI HR team</p>
+    <p>This is a system generated email.</p>
+</body>
+
+</html>
