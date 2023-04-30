@@ -120,7 +120,7 @@ if (@$_POST['form-type'] == "manager_remarks_update") {
         rating_obtained_20 = $rating_obtained_20,
         goalsheet_evaluated_by = '$goalsheet_evaluated_by',
         goalsheet_evaluated_on = '$goalsheet_evaluated_on',
-        ipf= $ipf
+        ipf= $average
         WHERE goalsheetid='$goalsheetid'";
 
     $result = pg_query($con, $manager_remarks_update);
