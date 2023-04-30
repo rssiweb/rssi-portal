@@ -21,7 +21,6 @@ if ($password_updated_by == NULL || $password_updated_on < $default_pass_updated
 <?php
 if (@$_POST['form-type'] == "manager_remarks_update") {
     $goalsheetid = $_POST['goalsheetid'];
-    $ipf = $_POST['average-rating'];
     $appraisee_associatenumber = $_POST['appraisee_associatenumber'];
     $manager_associatenumber = $_POST['manager_associatenumber'];
     $manager_remarks_1 = $_POST['manager_remarks_1'];
@@ -66,6 +65,13 @@ if (@$_POST['form-type'] == "manager_remarks_update") {
     $rating_obtained_20 = $_POST['rating_obtained_20'] ?? 'NULL';
 
 
+    $values = array($rating_obtained_1, $rating_obtained_2, $rating_obtained_3, $rating_obtained_4, $rating_obtained_5, $rating_obtained_6, $rating_obtained_7, $rating_obtained_8, $rating_obtained_9, $rating_obtained_10, $rating_obtained_11, $rating_obtained_12, $rating_obtained_13, $rating_obtained_14, $rating_obtained_15, $rating_obtained_16, $rating_obtained_17, $rating_obtained_18, $rating_obtained_19, $rating_obtained_20);
+
+    if (count($values) > 0) {
+        $average = array_sum($values) / count($values);
+    } else {
+        $average = 'NULL';
+    }
 
     $manager_remarks_update = "UPDATE appraisee_response
     SET manager_remarks_1 = '$manager_remarks_1',
@@ -108,7 +114,7 @@ if (@$_POST['form-type'] == "manager_remarks_update") {
         rating_obtained_18 = $rating_obtained_18,
         rating_obtained_19 = $rating_obtained_19,
         rating_obtained_20 = $rating_obtained_20,
-        ipf= $ipf
+        ipf= $average
         WHERE goalsheetid='$goalsheetid'";
 
     $result = pg_query($con, $manager_remarks_update);

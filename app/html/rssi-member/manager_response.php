@@ -150,7 +150,6 @@ if (!$result) {
                             <input type="hidden" name="goalsheetid" Value="<?php echo $array['goalsheetid'] ?>" readonly>
                             <input type="hidden" name="appraisee_associatenumber" Value="<?php echo $array['appraisee_associatenumber'] ?>" readonly>
                             <input type="hidden" name="manager_associatenumber" Value="<?php echo $array['manager_associatenumber'] ?>" readonly>
-                            <input type="hidden" id="average-rating-input" name="average-rating" readonly>
 
                             <table class="table">
                                 <tr>
@@ -827,8 +826,6 @@ if (!$result) {
     <script>
         // Find all the rating select fields
         const ratingSelects = document.querySelectorAll('.rating-select');
-        // Find the input field to store the average rating
-        const averageRatingInput = document.getElementById('average-rating-input');
 
         // Add an event listener to each select field
         ratingSelects.forEach(select => {
@@ -852,14 +849,10 @@ if (!$result) {
                 // Display the average in the span element
                 const averageElement = document.getElementById('rating-average');
                 averageElement.textContent = `Live Calculation: ${average.toFixed(2)}`;
-                // Set the value of the input field to the average rating
-                averageRatingInput.value = average.toFixed(2);
             } else {
                 // Clear the span element if all the values are empty
                 const averageElement = document.getElementById('rating-average');
                 averageElement.textContent = '';
-                // Clear the value of the input field if all the values are empty
-                averageRatingInput.value = '';
             }
         }
     </script>
