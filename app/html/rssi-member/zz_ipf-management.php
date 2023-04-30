@@ -14,7 +14,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';
 }
-if ($role != 'Admin') {
+if ($role=='Member') {
 
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
@@ -24,18 +24,44 @@ if ($role != 'Admin') {
 
 @$id = $_GET['get_aid'];
 
-if ($id != null) {
+if ($role == 'Admin') {
+    if ($id != null) {
 
-    $result = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
-    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
-    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
-    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.manager_associatenumber
-    WHERE appraisalyear='$id'");
+        $result = pg_query($con, "SELECT * FROM ipfsubmission 
+    
+    left join (SELECT associatenumber, ipfl FROM rssimyaccount_members) faculty ON ipfsubmission.memberid2=faculty.associatenumber
+    
+    WHERE substring(ipfsubmission.ipf, '\((.+)\)')='$id' order by id desc");
+    }
+
+    if ($id == null) {
+
+        $result = pg_query($con, "SELECT * FROM ipfsubmission 
+    
+    left join (SELECT associatenumber,ipfl FROM rssimyaccount_members) faculty ON ipfsubmission.memberid2=faculty.associatenumber
+    
+    WHERE substring(ipfsubmission.ipf, '\((.+)\)')=null order by id desc");
+    }
 }
+if ($role != 'Admin') {
 
-if ($id == null) {
+    if ($id != null) {
 
-    $result = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
+        $result = pg_query($con, "SELECT * FROM ipfsubmission 
+        
+        left join (SELECT associatenumber, ipfl FROM rssimyaccount_members) faculty ON ipfsubmission.memberid2=faculty.associatenumber
+        
+        WHERE substring(ipfsubmission.ipf, '\((.+)\)')='$id' AND memberid2='$user_check' order by id desc");
+    }
+
+    if ($id == null) {
+
+        $result = pg_query($con, "SELECT * FROM ipfsubmission 
+        
+        left join (SELECT associatenumber,ipfl FROM rssimyaccount_members) faculty ON ipfsubmission.memberid2=faculty.associatenumber
+        
+        WHERE substring(ipfsubmission.ipf, '\((.+)\)')=null AND memberid2='$user_check' order by id desc");
+    }
 }
 
 if (!$result) {
@@ -60,7 +86,7 @@ $resultArr = pg_fetch_all($result);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-    <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
@@ -129,86 +155,72 @@ $resultArr = pg_fetch_all($result);
                             </div>
                     </form>
                     <script>
-                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                            var currentYear = new Date().getFullYear() - 1;
-                        <?php } else { ?>
-                            var currentYear = new Date().getFullYear();
-                        <?php } ?>
+                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                var currentYear = new Date().getFullYear() - 1;
+                            <?php } else { ?>
+                                var currentYear = new Date().getFullYear();
+                            <?php } ?>
 
-                        for (var i = 0; i < 5; i++) {
-                            var next = currentYear + 1;
-                            var year = currentYear + '-' + next;
-                            //next.toString().slice(-2) 
-                            $('#get_aid').append(new Option(year, year));
-                            currentYear--;
-                        }
-                    </script>
+                            for (var i = 0; i < 5; i++) {
+                                var next = currentYear + 1;
+                                var year = currentYear + '-' + next;
+                                //next.toString().slice(-2) 
+                                $('#get_aid').append(new Option(year, year));
+                                currentYear--;
+                            }
+                        </script>
                     <br><br>
                     <?php echo '
                         <table class="table">
                             <thead>
                                 <tr>
-                                <th scope="col">Goal sheet ID</th>
-                                <th scope="col">Appraisee</th>    
-                                <th scope="col">Manager</th>
-                                <th scope="col">Reviewer</th>
-                                <th scope="col">Appraisal details</th>
+                                <th scope="col">Ref. number</th>
+                                <th scope="col">Associate details</th>    
+                                <th scope="col">Appraisal type</th>
                                 <th scope="col">Initiated on</th>
                                 <th scope="col">IPF</th>
                                 <th scope="col">Status</th>
-                                <th scope="col">Appraisee responded on</th>
+                                <th scope="col">Responded on</th>
                                 <th scope="col">Closed on</th>
                                 </tr>
                             </thead>' ?>
                     <?php if ($resultArr != null) {
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
-                            echo '<tr><td>' . $array['goalsheetid'] . '</td>
-                        <td>' . $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')' . '</td>
-                        <td>' . $array['mname'] . ' (' . $array['manager_associatenumber'] . ')' . '</td>
-                        <td>' . $array['rname'] . ' (' . $array['manager_associatenumber'] . ')' . '</td>
-                        <td>' . $array['appraisaltype'] . '<br>' . $array['appraisalyear'] . '</td>
-                        <td>' . date('d/m/y h:i:s a', strtotime($array['goalsheet_created_on'])) . '</td>  
-                        <td>' . $array['ipf'] . '</td>     
-                        <td>' ?><?php if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-                                    echo '<span class="label label-danger float-end">Self-assessment</span>';
-                                } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-                                    echo '<span class="label label-warning float-end">Manager assessment in progress</span>';
-                                } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") {
-                                    echo '<span class="label label-primary float-end">Reviewer assessment in progress</span>';
-                                } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
-                                    echo '<span class="label label-success float-end">IPF released</span>';
-                                } else if ($array['ipf_response'] == 'accepted') {
-                                    echo '<span class="label label-success float-end">IPF Accepted</span>';
-                                } else if ($array['ipf_response'] == 'rejected') {
-                                    echo '<span class="label label-danger float-end">IPF Rejected</span>';
-                                } ?><?php '</td>' ?>
+                            echo '<tr><td>' . $array['id'] . '</td>
+                        <td>' . $array['memberid2'] . '/' . strtok($array['membername2'], ' ') . '</td>
+                        <td>' . str_replace("(", "&nbsp;(", $array['ipf']) . '</td>
+                        <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td> 
+                        <td>' . $array['ipfl'] . '</td>     
+                        <td>' . $array['status2'] . '</td>' ?>
 
-                    <td><?php echo ($array['ipf_response_on'] == null) ? "" : date('d/m/y h:i:s a', strtotime($array['ipf_response_on'])); ?></td>
+                            <?php if ($array['respondedon'] != null) { ?>
+                                <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['respondedon'])) . '</td>' ?>
+                                <?php } else { ?><?php echo '<td></td>' ?>
+                            <?php } ?>
 
+                            <?php echo '<td>
 
-                    <?php echo '<td>
-
-                        <form name="ipfclose' . $array['goalsheetid'] . '" action="#" method="POST">
+                        <form name="ipfclose' . $array['id'] . '" action="#" method="POST">
                         <input type="hidden" name="form-type" type="text" value="ipfclose">
-                        <input type="hidden" name="ipfid" id="ipfid" type="text" value="' . $array['goalsheetid'] . '">
-                        <input type="hidden" name="ipf_process_closed_by" id="ipf_process_closed_by" type="text" value="' . $associatenumber . '">' ?>
+                        <input type="hidden" name="ipfid" id="ipfid" type="text" value="' . $array['id'] . '">
+                        <input type="hidden" name="ipfstatus" id="ipfstatus" type="text" value="closed">' ?>
 
-                    <?php if ($array['ipf_process_closed_by'] == null && $role == 'Admin') { ?>
+                            <?php if ($array['ipfstatus'] != 'closed' && $role == 'Admin') { ?>
 
-                        <?php echo '<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                                <?php echo '<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
                         border: none;" title="Closed"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>' ?>
-                    <?php } ?>
-                    <?php echo '</form>' ?>
+                            <?php } ?>
+                            <?php echo '</form>' ?>
 
-                    <?php if ($array['ipf_process_closed_by'] != null) { ?>
-                        <?php echo date('d/m/y h:i:s a', strtotime($array['ipf_process_closed_on'])) ?>
-                    <?php } else {
+                            <?php if ($array['closedon'] != null) { ?>
+                                <?php echo @date("d/m/Y g:i a", strtotime($array['closedon'])) ?>
+                            <?php } else {
                             } ?>
 
-                    <?php echo '</td>' ?>
-                    <?php  }
+                            <?php echo '</td>' ?>
+                            <?php  }
                     } else if (@$id == null) {
                         echo '<tr>
                                 <td colspan="6">Please select Filter value.</td>
@@ -216,12 +228,12 @@ $resultArr = pg_fetch_all($result);
                     } else {
                         echo '<tr>
                             <td colspan="6">No record found for' ?>&nbsp;<?php echo @$id ?>
-                <?php echo '</td>
+                        <?php echo '</td>
                         </tr>';
                     }
                     echo '</tbody>
                         </table>';
-                ?>
+                        ?>
                 </section>
             </div>
         </section>
@@ -236,16 +248,17 @@ $resultArr = pg_fetch_all($result);
     </script> -->
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
+        var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
 
         const scriptURL = 'payment-api.php'
 
         data.forEach(item => {
-            const form = document.forms['ipfclose' + item.goalsheetid]
+            const form = document.forms['ipfclose' + item.id]
             form.addEventListener('submit', e => {
                 e.preventDefault()
                 fetch(scriptURL, {
                         method: 'POST',
-                        body: new FormData(document.forms['ipfclose' + item.goalsheetid])
+                        body: new FormData(document.forms['ipfclose' + item.id])
                     })
                     .then(response =>
                         alert("The process has been closed in the system.") +

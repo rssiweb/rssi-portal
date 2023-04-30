@@ -5,6 +5,7 @@ include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -99,22 +100,13 @@ function getAssessmentStatus($array)
 
 <?php function displayTDs($array)
 {
-    $td1 = '<td>' . $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')<br>' . $array['aemail'] 
-    // . '<br>' . (($array['goalsheet_submitted_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_submitted_on'])) . ' by ' . $array['goalsheet_submitted_by'] : '') 
-    . '</td>';
-    $td2 = '<td>' . $array['mname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['memail'] 
-    // . '<br>' . (($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '') 
-    . '</td>';
-    $td3 = '<td>' . $array['rname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['remail']
-    // . '<br>' . (($array['goalsheet_reviewed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_reviewed_on'])) . ' by ' . $array['goalsheet_reviewed_by'] : '') 
-    . '</td>';
+    $td1 = '<td>' . $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')<br>' . $array['aemail']. '</td>';
+    $td2 = '<td>' . $array['mname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['memail']. '</td>';
+    $td3 = '<td>' . $array['rname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['remail']. '</td>';
     $td4 = '<td>' . $array['appraisaltype'] . '<br>' . $array['appraisalyear'] . '</td>';
 
     return $td1 . $td2 . $td3 . $td4;
 } ?>
-
-
-
 
 
 <!DOCTYPE html>
@@ -245,10 +237,12 @@ function getAssessmentStatus($array)
             <div class="col-md-12">
 
                 <div class="row">
-                    <!-- <div class="col" style="display: inline-block; width:100%; text-align:right;vertical-align: top;">
-                        <span class="noticea" title="Click here"><a href="ipf-management.php?get_aid=<?php echo $year ?>">Appraisal Workflow</a></span>
-                    </div> -->
-
+                    <?php
+                    if ($role == 'Admin') { ?>
+                        <div class="col" style="display: inline-block; width:100%; text-align:right">
+                            <span class="noticea"><a href="process.php" target="_blank" title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" title="Appraisal Workflow">Appraisal Workflow</a></span>
+                        </div>
+                    <?php } ?>
                     <section class="box" style="padding: 2%;">
 
                         <div class="tabset">
@@ -538,7 +532,7 @@ function getAssessmentStatus($array)
                         </div>
 
 
-                        <?php if (@$_GET['form-type'] == "appraisee" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) { ?>
+                        <?php if (@$_GET['form-type'] == "appraisee" && @$array['reviewer_response_complete'] == "yes" && @$array['ipf_response'] == null) { ?>
                             <div id="footer">
                                 <form name="ipfsubmission" action="#" method="POST">
                                     <span id='close'>x</span>

@@ -52,72 +52,70 @@ if (@$_POST['form-type'] == "appraisee_response") {
     $appraisalyear = $_POST['appraisal_year'];
     $parameter_1 = $_POST['parameter_1'];
     $expectation_1 = $_POST['expectation_1'];
-    $max_rating_1 = $_POST['max_rating_1'];
     $parameter_2 = $_POST['parameter_2'];
     $expectation_2 = $_POST['expectation_2'];
-    $max_rating_2 = $_POST['max_rating_2'];
     $parameter_3 = $_POST['parameter_3'];
     $expectation_3 = $_POST['expectation_3'];
-    $max_rating_3 = $_POST['max_rating_3'];
     $parameter_4 = $_POST['parameter_4'];
     $expectation_4 = $_POST['expectation_4'];
-    $max_rating_4 = $_POST['max_rating_4'];
     $parameter_5 = $_POST['parameter_5'];
     $expectation_5 = $_POST['expectation_5'];
-    $max_rating_5 = $_POST['max_rating_5'];
     $parameter_6 = $_POST['parameter_6'];
     $expectation_6 = $_POST['expectation_6'];
-    $max_rating_6 = $_POST['max_rating_6'];
     $parameter_7 = $_POST['parameter_7'];
     $expectation_7 = $_POST['expectation_7'];
-    $max_rating_7 = $_POST['max_rating_7'];
     $parameter_8 = $_POST['parameter_8'];
     $expectation_8 = $_POST['expectation_8'];
-    $max_rating_8 = $_POST['max_rating_8'];
     $parameter_9 = $_POST['parameter_9'];
     $expectation_9 = $_POST['expectation_9'];
-    $max_rating_9 = $_POST['max_rating_9'];
     $parameter_10 = $_POST['parameter_10'];
     $expectation_10 = $_POST['expectation_10'];
-    $max_rating_10 = $_POST['max_rating_10'];
     $parameter_11 = $_POST['parameter_11'];
     $expectation_11 = $_POST['expectation_11'];
-    $max_rating_11 = $_POST['max_rating_11'];
     $parameter_12 = $_POST['parameter_12'];
     $expectation_12 = $_POST['expectation_12'];
-    $max_rating_12 = $_POST['max_rating_12'];
     $parameter_13 = $_POST['parameter_13'];
     $expectation_13 = $_POST['expectation_13'];
-    $max_rating_13 = $_POST['max_rating_13'];
     $parameter_14 = $_POST['parameter_14'];
     $expectation_14 = $_POST['expectation_14'];
-    $max_rating_14 = $_POST['max_rating_14'];
     $parameter_15 = $_POST['parameter_15'];
     $expectation_15 = $_POST['expectation_15'];
-    $max_rating_15 = $_POST['max_rating_15'];
     $parameter_16 = $_POST['parameter_16'];
     $expectation_16 = $_POST['expectation_16'];
-    $max_rating_16 = $_POST['max_rating_16'];
     $parameter_17 = $_POST['parameter_17'];
     $expectation_17 = $_POST['expectation_17'];
-    $max_rating_17 = $_POST['max_rating_17'];
     $parameter_18 = $_POST['parameter_18'];
     $expectation_18 = $_POST['expectation_18'];
-    $max_rating_18 = $_POST['max_rating_18'];
-
     $parameter_19 = $_POST['parameter_19'];
     $expectation_19 = $_POST['expectation_19'];
-    $max_rating_19 = $_POST['max_rating_19'];
-
     $parameter_20 = $_POST['parameter_20'];
     $expectation_20 = $_POST['expectation_20'];
-    $max_rating_20 = $_POST['max_rating_20'];
+    $max_rating_1 = isset($_POST['max_rating_1']) && !empty($_POST['max_rating_1']) ? $_POST['max_rating_1'] : 'NULL';
+    $max_rating_2 = isset($_POST['max_rating_2']) && !empty($_POST['max_rating_2']) ? $_POST['max_rating_2'] : 'NULL';
+    $max_rating_3 = isset($_POST['max_rating_3']) && !empty($_POST['max_rating_3']) ? $_POST['max_rating_3'] : 'NULL';
+    $max_rating_4 = isset($_POST['max_rating_4']) && !empty($_POST['max_rating_4']) ? $_POST['max_rating_4'] : 'NULL';
+    $max_rating_5 = isset($_POST['max_rating_5']) && !empty($_POST['max_rating_5']) ? $_POST['max_rating_5'] : 'NULL';
+    $max_rating_6 = isset($_POST['max_rating_6']) && !empty($_POST['max_rating_6']) ? $_POST['max_rating_6'] : 'NULL';
+    $max_rating_7 = isset($_POST['max_rating_7']) && !empty($_POST['max_rating_7']) ? $_POST['max_rating_7'] : 'NULL';
+    $max_rating_8 = isset($_POST['max_rating_8']) && !empty($_POST['max_rating_8']) ? $_POST['max_rating_8'] : 'NULL';
+    $max_rating_9 = isset($_POST['max_rating_9']) && !empty($_POST['max_rating_9']) ? $_POST['max_rating_9'] : 'NULL';
+    $max_rating_10 = isset($_POST['max_rating_10']) && !empty($_POST['max_rating_10']) ? $_POST['max_rating_10'] : 'NULL';
+    $max_rating_11 = isset($_POST['max_rating_11']) && !empty($_POST['max_rating_11']) ? $_POST['max_rating_11'] : 'NULL';
+    $max_rating_12 = isset($_POST['max_rating_12']) && !empty($_POST['max_rating_12']) ? $_POST['max_rating_12'] : 'NULL';
+    $max_rating_13 = isset($_POST['max_rating_13']) && !empty($_POST['max_rating_13']) ? $_POST['max_rating_13'] : 'NULL';
+    $max_rating_14 = isset($_POST['max_rating_14']) && !empty($_POST['max_rating_14']) ? $_POST['max_rating_14'] : 'NULL';
+    $max_rating_15 = isset($_POST['max_rating_15']) && !empty($_POST['max_rating_15']) ? $_POST['max_rating_15'] : 'NULL';
+    $max_rating_16 = isset($_POST['max_rating_16']) && !empty($_POST['max_rating_16']) ? $_POST['max_rating_16'] : 'NULL';
+    $max_rating_17 = isset($_POST['max_rating_17']) && !empty($_POST['max_rating_17']) ? $_POST['max_rating_17'] : 'NULL';
+    $max_rating_18 = isset($_POST['max_rating_18']) && !empty($_POST['max_rating_18']) ? $_POST['max_rating_18'] : 'NULL';
+    $max_rating_19 = isset($_POST['max_rating_19']) && !empty($_POST['max_rating_19']) ? $_POST['max_rating_19'] : 'NULL';
+    $max_rating_20 = isset($_POST['max_rating_20']) && !empty($_POST['max_rating_20']) ? $_POST['max_rating_20'] : 'NULL';
+
     $goalsheet_created_by = $associatenumber;
     $goalsheet_created_on = date('Y-m-d H:i:s');
 
 
-    $appraisee_response = "INSERT INTO appraisee_response (
-        goalsheetid, 
+    $appraisee_response = "INSERT INTO appraisee_response (goalsheetid,
         appraisee_associatenumber, 
         manager_associatenumber, 
         reviewer_associatenumber, 
@@ -187,75 +185,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
         goalsheet_created_by,
         goalsheet_created_on
       ) VALUES (
-        '$goalsheetid',
-'$appraisee_associatenumber',
-'$manager_associatenumber',
-'$reviewer_associatenumber',
-'$role',
-'$appraisaltype',
-'$appraisalyear',
-'$parameter_1',
-'$expectation_1',
-'$max_rating_1',
-'$parameter_2',
-'$expectation_2',
-'$max_rating_2',
-'$parameter_3',
-'$expectation_3',
-'$max_rating_3',
-'$parameter_4',
-'$expectation_4',
-'$max_rating_4',
-'$parameter_5',
-'$expectation_5',
-'$max_rating_5',
-'$parameter_6',
-'$expectation_6',
-'$max_rating_6',
-'$parameter_7',
-'$expectation_7',
-'$max_rating_7',
-'$parameter_8',
-'$expectation_8',
-'$max_rating_8',
-'$parameter_9',
-'$expectation_9',
-'$max_rating_9',
-'$parameter_10',
-'$expectation_10',
-'$max_rating_10',
-'$parameter_11',
-'$expectation_11',
-'$max_rating_11',
-'$parameter_12',
-'$expectation_12',
-'$max_rating_12',
-'$parameter_13',
-'$expectation_13',
-'$max_rating_13',
-'$parameter_14',
-'$expectation_14',
-'$max_rating_14',
-'$parameter_15',
-'$expectation_15',
-'$max_rating_15',
-'$parameter_16',
-'$expectation_16',
-'$max_rating_16',
-'$parameter_17',
-'$expectation_17',
-'$max_rating_17',
-'$parameter_18',
-'$expectation_18',
-'$max_rating_18',
-'$parameter_19',
-'$expectation_19',
-'$max_rating_19',
-'$parameter_20',
-'$expectation_20',
-'$max_rating_20',
-'$goalsheet_created_by',
-'$goalsheet_created_on')";
+        '$goalsheetid','$appraisee_associatenumber','$manager_associatenumber','$reviewer_associatenumber','$role','$appraisaltype','$appraisalyear','$parameter_1','$expectation_1',$max_rating_1,'$parameter_2','$expectation_2',$max_rating_2,'$parameter_3','$expectation_3',$max_rating_3,'$parameter_4','$expectation_4',$max_rating_4,'$parameter_5','$expectation_5',$max_rating_5,'$parameter_6','$expectation_6',$max_rating_6,'$parameter_7','$expectation_7',$max_rating_7,'$parameter_8','$expectation_8',$max_rating_8,'$parameter_9','$expectation_9',$max_rating_9,'$parameter_10','$expectation_10',$max_rating_10,'$parameter_11','$expectation_11',$max_rating_11,'$parameter_12','$expectation_12',$max_rating_12,'$parameter_13','$expectation_13',$max_rating_13,'$parameter_14','$expectation_14',$max_rating_14,'$parameter_15','$expectation_15',$max_rating_15,'$parameter_16','$expectation_16',$max_rating_16,'$parameter_17','$expectation_17',$max_rating_17,'$parameter_18','$expectation_18',$max_rating_18,'$parameter_19','$expectation_19',$max_rating_19,'$parameter_20','$expectation_20',$max_rating_20,'$goalsheet_created_by','$goalsheet_created_on')";
 
     $result = pg_query($con, $appraisee_response);
     $cmdtuples = pg_affected_rows($result);
@@ -265,6 +195,27 @@ if (@$_POST['form-type'] == "appraisee_response") {
     }
 
     $resultArr = pg_fetch_all($result);
+
+
+    $resultt = pg_query($con, "Select phone,email,fullname from rssimyaccount_members where associatenumber='$appraisee_associatenumber'");
+    @$appraisee_contact = pg_fetch_result($resultt, 0, 0);
+    @$appraisee_email = pg_fetch_result($resultt, 0, 1);
+    @$appraisee_name = pg_fetch_result($resultt, 0, 2);
+
+    $resulttt = pg_query($con, "Select phone,email from rssimyaccount_members where associatenumber='$manager_associatenumber'");
+    @$manager_contact = pg_fetch_result($resulttt, 0, 0);
+    @$manager_email = pg_fetch_result($resulttt, 0, 1);
+
+    $resultttt = pg_query($con, "Select phone,email from rssimyaccount_members where associatenumber='$reviewer_associatenumber'");
+    @$reviewer_contact = pg_fetch_result($resultttt, 0, 0);
+    @$reviewer_email = pg_fetch_result($resultttt, 0, 1);
+
+    sendEmail("goal_sheet_creation_appraisee", array(
+        "goalsheetid" => $goalsheetid,
+        "appraisaltype" => @$appraisaltype,
+        "appraisalyear" => @$appraisalyear,
+        "appraisee_name" => @$appraisee_name,
+    ), $appraisee_email);
 } ?>
 
 
@@ -278,7 +229,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Associate Appraisal Form</title>
+    <title>Goal Setting Form</title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css">
@@ -327,10 +278,11 @@ if (@$_POST['form-type'] == "appraisee_response") {
                     <option value="Other">Other</option>
                 </select>
             </div>
-            <input type="submit" name="submit" value="Search"> <button type='button'>Lock / Unlock Form</button>
+            <input type="submit" name="submit" value="Search">
+            <!-- <button type='button'>Lock / Unlock Form</button> -->
         </form>
         <br>
-        <h2 class="text-center mb-4" style="background-color:#CE1212; color:white; padding:10px;">Associate Appraisal Form-I</h2>
+        <h2 class="text-center mb-4" style="background-color:#CE1212; color:white; padding:10px;">Goal Setting Form</h2>
 
 
         <p>Unique Id: WB/2021/0282726 (NGO Darpan, NITI Aayog, Government of India)</p>
@@ -340,7 +292,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
             <?php
             foreach ($resultArr as $array) {
             ?>
-                <form method="post" name="process" id="process" action="process.php">
+                <form method="post" name="process" id="process" action="process.php" onsubmit="return checkAssociateNumbers()">
 
                     <input type="hidden" name="form-type" value="appraisee_response">
 
@@ -569,6 +521,22 @@ if (@$_POST['form-type'] == "appraisee_response") {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
 
     <script>
+        function checkAssociateNumbers() {
+            var appraisee = document.getElementsByName('appraisee_associate_number')[0].value;
+            var manager = document.getElementsByName('manager_associate_number')[0].value;
+            var reviewer = document.getElementsByName('reviewer_associate_number')[0].value;
+
+            if (appraisee == manager || appraisee == reviewer) {
+                alert("Error: The appraisee cannot also be the manager or reviewer for the same goal sheet. Please select a different manager or reviewer.");
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+
+
+    <!-- <script>
         var form = document.getElementById('process'), // select form by ID
             btn1 = document.querySelectorAll('button')[0];
 
@@ -591,7 +559,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
         }
         // Lock the form when the page is loaded
         lockForm();
-    </script>
+    </script> -->
     <script>
         $(document).ready(function() {
             $('input[required], select[required], textarea[required]').each(function() {

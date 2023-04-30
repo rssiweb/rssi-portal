@@ -1,0 +1,36 @@
+Action Required: Complete Your Appraisal Goal Sheet | {{goalsheetid}}
+<!-- You have earned a badge -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Goal Sheet Created</title>
+</head>
+
+<body>
+    <p>Dear {{appraisee_name}},</p>
+    <p>We are writing to inform you that your goal sheet has been created for the current appraisal year.</p>
+    <p>You are required to fill out the goal sheet justifying the goals and attributes assigned to you. Once you have filled out the goal sheet, please submit it for further evaluation.</p>
+    <p>You can track the status of your goal sheet using the following information:</p>
+    <table>
+        <tr>
+            <td>Goal Sheet ID:</td>
+            <td><b>{{goalsheetid}}</b></td>
+        </tr>
+        <tr>
+            <td>Appraisal Type:</td>
+            <td>{{appraisaltype}}</td>
+        </tr>
+        <tr>
+            <td>Appraisal Year:</td>
+            <td>{{appraisalyear}}</td>
+        </tr>
+    </table>
+
+    <p>Follow this link to access the goal sheet: https://login.rssi.in/rssi-member/my_appraisal.php?form-type=appraisee&get_id={{appraisaltype}}&get_year={{appraisalyear}}.
+    </p>
+    <p>--RSSI HR team</p>
+    <p>This is a system generated email.</p>
+</body>
+
+</html>

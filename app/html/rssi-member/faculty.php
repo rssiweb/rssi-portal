@@ -338,7 +338,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php } ?>
 
                                 <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><span class="noticea"><a href="https://docs.google.com/forms/d/e/1FAIpQLScAuTVl6IirArMKi5yoj69z7NEYLKqvvNwn8SYo9UGa6RWT0A/viewform?entry.1592136078=' . $array['associatenumber'] . '&entry.593057865=' . $array['fullname'] . '&entry.1085056032=' . $array['email'] . '&entry.1932332750=' . strtok($array['position'],  '-') . '" target="_blank">Apply leave</a></span><br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
+            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
             
             
             <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
@@ -354,13 +354,13 @@ $resultArr = pg_fetch_all($result);
                         <input type="hidden" name="memberid2" type="text" value="' . $array['associatenumber'] . '" readonly>
                         <input type="hidden" type="text" name="ipf" id="ipf" value="' . $array['googlechat'] . '" readonly required>
                         <input type="hidden" name="flag" type="text" value="initiated" readonly>' ?>
-
-                                <?php if ($role == 'Admin') { ?>
+                                <!-- OLD Appraisal system -->
+                                <!-- <?php if ($role == 'Admin') { ?>
 
                                     <?php echo '<button type="submit" id="yes" onclick=validateForm() style=" outline: none;background: none;
                         padding: 0px;
                         border: none;" title="Release IPF ' . $array['googlechat'] . '/' . $array['ipfl'] . '"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777""></i></button>' ?>
-                                <?php } ?>
+                                <?php } ?> -->
                             <?php echo ' </form>
       </td>
             </tr>';
@@ -540,7 +540,7 @@ $resultArr = pg_fetch_all($result);
             alert("IPF has been initiated in the system.");
         }
     </script> -->
-    <script>
+    <!-- <script>
         var data = <?php echo json_encode($resultArr) ?>;
         var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
 
@@ -571,7 +571,7 @@ $resultArr = pg_fetch_all($result);
                 return false;
             }
         }
-    </script>
+    </script> -->
     <!-- Back top -->
     <script>
         $(document).ready(function() {
