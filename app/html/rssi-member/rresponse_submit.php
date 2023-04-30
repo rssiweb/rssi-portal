@@ -72,18 +72,18 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
     @$appraisalyear = pg_fetch_result($result_appraisal_details, 0, 1);
     @$appraisee_associatenumber = pg_fetch_result($result_appraisal_details, 0, 2);
 
-    // if (@$cmdtuples == 1 && $appraisee_email != "") {
-    //     sendEmail("ipf_issued", array(
-    //         "goalsheetid" => $goalsheetid,
-    //         "appraisaltype" => @$appraisaltype,
-    //         "appraisalyear" => @$appraisalyear,
-    //         "appraisee_name" => @$appraisee_name,
-    //         "appraiseeemail" => @$appraisee_email,
-    //         "appraiseeid" => @$appraisee_associatenumber,
-    //         "manager_name" => @$manager_name,
-    //         "reviewer_name" => @$reviewer_name,
-    //     ), $appraisee_email);
-    // }
+    if (@$cmdtuples == 1 && $appraisee_email != "") {
+        sendEmail("ipf_issued", array(
+            "goalsheetid" => $goalsheetid,
+            "appraisaltype" => @$appraisaltype,
+            "appraisalyear" => @$appraisalyear,
+            "appraisee_name" => @$appraisee_name,
+            "appraiseeemail" => @$appraisee_email,
+            "appraiseeid" => @$appraisee_associatenumber,
+            "manager_name" => @$manager_name,
+            "reviewer_name" => @$reviewer_name,
+        ), $appraisee_email);
+    }
 } ?>
 
 <head>
