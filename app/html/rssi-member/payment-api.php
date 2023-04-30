@@ -136,7 +136,7 @@ if ($_POST['form-type'] == "gpsedit") {
 if ($_POST['form-type'] == "ipfsubmission") {
   @$ipfid = $_POST['ipfid'];
   @$status2 = $_POST['status2'];
-  @$ipf_response_by= $_POST['ipf_response_by'];
+  @$ipf_response_by = $_POST['ipf_response_by'];
   $now = date('Y-m-d H:i:s');
   $ipfclose = "UPDATE appraisee_response SET  ipf_response = '$status2', ipf_response_on = '$now', ipf_response_by='$ipf_response_by' WHERE goalsheetid = '$ipfid'";
   $result = pg_query($con, $ipfclose);
@@ -224,9 +224,9 @@ if ($_POST['form-type'] == "claimreviewform") {
 
 if ($_POST['form-type'] == "ipfclose") {
   @$ipfid = $_POST['ipfid'];
-  @$ipfstatus = $_POST['ipfstatus'];
+  @$ipf_process_closed_by = $_POST['ipf_process_closed_by'];
   $now = date('Y-m-d H:i:s');
-  $ipfclose = "UPDATE ipfsubmission SET  ipfstatus = 'closed', closedon = '$now' WHERE id = $ipfid";
+  $ipfclose = "UPDATE appraisee_response SET  ipf_process_closed_by = '$ipf_process_closed_by', ipf_process_closed_on = '$now' WHERE goalsheetid = '$ipfid'";
   $result = pg_query($con, $ipfclose);
 }
 
