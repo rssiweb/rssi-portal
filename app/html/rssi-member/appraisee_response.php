@@ -200,6 +200,7 @@ if (!$result) {
 
                             <h2>Goals</h2>
                             <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
+                            <?php echo ($array['reviewer_response_complete'] == "yes") ? "<p>Rating Scale: 5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied</p>" : "" ?>
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
@@ -292,10 +293,9 @@ if (!$result) {
                                         <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_10'] : "" ?></td>
                                         <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_10'] : "" ?></td>
                                     </tr>
-
-
                                 </tbody>
                             </table>
+                            <p>*SLA - Service level agreement, KPI - Key performance indicator</p>
 
                             <h2>Attributes</h2>
                             <p>Attributes are competencies essential for performing a role.</p>
