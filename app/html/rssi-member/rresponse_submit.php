@@ -82,6 +82,7 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
             "appraiseeid" => @$appraisee_associatenumber,
             "manager_name" => @$manager_name,
             "reviewer_name" => @$reviewer_name,
+            "link" => "https://login.rssi.in/rssi-member/my_appraisal.php?form-type=appraisee&get_id=" . urlencode(@$appraisaltype) . "&get_year=" . @$appraisalyear,
         ), $appraisee_email);
     }
 } ?>
