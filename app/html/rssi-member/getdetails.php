@@ -12,9 +12,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
 
     <!------ Include the above in your HEAD tag ---------->
@@ -56,7 +56,10 @@
 <?php
 
 @$id = $_GET['scode'];
-$result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE scode='$id'");
+$result = pg_query($con, "SELECT * FROM rssimyaccount_members 
+LEFT JOIN (SELECT max(goalsheet_created_on),appraisee_associatenumber,ipf FROM appraisee_response GROUP BY appraisee_associatenumber,ipf) apprisal ON apprisal.appraisee_associatenumber = rssimyaccount_members.associatenumber
+WHERE scode='$id'");
+
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -105,7 +108,7 @@ echo '
 
 
         <?php echo  '<br>' . $array['yos'] . '</td>
-            <td>' . $array['ipfl'] . '</td>
+            <td>' . $array['ipf'] . '</td>
             <td>' . $array['astatus'] . '</td>' ?>
 
         <?php if ($array['associationstatus'] != null) { ?>
