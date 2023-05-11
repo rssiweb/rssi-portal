@@ -123,6 +123,7 @@ if ($_POST) {
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/addstyle.css">
@@ -146,56 +147,6 @@ if ($_POST) {
         .button:focus,
         [type="submit"]:focus {
             outline: none !important;
-        }
-    </style>
-    <!--------------- POP-UP BOX ------------
--------------------------------------->
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            padding-top: 100px;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.4);
-        }
-
-        /* Modal Content */
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 100vh;
-        }
-
-        @media (max-width:767px) {
-            .modal-content {
-                width: 50vh;
-            }
-        }
-
-        /* The Close Button */
-
-        .close {
-            color: #aaaaaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            text-align: right;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -229,10 +180,23 @@ if ($_POST) {
                                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                 <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Sign in" name="login">
                                 <br><br>
-                                <p style="text-align: right;"><a id="myBtn" href="javascript:void(0)">Forgot password?</a></p>
+                                <p style="text-align: right;"><a href="#" data-toggle="modal" data-target="#myModal">Forgot password?</a></p>
                             </fieldset>
                         </form>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Forgot password?</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Please contact RSSI Admin at 7980168159 or email at info@rssi.in</p>
                 </div>
             </div>
         </div>
@@ -295,33 +259,7 @@ if ($_POST) {
         });
     </script>
 
-    <div id="myModal" class="modal">
-
-        <!-- Modal content -->
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            Please contact RSSI Admin at 7980168159 or email at info@rssi.in
-        </div>
-
-    </div>
-    <script>
-        var modal = document.getElementById("myModal");
-        var btn = document.getElementById("myBtn");
-        var span = document.getElementsByClassName("close")[0];
-        btn.onclick = function() {
-            modal.style.display = "block";
-        }
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    </script>
-
-    <!--<div id="thoverX" class="thover"></div>
+    <!-- <div id="thoverX" class="thover"></div>
 <div id="tpopupX" class="tpopup">
     <img src="/images/pride3.jpg" class="img-fluid img-responsive hidden-xs" style="display: block;margin-left: auto;margin-right: auto;">
     <p style="display: block; margin-left: 5%;margin-right: 5%; text-align: left;">This Pride Month, RSSI launches #AgarTumSaathHo, to bring together LGBTQ Community and their straight allies.<br><br> Families and friends really matter! We know that most young people from the LGBTQ community grow up having to hide their identity
@@ -343,7 +281,7 @@ if ($_POST) {
             $("#thoverX").toggleClass('hidden');
         });
     </script>
-</div>-->
+</div> -->
     <?php include("../../util/footer.php"); ?>
 </body>
 

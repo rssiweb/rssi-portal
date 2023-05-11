@@ -132,12 +132,6 @@ if (@$login_failed_dialog) { ?>
             top: 70px;
         }
 
-        .modal-backdrop.in {
-            opacity: 0.5;
-            z-index: 1040;
-            background-color: #000000;
-        }
-
         .box {
             display: flex;
         }
