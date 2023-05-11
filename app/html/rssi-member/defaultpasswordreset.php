@@ -34,7 +34,7 @@ if (isset($_POST['login'])) {
             $newpass = $_POST['newpass'];
 
             $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
-            $now=date('Y-m-d H:i:s');
+            $now = date('Y-m-d H:i:s');
             $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', password_updated_by='$associatenumber', password_updated_on='$now' where associatenumber='$associatenumber'";
             $result = pg_query($con, $change_password_query);
             $cmdtuples = pg_affected_rows($result);
@@ -45,6 +45,37 @@ if (isset($_POST['login'])) {
     }
 }
 ?>
+<?php if (@$newpass != @$oldpass) { ?>
+    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
+    </div>
+<?php } ?>
+<?php
+if (@$cmdtuples == 1) {
+    echo '<div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">';
+    echo '<span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Password updated successfully! Redirecting to the home page...</span>';
+    echo '</div>';
+
+    // Redirect the user after a delay
+    echo '<meta http-equiv="refresh" content="3;url=index.php">';
+    exit; // End the script to prevent any further output
+}
+?>
+<?php
+if (@$login_failed_dialog) { ?>
+    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
+    </div>
+<?php } ?>
+<?php if (@$newpass == null) { ?>
+    <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <span>Hi <?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),&nbsp;Please change your default password.</span>
+    </div>
+<?php } ?>
+
 <!DOCTYPE html>
 <html>
 
@@ -58,8 +89,8 @@ if (isset($_POST['login'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
-    
+    <link rel="stylesheet" href="/css/style.css" />
+
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
@@ -83,43 +114,56 @@ if (isset($_POST['login'])) {
             -o-transition: 0ms;
             transition: 0ms;
         }
+
+        .checkbox {
+            padding: 0;
+            margin: 0;
+            vertical-align: bottom;
+            position: relative;
+            top: 0px;
+            overflow: hidden;
+        }
+
+        .x-btn:focus,
+        .button:focus,
+        [type="submit"]:focus {
+            outline: none;
+        }
+
+        .error {
+            color: red;
+            list-style-type: none;
+        }
+
+        .success {
+            color: green;
+            list-style-type: none;
+        }
+
+        .box {
+            display: flex;
+        }
+
+        .alert {
+            position: relative;
+            top: 70px;
+            /* adjust the value to position the alert message as desired */
+        }
     </style>
 
 </head>
 
 <body>
-<div class="page-topbar">
-    <div class="logo-area"> </div>
-</div>
+    <div class="page-topbar">
+        <div class="logo-area"> </div>
+    </div>
     <section>
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-            <div class="col" style="display: inline-block; width:100%; text-align:right">
-            <a href="logout.php" target="_self" class="btn btn-danger btn-sm" role="button"><i class="glyphicon glyphicon-log-out"></i>&nbsp;Sign Out</a></div>
-                <?php if (@$newpass != @$oldpass) { ?>
+                <!-- <div class="col" style="display: inline-block; width:100%; text-align:right">
+                    <a href="logout.php" target="_self" class="btn btn-danger btn-sm" role="button"><i class="glyphicon glyphicon-log-out"></i>&nbsp;Sign Out</a>
+                </div> -->
 
-                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
-                    </div> 
-                <?php } if (@$cmdtuples == 1) { ?>
-
-                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                        <span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully. Please sign out and sign in using the new password.</span>
-                    </div>
-                <?php } if (@$login_failed_dialog) { ?>
-                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
-                    </div>
-
-                <?php } if (@$newpass==null) { ?>
-                    <div class="alert alert-info alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <span>Hi <?php echo $fullname ?>&nbsp;(<?php echo $associatenumber ?>),&nbsp;Please change your default password.</span>
-                    </div>
-
-                <?php }?>
                 <section class="box" style="padding: 2%;">
                     <div class="col-md-4 col-md-offset-4">
                         <div class="login-panel panel panel-default" style="margin-top: unset;">
@@ -127,19 +171,25 @@ if (isset($_POST['login'])) {
                                 <b>Reset password</b>
                             </div>
                             <div class="panel-body">
-                                <form role="form" method="post" name="login" action="defaultpasswordreset.php">
+                                <form role="form" method="post" name="login" id="login" action="defaultpasswordreset.php">
                                     <fieldset>
                                         <div class="form-group">
-                                            <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
+                                            <label for="currentpass">Current password:</label>
+                                            <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required title="Enter your current password.">
                                         </div>
                                         <div class="form-group">
-                                            <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required>
+                                            <label for="newpass">New password:</label>
+                                            <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required title="Enter a new password. Your password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.">
                                             <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
                                                 <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
                                             </label>
+                                            <div id="password-message"></div>
                                         </div>
                                         <div class="form-group">
-                                            <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
+                                            <label for="oldpass">Confirm password:</label>
+                                            <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required title="Enter the same password again to confirm.">
+                                            <div id="password_message_conf"></div>
+                                            <div id="password-message-success"></div>
                                         </div>
                                         <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
@@ -151,8 +201,6 @@ if (isset($_POST['login'])) {
                     </div>
                 </section>
             </div>
-            <div class="col-md-12">
-                <div class="clearfix"></div>
         </section>
     </section>
 
@@ -191,22 +239,94 @@ if (isset($_POST['login'])) {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <style>
-        .checkbox {
-            padding: 0;
-            margin: 0;
-            vertical-align: bottom;
-            position: relative;
-            top: 0px;
-            overflow: hidden;
+    <script>
+        // Get the password input field and message element
+        const passwordInput = document.getElementById('newpass');
+        const passwordMessage = document.getElementById('password-message');
+
+        // Add an event listener to the password input field to check for changes
+        passwordInput.addEventListener('input', function() {
+            const password = passwordInput.value;
+
+            // Check if the password meets all the criteria
+            const hasLength = password.length >= 8 && password.length <= 15;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecialChar = /[!@#$^&*~]/.test(password);
+            const hasNoInvalidChars = /^[^'"\s]+$/.test(password);
+            const hasNoCommonWords = !/password|123456|qwerty|letmein|welcome/.test(password.toLowerCase());
+
+            // Set the error message based on which criteria are not met
+            let errorMessage = '';
+            if (!hasLength) {
+                errorMessage += '<li class="error">✘ Password should be between 8 and 15 characters.</li>';
+            }
+            if (!hasUppercase) {
+                errorMessage += '<li class="error">✘ Password should contain at least one uppercase letter.</li>';
+            }
+            if (!hasLowercase) {
+                errorMessage += '<li class="error">✘ Password should contain at least one lowercase letter.</li>';
+            }
+            if (!hasNumber) {
+                errorMessage += '<li class="error">✘ Password should contain at least one number.</li>';
+            }
+            if (!hasSpecialChar) {
+                errorMessage += '<li class="error">✘ Password should contain at least one special character.</li>';
+            }
+            if (!hasNoInvalidChars) {
+                errorMessage += '<li class="error">✘ Password should not contain single quotes, double quotes, or spaces.</li>';
+            }
+            if (!hasNoCommonWords) {
+                errorMessage += '<li class="error">✘ Password should not be a common word.</li>';
+            }
+
+
+            // Display the error message or a success message if all criteria are met
+            if (errorMessage) {
+                passwordMessage.innerHTML = errorMessage;
+                passwordInput.setCustomValidity('Please fix the errors in the password field.');
+            } else {
+                passwordMessage.innerHTML = '<li class="success">✔ Password meets all criteria.</li>';
+                passwordInput.setCustomValidity('');
+            }
+        });
+    </script>
+    <script>
+        const newPassword = document.getElementById('newpass');
+        const confirmPassword = document.getElementById('oldpass');
+        const passwordMessage_conf = document.getElementById('password_message_conf');
+        const passwordMessageSuccess = document.getElementById('password-message-success');
+        const form = document.getElementById('login');
+
+        const checkPasswords = () => {
+            if (newPassword.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity("Please fix the errors in the password field.");
+                passwordMessage_conf.innerHTML = '<p class="error">✘ New password and confirm password do not match.</p>';
+                passwordMessageSuccess.innerHTML = '';
+            } else {
+                confirmPassword.setCustomValidity("");
+                passwordMessageSuccess.innerHTML = '<p class="success">✔ New password and confirm password match!</p>';
+                passwordMessage_conf.innerHTML = '';
+            }
         }
 
-        .x-btn:focus,
-        .button:focus,
-        [type="submit"]:focus {
-            outline: none;
-        }
-    </style>
+        form.addEventListener('submit', (event) => {
+            checkPasswords();
+            if (passwordMessage_conf.innerHTML) {
+                event.preventDefault();
+            }
+        });
+
+        confirmPassword.addEventListener('input', () => {
+            checkPasswords();
+        });
+
+        newPassword.addEventListener('input', () => {
+            checkPasswords();
+        });
+    </script>
+
 </body>
 
 </html>

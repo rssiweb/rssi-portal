@@ -66,22 +66,38 @@ if (isset($_POST['login'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
-    
+    <link rel="stylesheet" href="/css/style.css" />
+
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
+    <style>
+        .checkbox {
+            padding: 0;
+            margin: 0;
+            vertical-align: bottom;
+            position: relative;
+            top: 0px;
+            overflow: hidden;
+        }
 
-    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
-    <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://www.rssi.in/disclaimer'
-        });
-    </script>
+        .x-btn:focus,
+        .button:focus,
+        [type="submit"]:focus {
+            outline: none;
+        }
+
+        .error {
+            color: red;
+            list-style-type: none;
+        }
+
+        .success {
+            color: green;
+            list-style-type: none;
+        }
+    </style>
 
 </head>
 
@@ -121,7 +137,7 @@ if (isset($_POST['login'])) {
                                 <b>Reset password</b>
                             </div>
                             <div class="panel-body">
-                                <form role="form" method="post" name="login" action="resetpassword.php">
+                                <form role="form" method="post" name="login" id="login" action="resetpassword.php">
                                     <fieldset>
                                         <div class="form-group">
                                             <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
@@ -131,9 +147,12 @@ if (isset($_POST['login'])) {
                                             <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
                                                 <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
                                             </label>
+                                            <div id="password-message"></div>
                                         </div>
                                         <div class="form-group">
                                             <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
+                                            <div id="password_message_conf"></div>
+                                            <div id="password-message-success"></div>
                                         </div>
                                         <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
@@ -145,8 +164,6 @@ if (isset($_POST['login'])) {
                     </div>
                 </section>
             </div>
-            <div class="col-md-12">
-                <div class="clearfix"></div>
         </section>
     </section>
 
@@ -185,22 +202,93 @@ if (isset($_POST['login'])) {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <style>
-        .checkbox {
-            padding: 0;
-            margin: 0;
-            vertical-align: bottom;
-            position: relative;
-            top: 0px;
-            overflow: hidden;
+    <script>
+        // Get the password input field and message element
+        const passwordInput = document.getElementById('newpass');
+        const passwordMessage = document.getElementById('password-message');
+
+        // Add an event listener to the password input field to check for changes
+        passwordInput.addEventListener('input', function() {
+            const password = passwordInput.value;
+
+            // Check if the password meets all the criteria
+            const hasLength = password.length >= 8 && password.length <= 15;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecialChar = /[!@#$^&*~]/.test(password);
+            const hasNoInvalidChars = /^[^'"\s]+$/.test(password);
+            const hasNoCommonWords = !/password|123456|qwerty|letmein|welcome/.test(password.toLowerCase());
+
+            // Set the error message based on which criteria are not met
+            let errorMessage = '';
+            if (!hasLength) {
+                errorMessage += '<li class="error">✘ Password should be between 8 and 15 characters.</li>';
+            }
+            if (!hasUppercase) {
+                errorMessage += '<li class="error">✘ Password should contain at least one uppercase letter.</li>';
+            }
+            if (!hasLowercase) {
+                errorMessage += '<li class="error">✘ Password should contain at least one lowercase letter.</li>';
+            }
+            if (!hasNumber) {
+                errorMessage += '<li class="error">✘ Password should contain at least one number.</li>';
+            }
+            if (!hasSpecialChar) {
+                errorMessage += '<li class="error">✘ Password should contain at least one special character.</li>';
+            }
+            if (!hasNoInvalidChars) {
+                errorMessage += '<li class="error">✘ Password should not contain single quotes, double quotes, or spaces.</li>';
+            }
+            if (!hasNoCommonWords) {
+                errorMessage += '<li class="error">✘ Password should not be a common word.</li>';
+            }
+
+
+            // Display the error message or a success message if all criteria are met
+            if (errorMessage) {
+                passwordMessage.innerHTML = errorMessage;
+                passwordInput.setCustomValidity('Please fix the errors in the password field.');
+            } else {
+                passwordMessage.innerHTML = '<li class="success">✔ Password meets all criteria.</li>';
+                passwordInput.setCustomValidity('');
+            }
+        });
+    </script>
+    <script>
+        const newPassword = document.getElementById('newpass');
+        const confirmPassword = document.getElementById('oldpass');
+        const passwordMessage_conf = document.getElementById('password_message_conf');
+        const passwordMessageSuccess = document.getElementById('password-message-success');
+        const form = document.getElementById('login');
+
+        const checkPasswords = () => {
+            if (newPassword.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity("Please fix the errors in the password field.");
+                passwordMessage_conf.innerHTML = '<p class="error">✘ New password and confirm password do not match.</p>';
+                passwordMessageSuccess.innerHTML = '';
+            } else {
+                confirmPassword.setCustomValidity("");
+                passwordMessageSuccess.innerHTML = '<p class="success">✔ New password and confirm password match!</p>';
+                passwordMessage_conf.innerHTML = '';
+            }
         }
 
-        .x-btn:focus,
-        .button:focus,
-        [type="submit"]:focus {
-            outline: none;
-        }
-    </style>
+        form.addEventListener('submit', (event) => {
+            checkPasswords();
+            if (passwordMessage_conf.innerHTML) {
+                event.preventDefault();
+            }
+        });
+
+        confirmPassword.addEventListener('input', () => {
+            checkPasswords();
+        });
+
+        newPassword.addEventListener('input', () => {
+            checkPasswords();
+        });
+    </script>
 </body>
 
 </html>
