@@ -100,19 +100,6 @@ if (@$login_failed_dialog) { ?>
             td {
                 width: 100%
             }
-
-            .page-topbar .logo-area {
-                width: 240px !important;
-                margin-top: 2.5%;
-            }
-        }
-
-        .page-topbar,
-        .logo-area {
-            -webkit-transition: 0ms;
-            -moz-transition: 0ms;
-            -o-transition: 0ms;
-            transition: 0ms;
         }
 
         .checkbox {
@@ -140,14 +127,19 @@ if (@$login_failed_dialog) { ?>
             list-style-type: none;
         }
 
-        .box {
-            display: flex;
-        }
-
         .alert {
             position: relative;
             top: 70px;
-            /* adjust the value to position the alert message as desired */
+        }
+
+        .modal-backdrop.in {
+            opacity: 0.5;
+            z-index: 1040;
+            background-color: #000000;
+        }
+
+        .box {
+            display: flex;
         }
     </style>
 
@@ -174,11 +166,9 @@ if (@$login_failed_dialog) { ?>
                                 <form role="form" method="post" name="login" id="login" action="defaultpasswordreset.php">
                                     <fieldset>
                                         <div class="form-group">
-                                            <label for="currentpass">Current password:</label>
                                             <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required title="Enter your current password.">
                                         </div>
                                         <div class="form-group">
-                                            <label for="newpass">New password:</label>
                                             <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required title="Enter a new password. Your password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.">
                                             <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
                                                 <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
@@ -186,13 +176,15 @@ if (@$login_failed_dialog) { ?>
                                             <div id="password-message"></div>
                                         </div>
                                         <div class="form-group">
-                                            <label for="oldpass">Confirm password:</label>
                                             <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required title="Enter the same password again to confirm.">
                                             <div id="password_message_conf"></div>
                                             <div id="password-message-success"></div>
                                         </div>
                                         <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
+                                        <br><br><br>
+                                        <p style="text-align: right;"><a href="#" data-toggle="modal" data-target="#myModal">Password Fields User Guide</a></p>
+
 
                                     </fieldset>
                                 </form>
@@ -203,6 +195,31 @@ if (@$login_failed_dialog) { ?>
             </div>
         </section>
     </section>
+
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Password Fields User Guide</h4>
+                </div>
+                <div class="modal-body">
+
+                    <p>When filling out the form below to reset your password, please keep the following guidelines in mind:</p>
+
+                    <ol>
+                        <li>The "Current Password" field is where you should enter your current password.</li>
+                        <li>The "New Password" field is where you should enter your desired new password.</li>
+                        <li>You can show the password you're typing in the "New Password" field by checking the "Show password" checkbox.</li>
+                        <li>The "Confirm Password" field is where you should re-enter your new password to confirm it.</li>
+                        <li>Once you have filled out all three password fields, click the "Update" button to submit the form.</li>
+                    </ol>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         if (window.history.replaceState) {

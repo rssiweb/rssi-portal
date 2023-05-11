@@ -97,6 +97,10 @@ if (isset($_POST['login'])) {
             color: green;
             list-style-type: none;
         }
+
+        .box {
+            display: flex;
+        }
     </style>
 
 </head>
@@ -156,6 +160,8 @@ if (isset($_POST['login'])) {
                                         </div>
                                         <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
+                                        <br><br><br>
+                                        <p style="text-align: right;"><a href="#" data-toggle="modal" data-target="#myModal">Password Fields User Guide</a></p>
 
                                     </fieldset>
                                 </form>
@@ -166,6 +172,30 @@ if (isset($_POST['login'])) {
             </div>
         </section>
     </section>
+
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Password Fields User Guide</h4>
+                </div>
+                <div class="modal-body">
+
+                    <p>When filling out the form below to reset your password, please keep the following guidelines in mind:</p>
+
+                    <ol>
+                        <li>The "Current Password" field is where you should enter your current password.</li>
+                        <li>The "New Password" field is where you should enter your desired new password.</li>
+                        <li>You can show the password you're typing in the "New Password" field by checking the "Show password" checkbox.</li>
+                        <li>The "Confirm Password" field is where you should re-enter your new password to confirm it.</li>
+                        <li>Once you have filled out all three password fields, click the "Update" button to submit the form.</li>
+                    </ol>
+
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         if (window.history.replaceState) {

@@ -45,7 +45,7 @@
             background-color: #35395c;
             top: 0px;
             left: 0px;
-            z-index: 1999;
+            z-index: 99;
             box-shadow: 0 2px 4px rgba(33, 33, 33, .2);
             -webkit-box-shadow: 0 2px 4px rgba(33, 33, 33, .2);
             -moz-box-shadow: 0 2px 4px rgba(33, 33, 33, .2);
@@ -58,7 +58,7 @@
             background-image: url(../img/WebsiteHeaderLogo.png);
             background-repeat: no-repeat;
             background-size: 140px;
-            margin-top: 0.75%;
+            margin-top: 0.74%;
             margin-left: 1%;
         }
         /* ---------------
