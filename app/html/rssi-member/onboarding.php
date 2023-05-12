@@ -92,6 +92,18 @@ if (!$result) {
                                 <button type="button" class="btn btn-primary" onclick="capturePhoto()">Capture Photo</button>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="mt-3">
+                                    <video id="video" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mt-3">
+                                    <img id="photo-preview" class="img-thumbnail" alt="Preview" width="320" height="240">
+                                </div>
+                            </div>
+                        </div>
 
 
                         <div class="mb-3">
@@ -264,10 +276,11 @@ if (!$result) {
                 audio: false
             };
 
-            const video = document.createElement('video');
+            const video = document.getElementById('video');
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             const photoInput = document.getElementById('photo');
+            const photoPreview = document.getElementById('photo-preview');
 
             navigator.mediaDevices.getUserMedia(constraints)
                 .then(stream => {
@@ -284,10 +297,12 @@ if (!$result) {
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
                 const photoURL = canvas.toDataURL('image/png');
                 photoInput.value = photoURL;
+                photoPreview.src = photoURL;
                 video.srcObject.getTracks().forEach(track => track.stop());
             });
         }
     </script>
+
 </body>
 
 </html>
