@@ -62,28 +62,38 @@ if (!$result) {
                         <hr>
                         <div class="card">
                             <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12 text-end">
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#joining-letter-modal">
+                                            <i class="far fa-file-pdf"></i>
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="row align-items-center">
                                     <div class="col-md-4 d-flex flex-column justify-content-center align-items-center mb-3">
                                         <img src="<?php echo $array['photo'] ?>" alt="Profile picture" width="100px">
-                                        <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#joining-letter-modal">
-                                            Open Joining Letter
-                                        </button>
                                     </div>
 
                                     <div class="col-md-8">
-                                        <div class="row align-items-start">
-                                            <div class="col-md-12 text-end mb-3">
+                                        <div class="row">
+                                            <div class="col-md-12 d-flex align-items-center">
+                                                <h2><?php echo $array['fullname'] ?></h2>
                                                 <?php if ($array['filterstatus'] == 'Active') : ?>
-                                                    <span class="badge bg-success">Active</span>
+                                                    <span class="badge bg-success ms-3">Active</span>
                                                 <?php else : ?>
-                                                    <span class="badge bg-danger">Inactive</span>
+                                                    <span class="badge bg-danger ms-3">Inactive</span>
                                                 <?php endif; ?>
                                             </div>
+                                        </div>
+
+
+
+                                        <div class="row">
                                             <div class="col-md-6">
-                                                <h2><?php echo $array['fullname'] ?></h2>
                                                 <p><strong>Associate ID:</strong> <?php echo $array['associatenumber'] ?></p>
                                                 <p><strong>Joining Date:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
                                             </div>
+
                                             <div class="col-md-6">
                                                 <p><strong>Engagement:</strong> <?php echo $array['engagement']; ?></p>
                                                 <p><strong>Position:</strong> <?php echo implode('-', array_slice(explode('-',  $array['position']), 0, 2)); ?></p>
