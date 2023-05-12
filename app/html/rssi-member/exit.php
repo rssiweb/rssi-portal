@@ -95,7 +95,7 @@ if (!$result) {
                                             <h2><?php echo $array['fullname'] ?></h2>
                                             <p><strong>Associate ID:</strong> <?php echo $array['associatenumber'] ?></p>
                                             <p><strong>Joining Date:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
-                                            <strong>Last Working Day:</strong> <?php echo ($array['effectivedate'] == null) ? "N/A" : date('M d, Y',strtotime($array['effectivedate'])); ?></p>
+                                            <strong>Last Working Day:</strong> <?php echo ($array['effectivedate'] == null) ? "N/A" : date('M d, Y', strtotime($array['effectivedate'])); ?></p>
                                         </div>
                                         <div class="col-md-6">
                                             <p><strong>Engagement:</strong> <?php echo $array['engagement']; ?></p>
@@ -220,6 +220,26 @@ if (!$result) {
                             canvas.addEventListener('mouseup', endDrawing);
                             canvas.addEventListener('mouseleave', endDrawing);
                             clearButton.addEventListener('click', clearCanvas);
+
+
+
+                            // Retrieve the signature data from the form
+                            const signatureData = document.getElementById('signature-data').value;
+
+                            // Get the canvas and its context
+                            const canvas_sig = document.getElementById('signature-canvas');
+                            const ctx_sig = canvas_sig.getContext('2d');
+
+                            // Create a new image object
+                            const signatureImage = new Image();
+
+                            // Set the source of the image object to the signature data
+                            signatureImage.src = signatureData;
+
+                            // Once the image is loaded, draw it onto the canvas
+                            signatureImage.onload = function() {
+                                ctx_sig.drawImage(signatureImage, 0, 0);
+                            };
                         </script>
 
                         <div class="mb-3">
