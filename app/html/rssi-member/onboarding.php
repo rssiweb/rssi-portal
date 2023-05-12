@@ -90,16 +90,28 @@ if (!$result) {
                             <input type="text" class="form-control" id="photo" readonly>
                             <div class="mt-2">
                                 <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
-                                <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
+                            </div>
+                        </div>
+                        <div id="camera-preview-container" style="display:none;">
+                            <div class="mt-3">
+                                <video id="camera-preview" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-primary" onclick="capturePhoto()">Capture Photo</button>
                             </div>
                         </div>
                         <div class="mt-3">
-                            <video id="video-preview" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
-                            <canvas id="canvas-preview" class="d-none"></canvas>
+                            <img id="photo-preview" class="img-thumbnail" alt="Preview" width="320" height="240">
                         </div>
 
                         <script>
-                            let videoPreview, canvasPreview, photoInput, captureBtn;
+                            let videoStream;
+                            const video = document.getElementById('camera-preview');
+                            const canvas_img = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            const photoInput = document.getElementById('photo');
+                            const photoPreview = document.getElementById('photo-preview');
+                            const cameraPreviewContainer = document.getElementById('camera-preview-container');
 
                             function startCamera() {
                                 const constraints = {
@@ -107,36 +119,32 @@ if (!$result) {
                                     audio: false
                                 };
 
-                                videoPreview = document.getElementById('video-preview');
-                                canvasPreview = document.getElementById('canvas-preview');
-                                photoInput = document.getElementById('photo');
-                                captureBtn = document.getElementById('capture-btn');
-
                                 navigator.mediaDevices.getUserMedia(constraints)
                                     .then(stream => {
-                                        videoPreview.srcObject = stream;
-                                        videoPreview.play();
-                                        captureBtn.classList.remove('d-none');
+                                        videoStream = stream;
+                                        video.srcObject = stream;
+                                        video.play();
+                                        cameraPreviewContainer.style.display = 'block';
                                     })
                                     .catch(error => {
                                         console.error('Error accessing camera: ', error);
                                     });
-
-                                videoPreview.addEventListener('canplay', () => {
-                                    canvasPreview.width = videoPreview.videoWidth;
-                                    canvasPreview.height = videoPreview.videoHeight;
-                                    canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
-                                });
                             }
 
                             function capturePhoto() {
-                                const photoURL = canvasPreview.toDataURL('image/png');
+                                canvas_img.width = video.videoWidth;
+                                canvas_img.height = video.videoHeight;
+                                context.drawImage(video, 0, 0, canvas_img.width, canvas_img.height);
+                                const photoURL = canvas_img.toDataURL('image/png');
                                 photoInput.value = photoURL;
-                                videoPreview.srcObject.getTracks().forEach(track => track.stop());
-                                canvasPreview.classList.add('d-none');
-                                videoPreview.classList.remove('d-none');
-                                captureBtn.classList.add('d-none');
+                                photoPreview.src = photoURL;
                             }
+
+                            window.addEventListener('beforeunload', () => {
+                                if (videoStream) {
+                                    videoStream.getTracks().forEach(track => track.stop());
+                                }
+                            });
                         </script>
 
 
@@ -217,10 +225,6 @@ if (!$result) {
 
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary">Submit</button>
-                        </div>
-                        <!-- Footer -->
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
                     </form>
                 <?php } ?>
