@@ -90,28 +90,16 @@ if (!$result) {
                             <input type="text" class="form-control" id="photo" readonly>
                             <div class="mt-2">
                                 <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
-                            </div>
-                        </div>
-                        <div id="camera-preview-container" style="display:none;">
-                            <div class="mt-3">
-                                <video id="camera-preview" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
-                            </div>
-                            <div class="mt-3">
-                                <button type="button" class="btn btn-primary" onclick="capturePhoto()">Capture Photo</button>
+                                <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
                             </div>
                         </div>
                         <div class="mt-3">
-                            <img id="photo-preview" class="img-thumbnail" alt="Preview" width="320" height="240">
+                            <video id="video-preview" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
+                            <canvas id="canvas-preview" class="d-none"></canvas>
                         </div>
 
                         <script>
-                            let videoStream;
-                            const video = document.getElementById('camera-preview');
-                            const canvas_img = document.createElement('canvas');
-                            const context = canvas.getContext('2d');
-                            const photoInput = document.getElementById('photo');
-                            const photoPreview = document.getElementById('photo-preview');
-                            const cameraPreviewContainer = document.getElementById('camera-preview-container');
+                            let videoPreview, canvasPreview, photoInput, captureBtn;
 
                             function startCamera() {
                                 const constraints = {
@@ -119,109 +107,41 @@ if (!$result) {
                                     audio: false
                                 };
 
+                                videoPreview = document.getElementById('video-preview');
+                                canvasPreview = document.getElementById('canvas-preview');
+                                photoInput = document.getElementById('photo');
+                                captureBtn = document.getElementById('capture-btn');
+
                                 navigator.mediaDevices.getUserMedia(constraints)
                                     .then(stream => {
-                                        videoStream = stream;
-                                        video.srcObject = stream;
-                                        video.play();
-                                        cameraPreviewContainer.style.display = 'block';
+                                        videoPreview.srcObject = stream;
+                                        videoPreview.play();
+                                        captureBtn.classList.remove('d-none');
                                     })
                                     .catch(error => {
                                         console.error('Error accessing camera: ', error);
                                     });
+
+                                videoPreview.addEventListener('canplay', () => {
+                                    canvasPreview.width = videoPreview.videoWidth;
+                                    canvasPreview.height = videoPreview.videoHeight;
+                                    canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+                                });
                             }
 
                             function capturePhoto() {
-                                canvas_img.width = video.videoWidth;
-                                canvas_img.height = video.videoHeight;
-                                context.drawImage(video, 0, 0, canvas_img.width, canvas_img.height);
-                                const photoURL = canvas_img.toDataURL('image/png');
+                                canvasPreview.width = videoPreview.videoWidth;
+                                canvasPreview.height = videoPreview.videoHeight;
+                                canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+                                const photoURL = canvasPreview.toDataURL('image/png');
                                 photoInput.value = photoURL;
-                                photoPreview.src = photoURL;
+                                videoPreview.srcObject.getTracks().forEach(track => track.stop());
+                                canvasPreview.classList.add('d-none');
+                                videoPreview.classList.remove('d-none');
+                                captureBtn.classList.add('d-none');
                             }
-
-                            window.addEventListener('beforeunload', () => {
-                                if (videoStream) {
-                                    videoStream.getTracks().forEach(track => track.stop());
-                                }
-                            });
                         </script>
 
-
-                        <div class="mb-3">
-                            <label for="exit-interview" class="form-label">Exit Interview:</label>
-                            <textarea class="form-control" rows="5" id="exit-interview"></textarea>
-                            <div class="form-text">Enter any comments or feedback from the associate's exit interview.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="exit-form-date" class="form-label">Exit Form Date:</label>
-                            <input type="date" class="form-control" id="exit-form-date">
-                            <div class="form-text">Enter the date the exit form was completed.</div>
-                        </div>
-
-                        <div>
-                            <label for="signature-field">Please verify the data entered above and sign below to confirm its accuracy. By signing, you agree that the information provided is complete and correct to the best of your knowledge.</label>
-                            <div>
-                                <canvas id="signature-canvas" class="border border-1 rounded"></canvas>
-                                <input type="hidden" name="signature-data" id="signature-data">
-                                <button id="clear-button" class="btn btn-secondary mt-2">Clear Signature</button>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="signature" class="form-label">Signature</label>
-                                <input type="text" class="form-control" name="signature-name" id="signature-name" placeholder="Please sign above" required>
-                            </div>
-                        </div>
-
-                        <script>
-                            const canvas = document.getElementById('signature-canvas');
-                            const signatureDataInput = document.getElementById('signature-data');
-                            const signatureNameInput = document.getElementById('signature-name');
-                            const clearButton = document.getElementById('clear-button');
-                            const ctx = canvas.getContext('2d');
-                            let isDrawing = false;
-                            let lastX = 0;
-                            let lastY = 0;
-                            let sigData = '';
-
-                            function startDrawing(e) {
-                                isDrawing = true;
-                                [lastX, lastY] = [e.offsetX, e.offsetY];
-                            }
-
-                            function draw(e) {
-                                if (!isDrawing) return;
-                                ctx.beginPath();
-                                ctx.moveTo(lastX, lastY);
-                                ctx.lineTo(e.offsetX, e.offsetY);
-                                ctx.stroke();
-                                [lastX, lastY] = [e.offsetX, e.offsetY];
-                                sigData = canvas.toDataURL();
-                            }
-
-                            function endDrawing() {
-                                isDrawing = false;
-                                signatureDataInput.value = sigData;
-                            }
-
-                            function clearCanvas(event) {
-                                event.preventDefault();
-                                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                                signatureDataInput.value = '';
-                                sigData = '';
-                                signatureNameInput.value = '';
-                            }
-
-                            clearButton.addEventListener('click', clearCanvas);
-
-
-                            canvas.addEventListener('mousedown', startDrawing);
-                            canvas.addEventListener('mousemove', draw);
-                            canvas.addEventListener('mouseup', endDrawing);
-                            canvas.addEventListener('mouseleave', endDrawing);
-                            clearButton.addEventListener('click', clearCanvas);
-                        </script>
 
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary">Submit</button>
