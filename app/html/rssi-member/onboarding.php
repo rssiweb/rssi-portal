@@ -94,13 +94,13 @@ if (!$result) {
                             </div>
                         </div>
                         <div class="mt-3">
-                            <video id="video-preview" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
-                            <canvas id="canvas-preview" class="d-none" width="320" height="240"></canvas>
+                            <video id="video-preview" class="img-thumbnail d-none" alt="Preview" width="320" height="240"></video>
+                            <canvas id="canvas-preview" class="d-none" width="640" height="480"></canvas>
                             <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                         </div>
 
                         <script>
-                            let videoPreview, canvasPreview, photoInput, captureBtn, photoPreview;
+                            let videoPreview, canvasPreview, photoInput, captureBtn;
 
                             function startCamera() {
                                 const constraints = {
@@ -112,14 +112,15 @@ if (!$result) {
                                 canvasPreview = document.getElementById('canvas-preview');
                                 photoInput = document.getElementById('photo');
                                 captureBtn = document.getElementById('capture-btn');
-                                photoPreview = document.getElementById('photo-preview');
 
                                 navigator.mediaDevices.getUserMedia(constraints)
                                     .then(stream => {
                                         videoPreview.srcObject = stream;
                                         videoPreview.play();
                                         captureBtn.classList.remove('d-none');
-                                        photoPreview.classList.add('d-none'); // Hide photo preview on start camera
+                                        canvasPreview.classList.remove('d-none');
+                                        videoPreview.classList.remove('d-none');
+                                        document.getElementById('photo-preview').classList.add('d-none');
                                     })
                                     .catch(error => {
                                         console.error('Error accessing camera: ', error);
@@ -140,11 +141,11 @@ if (!$result) {
                                 canvasPreview.classList.add('d-none');
                                 videoPreview.classList.add('d-none');
                                 captureBtn.classList.add('d-none');
-                                photoPreview.setAttribute('src', photoURL);
-                                photoPreview.classList.remove('d-none'); // Show photo preview after capture
+                                document.getElementById('photo-preview').setAttribute('src', photoURL);
+                                document.getElementById('photo-preview').classList.remove('d-none');
+                                document.getElementById('video-preview').classList.add('d-none');
                             }
                         </script>
-
 
                         <div class="mb-3">
                             <label for="exit-interview" class="form-label">Exit Interview:</label>
