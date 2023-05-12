@@ -95,7 +95,7 @@ if (!$result) {
                         </div>
                         <div class="mt-3">
                             <video id="video-preview" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
-                            <canvas id="canvas-preview" class="d-none" width="320" height="240"></canvas>
+                            <!-- <canvas id="canvas-preview" class="d-none" width="320" height="240"></canvas> -->
                             <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                         </div>
 
@@ -109,7 +109,7 @@ if (!$result) {
                                 };
 
                                 videoPreview = document.getElementById('video-preview');
-                                canvasPreview = document.getElementById('canvas-preview');
+                                // canvasPreview = document.getElementById('canvas-preview');
                                 photoInput = document.getElementById('photo');
                                 captureBtn = document.getElementById('capture-btn');
 
@@ -127,11 +127,11 @@ if (!$result) {
                                         console.error('Error accessing camera: ', error);
                                     });
 
-                                videoPreview.addEventListener('canplay', () => {
-                                    canvasPreview.width = videoPreview.videoWidth;
-                                    canvasPreview.height = videoPreview.videoHeight;
-                                    canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
-                                });
+                                // videoPreview.addEventListener('canplay', () => {
+                                //     canvasPreview.width = videoPreview.videoWidth;
+                                //     canvasPreview.height = videoPreview.videoHeight;
+                                //     canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+                                // });
                             }
 
                             function capturePhoto() {
