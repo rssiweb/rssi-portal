@@ -85,7 +85,7 @@ if (!$result) {
                         </div>
 
 
-                        <div class="mb-3">
+                        <!-- <div class="mb-3">
                             <label for="photo" class="form-label">Current Photo</label>
                             <input type="text" class="form-control" id="photo" readonly>
                             <div class="mt-2">
@@ -140,7 +140,65 @@ if (!$result) {
                                 videoPreview.classList.remove('d-none');
                                 captureBtn.classList.add('d-none');
                             }
+                        </script> -->
+
+
+                        <div class="mb-3">
+                            <label for="photo" class="form-label">Current Photo</label>
+                            <input type="text" class="form-control" id="photo" readonly>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
+                                <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <video id="video-preview" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
+                            <canvas id="canvas-preview" class="d-none"></canvas>
+                        </div>
+
+                        <script>
+                            let videoPreview, canvasPreview, photoInput, captureBtn;
+
+                            function startCamera() {
+                                const constraints = {
+                                    video: true,
+                                    audio: false
+                                };
+
+                                videoPreview = document.getElementById('video-preview');
+                                canvasPreview = document.getElementById('canvas-preview');
+                                photoInput = document.getElementById('photo');
+                                captureBtn = document.getElementById('capture-btn');
+
+                                navigator.mediaDevices.getUserMedia(constraints)
+                                    .then(stream => {
+                                        videoPreview.srcObject = stream;
+                                        videoPreview.play();
+                                        captureBtn.classList.remove('d-none');
+                                    })
+                                    .catch(error => {
+                                        console.error('Error accessing camera: ', error);
+                                    });
+
+                                videoPreview.addEventListener('canplay', () => {
+                                    canvasPreview.width = videoPreview.videoWidth;
+                                    canvasPreview.height = videoPreview.videoHeight;
+                                    canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+                                });
+                            }
+
+                            function capturePhoto() {
+                                const context = canvasPreview.getContext('2d');
+                                context.drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+                                const photoURL = canvasPreview.toDataURL('image/png');
+                                photoInput.value = photoURL;
+                                videoPreview.srcObject.getTracks().forEach(track => track.stop());
+                                canvasPreview.classList.add('d-none');
+                                videoPreview.classList.remove('d-none');
+                                captureBtn.classList.add('d-none');
+                            }
                         </script>
+
 
 
 
