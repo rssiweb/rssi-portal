@@ -255,7 +255,7 @@ if (!$result) {
         <?php
         } else if ($associate_number == null) {
         ?>
-            <p>Please enter the Associate ID.</p>
+            <p>Please enter the Associate ID</p>
         <?php
         } else {
         ?>
