@@ -89,53 +89,55 @@ if (!$result) {
                             <label for="photo" class="form-label">Current Photo</label>
                             <input type="text" class="form-control" id="photo" readonly>
                             <div class="mt-2">
-                                <button type="button" class="btn btn-primary" onclick="capturePhoto()">Capture Photo</button>
+                                <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
+                                <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="mt-3">
-                                    <video id="video" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="mt-3">
-                                    <img id="photo-preview" class="img-thumbnail" alt="Preview" width="320" height="240">
-                                </div>
-                            </div>
+                        <div class="mt-3">
+                            <video id="video-preview" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
+                            <canvas id="canvas-preview" class="d-none"></canvas>
                         </div>
 
+                        <script>
+                            let videoPreview, canvasPreview, photoInput, captureBtn;
 
-                        <div class="mb-3">
-                            <label for="clearance">Clearance</label>
-                            <div class="form-text">Prior to release, the associate must obtain the following clearances. <p>To know more details <a href="#" data-bs-toggle="modal" data-bs-target="#popup">click here</a>.</p>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="asset-clearance" name="clearance[]" value="asset-clearance">
-                                <label class="form-check-label" for="asset-clearance">Asset Clearance</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="financial-clearance" name="clearance[]" value="financial-clearance">
-                                <label class="form-check-label" for="financial-clearance">Financial Clearance</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="security-clearance" name="clearance[]" value="security-clearance">
-                                <label class="form-check-label" for="security-clearance">Security Clearance</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="hr-clearance" name="clearance[]" value="hr-clearance">
-                                <label class="form-check-label" for="hr-clearance">HR Clearance</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="work-clearance" name="clearance[]" value="work-clearance">
-                                <label class="form-check-label" for="work-clearance">Work Clearance</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="legal-clearance" name="clearance[]" value="legal-clearance">
-                                <label class="form-check-label" for="legal-clearance">Legal Clearance</label>
-                            </div>
-                        </div>
+                            function startCamera() {
+                                const constraints = {
+                                    video: true,
+                                    audio: false
+                                };
 
+                                videoPreview = document.getElementById('video-preview');
+                                canvasPreview = document.getElementById('canvas-preview');
+                                photoInput = document.getElementById('photo');
+                                captureBtn = document.getElementById('capture-btn');
+
+                                navigator.mediaDevices.getUserMedia(constraints)
+                                    .then(stream => {
+                                        videoPreview.srcObject = stream;
+                                        videoPreview.play();
+                                        captureBtn.classList.remove('d-none');
+                                    })
+                                    .catch(error => {
+                                        console.error('Error accessing camera: ', error);
+                                    });
+
+                                videoPreview.addEventListener('canplay', () => {
+                                    canvasPreview.width = videoPreview.videoWidth;
+                                    canvasPreview.height = videoPreview.videoHeight;
+                                    canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+                                });
+                            }
+
+                            function capturePhoto() {
+                                const photoURL = canvasPreview.toDataURL('image/png');
+                                photoInput.value = photoURL;
+                                videoPreview.srcObject.getTracks().forEach(track => track.stop());
+                                canvasPreview.classList.add('d-none');
+                                videoPreview.classList.remove('d-none');
+                                captureBtn.classList.add('d-none');
+                            }
+                        </script>
 
 
                         <div class="mb-3">
@@ -216,38 +218,10 @@ if (!$result) {
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </div>
-
-
-                        <!-- Popup -->
-                        <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <!-- Header -->
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="popupLabel">Types of clearance</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <!-- Body -->
-                                    <div class="modal-body">
-                                        <ol>
-                                            <li>Asset clearance - The associate must return all company assets, such as laptops, phones, and equipment, and ensure that they are in good working condition.</li>
-                                            <li>Financial clearance - The associate must settle any outstanding financial obligations, such as outstanding loans or unpaid expenses.</li>
-                                            <li>Security clearance - The associate must return all security-related items, such as access cards, keys, and passwords, and ensure that any confidential information or data is secured or deleted.</li>
-                                            <li>HR clearance - The associate must complete any HR-related tasks, such as exit interviews or paperwork, and ensure that their personal and professional details are updated and accurate.</li>
-                                            <li>Work clearance - The associate must complete or delegate all outstanding work tasks and ensure that all projects or assignments are handed over to appropriate parties.</li>
-                                            <li>Legal clearance - The associate must resolve any legal issues related to their work, such as contract or intellectual property disputes, and ensure that all legal requirements are fulfilled.</li>
-                                        </ol>
-
-                                    </div>
-                                    <!-- Footer -->
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Footer -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
-
-
                     </form>
                 <?php } ?>
             <?php } ?>
@@ -268,41 +242,6 @@ if (!$result) {
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
-
-    <script>
-        function capturePhoto() {
-            const constraints = {
-                video: true,
-                audio: false
-            };
-
-            const video = document.getElementById('video');
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            const photoInput = document.getElementById('photo');
-            const photoPreview = document.getElementById('photo-preview');
-
-            navigator.mediaDevices.getUserMedia(constraints)
-                .then(stream => {
-                    video.srcObject = stream;
-                    video.play();
-                })
-                .catch(error => {
-                    console.error('Error accessing camera: ', error);
-                });
-
-            video.addEventListener('canplay', () => {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const photoURL = canvas.toDataURL('image/png');
-                photoInput.value = photoURL;
-                photoPreview.src = photoURL;
-                video.srcObject.getTracks().forEach(track => track.stop());
-            });
-        }
-    </script>
-
 </body>
 
 </html>
