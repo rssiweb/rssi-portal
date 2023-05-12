@@ -87,7 +87,7 @@ if (!$result) {
 
                         <div class="mb-3">
                             <label for="photo" class="form-label">Current Photo</label>
-                            <input type="text" class="form-control" id="photo" name="photo">
+                            <input type="hidden" class="form-control" id="photo" name="photo">
                             <div class="mt-2">
                                 <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
                                 <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
@@ -145,6 +145,13 @@ if (!$result) {
                                 document.getElementById('photo-preview').classList.remove('d-none');
                                 document.getElementById('video-preview').classList.add('d-none');
                             }
+                        </script>
+
+                        <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
+                        <script>
+                            const photoInput_display = document.getElementById('photo');
+                            const photoPreview = document.getElementById('photo-preview');
+                            photoPreview.setAttribute('src', photoInput_display.value);
                         </script>
 
                         <div class="mb-3">
