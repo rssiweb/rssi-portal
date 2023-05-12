@@ -17,7 +17,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb FROM rssimyaccount_members WHERE associatenumber = '$associate_number'");
+$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus FROM rssimyaccount_members WHERE associatenumber = '$associate_number'");
 $resultArr = pg_fetch_all($result);
 if (!$result) {
     echo "An error occurred.\n";
@@ -60,30 +60,64 @@ if (!$result) {
 
                         <h3>Associate Onboarding Form</h3>
                         <hr>
-                        <div class="container">
-                            <div class="row">
-                                <div class="col-md-4 text-center mb-3">
-                                    <img src="<?php echo $array['photo'] ?>" alt="Profile picture" width="100px">
-                                </div>
-                                <div class="col-md-8">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h2><?php echo $array['fullname'] ?></h2>
-                                            <p><strong>Associate ID:</strong> <?php echo $array['associatenumber'] ?></p>
-                                            <p><strong>Joining Date:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
-                                            <strong>Last Working Day:</strong> <?php echo ($array['effectivedate'] == null) ? "N/A" : date('M d, Y', strtotime($array['effectivedate'])); ?></p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <p><strong>Engagement:</strong> <?php echo $array['engagement']; ?></p>
-                                            <p><strong>Position:</strong> <?php echo implode('-', array_slice(explode('-',  $array['position']), 0, 2)); ?></p>
-                                            <p><strong>Deputed Branch:</strong> <?php echo $array['depb']; ?></p>
-                                            <!-- Add any additional information you want to display here -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4 d-flex flex-column justify-content-center align-items-center mb-3">
+                                        <img src="<?php echo $array['photo'] ?>" alt="Profile picture" width="100px">
+                                        <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#joining-letter-modal">
+                                            Open Joining Letter
+                                        </button>
+                                    </div>
+
+                                    <div class="col-md-8">
+                                        <div class="row align-items-start">
+                                            <div class="col-md-12 text-end mb-3">
+                                                <?php if ($array['filterstatus'] == 'Active') : ?>
+                                                    <span class="badge bg-success">Active</span>
+                                                <?php else : ?>
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h2><?php echo $array['fullname'] ?></h2>
+                                                <p><strong>Associate ID:</strong> <?php echo $array['associatenumber'] ?></p>
+                                                <p><strong>Joining Date:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Engagement:</strong> <?php echo $array['engagement']; ?></p>
+                                                <p><strong>Position:</strong> <?php echo implode('-', array_slice(explode('-',  $array['position']), 0, 2)); ?></p>
+                                                <p><strong>Deputed Branch:</strong> <?php echo $array['depb']; ?></p>
+                                                <!-- Add any additional information you want to display here -->
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Modal -->
+                        <div class="modal fade" id="joining-letter-modal" tabindex="-1" aria-labelledby="joining-letter-modal-label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="joining-letter-modal-label">Joining Letter</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <iframe src="https://www.africau.edu/images/default/sample.pdf" style="width:100%; height:500px;"></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- jQuery Library -->
+                        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+                        <!-- Bootstrap 5 JavaScript Library -->
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+
+                        <hr>
 
                         <div class="mb-3">
                             <label for="photo" class="form-label">Current Photo</label>
@@ -154,80 +188,28 @@ if (!$result) {
                             photoPreview.setAttribute('src', photoInput_display.value);
                         </script>
 
-                        <div class="mb-3">
-                            <label for="exit-interview" class="form-label">Exit Interview:</label>
-                            <textarea class="form-control" rows="5" id="exit-interview"></textarea>
-                            <div class="form-text">Enter any comments or feedback from the associate's exit interview.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="exit-form-date" class="form-label">Exit Form Date:</label>
-                            <input type="date" class="form-control" id="exit-form-date">
-                            <div class="form-text">Enter the date the exit form was completed.</div>
-                        </div>
-
-                        <div>
-                            <label for="signature-field">Please verify the data entered above and sign below to confirm its accuracy. By signing, you agree that the information provided is complete and correct to the best of your knowledge.</label>
-                            <div>
-                                <canvas id="signature-canvas" class="border border-1 rounded"></canvas>
-                                <input type="hidden" name="signature-data" id="signature-data">
-                                <button id="clear-button" class="btn btn-secondary mt-2">Clear Signature</button>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="reporting-date-time" class="form-label">Reporting Date &amp; Time</label>
+                                <input type="datetime-local" class="form-control" id="reporting-date-time" name="reporting-date-time" required>
                             </div>
-
-                            <div class="mb-3">
-                                <label for="signature" class="form-label">Signature</label>
-                                <input type="text" class="form-control" name="signature-name" id="signature-name" placeholder="Please sign above" required>
+                            <div class="col-md-6">
+                                <label for="otp-associate" class="form-label">OTP from Associate</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="otp-associate" name="otp-associate" placeholder="Enter OTP" required>
+                                    <button class="btn btn-outline-secondary" type="button">Generate OTP</button>
+                                </div>
+                                <div class="form-text">OTP will be sent to the registered email address.</div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="otp-center-incharge" class="form-label">OTP from Center Incharge</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="otp-center-incharge" name="otp-center-incharge" placeholder="Enter OTP" required>
+                                <button class="btn btn-outline-secondary" type="button">Generate OTP</button>
                             </div>
                         </div>
 
-                        <script>
-                            const canvas = document.getElementById('signature-canvas');
-                            const signatureDataInput = document.getElementById('signature-data');
-                            const signatureNameInput = document.getElementById('signature-name');
-                            const clearButton = document.getElementById('clear-button');
-                            const ctx = canvas.getContext('2d');
-                            let isDrawing = false;
-                            let lastX = 0;
-                            let lastY = 0;
-                            let sigData = '';
-
-                            function startDrawing(e) {
-                                isDrawing = true;
-                                [lastX, lastY] = [e.offsetX, e.offsetY];
-                            }
-
-                            function draw(e) {
-                                if (!isDrawing) return;
-                                ctx.beginPath();
-                                ctx.moveTo(lastX, lastY);
-                                ctx.lineTo(e.offsetX, e.offsetY);
-                                ctx.stroke();
-                                [lastX, lastY] = [e.offsetX, e.offsetY];
-                                sigData = canvas.toDataURL();
-                            }
-
-                            function endDrawing() {
-                                isDrawing = false;
-                                signatureDataInput.value = sigData;
-                            }
-
-                            function clearCanvas(event) {
-                                event.preventDefault();
-                                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                                signatureDataInput.value = '';
-                                sigData = '';
-                                signatureNameInput.value = '';
-                            }
-
-                            clearButton.addEventListener('click', clearCanvas);
-
-
-                            canvas.addEventListener('mousedown', startDrawing);
-                            canvas.addEventListener('mousemove', draw);
-                            canvas.addEventListener('mouseup', endDrawing);
-                            canvas.addEventListener('mouseleave', endDrawing);
-                            clearButton.addEventListener('click', clearCanvas);
-                        </script>
 
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary">Submit</button>
