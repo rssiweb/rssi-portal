@@ -87,7 +87,7 @@ if (!$result) {
 
                         <div class="mb-3">
                             <label for="photo" class="form-label">Current Photo</label>
-                            <input type="hidden" class="form-control" id="photo" name="photo">
+                            <input type="text" class="form-control" id="photo" readonly>
                             <div class="mt-2">
                                 <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
                                 <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
@@ -96,7 +96,6 @@ if (!$result) {
                         <div class="mt-3">
                             <video id="video-preview" class="img-thumbnail" alt="Preview" width="320" height="240"></video>
                             <canvas id="canvas-preview" class="d-none" width="320" height="240"></canvas>
-                            <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                         </div>
 
                         <script>
@@ -118,6 +117,7 @@ if (!$result) {
                                         videoPreview.srcObject = stream;
                                         videoPreview.play();
                                         captureBtn.classList.remove('d-none');
+                                        canvasPreview.classList.remove('d-none'); // show the canvas-preview element
                                     })
                                     .catch(error => {
                                         console.error('Error accessing camera: ', error);
@@ -136,16 +136,10 @@ if (!$result) {
                                 photoInput.value = photoURL;
                                 videoPreview.srcObject.getTracks().forEach(track => track.stop());
                                 canvasPreview.classList.add('d-none');
-                                videoPreview.classList.add('d-none');
+                                videoPreview.classList.remove('d-none');
                                 captureBtn.classList.add('d-none');
-                                document.getElementById('photo-preview').setAttribute('src', photoURL);
-                                document.getElementById('photo-preview').classList.remove('d-none');
                             }
                         </script>
-
-
-
-
 
 
                         <div class="mb-3">
