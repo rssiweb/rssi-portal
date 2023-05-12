@@ -143,6 +143,82 @@ if (!$result) {
                         </script>
 
 
+
+                        <div class="mb-3">
+                            <label for="exit-interview" class="form-label">Exit Interview:</label>
+                            <textarea class="form-control" rows="5" id="exit-interview"></textarea>
+                            <div class="form-text">Enter any comments or feedback from the associate's exit interview.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="exit-form-date" class="form-label">Exit Form Date:</label>
+                            <input type="date" class="form-control" id="exit-form-date">
+                            <div class="form-text">Enter the date the exit form was completed.</div>
+                        </div>
+
+                        <div>
+                            <label for="signature-field">Please verify the data entered above and sign below to confirm its accuracy. By signing, you agree that the information provided is complete and correct to the best of your knowledge.</label>
+                            <div>
+                                <canvas id="signature-canvas" class="border border-1 rounded"></canvas>
+                                <input type="hidden" name="signature-data" id="signature-data">
+                                <button id="clear-button" class="btn btn-secondary mt-2">Clear Signature</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="signature" class="form-label">Signature</label>
+                                <input type="text" class="form-control" name="signature-name" id="signature-name" placeholder="Please sign above" required>
+                            </div>
+                        </div>
+
+                        <script>
+                            const canvas = document.getElementById('signature-canvas');
+                            const signatureDataInput = document.getElementById('signature-data');
+                            const signatureNameInput = document.getElementById('signature-name');
+                            const clearButton = document.getElementById('clear-button');
+                            const ctx = canvas.getContext('2d');
+                            let isDrawing = false;
+                            let lastX = 0;
+                            let lastY = 0;
+                            let sigData = '';
+
+                            function startDrawing(e) {
+                                isDrawing = true;
+                                [lastX, lastY] = [e.offsetX, e.offsetY];
+                            }
+
+                            function draw(e) {
+                                if (!isDrawing) return;
+                                ctx.beginPath();
+                                ctx.moveTo(lastX, lastY);
+                                ctx.lineTo(e.offsetX, e.offsetY);
+                                ctx.stroke();
+                                [lastX, lastY] = [e.offsetX, e.offsetY];
+                                sigData = canvas.toDataURL();
+                            }
+
+                            function endDrawing() {
+                                isDrawing = false;
+                                signatureDataInput.value = sigData;
+                            }
+
+                            function clearCanvas(event) {
+                                event.preventDefault();
+                                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                signatureDataInput.value = '';
+                                sigData = '';
+                                signatureNameInput.value = '';
+                            }
+
+                            clearButton.addEventListener('click', clearCanvas);
+
+
+                            canvas.addEventListener('mousedown', startDrawing);
+                            canvas.addEventListener('mousemove', draw);
+                            canvas.addEventListener('mouseup', endDrawing);
+                            canvas.addEventListener('mouseleave', endDrawing);
+                            clearButton.addEventListener('click', clearCanvas);
+                        </script>
+
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </div>
