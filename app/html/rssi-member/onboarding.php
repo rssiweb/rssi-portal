@@ -99,7 +99,7 @@ if (!$result) {
                         </div>
 
                         <script>
-                            let videoPreview, canvasPreview, photoInput, captureBtn;
+                            let videoPreview, canvasPreview, photoInput, captureBtn, stream;
 
                             function startCamera() {
                                 const constraints = {
@@ -112,16 +112,26 @@ if (!$result) {
                                 photoInput = document.getElementById('photo');
                                 captureBtn = document.getElementById('capture-btn');
 
-                                navigator.mediaDevices.getUserMedia(constraints)
-                                    .then(stream => {
-                                        videoPreview.srcObject = stream;
-                                        videoPreview.play();
-                                        captureBtn.classList.remove('d-none');
-                                        canvasPreview.classList.remove('d-none'); // show the canvas-preview element
-                                    })
-                                    .catch(error => {
-                                        console.error('Error accessing camera: ', error);
-                                    });
+                                if (stream) {
+                                    videoPreview.srcObject = stream;
+                                    videoPreview.play();
+                                    captureBtn.classList.remove('d-none');
+                                    canvasPreview.classList.add('d-none');
+                                    videoPreview.classList.remove('d-none');
+                                } else {
+                                    navigator.mediaDevices.getUserMedia(constraints)
+                                        .then(str => {
+                                            stream = str;
+                                            videoPreview.srcObject = stream;
+                                            videoPreview.play();
+                                            captureBtn.classList.remove('d-none');
+                                            canvasPreview.classList.add('d-none');
+                                            videoPreview.classList.remove('d-none');
+                                        })
+                                        .catch(error => {
+                                            console.error('Error accessing camera: ', error);
+                                        });
+                                }
 
                                 videoPreview.addEventListener('canplay', () => {
                                     canvasPreview.width = videoPreview.videoWidth;
@@ -136,10 +146,11 @@ if (!$result) {
                                 photoInput.value = photoURL;
                                 videoPreview.srcObject.getTracks().forEach(track => track.stop());
                                 canvasPreview.classList.add('d-none');
-                                videoPreview.classList.remove('d-none');
+                                videoPreview.classList.add('d-none');
                                 captureBtn.classList.add('d-none');
                             }
                         </script>
+
 
 
                         <div class="mb-3">
