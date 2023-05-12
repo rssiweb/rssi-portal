@@ -17,7 +17,10 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus FROM rssimyaccount_members WHERE associatenumber = '$associate_number'");
+$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name FROM rssimyaccount_members 
+LEFT JOIN certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
+WHERE associatenumber = '$associate_number' AND badge_name='Joining Letter'");
+
 $resultArr = pg_fetch_all($result);
 if (!$result) {
     echo "An error occurred.\n";
@@ -105,7 +108,17 @@ if (!$result) {
                                 </div>
                             </div>
                         </div>
+                        <?php
+                        // Google Drive URL stored in $array['certificate_url']
+                        $url = $array['certificate_url'];
 
+                        // Extract the file ID using regular expressions
+                        preg_match('/\/file\/d\/(.+?)\//', $url, $matches);
+                        $file_id = $matches[1];
+
+                        // Generate the preview URL
+                        $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+                        ?>
                         <!-- Modal -->
                         <div class="modal fade" id="joining-letter-modal" tabindex="-1" aria-labelledby="joining-letter-modal-label" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -115,7 +128,8 @@ if (!$result) {
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <iframe src="https://www.africau.edu/images/default/sample.pdf" style="width:100%; height:500px;"></iframe>
+                                        <!-- Use the preview URL in the src attribute of the iframe tag -->
+                                        <iframe src="<?php echo $preview_url; ?>" style="width:100%; height:500px;"></iframe>
                                     </div>
                                 </div>
                             </div>
