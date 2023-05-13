@@ -19,7 +19,8 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 @$associate_number = @strtoupper($_GET['associate-number']);
 $result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name FROM rssimyaccount_members 
 LEFT JOIN certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
-WHERE associatenumber = '$associate_number' AND badge_name='Joining Letter'");
+LEFT JOIN resourcemovement ON resourcemovement.onboarding_associate_id = rssimyaccount_members.associatenumber
+WHERE associatenumber = '$associate_number' AND badge_name='Joining Letter' AND onboard_initiated_by != null");
 
 $resultArr = pg_fetch_all($result);
 if (!$result) {
@@ -151,54 +152,6 @@ if (!$result) {
                             <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                         </div>
 
-                        <script>
-                            let videoPreview, canvasPreview, photoInput, captureBtn;
-
-                            function startCamera() {
-                                const constraints = {
-                                    video: true,
-                                    audio: false
-                                };
-
-                                videoPreview = document.getElementById('video-preview');
-                                canvasPreview = document.getElementById('canvas-preview');
-                                photoInput = document.getElementById('photo');
-                                captureBtn = document.getElementById('capture-btn');
-
-                                navigator.mediaDevices.getUserMedia(constraints)
-                                    .then(stream => {
-                                        videoPreview.srcObject = stream;
-                                        videoPreview.play();
-                                        captureBtn.classList.remove('d-none');
-                                        // canvasPreview.classList.remove('d-none');
-                                        videoPreview.classList.remove('d-none');
-                                        document.getElementById('photo-preview').classList.add('d-none');
-                                    })
-                                    .catch(error => {
-                                        console.error('Error accessing camera: ', error);
-                                    });
-
-                                videoPreview.addEventListener('canplay', () => {
-                                    canvasPreview.width = videoPreview.videoWidth;
-                                    canvasPreview.height = videoPreview.videoHeight;
-                                    canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
-                                });
-                            }
-
-                            function capturePhoto() {
-                                canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
-                                const photoURL = canvasPreview.toDataURL('image/png');
-                                photoInput.value = photoURL;
-                                videoPreview.srcObject.getTracks().forEach(track => track.stop());
-                                canvasPreview.classList.add('d-none');
-                                videoPreview.classList.add('d-none');
-                                captureBtn.classList.add('d-none');
-                                document.getElementById('photo-preview').setAttribute('src', photoURL);
-                                document.getElementById('photo-preview').classList.remove('d-none');
-                                document.getElementById('video-preview').classList.add('d-none');
-                            }
-                        </script>
-
                         <!-- <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                         <script>
                             const photoInput_display = document.getElementById('photo');
@@ -282,6 +235,54 @@ if (!$result) {
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
     <!-- Bootstrap 5 JavaScript Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let videoPreview, canvasPreview, photoInput, captureBtn;
+
+        function startCamera() {
+            const constraints = {
+                video: true,
+                audio: false
+            };
+
+            videoPreview = document.getElementById('video-preview');
+            canvasPreview = document.getElementById('canvas-preview');
+            photoInput = document.getElementById('photo');
+            captureBtn = document.getElementById('capture-btn');
+
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(stream => {
+                    videoPreview.srcObject = stream;
+                    videoPreview.play();
+                    captureBtn.classList.remove('d-none');
+                    // canvasPreview.classList.remove('d-none');
+                    videoPreview.classList.remove('d-none');
+                    document.getElementById('photo-preview').classList.add('d-none');
+                })
+                .catch(error => {
+                    console.error('Error accessing camera: ', error);
+                });
+
+            videoPreview.addEventListener('canplay', () => {
+                canvasPreview.width = videoPreview.videoWidth;
+                canvasPreview.height = videoPreview.videoHeight;
+                canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+            });
+        }
+
+        function capturePhoto() {
+            canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+            const photoURL = canvasPreview.toDataURL('image/png');
+            photoInput.value = photoURL;
+            videoPreview.srcObject.getTracks().forEach(track => track.stop());
+            canvasPreview.classList.add('d-none');
+            videoPreview.classList.add('d-none');
+            captureBtn.classList.add('d-none');
+            document.getElementById('photo-preview').setAttribute('src', photoURL);
+            document.getElementById('photo-preview').classList.remove('d-none');
+            document.getElementById('video-preview').classList.add('d-none');
+        }
+    </script>
 
     <script>
         window.onload = function() {

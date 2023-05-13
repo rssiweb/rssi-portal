@@ -57,6 +57,8 @@ if ($id != null) {
 
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
 
+    left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM resourcemovement) resourcemovement ON rssimyaccount_members.associatenumber=resourcemovement.onboarding_associate_id
+
     WHERE filterstatus='$id' order by filterstatus asc,today desc");
 } else if ($aaid != null) {
     $result = pg_query($con, "SELECT distinct * FROM rssimyaccount_members 
@@ -81,6 +83,8 @@ if ($id != null) {
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as cladd FROM leaveadjustment WHERE adj_leavetype='Casual Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber=cladj.adj_applicantid
 
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
+
+    left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM resourcemovement) resourcemovement ON rssimyaccount_members.associatenumber=resourcemovement.onboarding_associate_id
     
     WHERE associatenumber='$aaid' order by filterstatus asc,today desc");
 } else {
@@ -282,6 +286,7 @@ $resultArr = pg_fetch_all($result);
           <th scope="col" id="cw2">Association Status</th>
           <th scope="col">Productivity</th>
           <th scope="col">Profile</th>
+          <th scope="col">Initiating onboarding</th>
         </tr>
         </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
@@ -344,27 +349,27 @@ $resultArr = pg_fetch_all($result);
             <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="fa-solid fa-list-ol" style="font-size: 16px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;
             
-            <a id="profile" href="myprofile.php?get_id=' . $array['associatenumber'] . '" target="_blank"><i class="fa-regular fa-user" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a> &nbsp;
-
+            <a id="profile" href="myprofile.php?get_id=' . $array['associatenumber'] . '" target="_blank"><i class="fa-regular fa-user" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a>
+            </td>
             
-
-                        <form name="ipfpush' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
-                        <input type="hidden" name="form-type" type="text" value="ipfpush">
-                        <input type="hidden" name="membername2" type="text" value="' . $array['fullname'] . '" readonly>
-                        <input type="hidden" name="memberid2" type="text" value="' . $array['associatenumber'] . '" readonly>
-                        <input type="hidden" type="text" name="ipf" id="ipf" value="' . $array['googlechat'] . '" readonly required>
-                        <input type="hidden" name="flag" type="text" value="initiated" readonly>' ?>
+            <td style="white-space: unset;">
+                        <form name="initiatingonboarding' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
+                        <input type="hidden" name="form-type" type="text" value="initiatingonboarding">
+                        <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
+                        <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>' ?>
                                 <!-- OLD Appraisal system -->
-                                <!-- <?php if ($role == 'Admin') { ?>
+                                <?php if ($role == 'Admin' && $array['onboard_initiated_by'] == null) { ?>
 
                                     <?php echo '<button type="submit" id="yes" onclick=validateForm() style=" outline: none;background: none;
                         padding: 0px;
-                        border: none;" title="Release IPF ' . $array['googlechat'] . '/' . $array['ipfl'] . '"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777""></i></button>' ?>
-                                <?php } ?> -->
-                            <?php echo ' </form>
+                        border: none;" title="Initiating Onboarding"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777"></i></button>' ?>
+                                <?php } else {
+                                    echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) .' by ' . $array['onboard_initiated_by'] ?>
+                            <?php }
+                                echo ' </form>
       </td>
             </tr>';
-                        } ?>
+                            } ?>
                         <?php
                     } else if ($id == "") {
                         ?>
@@ -540,25 +545,25 @@ $resultArr = pg_fetch_all($result);
             alert("IPF has been initiated in the system.");
         }
     </script> -->
-    <!-- <script>
+    <script>
         var data = <?php echo json_encode($resultArr) ?>;
         var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
 
         const scriptURL = 'payment-api.php'
 
         function validateForm() {
-            if (confirm('Are you sure you want to release IPF? Once you click on OK the associate will be notified.')) {
+            if (confirm('Are you sure you want to onboard this associate?')) {
 
                 data.forEach(item => {
-                    const form = document.forms['ipfpush' + item.associatenumber]
+                    const form = document.forms['initiatingonboarding' + item.associatenumber]
                     form.addEventListener('submit', e => {
                         e.preventDefault()
                         fetch(scriptURL, {
                                 method: 'POST',
-                                body: new FormData(document.forms['ipfpush' + item.associatenumber])
+                                body: new FormData(document.forms['initiatingonboarding' + item.associatenumber])
                             })
                             .then(response =>
-                                alert("IPF has been released in the system.") +
+                                alert("The associate's onboarding process has been initiated successfully. ") +
                                 location.reload()
                             )
                             .catch(error => console.error('Error!', error.message))
@@ -567,11 +572,11 @@ $resultArr = pg_fetch_all($result);
                     console.log(item)
                 })
             } else {
-                alert("IPF is NOT released in the system.");
+                alert("The onboarding process has been cancelled.");
                 return false;
             }
         }
-    </script> -->
+    </script>
     <!-- Back top -->
     <script>
         $(document).ready(function() {

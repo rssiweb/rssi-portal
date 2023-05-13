@@ -122,15 +122,13 @@ if ($_POST['form-type'] == "gpsedit") {
 
 
 
-// if ($_POST['form-type'] == "ipfpush") {
-//   @$membername2 = $_POST['membername2'];
-//   @$memberid2 = $_POST['memberid2'];
-//   @$ipf = $_POST['ipf'];
-//   @$flag = $_POST['flag'];
-//   $now = date('Y-m-d H:i:s');
-//   $ipfpush = "INSERT INTO ipfsubmission VALUES ('$now','$memberid2','$membername2','$ipf','$flag')";
-//   $result = pg_query($con, $ipfpush);
-// }
+if ($_POST['form-type'] == "initiatingonboarding") {
+  @$initiatedfor = $_POST['initiatedfor'];
+  @$initiatedby = $_POST['initiatedby'];
+  $now = date('Y-m-d H:i:s');
+  $initiatingonboarding = "INSERT INTO resourcemovement (onboarding_associate_id, onboard_initiated_by, onboard_initiated_on) VALUES ('$initiatedfor','$initiatedby','$now')";
+  $result = pg_query($con, $initiatingonboarding);
+}
 
 
 if ($_POST['form-type'] == "ipfsubmission") {
