@@ -20,7 +20,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 $result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name FROM rssimyaccount_members 
 LEFT JOIN certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
 LEFT JOIN resourcemovement ON resourcemovement.onboarding_associate_id = rssimyaccount_members.associatenumber
-WHERE associatenumber = '$associate_number' AND badge_name='Joining Letter' AND onboard_initiated_by != null");
+WHERE associatenumber = '$associate_number' AND badge_name='Joining Letter'");
 
 $resultArr = pg_fetch_all($result);
 if (!$result) {
@@ -225,6 +225,7 @@ if (!$result) {
                     </div>
                 </div>
             </div>
+
         <?php } ?>
     </div>
 
@@ -292,6 +293,18 @@ if (!$result) {
             });
             myModal.show();
         };
+    </script>
+    <script>
+        var myModal = document.getElementById('myModal');
+
+        myModal.addEventListener('click', function(event) {
+            if (event.target === myModal) {
+                // Clicked outside the modal - close it and unfreeze the background
+                $('#myModal').modal('hide');
+                $('body').removeClass('modal-open');
+                $('.modal-backdrop').remove();
+            }
+        });
     </script>
 </body>
 
