@@ -135,12 +135,6 @@ if (!$result) {
                             </div>
                         </div>
 
-                        <!-- jQuery Library -->
-                        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-                        <!-- Bootstrap 5 JavaScript Library -->
-                        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-
                         <hr>
 
                         <div class="mb-3">
@@ -205,12 +199,12 @@ if (!$result) {
                             }
                         </script>
 
-                        <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
+                        <!-- <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                         <script>
                             const photoInput_display = document.getElementById('photo');
                             const photoPreview = document.getElementById('photo-preview');
                             photoPreview.setAttribute('src', photoInput_display.value);
-                        </script>
+                        </script> -->
 
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -241,7 +235,22 @@ if (!$result) {
                     </form>
                 <?php } ?>
             <?php } ?>
-            <?php if ($role != 'Admin' && $role != 'Offline Manager') { ?><p>Oops! It looks like you're trying to access the data that doesn't belong to you.</p><?php } ?>
+            <?php if ($role != 'Admin' && $role != 'Offline Manager') { ?>
+                <!-- Modal -->
+                <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Access Denied</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Access Denied: Required permissions are missing. Contact RSSI support team if you believe this is a mistake.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php } ?>
         <?php
         } else if ($associate_number == null) {
         ?>
@@ -249,15 +258,40 @@ if (!$result) {
         <?php
         } else {
         ?>
-            <p>We could not find any records matching the entered Goal sheet ID.</p>
+            <!-- Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Access Denied</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Access Denied: Joining letter not issued yet. Contact RSSI support team for assistance.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         <?php } ?>
     </div>
 
     <!-- Bootstrap JS -->
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <!-- jQuery Library -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
+    <!-- Bootstrap 5 JavaScript Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        window.onload = function() {
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            myModal.show();
+        };
+    </script>
 </body>
 
 </html>
