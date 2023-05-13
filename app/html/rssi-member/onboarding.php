@@ -294,7 +294,7 @@ if (!$result) {
             myModal.show();
         };
     </script>
-    <script>
+    <!-- <script>
         var myModal = document.getElementById('myModal');
 
         myModal.addEventListener('click', function(event) {
@@ -305,7 +305,7 @@ if (!$result) {
                 $('.modal-backdrop').remove();
             }
         });
-    </script>
+    </script> -->
 </body>
 
 </html>
