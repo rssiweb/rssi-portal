@@ -17,10 +17,10 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name FROM rssimyaccount_members 
-LEFT JOIN certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
+$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by FROM rssimyaccount_members 
+LEFT JOIN (SELECT awarded_to_id,badge_name,certificate_url FROM certificate WHERE badge_name='Joining Letter') certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
 LEFT JOIN resourcemovement ON resourcemovement.onboarding_associate_id = rssimyaccount_members.associatenumber
-WHERE associatenumber = '$associate_number' AND badge_name='Joining Letter'");
+WHERE associatenumber = '$associate_number'");
 
 $resultArr = pg_fetch_all($result);
 if (!$result) {
@@ -52,14 +52,14 @@ if (!$result) {
             <hr>
             <div class="mb-3">
                 <label for="associate-number" class="form-label">Associate Number:</label>
-                <input type="text" class="form-control" id="associate-number" name="associate-number" Value="<?php echo $associate_number ?>" placeholder="Enter associate number">
+                <input type="text" class="form-control" id="associate-number" name="associate-number" Value="<?php echo $associate_number ?>" placeholder="Enter associate number" required>
                 <div class="form-text">Enter the associate number to search for their information.</div>
             </div>
             <button type="submit" class="btn btn-primary mb-3">Search</button>
         </form>
         <?php if (sizeof($resultArr) > 0) { ?>
             <?php foreach ($resultArr as $array) { ?>
-                <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
+                <?php if (($role == 'Admin' || $role == 'Offline Manager') && $array['onboard_initiated_by'] != null && $array['certificate_url'] != null) { ?>
                     <form method="post" name="a_exit" id="a_exit">
 
                         <h3>Associate Onboarding Form</h3>
@@ -89,8 +89,6 @@ if (!$result) {
                                                 <?php endif; ?>
                                             </div>
                                         </div>
-
-
 
                                         <div class="row">
                                             <div class="col-md-6">
@@ -135,9 +133,7 @@ if (!$result) {
                                 </div>
                             </div>
                         </div>
-
                         <hr>
-
                         <div class="mb-3">
                             <label for="photo" class="form-label">Current Photo</label>
                             <input type="hidden" class="form-control" id="photo" name="photo">
@@ -181,36 +177,61 @@ if (!$result) {
                             </div>
                         </div>
 
-
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </div>
                     </form>
-                <?php } ?>
-            <?php } ?>
-            <?php if ($role != 'Admin' && $role != 'Offline Manager') { ?>
-                <!-- Modal -->
-                <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLabel">Access Denied</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Access Denied: Required permissions are missing. Contact RSSI support team if you believe this is a mistake.</p>
+                <?php } else if (($role == 'Admin' || $role == 'Offline Manager') && $array['onboard_initiated_by'] == null) { ?>
+                    <!-- Onboarding not initiated -->
+                    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Access Denied</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Access Denied: Onboarding process has not been initiated in the system. Please contact RSSI support team for assistance.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+
+                <?php } else if ($role != 'Admin' && $role != 'Offline Manager') { ?>
+                    <!-- Modal -->
+                    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Access Denied</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Access Denied: Required permissions are missing. Contact RSSI support team if you believe this is a mistake.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php } else if ($array['certificate_url'] == null) { ?>
+                    <!-- Modal -->
+                    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Access Denied</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Access Denied: Joining letter not issued yet. Contact RSSI support team for assistance.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                <?php } ?>
             <?php } ?>
-        <?php
-        } else if ($associate_number == null) {
-        ?>
-            <p>Please enter the Associate ID</p>
-        <?php
-        } else {
-        ?>
+
+        <?php } else if ($associate_number != null) { ?>
             <!-- Modal -->
             <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
@@ -220,7 +241,7 @@ if (!$result) {
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <p>Access Denied: Joining letter not issued yet. Contact RSSI support team for assistance.</p>
+                            <p>Access Denied: Contact RSSI support team for assistance.</p>
                         </div>
                     </div>
                 </div>
