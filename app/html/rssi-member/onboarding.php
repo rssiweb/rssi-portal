@@ -164,7 +164,7 @@ if (!$result) {
                                 <label for="otp-associate" class="form-label">OTP from Associate</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="otp-associate" name="otp-associate" placeholder="Enter OTP" required>
-                                    <button class="btn btn-outline-secondary" type="button">Generate OTP</button>
+                                    <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate" onclick="validateForm()">Generate OTP</button>
                                 </div>
                                 <div class="form-text">OTP will be sent to the registered email address.</div>
                             </div>
@@ -181,6 +181,13 @@ if (!$result) {
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </div>
                     </form>
+
+                    <!-- Form gen_otp_associate -->
+                    <form name="gen_otp_associate" id="gen_otp_associate" action="#" method="POST" style="display:inline;">
+                        <input type="hidden" name="form-type" type="text" value="gen_otp_associate">
+                        <input type="hidden" name="otp_initiatedfor" type="text" value="<?php echo $array['associatenumber'] ?>" readonly>
+                    </form>
+
                 <?php } else if (($role == 'Admin' || $role == 'Offline Manager') && $array['onboard_initiated_by'] == null) { ?>
                     <!-- Onboarding not initiated -->
                     <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -327,6 +334,44 @@ if (!$result) {
             }
         });
     </script> -->
+
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>;
+        var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
+
+        const scriptURL = 'payment-api.php'
+
+        // Add an event listener to the submit button with id "submit-formB"
+        document.getElementById("submit_gen_otp_associate").addEventListener("click", function(event) {
+            event.preventDefault(); // prevent default form submission
+
+            if (confirm('Are you sure you want to generate OTP?')) {
+
+                data.forEach(item => {
+                    const form = document.forms['gen_otp_associate']
+                    form.addEventListener('submit', e => {
+                        e.preventDefault()
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['gen_otp_associate'])
+                            })
+                            .then(response =>
+                                alert("OTP generated successfully.") +
+                                location.reload()
+                            )
+                            .catch(error => console.error('Error!', error.message))
+                    })
+
+                    console.log(item)
+                })
+            } else {
+                alert("OTP generation has been cancelled.");
+                return false;
+            }
+        })
+    </script>
+
+
 </body>
 
 </html>
