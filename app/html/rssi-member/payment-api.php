@@ -130,6 +130,16 @@ if ($_POST['form-type'] == "gen_otp_associate") {
   $result = pg_query($con, $gen_otp_associate);
 }
 
+if ($_POST['form-type'] == "gen_otp_centr") {
+  @$otp_initiatedfor = $_POST['otp_initiatedfor'];
+
+  // Generate a random 6 digit number
+  $otp = rand(100000, 999999);
+
+  $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
+  $result = pg_query($con, $gen_otp_centr);
+}
+
 if ($_POST['form-type'] == "initiatingonboarding") {
   @$initiatedfor = $_POST['initiatedfor'];
   @$initiatedby = $_POST['initiatedby'];

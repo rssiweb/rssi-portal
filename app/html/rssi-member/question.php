@@ -30,10 +30,10 @@ date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-d-m h:i:s');
 //echo $date;
 
-@$category = $_POST['get_category'];
-@$subject = $_POST['get_subject'];
-@$year = $_POST['get_year'];
-@$exam = $_POST['get_exam'];
+@$category = $_GET['get_category'];
+@$subject = $_GET['get_subject'];
+@$year = $_GET['get_year'];
+@$exam = $_GET['get_exam'];
 
 if ($category != 'ALL' && $subject != 'ALL' && $year != 'ALL' && $exam == 'ALL') {
     $result = pg_query($con, "SELECT * FROM question WHERE category='$category' AND subject='$subject' AND year='$year'");
@@ -144,7 +144,7 @@ $resultArr = pg_fetch_all($result);
                     </div>
                 </div>
                 <section class="box" style="padding: 2%;">
-                    <form action="" method="POST">
+                    <form action="" method="GET">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
                                 <select name="get_category" class="form-control" style="width:max-content; display:inline-block" required>

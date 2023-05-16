@@ -173,7 +173,7 @@ if (!$result) {
                             <label for="otp-center-incharge" class="form-label">OTP from Center Incharge</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="otp-center-incharge" name="otp-center-incharge" placeholder="Enter OTP" required>
-                                <button class="btn btn-outline-secondary" type="button">Generate OTP</button>
+                                <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr" onclick="validateForm_centr()">Generate OTP</button>
                             </div>
                         </div>
 
@@ -185,6 +185,12 @@ if (!$result) {
                     <!-- Form gen_otp_associate -->
                     <form name="gen_otp_associate" id="gen_otp_associate" action="#" method="POST" style="display:inline;">
                         <input type="hidden" name="form-type" type="text" value="gen_otp_associate">
+                        <input type="hidden" name="otp_initiatedfor" type="text" value="<?php echo $array['associatenumber'] ?>" readonly>
+                    </form>
+
+                    <!-- Form gen_otp_centr -->
+                    <form name="gen_otp_centr" id="gen_otp_centr" action="#" method="POST" style="display:inline;">
+                        <input type="hidden" name="form-type" type="text" value="gen_otp_centr">
                         <input type="hidden" name="otp_initiatedfor" type="text" value="<?php echo $array['associatenumber'] ?>" readonly>
                     </form>
 
@@ -339,33 +345,47 @@ if (!$result) {
         var data = <?php echo json_encode($resultArr) ?>;
         var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
 
-        const scriptURL = 'payment-api.php'
+        const scriptURL = 'payment-api.php';
 
-        // Add an event listener to the submit button with id "submit-formB"
+        // Get reference to form
+        var form = document.forms['gen_otp_associate'];
+        var form_centr = document.forms['gen_otp_centr'];
+
+        // Add an event listener to the submit button with id "submit_gen_otp_associate"
         document.getElementById("submit_gen_otp_associate").addEventListener("click", function(event) {
             event.preventDefault(); // prevent default form submission
 
             if (confirm('Are you sure you want to generate OTP?')) {
-
-                data.forEach(item => {
-                    const form = document.forms['gen_otp_associate']
-                    form.addEventListener('submit', e => {
-                        e.preventDefault()
-                        fetch(scriptURL, {
-                                method: 'POST',
-                                body: new FormData(document.forms['gen_otp_associate'])
-                            })
-                            .then(response =>
-                                alert("OTP generated successfully.") +
-                                location.reload()
-                            )
-                            .catch(error => console.error('Error!', error.message))
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
                     })
-
-                    console.log(item)
-                })
+                    .then(response =>
+                        alert("OTP generated successfully.")
+                    )
+                    .catch(error => console.error('Error!', error.message));
             } else {
                 alert("OTP generation has been cancelled.");
+                return false;
+            }
+        })
+
+
+        // Add an event listener to the submit button with id "submit_gen_otp_associate"
+        document.getElementById("submit_gen_otp_centr").addEventListener("click", function(event) {
+            event.preventDefault(); // prevent default form submission;
+
+            if (confirm('Are you sure you want to generate OTP for centre incharge?')) {
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form_centr)
+                    })
+                    .then(response =>
+                        alert("OTP generated successfully for centre incharge.")
+                    )
+                    .catch(error => console.error('Error!', error.message));
+            } else {
+                alert("OTP generation has been cancelled centre incharge.");
                 return false;
             }
         })
