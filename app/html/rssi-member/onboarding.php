@@ -242,7 +242,8 @@ if (@$cmdtuples == 1) {
                                 <label for="otp-associate" class="form-label">OTP from Associate</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="otp-associate" name="otp-associate" placeholder="Enter OTP" required>
-                                    <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate" onclick="validateForm()" <?php echo ($array['onboarding_gen_otp_associate'] != null) ? "disabled" : ""; ?>>Generate OTP</button>
+                                    <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate" onclick="validateForm()">Generate OTP</button>
+                                    <!--<?php echo ($array['onboarding_gen_otp_associate'] != null) ? "disabled" : ""; ?>-->
                                 </div>
                                 <div class="form-text">OTP will be sent to the registered email address.</div>
                             </div>
@@ -251,7 +252,8 @@ if (@$cmdtuples == 1) {
                             <label for="otp-center-incharge" class="form-label">OTP from Center Incharge</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="otp-center-incharge" name="otp-center-incharge" placeholder="Enter OTP" required>
-                                <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr" onclick="validateForm_centr()" <?php echo ($array['onboarding_gen_otp_center_incharge'] != null) ? "disabled" : ""; ?>>Generate OTP</button>
+                                <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr" onclick="validateForm_centr()">Generate OTP</button>
+                                <!--<?php echo ($array['onboarding_gen_otp_center_incharge'] != null) ? "disabled" : ""; ?>-->
                             </div>
                         </div>
 
@@ -420,9 +422,6 @@ if (@$cmdtuples == 1) {
     </script> -->
 
     <script>
-        var data = <?php echo json_encode($resultArr) ?>;
-        var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
-
         const scriptURL = 'payment-api.php';
 
         // Get reference to form
