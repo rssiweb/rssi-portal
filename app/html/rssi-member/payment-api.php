@@ -125,8 +125,9 @@ if ($_POST['form-type'] == "gen_otp_associate") {
 
   // Generate a random 6 digit number
   $otp = rand(100000, 999999);
+  $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
 
-  $gen_otp_associate = "UPDATE resourcemovement SET  onboarding_gen_otp_associate = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
+  $gen_otp_associate = "UPDATE resourcemovement SET  onboarding_gen_otp_associate = '$hashedValue', otp_asso = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
   $result = pg_query($con, $gen_otp_associate);
 }
 
@@ -135,8 +136,9 @@ if ($_POST['form-type'] == "gen_otp_centr") {
 
   // Generate a random 6 digit number
   $otp = rand(100000, 999999);
+  $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
 
-  $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
+  $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$hashedValue', otp_centre = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
   $result = pg_query($con, $gen_otp_centr);
 }
 

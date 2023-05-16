@@ -5,6 +5,7 @@ include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -17,7 +18,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by FROM rssimyaccount_members 
+$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by,onboarding_gen_otp_center_incharge,onboarding_gen_otp_associate,email FROM rssimyaccount_members 
 LEFT JOIN (SELECT awarded_to_id,badge_name,certificate_url FROM certificate WHERE badge_name='Joining Letter') certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
 LEFT JOIN resourcemovement ON resourcemovement.onboarding_associate_id = rssimyaccount_members.associatenumber
 WHERE associatenumber = '$associate_number'");
@@ -28,6 +29,81 @@ if (!$result) {
     exit;
 }
 
+?>
+<?php
+
+// date_default_timezone_set('Asia/Kolkata');
+// $date = date('Y-m-d H:i:s');
+// $auth_failed_dialog = false;
+// $otp_associate = "";
+// $otp_centreincharge = "";
+// $cmdtuples = 0;
+if (@$_POST['form-type'] == "onboarding") {
+
+    $otp_associate = password_hash($_POST['otp-associate'], PASSWORD_DEFAULT);
+    $otp_centreincharge = password_hash($_POST['otp-center-incharge'], PASSWORD_DEFAULT);
+    $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
+
+    $query = "select onboarding_gen_otp_associate, onboarding_gen_otp_center_incharge from resourcemovement WHERE onboarding_associate_id='$otp_initiatedfor_main'";
+    $result = pg_query($con, $query);
+    $db_otp_associate = pg_fetch_result($result, 0, 0);
+    $db_otp_centreincharge = pg_fetch_result($result, 0, 1);
+
+    $authSuccess = password_verify($otp_associate, $db_otp_associate) && password_verify($otp_centreincharge, $db_otp_centreincharge);
+    if ($authSuccess) {
+        // $otp_associate = password_hash($_POST['otp-associate'], PASSWORD_DEFAULT);
+        // $otp_centreincharge = password_hash($_POST['otp-center-incharge'], PASSWORD_DEFAULT);
+        $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
+        $onboarding_photo = $_POST['photo'];
+        $reporting_date_time = $_POST['reporting-date-time'];
+        $now = date('Y-m-d H:i:s');
+        $onboarded = "UPDATE resourcemovement SET onboarding_photo='$onboarding_photo', reporting_date_time='$reporting_date_time', onboarding_otp_associate='$otp_associate', onboarding_otp_center_incharge='$otp_centreincharge', onboarding_submitted_by='$associatenumber', onboarding_submitted_on='$now', onboarding_flag='yes'where onboarding_associate_id='$otp_initiatedfor_main'";
+        $result = pg_query($con, $onboarded);
+        $cmdtuples = pg_affected_rows($result);
+    } else {
+        $auth_failed_dialog = true;
+    }
+} else {
+}
+
+if (@$auth_failed_dialog) { ?>
+    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The OTP you entered is incorrect.</span>
+        <?php // Check that all input values are set
+        if (!isset($otp_associate, $otp_centreincharge, $db_otp_associate, $db_otp_centreincharge)) {
+            error_log('One or more input values is missing');
+            exit;
+        }
+
+        // Print input values for debugging purposes
+        var_dump($otp_associate, $otp_centreincharge, $db_otp_associate, $db_otp_centreincharge);
+
+        // Verify OTP values
+        $authSuccess = password_verify($otp_associate, $db_otp_associate) && password_verify($otp_centreincharge, $db_otp_centreincharge);
+
+        // Print authSuccess for debugging purposes
+        var_dump($authSuccess);
+
+        // Echo success or error message to user
+        if ($authSuccess) {
+            echo 'OTP verification succeeded';
+        } else {
+            echo 'OTP verification failed';
+        }
+        ?>
+    </div>
+<?php } ?>
+<?php
+if (@$cmdtuples == 1) {
+    echo '<div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">';
+    echo '<span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>The associate has been onboarded succesfully.</span>';
+    echo '</div>';
+
+    // Redirect the user after a delay
+    echo '<meta http-equiv="refresh" content="3;url=index.php">';
+    exit; // End the script to prevent any further output
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -60,7 +136,9 @@ if (!$result) {
         <?php if (sizeof($resultArr) > 0) { ?>
             <?php foreach ($resultArr as $array) { ?>
                 <?php if (($role == 'Admin' || $role == 'Offline Manager') && $array['onboard_initiated_by'] != null && $array['certificate_url'] != null) { ?>
-                    <form method="post" name="a_exit" id="a_exit">
+                    <form method="post" name="a_onboard" id="a_onboard" action="onboarding.php">
+                        <input type="hidden" name="form-type" type="text" value="onboarding">
+                        <input type="hidden" name="otp_initiatedfor_main" type="text" value="<?php echo $array['associatenumber'] ?>" readonly>
 
                         <h3>Associate Onboarding Form</h3>
                         <hr>
@@ -164,7 +242,7 @@ if (!$result) {
                                 <label for="otp-associate" class="form-label">OTP from Associate</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="otp-associate" name="otp-associate" placeholder="Enter OTP" required>
-                                    <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate" onclick="validateForm()">Generate OTP</button>
+                                    <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate" onclick="validateForm()" <?php echo ($array['onboarding_gen_otp_associate'] != null) ? "disabled" : ""; ?>>Generate OTP</button>
                                 </div>
                                 <div class="form-text">OTP will be sent to the registered email address.</div>
                             </div>
@@ -173,7 +251,7 @@ if (!$result) {
                             <label for="otp-center-incharge" class="form-label">OTP from Center Incharge</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="otp-center-incharge" name="otp-center-incharge" placeholder="Enter OTP" required>
-                                <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr" onclick="validateForm_centr()">Generate OTP</button>
+                                <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr" onclick="validateForm_centr()" <?php echo ($array['onboarding_gen_otp_center_incharge'] != null) ? "disabled" : ""; ?>>Generate OTP</button>
                             </div>
                         </div>
 
@@ -375,17 +453,17 @@ if (!$result) {
         document.getElementById("submit_gen_otp_centr").addEventListener("click", function(event) {
             event.preventDefault(); // prevent default form submission;
 
-            if (confirm('Are you sure you want to generate OTP for centre incharge?')) {
+            if (confirm('Are you sure you want to generate OTP?')) {
                 fetch(scriptURL, {
                         method: 'POST',
                         body: new FormData(form_centr)
                     })
                     .then(response =>
-                        alert("OTP generated successfully for centre incharge.")
+                        alert("OTP generated successfully.")
                     )
                     .catch(error => console.error('Error!', error.message));
             } else {
-                alert("OTP generation has been cancelled centre incharge.");
+                alert("OTP generation has been cancelled.");
                 return false;
             }
         })
