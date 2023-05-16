@@ -32,16 +32,10 @@ if (!$result) {
 ?>
 <?php
 
-// date_default_timezone_set('Asia/Kolkata');
-// $date = date('Y-m-d H:i:s');
-// $auth_failed_dialog = false;
-// $otp_associate = "";
-// $otp_centreincharge = "";
-// $cmdtuples = 0;
 if (@$_POST['form-type'] == "onboarding") {
 
-    $otp_associate = password_hash($_POST['otp-associate'], PASSWORD_DEFAULT);
-    $otp_centreincharge = password_hash($_POST['otp-center-incharge'], PASSWORD_DEFAULT);
+    $otp_associate = $_POST['otp-associate'];
+    $otp_centreincharge = $_POST['otp-center-incharge'];
     $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
 
     $query = "select onboarding_gen_otp_associate, onboarding_gen_otp_center_incharge from resourcemovement WHERE onboarding_associate_id='$otp_initiatedfor_main'";
@@ -51,8 +45,6 @@ if (@$_POST['form-type'] == "onboarding") {
 
     $authSuccess = password_verify($otp_associate, $db_otp_associate) && password_verify($otp_centreincharge, $db_otp_centreincharge);
     if ($authSuccess) {
-        // $otp_associate = password_hash($_POST['otp-associate'], PASSWORD_DEFAULT);
-        // $otp_centreincharge = password_hash($_POST['otp-center-incharge'], PASSWORD_DEFAULT);
         $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
         $onboarding_photo = $_POST['photo'];
         $reporting_date_time = $_POST['reporting-date-time'];
@@ -70,28 +62,6 @@ if (@$auth_failed_dialog) { ?>
     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
         <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The OTP you entered is incorrect.</span>
-        <?php // Check that all input values are set
-        if (!isset($otp_associate, $otp_centreincharge, $db_otp_associate, $db_otp_centreincharge)) {
-            error_log('One or more input values is missing');
-            exit;
-        }
-
-        // Print input values for debugging purposes
-        var_dump($otp_associate, $otp_centreincharge, $db_otp_associate, $db_otp_centreincharge);
-
-        // Verify OTP values
-        $authSuccess = password_verify($otp_associate, $db_otp_associate) && password_verify($otp_centreincharge, $db_otp_centreincharge);
-
-        // Print authSuccess for debugging purposes
-        var_dump($authSuccess);
-
-        // Echo success or error message to user
-        if ($authSuccess) {
-            echo 'OTP verification succeeded';
-        } else {
-            echo 'OTP verification failed';
-        }
-        ?>
     </div>
 <?php } ?>
 <?php
@@ -242,7 +212,7 @@ if (@$cmdtuples == 1) {
                                 <label for="otp-associate" class="form-label">OTP from Associate</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="otp-associate" name="otp-associate" placeholder="Enter OTP" required>
-                                    <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate" onclick="validateForm()">Generate OTP</button>
+                                    <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate">Generate OTP</button>
                                     <!--<?php echo ($array['onboarding_gen_otp_associate'] != null) ? "disabled" : ""; ?>-->
                                 </div>
                                 <div class="form-text">OTP will be sent to the registered email address.</div>
@@ -252,7 +222,7 @@ if (@$cmdtuples == 1) {
                             <label for="otp-center-incharge" class="form-label">OTP from Center Incharge</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="otp-center-incharge" name="otp-center-incharge" placeholder="Enter OTP" required>
-                                <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr" onclick="validateForm_centr()">Generate OTP</button>
+                                <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr">Generate OTP</button>
                                 <!--<?php echo ($array['onboarding_gen_otp_center_incharge'] != null) ? "disabled" : ""; ?>-->
                             </div>
                         </div>
@@ -347,7 +317,7 @@ if (@$cmdtuples == 1) {
 
     <!-- jQuery Library -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script> -->
     <!-- Bootstrap 5 JavaScript Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 
@@ -400,7 +370,7 @@ if (@$cmdtuples == 1) {
     </script>
 
     <script>
-        window.onload = function() {
+        window.ready = function() {
             var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
                 backdrop: 'static',
                 keyboard: false
@@ -440,7 +410,7 @@ if (@$cmdtuples == 1) {
                     .then(response =>
                         alert("OTP generated successfully.")
                     )
-                    .catch(error => console.error('Error!', error.message));
+                    .catch(error => alert('Error! XXXXX'));
             } else {
                 alert("OTP generation has been cancelled.");
                 return false;

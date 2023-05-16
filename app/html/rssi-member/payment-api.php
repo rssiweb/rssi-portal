@@ -2,7 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/paytm-util.php");
-// include("../../util/email.php");
+include("../../util/email.php");
 // require_once("email.php");
 
 date_default_timezone_set('Asia/Kolkata');
@@ -127,19 +127,42 @@ if ($_POST['form-type'] == "gen_otp_associate") {
   $otp = rand(100000, 999999);
   $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
 
-  $gen_otp_associate = "UPDATE resourcemovement SET  onboarding_gen_otp_associate = '$hashedValue', otp_asso = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
+  $gen_otp_associate = "UPDATE resourcemovement SET  onboarding_gen_otp_associate = '$hashedValue', otp_ass = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
   $result = pg_query($con, $gen_otp_associate);
+  if($result)
+  {
+      $rows = pg_num_rows($result);
+      if($rows == 0){
+        http_response_code(400);
+      }
+      echo $rows;
+  } else {
+    $error = pg_last_error($con);
+    echo $error;
+  }
 }
 
 if ($_POST['form-type'] == "gen_otp_centr") {
+
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
 
   // Generate a random 6 digit number
   $otp = rand(100000, 999999);
   $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
 
-  $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$hashedValue', otp_centre = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
+  $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$hashedValue', otp_centr = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
   $result = pg_query($con, $gen_otp_centr);
+  if($result)
+  {
+      $rows = pg_num_rows($result);
+      if($rows == 0){
+        http_response_code(400);
+      }
+      echo $rows;
+  } else {
+    $error = pg_last_error($con);
+    echo $error;
+  }
 }
 
 if ($_POST['form-type'] == "initiatingonboarding") {
