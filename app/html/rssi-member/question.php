@@ -204,10 +204,10 @@ $resultArr = pg_fetch_all($result);
                                         <option hidden selected><?php echo $exam ?></option>
                                     <?php }
                                     ?>
-                                    <option>First Term Exam</option>
-                                    <option>Half Yearly Exam</option>
+                                    <option disabled>First Term Exam</option>
+                                    <option disabled>Half Yearly Exam</option>
                                     <option>Annual Exam</option>
-                                    <option>ALL</option>
+                                    <!-- <option>ALL</option> -->
                                 </select>
                             </div>
                         </div>
