@@ -18,7 +18,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by,onboarding_gen_otp_center_incharge,onboarding_gen_otp_associate,email,onboarding_flag,onboarding_photo,reporting_date_time FROM rssimyaccount_members 
+$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by,onboarding_gen_otp_center_incharge,onboarding_gen_otp_associate,email,onboarding_flag,onboarding_photo,reporting_date_time,disclaimer,ip_address,onboarding_submitted_by,onboarding_submitted_on,onboard_initiated_on,onboard_initiated_by FROM rssimyaccount_members 
 LEFT JOIN (SELECT awarded_to_id,badge_name,certificate_url FROM certificate WHERE badge_name='Joining Letter') certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
 LEFT JOIN resourcemovement ON resourcemovement.onboarding_associate_id = rssimyaccount_members.associatenumber
 WHERE associatenumber = '$associate_number'");
@@ -48,8 +48,10 @@ if (@$_POST['form-type'] == "onboarding") {
         $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
         $onboarding_photo = $_POST['photo'];
         $reporting_date_time = $_POST['reporting-date-time'];
+        $disclaimer = $_POST['onboarding_complete'];
         $now = date('Y-m-d H:i:s');
-        $onboarded = "UPDATE resourcemovement SET onboarding_photo='$onboarding_photo', reporting_date_time='$reporting_date_time', onboarding_otp_associate='$otp_associate', onboarding_otp_center_incharge='$otp_centreincharge', onboarding_submitted_by='$associatenumber', onboarding_submitted_on='$now', onboarding_flag='yes'where onboarding_associate_id='$otp_initiatedfor_main'";
+        $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user
+        $onboarded = "UPDATE resourcemovement SET onboarding_photo='$onboarding_photo', reporting_date_time='$reporting_date_time', onboarding_otp_associate='$otp_associate', onboarding_otp_center_incharge='$otp_centreincharge', onboarding_submitted_by='$associatenumber', onboarding_submitted_on='$now', onboarding_flag='yes', disclaimer='$disclaimer', ip_address='$ip_address' where onboarding_associate_id='$otp_initiatedfor_main'";
         $result = pg_query($con, $onboarded);
         $cmdtuples = pg_affected_rows($result);
     } else {
@@ -211,10 +213,10 @@ if (@$cmdtuples == 1) {
                                 <canvas id="canvas-preview" class="d-none" width="640" height="480"></canvas>
                                 <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                             </div>
-                            <?php if ($array['onboarding_photo']!=null){?>
-                            <div class="row mb-3">
-                                <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" style="width:500px;" src="<?php echo $array['onboarding_photo'] ?>">
-                            </div>
+                            <?php if ($array['onboarding_photo'] != null) { ?>
+                                <div class="row mb-3">
+                                    <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" style="width:500px;" src="<?php echo $array['onboarding_photo'] ?>">
+                                </div>
                             <?php } ?>
 
                             <div class="row mb-3">
@@ -238,10 +240,50 @@ if (@$cmdtuples == 1) {
                                     <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr">Generate OTP</button>
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <label>
+                                    <input type="checkbox" name="onboarding_complete" value="yes" required <?php if ($array['disclaimer'] == 'yes') {
+                                                                                                                echo "checked";
+                                                                                                            } ?>>
+                                    I confirm that I have completed all the onboarding tasks for this associate, including:
+                                    <ol>
+                                        <li>Reviewing the associate's job description and responsibilities</li>
+                                        <li>Providing the associate with access to the required tools and resources</li>
+                                        <li>Conducting a briefing on the NGO's policies and procedures</li>
+                                        <li>Introducing the associate to their team and colleagues</li>
+                                    </ol>
+                                </label>
+                            </div>
 
                             <div class="mb-3">
                                 <button type="submit" class="btn btn-primary">Submit</button>
                             </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    Onboarding Status
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <div class="row">
+                                            <div class="col-6">Initiated On:</div>
+                                            <div class="col-6">
+                                                <?php echo ($array['onboard_initiated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'] : '' ?>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="row">
+                                            <div class="col-6">Submitted On:</div>
+                                            <div class="col-6">
+                                                <?php echo ($array['onboarding_submitted_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['onboarding_submitted_on'])) . ' by ' . $array['onboarding_submitted_by'] : '' ?><br>
+                                                <?php echo 'IP Address:' . $array['ip_address'] ?>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <br><br>
                         </fieldset>
                     </form>
 
