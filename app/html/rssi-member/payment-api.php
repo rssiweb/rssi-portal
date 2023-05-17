@@ -143,21 +143,32 @@ if ($formtype == "gen_otp_associate") {
 if ($formtype == "gen_otp_centr") {
 
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
+  $item = $entityManager->getRepository('Resourcemovement')->find($otp_initiatedfor); //primary key
+  if ($item) {
+    // Generate a random 6 digit number
+    $otp = rand(100000, 999999);
+    $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
 
-  // Generate a random 6 digit number
-  $otp = rand(100000, 999999);
-  $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
-
-  $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$hashedValue', otp_centre = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
-  $result = pg_query($con, $gen_otp_centr);
-  if ($result) {
-    $rows = pg_num_rows($result);
-    if ($rows == 1)
-      echo "success";
-    else
-      echo "failed";
-  } else
+    $item->setOnboardingGenOtpCenterIncharge($hashedValue);
+    $item->setOtpCentre($otp);
+    $entityManager->persist($item);
+    $entityManager->flush();
+    echo "success";
+  } else {
     echo "failed";
+  }
+
+
+  // $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$hashedValue', otp_centre = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
+  // $result = pg_query($con, $gen_otp_centr);
+  // if ($result) {
+  //   $rows = pg_num_rows($result);
+  //   if ($rows == 1)
+  //     echo "success";
+  //   else
+  //     echo "failed";
+  // } else
+  //   echo "failed";
 }
 
 if ($formtype == "initiatingonboarding") {
