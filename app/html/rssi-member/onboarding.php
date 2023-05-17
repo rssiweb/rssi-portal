@@ -211,14 +211,11 @@ if (@$cmdtuples == 1) {
                                 <canvas id="canvas-preview" class="d-none" width="640" height="480"></canvas>
                                 <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                             </div>
-                            <!-- <div class="row mb-3">
-                                <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
-                                <script>
-                                    const photoInput_display = document.getElementById('photo');
-                                    const photoPreview = document.getElementById('photo-preview');
-                                    photoPreview.setAttribute('src', photoInput_display.value);
-                                </script>
-                            </div> -->
+                            <?php if ($array['onboarding_photo']!=null){?>
+                            <div class="row mb-3">
+                                <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" style="width:500px;" src="<?php echo $array['onboarding_photo'] ?>">
+                            </div>
+                            <?php } ?>
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
