@@ -407,32 +407,39 @@ if (@$cmdtuples == 1) {
                         method: 'POST',
                         body: new FormData(form)
                     })
-                    .then(response =>
-                        alert("OTP generated successfully.")
-                    )
-                    .catch(error => alert('Error! XXXXX'));
+                    .then(response => response.text())
+                    .then(result => {
+                        if (result == 'success') {
+                            alert("OTP generated successfully!")
+                        } else {
+                            alert("Error generating OTP. Please try again later or contact support.")
+                        }
+                    })
             } else {
-                alert("OTP generation has been cancelled.");
+                alert("OTP generation cancelled.");
                 return false;
             }
         })
 
-
         // Add an event listener to the submit button with id "submit_gen_otp_associate"
         document.getElementById("submit_gen_otp_centr").addEventListener("click", function(event) {
-            event.preventDefault(); // prevent default form submission;
+            event.preventDefault(); // prevent default form submission
 
             if (confirm('Are you sure you want to generate OTP?')) {
                 fetch(scriptURL, {
                         method: 'POST',
                         body: new FormData(form_centr)
                     })
-                    .then(response =>
-                        alert("OTP generated successfully.")
-                    )
-                    .catch(error => console.error('Error!', error.message));
+                    .then(response => response.text())
+                    .then(result => {
+                        if (result == 'success') {
+                            alert("OTP generated successfully!")
+                        } else {
+                            alert("Error generating OTP. Please try again later or contact support.")
+                        }
+                    })
             } else {
-                alert("OTP generation has been cancelled.");
+                alert("OTP generation cancelled.");
                 return false;
             }
         })

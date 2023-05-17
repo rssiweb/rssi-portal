@@ -124,8 +124,7 @@ if ($formtype == "gpsedit") {
 
 if ($formtype == "gen_otp_associate") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
-  
-  $item = $entityManager->getRepository('Resourcemovement')->find($otp_initiatedfor);
+  $item = $entityManager->getRepository('Resourcemovement')->find($otp_initiatedfor); //primary key
   if ($item) {
     // Generate a random 6 digit number
     $otp = rand(100000, 999999);
@@ -133,11 +132,13 @@ if ($formtype == "gen_otp_associate") {
 
     $item->setOnboardingGenOtpAssociate($hashedValue);
     $item->setOtpAsso($otp);
+<<<<<<< HEAD
     $entityManager->persist($item);
+=======
+>>>>>>> 35bdfa6 (ok)
     $entityManager->flush();
     echo "success";
-  }else{
-    http_response_code(400);
+  } else {
     echo "failed";
   }
 }
@@ -152,17 +153,14 @@ if ($formtype == "gen_otp_centr") {
 
   $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$hashedValue', otp_centr = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
   $result = pg_query($con, $gen_otp_centr);
-  if($result)
-  {
-      $rows = pg_num_rows($result);
-      if($rows == 0){
-        http_response_code(400);
-      }
-      echo $rows;
-  } else {
-    $error = pg_last_error($con);
-    echo $error;
-  }
+  if ($result) {
+    $rows = pg_num_rows($result);
+    if ($rows == 1)
+      echo "success";
+    else
+      echo "failed";
+  } else
+    echo "failed";
 }
 
 if ($formtype == "initiatingonboarding") {
@@ -214,32 +212,6 @@ if ($formtype == "leavereviewform") {
   $leaveapproval = "UPDATE leavedb_leavedb SET  status = '$status', fromdate = '$fromdate',  todate = '$todate', comment = '$comment',reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name', days = '$day', halfday = $halfdayhr WHERE leaveid = '$leaveid'";
 
   $result = pg_query($con, $leaveapproval);
-
-
-  // $applicantid = pg_query($con, "Select applicantid from leavedb_leavedb where leaveid='$leaveid'");
-  // $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$applicantid'");
-  // @$nameassociate = pg_fetch_result($resultt, 0, 0);
-  // @$emailassociate = pg_fetch_result($resultt, 0, 1);
-
-  // $resulttt = pg_query($con, "Select studentname,emailaddress from rssimyprofile_student where student_id='$applicantid'");
-  // @$namestudent = pg_fetch_result($resulttt, 0, 0);
-  // @$emailstudent = pg_fetch_result($resulttt, 0, 1);
-
-  // $applicantname = $nameassociate . $namestudent;
-  // $email = $emailassociate . $emailstudent;
-
-  // sendEmail("leaveapply_admin", array(
-  //   "leaveid" => $leaveid,
-  //   "applicantid" => $applicantid,
-  //   "applicantname" => @$applicantname,
-  //   "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-  //   "todate" => @date("d/m/Y", strtotime($todate)),
-  //   "typeofleave" => $typeofleave,
-  //   "category" => $creason,
-  //   "status" => $status,
-  //   "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
-  //   "comment" => $comment,
-  // ), $email);
 }
 
 if ($formtype == "claimreviewform") {
@@ -275,7 +247,7 @@ if ($formtype == "test") {
   @$sname = $_POST['sname'];
   @$sid = $_POST['sid'];
   @$amount = $_POST['amount'];
-  $orderid  = "ORDER_" . time();
+  $orderid = "ORDER_" . time();
   $now = date('Y-m-d H:i:s');
   $test = "INSERT INTO test VALUES ('$now', '$sname', '$sid', '$amount','$orderid', 'initiated')";
   $result = pg_query($con, $test);
@@ -284,9 +256,11 @@ if ($formtype == "test") {
   // payment step 1: create a order in database - form saved orderId created.
   // create row in database
   $txn_token = get_paytm_tnx_token($orderid, $amount, $sid);
-  echo json_encode(array(
-    "txnToken" => $txn_token,
-    "amount" => $amount,
-    "orderid" => $orderid
-  ));
+  echo json_encode(
+    array(
+      "txnToken" => $txn_token,
+      "amount" => $amount,
+      "orderid" => $orderid
+    )
+  );
 }
