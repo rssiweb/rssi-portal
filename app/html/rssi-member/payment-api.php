@@ -132,10 +132,7 @@ if ($formtype == "gen_otp_associate") {
 
     $item->setOnboardingGenOtpAssociate($hashedValue);
     $item->setOtpAsso($otp);
-<<<<<<< HEAD
     $entityManager->persist($item);
-=======
->>>>>>> 35bdfa6 (ok)
     $entityManager->flush();
     echo "success";
   } else {
