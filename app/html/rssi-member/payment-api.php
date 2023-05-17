@@ -133,6 +133,8 @@ if ($formtype == "gen_otp_associate") {
 
     $item->setOnboardingGenOtpAssociate($hashedValue);
     $item->setOtpAsso($otp);
+    $entityManager->persisit($item);
+    $entityManager->flush();
     echo "success";
   }else{
     http_response_code(400);
