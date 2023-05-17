@@ -213,7 +213,6 @@ if (@$cmdtuples == 1) {
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="otp-associate" name="otp-associate" placeholder="Enter OTP" required>
                                     <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate">Generate OTP</button>
-                                    <!--<?php echo ($array['onboarding_gen_otp_associate'] != null) ? "disabled" : ""; ?>-->
                                 </div>
                                 <div class="form-text">OTP will be sent to the registered email address.</div>
                             </div>
@@ -223,7 +222,6 @@ if (@$cmdtuples == 1) {
                             <div class="input-group">
                                 <input type="text" class="form-control" id="otp-center-incharge" name="otp-center-incharge" placeholder="Enter OTP" required>
                                 <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr">Generate OTP</button>
-                                <!--<?php echo ($array['onboarding_gen_otp_center_incharge'] != null) ? "disabled" : ""; ?>-->
                             </div>
                         </div>
 
@@ -322,54 +320,6 @@ if (@$cmdtuples == 1) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        let videoPreview, canvasPreview, photoInput, captureBtn;
-
-        function startCamera() {
-            const constraints = {
-                video: true,
-                audio: false
-            };
-
-            videoPreview = document.getElementById('video-preview');
-            canvasPreview = document.getElementById('canvas-preview');
-            photoInput = document.getElementById('photo');
-            captureBtn = document.getElementById('capture-btn');
-
-            navigator.mediaDevices.getUserMedia(constraints)
-                .then(stream => {
-                    videoPreview.srcObject = stream;
-                    videoPreview.play();
-                    captureBtn.classList.remove('d-none');
-                    // canvasPreview.classList.remove('d-none');
-                    videoPreview.classList.remove('d-none');
-                    document.getElementById('photo-preview').classList.add('d-none');
-                })
-                .catch(error => {
-                    console.error('Error accessing camera: ', error);
-                });
-
-            videoPreview.addEventListener('canplay', () => {
-                canvasPreview.width = videoPreview.videoWidth;
-                canvasPreview.height = videoPreview.videoHeight;
-                canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
-            });
-        }
-
-        function capturePhoto() {
-            canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
-            const photoURL = canvasPreview.toDataURL('image/png');
-            photoInput.value = photoURL;
-            videoPreview.srcObject.getTracks().forEach(track => track.stop());
-            canvasPreview.classList.add('d-none');
-            videoPreview.classList.add('d-none');
-            captureBtn.classList.add('d-none');
-            document.getElementById('photo-preview').setAttribute('src', photoURL);
-            document.getElementById('photo-preview').classList.remove('d-none');
-            document.getElementById('video-preview').classList.add('d-none');
-        }
-    </script>
-
-    <script>
         window.ready = function() {
             var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
                 backdrop: 'static',
@@ -421,7 +371,7 @@ if (@$cmdtuples == 1) {
             }
         })
 
-        // Add an event listener to the submit button with id "submit_gen_otp_associate"
+        // Add an event listener to the submit button with id "submit_gen_otp_centr"
         document.getElementById("submit_gen_otp_centr").addEventListener("click", function(event) {
             event.preventDefault(); // prevent default form submission
 
@@ -443,6 +393,55 @@ if (@$cmdtuples == 1) {
                 return false;
             }
         })
+    </script>
+
+
+    <script>
+        let videoPreview, canvasPreview, photoInput, captureBtn;
+
+        function startCamera() {
+            const constraints = {
+                video: true,
+                audio: false
+            };
+
+            videoPreview = document.getElementById('video-preview');
+            canvasPreview = document.getElementById('canvas-preview');
+            photoInput = document.getElementById('photo');
+            captureBtn = document.getElementById('capture-btn');
+
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(stream => {
+                    videoPreview.srcObject = stream;
+                    videoPreview.play();
+                    captureBtn.classList.remove('d-none');
+                    // canvasPreview.classList.remove('d-none');
+                    videoPreview.classList.remove('d-none');
+                    document.getElementById('photo-preview').classList.add('d-none');
+                })
+                .catch(error => {
+                    console.error('Error accessing camera: ', error);
+                });
+
+            videoPreview.addEventListener('canplay', () => {
+                canvasPreview.width = videoPreview.videoWidth;
+                canvasPreview.height = videoPreview.videoHeight;
+                canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+            });
+        }
+
+        function capturePhoto() {
+            canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
+            const photoURL = canvasPreview.toDataURL('image/png');
+            photoInput.value = photoURL;
+            videoPreview.srcObject.getTracks().forEach(track => track.stop());
+            canvasPreview.classList.add('d-none');
+            videoPreview.classList.add('d-none');
+            captureBtn.classList.add('d-none');
+            document.getElementById('photo-preview').setAttribute('src', photoURL);
+            document.getElementById('photo-preview').classList.remove('d-none');
+            document.getElementById('video-preview').classList.add('d-none');
+        }
     </script>
 
 
