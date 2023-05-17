@@ -23,74 +23,11 @@ class Claim
     private $reimbid;
 
     /**
-     * @var int|null
-     *
-     * @ORM\Column(name="id", type="integer", nullable=true)
-     */
-    private $id;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="timestamp", type="text", nullable=true)
-     */
-    private $timestamp;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="name", type="text", nullable=true)
-     */
-    private $name;
-
-    /**
      * @var string|null
      *
      * @ORM\Column(name="registrationid", type="text", nullable=true)
      */
     private $registrationid;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="mobilenumber", type="text", nullable=true)
-     */
-    private $mobilenumber;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="email", type="text", nullable=true)
-     */
-    private $email;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="bankname", type="text", nullable=true)
-     */
-    private $bankname;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="accountnumber", type="text", nullable=true)
-     */
-    private $accountnumber;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="accountholdername", type="text", nullable=true)
-     */
-    private $accountholdername;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="ifsccode", type="text", nullable=true)
-     */
-    private $ifsccode;
 
     /**
      * @var string|null
@@ -137,13 +74,6 @@ class Claim
     /**
      * @var string|null
      *
-     * @ORM\Column(name="termsofagreement", type="text", nullable=true)
-     */
-    private $termsofagreement;
-
-    /**
-     * @var string|null
-     *
      * @ORM\Column(name="year", type="text", nullable=true)
      */
     private $year;
@@ -172,20 +102,6 @@ class Claim
     /**
      * @var string|null
      *
-     * @ORM\Column(name="transfereddate", type="text", nullable=true)
-     */
-    private $transfereddate;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="closedon", type="text", nullable=true)
-     */
-    private $closedon;
-
-    /**
-     * @var string|null
-     *
      * @ORM\Column(name="mediremarks", type="text", nullable=true)
      */
     private $mediremarks;
@@ -193,23 +109,51 @@ class Claim
     /**
      * @var string|null
      *
-     * @ORM\Column(name="profile", type="text", nullable=true)
-     */
-    private $profile;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="rlastupdatedon", type="text", nullable=true)
-     */
-    private $rlastupdatedon;
-
-    /**
-     * @var string|null
-     *
      * @ORM\Column(name="claimheaddetails", type="text", nullable=true)
      */
     private $claimheaddetails;
+
+    /**
+     * @var \DateTime|null
+     *
+     * @ORM\Column(name="timestamp", type="datetime", nullable=true)
+     */
+    private $timestamp;
+
+    /**
+     * @var \DateTime|null
+     *
+     * @ORM\Column(name="transfereddate", type="date", nullable=true)
+     */
+    private $transfereddate;
+
+    /**
+     * @var \DateTime|null
+     *
+     * @ORM\Column(name="closedon", type="date", nullable=true)
+     */
+    private $closedon;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="reviewer_id", type="text", nullable=true)
+     */
+    private $reviewerId;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="reviewer_name", type="text", nullable=true)
+     */
+    private $reviewerName;
+
+    /**
+     * @var \DateTime|null
+     *
+     * @ORM\Column(name="updatedon", type="datetime", nullable=true)
+     */
+    private $updatedon;
 
 
 
@@ -221,78 +165,6 @@ class Claim
     public function getReimbid()
     {
         return $this->reimbid;
-    }
-
-    /**
-     * Set id.
-     *
-     * @param int|null $id
-     *
-     * @return Claim
-     */
-    public function setId($id = null)
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    /**
-     * Get id.
-     *
-     * @return int|null
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set timestamp.
-     *
-     * @param string|null $timestamp
-     *
-     * @return Claim
-     */
-    public function setTimestamp($timestamp = null)
-    {
-        $this->timestamp = $timestamp;
-
-        return $this;
-    }
-
-    /**
-     * Get timestamp.
-     *
-     * @return string|null
-     */
-    public function getTimestamp()
-    {
-        return $this->timestamp;
-    }
-
-    /**
-     * Set name.
-     *
-     * @param string|null $name
-     *
-     * @return Claim
-     */
-    public function setName($name = null)
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Get name.
-     *
-     * @return string|null
-     */
-    public function getName()
-    {
-        return $this->name;
     }
 
     /**
@@ -317,150 +189,6 @@ class Claim
     public function getRegistrationid()
     {
         return $this->registrationid;
-    }
-
-    /**
-     * Set mobilenumber.
-     *
-     * @param string|null $mobilenumber
-     *
-     * @return Claim
-     */
-    public function setMobilenumber($mobilenumber = null)
-    {
-        $this->mobilenumber = $mobilenumber;
-
-        return $this;
-    }
-
-    /**
-     * Get mobilenumber.
-     *
-     * @return string|null
-     */
-    public function getMobilenumber()
-    {
-        return $this->mobilenumber;
-    }
-
-    /**
-     * Set email.
-     *
-     * @param string|null $email
-     *
-     * @return Claim
-     */
-    public function setEmail($email = null)
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    /**
-     * Get email.
-     *
-     * @return string|null
-     */
-    public function getEmail()
-    {
-        return $this->email;
-    }
-
-    /**
-     * Set bankname.
-     *
-     * @param string|null $bankname
-     *
-     * @return Claim
-     */
-    public function setBankname($bankname = null)
-    {
-        $this->bankname = $bankname;
-
-        return $this;
-    }
-
-    /**
-     * Get bankname.
-     *
-     * @return string|null
-     */
-    public function getBankname()
-    {
-        return $this->bankname;
-    }
-
-    /**
-     * Set accountnumber.
-     *
-     * @param string|null $accountnumber
-     *
-     * @return Claim
-     */
-    public function setAccountnumber($accountnumber = null)
-    {
-        $this->accountnumber = $accountnumber;
-
-        return $this;
-    }
-
-    /**
-     * Get accountnumber.
-     *
-     * @return string|null
-     */
-    public function getAccountnumber()
-    {
-        return $this->accountnumber;
-    }
-
-    /**
-     * Set accountholdername.
-     *
-     * @param string|null $accountholdername
-     *
-     * @return Claim
-     */
-    public function setAccountholdername($accountholdername = null)
-    {
-        $this->accountholdername = $accountholdername;
-
-        return $this;
-    }
-
-    /**
-     * Get accountholdername.
-     *
-     * @return string|null
-     */
-    public function getAccountholdername()
-    {
-        return $this->accountholdername;
-    }
-
-    /**
-     * Set ifsccode.
-     *
-     * @param string|null $ifsccode
-     *
-     * @return Claim
-     */
-    public function setIfsccode($ifsccode = null)
-    {
-        $this->ifsccode = $ifsccode;
-
-        return $this;
-    }
-
-    /**
-     * Get ifsccode.
-     *
-     * @return string|null
-     */
-    public function getIfsccode()
-    {
-        return $this->ifsccode;
     }
 
     /**
@@ -608,30 +336,6 @@ class Claim
     }
 
     /**
-     * Set termsofagreement.
-     *
-     * @param string|null $termsofagreement
-     *
-     * @return Claim
-     */
-    public function setTermsofagreement($termsofagreement = null)
-    {
-        $this->termsofagreement = $termsofagreement;
-
-        return $this;
-    }
-
-    /**
-     * Get termsofagreement.
-     *
-     * @return string|null
-     */
-    public function getTermsofagreement()
-    {
-        return $this->termsofagreement;
-    }
-
-    /**
      * Set year.
      *
      * @param string|null $year
@@ -728,54 +432,6 @@ class Claim
     }
 
     /**
-     * Set transfereddate.
-     *
-     * @param string|null $transfereddate
-     *
-     * @return Claim
-     */
-    public function setTransfereddate($transfereddate = null)
-    {
-        $this->transfereddate = $transfereddate;
-
-        return $this;
-    }
-
-    /**
-     * Get transfereddate.
-     *
-     * @return string|null
-     */
-    public function getTransfereddate()
-    {
-        return $this->transfereddate;
-    }
-
-    /**
-     * Set closedon.
-     *
-     * @param string|null $closedon
-     *
-     * @return Claim
-     */
-    public function setClosedon($closedon = null)
-    {
-        $this->closedon = $closedon;
-
-        return $this;
-    }
-
-    /**
-     * Get closedon.
-     *
-     * @return string|null
-     */
-    public function getClosedon()
-    {
-        return $this->closedon;
-    }
-
-    /**
      * Set mediremarks.
      *
      * @param string|null $mediremarks
@@ -800,54 +456,6 @@ class Claim
     }
 
     /**
-     * Set profile.
-     *
-     * @param string|null $profile
-     *
-     * @return Claim
-     */
-    public function setProfile($profile = null)
-    {
-        $this->profile = $profile;
-
-        return $this;
-    }
-
-    /**
-     * Get profile.
-     *
-     * @return string|null
-     */
-    public function getProfile()
-    {
-        return $this->profile;
-    }
-
-    /**
-     * Set rlastupdatedon.
-     *
-     * @param string|null $rlastupdatedon
-     *
-     * @return Claim
-     */
-    public function setRlastupdatedon($rlastupdatedon = null)
-    {
-        $this->rlastupdatedon = $rlastupdatedon;
-
-        return $this;
-    }
-
-    /**
-     * Get rlastupdatedon.
-     *
-     * @return string|null
-     */
-    public function getRlastupdatedon()
-    {
-        return $this->rlastupdatedon;
-    }
-
-    /**
      * Set claimheaddetails.
      *
      * @param string|null $claimheaddetails
@@ -869,5 +477,149 @@ class Claim
     public function getClaimheaddetails()
     {
         return $this->claimheaddetails;
+    }
+
+    /**
+     * Set timestamp.
+     *
+     * @param \DateTime|null $timestamp
+     *
+     * @return Claim
+     */
+    public function setTimestamp($timestamp = null)
+    {
+        $this->timestamp = $timestamp;
+
+        return $this;
+    }
+
+    /**
+     * Get timestamp.
+     *
+     * @return \DateTime|null
+     */
+    public function getTimestamp()
+    {
+        return $this->timestamp;
+    }
+
+    /**
+     * Set transfereddate.
+     *
+     * @param \DateTime|null $transfereddate
+     *
+     * @return Claim
+     */
+    public function setTransfereddate($transfereddate = null)
+    {
+        $this->transfereddate = $transfereddate;
+
+        return $this;
+    }
+
+    /**
+     * Get transfereddate.
+     *
+     * @return \DateTime|null
+     */
+    public function getTransfereddate()
+    {
+        return $this->transfereddate;
+    }
+
+    /**
+     * Set closedon.
+     *
+     * @param \DateTime|null $closedon
+     *
+     * @return Claim
+     */
+    public function setClosedon($closedon = null)
+    {
+        $this->closedon = $closedon;
+
+        return $this;
+    }
+
+    /**
+     * Get closedon.
+     *
+     * @return \DateTime|null
+     */
+    public function getClosedon()
+    {
+        return $this->closedon;
+    }
+
+    /**
+     * Set reviewerId.
+     *
+     * @param string|null $reviewerId
+     *
+     * @return Claim
+     */
+    public function setReviewerId($reviewerId = null)
+    {
+        $this->reviewerId = $reviewerId;
+
+        return $this;
+    }
+
+    /**
+     * Get reviewerId.
+     *
+     * @return string|null
+     */
+    public function getReviewerId()
+    {
+        return $this->reviewerId;
+    }
+
+    /**
+     * Set reviewerName.
+     *
+     * @param string|null $reviewerName
+     *
+     * @return Claim
+     */
+    public function setReviewerName($reviewerName = null)
+    {
+        $this->reviewerName = $reviewerName;
+
+        return $this;
+    }
+
+    /**
+     * Get reviewerName.
+     *
+     * @return string|null
+     */
+    public function getReviewerName()
+    {
+        return $this->reviewerName;
+    }
+
+    /**
+     * Set updatedon.
+     *
+     * @param \DateTime|null $updatedon
+     *
+     * @return Claim
+     */
+    public function setUpdatedon($updatedon = null)
+    {
+        $this->updatedon = $updatedon;
+
+        return $this;
+    }
+
+    /**
+     * Get updatedon.
+     *
+     * @return \DateTime|null
+     */
+    public function getUpdatedon()
+    {
+        return $this->updatedon;
     }
 }

@@ -95,9 +95,9 @@ class Payslip
     /**
      * @var string|null
      *
-     * @ORM\Column(name="classcount", type="text", nullable=true)
+     * @ORM\Column(name="dayspaid", type="text", nullable=true)
      */
-    private $classcount;
+    private $dayspaid;
 
     /**
      * @var string|null
@@ -499,27 +499,27 @@ class Payslip
     }
 
     /**
-     * Set classcount.
+     * Set dayspaid.
      *
-     * @param string|null $classcount
+     * @param string|null $dayspaid
      *
      * @return Payslip
      */
-    public function setClasscount($classcount = null)
+    public function setDayspaid($dayspaid = null)
     {
-        $this->classcount = $classcount;
+        $this->dayspaid = $dayspaid;
 
         return $this;
     }
 
     /**
-     * Get classcount.
+     * Get dayspaid.
      *
      * @return string|null
      */
-    public function getClasscount()
+    public function getDayspaid()
     {
-        return $this->classcount;
+        return $this->dayspaid;
     }
 
     /**

@@ -603,6 +603,48 @@ class RssimyaccountMembers
      */
     private $defaultPassUpdatedOn;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="job_type", type="text", nullable=true)
+     */
+    private $jobType;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="salary", type="decimal", precision=10, scale=0, nullable=true)
+     */
+    private $salary;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="panno", type="text", nullable=true)
+     */
+    private $panno;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="bankname", type="text", nullable=true)
+     */
+    private $bankname;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="accountnumber", type="text", nullable=true)
+     */
+    private $accountnumber;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="ifsccode", type="text", nullable=true)
+     */
+    private $ifsccode;
+
 
 
     /**
@@ -2605,5 +2647,149 @@ class RssimyaccountMembers
     public function getDefaultPassUpdatedOn()
     {
         return $this->defaultPassUpdatedOn;
+    }
+
+    /**
+     * Set jobType.
+     *
+     * @param string|null $jobType
+     *
+     * @return RssimyaccountMembers
+     */
+    public function setJobType($jobType = null)
+    {
+        $this->jobType = $jobType;
+
+        return $this;
+    }
+
+    /**
+     * Get jobType.
+     *
+     * @return string|null
+     */
+    public function getJobType()
+    {
+        return $this->jobType;
+    }
+
+    /**
+     * Set salary.
+     *
+     * @param string|null $salary
+     *
+     * @return RssimyaccountMembers
+     */
+    public function setSalary($salary = null)
+    {
+        $this->salary = $salary;
+
+        return $this;
+    }
+
+    /**
+     * Get salary.
+     *
+     * @return string|null
+     */
+    public function getSalary()
+    {
+        return $this->salary;
+    }
+
+    /**
+     * Set panno.
+     *
+     * @param string|null $panno
+     *
+     * @return RssimyaccountMembers
+     */
+    public function setPanno($panno = null)
+    {
+        $this->panno = $panno;
+
+        return $this;
+    }
+
+    /**
+     * Get panno.
+     *
+     * @return string|null
+     */
+    public function getPanno()
+    {
+        return $this->panno;
+    }
+
+    /**
+     * Set bankname.
+     *
+     * @param string|null $bankname
+     *
+     * @return RssimyaccountMembers
+     */
+    public function setBankname($bankname = null)
+    {
+        $this->bankname = $bankname;
+
+        return $this;
+    }
+
+    /**
+     * Get bankname.
+     *
+     * @return string|null
+     */
+    public function getBankname()
+    {
+        return $this->bankname;
+    }
+
+    /**
+     * Set accountnumber.
+     *
+     * @param string|null $accountnumber
+     *
+     * @return RssimyaccountMembers
+     */
+    public function setAccountnumber($accountnumber = null)
+    {
+        $this->accountnumber = $accountnumber;
+
+        return $this;
+    }
+
+    /**
+     * Get accountnumber.
+     *
+     * @return string|null
+     */
+    public function getAccountnumber()
+    {
+        return $this->accountnumber;
+    }
+
+    /**
+     * Set ifsccode.
+     *
+     * @param string|null $ifsccode
+     *
+     * @return RssimyaccountMembers
+     */
+    public function setIfsccode($ifsccode = null)
+    {
+        $this->ifsccode = $ifsccode;
+
+        return $this;
+    }
+
+    /**
+     * Get ifsccode.
+     *
+     * @return string|null
+     */
+    public function getIfsccode()
+    {
+        return $this->ifsccode;
     }
 }

@@ -218,6 +218,13 @@ class Donation
      */
     private $sectionCode;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="date_of_donation", type="text", nullable=true)
+     */
+    private $dateOfDonation;
+
 
 
     /**
@@ -900,5 +907,29 @@ class Donation
     public function getSectionCode()
     {
         return $this->sectionCode;
+    }
+
+    /**
+     * Set dateOfDonation.
+     *
+     * @param string|null $dateOfDonation
+     *
+     * @return Donation
+     */
+    public function setDateOfDonation($dateOfDonation = null)
+    {
+        $this->dateOfDonation = $dateOfDonation;
+
+        return $this;
+    }
+
+    /**
+     * Get dateOfDonation.
+     *
+     * @return string|null
+     */
+    public function getDateOfDonation()
+    {
+        return $this->dateOfDonation;
     }
 }

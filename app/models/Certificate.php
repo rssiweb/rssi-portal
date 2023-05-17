@@ -78,6 +78,34 @@ class Certificate
      */
     private $awardedToName;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="out_email", type="text", nullable=true)
+     */
+    private $outEmail;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="out_phone", type="text", nullable=true)
+     */
+    private $outPhone;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="out_scode", type="text", nullable=true)
+     */
+    private $outScode;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="out_flag", type="decimal", precision=10, scale=0, nullable=true)
+     */
+    private $outFlag;
+
 
 
     /**
@@ -280,5 +308,101 @@ class Certificate
     public function getAwardedToName()
     {
         return $this->awardedToName;
+    }
+
+    /**
+     * Set outEmail.
+     *
+     * @param string|null $outEmail
+     *
+     * @return Certificate
+     */
+    public function setOutEmail($outEmail = null)
+    {
+        $this->outEmail = $outEmail;
+
+        return $this;
+    }
+
+    /**
+     * Get outEmail.
+     *
+     * @return string|null
+     */
+    public function getOutEmail()
+    {
+        return $this->outEmail;
+    }
+
+    /**
+     * Set outPhone.
+     *
+     * @param string|null $outPhone
+     *
+     * @return Certificate
+     */
+    public function setOutPhone($outPhone = null)
+    {
+        $this->outPhone = $outPhone;
+
+        return $this;
+    }
+
+    /**
+     * Get outPhone.
+     *
+     * @return string|null
+     */
+    public function getOutPhone()
+    {
+        return $this->outPhone;
+    }
+
+    /**
+     * Set outScode.
+     *
+     * @param string|null $outScode
+     *
+     * @return Certificate
+     */
+    public function setOutScode($outScode = null)
+    {
+        $this->outScode = $outScode;
+
+        return $this;
+    }
+
+    /**
+     * Get outScode.
+     *
+     * @return string|null
+     */
+    public function getOutScode()
+    {
+        return $this->outScode;
+    }
+
+    /**
+     * Set outFlag.
+     *
+     * @param string|null $outFlag
+     *
+     * @return Certificate
+     */
+    public function setOutFlag($outFlag = null)
+    {
+        $this->outFlag = $outFlag;
+
+        return $this;
+    }
+
+    /**
+     * Get outFlag.
+     *
+     * @return string|null
+     */
+    public function getOutFlag()
+    {
+        return $this->outFlag;
     }
 }

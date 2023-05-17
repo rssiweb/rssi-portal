@@ -1,13 +1,10 @@
 <?php
+// move it inside html to make it work
+require_once __DIR__ . '/../bootstrap.php';
 
-require_once __DIR__ . "bootstrap.php";
+$memberRepository = $entityManager->getRepository('RssimyaccountMembers');
+$members = $memberRepository->findAll();
 
-// $memberRepository = $entityManager->getRepository('Member');
-// $members = $memberRepository->findAll();
-
-// foreach ($members as $member) {
-//     echo sprintf("-%s\n", $member->getFullName());
-// }
-
-$pregResult = preg_match('/' . '^rssimyaccount_members$' . '/', "rssimyaccount_members");
-echo $pregResult
+foreach ($members as $member) {
+    echo sprintf("-%s\n", $member->getAssociatenumber());
+}

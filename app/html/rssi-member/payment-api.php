@@ -7,7 +7,9 @@ include("../../util/email.php");
 
 date_default_timezone_set('Asia/Kolkata');
 
-if ($_POST['form-type'] == "payment") {
+$formtype = $_POST['form-type'];
+
+if ($formtype == "payment") {
   @$sname = strtoupper($_POST['sname']);
   @$studentid = $_POST['studentid'];
   @$fees = $_POST['fees'];
@@ -22,20 +24,20 @@ if ($_POST['form-type'] == "payment") {
   // echo json_encode($result);
 }
 
-if ($_POST['form-type'] == "transfer") {
+if ($formtype == "transfer") {
   @$refid = $_POST['pid'];
   $pstatus = "UPDATE fees SET  pstatus = 'transferred' WHERE id = $refid";
   $result = pg_query($con, $pstatus);
 }
 
-if ($_POST['form-type'] == "noticebodyedit") {
+if ($formtype == "noticebodyedit") {
   @$noticeid = $_POST['noticeid'];
   @$noticebody = $_POST['noticebody'];
   $noticebodyedit = "UPDATE notice SET  noticebody = '$noticebody' WHERE noticeid = '$noticeid'";
   $result = pg_query($con, $noticebodyedit);
 }
 
-if ($_POST['form-type'] == "policybodyedit") {
+if ($formtype == "policybodyedit") {
   @$policyid = $_POST['policyid'];
   @$remarks = $_POST['remarks'];
   $policybodyeditt = "UPDATE policy SET  remarks = '$remarks' WHERE policyid = '$policyid'";
@@ -43,68 +45,68 @@ if ($_POST['form-type'] == "policybodyedit") {
 }
 
 
-if ($_POST['form-type'] == "paydelete") {
+if ($formtype == "paydelete") {
   @$refid = $_POST['pid'];
   $paydelete = "DELETE from fees WHERE id = $refid";
   $result = pg_query($con, $paydelete);
 }
 
-if ($_POST['form-type1'] == "policydelete") {
+if ($formtype == "policydelete") {
   @$policydid = $_POST['policydeleteid'];
   $deletepolicy = "DELETE from policy WHERE policyid = '$policydid'";
   $result = pg_query($con, $deletepolicy);
 }
 
-if ($_POST['form-type'] == "paydelete") {
+if ($formtype == "paydelete") {
   @$refid = $_POST['pid'];
   $paydelete = "DELETE from fees WHERE id = $refid";
   $result = pg_query($con, $paydelete);
 }
 
-if ($_POST['form-type'] == "leavedelete") {
+if ($formtype == "leavedelete") {
   @$leavedeleteid = $_POST['leavedeleteid'];
   $leavedelete = "DELETE from leavedb_leavedb WHERE leaveid = '$leavedeleteid'";
   $result = pg_query($con, $leavedelete);
 }
 
-if ($_POST['form-type'] == "claimdelete") {
+if ($formtype == "claimdelete") {
   @$claimdeleteid = $_POST['claimdeleteid'];
   $claimdelete = "DELETE from claim WHERE reimbid = '$claimdeleteid'";
   $result = pg_query($con, $claimdelete);
 }
 
-if ($_POST['form-type'] == "leaveadjdelete") {
+if ($formtype == "leaveadjdelete") {
   @$leaveadjdeleteid = $_POST['leaveadjdeleteid'];
   $leaveadjdelete = "DELETE from leaveadjustment WHERE leaveadjustmentid = '$leaveadjdeleteid'";
   $result = pg_query($con, $leaveadjdelete);
 }
 
-if ($_POST['form-type'] == "leaveallodelete") {
+if ($formtype == "leaveallodelete") {
   @$leaveallodeleteid = $_POST['leaveallodeleteid'];
   $leaveallodelete = "DELETE from leaveallocation WHERE leaveallocationid = '$leaveallodeleteid'";
   $result = pg_query($con, $leaveallodelete);
 }
 
-if ($_POST['form-type'] == "cmsdelete") {
+if ($formtype == "cmsdelete") {
   @$certificate_no = $_POST['cmsid'];
   $cmsdelete = "DELETE from certificate WHERE certificate_no = '$certificate_no'";
   $result = pg_query($con, $cmsdelete);
 }
 
-if ($_POST['form-type'] == "gemsdelete") {
+if ($formtype == "gemsdelete") {
   @$redeem_id = $_POST['redeem_id'];
   $gemsdelete = "DELETE from gems WHERE redeem_id = '$redeem_id'";
   $result = pg_query($con, $gemsdelete);
 }
 
-// if ($_POST['form-type'] == "gpsdelete") {
+// if ($formtype == "gpsdelete") {
 //   @$gpsid = $_POST['gpsid'];
 //   $gpsdelete = "DELETE from gps WHERE itemid = '$gpsid'";
 //   $result = pg_query($con, $gpsdelete);
 // }
 
 
-if ($_POST['form-type'] == "gpsedit") {
+if ($formtype == "gpsedit") {
   @$itemid = $_POST['itemid1'];
   @$itemname = $_POST['itemname'];
   @$itemtype = $_POST['itemtype'];
@@ -120,29 +122,25 @@ if ($_POST['form-type'] == "gpsedit") {
 }
 
 
-if ($_POST['form-type'] == "gen_otp_associate") {
+if ($formtype == "gen_otp_associate") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
+  
+  $item = $entityManager->getRepository('Resourcemovement')->find($otp_initiatedfor);
+  if ($item) {
+    // Generate a random 6 digit number
+    $otp = rand(100000, 999999);
+    $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
 
-  // Generate a random 6 digit number
-  $otp = rand(100000, 999999);
-  $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
-
-  $gen_otp_associate = "UPDATE resourcemovement SET  onboarding_gen_otp_associate = '$hashedValue', otp_ass = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
-  $result = pg_query($con, $gen_otp_associate);
-  if($result)
-  {
-      $rows = pg_num_rows($result);
-      if($rows == 0){
-        http_response_code(400);
-      }
-      echo $rows;
-  } else {
-    $error = pg_last_error($con);
-    echo $error;
+    $item->setOnboardingGenOtpAssociate($hashedValue);
+    $item->setOtpAsso($otp);
+    echo "success";
+  }else{
+    http_response_code(400);
+    echo "failed";
   }
 }
 
-if ($_POST['form-type'] == "gen_otp_centr") {
+if ($formtype == "gen_otp_centr") {
 
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
 
@@ -165,7 +163,7 @@ if ($_POST['form-type'] == "gen_otp_centr") {
   }
 }
 
-if ($_POST['form-type'] == "initiatingonboarding") {
+if ($formtype == "initiatingonboarding") {
   @$initiatedfor = $_POST['initiatedfor'];
   @$initiatedby = $_POST['initiatedby'];
   $now = date('Y-m-d H:i:s');
@@ -174,7 +172,7 @@ if ($_POST['form-type'] == "initiatingonboarding") {
 }
 
 
-if ($_POST['form-type'] == "ipfsubmission") {
+if ($formtype == "ipfsubmission") {
   @$ipfid = $_POST['ipfid'];
   @$status2 = $_POST['status2'];
   @$ipf_response_by = $_POST['ipf_response_by'];
@@ -183,7 +181,7 @@ if ($_POST['form-type'] == "ipfsubmission") {
   $result = pg_query($con, $ipfclose);
 }
 
-if ($_POST['form-type'] == "gemsredeem") {
+if ($formtype == "gemsredeem") {
   @$reviewer_id = $_POST['reviewer_id'];
   @$reviewer_name = $_POST['reviewer_name'];
   @$redeem_idd = $_POST['redeem_idd'];
@@ -194,7 +192,7 @@ if ($_POST['form-type'] == "gemsredeem") {
   $result = pg_query($con, $gemsredeem);
 }
 
-if ($_POST['form-type'] == "leavereviewform") {
+if ($formtype == "leavereviewform") {
   @$reviewer_id = $_POST['reviewer_id'];
   @$reviewer_name = $_POST['reviewer_name'];
   @$leaveid = $_POST['leaveidd'];
@@ -242,7 +240,7 @@ if ($_POST['form-type'] == "leavereviewform") {
   // ), $email);
 }
 
-if ($_POST['form-type'] == "claimreviewform") {
+if ($formtype == "claimreviewform") {
   @$reviewer_id = $_POST['reviewer_id'];
   @$reviewer_name = $_POST['reviewer_name'];
   @$reimbidd = $_POST['reimbid'];
@@ -263,7 +261,7 @@ if ($_POST['form-type'] == "claimreviewform") {
   $result = pg_query($con, $claimapproval);
 }
 
-if ($_POST['form-type'] == "ipfclose") {
+if ($formtype == "ipfclose") {
   @$ipfid = $_POST['ipfid'];
   @$ipf_process_closed_by = $_POST['ipf_process_closed_by'];
   $now = date('Y-m-d H:i:s');
@@ -271,7 +269,7 @@ if ($_POST['form-type'] == "ipfclose") {
   $result = pg_query($con, $ipfclose);
 }
 
-if ($_POST['form-type'] == "test") {
+if ($formtype == "test") {
   @$sname = $_POST['sname'];
   @$sid = $_POST['sid'];
   @$amount = $_POST['amount'];

@@ -78,6 +78,13 @@ class Fees
      */
     private $ptype;
 
+    /**
+     * @var int|null
+     *
+     * @ORM\Column(name="feeyear", type="integer", nullable=true)
+     */
+    private $feeyear;
+
 
 
     /**
@@ -280,5 +287,29 @@ class Fees
     public function getPtype()
     {
         return $this->ptype;
+    }
+
+    /**
+     * Set feeyear.
+     *
+     * @param int|null $feeyear
+     *
+     * @return Fees
+     */
+    public function setFeeyear($feeyear = null)
+    {
+        $this->feeyear = $feeyear;
+
+        return $this;
+    }
+
+    /**
+     * Get feeyear.
+     *
+     * @return int|null
+     */
+    public function getFeeyear()
+    {
+        return $this->feeyear;
     }
 }

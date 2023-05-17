@@ -1,3 +1,4 @@
 .DS_Store
 app/.DS_Store
 app/vendor/
+app/models/*~

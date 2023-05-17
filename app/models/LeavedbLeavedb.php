@@ -127,6 +127,20 @@ class LeavedbLeavedb
      */
     private $days;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="halfday", type="decimal", precision=10, scale=0, nullable=true)
+     */
+    private $halfday;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="ack", type="decimal", precision=10, scale=0, nullable=true)
+     */
+    private $ack;
+
 
 
     /**
@@ -497,5 +511,53 @@ class LeavedbLeavedb
     public function getDays()
     {
         return $this->days;
+    }
+
+    /**
+     * Set halfday.
+     *
+     * @param string|null $halfday
+     *
+     * @return LeavedbLeavedb
+     */
+    public function setHalfday($halfday = null)
+    {
+        $this->halfday = $halfday;
+
+        return $this;
+    }
+
+    /**
+     * Get halfday.
+     *
+     * @return string|null
+     */
+    public function getHalfday()
+    {
+        return $this->halfday;
+    }
+
+    /**
+     * Set ack.
+     *
+     * @param string|null $ack
+     *
+     * @return LeavedbLeavedb
+     */
+    public function setAck($ack = null)
+    {
+        $this->ack = $ack;
+
+        return $this;
+    }
+
+    /**
+     * Get ack.
+     *
+     * @return string|null
+     */
+    public function getAck()
+    {
+        return $this->ack;
     }
 }
