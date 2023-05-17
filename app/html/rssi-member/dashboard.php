@@ -21,7 +21,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dashboard</title>
+    <title>RSSI-InChargePro</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
@@ -37,7 +37,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
     <style>
         .equal-height {
-            height: 150px;
+            height: 100px;
             /* adjust to desired height */
             overflow: auto;
         }
@@ -57,32 +57,32 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    Home / My Allocation
+                    Home / InChargePro
                 </div>
                 <section class="box" style="padding: 2%;">
-                    <h1 class="page-header">Dashboard</h1>
                     <div class="row placeholders">
                         <div class="col-xs-6 col-sm-3 placeholder">
 
                             <h4>Onboarding Process</h4>
-                            <p class="text-muted equal-height">Onboarding is the process of integrating new associates into the organization and familiarizing them with the organization's culture, values, and expectations. This includes introducing them to their team members, providing training and resources, setting goals, and ensuring they have the necessary tools to succeed in their new role.</p>
-                            <a href="#" class="btn btn-primary btn-sm btn-block">Launch</a>
+                            <p class="text-muted equal-height">Welcome to the RSSI Onboarding Portal - your one-stop destination for a smooth and efficient onboarding process.</p>
+                            <a href="onboarding.php" target="_blank" class="btn btn-success btn-sm btn-block">Launch</a>
                         </div>
                         <div class="col-xs-6 col-sm-3 placeholder">
 
                             <h4>Exit Process</h4>
-                            <p class="text-muted equal-height">Exit process is the process of separating an associate from the organization, which includes conducting exit interviews, collecting company property, providing necessary information about other benefits, and completing any necessary paperwork or formalities.</p>
-                            <a href="#" class="btn btn-primary btn-sm btn-block">Launch</a>
+                            <p class="text-muted equal-height">Efficiently manage the separation of associates with the RSSI Exit Process. Conduct exit interviews, collect company property, provide benefit information, and complete necessary formalities in one place.</p>
+                            <a href="#" class="btn btn-danger btn-sm btn-block" disabled>Launch</a>
                         </div>
+                        
                         <div class="col-xs-6 col-sm-3 placeholder">
-                            <a href="#" class="btn btn-primary btn-sm btn-block"><i class="fa fa-rocket"></i> Launch Admission App</a>
-                            <h4>Admission Process</h4>
-                            <p class="text-muted equal-height">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vestibulum velit nec mauris faucibus, vitae finibus tellus aliquam. Duis tempor augue non elit pharetra congue.</p>
-                        </div>
-                        <div class="col-xs-6 col-sm-3 placeholder">
-                            <a href="#" class="btn btn-primary btn-sm btn-block"><i class="fa fa-rocket"></i> Launch Visitor Registration App</a>
                             <h4>Visitor Registration</h4>
-                            <p class="text-muted equal-height">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vestibulum velit nec mauris faucibus, vitae finibus tellus aliquam. Duis tempor augue non elit pharetra congue.</p>
+                            <p class="text-muted equal-height">Welcome to the RSSI Visitor Registration Portal. This is your one-stop solution to efficiently register and track the details of visitors to our premises.</p>
+                            <a href="#" class="btn btn-warning btn-sm btn-block" disabled>Launch</a>
+                        </div>
+                        <div class="col-xs-6 col-sm-3 placeholder">
+                            <h4>Student Registration</h4>
+                            <p class="text-muted equal-height">Welcome to the RSSI Student Admission Portal. Here, you can easily manage student data and track their admission process.</p>
+                            <a href="#" class="btn btn-primary btn-sm btn-block" disabled>Launch</a>
                         </div>
                     </div>
                 </section>

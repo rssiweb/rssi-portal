@@ -101,6 +101,9 @@
                         <?php if (@$role == 'Offline Manager' || @$role == 'Admin') {
                         ?>
                             <li style="height: unset;">
+                                <a style="font-size:13px;" href="dashboard.php"><i class="fa-solid fa-vector-square"></i>&nbsp;InChargePro</a>
+                            </li>
+                            <li style="height: unset;">
                                 <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-building-user"></i>&nbsp;Visitor pass</a>
                             </li>
                             <li style="height: unset;">
