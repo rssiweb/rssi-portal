@@ -18,7 +18,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by,onboarding_gen_otp_center_incharge,onboarding_gen_otp_associate,email,onboarding_flag FROM rssimyaccount_members 
+$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by,onboarding_gen_otp_center_incharge,onboarding_gen_otp_associate,email,onboarding_flag,onboarding_photo,reporting_date_time FROM rssimyaccount_members 
 LEFT JOIN (SELECT awarded_to_id,badge_name,certificate_url FROM certificate WHERE badge_name='Joining Letter') certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
 LEFT JOIN resourcemovement ON resourcemovement.onboarding_associate_id = rssimyaccount_members.associatenumber
 WHERE associatenumber = '$associate_number'");
@@ -60,18 +60,18 @@ if (@$_POST['form-type'] == "onboarding") {
 
 if (@$auth_failed_dialog) { ?>
     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The OTP you entered is incorrect.</span>
+        <i class="fa-solid fa-xmark"></i>&nbsp;&nbsp;<span>ERROR: The OTP you entered is incorrect.</span>
     </div>
 <?php } ?>
 <?php
 if (@$cmdtuples == 1) {
-    echo '<div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">';
-    echo '<span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>The associate has been onboarded succesfully.</span>';
+    echo '<div class="alert alert-success" role="alert" style="text-align: -webkit-center;">';
+    echo '<h4 class="alert-heading" style="font-size: 1.5rem;">The associate has been onboarded successfully!</h4>
+';
 
     // Redirect the user after a delay
     $redirect_url = 'onboarding.php?associate-number=' . $otp_initiatedfor_main;
-    echo '<p>You will be redirected to ' . $redirect_url . ' in <span id="countdown">3</span> seconds.</p>';
+    echo '<p style="font-size: 1.2rem;">Redirecting to the onboarding page in <span id="countdown">3</span> seconds.</p>';
     echo '</div>';
     echo '<script>
             var timeleft = 3;
@@ -84,6 +84,7 @@ if (@$cmdtuples == 1) {
                 }
             }, 1000);
           </script>';
+    //   exit; 
 }
 ?>
 
@@ -119,85 +120,87 @@ if (@$cmdtuples == 1) {
             <?php foreach ($resultArr as $array) { ?>
                 <?php if (($role == 'Admin' || $role == 'Offline Manager') && $array['onboard_initiated_by'] != null && $array['certificate_url'] != null) { ?>
                     <form method="post" name="a_onboard" id="a_onboard" action="onboarding.php">
+
+                        <h3>Associate Onboarding Form</h3>
+                        <hr>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12 text-end">
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#joining-letter-modal">
+                                            <i class="far fa-file-pdf"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="row align-items-center">
+                                    <div class="col-md-4 d-flex flex-column justify-content-center align-items-center mb-3">
+                                        <img src="<?php echo $array['photo'] ?>" alt="Profile picture" width="100px">
+                                    </div>
+
+                                    <div class="col-md-8">
+                                        <div class="row">
+                                            <div class="col-md-12 d-flex align-items-center">
+                                                <h2><?php echo $array['fullname'] ?></h2>
+                                                <?php if ($array['filterstatus'] == 'Active') : ?>
+                                                    <span class="badge bg-success ms-3">Active</span>
+                                                <?php else : ?>
+                                                    <span class="badge bg-danger ms-3">Inactive</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Associate ID:</strong> <?php echo $array['associatenumber'] ?></p>
+                                                <p><strong>Joining Date:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <p><strong>Engagement:</strong> <?php echo $array['engagement']; ?></p>
+                                                <p><strong>Position:</strong> <?php echo implode('-', array_slice(explode('-',  $array['position']), 0, 2)); ?></p>
+                                                <p><strong>Deputed Branch:</strong> <?php echo $array['depb']; ?></p>
+                                                <!-- Add any additional information you want to display here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php
+                        // Google Drive URL stored in $array['certificate_url']
+                        $url = $array['certificate_url'];
+
+                        // Extract the file ID using regular expressions
+                        preg_match('/\/file\/d\/(.+?)\//', $url, $matches);
+                        $file_id = $matches[1];
+
+                        // Generate the preview URL
+                        $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+                        ?>
+                        <!-- Modal -->
+                        <div class="modal fade" id="joining-letter-modal" tabindex="-1" aria-labelledby="joining-letter-modal-label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="joining-letter-modal-label">Joining Letter</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <!-- Use the preview URL in the src attribute of the iframe tag -->
+                                        <iframe src="<?php echo $preview_url; ?>" style="width:100%; height:500px;"></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
                         <fieldset <?php echo ($array['onboarding_flag'] == "yes") ? "disabled" : ""; ?>>
+
                             <input type="hidden" name="form-type" type="text" value="onboarding">
                             <input type="hidden" name="otp_initiatedfor_main" type="text" value="<?php echo $array['associatenumber'] ?>" readonly>
 
-                            <h3>Associate Onboarding Form</h3>
-                            <hr>
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-12 text-end">
-                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#joining-letter-modal">
-                                                <i class="far fa-file-pdf"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="row align-items-center">
-                                        <div class="col-md-4 d-flex flex-column justify-content-center align-items-center mb-3">
-                                            <img src="<?php echo $array['photo'] ?>" alt="Profile picture" width="100px">
-                                        </div>
-
-                                        <div class="col-md-8">
-                                            <div class="row">
-                                                <div class="col-md-12 d-flex align-items-center">
-                                                    <h2><?php echo $array['fullname'] ?></h2>
-                                                    <?php if ($array['filterstatus'] == 'Active') : ?>
-                                                        <span class="badge bg-success ms-3">Active</span>
-                                                    <?php else : ?>
-                                                        <span class="badge bg-danger ms-3">Inactive</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <p><strong>Associate ID:</strong> <?php echo $array['associatenumber'] ?></p>
-                                                    <p><strong>Joining Date:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
-                                                </div>
-
-                                                <div class="col-md-6">
-                                                    <p><strong>Engagement:</strong> <?php echo $array['engagement']; ?></p>
-                                                    <p><strong>Position:</strong> <?php echo implode('-', array_slice(explode('-',  $array['position']), 0, 2)); ?></p>
-                                                    <p><strong>Deputed Branch:</strong> <?php echo $array['depb']; ?></p>
-                                                    <!-- Add any additional information you want to display here -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php
-                            // Google Drive URL stored in $array['certificate_url']
-                            $url = $array['certificate_url'];
-
-                            // Extract the file ID using regular expressions
-                            preg_match('/\/file\/d\/(.+?)\//', $url, $matches);
-                            $file_id = $matches[1];
-
-                            // Generate the preview URL
-                            $preview_url = "https://drive.google.com/file/d/$file_id/preview";
-                            ?>
-                            <!-- Modal -->
-                            <div class="modal fade" id="joining-letter-modal" tabindex="-1" aria-labelledby="joining-letter-modal-label" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="joining-letter-modal-label">Joining Letter</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <!-- Use the preview URL in the src attribute of the iframe tag -->
-                                            <iframe src="<?php echo $preview_url; ?>" style="width:100%; height:500px;"></iframe>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <hr>
                             <div class="mb-3">
                                 <label for="photo" class="form-label">Current Photo</label>
-                                <input type="hidden" class="form-control" id="photo" name="photo">
+                                <input type="hidden" class="form-control" id="photo" name="photo" value="<?php echo $array['onboarding_photo'] ?>">
                                 <div class="mt-2">
                                     <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
                                     <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
@@ -208,18 +211,19 @@ if (@$cmdtuples == 1) {
                                 <canvas id="canvas-preview" class="d-none" width="640" height="480"></canvas>
                                 <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                             </div>
-
-                            <!-- <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
+                            <!-- <div class="row mb-3">
+                                <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
                                 <script>
                                     const photoInput_display = document.getElementById('photo');
                                     const photoPreview = document.getElementById('photo-preview');
                                     photoPreview.setAttribute('src', photoInput_display.value);
-                                </script> -->
+                                </script>
+                            </div> -->
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="reporting-date-time" class="form-label">Reporting Date &amp; Time</label>
-                                    <input type="datetime-local" class="form-control" id="reporting-date-time" name="reporting-date-time" required>
+                                    <input type="datetime-local" class="form-control" id="reporting-date-time" name="reporting-date-time" value="<?php echo $array['reporting_date_time'] ?>" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="otp-associate" class="form-label">OTP from Associate</label>
@@ -334,7 +338,7 @@ if (@$cmdtuples == 1) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        window.ready = function() {
+        window.onload = function() {
             var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
                 backdrop: 'static',
                 keyboard: false
