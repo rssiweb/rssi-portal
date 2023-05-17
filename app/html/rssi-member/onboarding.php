@@ -268,7 +268,7 @@ if (@$cmdtuples == 1) {
                                         <div class="row">
                                             <div class="col-6">Initiated On:</div>
                                             <div class="col-6">
-                                                <?php echo ($array['onboard_initiated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'] : '' ?>
+                                                <?php echo ($array['onboard_initiated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'] : '<span class="text-muted">Not initiated yet</span>' ?>
                                             </div>
                                         </div>
                                     </li>
@@ -276,8 +276,14 @@ if (@$cmdtuples == 1) {
                                         <div class="row">
                                             <div class="col-6">Submitted On:</div>
                                             <div class="col-6">
-                                                <?php echo ($array['onboarding_submitted_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['onboarding_submitted_on'])) . ' by ' . $array['onboarding_submitted_by'] : '' ?><br>
-                                                <?php echo 'IP Address:' . $array['ip_address'] ?>
+                                                <?php
+                                                if ($array['onboarding_submitted_on'] !== null) {
+                                                    echo date('d/m/y h:i:s a', strtotime($array['onboarding_submitted_on'])) . ' by ' . $array['onboarding_submitted_by'] . '<br>';
+                                                    echo 'IP Address: ' . $array['ip_address'];
+                                                } else {
+                                                    echo '<span class="text-muted">Not submitted yet</span>';
+                                                }
+                                                ?>
                                             </div>
                                         </div>
                                     </li>
