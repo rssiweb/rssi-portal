@@ -151,7 +151,7 @@ if ($formtype == "gen_otp_centr") {
   $otp = rand(100000, 999999);
   $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
 
-  $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$hashedValue', otp_centr = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
+  $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$hashedValue', otp_centre = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
   $result = pg_query($con, $gen_otp_centr);
   if ($result) {
     $rows = pg_num_rows($result);
