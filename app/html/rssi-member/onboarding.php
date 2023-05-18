@@ -64,11 +64,6 @@ if (@$auth_failed_dialog) { ?>
     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
         <i class="fa-solid fa-xmark"></i>&nbsp;&nbsp;<span>ERROR: The OTP you entered is incorrect.</span>
     </div>
-    <script>
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
-    </script>
 <?php } ?>
 <?php
 if (@$cmdtuples == 1) {
@@ -207,7 +202,7 @@ if (@$cmdtuples == 1) {
 
                             <div class="mb-3">
                                 <label for="photo" class="form-label">Current Photo</label>
-                                <input type="hidden" class="form-control" id="photo" name="photo">
+                                <input type="hidden" class="form-control" id="photo" name="photo" value="<?php echo $array['onboarding_photo'] ?>" required>
                                 <div class="mt-2">
                                     <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
                                     <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
@@ -259,29 +254,6 @@ if (@$cmdtuples == 1) {
                                     </ol>
                                 </label>
                             </div>
-
-                            <script>
-                                let photoCaptured = false;
-
-                                function capturePhoto() {
-                                    // Your existing code to capture the photo goes here
-
-                                    // Set the flag to indicate that the photo has been captured
-                                    photoCaptured = true;
-                                    document.getElementById('photo').value = 'photo captured';
-                                }
-
-                                // Validate the form before submission
-                                function validateForm(event) {
-                                    if (!photoCaptured) {
-                                        alert('Please capture the photo before submitting the form.');
-                                        event.preventDefault(); // Prevent form submission
-                                    }
-                                }
-
-                                // Attach the form validation to the form's submit event
-                                document.getElementById('a_onboard').addEventListener('submit', validateForm);
-                            </script>
 
                             <div class="mb-3">
                                 <button type="submit" class="btn btn-primary">Submit</button>
@@ -423,6 +395,18 @@ if (@$cmdtuples == 1) {
             myModal.show();
         };
     </script>
+    <!-- <script>
+        var myModal = document.getElementById('myModal');
+
+        myModal.addEventListener('click', function(event) {
+            if (event.target === myModal) {
+                // Clicked outside the modal - close it and unfreeze the background
+                $('#myModal').modal('hide');
+                $('body').removeClass('modal-open');
+                $('.modal-backdrop').remove();
+            }
+        });
+    </script> -->
 
     <script>
         const scriptURL = 'payment-api.php';
@@ -522,6 +506,8 @@ if (@$cmdtuples == 1) {
             document.getElementById('video-preview').classList.add('d-none');
         }
     </script>
+
+
 </body>
 
 </html>
