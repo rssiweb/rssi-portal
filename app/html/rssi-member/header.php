@@ -96,12 +96,12 @@
                             <a style="font-size:13px;" href="iexplore.php"><i class="fa-solid fa-arrow-up-a-z"></i>&nbsp;iExplore</a>
                         </li>
                         <li style="height: unset;">
-                            <a style="font-size:13px;" href="policy.php"><i class="fa-solid fa-shield-halved"></i></i>&nbsp;HR Policy</a>
+                            <a style="font-size:13px;" href="policy.php"><i class="fa-solid fa-file-shield"></i>&nbsp;HR Policy</a>
                         </li>
                         <?php if (@$role == 'Offline Manager' || @$role == 'Admin') {
                         ?>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="dashboard.php"><i class="fa-solid fa-vector-square"></i>&nbsp;InChargePro</a>
+                                <a style="font-size:13px;" href="dashboard.php"><i class="fa-solid fa-bars-progress"></i>&nbsp;Manager Suite</a>
                             </li>
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-building-user"></i>&nbsp;Visitor pass</a>
