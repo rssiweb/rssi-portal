@@ -106,20 +106,6 @@ class Resourcemovement
      */
     private $onboardInitiatedOn;
 
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="otp_asso", type="text", nullable=true)
-     */
-    private $otpAsso;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="otp_centre", type="text", nullable=true)
-     */
-    private $otpCentre;
-
 
 
     /**

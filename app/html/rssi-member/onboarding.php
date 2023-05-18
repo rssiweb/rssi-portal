@@ -202,7 +202,7 @@ if (@$cmdtuples == 1) {
 
                             <div class="mb-3">
                                 <label for="photo" class="form-label">Current Photo</label>
-                                <input type="hidden" class="form-control" id="photo" name="photo" value="<?php echo $array['onboarding_photo'] ?>" required>
+                                <input type="hidden" class="form-control" id="photo" name="photo" value="<?php echo $array['onboarding_photo'] ?>">
                                 <div class="mt-2">
                                     <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
                                     <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
@@ -254,6 +254,29 @@ if (@$cmdtuples == 1) {
                                     </ol>
                                 </label>
                             </div>
+
+                            <script>
+                                let photoCaptured = false;
+
+                                function capturePhoto() {
+                                    // Your existing code to capture the photo goes here
+
+                                    // Set the flag to indicate that the photo has been captured
+                                    photoCaptured = true;
+                                    document.getElementById('photo').value = 'photo captured';
+                                }
+
+                                // Validate the form before submission
+                                function validateForm(event) {
+                                    if (!photoCaptured) {
+                                        alert('Please capture the photo before submitting the form.');
+                                        event.preventDefault(); // Prevent form submission
+                                    }
+                                }
+
+                                // Attach the form validation to the form's submit event
+                                document.getElementById('a_onboard').addEventListener('submit', validateForm);
+                            </script>
 
                             <div class="mb-3">
                                 <button type="submit" class="btn btn-primary">Submit</button>
