@@ -275,13 +275,15 @@ if (@$cmdtuples == 1) {
                                 function validateForm(event) {
                                     if (!photoCaptured) {
                                         alert('Please capture the photo before submitting the form.');
-                                        event.preventDefault(); // Prevent form submission
+                                        return false; // Prevent form submission
                                     }
+                                    return true; // Allow form submission
                                 }
 
                                 // Attach the form validation to the form's submit event
-                                document.getElementById('a_onboard').addEventListener('submit', validateForm);
+                                document.getElementById('a_onboard').onsubmit = validateForm;
                             </script>
+
 
                             <div class="mb-3">
                                 <button type="submit" class="btn btn-primary">Submit</button>
