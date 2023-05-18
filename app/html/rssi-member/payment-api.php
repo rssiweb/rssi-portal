@@ -133,7 +133,6 @@ if ($formtype == "gen_otp_associate") {
     $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
 
     $item->setOnboardingGenOtpAssociate($hashedValue);
-    $item->setOtpAsso($otp);
     $entityManager->persist($item);
     $entityManager->flush();
     echo "success";
@@ -161,7 +160,6 @@ if ($formtype == "gen_otp_centr") {
     $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
 
     $item->setOnboardingGenOtpCenterIncharge($hashedValue);
-    $item->setOtpCentre($otp);
     $entityManager->persist($item);
     $entityManager->flush();
     echo "success";
