@@ -260,31 +260,6 @@ if (@$cmdtuples == 1) {
                                 </label>
                             </div>
 
-                            <script>
-                                let photoCaptured = false;
-
-                                function capturePhoto() {
-                                    // Your existing code to capture the photo goes here
-
-                                    // Set the flag to indicate that the photo has been captured
-                                    photoCaptured = true;
-                                    document.getElementById('photo').value = 'photo captured';
-                                }
-
-                                // Validate the form before submission
-                                function validateForm(event) {
-                                    if (!photoCaptured) {
-                                        alert('Please capture the photo before submitting the form.');
-                                        return false; // Prevent form submission
-                                    }
-                                    return true; // Allow form submission
-                                }
-
-                                // Attach the form validation to the form's submit event
-                                document.getElementById('a_onboard').onsubmit = validateForm;
-                            </script>
-
-
                             <div class="mb-3">
                                 <button type="submit" class="btn btn-primary">Submit</button>
                             </div>
@@ -522,6 +497,9 @@ if (@$cmdtuples == 1) {
                 canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
             });
         }
+    </script>
+    <script>
+        let photoCaptured = false;
 
         function capturePhoto() {
             canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
@@ -534,9 +512,24 @@ if (@$cmdtuples == 1) {
             document.getElementById('photo-preview').setAttribute('src', photoURL);
             document.getElementById('photo-preview').classList.remove('d-none');
             document.getElementById('video-preview').classList.add('d-none');
-        }
-    </script>
 
+            // Set the flag to indicate that the photo has been captured
+            photoCaptured = true;
+            document.getElementById('photo').value = 'photo captured';
+        }
+
+        // Validate the form before submission
+        function validateForm(event) {
+            if (!photoCaptured) {
+                alert('Please capture the photo before submitting the form.');
+                return false; // Prevent form submission
+            }
+            return true; // Allow form submission
+        }
+
+        // Attach the form validation to the form's submit event
+        document.getElementById('a_onboard').onsubmit = validateForm;
+    </script>
 
 </body>
 
