@@ -512,12 +512,9 @@ if (@$cmdtuples == 1) {
             document.getElementById('photo-preview').setAttribute('src', photoURL);
             document.getElementById('photo-preview').classList.remove('d-none');
             document.getElementById('video-preview').classList.add('d-none');
-
             // Set the flag to indicate that the photo has been captured
             photoCaptured = true;
-            document.getElementById('photo').value = 'photo captured';
         }
-
         // Validate the form before submission
         function validateForm(event) {
             if (!photoCaptured) {
@@ -526,7 +523,6 @@ if (@$cmdtuples == 1) {
             }
             return true; // Allow form submission
         }
-
         // Attach the form validation to the form's submit event
         document.getElementById('a_onboard').onsubmit = validateForm;
     </script>
