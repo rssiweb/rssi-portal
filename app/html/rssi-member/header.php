@@ -25,29 +25,11 @@
                             </a>
                         </li>
 
-                        <!-- <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/1VOuqKRhyy3hycuiIMi022qKAzvPVd4dw/view" target="_blank">Responsibilities of Centre In charge / Asst. centre in-
-                                charge
-                                <span class="label label-info">Sep 2, 2022</span>
-                            </a>
-                        </li> -->
-
                         <li style="height: unset;">
                             <a class="notification" href="https://youtu.be/W3sWtsuRlTM" target="_blank">User Guide My Account
                                 <span class="label label-info">Dec 8, 2021</span>
                             </a>
                         </li>
-                        <!-- <li style="height: unset;">
-                            <a class="notification" href="https://youtu.be/HuGmVkIW6vw" target="_blank">How to Evaluate Answer Sheet
-                                <span class="label label-info">Dec 5, 2021</span>
-                            </a>
-                        </li> -->
-
-                        <!-- <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view" target="_blank">Responsibilities of the Teaching Intern
-                                <span class="label label-info">Aug 2, 2021</span>
-                            </a>
-                        </li> -->
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1yDOMpaOaHatAaDBjRyuoaOpuDGCf9h9S/view" target="_blank">How to Accept a Google Meeting Invite
                                 <span class="label label-info">Aug 2, 2021</span>
@@ -58,24 +40,12 @@
                                 <span class="label label-info">Aug 1, 2021</span>
                             </a>
                         </li>
-                        <!-- <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/1YOhIKnOe1Ygt7wFS-Jh3Fe8Fm4qUKiXG/view?usp=sharing" target="_blank">Examiner & Reviewer User Guide
-                                <span class="label label-info">Jul 20, 2021</span>
-                            </a>
-                        </li> -->
-
 
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting
                                 <span class="label label-info">Jul 7, 2021</span>
                             </a>
                         </li>
-
-                        <!-- <li style="height: unset;">
-                            <a class="notification" href="https://drive.google.com/file/d/1no7KiM1Kqt9_elGZgNCzF2HAW8um85Un/view" target="_blank">Instructions to invigilators during examination
-                                <span class="label label-info">Jul 6, 2021</span>
-                            </a>
-                        </li> -->
                         <li></li>
                     </ul>
                 </li>

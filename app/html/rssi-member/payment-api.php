@@ -124,6 +124,8 @@ if ($formtype == "gpsedit") {
 
 if ($formtype == "gen_otp_associate") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
+  @$associate_name = $_POST['associate_name'];
+  @$email = $_POST['associate_email'];
   $item = $entityManager->getRepository('Resourcemovement')->find($otp_initiatedfor); //primary key
   if ($item) {
     // Generate a random 6 digit number
@@ -135,6 +137,13 @@ if ($formtype == "gen_otp_associate") {
     $entityManager->persist($item);
     $entityManager->flush();
     echo "success";
+    if ($email != "") {
+      sendEmail("otp", array(
+        "process" => 'onboarding',
+        "otp" => @$otp,
+        "receiver" => @$associate_name,
+      ), $email);
+    }
   } else {
     echo "failed";
   }
@@ -143,6 +152,8 @@ if ($formtype == "gen_otp_associate") {
 if ($formtype == "gen_otp_centr") {
 
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
+  @$email = $_POST['centre_incharge_email'];
+  @$centre_incharge_name = $_POST['centre_incharge_name'];
   $item = $entityManager->getRepository('Resourcemovement')->find($otp_initiatedfor); //primary key
   if ($item) {
     // Generate a random 6 digit number
@@ -154,6 +165,13 @@ if ($formtype == "gen_otp_centr") {
     $entityManager->persist($item);
     $entityManager->flush();
     echo "success";
+    if ($email != "") {
+      sendEmail("otp", array(
+        "process" => 'onboarding',
+        "otp" => @$otp,
+        "receiver" => @$centre_incharge_name,
+      ), $email);
+    }
   } else {
     echo "failed";
   }

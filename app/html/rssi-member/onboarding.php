@@ -202,7 +202,7 @@ if (@$cmdtuples == 1) {
 
                             <div class="mb-3">
                                 <label for="photo" class="form-label">Current Photo</label>
-                                <input type="hidden" class="form-control" id="photo" name="photo" value="<?php echo $array['onboarding_photo'] ?>">
+                                <input type="hidden" class="form-control" id="photo" name="photo" value="<?php echo $array['onboarding_photo'] ?>" required>
                                 <div class="mt-2">
                                     <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
                                     <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
@@ -295,14 +295,18 @@ if (@$cmdtuples == 1) {
 
                     <!-- Form gen_otp_associate -->
                     <form name="gen_otp_associate" id="gen_otp_associate" action="#" method="POST" style="display:inline;">
-                        <input type="hidden" name="form-type" type="text" value="gen_otp_associate">
-                        <input type="hidden" name="otp_initiatedfor" type="text" value="<?php echo $array['associatenumber'] ?>" readonly>
+                        <input type="hidden" name="form-type" value="gen_otp_associate">
+                        <input type="hidden" name="otp_initiatedfor" value="<?php echo $array['associatenumber'] ?>" readonly>
+                        <input type="hidden" name="associate_name" value="<?php echo $array['fullname'] ?>" readonly>
+                        <input type="hidden" name="associate_email" value="<?php echo $array['email'] ?>" readonly>
                     </form>
 
                     <!-- Form gen_otp_centr -->
                     <form name="gen_otp_centr" id="gen_otp_centr" action="#" method="POST" style="display:inline;">
-                        <input type="hidden" name="form-type" type="text" value="gen_otp_centr">
-                        <input type="hidden" name="otp_initiatedfor" type="text" value="<?php echo $array['associatenumber'] ?>" readonly>
+                        <input type="hidden" name="form-type" value="gen_otp_centr">
+                        <input type="hidden" name="otp_initiatedfor" value="<?php echo $array['associatenumber'] ?>" readonly>
+                        <input type="hidden" name="centre_incharge_name" value="<?php echo $fullname ?>" readonly>
+                        <input type="hidden" name="centre_incharge_email" value="<?php echo $email ?>" readonly>
                     </form>
 
                 <?php } else if (($role == 'Admin' || $role == 'Offline Manager') && $array['onboard_initiated_by'] == null) { ?>
