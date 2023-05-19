@@ -569,7 +569,7 @@ $resultArr = pg_fetch_all($result);
                                 } else {
                                     alert("Error onboarding associate. Please try again later or contact support.")
                                 }
-                            })
+                            }) + location.reload()
                     })
                 })
             } else {
