@@ -126,7 +126,7 @@ if ($formtype == "gen_otp_associate") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
   @$associate_name = $_POST['associate_name'];
   @$email = $_POST['associate_email'];
-  $item = $entityManager->getRepository('Resourcemovement')->find($otp_initiatedfor); //primary key
+  $item = $entityManager->getRepository('onboarding')->find($otp_initiatedfor); //primary key
   if ($item) {
     // Generate a random 6 digit number
     $otp = rand(100000, 999999);
@@ -153,7 +153,7 @@ if ($formtype == "gen_otp_centr") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
   @$email = $_POST['centre_incharge_email'];
   @$centre_incharge_name = $_POST['centre_incharge_name'];
-  $item = $entityManager->getRepository('Resourcemovement')->find($otp_initiatedfor); //primary key
+  $item = $entityManager->getRepository('onboarding')->find($otp_initiatedfor); //primary key
   if ($item) {
     // Generate a random 6 digit number
     $otp = rand(100000, 999999);
@@ -179,7 +179,7 @@ if ($formtype == "initiatingonboarding") {
   @$initiatedfor = $_POST['initiatedfor'];
   @$initiatedby = $_POST['initiatedby'];
   $now = date('Y-m-d H:i:s');
-  $initiatingonboarding = "INSERT INTO resourcemovement (onboarding_associate_id, onboard_initiated_by, onboard_initiated_on) VALUES ('$initiatedfor','$initiatedby','$now')";
+  $initiatingonboarding = "INSERT INTO onboarding (onboarding_associate_id, onboard_initiated_by, onboard_initiated_on) VALUES ('$initiatedfor','$initiatedby','$now')";
   $result = pg_query($con, $initiatingonboarding);
   if ($result) {
     $cmdtuples = pg_affected_rows($result);

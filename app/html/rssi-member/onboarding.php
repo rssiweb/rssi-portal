@@ -27,7 +27,7 @@ $result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,rema
         ORDER BY issuedon DESC
         LIMIT 1
     ) certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
-    LEFT JOIN resourcemovement ON resourcemovement.onboarding_associate_id = rssimyaccount_members.associatenumber
+    LEFT JOIN onboarding ON onboarding.onboarding_associate_id = rssimyaccount_members.associatenumber
     WHERE rssimyaccount_members.associatenumber = '$associate_number'");
 
 
@@ -46,7 +46,7 @@ if (@$_POST['form-type'] == "onboarding") {
     $otp_centreincharge = $_POST['otp-center-incharge'];
     $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
 
-    $query = "select onboarding_gen_otp_associate, onboarding_gen_otp_center_incharge from resourcemovement WHERE onboarding_associate_id='$otp_initiatedfor_main'";
+    $query = "select onboarding_gen_otp_associate, onboarding_gen_otp_center_incharge from onboarding WHERE onboarding_associate_id='$otp_initiatedfor_main'";
     $result = pg_query($con, $query);
     $db_otp_associate = pg_fetch_result($result, 0, 0);
     $db_otp_centreincharge = pg_fetch_result($result, 0, 1);
@@ -59,7 +59,7 @@ if (@$_POST['form-type'] == "onboarding") {
         $disclaimer = $_POST['onboarding_complete'];
         $now = date('Y-m-d H:i:s');
         $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user
-        $onboarded = "UPDATE resourcemovement SET onboarding_photo='$onboarding_photo', reporting_date_time='$reporting_date_time', onboarding_otp_associate='$otp_associate', onboarding_otp_center_incharge='$otp_centreincharge', onboarding_submitted_by='$associatenumber', onboarding_submitted_on='$now', onboarding_flag='yes', disclaimer='$disclaimer', ip_address='$ip_address' where onboarding_associate_id='$otp_initiatedfor_main'";
+        $onboarded = "UPDATE onboarding SET onboarding_photo='$onboarding_photo', reporting_date_time='$reporting_date_time', onboarding_otp_associate='$otp_associate', onboarding_otp_center_incharge='$otp_centreincharge', onboarding_submitted_by='$associatenumber', onboarding_submitted_on='$now', onboarding_flag='yes', disclaimer='$disclaimer', ip_address='$ip_address' where onboarding_associate_id='$otp_initiatedfor_main'";
         $result = pg_query($con, $onboarded);
         $cmdtuples = pg_affected_rows($result);
     } else {

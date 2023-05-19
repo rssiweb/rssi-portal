@@ -60,30 +60,6 @@ if (!$result) {
 
                         <h3>Associate Exit Form</h3>
                         <hr>
-                        <!-- <div class="row">
-                            <div class="col-md-8 mb-3">
-                                <label for="associate-name" class="form-label">Associate Name:</label>
-                                <input type="text" class="form-control" id="associate-name" placeholder="Enter associate name" value="<?php echo $array['fullname'] ?>" readonly>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <img src="<?php echo $array['photo'] ?>" alt="Placeholder image" width="100px" class="float-end">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="associate-id" class="form-label">Associate ID:</label>
-                            <input type="text" class="form-control" id="associate-id" placeholder="Enter associate ID" Value="<?php echo $array['associatenumber'] ?>" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="doj" class="form-label">Joining Date:</label>
-                            <input type="date" class="form-control" id="doj" placeholder="Enter Joining Date" Value="<?php echo $array['doj'] ?>" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="last-day" class="form-label">Last Day of Employment:</label>
-                            <input type="date" class="form-control" id="last-day" Value="<?php echo $array['effectivedate'] ?>" readonly>
-                            <div class="form-text">This field will be filled by the system.</div>
-                        </div> -->
-
                         <div class="container">
                             <div class="row">
                                 <div class="col-md-4 text-center mb-3">
@@ -153,94 +129,28 @@ if (!$result) {
                             <div class="form-text">Enter any comments or feedback from the associate's exit interview.</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="exit-form-date" class="form-label">Exit Form Date:</label>
-                            <input type="date" class="form-control" id="exit-form-date">
-                            <div class="form-text">Enter the date the exit form was completed.</div>
-                        </div>
-
-                        <div>
-                            <label for="signature-field">Please verify the data entered above and sign below to confirm its accuracy. By signing, you agree that the information provided is complete and correct to the best of your knowledge.</label>
-                            <div>
-                                <canvas id="signature-canvas" class="border border-1 rounded"></canvas>
-                                <input type="hidden" name="signature-data" id="signature-data">
-                                <button id="clear-button" class="btn btn-secondary mt-2">Clear Signature</button>
+                        <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="reporting-date-time" class="form-label">Exit Form Date &amp; Time</label>
+                                    <input type="datetime-local" class="form-control" id="reporting-date-time" name="reporting-date-time" value="<?php echo @$array['reporting_date_time'] ?>" required>
+                                    <div class="form-text">Enter the date the exit form was completed.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="otp-associate" class="form-label">OTP from Associate</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="otp-associate" name="otp-associate" placeholder="Enter OTP" required>
+                                        <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate">Generate OTP</button>
+                                    </div>
+                                    <div class="form-text">OTP will be sent to the registered email address.</div>
+                                </div>
                             </div>
-
                             <div class="mb-3">
-                                <label for="signature" class="form-label">Signature</label>
-                                <input type="text" class="form-control" name="signature-name" id="signature-name" placeholder="Please sign above" required>
+                                <label for="otp-center-incharge" class="form-label">OTP from Center Incharge</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="otp-center-incharge" name="otp-center-incharge" placeholder="Enter OTP" required>
+                                    <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr">Generate OTP</button>
+                                </div>
                             </div>
-                        </div>
-
-                        <script>
-                            const canvas = document.getElementById('signature-canvas');
-                            const signatureDataInput = document.getElementById('signature-data');
-                            const signatureNameInput = document.getElementById('signature-name');
-                            const clearButton = document.getElementById('clear-button');
-                            const ctx = canvas.getContext('2d');
-                            let isDrawing = false;
-                            let lastX = 0;
-                            let lastY = 0;
-                            let sigData = '';
-
-                            function startDrawing(e) {
-                                isDrawing = true;
-                                [lastX, lastY] = [e.offsetX, e.offsetY];
-                            }
-
-                            function draw(e) {
-                                if (!isDrawing) return;
-                                ctx.beginPath();
-                                ctx.moveTo(lastX, lastY);
-                                ctx.lineTo(e.offsetX, e.offsetY);
-                                ctx.stroke();
-                                [lastX, lastY] = [e.offsetX, e.offsetY];
-                                sigData = canvas.toDataURL();
-                            }
-
-                            function endDrawing() {
-                                isDrawing = false;
-                                signatureDataInput.value = sigData;
-                            }
-
-                            function clearCanvas(event) {
-                                event.preventDefault();
-                                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                                signatureDataInput.value = '';
-                                sigData = '';
-                                signatureNameInput.value = '';
-                            }
-
-                            clearButton.addEventListener('click', clearCanvas);
-
-
-                            canvas.addEventListener('mousedown', startDrawing);
-                            canvas.addEventListener('mousemove', draw);
-                            canvas.addEventListener('mouseup', endDrawing);
-                            canvas.addEventListener('mouseleave', endDrawing);
-                            clearButton.addEventListener('click', clearCanvas);
-
-
-
-                            // Retrieve the signature data from the form
-                            const signatureData = document.getElementById('signature-data').value;
-
-                            // Get the canvas and its context
-                            const canvas_sig = document.getElementById('signature-canvas');
-                            const ctx_sig = canvas_sig.getContext('2d');
-
-                            // Create a new image object
-                            const signatureImage = new Image();
-
-                            // Set the source of the image object to the signature data
-                            signatureImage.src = signatureData;
-
-                            // Once the image is loaded, draw it onto the canvas
-                            signatureImage.onload = function() {
-                                ctx_sig.drawImage(signatureImage, 0, 0);
-                            };
-                        </script>
 
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary">Submit</button>

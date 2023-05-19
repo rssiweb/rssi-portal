@@ -57,7 +57,7 @@ if ($id != null) {
 
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
 
-    left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM resourcemovement) resourcemovement ON rssimyaccount_members.associatenumber=resourcemovement.onboarding_associate_id
+    left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM onboarding) onboarding ON rssimyaccount_members.associatenumber=onboarding.onboarding_associate_id
 
     WHERE filterstatus='$id' order by filterstatus asc,today desc");
 } else if ($aaid != null) {
@@ -84,7 +84,7 @@ if ($id != null) {
 
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
 
-    left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM resourcemovement) resourcemovement ON rssimyaccount_members.associatenumber=resourcemovement.onboarding_associate_id
+    left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM onboarding) onboarding ON rssimyaccount_members.associatenumber=onboarding.onboarding_associate_id
     
     WHERE associatenumber='$aaid' order by filterstatus asc,today desc");
 } else {

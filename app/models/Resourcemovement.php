@@ -5,12 +5,12 @@
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Resourcemovement
+ * onboarding
  *
- * @ORM\Table(name="resourcemovement")
+ * @ORM\Table(name="onboarding")
  * @ORM\Entity
  */
-class Resourcemovement
+class onboarding
 {
     /**
      * @var string
@@ -123,7 +123,7 @@ class Resourcemovement
      *
      * @param int $serialNumber
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setSerialNumber($serialNumber)
     {
@@ -147,7 +147,7 @@ class Resourcemovement
      *
      * @param string|null $onboardingPhoto
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardingPhoto($onboardingPhoto = null)
     {
@@ -171,7 +171,7 @@ class Resourcemovement
      *
      * @param \DateTime|null $reportingDateTime
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setReportingDateTime($reportingDateTime = null)
     {
@@ -195,7 +195,7 @@ class Resourcemovement
      *
      * @param string|null $onboardingGenOtpAssociate
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardingGenOtpAssociate($onboardingGenOtpAssociate = null)
     {
@@ -219,7 +219,7 @@ class Resourcemovement
      *
      * @param string|null $onboardingOtpAssociate
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardingOtpAssociate($onboardingOtpAssociate = null)
     {
@@ -243,7 +243,7 @@ class Resourcemovement
      *
      * @param string|null $onboardingGenOtpCenterIncharge
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardingGenOtpCenterIncharge($onboardingGenOtpCenterIncharge = null)
     {
@@ -267,7 +267,7 @@ class Resourcemovement
      *
      * @param string|null $onboardingOtpCenterIncharge
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardingOtpCenterIncharge($onboardingOtpCenterIncharge = null)
     {
@@ -291,7 +291,7 @@ class Resourcemovement
      *
      * @param string|null $onboardingSubmittedBy
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardingSubmittedBy($onboardingSubmittedBy = null)
     {
@@ -315,7 +315,7 @@ class Resourcemovement
      *
      * @param \DateTime|null $onboardingSubmittedOn
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardingSubmittedOn($onboardingSubmittedOn = null)
     {
@@ -339,7 +339,7 @@ class Resourcemovement
      *
      * @param string|null $onboardingFlag
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardingFlag($onboardingFlag = null)
     {
@@ -363,7 +363,7 @@ class Resourcemovement
      *
      * @param string|null $onboardInitiatedBy
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardInitiatedBy($onboardInitiatedBy = null)
     {
@@ -387,7 +387,7 @@ class Resourcemovement
      *
      * @param \DateTime|null $onboardInitiatedOn
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOnboardInitiatedOn($onboardInitiatedOn = null)
     {
@@ -411,7 +411,7 @@ class Resourcemovement
      *
      * @param string|null $otpAsso
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOtpAsso($otpAsso = null)
     {
@@ -435,7 +435,7 @@ class Resourcemovement
      *
      * @param string|null $otpCentre
      *
-     * @return Resourcemovement
+     * @return onboarding
      */
     public function setOtpCentre($otpCentre = null)
     {
