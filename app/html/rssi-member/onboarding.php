@@ -18,18 +18,20 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by,onboarding_gen_otp_center_incharge,onboarding_gen_otp_associate,email,onboarding_flag,onboarding_photo,reporting_date_time,disclaimer,ip_address,onboarding_submitted_by,onboarding_submitted_on,onboard_initiated_on,onboard_initiated_by,issuedon,certificate_no
+$result = pg_query($con, "SELECT fullname, associatenumber, doj, effectivedate, remarks, photo, engagement, position, depb, filterstatus, COALESCE(latest_certificate.certificate_url, certificate.certificate_url) AS certificate_url, COALESCE(latest_certificate.badge_name, certificate.badge_name) AS badge_name, onboard_initiated_by, onboarding_gen_otp_center_incharge, onboarding_gen_otp_associate, email, onboarding_flag, onboarding_photo, reporting_date_time, disclaimer, ip_address, onboarding_submitted_by, onboarding_submitted_on, onboard_initiated_on, onboard_initiated_by, COALESCE(latest_certificate.issuedon, certificate.issuedon) AS issuedon, COALESCE(latest_certificate.certificate_no, certificate.certificate_no) AS certificate_no
     FROM rssimyaccount_members
     LEFT JOIN (
-        SELECT awarded_to_id,badge_name,certificate_url,issuedon,certificate_no
+        SELECT awarded_to_id, badge_name, certificate_url, issuedon, certificate_no
         FROM certificate
-        WHERE badge_name='Joining Letter'
+        WHERE badge_name = 'Joining Letter'
         ORDER BY issuedon DESC
         LIMIT 1
-    ) certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
+    ) latest_certificate ON latest_certificate.awarded_to_id = rssimyaccount_members.associatenumber
+    LEFT JOIN certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
     LEFT JOIN onboarding ON onboarding.onboarding_associate_id = rssimyaccount_members.associatenumber
-    WHERE rssimyaccount_members.associatenumber = '$associate_number'");
-
+    WHERE rssimyaccount_members.associatenumber = '$associate_number'
+    ORDER BY certificate.issuedon DESC
+    LIMIT 1");
 
 $resultArr = pg_fetch_all($result);
 if (!$result) {

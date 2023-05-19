@@ -142,3 +142,8 @@ CREATE SEQUENCE result_id_seq;
 
 CREATE TABLE result(
 id integer NOT NULL DEFAULT nextval('result_id_seq'),
+
+DROP SEQUENCE IF EXISTS resourcemovement_serial_number_seq CASCADE;
+CREATE SEQUENCE onboarding_serial_number_seq START WITH 1;
+
+ALTER TABLE onboarding ALTER COLUMN serial_number SET DEFAULT nextval('onboarding_serial_number_seq'::regclass);
