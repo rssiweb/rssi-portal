@@ -58,7 +58,7 @@ if (@$_POST['form-type'] == "exit") {
         $exit_date_time = $_POST['reporting-date-time'];
         $now = date('Y-m-d H:i:s');
         $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user
-        $exit = "UPDATE associate_exit SET onboarding_photo='$onboarding_photo', reporting_date_time='$reporting_date_time', onboarding_otp_associate='$otp_associate', onboarding_otp_center_incharge='$otp_centreincharge', onboarding_submitted_by='$associatenumber', onboarding_submitted_on='$now', onboarding_flag='yes', disclaimer='$disclaimer', ip_address='$ip_address' where onboarding_associate_id='$otp_initiatedfor_main'";
+        $exit = "UPDATE associate_exit SET exit_photo='$exit_photo', exit_date_time='$exit_date_time', exit_otp_associate='$otp_associate', exit_otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', disclaimer='$disclaimer', ip_address='$ip_address', remarks='$remarks',asset_clearance='$asset_clearance',financial_clearance='$financial_clearance', security_clearance='$security_clearance',hr_clearance='$hr_clearance', work_clearance='$work_clearance',legal_clearance='$legal_clearance', exit_interview='$exit_interview' where exit_associate_id='$otp_initiatedfor_main'";
         $result = pg_query($con, $onboarded);
         $cmdtuples = pg_affected_rows($result);
     } else {
@@ -316,7 +316,7 @@ if (@$cmdtuples == 1) {
                     </form>
 
                 <?php } else if (($role == 'Admin' || $role == 'Offline Manager') && $array['exit_initiated_by'] == null) { ?>
-                    <!-- Onboarding not initiated -->
+                    <!-- Exit not initiated -->
                     <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
@@ -426,7 +426,7 @@ if (@$cmdtuples == 1) {
         })
     </script>
 
-<script>
+    <script>
         window.onload = function() {
             var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
                 backdrop: 'static',

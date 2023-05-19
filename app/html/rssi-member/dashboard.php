@@ -71,7 +71,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
                             <h4>Exit Process</h4>
                             <p class="text-muted equal-height">Efficiently manage the separation of associates with the RSSI Exit Process. Conduct exit interviews, collect company property, provide benefit information, and complete necessary formalities in one place.</p>
-                            <a href="#" class="btn btn-danger btn-sm btn-block" disabled>Launch&nbsp;&nbsp;<i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                            <a href="exit.php" class="btn btn-danger btn-sm btn-block">Launch&nbsp;&nbsp;<i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                         </div>
                         
                         <div class="col-xs-6 col-sm-3 placeholder">
