@@ -18,10 +18,18 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by,onboarding_gen_otp_center_incharge,onboarding_gen_otp_associate,email,onboarding_flag,onboarding_photo,reporting_date_time,disclaimer,ip_address,onboarding_submitted_by,onboarding_submitted_on,onboard_initiated_on,onboard_initiated_by FROM rssimyaccount_members 
-LEFT JOIN (SELECT awarded_to_id,badge_name,certificate_url FROM certificate WHERE badge_name='Joining Letter') certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
-LEFT JOIN resourcemovement ON resourcemovement.onboarding_associate_id = rssimyaccount_members.associatenumber
-WHERE associatenumber = '$associate_number'");
+$result = pg_query($con, "SELECT fullname,associatenumber,doj,effectivedate,remarks,photo,engagement,position,depb,filterstatus,certificate_url,badge_name, onboard_initiated_by,onboarding_gen_otp_center_incharge,onboarding_gen_otp_associate,email,onboarding_flag,onboarding_photo,reporting_date_time,disclaimer,ip_address,onboarding_submitted_by,onboarding_submitted_on,onboard_initiated_on,onboard_initiated_by,issuedon,certificate_no
+    FROM rssimyaccount_members
+    LEFT JOIN (
+        SELECT awarded_to_id,badge_name,certificate_url,issuedon,certificate_no
+        FROM certificate
+        WHERE badge_name='Joining Letter'
+        ORDER BY issuedon DESC
+        LIMIT 1
+    ) certificate ON certificate.awarded_to_id = rssimyaccount_members.associatenumber
+    LEFT JOIN resourcemovement ON resourcemovement.onboarding_associate_id = rssimyaccount_members.associatenumber
+    WHERE rssimyaccount_members.associatenumber = '$associate_number'");
+
 
 $resultArr = pg_fetch_all($result);
 if (!$result) {
@@ -134,7 +142,7 @@ if (@$cmdtuples == 1) {
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-12 text-end">
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#joining-letter-modal">
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#joining-letter-modal-<?php echo $array['certificate_no']; ?>">
                                             <i class="far fa-file-pdf"></i>
                                         </button>
                                     </div>
@@ -185,7 +193,8 @@ if (@$cmdtuples == 1) {
                         $preview_url = "https://drive.google.com/file/d/$file_id/preview";
                         ?>
                         <!-- Modal -->
-                        <div class="modal fade" id="joining-letter-modal" tabindex="-1" aria-labelledby="joining-letter-modal-label" aria-hidden="true">
+
+                        <div class="modal fade" id="joining-letter-modal-<?php echo $array['certificate_no']; ?>" tabindex="-1" aria-labelledby="joining-letter-modal-label" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content">
                                     <div class="modal-header">
@@ -193,12 +202,12 @@ if (@$cmdtuples == 1) {
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <!-- Use the preview URL in the src attribute of the iframe tag -->
                                         <iframe src="<?php echo $preview_url; ?>" style="width:100%; height:500px;"></iframe>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                         <hr>
                         <fieldset <?php echo ($array['onboarding_flag'] == "yes") ? "disabled" : ""; ?>>
 
