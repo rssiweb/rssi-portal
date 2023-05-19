@@ -565,11 +565,11 @@ $resultArr = pg_fetch_all($result);
                             .then(response => response.text())
                             .then(result => {
                                 if (result == 'success') {
-                                    alert("The associate's onboarding process has been initiated successfully.")
+                                    alert("The associate's onboarding process has been initiated successfully.") + location.reload()
                                 } else {
-                                    alert("Error onboarding associate. Please try again later or contact support.")
+                                    alert("Error onboarding associate. Please try again later or contact support.") + location.reload()
                                 }
-                            }) + location.reload()
+                            })
                     })
                 })
             } else {
