@@ -21,7 +21,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RSSI-Manager Suite</title>
+    <title>RSSI-PeopleOps Portal</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
@@ -57,7 +57,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    Home / Manager Suite
+                    Home / PeopleOps Portal
                 </div>
                 <section class="box" style="padding: 2%;">
                     <div class="row placeholders">
