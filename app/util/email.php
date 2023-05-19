@@ -21,7 +21,7 @@ function template_file($file,$hash) {
     return $string;
 }
 
-function sendEmail($template, $data, $email) {
+function sendEmail($template, $data, $email, $bcc=True) {
     $mail = new PHPMailer(true);
     $template_name = $template;
     $template_data = $data; 
@@ -52,7 +52,10 @@ function sendEmail($template, $data, $email) {
     // $mail->addAddress('ellen@example.com');               //Name is optional
     // $mail->addReplyTo('info@example.com', 'Information');
     // $mail->addCC('info@rssi.in');
-    $mail->addBCC('info@rssi.in');
+    if ($bcc){
+        $mail->addBCC('info@rssi.in');
+    }
+    
 
     // //Attachments
     // $mail->addAttachment('/var/tmp/file.tar.gz');         //Add attachments

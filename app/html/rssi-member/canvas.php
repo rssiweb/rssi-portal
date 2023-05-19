@@ -81,3 +81,30 @@
         ctx_sig.drawImage(signatureImage, 0, 0);
     };
 </script>
+
+
+
+
+
+
+
+$item = $entityManager->getRepository('AssociateExit')->find($otp_initiatedfor); //primary key
+  if ($item) {
+    // Generate a random 6 digit number
+    $otp = rand(100000, 999999);
+    $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
+
+    $item->setExitGenOtpAssociate($hashedValue);
+    $entityManager->persist($item);
+    $entityManager->flush();
+    echo "success";
+    if ($email != "") {
+      sendEmail("otp", array(
+        "process" => 'exit',
+        "otp" => @$otp,
+        "receiver" => @$associate_name,
+      ), $email, False);
+    }
+  } else {
+    echo "failed";
+  }

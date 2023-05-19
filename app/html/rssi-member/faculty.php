@@ -59,6 +59,8 @@ if ($id != null) {
 
     left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM onboarding) onboarding ON rssimyaccount_members.associatenumber=onboarding.onboarding_associate_id
 
+    left join (SELECT exit_associate_id,exit_initiated_by,exit_initiated_on FROM associate_exit) associate_exit ON rssimyaccount_members.associatenumber=associate_exit.exit_associate_id
+
     WHERE filterstatus='$id' order by filterstatus asc,today desc");
 } else if ($aaid != null) {
     $result = pg_query($con, "SELECT distinct * FROM rssimyaccount_members 
@@ -85,6 +87,8 @@ if ($id != null) {
     left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
 
     left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM onboarding) onboarding ON rssimyaccount_members.associatenumber=onboarding.onboarding_associate_id
+
+    left join (SELECT exit_associate_id,exit_initiated_by,exit_initiated_on FROM associate_exit) associate_exit ON rssimyaccount_members.associatenumber=associate_exit.exit_associate_id
     
     WHERE associatenumber='$aaid' order by filterstatus asc,today desc");
 } else {
@@ -116,6 +120,7 @@ $resultArr = pg_fetch_all($result);
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,-25" />
 
     <!------ Include the above in your HEAD tag ---------->
 
@@ -286,7 +291,7 @@ $resultArr = pg_fetch_all($result);
           <th scope="col" id="cw2">Association Status</th>
           <th scope="col">Productivity</th>
           <th scope="col">Profile</th>
-          <th scope="col">Initiating onboarding</th>
+          <th scope="col">Workforce Transition</th>
         </tr>
         </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
@@ -357,14 +362,34 @@ $resultArr = pg_fetch_all($result);
                         <input type="hidden" name="form-type" type="text" value="initiatingonboarding">
                         <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
                         <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>' ?>
-                                <!-- OLD Appraisal system -->
+                                <!-- Initiate onboarding system -->
                                 <?php if ($role == 'Admin' && $array['onboard_initiated_by'] == null) { ?>
 
                                     <?php echo '<button type="submit" id="yes" onclick=validateForm() style=" outline: none;background: none;
                         padding: 0px;
-                        border: none;" title="Initiating Onboarding"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777"></i></button>' ?>
+                        border: none;" title="Initiating Onboarding"><span class="material-symbols-outlined" style="color:#777777">
+                        person_add
+                        </span></button>' ?>
                                 <?php } else {
                                     echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'] ?>
+                                <?php }
+                                echo ' </form>&nbsp;&nbsp;
+
+
+                                <form name="initiatingexit' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
+                        <input type="hidden" name="form-type" type="text" value="initiatingexit">
+                        <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
+                        <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>' ?>
+                                <!-- Initiate Exit system -->
+                                <?php if ($role == 'Admin' && $array['exit_initiated_by'] == null) { ?>
+
+                                    <?php echo '<button type="submit" id="yes" onclick=exit_validateForm() style=" outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="Initiating Exit"><span class="material-symbols-outlined" style="color:#777777">
+                        person_remove
+                        </span></i></button>' ?>
+                                <?php } else {
+                                    echo date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'] ?>
                             <?php }
                                 echo ' </form>
       </td>
@@ -567,13 +592,40 @@ $resultArr = pg_fetch_all($result);
                                 if (result == 'success') {
                                     alert("The associate's onboarding process has been initiated successfully.") + location.reload()
                                 } else {
-                                    alert("Error onboarding associate. Please try again later or contact support.") + location.reload()
+                                    alert("An error occurred while processing your request. Please try again later.") + location.reload()
                                 }
                             })
                     })
                 })
             } else {
                 alert("The onboarding process has been cancelled.");
+                return false;
+            }
+        }
+
+        function exit_validateForm() {
+            if (confirm('Are you sure you want to initiate the exit process for this associate?')) {
+
+                data.forEach(item => {
+                    const form = document.forms['initiatingexit' + item.associatenumber]
+                    form.addEventListener('submit', e => {
+                        e.preventDefault()
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['initiatingexit' + item.associatenumber])
+                            })
+                            .then(response => response.text())
+                            .then(result => {
+                                if (result == 'success') {
+                                    alert("The process has been successfully initiated.") + location.reload()
+                                } else {
+                                    alert("An error occurred while processing your request. Please try again later.") + location.reload()
+                                }
+                            })
+                    })
+                })
+            } else {
+                alert("The process has been canceled.");
                 return false;
             }
         }

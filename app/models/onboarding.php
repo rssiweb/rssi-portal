@@ -5,12 +5,12 @@
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * onboarding
+ * Onboarding
  *
  * @ORM\Table(name="onboarding")
  * @ORM\Entity
  */
-class onboarding
+class Onboarding
 {
     /**
      * @var string
@@ -18,7 +18,7 @@ class onboarding
      * @ORM\Column(name="onboarding_associate_id", type="text", nullable=false)
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="SEQUENCE")
-     * @ORM\SequenceGenerator(sequenceName="resourcemovement_onboarding_associate_id_seq", allocationSize=1, initialValue=1)
+     * @ORM\SequenceGenerator(sequenceName="onboarding_onboarding_associate_id_seq", allocationSize=1, initialValue=1)
      */
     private $onboardingAssociateId;
 
@@ -106,6 +106,20 @@ class onboarding
      */
     private $onboardInitiatedOn;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="disclaimer", type="text", nullable=true)
+     */
+    private $disclaimer;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="ip_address", type="string", length=255, nullable=true)
+     */
+    private $ipAddress;
+
 
 
     /**
@@ -123,7 +137,7 @@ class onboarding
      *
      * @param int $serialNumber
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setSerialNumber($serialNumber)
     {
@@ -147,7 +161,7 @@ class onboarding
      *
      * @param string|null $onboardingPhoto
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardingPhoto($onboardingPhoto = null)
     {
@@ -171,7 +185,7 @@ class onboarding
      *
      * @param \DateTime|null $reportingDateTime
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setReportingDateTime($reportingDateTime = null)
     {
@@ -195,7 +209,7 @@ class onboarding
      *
      * @param string|null $onboardingGenOtpAssociate
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardingGenOtpAssociate($onboardingGenOtpAssociate = null)
     {
@@ -219,7 +233,7 @@ class onboarding
      *
      * @param string|null $onboardingOtpAssociate
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardingOtpAssociate($onboardingOtpAssociate = null)
     {
@@ -243,7 +257,7 @@ class onboarding
      *
      * @param string|null $onboardingGenOtpCenterIncharge
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardingGenOtpCenterIncharge($onboardingGenOtpCenterIncharge = null)
     {
@@ -267,7 +281,7 @@ class onboarding
      *
      * @param string|null $onboardingOtpCenterIncharge
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardingOtpCenterIncharge($onboardingOtpCenterIncharge = null)
     {
@@ -291,7 +305,7 @@ class onboarding
      *
      * @param string|null $onboardingSubmittedBy
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardingSubmittedBy($onboardingSubmittedBy = null)
     {
@@ -315,7 +329,7 @@ class onboarding
      *
      * @param \DateTime|null $onboardingSubmittedOn
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardingSubmittedOn($onboardingSubmittedOn = null)
     {
@@ -339,7 +353,7 @@ class onboarding
      *
      * @param string|null $onboardingFlag
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardingFlag($onboardingFlag = null)
     {
@@ -363,7 +377,7 @@ class onboarding
      *
      * @param string|null $onboardInitiatedBy
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardInitiatedBy($onboardInitiatedBy = null)
     {
@@ -387,7 +401,7 @@ class onboarding
      *
      * @param \DateTime|null $onboardInitiatedOn
      *
-     * @return onboarding
+     * @return Onboarding
      */
     public function setOnboardInitiatedOn($onboardInitiatedOn = null)
     {
@@ -404,5 +418,53 @@ class onboarding
     public function getOnboardInitiatedOn()
     {
         return $this->onboardInitiatedOn;
+    }
+
+    /**
+     * Set disclaimer.
+     *
+     * @param string|null $disclaimer
+     *
+     * @return Onboarding
+     */
+    public function setDisclaimer($disclaimer = null)
+    {
+        $this->disclaimer = $disclaimer;
+
+        return $this;
+    }
+
+    /**
+     * Get disclaimer.
+     *
+     * @return string|null
+     */
+    public function getDisclaimer()
+    {
+        return $this->disclaimer;
+    }
+
+    /**
+     * Set ipAddress.
+     *
+     * @param string|null $ipAddress
+     *
+     * @return Onboarding
+     */
+    public function setIpAddress($ipAddress = null)
+    {
+        $this->ipAddress = $ipAddress;
+
+        return $this;
+    }
+
+    /**
+     * Get ipAddress.
+     *
+     * @return string|null
+     */
+    public function getIpAddress()
+    {
+        return $this->ipAddress;
     }
 }

@@ -141,7 +141,7 @@ if ($formtype == "gen_otp_associate") {
         "process" => 'onboarding',
         "otp" => @$otp,
         "receiver" => @$associate_name,
-      ), $email);
+      ), $email, False);
     }
   } else {
     echo "failed";
@@ -168,12 +168,64 @@ if ($formtype == "gen_otp_centr") {
         "process" => 'onboarding',
         "otp" => @$otp,
         "receiver" => @$centre_incharge_name,
-      ), $email);
+      ), $email, False);
     }
   } else {
     echo "failed";
   }
 }
+
+if ($formtype == "exit_gen_otp_associate") {
+  @$otp_initiatedfor = $_POST['otp_initiatedfor'];
+  @$associate_name = $_POST['associate_name'];
+  @$email = $_POST['associate_email'];
+  // Generate a random 6 digit number
+  $otp = rand(100000, 999999);
+  $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
+  $exit_otp_associate = "UPDATE associate_exit SET  exit_gen_otp_associate = '$hashedValue' WHERE exit_associate_id = '$otp_initiatedfor'";
+  $result = pg_query($con, $exit_otp_associate);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+    if ($email != "") {
+      sendEmail("otp", array(
+        "process" => 'exit',
+        "otp" => @$otp,
+        "receiver" => @$associate_name,
+      ), $email, False);
+    } else
+      echo "failed";
+  } else
+    echo "bad request";
+}
+
+if ($formtype == "exit_gen_otp_centr") {
+
+  @$otp_initiatedfor = $_POST['otp_initiatedfor'];
+  @$email = $_POST['centre_incharge_email'];
+  @$centre_incharge_name = $_POST['centre_incharge_name'];
+  // Generate a random 6 digit number
+  $otp = rand(100000, 999999);
+  $hashedValue = password_hash($otp, PASSWORD_DEFAULT);
+  $exit_otp_centreincharge = "UPDATE associate_exit SET  exit_gen_otp_center_incharge = '$hashedValue' WHERE exit_associate_id = '$otp_initiatedfor'";
+  $result = pg_query($con, $exit_otp_centreincharge);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+    if ($email != "") {
+      sendEmail("otp", array(
+        "process" => 'exit',
+        "otp" => @$otp,
+        "receiver" => @$centre_incharge_name,
+      ), $email, False);
+    } else
+      echo "failed";
+  } else
+    echo "bad request";
+}
+
 
 if ($formtype == "initiatingonboarding") {
   @$initiatedfor = $_POST['initiatedfor'];
@@ -181,6 +233,23 @@ if ($formtype == "initiatingonboarding") {
   $now = date('Y-m-d H:i:s');
   $initiatingonboarding = "INSERT INTO onboarding (onboarding_associate_id, onboard_initiated_by, onboard_initiated_on) VALUES ('$initiatedfor','$initiatedby','$now')";
   $result = pg_query($con, $initiatingonboarding);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+    else
+      echo "failed";
+  } else
+    echo "bad request";
+}
+
+
+if ($formtype == "initiatingexit") {
+  @$initiatedfor = $_POST['initiatedfor'];
+  @$initiatedby = $_POST['initiatedby'];
+  $now = date('Y-m-d H:i:s');
+  $initiatingexit = "INSERT INTO associate_exit (exit_associate_id, exit_initiated_by, exit_initiated_on) VALUES ('$initiatedfor','$initiatedby','$now')";
+  $result = pg_query($con, $initiatingexit);
   if ($result) {
     $cmdtuples = pg_affected_rows($result);
     if ($cmdtuples == 1)
