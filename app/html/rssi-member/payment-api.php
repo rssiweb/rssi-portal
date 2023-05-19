@@ -173,18 +173,6 @@ if ($formtype == "gen_otp_centr") {
   } else {
     echo "failed";
   }
-
-
-  // $gen_otp_centr = "UPDATE resourcemovement SET  onboarding_gen_otp_center_incharge = '$hashedValue', otp_centre = '$otp' WHERE onboarding_associate_id = '$otp_initiatedfor'";
-  // $result = pg_query($con, $gen_otp_centr);
-  // if ($result) {
-  //   $rows = pg_num_rows($result);
-  //   if ($rows == 1)
-  //     echo "success";
-  //   else
-  //     echo "failed";
-  // } else
-  //   echo "failed";
 }
 
 if ($formtype == "initiatingonboarding") {
@@ -193,6 +181,14 @@ if ($formtype == "initiatingonboarding") {
   $now = date('Y-m-d H:i:s');
   $initiatingonboarding = "INSERT INTO resourcemovement (onboarding_associate_id, onboard_initiated_by, onboard_initiated_on) VALUES ('$initiatedfor','$initiatedby','$now')";
   $result = pg_query($con, $initiatingonboarding);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+    else
+      echo "failed";
+  } else
+    echo "bad request";
 }
 
 

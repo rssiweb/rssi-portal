@@ -314,7 +314,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php }
                                 echo '</div></td>
             <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
-            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . $array['originaldoj'] . '<br>' . $array['yos'] . '</td>
+            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['originaldoj'])) . '<br>' . $array['yos'] . '</td>
             <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
             <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>' ?>
                                 <?php if ($id == "Active") { ?>
@@ -364,7 +364,7 @@ $resultArr = pg_fetch_all($result);
                         padding: 0px;
                         border: none;" title="Initiating Onboarding"><i class="fa-solid fa-arrow-up-from-bracket" style="font-size: 16px ; color:#777777"></i></button>' ?>
                                 <?php } else {
-                                    echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) .' by ' . $array['onboard_initiated_by'] ?>
+                                    echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'] ?>
                             <?php }
                                 echo ' </form>
       </td>
@@ -562,14 +562,15 @@ $resultArr = pg_fetch_all($result);
                                 method: 'POST',
                                 body: new FormData(document.forms['initiatingonboarding' + item.associatenumber])
                             })
-                            .then(response =>
-                                alert("The associate's onboarding process has been initiated successfully. ") +
-                                location.reload()
-                            )
-                            .catch(error => console.error('Error!', error.message))
+                            .then(response => response.text())
+                            .then(result => {
+                                if (result == 'success') {
+                                    alert("The associate's onboarding process has been initiated successfully.")
+                                } else {
+                                    alert("Error onboarding associate. Please try again later or contact support.")
+                                }
+                            })
                     })
-
-                    console.log(item)
                 })
             } else {
                 alert("The onboarding process has been cancelled.");
