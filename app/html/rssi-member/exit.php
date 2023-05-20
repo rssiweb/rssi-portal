@@ -140,6 +140,11 @@ if (@$cmdtuples == 1) {
                         <hr>
                         <div class="container">
                             <div class="row">
+                                <!-- <div class="row">
+                                    <div class="col-md-12 text-end">
+                                        <a href="https://www.google.com/search?q=rssi+ngo&oq=rssi+ngo&aqs=chrome.0.35i39i355i650j46i39i175i199i650j69i64j0i512j69i60l2j69i61j69i65.2251j0j4&sourceid=chrome&ie=UTF-8#lrd=0x399be3fc575228e3:0xbbc4182b61aa1609,1,,,," target="_blank">Google review</a>
+                                    </div>
+                                </div> -->
                                 <div class="col-md-4 text-center mb-3">
                                     <img src="<?php echo $array['photo'] ?>" alt="Profile picture" width="100px">
                                 </div>
@@ -197,27 +202,27 @@ if (@$cmdtuples == 1) {
                                 <div class="form-text">Prior to release, the associate must obtain the following clearances. <p>To know more details <a href="#" data-bs-toggle="modal" data-bs-target="#popup">click here</a>.</p>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="asset-clearance" name="clearance[]" value="asset-clearance" <?php if ($array['asset_clearance'] === 't') echo 'checked'; ?>>
+                                    <input class="form-check-input" type="checkbox" id="asset-clearance" name="clearance[]" value="asset-clearance" <?php if ($array['asset_clearance'] === 't') echo 'checked'; ?> required>
                                     <label class="form-check-label" for="asset-clearance">Asset Clearance</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="financial-clearance" name="clearance[]" value="financial-clearance" <?php if ($array['financial_clearance'] === 't') echo 'checked'; ?>>
+                                    <input class="form-check-input" type="checkbox" id="financial-clearance" name="clearance[]" value="financial-clearance" <?php if ($array['financial_clearance'] === 't') echo 'checked'; ?> required>
                                     <label class="form-check-label" for="financial-clearance">Financial Clearance</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="security-clearance" name="clearance[]" value="security-clearance" <?php if ($array['security_clearance'] === 't') echo 'checked'; ?>>
+                                    <input class="form-check-input" type="checkbox" id="security-clearance" name="clearance[]" value="security-clearance" <?php if ($array['security_clearance'] === 't') echo 'checked'; ?> required>
                                     <label class="form-check-label" for="security-clearance">Security Clearance</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="hr-clearance" name="clearance[]" value="hr-clearance" <?php if ($array['hr_clearance'] === 't') echo 'checked'; ?>>
-                                    <label class="form-check-label" for="hr-clearance">HR Clearance</label>
+                                    <input class="form-check-input" type="checkbox" id="hr-clearance" name="clearance[]" value="hr-clearance" <?php if ($array['hr_clearance'] === 't') echo 'checked'; ?> required>
+                                    <label class="form-check-label" for="hr-clearance">HR Clearance (Submission of Goal Sheet, Internship Report (if applicable), and <a href="https://www.google.com/search?q=rssi+ngo&oq=rssi+ngo&aqs=chrome.0.35i39i355i650j46i39i175i199i650j69i64j0i512j69i60l2j69i61j69i65.2251j0j4&sourceid=chrome&ie=UTF-8#lrd=0x399be3fc575228e3:0xbbc4182b61aa1609,1,,,," target="_blank">Google Review</a> etc.)</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="work-clearance" name="clearance[]" value="work-clearance" <?php if ($array['work_clearance'] === 't') echo 'checked'; ?>>
+                                    <input class="form-check-input" type="checkbox" id="work-clearance" name="clearance[]" value="work-clearance" <?php if ($array['work_clearance'] === 't') echo 'checked'; ?> required>
                                     <label class="form-check-label" for="work-clearance">Work Clearance</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="legal-clearance" name="clearance[]" value="legal-clearance" <?php if ($array['legal_clearance'] === 't') echo 'checked'; ?>>
+                                    <input class="form-check-input" type="checkbox" id="legal-clearance" name="clearance[]" value="legal-clearance" <?php if ($array['legal_clearance'] === 't') echo 'checked'; ?> required>
                                     <label class="form-check-label" for="legal-clearance">Legal Clearance</label>
                                 </div>
                             </div>
@@ -256,7 +261,37 @@ if (@$cmdtuples == 1) {
                                 <button type="submit" class="btn btn-primary">Submit</button>
                             </div>
 
-
+                            <div class="card">
+                                <div class="card-header">
+                                    Separation Status
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <div class="row">
+                                            <div class="col-6">Initiated On:</div>
+                                            <div class="col-6">
+                                                <?php echo ($array['exit_initiated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'] : '<span class="text-muted">Not initiated yet</span>' ?>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <div class="row">
+                                            <div class="col-6">Submitted On:</div>
+                                            <div class="col-6">
+                                                <?php
+                                                if ($array['exit_submitted_on'] !== null) {
+                                                    echo date('d/m/y h:i:s a', strtotime($array['exit_submitted_on'])) . ' by ' . $array['exit_submitted_by'] . '<br>';
+                                                    echo 'IP Address: ' . $array['ip_address'];
+                                                } else {
+                                                    echo '<span class="text-muted">Not submitted yet</span>';
+                                                }
+                                                ?>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <br><br>
                             <!-- Popup -->
                             <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
                                 <div class="modal-dialog">
@@ -286,7 +321,7 @@ if (@$cmdtuples == 1) {
                                 </div>
                             </div>
 
-
+                        </fieldset>
                     </form>
                     <!-- Form gen_otp_associate -->
                     <form name="exit_gen_otp_associate" id="exit_gen_otp_associate" action="#" method="POST" style="display:inline;">
