@@ -188,6 +188,62 @@ $resultArr = pg_fetch_all($result);
         #cw3 {
             width: 25%;
         }
+
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 100;
+            /* Sit on top */
+            padding-top: 100px;
+            /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0);
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 100vh;
+        }
+
+        @media (max-width:767px) {
+            .modal-content {
+                width: 50vh;
+            }
+        }
+
+        /* The Close Button */
+
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 
 </head>
@@ -290,8 +346,7 @@ $resultArr = pg_fetch_all($result);
           <th scope="col">Class URL</th>
           <th scope="col" id="cw2">Association Status</th>
           <th scope="col">Productivity</th>
-          <th scope="col">Profile</th>
-          <th scope="col">Workforce Transition</th>
+          <th scope="col">Worklist</th>
         </tr>
         </thead>' ?>
                     <?php if (sizeof($resultArr) > 0) { ?>
@@ -299,208 +354,146 @@ $resultArr = pg_fetch_all($result);
                         echo '<tbody>';
                         foreach ($resultArr as $array) {
                             echo '<tr>
-            <td>' ?>
+        <td>';
+                        ?>
                             <?php if ($array['photo'] != null) { ?>
-                                <?php echo '<div class="icon-container"><img src="' . $array['photo'] . '" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>' ?>
-                            <?php } else { ?> <?php echo '<div class="icon-container"><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>'
-                                                ?><?php } ?>
+                                <?php echo '<div class="icon-container"><img src="' . $array['photo'] . '" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>'; ?>
+                            <?php } else { ?>
+                                <?php echo '<div class="icon-container"><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>'; ?>
+                            <?php } ?>
 
-                                <?php if ($array['logintime'] != null) { ?>
-
-                                    <?php if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
-
-                                        <?php echo '<div class="status-circle" title="Online"></div>' ?>
-
-                                    <?php } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>' ?>
-
-                                    <?php }
-                                } else { ?> <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>' ?>
-
-                                <?php }
-                                echo '</div></td>
-            <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
-            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['originaldoj'])) . '<br>' . $array['yos'] . '</td>
-            <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
-            <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>' ?>
-                                <?php if ($id == "Active") { ?>
-                                    <?php echo '<td><span class="noticea"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>' ?>
-                                <?php } else { ?> <?php echo '<td></td>' ?>
-                                <?php } ?>
-
-                                <?php echo '<td style="white-space:unset">' . $array['astatus'] ?><br>
-
-                                <?php if ($array['onleave'] != null) { ?>
-                                    <?php echo '<br><p class="label label-danger">on leave</p>' ?>
-                                <?php } else {
-                                } ?>
-                                <?php if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') { ?>
-                                    <?php echo '<br><p class="label label-warning">Attd. pending</p>' ?>
-                                <?php    } ?>
-
-                                <?php if ($array['userid'] != null && $array['status'] != 'Closed') { ?>
-                                    <?php echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-warning">agreement</p></a>' ?>
+                            <?php if ($array['logintime'] != null) { ?>
+                                <?php if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
+                                    <?php echo '<div class="status-circle" title="Online"></div>'; ?>
                                 <?php } else { ?>
-                                <?php } ?>
-
-                                <?php if ($array['taggedto'] != null) { ?>
-                                    <?php echo '<br><a href="gps.php?taggedto=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>' ?>
-                                <?php } else { ?>
-                                <?php } ?>
-
-                                <?php echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
-            <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
-            
-            
-            <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                <i class="fa-solid fa-list-ol" style="font-size: 16px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;
-            
-            <a id="profile" href="myprofile.php?get_id=' . $array['associatenumber'] . '" target="_blank"><i class="fa-regular fa-user" style="font-size: 16px ;color:#777777" title="Profile" display:inline;></i></a>
-            </td>
-            
-            <td style="white-space: unset;">
-                        <form name="initiatingonboarding' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
-                        <input type="hidden" name="form-type" type="text" value="initiatingonboarding">
-                        <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
-                        <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>' ?>
-                                <!-- Initiate onboarding system -->
-                                <?php if ($role == 'Admin' && $array['onboard_initiated_by'] == null) { ?>
-
-                                    <?php echo '<button type="submit" id="yes" onclick=validateForm() style=" outline: none;background: none;
-                        padding: 0px;
-                        border: none;" title="Initiating Onboarding"><span class="material-symbols-outlined" style="color:#777777">
-                        person_add
-                        </span></button>' ?>
-                                <?php } else {
-                                    echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'] ?>
+                                    <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'; ?>
                                 <?php }
-                                echo ' </form>&nbsp;&nbsp;
-
-
-                                <form name="initiatingexit' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
-                        <input type="hidden" name="form-type" type="text" value="initiatingexit">
-                        <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
-                        <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>' ?>
-                                <!-- Initiate Exit system -->
-                                <?php if ($role == 'Admin' && $array['exit_initiated_by'] == null) { ?>
-
-                                    <?php echo '<button type="submit" id="yes" onclick=exit_validateForm() style=" outline: none;background: none;
-                        padding: 0px;
-                        border: none;" title="Initiating Exit"><span class="material-symbols-outlined" style="color:#777777">
-                        person_remove
-                        </span></i></button>' ?>
-                                <?php } else {
-                                    echo date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'] ?>
+                            } else { ?>
+                                <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'; ?>
                             <?php }
-                                echo ' </form>
-      </td>
-            </tr>';
-                            } ?>
-                        <?php
-                    } else if ($id == "") {
-                        ?>
-                            <tr>
-                                <td colspan="5">Please select Status.</td>
-                            </tr>
-                        <?php
-                    } else {
-                        ?>
-                            <tr>
-                                <td colspan="5">No record found for <?php echo $id ?></td>
-                            </tr>
-                        <?php }
+                            echo '</div></td>
+        <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
+        <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['originaldoj'])) . '<br>' . $array['yos'] . '</td>
+        <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
+        <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>';
+                            ?>
 
-                    echo '</tbody>
-                        </table>';
+                            <?php if ($id == "Active") { ?>
+                                <?php echo '<td><span class="noticea"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>'; ?>
+                            <?php } else { ?>
+                                <?php echo '<td></td>'; ?>
+                            <?php } ?>
+
+                            <?php echo '<td style="white-space:unset">' . $array['astatus'] . '<br>';
+
+                            if ($array['onleave'] != null) {
+                                echo '<br><p class="label label-danger">on leave</p>';
+                            }
+
+                            if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') {
+                                echo '<br><p class="label label-warning">Attd. pending</p>';
+                            }
+
+                            if ($array['userid'] != null && $array['status'] != 'Closed') {
+                                echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-warning">agreement</p></a>';
+                            }
+
+                            if ($array['taggedto'] != null) {
+                                echo '<br><a href="gps.php?taggedto=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>';
+                            }
+
+                            echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
+        <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
+        
+        
+        <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+        <span class="material-symbols-outlined" style="color:#777777">
+format_list_bulleted
+</span></button>
+        &nbsp;&nbsp;
+        <form name="initiatingonboarding' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
+            <input type="hidden" name="form-type" type="text" value="initiatingonboarding">
+            <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
+            <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
+                            ?>
+                            <!-- Initiate onboarding system -->
+                            <?php if ($role == 'Admin' && $array['onboard_initiated_by'] == null) { ?>
+                                <?php echo '<button type="submit" id="yes" onclick="validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Onboarding"><span class="material-symbols-outlined" style="color:#777777">
+                person_add
+                </span></button>'; ?>
+                            <?php } else {
+                                echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'];
+                            }
+                            echo '</form>&nbsp;&nbsp;
+
+        <form name="initiatingexit' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
+            <input type="hidden" name="form-type" type="text" value="initiatingexit">
+            <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
+            <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
+                            ?>
+                            <!-- Initiate Exit system -->
+                            <?php if ($role == 'Admin' && $array['exit_initiated_by'] == null) { ?>
+                                <?php echo '<button type="submit" id="yes" onclick="validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Exit"><span class="material-symbols-outlined" style="color:#777777">
+                exit_to_app
+                </span></button>'; ?>
+                        <?php } else {
+                                echo date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'];
+                            }
+                            echo '</form></td></tr>';
+                        }
+                        echo '</tbody>';
                         ?>
-            </div>
-            </div>
+                    <?php } else { ?>
+                        <?php echo '<tbody><tr><td colspan="9" align="center">No Data Found</td></tr></tbody>'; ?>
+                    <?php } ?>
+                </section>
             </div>
         </section>
-        </div>
     </section>
-    </section>
-
-    <!--------------- POP-UP BOX ------------
--------------------------------------->
-    <style>
-        .modal {
-            display: none;
-            /* Hidden by default */
-            position: fixed;
-            /* Stay in place */
-            z-index: 100;
-            /* Sit on top */
-            padding-top: 100px;
-            /* Location of the box */
-            left: 0;
-            top: 0;
-            width: 100%;
-            /* Full width */
-            height: 100%;
-            /* Full height */
-            overflow: auto;
-            /* Enable scroll if needed */
-            background-color: rgb(0, 0, 0);
-            /* Fallback color */
-            background-color: rgba(0, 0, 0, 0.4);
-            /* Black w/ opacity */
-        }
-
-        /* Modal Content */
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 100vh;
-        }
-
-        @media (max-width:767px) {
-            .modal-content {
-                width: 50vh;
-            }
-        }
-
-        /* The Close Button */
-
-        .close {
-            color: #aaaaaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            text-align: right;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
-    </style>
 
     <div id="myModal" class="modal">
-
-        <!-- Modal content -->
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div style="width:100%; text-align:right">
-                <p id="status" class="label " style="display: inline !important;"><span class="fullname"></span></p>
-            </div>
-            <span class="noticea"><a id="offer_letter" href="#" target="_blank">Offer Letter</a></span><br>
-            <span class="noticea"><a id="joining_letter" href="#" target="_blank">Joining Letter</a></span><br>
-
-            WBT Completed:&nbsp;<span class="attd"></span>
-            <div class="col" style="display: inline-block; text-align:right"><a id="wbt_details" href="#" target="_blank"><i class="fa-regular fa-eye" style="font-size: 20px ;color:#777777" title="WBT Details"></i></a></div><br>
-
-            <span class="noticea"><a id="certificate_issue" href="#" target="_blank">Issue Document</a></span><br>
-            <span class="noticea"><a id="certificate_view" href="#" target="_blank">View Document</a></span><br>
-            <span class="noticea"><a id="experience_letter" href="#" target="_blank">Generate Experience Letter</a></span>
-
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <p id="status" class="label"><span class="fullname"></span></p>
         </div>
-
+        <div class="modal-body">
+        <div class="row">
+                <div class="col-md-6">
+                    <p>WBT Completed: <span class="attd"></span></p>
+                </div>
+                <div class="col-md-6 text-right">
+                    <a id="wbt_details" href="#" target="_blank">
+                        <i class="fa-regular fa-eye" style="font-size: 20px; color:#777777" title="WBT Details"></i>
+                    </a>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <span class="noticea"><a id="offer_letter" href="#" target="_blank">Offer Letter</a></span><br>
+                    <span class="noticea"><a id="joining_letter" href="#" target="_blank">Joining Letter</a></span><br>
+                </div>
+                <div class="col-md-6">
+                    <span class="noticea"><a id="certificate_issue" href="#" target="_blank">Issue Document</a></span><br>
+                    <span class="noticea"><a id="certificate_view" href="#" target="_blank">View Document</a></span><br>
+                </div>
+            </div>
+            <hr>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <span class="noticea"><a id="experience_letter" href="#" target="_blank">Generate Experience Letter</a></span><br>
+                </div>
+                <div class="col-md-6">
+                    <span class="noticea"><a id="profile" href="#" target="_blank">Profile</a></span>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
+
     <script>
         var data = <?php echo json_encode($resultArr) ?>
 
@@ -550,6 +543,8 @@ $resultArr = pg_fetch_all($result);
             profile.href = "/rssi-member/expletter.php?get_id=" + mydata["associatenumber"]
             profile = document.getElementById("joining_letter")
             profile.href = "/rssi-member/joiningletter.php?get_id=" + mydata["associatenumber"]
+            profile = document.getElementById("profile")
+            profile.href = "/rssi-member/myprofile.php?get_id=" + mydata["associatenumber"]
 
 
         }
