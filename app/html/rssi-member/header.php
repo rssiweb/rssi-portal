@@ -4,7 +4,9 @@
     <div class="quick-area">
 
         <ul class="pull-left info-menu  user-notify" id="menu">
-            <button id="menu_icon"><i class="fa fa-bars" aria-hidden="true"></i></button>
+            <button id="menu_icon"><span class="material-symbols-outlined" aria-hidden="true">
+                    menu
+                </span></button>
             <li>
                 <!--<a href="#"> <i class="fa fa-envelope"></i>
                     <span class="badge">1</span>
@@ -13,7 +15,9 @@
             <?php if (@$filterstatus == 'Active') {
             ?>
                 <li class="profile dropdown">
-                    <a href="#" class="close1"> <i class="fas fa-folder-plus"></i>
+                    <a href="#" class="close1"> <span class="material-symbols-outlined">
+                            folder_open
+                        </span>
                         <!--<span class="badge">1</span>-->
                     </a>
                     <ul id="noti" class="dropdown-menu profile fadeIn" style="right:unset;/*height:300px; overflow-y: auto;*/">
@@ -52,7 +56,9 @@
 
                 <!------------------------------- ADMIN ---------------------------------->
                 <li class="profile dropdown">
-                    <a href="#"> <i class="fas fa-sitemap"></i></a>
+                    <a href="#"> <span class="material-symbols-outlined">
+                            page_info
+                        </span></a>
                     <ul class="dropdown-menu profile fadeIn" style="right:unset">
                         <?php if (@$role != 'Member') {
                         ?>
@@ -71,7 +77,9 @@
                         <?php if (@$role == 'Offline Manager' || @$role == 'Admin') {
                         ?>
                             <li style="height: unset;">
-                                <a style="font-size:13px;" href="dashboard.php"><i class="fa-solid fa-user-group"></i>&nbsp;PeopleOps Portal</a>
+                                <a style="font-size:13px;" href="dashboard.php"><span class="material-symbols-outlined">
+                                        co_present
+                                    </span>&nbsp;ProcessHub</a>
                             </li>
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="visitor.php"><i class="fa-solid fa-building-user"></i>&nbsp;Visitor pass</a>
@@ -126,19 +134,27 @@
             <?php } else { ?>
 
                 <li>
-                    <a href="#"> <i class="fas fa-folder-plus"></i>
-                        <a href="#"> <i class="fas fa-sitemap"></i>
+                    <a href="#"> <span class="material-symbols-outlined">
+                            folder_open
+                        </span>
+                        <a href="#"> <span class="material-symbols-outlined">
+                                page_info
+                            </span>
                 </li>
             <?php  }
             ?>
 
             <li>
                 <!--class="hidden-xs"-->
-                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <i class="fas fa-star-half-alt" title="Rate us"></i>
+                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <span class="material-symbols-outlined" title="Rate us">
+                        reviews
+                    </span>
                 </a>
             </li>
             <li class="hidden-xs">
-                <a href="https://www.youtube.com/c/RSSINGO" target="_blank"> <i class="fab fa-youtube" title="Watch now"></i>
+                <a href="https://www.youtube.com/c/RSSINGO" target="_blank"> <span class="material-symbols-outlined" title="Watch now">
+                        youtube_activity
+                    </span>
                 </a>
             </li>
         </ul>
