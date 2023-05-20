@@ -47,19 +47,21 @@ if (@$_POST['form-type'] == "exit") {
     if ($authSuccess) {
         $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
         $exit_photo = $_POST['photo'];
-        $remarks = $_POST['reason-for-leaving'];
-        $asset_clearance = isset($_POST['clearance']['asset-clearance']) ? true : false;
-        $financial_clearance = isset($_POST['clearance']['financial-clearance']) ? true : false;
-        $security_clearance = isset($_POST['clearance']['security-clearance']) ? true : false;
-        $hr_clearance = isset($_POST['clearance']['hr-clearance']) ? true : false;
-        $work_clearance = isset($_POST['clearance']['work-clearance']) ? true : false;
-        $legal_clearance = isset($_POST['clearance']['legal-clearance']) ? true : false;
+        $exit_remarks = $_POST['reason-for-leaving'];
+
+        $asset_clearance = isset($_POST['clearance']) && in_array('asset-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
+        $financial_clearance = isset($_POST['clearance']) && in_array('financial-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
+        $security_clearance = isset($_POST['clearance']) && in_array('security-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
+        $hr_clearance = isset($_POST['clearance']) && in_array('hr-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
+        $work_clearance = isset($_POST['clearance']) && in_array('work-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
+        $legal_clearance = isset($_POST['clearance']) && in_array('legal-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
+
         $exit_interview = $_POST['exit-interview'];
-        $exit_date_time = $_POST['reporting-date-time'];
+        $exit_date_time = $_POST['exit-date-time'];
         $now = date('Y-m-d H:i:s');
         $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user
-        $exit = "UPDATE associate_exit SET exit_photo='$exit_photo', exit_date_time='$exit_date_time', exit_otp_associate='$otp_associate', exit_otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', disclaimer='$disclaimer', ip_address='$ip_address', remarks='$remarks',asset_clearance='$asset_clearance',financial_clearance='$financial_clearance', security_clearance='$security_clearance',hr_clearance='$hr_clearance', work_clearance='$work_clearance',legal_clearance='$legal_clearance', exit_interview='$exit_interview' where exit_associate_id='$otp_initiatedfor_main'";
-        $result = pg_query($con, $onboarded);
+        $exit = "UPDATE associate_exit SET exit_photo='$exit_photo', exit_date_time='$exit_date_time', otp_associate='$otp_associate', otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', ip_address='$ip_address', remarks='$exit_remarks', asset_clearance=$asset_clearance, financial_clearance=$financial_clearance, security_clearance=$security_clearance, hr_clearance=$hr_clearance, work_clearance=$work_clearance,legal_clearance=$legal_clearance, exit_interview='$exit_interview' where exit_associate_id='$otp_initiatedfor_main'";
+        $result = pg_query($con, $exit);
         $cmdtuples = pg_affected_rows($result);
     } else {
         $auth_failed_dialog = true;
@@ -132,7 +134,7 @@ if (@$cmdtuples == 1) {
         <?php if (sizeof($resultArr) > 0) { ?>
             <?php foreach ($resultArr as $array) { ?>
                 <?php if (($role == 'Admin' || $role == 'Offline Manager') && $array['exit_initiated_by'] != null) { ?>
-                    <form method="post" name="a_exit" id="a_exit">
+                    <form method="post" name="a_exit" id="a_exit" action="exit.php">
 
                         <h3>Associate Exit Form</h3>
                         <hr>
@@ -186,7 +188,7 @@ if (@$cmdtuples == 1) {
 
                             <div class="mb-3">
                                 <label for="reason-for-leaving" class="form-label">Reason for Leaving:</label>
-                                <textarea class="form-control" rows="5" id="reason-for-leaving"><?php echo $array['exit_remarks'] ?></textarea>
+                                <textarea class="form-control" rows="5" name="reason-for-leaving" id="reason-for-leaving"><?php echo $array['exit_remarks'] ?></textarea>
                                 <div class="form-text">Enter the reason for the associate leaving the company.</div>
                             </div>
 
@@ -195,55 +197,42 @@ if (@$cmdtuples == 1) {
                                 <div class="form-text">Prior to release, the associate must obtain the following clearances. <p>To know more details <a href="#" data-bs-toggle="modal" data-bs-target="#popup">click here</a>.</p>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="asset-clearance" name="clearance[]" value="asset-clearance" <?php if ($array['asset_clearance'] == 'true') {
-                                                                                                                                                        echo "checked";
-                                                                                                                                                    } ?>>
+                                    <input class="form-check-input" type="checkbox" id="asset-clearance" name="clearance[]" value="asset-clearance" <?php if ($array['asset_clearance'] === 't') echo 'checked'; ?>>
                                     <label class="form-check-label" for="asset-clearance">Asset Clearance</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="financial-clearance" name="clearance[]" value="financial-clearance" <?php if ($array['financial_clearance'] == 'true') {
-                                                                                                                                                                echo "checked";
-                                                                                                                                                            } ?>>
+                                    <input class="form-check-input" type="checkbox" id="financial-clearance" name="clearance[]" value="financial-clearance" <?php if ($array['financial_clearance'] === 't') echo 'checked'; ?>>
                                     <label class="form-check-label" for="financial-clearance">Financial Clearance</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="security-clearance" name="clearance[]" value="security-clearance" <?php if ($array['security_clearance'] == 'true') {
-                                                                                                                                                                echo "checked";
-                                                                                                                                                            } ?>>
+                                    <input class="form-check-input" type="checkbox" id="security-clearance" name="clearance[]" value="security-clearance" <?php if ($array['security_clearance'] === 't') echo 'checked'; ?>>
                                     <label class="form-check-label" for="security-clearance">Security Clearance</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="hr-clearance" name="clearance[]" value="hr-clearance" <?php if ($array['hr_clearance'] == 'true') {
-                                                                                                                                                    echo "checked";
-                                                                                                                                                } ?>>
+                                    <input class="form-check-input" type="checkbox" id="hr-clearance" name="clearance[]" value="hr-clearance" <?php if ($array['hr_clearance'] === 't') echo 'checked'; ?>>
                                     <label class="form-check-label" for="hr-clearance">HR Clearance</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="work-clearance" name="clearance[]" value="work-clearance" <?php if ($array['work_clearance'] == 'true') {
-                                                                                                                                                        echo "checked";
-                                                                                                                                                    } ?>>
+                                    <input class="form-check-input" type="checkbox" id="work-clearance" name="clearance[]" value="work-clearance" <?php if ($array['work_clearance'] === 't') echo 'checked'; ?>>
                                     <label class="form-check-label" for="work-clearance">Work Clearance</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="legal-clearance" name="clearance[]" value="legal-clearance" <?php if ($array['legal_clearance'] == 'true') {
-                                                                                                                                                        echo "checked";
-                                                                                                                                                    } ?>>
+                                    <input class="form-check-input" type="checkbox" id="legal-clearance" name="clearance[]" value="legal-clearance" <?php if ($array['legal_clearance'] === 't') echo 'checked'; ?>>
                                     <label class="form-check-label" for="legal-clearance">Legal Clearance</label>
                                 </div>
                             </div>
 
 
-
                             <div class="mb-3">
                                 <label for="exit-interview" class="form-label">Exit Interview:</label>
-                                <textarea class="form-control" rows="5" id="exit-interview"><?php echo $array['exit_interview'] ?></textarea>
+                                <textarea class="form-control" rows="5" name="exit-interview" id="exit-interview"><?php echo $array['exit_interview'] ?></textarea>
                                 <div class="form-text">Enter any comments or feedback from the associate's exit interview.</div>
                             </div>
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label for="reporting-date-time" class="form-label">Exit Form Date &amp; Time</label>
-                                    <input type="datetime-local" class="form-control" id="reporting-date-time" name="reporting-date-time" value="<?php echo @$array['reporting_date_time'] ?>" required>
+                                    <label for="exit-date-time" class="form-label">Exit Form Date &amp; Time</label>
+                                    <input type="datetime-local" class="form-control" id="exit-date-time" name="exit-date-time" value="<?php echo @$array['exit_date_time'] ?>" required>
                                     <div class="form-text">Enter the date the exit form was completed.</div>
                                 </div>
                                 <div class="col-md-6">
@@ -497,7 +486,7 @@ if (@$cmdtuples == 1) {
             return true; // Allow form submission
         }
         // Attach the form validation to the form's submit event
-        document.getElementById('a_onboard').onsubmit = validateForm;
+        document.getElementById('a_exit').onsubmit = validateForm;
     </script>
 
 </body>
