@@ -56,8 +56,8 @@
 
                 <!------------------------------- ADMIN ---------------------------------->
                 <li class="profile dropdown">
-                    <a href="#"> <span class="material-symbols-outlined">
-                            page_info
+                    <a href="#" class="menu-link"><span class="material-symbols-outlined">
+                            widgets
                         </span></a>
                     <ul class="dropdown-menu profile fadeIn" style="right:unset">
                         <?php if (@$role != 'Member') {
@@ -100,9 +100,6 @@
                                 <a style="font-size:13px;" href="leave_admin.php"><i class="fas fa-plane-departure"></i>&nbsp;Leave Management</a>
                             </li>
 
-                            <!-- <li style="height: unset;">
-                                <a style="font-size:13px;" href="userlog.php"><i class="fa-solid fa-users"></i>&nbsp;User log</a>
-                            </li> -->
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="my_book.php"><i class="fas fa-book-reader"></i>&nbsp;Library Status</a>
                             </li>
@@ -118,9 +115,6 @@
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="pms.php"><i class="fas fa-unlock-alt"></i>&nbsp;PMS</a>
                             </li>
-                            <!-- <li style="height: unset;">
-                                <a style="font-size:13px;" href="asset-management.php"><i class="fa-solid fa-truck-fast"></i>&nbsp;Asset Management</a>
-                            </li> -->
                             <li style="height: unset;">
                                 <a style="font-size:13px;" href="ams.php"><i class="fa-solid fa-bullhorn"></i>&nbsp;Announcement</a>
                             </li>
@@ -143,20 +137,6 @@
                 </li>
             <?php  }
             ?>
-
-            <li>
-                <!--class="hidden-xs"-->
-                <a href="https://g.page/r/CQkWqmErGMS7EAg/review" target="_blank"> <span class="material-symbols-outlined" title="Rate us">
-                        reviews
-                    </span>
-                </a>
-            </li>
-            <li class="hidden-xs">
-                <a href="https://www.youtube.com/c/RSSINGO" target="_blank"> <span class="material-symbols-outlined" title="Watch now">
-                        youtube_activity
-                    </span>
-                </a>
-            </li>
         </ul>
 
         <ul class="pull-right info-menu user-info">
@@ -183,12 +163,6 @@
                             Reset Password
                         </a>
                     </li>
-                    <!-- <li>
-                        <a href="myprofile.php">
-                            <i class="fa fa-user"></i>
-                            Profile
-                        </a>
-                    </li> -->
 
                     <li class="last">
                         <a href="logout.php">
