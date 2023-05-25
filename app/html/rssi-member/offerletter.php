@@ -238,11 +238,11 @@ if (!$result) {
                                         <li>You are expected to be active and responsive throughout your service period.</li>
                                         <li>Working Hours —
                                             <?php if (str_contains($array['position'], "Intern")) { ?>
-                                                4 days a week, 2 hours per day
+                                                4 days a week, 2.5 hours per day
                                             <?php } else if (str_contains($array['position'], "Employee")) { ?>
-                                                6 days a week, 2 hours per day + Administrative activities as required.
+                                                6 days a week, 2.5 hours per day + Administrative activities as required.
                                             <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
-                                                3 days a week, 2 hours per day
+                                                3 days a week, 2.5 hours per day
                                             <?php } ?>
 
                                             <br>The working hours can be extended up to a maximum of 30 minutes depending on the real time situation for other activities including prayer, and management i.e. student admission, and other non-academic activities etc. You should be flexible in terms of working hours.
