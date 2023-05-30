@@ -99,7 +99,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#acadamis" data-bs-toggle="collapse" href="#">
-          <span>Acadamis</span><i class="bi bi-chevron-down ms-auto"></i>
+          <span>Academic</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="acadamis" class="nav-content collapse" data-bs-parent="#sidebar-nav">
           <li>

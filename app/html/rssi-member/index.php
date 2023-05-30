@@ -115,9 +115,7 @@ if ($_POST) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>RSSI-My Account</title>
-
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -126,7 +124,6 @@ if ($_POST) {
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
-
     <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -138,7 +135,6 @@ if ($_POST) {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <style>
         @media (max-width: 767px) {
 
@@ -163,11 +159,9 @@ if ($_POST) {
             margin-left: 10%;
         }
     </style>
-
 </head>
 
 <body>
-
     <main>
         <div class="container">
 
@@ -183,17 +177,12 @@ if ($_POST) {
                                 </div>
                             </div>
 
-
-
                             <div class="card mb-3">
-
                                 <div class="card-body">
-
                                     <div class="pt-4 pb-2">
                                         <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
                                         <p class="text-center small">Enter your username & password to login</p>
                                     </div>
-
                                     <form class="row g-3 needs-validation" role="form" method="post" name="login" action="index.php">
 
                                         <div class="col-12">
@@ -240,7 +229,6 @@ if ($_POST) {
                 </div>
 
             </section>
-
         </div>
     </main><!-- End #main -->
 
