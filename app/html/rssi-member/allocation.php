@@ -48,22 +48,34 @@ $resultArr = pg_fetch_all($result);
 $resultArrc = pg_fetch_all($resultc);
 ?>
 
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>My Allocation</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="/css/style.css">
-    <!-- Main css -->
-    <style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <title>My Allocation</title>
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://www.rssi.in/disclaimer'
+        });
+    </script>
+    <style>
         /*
  CSS for the main interaction
 */
@@ -127,64 +139,67 @@ $resultArrc = pg_fetch_all($resultc);
             border-top: 1px solid #ccc;
         }
     </style>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <!------ Include the above in your HEAD tag ---------->
-
-    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
-    <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://www.rssi.in/disclaimer'
-        });
-    </script>
-
 </head>
 
 <body>
-    <?php $allocation_active = 'active'; ?>
+
     <?php include 'header.php'; ?>
 
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
-                <div class="col" style="display: inline-block; width:99%; text-align:right">
-                    Home / My Allocation
-                </div>
-                
-                    <?php if ($role == 'Admin') { ?>
-                        <form action="" method="POST">
-                            <div class="form-group" style="display: inline-block;">
-                                <div class="col2" style="display: inline-block;">
-                                    <?php if ($role == 'Admin') { ?>
-                                        <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
-                                    <?php } ?>
-                                </div>
-                            </div>
-                            <div class="col2 left" style="display: inline-block;">
-                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                    <i class="bi bi-search"></i>&nbsp;Search</button>
-                            </div>
-                        </form>
-                    <?php } ?>
+    <main id="main" class="main">
 
-                    <div class="tabset">
-                        <!-- Tab 1 -->
-                        <input type="radio" name="tabset" id="tab1" aria-controls="marzen" checked>
-                        <label for="tab1">Current Allocation</label>
-                        <!-- Tab 2 -->
-                        <input type="radio" name="tabset" id="tab2" aria-controls="rauchbier">
-                        <label for="tab2">History Allocation</label>
-                        <!-- Tab 3 -->
-                        <input type="radio" name="tabset" id="tab3" aria-controls="dunkles">
-                        <label for="tab3">Future Allocation</label>
+        <div class="pagetitle">
+            <h1>My Allocation</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">My Services</a></li>
+                    <li class="breadcrumb-item active">My Allocation</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                        <div class="tab-panels">
-                            <section id="marzen" class="tab-panel">
-                                <?php echo ' <table class="table">
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <?php if ($role == 'Admin') { ?>
+                                <form action="" method="POST">
+                                    <div class="form-group" style="display: inline-block;">
+                                        <div class="col2" style="display: inline-block;">
+                                            <?php if ($role == 'Admin') { ?>
+                                                <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                    <div class="col2 left" style="display: inline-block;">
+                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                    </div>
+                                </form>
+                                <br>
+                            <?php } ?>
+
+                            <div class="tabset">
+                                <!-- Tab 1 -->
+                                <input type="radio" name="tabset" id="tab1" aria-controls="marzen" checked>
+                                <label for="tab1">Current Allocation</label>
+                                <!-- Tab 2 -->
+                                <input type="radio" name="tabset" id="tab2" aria-controls="rauchbier">
+                                <label for="tab2">History Allocation</label>
+                                <!-- Tab 3 -->
+                                <input type="radio" name="tabset" id="tab3" aria-controls="dunkles">
+                                <label for="tab3">Future Allocation</label>
+
+                                <div class="tab-panels">
+                                    <section id="marzen" class="tab-panel">
+                                        <?php echo '
+                                <div class="table-responsive">
+                                <table class="table">
                         <thead>
                             <tr>
                             <th scope="col">Allocation Date</th>
@@ -195,28 +210,30 @@ $resultArrc = pg_fetch_all($resultc);
                             </tr>
                         </thead>
                         <tbody>';
-                                foreach ($resultArrc as $array) {
-                                    echo '
+                                        foreach ($resultArrc as $array) {
+                                            echo '
                             <tr>
                             <td style="line-height: 2;">' . $array['allocationdate'] . '</td>
                             <td style="line-height: 2;">' . $array['maxclass'] . '</td>
                             <td style="line-height: 2;">' . $array['classtaken'] . '</td>
                             <td style="line-height: 2;">' . $array['leave'] . '</td>
                             <td style="line-height: 2;">' ?>
-                                    <?php if (@$array['allocationdate'] != null) {
-                                        echo $array['ctp'] . '&nbsp;<meter id="disk_c" value="' . strtok($array['ctp'], '%') . '" min="0" max="100"></meter>' ?>
-                                    <?php
-                                    } else {
-                                    }
-                                    ?>
-                                <?php echo '</td>
+                                            <?php if (@$array['allocationdate'] != null) {
+                                                echo $array['ctp'] . '&nbsp;<meter id="disk_c" value="' . strtok($array['ctp'], '%') . '" min="0" max="100"></meter>' ?>
+                                            <?php
+                                            } else {
+                                            }
+                                            ?>
+                                        <?php echo '</td>
                             </tr>';
-                                }
-                                echo '</tbody>
-                                </table>'; ?>
-                            </section>
-                            <section id="rauchbier" class="tab-panel">
-                                <?php echo '
+                                        }
+                                        echo '</tbody>
+                                </table>
+                                </div>'; ?>
+                                    </section>
+                                    <section id="rauchbier" class="tab-panel">
+                                        <?php echo '
+                                <div class="table-responsive">
                      <table class="table">
                         <thead>
                             <tr>
@@ -226,35 +243,44 @@ $resultArrc = pg_fetch_all($resultc);
                             </tr>
                         </thead>
                         <tbody>';
-                                foreach ($resultArr as $array) {
-                                    echo '
+                                        foreach ($resultArr as $array) {
+                                            echo '
                             <tr>
                             <td style="line-height: 2;">' . $array['hallocationdate'] . '</td>
                             <td style="line-height: 2;">' . $array['hmaxclass'] . '</td>
                             <td style="line-height: 2;">' . $array['hclasstaken'] ?>
-                                    <?php if ($array['hmaxclass'] != "Unallocated" && $array['hmaxclass'] != 0 && $array['hclasstaken'] != 0) { ?>
-                                        <?php echo   '&nbsp;(' . number_format($array['hclasstaken'] / $array['hmaxclass'] * '100', '2', '.', '') . '%)' ?>
-                                        <?php
-                                    } else {
-                                    }
-                                        ?><?php echo '</td>
+                                            <?php if ($array['hmaxclass'] != "Unallocated" && $array['hmaxclass'] != 0 && $array['hclasstaken'] != 0) { ?>
+                                                <?php echo   '&nbsp;(' . number_format($array['hclasstaken'] / $array['hmaxclass'] * '100', '2', '.', '') . '%)' ?>
+                                                <?php
+                                            } else {
+                                            }
+                                                ?><?php echo '</td>
                             </tr>';
                                         }
                                         echo '</tbody>
-                                </table>';
+                                </table>
+                                </div>';
                                             ?>
-                            </section>
-                            <section id="dunkles" class="tab-panel">
-                                <p>No data available</p>
-                            </section>
-                        </div>
-
+                                    </section>
+                                    <section id="dunkles" class="tab-panel">
+                                        <p>No data available</p>
+                                    </section>
+                                </div>
+                            </div>
+                        </div><!-- End Reports -->
                     </div>
-                </section>
-            </div>
-
         </section>
-    </section>
+
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+
 </body>
 
 </html>

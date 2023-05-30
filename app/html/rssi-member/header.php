@@ -42,7 +42,7 @@
             </li>
 
             <li>
-              <a class="dropdown-item d-flex align-items-center" href="myprofile.php">
+              <a class="dropdown-item d-flex align-items-center" href="myprofile.php" target="_blank">
                 <i class="bi bi-person"></i>
                 <span>My Profile</span>
               </a>
@@ -123,6 +123,11 @@
           <li>
             <a id="documentLink" href="document.php">
               <span>My Document</span>
+            </a>
+          </li>
+          <li>
+            <a id="allocationLink" href="allocation.php">
+              <span>My Allocation</span>
             </a>
           </li>
         </ul>
@@ -335,6 +340,11 @@
         id: 'myservices',
         linkId: 'documentLink',
         url: 'document.php'
+      },
+      {
+        id: 'myservices',
+        linkId: 'allocationLink',
+        url: 'allocation.php'
       },
       {
         id: 'myservices',

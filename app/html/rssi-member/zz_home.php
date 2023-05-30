@@ -70,7 +70,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
             ;
         }
     </style>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 </head>
 
 <body>

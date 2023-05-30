@@ -145,7 +145,7 @@ $resultArr = pg_fetch_all($result);
             display: inline-block;
         }
     </style>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>

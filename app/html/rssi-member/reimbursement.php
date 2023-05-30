@@ -102,7 +102,7 @@ if (@$_POST['form-type'] == "reimbursementapply") {
         });
     </script>
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <!---change option value based on other dropdown PHP, Have created another file process-request.php to get the creason option---->
     <script type="text/javascript" src="http://code.jquery.com/jquery.js"> </script>
     <!--Here .typeofleave is a class and has been assigned to the input filed id=typeofleave-->
