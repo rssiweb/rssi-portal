@@ -54,7 +54,7 @@
             <li>
               <a class="dropdown-item d-flex align-items-center" href="resetpassword.php">
                 <i class="bi bi-gear"></i>
-                <span>Account Settings</span>
+                <span>Reset Password</span>
               </a>
             </li>
             <li>
