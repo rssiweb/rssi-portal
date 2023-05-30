@@ -157,7 +157,7 @@ if ($_POST) {
             padding: 1px 5px;
             border-radius: 0px;
             font-size: small !important;
-            color: whitesmoke !important;
+            color: white !important;
             margin-left: 10%;
         }
     </style>
