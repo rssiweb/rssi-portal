@@ -218,7 +218,7 @@ if ($_POST) {
                                         </div>
                                         <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <div class="col-12">
-                                            <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
+                                            <button class="btn btn-primary w-100" type="submit" name="login" value="login">Login</button>
                                         </div>
                                         <div class="col-12">
                                             <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Click here</a></p>
