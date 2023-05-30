@@ -127,6 +127,8 @@ if ($_POST) {
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
 
+    <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
+
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
@@ -218,7 +220,7 @@ if ($_POST) {
                                         </div>
                                         <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <div class="col-12">
-                                            <button class="btn btn-primary w-100" type="submit" name="login" value="login">Login</button>
+                                            <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
                                         </div>
                                         <div class="col-12">
                                             <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Click here</a></p>
