@@ -388,7 +388,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                       <div class="modal-dialog modal-xl">
                         <div class="modal-content">
                           <div class="modal-header">
-                            <h1 class="modal-title fs-5" id="exampleModalLabel">Reimbursement Status Update Form</h1>
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Reimbursement Details</h1>
                             <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
                           <div class="modal-body">
@@ -398,8 +398,8 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                             </div>
 
                             <?php if ($role != "Admin") { ?>
-                              <p style="font-size: small;">
-                                Transaction id: <span class="transactionid"></span><br><br>
+                              <p>
+                                Transaction id: <span class="transactionid"></span><br>
                                 HR Remarks: <span class="mediremarks"></span><br>
                               </p>
                             <?php } ?>
@@ -516,7 +516,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                         } else {
                           status.classList.remove("bg-success")
                           status.classList.remove("bg-danger")
-                          status.classList.add("bg-default")
+                          status.classList.add("bg-secondary")
                         }
                         //class add end
 

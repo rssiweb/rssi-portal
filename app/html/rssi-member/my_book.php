@@ -125,7 +125,7 @@ $resultArr = pg_fetch_all($result);
                         <div class="card-body">
                             <br>
                             <div class="row">
-                                <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
+                                <div class="col">
                                     Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                                 </div>
                             </div>

@@ -238,7 +238,7 @@ if (@$_POST['form-type'] == "gms") {
 
                                     <?php if ($role == 'Admin') { ?>
                                         <span class="input-help">
-                                            <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr_admin - $resultArrr_admin) ?>" min="1">
+                                            <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr_admin - $resultArrr_admin) ?>" min="1" required>
                                             <small id="passwordHelpBlock" class="form-text text-muted">Redeem gems point</small>
                                         </span>
 
@@ -247,7 +247,7 @@ if (@$_POST['form-type'] == "gms") {
                                     <?php if ($role != 'Admin') { ?>
 
                                         <span class="input-help">
-                                            <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr - $resultArrr) ?>" min="1">
+                                            <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr - $resultArrr) ?>" min="1" required>
                                             <small id="passwordHelpBlock" class="form-text text-muted">Redeem gems point</small>
                                         </span>
                                     <?php } ?>
