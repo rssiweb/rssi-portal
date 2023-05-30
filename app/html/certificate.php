@@ -75,7 +75,7 @@ echo '
             <div class="col-md-12">
             <div style="font-family:Poppins; text-align:Center;font-size:20px;">Rina Shiksha Sahayak Foundation (RSSI)</div>
             <div style="font-family:Roboto; text-align:Center;font-size:20px; line-height:2">Certificate Details</div>
-                <section class="box" style="padding: 2%;">
+                
 <table class="table">
 <thead>
     <tr>
@@ -113,7 +113,7 @@ echo '
 
         <?php } else { ?>
 
-            <?php echo '<td><a href="' . $array['certificate_url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
+            <?php echo '<td><a href="' . $array['certificate_url'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
         <?php } ?>
 
     <?php  }

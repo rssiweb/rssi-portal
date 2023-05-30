@@ -37,9 +37,9 @@ $typeofleaveArr = array("Sick Leave" => array("Abdominal/Pelvic pain",
 if($typeofleave !== 'Select'){
         echo "<span class='input-help'>";
         if($typeofleave !== 'Leave Without Pay'){
-        echo "<select name='creason' id='creason' class='form-control' required>";
+        echo "<select name='creason' id='creason' class='form-select' required>";
         } else {
-        echo "<select name='creason' id='creason' class='form-control'>";
+        echo "<select name='creason' id='creason' class='form-select'>";
         }
         echo "<option disabled selected hidden value=''>Select</option>";
         foreach($typeofleaveArr[$typeofleave] as $value){

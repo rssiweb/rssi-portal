@@ -16,7 +16,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';
 }
-if ($role=='Member') {
+if ($role == 'Member') {
 
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
@@ -102,27 +102,34 @@ $resultArr = pg_fetch_all($result);
 <!DOCTYPE html>
 <html>
 
-<head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>RSSI-Leave Allocation</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .checkbox {
-            padding: 0;
-            margin: 0;
-            vertical-align: bottom;
-            position: relative;
-            top: 0px;
-            overflow: hidden;
-        }
+<!doctype html>
+<html lang="en">
 
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Leave Allocation</title>
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://www.rssi.in/disclaimer'
+        });
+    </script>
+    <style>
         .x-btn:focus,
         .button:focus,
         [type="submit"]:focus {
@@ -130,7 +137,6 @@ $resultArr = pg_fetch_all($result);
         }
 
         #passwordHelpBlock {
-            font-size: x-small;
             display: block;
         }
 
@@ -140,8 +146,6 @@ $resultArr = pg_fetch_all($result);
         }
     </style>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -157,202 +161,215 @@ $resultArr = pg_fetch_all($result);
 </head>
 
 <body>
+
     <?php include 'header.php'; ?>
 
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
-                <div class="row">
-                    <?php if (@$leaveallocationid != null && @$cmdtuples == 0) { ?>
+    <main id="main" class="main">
 
-                        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
-                        </div>
-                    <?php
-                    } else if (@$cmdtuples == 1) { ?>
+        <div class="pagetitle">
+            <h1>Leave Allocation</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">My Services</a></li>
+                    <li class="breadcrumb-item"><a href="leave.php">Apply for Leave</a></li>
+                    <li class="breadcrumb-item active">Leave Allocation</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                        <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave allocation id <?php echo $leaveallocationid ?>.</span>
-                        </div>
-                        <script>
-                            if (window.history.replaceState) {
-                                window.history.replaceState(null, null, window.location.href);
-                            }
-                        </script>
-                    <?php } ?>
-                    <?php if ($role == 'Admin') { ?>
-                        <div class="col" style="display: inline-block; text-align:left; width:100%">
-                            <!-- Home / <span class="noticea"><a href="leave_admin.php">Leave Management System (LMS)</a></span> /  -->
-                            <h1>Leave Allocation</h1>
-                        </div>
-                    <?php } else { ?>
-                        <div class="col" style="display: inline-block; text-align:right; width:100%">Home / <span class="noticea"><a href="leave.php">Leave</a></span> / Leave Allocation
-                        </div>
-                    <?php } ?>
-                    <section class="box" style="padding: 2%;">
-                        <?php if ($role == "Admin") { ?>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col" colspan="2">Allocate Leave</th>
-                                    </tr>
-                                </thead>
-                            </table>
+        <section class="section dashboard">
+            <div class="row">
 
-                            <form autocomplete="off" name="leaveallocation" id="leaveallocation" action="leaveallo.php" method="POST">
-                                <div class="form-group" style="display: inline-block;">
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                                    <input type="hidden" name="form-type" type="text" value="leaveallocation">
+                        <div class="card-body">
+                            <br>
+                            <div class="row">
+                                <?php if (@$leaveallocationid != null && @$cmdtuples == 0) { ?>
 
-                                    <span class="input-help">
-                                        <input type="text" name="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo @$_GET['allo_applicantid']; ?>" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
-                                    </span>
+                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                                    </div>
+                                <?php
+                                } else if (@$cmdtuples == 1) { ?>
 
-                                    <span class="input-help">
-                                        <input type="number" name="allo_daycount" id='allo_daycount' class="form-control" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
-                                        <small id="passwordHelpBlock_allo_daycount" class="form-text text-muted">Allocated day*</small>
-                                    </span>
-                                    <span class="input-help">
-                                        <select name="allo_leavetype" id="allo_leavetype" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-                                            <option value="" disabled selected hidden>Types of Leave</option>
-                                            <option value="Sick Leave">Sick Leave</option>
-                                            <option value="Casual Leave">Casual Leave</option>
-                                        </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Adjusted Leave Type*</small>
-                                    </span>
-                                    <span class="input-help">
-                                        <select name="allo_academicyear" id="allo_academicyear" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-                                            <option value="" disabled selected hidden>Academic Year</option>
-                                        </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Academic Year</small>
-                                    </span>
-
-                                    <span class="input-help">
-                                        <textarea type="text" name="allo_remarks" class="form-control" placeholder="Remarks" value=""></textarea>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
-                                    </span>
-                                </div>
-                                <div class="col2 left" style="display: inline-block;">
-                                    <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Add Leave</button>
-
-                                </div>
-
-                            </form>
-
-                            <script>
-                                <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                    var currentYear = new Date().getFullYear() - 1;
-                                <?php } else { ?>
-                                    var currentYear = new Date().getFullYear();
+                                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                        <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave allocation id <?php echo $leaveallocationid ?>.</span>
+                                    </div>
+                                    <script>
+                                        if (window.history.replaceState) {
+                                            window.history.replaceState(null, null, window.location.href);
+                                        }
+                                    </script>
                                 <?php } ?>
-                                for (var i = 0; i < 2; i++) {
-                                    var next = currentYear + 1;
-                                    var year = currentYear + '-' + next;
-                                    //next.toString().slice(-2)
-                                    $('#allo_academicyear').append(new Option(year, year));
-                                    currentYear--;
-                                }
-                            </script>
-                        <?php } ?>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th scope="col" colspan="2">Leave Allocation Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <form action="" method="GET">
-                                            <div class="form-group" style="display: inline-block;">
-                                                <div class="col2" style="display: inline-block;">
-                                                    <input name="leaveallocationid" id="leaveallocationid" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave Allocation ID" value="<?php echo $id ?>">
-                                                    <?php if ($role == "Admin") { ?>
-                                                        <input name="allo_applicantid" id="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>" required>
-                                                    <?php } ?>
-                                                    <select name="allo_academicyear_search" id="allo_academicyear_search" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
-                                                        <?php if ($allo_academicyear == null) { ?>
-                                                            <option value="" disabled selected hidden>Academic Year</option>
-                                                        <?php
-                                                        } else { ?>
-                                                            <option hidden selected><?php echo $allo_academicyear ?></option>
-                                                        <?php }
-                                                        ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col2 left" style="display: inline-block;">
-                                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                                            </div>
-                                            <?php if ($role == "Admin") { ?>
-                                                <div id="filter-checks">
-                                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
-                                                    <label for="is_user" style="font-weight: 400;">Search by Leave Allocation ID</label>
-                                                </div>
-                                            <?php } ?>
-                                        </form>
-                                        <?php if ($role == "Admin") { ?>
-                                            <script>
-                                                if ($('#is_user').not(':checked').length > 0) {
 
-                                                    document.getElementById("leaveallocationid").disabled = true;
-                                                    document.getElementById("allo_applicantid").disabled = false;
-                                                    document.getElementById("allo_academicyear_search").disabled = false;
+                                <!-- <section style="padding: 2%;"> -->
+                                <?php if ($role == "Admin") { ?>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col" colspan="2">Allocate Leave</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
 
-                                                } else {
+                                    <form autocomplete="off" name="leaveallocation" id="leaveallocation" action="leaveallo.php" method="POST">
+                                        <div class="form-group" style="display: inline-block;">
 
-                                                    document.getElementById("leaveallocationid").disabled = false;
-                                                    document.getElementById("allo_applicantid").disabled = true;
-                                                    document.getElementById("allo_academicyear_search").disabled = true;
+                                            <input type="hidden" name="form-type" type="text" value="leaveallocation">
 
-                                                }
+                                            <span class="input-help">
+                                                <input type="text" name="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo @$_GET['allo_applicantid']; ?>" required>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
+                                            </span>
 
-                                                const checkbox = document.getElementById('is_user');
+                                            <span class="input-help">
+                                                <input type="number" name="allo_daycount" id='allo_daycount' class="form-control" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
+                                                <small id="passwordHelpBlock_allo_daycount" class="form-text text-muted">Allocated day*</small>
+                                            </span>
+                                            <span class="input-help">
+                                                <select name="allo_leavetype" id="allo_leavetype" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
+                                                    <option value="" disabled selected hidden>Types of Leave</option>
+                                                    <option value="Sick Leave">Sick Leave</option>
+                                                    <option value="Casual Leave">Casual Leave</option>
+                                                </select>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Adjusted Leave Type*</small>
+                                            </span>
+                                            <span class="input-help">
+                                                <select name="allo_academicyear" id="allo_academicyear" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
+                                                    <option value="" disabled selected hidden>Academic Year</option>
+                                                </select>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Academic Year</small>
+                                            </span>
 
-                                                checkbox.addEventListener('change', (event) => {
-                                                    if (event.target.checked) {
-                                                        document.getElementById("leaveallocationid").disabled = false;
-                                                        document.getElementById("allo_applicantid").disabled = true;
-                                                        document.getElementById("allo_academicyear_search").disabled = true
-                                                    } else {
-                                                        document.getElementById("leaveallocationid").disabled = true;
-                                                        document.getElementById("allo_applicantid").disabled = false;
-                                                        document.getElementById("allo_academicyear_search").disabled = false;
-                                                    }
-                                                })
-                                            </script>
+                                            <span class="input-help">
+                                                <textarea type="text" name="allo_remarks" class="form-control" placeholder="Remarks" value=""></textarea>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
+                                            </span>
+                                        </div>
+                                        <div class="col2 left" style="display: inline-block;">
+                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Add Leave</button>
+
+                                        </div>
+
+                                    </form>
+
+                                    <script>
+                                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                            var currentYear = new Date().getFullYear() - 1;
+                                        <?php } else { ?>
+                                            var currentYear = new Date().getFullYear();
                                         <?php } ?>
-                                        <script>
-                                            <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                                var currentYear = new Date().getFullYear() - 1;
-                                            <?php } else { ?>
-                                                var currentYear = new Date().getFullYear();
-                                            <?php } ?>
-                                            for (var i = 0; i < 5; i++) {
-                                                var next = currentYear + 1;
-                                                var year = currentYear + '-' + next;
-                                                //next.toString().slice(-2)
-                                                $('#allo_academicyear_search').append(new Option(year, year));
-                                                currentYear--;
-                                            }
-                                        </script>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        for (var i = 0; i < 2; i++) {
+                                            var next = currentYear + 1;
+                                            var year = currentYear + '-' + next;
+                                            //next.toString().slice(-2)
+                                            $('#allo_academicyear').append(new Option(year, year));
+                                            currentYear--;
+                                        }
+                                    </script>
+                                <?php } ?>
+                                <table class="table" style="margin-top: 2%;">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" colspan="2">Leave Allocation Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <form action="" method="GET">
+                                                    <div class="form-group" style="display: inline-block;">
+                                                        <div class="col2" style="display: inline-block;">
+                                                            <input name="leaveallocationid" id="leaveallocationid" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave Allocation ID" value="<?php echo $id ?>">
+                                                            <?php if ($role == "Admin") { ?>
+                                                                <input name="allo_applicantid" id="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>" required>
+                                                            <?php } ?>
+                                                            <select name="allo_academicyear_search" id="allo_academicyear_search" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                                                                <?php if ($allo_academicyear == null) { ?>
+                                                                    <option value="" disabled selected hidden>Academic Year</option>
+                                                                <?php
+                                                                } else { ?>
+                                                                    <option hidden selected><?php echo $allo_academicyear ?></option>
+                                                                <?php }
+                                                                ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col2 left" style="display: inline-block;">
+                                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                                    </div>
+                                                    <?php if ($role == "Admin") { ?>
+                                                        <div id="filter-checks">
+                                                            <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                                            <label for="is_user" style="font-weight: 400;">Search by Leave Allocation ID</label>
+                                                        </div>
+                                                    <?php } ?>
+                                                </form>
+                                                <?php if ($role == "Admin") { ?>
+                                                    <script>
+                                                        if ($('#is_user').not(':checked').length > 0) {
 
-                        <div class="col" style="display: inline-block; width:100%; text-align:right;">
-                            Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                        </div>
+                                                            document.getElementById("leaveallocationid").disabled = true;
+                                                            document.getElementById("allo_applicantid").disabled = false;
+                                                            document.getElementById("allo_academicyear_search").disabled = false;
 
-                        <?php echo '
+                                                        } else {
+
+                                                            document.getElementById("leaveallocationid").disabled = false;
+                                                            document.getElementById("allo_applicantid").disabled = true;
+                                                            document.getElementById("allo_academicyear_search").disabled = true;
+
+                                                        }
+
+                                                        const checkbox = document.getElementById('is_user');
+
+                                                        checkbox.addEventListener('change', (event) => {
+                                                            if (event.target.checked) {
+                                                                document.getElementById("leaveallocationid").disabled = false;
+                                                                document.getElementById("allo_applicantid").disabled = true;
+                                                                document.getElementById("allo_academicyear_search").disabled = true
+                                                            } else {
+                                                                document.getElementById("leaveallocationid").disabled = true;
+                                                                document.getElementById("allo_applicantid").disabled = false;
+                                                                document.getElementById("allo_academicyear_search").disabled = false;
+                                                            }
+                                                        })
+                                                    </script>
+                                                <?php } ?>
+                                                <script>
+                                                    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                                        var currentYear = new Date().getFullYear() - 1;
+                                                    <?php } else { ?>
+                                                        var currentYear = new Date().getFullYear();
+                                                    <?php } ?>
+                                                    for (var i = 0; i < 5; i++) {
+                                                        var next = currentYear + 1;
+                                                        var year = currentYear + '-' + next;
+                                                        //next.toString().slice(-2)
+                                                        $('#allo_academicyear_search').append(new Option(year, year));
+                                                        currentYear--;
+                                                    }
+                                                </script>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="col" style="display: inline-block; width:100%; text-align:right;">
+                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                                </div>
+
+                                <?php echo '
                     <p>Select Number Of Rows</p>
                     <div class="form-group">
-                        <select class="form-control" name="state" id="maxRows">
+                        <select class="form-select" name="state" id="maxRows">
                             <option value="5000">Show ALL Rows</option>
                             <option value="5">5</option>
                             <option value="10">10</option>
@@ -363,6 +380,7 @@ $resultArr = pg_fetch_all($result);
                             <option value="100">100</option>
                         </select>
                     </div>
+                    <div class="table-responsive">
                     <table class="table" id="table-id">
                         <thead>
                             <tr>
@@ -373,19 +391,19 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Allocated Leave Type</th>
                                 <th scope="col">Allocatd by</th>
                                 <th scope="col" width="15%">Remarks</th>' ?>
-                        <?php if ($role == "Admin") { ?>
-                            <?php echo '<th scope="col"></th>' ?>
-                        <?php } ?>
-                        </tr>
-                        <?php echo '</thead>' ?>
-                        <?php if (sizeof($resultArr) > 0) { ?>
-                            <?php
-                            echo '<tbody>';
-                            foreach ($resultArr as $array) {
-                                echo '<tr>'
-                            ?>
-                                <?php
-                                echo '<td>' . $array['leaveallocationid'] . '</td>
+                                <?php if ($role == "Admin") { ?>
+                                    <?php echo '<th scope="col"></th>' ?>
+                                <?php } ?>
+                                </tr>
+                                <?php echo '</thead>' ?>
+                                <?php if (sizeof($resultArr) > 0) { ?>
+                                    <?php
+                                    echo '<tbody>';
+                                    foreach ($resultArr as $array) {
+                                        echo '<tr>'
+                                    ?>
+                                        <?php
+                                        echo '<td>' . $array['leaveallocationid'] . '</td>
                                 <td>' . $array['allo_applicantid'] . '<br>' . $array['fullname'] . $array['studentname'] . '</td>
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['allo_date'])) . '</td>
                                 <td>' . $array['allo_daycount'] . '</td>
@@ -393,220 +411,206 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['allocatedbyid'] . '<br>' . $array['allocatedbyname'] . '</td>
                                 <td>' . $array['allo_remarks'] . '</td>' ?>
 
-                                <?php if ($role == "Admin") { ?>
+                                        <?php if ($role == "Admin") { ?>
 
-                                    <?php echo '<td>
+                                            <?php echo '<td>
                                     
                                     <form name="leaveallodelete_' . $array['leaveallocationid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                     <input type="hidden" name="form-type" type="text" value="leaveallodelete">
                                     <input type="hidden" name="leaveallodeleteid" id="leaveallodeleteid" type="text" value="' . $array['leaveallocationid'] . '">
 
-                                    <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['leaveallocationid'] . '"><i class="fa-solid fa-xmark"></i></button>
+                                    <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['leaveallocationid'] . '"><i class="bi bi-x-lg"></i></button>
                                 </form>
                                 </td>' ?>
-                                <?php } ?>
-                            <?php } ?>
-                        <?php
-                        } else if ($id == null && $allo_academicyear == null) {
-                        ?>
-                            <tr>
-                                <td colspan="5">Please select Filter value.</td>
-                            </tr>
-                        <?php
-                        } else {
-                        ?>
-                            <tr>
-                                <td colspan="5">No record was found for the selected filter value.</td>
-                            </tr>
-                        <?php }
+                                        <?php } ?>
+                                    <?php } ?>
+                                <?php
+                                } else if ($id == null && $allo_academicyear == null) {
+                                ?>
+                                    <tr>
+                                        <td colspan="5">Please select Filter value.</td>
+                                    </tr>
+                                <?php
+                                } else {
+                                ?>
+                                    <tr>
+                                        <td colspan="5">No record was found for the selected filter value.</td>
+                                    </tr>
+                                <?php }
 
-                        echo '</tbody>
-                                    </table>';
-                        ?>
-                        <!--		Start Pagination -->
-                        <div class='pagination-container'>
-                            <nav>
-                                <ul class="pagination">
+                                echo '</tbody>
+                                    </table>
+                                    </div>';
+                                ?>
+                                <!-- Start Pagination -->
+                                <div class="pagination-container">
+                                    <nav>
+                                        <ul class="pagination">
+                                            <li class="page-item" data-page="prev">
+                                                <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
+                                            </li>
+                                            <!-- Here the JS Function Will Add the Rows -->
+                                            <li class="page-item">
+                                                <button class="page-link pagination-button">1</button>
+                                            </li>
+                                            <li class="page-item">
+                                                <button class="page-link pagination-button">2</button>
+                                            </li>
+                                            <li class="page-item">
+                                                <button class="page-link pagination-button">3</button>
+                                            </li>
+                                            <li class="page-item" data-page="next" id="prev">
+                                                <button class="page-link pagination-button" aria-label="Next">&gt;</button>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
 
-                                    <li data-page="prev">
-                                        <span>
-                                            < <span class="sr-only">(current)
-                                        </span></span>
-                                    </li>
-                                    <!--	Here the JS Function Will Add the Rows -->
-                                    <li data-page="next" id="prev">
-                                        <span> > <span class="sr-only">(current)</span></span>
-                                    </li>
-                                </ul>
-                            </nav>
+                                <script>
+                                    getPagination('#table-id');
+
+                                    function getPagination(table) {
+                                        var lastPage = 1;
+
+                                        $('#maxRows').on('change', function(evt) {
+                                            lastPage = 1;
+                                            $('.pagination').find('li').slice(1, -1).remove();
+                                            var trnum = 0;
+                                            var maxRows = parseInt($(this).val());
+
+                                            if (maxRows == 5000) {
+                                                $('.pagination').hide();
+                                            } else {
+                                                $('.pagination').show();
+                                            }
+
+                                            var totalRows = $(table + ' tbody tr').length;
+                                            $(table + ' tr:gt(0)').each(function() {
+                                                trnum++;
+                                                if (trnum > maxRows) {
+                                                    $(this).hide();
+                                                }
+                                                if (trnum <= maxRows) {
+                                                    $(this).show();
+                                                }
+                                            });
+
+                                            if (totalRows > maxRows) {
+                                                var pagenum = Math.ceil(totalRows / maxRows);
+                                                for (var i = 1; i <= pagenum; i++) {
+                                                    $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
+                                                <button class="page-link pagination-button">' + i + '</button>\
+                                                </li>').show();
+                                                }
+                                            }
+
+                                            $('.pagination [data-page="1"]').addClass('active');
+                                            $('.pagination li').on('click', function(evt) {
+                                                evt.stopImmediatePropagation();
+                                                evt.preventDefault();
+                                                var pageNum = $(this).attr('data-page');
+
+                                                var maxRows = parseInt($('#maxRows').val());
+
+                                                if (pageNum == 'prev') {
+                                                    if (lastPage == 1) {
+                                                        return;
+                                                    }
+                                                    pageNum = --lastPage;
+                                                }
+                                                if (pageNum == 'next') {
+                                                    if (lastPage == $('.pagination li').length - 2) {
+                                                        return;
+                                                    }
+                                                    pageNum = ++lastPage;
+                                                }
+
+                                                lastPage = pageNum;
+                                                var trIndex = 0;
+                                                $('.pagination li').removeClass('active');
+                                                $('.pagination [data-page="' + lastPage + '"]').addClass('active');
+                                                limitPagging();
+                                                $(table + ' tr:gt(0)').each(function() {
+                                                    trIndex++;
+                                                    if (
+                                                        trIndex > maxRows * pageNum ||
+                                                        trIndex <= maxRows * pageNum - maxRows
+                                                    ) {
+                                                        $(this).hide();
+                                                    } else {
+                                                        $(this).show();
+                                                    }
+                                                });
+                                            });
+                                            limitPagging();
+                                        }).val(5).change();
+                                    }
+
+                                    function limitPagging() {
+                                        if ($('.pagination li').length > 7) {
+                                            if ($('.pagination li.active').attr('data-page') <= 3) {
+                                                $('.pagination li.page-item:gt(5)').hide();
+                                                $('.pagination li.page-item:lt(5)').show();
+                                                $('.pagination [data-page="next"]').show();
+                                            }
+                                            if ($('.pagination li.active').attr('data-page') > 3) {
+                                                $('.pagination li.page-item').hide();
+                                                $('.pagination [data-page="next"]').show();
+                                                var currentPage = parseInt($('.pagination li.active').attr('data-page'));
+                                                for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+                                                    $('.pagination [data-page="' + i + '"]').show();
+                                                }
+                                            }
+                                        }
+                                    }
+                                </script>
+
+                                <script>
+                                    var data = <?php echo json_encode($resultArr) ?>;
+                                    const scriptURL = 'payment-api.php'
+
+                                    function validateForm() {
+                                        if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+
+                                            data.forEach(item => {
+                                                const form = document.forms['leaveallodelete_' + item.leaveallocationid]
+                                                form.addEventListener('submit', e => {
+                                                    e.preventDefault()
+                                                    fetch(scriptURL, {
+                                                            method: 'POST',
+                                                            body: new FormData(document.forms['leaveallodelete_' + item.leaveallocationid])
+                                                        })
+                                                        .then(response =>
+                                                            alert("Record has been deleted.") +
+                                                            location.reload()
+                                                        )
+                                                        .catch(error => console.error('Error!', error.message))
+                                                })
+
+                                                console.log(item)
+                                            })
+                                        } else {
+                                            alert("Record has NOT been deleted.");
+                                            return false;
+                                        }
+                                    }
+                                </script>
+                            </div>
                         </div>
-                    </section>
+                    </div><!-- End Reports -->
+                </div>
         </section>
 
-        <script>
-            var data = <?php echo json_encode($resultArr) ?>;
-            const scriptURL = 'payment-api.php'
+    </main><!-- End #main -->
 
-            function validateForm() {
-                if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-                    data.forEach(item => {
-                        const form = document.forms['leaveallodelete_' + item.leaveallocationid]
-                        form.addEventListener('submit', e => {
-                            e.preventDefault()
-                            fetch(scriptURL, {
-                                    method: 'POST',
-                                    body: new FormData(document.forms['leaveallodelete_' + item.leaveallocationid])
-                                })
-                                .then(response =>
-                                    alert("Record has been deleted.") +
-                                    location.reload()
-                                )
-                                .catch(error => console.error('Error!', error.message))
-                        })
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
-                        console.log(item)
-                    })
-                } else {
-                    alert("Record has NOT been deleted.");
-                    return false;
-                }
-            }
-        </script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 
-        <script>
-            getPagination('#table-id');
-
-            function getPagination(table) {
-                var lastPage = 1;
-
-                $('#maxRows')
-                    .on('change', function(evt) {
-                        //$('.paginationprev').html('');						// reset pagination
-
-                        lastPage = 1;
-                        $('.pagination')
-                            .find('li')
-                            .slice(1, -1)
-                            .remove();
-                        var trnum = 0; // reset tr counter
-                        var maxRows = parseInt($(this).val()); // get Max Rows from select option
-
-                        if (maxRows == 5000) {
-                            $('.pagination').hide();
-                        } else {
-                            $('.pagination').show();
-                        }
-
-                        var totalRows = $(table + ' tbody tr').length; // numbers of rows
-                        $(table + ' tr:gt(0)').each(function() {
-                            // each TR in  table and not the header
-                            trnum++; // Start Counter
-                            if (trnum > maxRows) {
-                                // if tr number gt maxRows
-
-                                $(this).hide(); // fade it out
-                            }
-                            if (trnum <= maxRows) {
-                                $(this).show();
-                            } // else fade in Important in case if it ..
-                        }); //  was fade out to fade it in
-                        if (totalRows > maxRows) {
-                            // if tr total rows gt max rows option
-                            var pagenum = Math.ceil(totalRows / maxRows); // ceil total(rows/maxrows) to get ..
-                            //	numbers of pages
-                            for (var i = 1; i <= pagenum;) {
-                                // for each page append pagination li
-                                $('.pagination #prev')
-                                    .before(
-                                        '<li data-page="' +
-                                        i +
-                                        '">\
-								  <span>' +
-                                        i++ +
-                                        '<span class="sr-only">(current)</span></span>\
-								</li>'
-                                    )
-                                    .show();
-                            } // end for i
-                        } // end if row count > max rows
-                        $('.pagination [data-page="1"]').addClass('active'); // add active class to the first li
-                        $('.pagination li').on('click', function(evt) {
-                            // on click each page
-                            evt.stopImmediatePropagation();
-                            evt.preventDefault();
-                            var pageNum = $(this).attr('data-page'); // get it's number
-
-                            var maxRows = parseInt($('#maxRows').val()); // get Max Rows from select option
-
-                            if (pageNum == 'prev') {
-                                if (lastPage == 1) {
-                                    return;
-                                }
-                                pageNum = --lastPage;
-                            }
-                            if (pageNum == 'next') {
-                                if (lastPage == $('.pagination li').length - 2) {
-                                    return;
-                                }
-                                pageNum = ++lastPage;
-                            }
-
-                            lastPage = pageNum;
-                            var trIndex = 0; // reset tr counter
-                            $('.pagination li').removeClass('active'); // remove active class from all li
-                            $('.pagination [data-page="' + lastPage + '"]').addClass('active'); // add active class to the clicked
-                            // $(this).addClass('active');					// add active class to the clicked
-                            limitPagging();
-                            $(table + ' tr:gt(0)').each(function() {
-                                // each tr in table not the header
-                                trIndex++; // tr index counter
-                                // if tr index gt maxRows*pageNum or lt maxRows*pageNum-maxRows fade if out
-                                if (
-                                    trIndex > maxRows * pageNum ||
-                                    trIndex <= maxRows * pageNum - maxRows
-                                ) {
-                                    $(this).hide();
-                                } else {
-                                    $(this).show();
-                                } //else fade in
-                            }); // end of for each tr in table
-                        }); // end of on click pagination list
-                        limitPagging();
-                    })
-                    .val(5)
-                    .change();
-
-                // end of on select change
-
-                // END OF PAGINATION
-            }
-
-            function limitPagging() {
-                // alert($('.pagination li').length)
-
-                if ($('.pagination li').length > 7) {
-                    if ($('.pagination li.active').attr('data-page') <= 3) {
-                        $('.pagination li:gt(5)').hide();
-                        $('.pagination li:lt(5)').show();
-                        $('.pagination [data-page="next"]').show();
-                    }
-                    if ($('.pagination li.active').attr('data-page') > 3) {
-                        $('.pagination li:gt(0)').hide();
-                        $('.pagination [data-page="next"]').show();
-                        for (let i = (parseInt($('.pagination li.active').attr('data-page')) - 2); i <= (parseInt($('.pagination li.active').attr('data-page')) + 2); i++) {
-                            $('.pagination [data-page="' + i + '"]').show();
-
-                        }
-
-                    }
-                }
-            }
-        </script>
-    </section>
-    </div>
-    </section>
-    </section>
 </body>
 
 </html>

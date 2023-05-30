@@ -134,13 +134,13 @@ if (@$_POST['form-type'] == "admission") {
 
         <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <span class="blink_me"><i class="fa-solid fa-xmark"></i></span>&nbsp;&nbsp;<span>Error: Your admission form has not been submitted. Please ensure that all required fields are completed and try again. If the issue persists, please contact the admissions office for assistance.</span>
+            <span class="blink_me"><i class="bi bi-x-lg"></i></span>&nbsp;&nbsp;<span>Error: Your admission form has not been submitted. Please ensure that all required fields are completed and try again. If the issue persists, please contact the admissions office for assistance.</span>
         </div>
     <?php } else if (@$cmdtuples == 1) { ?>
 
         <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>Success! Your admission form has been submitted and is now under review. Student Id <?php echo $student_id ?></span>
+            <span class="blink_me"><i class="bi bi-x-lg"></i></i></span>&nbsp;&nbsp;<span>Success! Your admission form has been submitted and is now under review. Student Id <?php echo $student_id ?></span>
         </div>
         <script>
             if (window.history.replaceState) {

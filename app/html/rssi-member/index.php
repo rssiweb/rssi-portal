@@ -67,7 +67,7 @@ function checkLogin($con, $date)
     $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
     $result = pg_query($con, $query);
     $user = pg_fetch_row($result);
-    $existingHashFromDb = $user[0];
+    @$existingHashFromDb = $user[0];
 
     @$loginSuccess = password_verify($colors, $existingHashFromDb);
 
@@ -109,98 +109,139 @@ if ($_POST) {
 
 ?>
 
-<html>
+<!doctype html>
+<html lang="en">
 
-<head lang="en">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <title>My Account</title>
-    <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>RSSI-My Account</title>
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://www.rssi.in/disclaimer'
+        });
+    </script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/addstyle.css">
     <style>
-        label {
-            display: block;
-            padding-left: 15px;
-            text-indent: -15px;
+        @media (max-width: 767px) {
+
+            /* Styles for mobile devices */
+            .logo {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .logo span {
+                margin: 5px 0;
+            }
         }
 
-        .checkbox {
-            padding: 0;
-            margin: 0;
-            vertical-align: bottom;
-            position: relative;
-            top: 0px;
-            overflow: hidden;
-        }
-
-        .btn:focus,
-        .button:focus,
-        [type="submit"]:focus {
-            outline: none !important;
+        .by-line {
+            background-color: #CE1212;
+            padding: 1px 5px;
+            border-radius: 0px;
+            font-size: small !important;
+            color: whitesmoke !important;
+            margin-left: 10%;
         }
     </style>
+
 </head>
 
 <body>
-    <div class="page-topbar">
-        <div class="logo-area"> </div>
-        <!-- <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1659756398/indian-flag-20_v5idmk.gif" width="50" class="over" /> -->
-    </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 col-md-offset-4">
-                <div class="login-panel panel panel-default">
-                    <div class="panel-heading">
-                        <!--<img src="..//images/phoenix1b.png" alt="Phoenix" class="center">-->
-                        <b>Phoenix</b>
-                    </div>
-                    <div class="panel-body">
-                        <form role="form" method="post" name="login" action="index.php">
-                            <fieldset>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="Associate ID" name="aid" type="text" autofocus required>
+
+    <main>
+        <div class="container">
+
+            <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
+
+                            <div class="container text-center py-4">
+                                <div class="logo">
+                                    <span class="d-lg-block" style="margin-right:10%;">Phoenix</span>
+                                    <span class="by-line">by RSSI NGO</span>
                                 </div>
-                                <div class="form-group">
-                                    <input class="form-control" placeholder="Password" name="pass" id="pass" type="password" value="" required>
-                                    <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
-                                        <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show
-                                        password
-                                    </label>
+                            </div>
+
+
+
+                            <div class="card mb-3">
+
+                                <div class="card-body">
+
+                                    <div class="pt-4 pb-2">
+                                        <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
+                                        <p class="text-center small">Enter your username & password to login</p>
+                                    </div>
+
+                                    <form class="row g-3 needs-validation" role="form" method="post" name="login" action="index.php">
+
+                                        <div class="col-12">
+                                            <label for="yourUsername" class="form-label">Username</label>
+                                            <div class="input-group has-validation">
+                                                <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-person"></i></span>
+                                                <input type="text" name="aid" class="form-control" id="aid" placeholder="Associate Number" required>
+                                                <div class="invalid-feedback">Please enter your username.</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="pass" class="form-label">Password</label>
+                                            <input type="password" name="pass" class="form-control" id="pass" required>
+                                            <div class="invalid-feedback">Please enter your password!</div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <label for="show-password" class="form-label" style="margin-top: 5px;font-weight: unset;">
+                                                    <input type="checkbox" class="form-check-input" id="show-password" class="field__toggle-input" style="display: inline-block;"> Show password
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
+                                        <div class="col-12">
+                                            <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
+                                        </div>
+                                        <div class="col-12">
+                                            <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Click here</a></p>
+                                            </p>
+                                        </div>
+                                    </form>
+
                                 </div>
-                                <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
-                                <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Sign in" name="login">
-                                <br><br>
-                                <p style="text-align: right;"><a href="#" data-toggle="modal" data-target="#myModal">Forgot password?</a></p>
-                            </fieldset>
-                        </form>
+                            </div>
+
+                            <div class="credits">
+                                Designed by <a href="https://www.rssi.in/">rssi.in</a>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
-            </div>
+
+            </section>
+
         </div>
-    </div>
-    <div id="myModal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Forgot password?</h4>
-                </div>
-                <div class="modal-body">
-                    <p>Please contact RSSI Admin at 7980168159 or email at info@rssi.in</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    </main><!-- End #main -->
+
     <script>
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
@@ -228,14 +269,28 @@ if ($_POST) {
     </script>
 
     <?php if ($login_failed_dialog) { ?>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 col-md-offset-4" style="text-align: center;">
-                    <span style="color:red">Error: Login failed. Please enter valid credentials.</span>
+        <div class="modal" tabindex="-1" role="dialog" id="errorModal">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Error: Login Failed</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Please enter valid credentials.</p>
+                    </div>
                 </div>
             </div>
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var myModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                myModal.show();
+            });
+        </script>
     <?php } ?>
+
+
     <!--protected by reCAPTCHA-->
     <script>
         grecaptcha.ready(function() {
@@ -249,40 +304,35 @@ if ($_POST) {
         });
     </script>
 
-    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
-    <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://www.rssi.in/disclaimer'
-        });
-    </script>
+    <!-- Popup -->
+    <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="popupLabel">Forgot password?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Body -->
+                <div class="modal-body">
+                    Please contact RSSI Admin at 7980168159 or email at info@rssi.in
 
-    <!-- <div id="thoverX" class="thover"></div>
-<div id="tpopupX" class="tpopup">
-    <img src="/images/pride3.jpg" class="img-fluid img-responsive hidden-xs" style="display: block;margin-left: auto;margin-right: auto;">
-    <p style="display: block; margin-left: 5%;margin-right: 5%; text-align: left;">This Pride Month, RSSI launches #AgarTumSaathHo, to bring together LGBTQ Community and their straight allies.<br><br> Families and friends really matter! We know that most young people from the LGBTQ community grow up having to hide their identity
-        because they fear being judged and rejected even by their loved ones. But this has a severe impact on their self-esteem and sense of self-worth. Supportive parents, families, friends, teachers, and peers can all play an important role in helping
-        build self-esteem and a positive sense of self among LGBTQ youth, including gender non-conforming teens. This Pride month, RSSI NGO aims to bring forward and celebrate these stories of support, courage, love, and of understanding.</p>
-    <div class="embed-responsive embed-responsive-16by9">
-        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/e677aw0T0Pk" allowfullscreen></iframe>
+                </div>
+                <!-- Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
     </div>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-    <div id="tcloseX" class="tclose notranslate">X</div>
-    <script>
-        $("#tcloseX").click(function() {
-            $("#tpopupX").toggleClass('hidden');
-            $("#thoverX").toggleClass('hidden');
-        });
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
-        $("#thoverX").click(function() {
-            $("#tpopupX").toggleClass('hidden');
-            $("#thoverX").toggleClass('hidden');
-        });
-    </script>
-</div> -->
-    <?php include("../../util/footer.php"); ?>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+
 </body>
 
 </html>

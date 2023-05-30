@@ -72,7 +72,7 @@ if (@$_POST['form-type'] == "onboarding") {
 
 if (@$auth_failed_dialog) { ?>
     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-        <i class="fa-solid fa-xmark"></i>&nbsp;&nbsp;<span>ERROR: The OTP you entered is incorrect.</span>
+        <i class="bi bi-x-lg"></i>&nbsp;&nbsp;<span>ERROR: The OTP you entered is incorrect.</span>
     </div>
     <script>
         if (window.history.replaceState) {

@@ -192,7 +192,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     </select>
                     <div class="col topbutton" style="display: inline-block;">
                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                            <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                            <i class="bi bi-search"></i>&nbsp;Search</button>
                         <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;">
                             <i class="fa-solid fa-print"></i>&nbsp;Print</button>
                     </div>

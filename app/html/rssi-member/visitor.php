@@ -97,7 +97,7 @@ $resultArr = pg_fetch_all($result);
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         Home / Visitor pass
                     </div>
-                    <section class="box" style="padding: 2%;">
+                    
                         <form id="myform" action="" method="GET">
                             <div class="form-group" style="display: inline-block;">
                                 <div class="col2" style="display: inline-block;">
@@ -130,7 +130,7 @@ $resultArr = pg_fetch_all($result);
                             </div>
                             <div class="col2 left" style="display: inline-block;">
                                 <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLSfGLdHHjI8J5b238SMAmf7LMkVVRJPAKnk1SjHcBUZSXATFQA/viewform" target="_blank" class="btn btn-info btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Registration</a>
+                                    <i class="bi bi-search"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLSfGLdHHjI8J5b238SMAmf7LMkVVRJPAKnk1SjHcBUZSXATFQA/viewform" target="_blank" class="btn btn-info btn-sm" role="button"><i class="bi bi-plus-lg"></i>&nbsp;Registration</a>
                             </div>
                         </form>
 
@@ -176,21 +176,21 @@ $resultArr = pg_fetch_all($result);
 
 
                                     <?php if ($array['status'] == 'Approved' && $array['visitdateto'] >= $today) { ?>
-                                        <?php echo '<td><p class="label label-success">approved</p></td>' ?>
+                                        <?php echo '<td><p class="badge label-success">approved</p></td>' ?>
                                     <?php }
                                     else if ($array['status'] == 'Rejected') { ?>
-                                        <?php echo '<td><p class="label label-danger">rejected</p></td>' ?>
+                                        <?php echo '<td><p class="badge label-danger">rejected</p></td>' ?>
                                     <?php }
                                     else if ($array['status'] == null && $array['visitdateto'] >= $today) { ?>
-                                        <?php echo '<td><p class="label label-default">under review</p></td>' ?>
+                                        <?php echo '<td><p class="badge label-default">under review</p></td>' ?>
                                     <?php }
 
                                     else if ($array['status'] != 'Visited' && $array['visitdateto'] < $today) { ?>
-                                        <?php echo '<td><p class="label label-default">expired</p></td>' ?>
+                                        <?php echo '<td><p class="badge label-default">expired</p></td>' ?>
                                     <?php }
 
                                     else if ($array['status'] == 'Visited') { ?>
-                                        <?php echo '<td><p class="label label-warning">visited</p></td>' ?>
+                                        <?php echo '<td><p class="badge label-warning">visited</p></td>' ?>
                                     <?php } ?>
 
                                 <?php echo '</tr>';

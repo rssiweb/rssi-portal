@@ -56,7 +56,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     <section class="wrapper main-wrapper row">
       <div class="col-md-12">
 
-        <section class="box" style="padding: 2%;">
+        
 
           <table class="table">
             <thead>

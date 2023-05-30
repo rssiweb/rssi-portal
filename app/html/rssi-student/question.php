@@ -141,7 +141,7 @@ $resultArr = pg_fetch_all($result);
                     <span class="noticea"><a href="home.php" target="_self">Home</a></span> / <span class="noticea"><a href="exam.php" target="_self">Examination</a></span> / Question Portal
                     </div>
                 </div>
-                <section class="box" style="padding: 2%;">
+                
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
@@ -210,7 +210,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                                <i class="bi bi-search"></i>&nbsp;Search</button>
                         </div>
                     </form>
                     <script>
@@ -248,7 +248,7 @@ $resultArr = pg_fetch_all($result);
                             echo '<tr>
               <td>' . $array['category'] . '</td>
             <td>' . $array['subject'] . '</td>
-            <td>' . $array['testcode'] . '&nbsp; <p class="label label-default">' . $array['class'] . '</p></td>
+            <td>' . $array['testcode'] . '&nbsp; <p class="badge label-default">' . $array['class'] . '</p></td>
             <td>' . $array['fullmarks'] . '</td>
             <td>' . $array['examname'] . '</td>
             <td>' . $array['topic'] . '</td>' ?>

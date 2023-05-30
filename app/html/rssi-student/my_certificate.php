@@ -103,15 +103,15 @@ $resultArrr = pg_fetch_result($totalgems, 0, 0);
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
                 <?php if ($resultArrr != null) { ?>
-                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo $resultArrr ?></p>
+                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="badge label-success"><?php echo $resultArrr ?></p>
                     </div>
                 <?php } ?>
                 <?php if ($resultArrr == null) { ?>
-                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
+                    <div style="display: inline-block; width:100%; font-size:small; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="badge label-default">You're almost there</p>
                     </div>
                 <?php } ?>
                 <div class="row">
-                    <section class="box" style="padding: 2%;">
+                    
                         <!-- <p>Home / Certificate Management System</p><br> -->
                         <div class="col" style="display: inline-block; width:100%; text-align:right">
                             Home / <span class="noticea"><a href="document.php">My Document</a></span> / My Certificate<br><br>
@@ -122,7 +122,7 @@ $resultArrr = pg_fetch_result($totalgems, 0, 0);
                         <?php echo '
                     <p>Select Number Of Rows</p>
                     <div class="form-group">
-                        <select class="form-control" name="state" id="maxRows">
+                        <select class="form-select" name="state" id="maxRows">
                             <option value="5000">Show ALL Rows</option>
                             <option value="5">5</option>
                             <option value="10">10</option>
@@ -167,7 +167,7 @@ $resultArrr = pg_fetch_result($totalgems, 0, 0);
 
                                 <?php } else { ?>
 
-                                    <?php echo '<td><a href="' . $array['certificate_url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
+                                    <?php echo '<td><a href="' . $array['certificate_url'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
                                 <?php } ?>
 
 

@@ -64,20 +64,23 @@ $resultArr = pg_fetch_all($result);
 <html lang="en">
 
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Library Status</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <!------ Include the above in your HEAD tag ---------->
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>My Book</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+
+
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -88,14 +91,6 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <style>
-        @media (min-width:767px) {
-            .left {
-                margin-left: 2%;
-            }
-        }
-    </style>
-
 </head>
 
 <!-- =========================
@@ -103,50 +98,69 @@ $resultArr = pg_fetch_all($result);
 ============================== -->
 
 <body>
+
     <?php include 'header.php'; ?>
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
-                <div class="row">
-                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                    </div>
 
-                    <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / <span class="noticea"><a href="library.php">Library</a></span> / Library Status
-                    </div>
-                </div>
-                <section class="box" style="padding: 2%;">
+    <main id="main" class="main">
 
-                    <form action="" method="POST">
-                        <div class="form-group" style="display: inline-block;">
-                            <div class="col2" style="display: inline-block;">
-                                <?php if ($role == 'Admin') { ?>
-                                    <input name="get_bid" class="form-control" style="width:max-content; display:inline-block" placeholder="Borrowers ID" value="<?php echo $id ?>">
-                                <?php } ?>
-                                <select name="get_status" class="form-control" style="width:max-content;display:inline-block" required>
-                                    <?php if ($status == null) { ?>
-                                        <option value="" hidden selected>Select book status</option>
-                                    <?php
-                                    } else { ?>
-                                        <option hidden selected><?php echo $status ?></option>
-                                    <?php }
-                                    ?>
-                                    <option>Issued</option>
-                                    <option>Due</option>
-                                    <option>Returned</option>
-                                    <option>Canceled</option>
-                                    <option>Duplicate-Canceled</option>
-                                    <option>ALL</option>
-                                </select>
+        <div class="pagetitle">
+            <h1>My Book</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
+                    <li class="breadcrumb-item"><a href="library.php">Libary</a></li>
+                    <li class="breadcrumb-item active">My Book</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="row">
+                                <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
+                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                        </div>
-                    </form>
-                    <?php echo '
+                            
+
+                                <form action="" method="POST">
+                                    <div class="form-group" style="display: inline-block;">
+                                        <div class="col2" style="display: inline-block;">
+                                            <?php if ($role == 'Admin') { ?>
+                                                <input name="get_bid" class="form-control" style="width:max-content; display:inline-block" placeholder="Borrowers ID" value="<?php echo $id ?>">
+                                            <?php } ?>
+                                            <select name="get_status" class="form-select" style="width:max-content;display:inline-block" required>
+                                                <?php if ($status == null) { ?>
+                                                    <option value="" hidden selected>Select book status</option>
+                                                <?php
+                                                } else { ?>
+                                                    <option hidden selected><?php echo $status ?></option>
+                                                <?php }
+                                                ?>
+                                                <option>Issued</option>
+                                                <option>Due</option>
+                                                <option>Returned</option>
+                                                <option>Canceled</option>
+                                                <option>Duplicate-Canceled</option>
+                                                <option>ALL</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col2 left" style="display: inline-block;">
+                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                    </div>
+                                </form>
+                                <?php echo '
+                                <div class="table-responsive">
                     <table class="table">
                         <thead>
                             <tr>
@@ -163,68 +177,57 @@ $resultArr = pg_fetch_all($result);
                             </tr>
                         </thead>
                         <tbody>';
-                    foreach ($resultArr as $array) {
-                        echo '
+                                foreach ($resultArr as $array) {
+                                    echo '
                             <tr>
-                                <td style="line-height: 1.7;">' . $array['yourid'] . '/' . strtok($array['yourname'], ' ') . '</td>
-                                <td style="line-height: 1.7;">' . $array['orderid'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['orderdate'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['bookregno'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['bookname'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['originalprice'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['issuedon'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['duedate'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['bookstatus'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['remarks'] . '</td>
+                                <td>' . $array['yourid'] . '/' . strtok($array['yourname'], ' ') . '</td>
+                                <td>' . $array['orderid'] . '</td>
+                                <td>' . $array['orderdate'] . '</td>
+                                <td>' . $array['bookregno'] . '</td>
+                                <td>' . $array['bookname'] . '</td>
+                                <td>' . $array['originalprice'] . '</td>
+                                <td>' . $array['issuedon'] . '</td>
+                                <td>' . $array['duedate'] . '</td>
+                                <td>' . $array['bookstatus'] . '</td>
+                                <td>' . $array['remarks'] . '</td>
                             </tr>';
-                    } ?>
-                    <?php
-                    if ($status == null && sizeof($resultArr) == 0) {
-                    ?>
-                        <tr>
-                            <td colspan="5">Please select Filter value.</td>
-                        </tr>
-                    <?php
-                    }
-                    if ($status != null && sizeof($resultArr) == 0) {
-                    ?>
-                        <tr>
-                            <td colspan="5">No record was found for the selected filter value.</td>
-                        </tr>
-                    <?php }
+                                } ?>
+                                <?php
+                                if ($status == null && sizeof($resultArr) == 0) {
+                                ?>
+                                    <tr>
+                                        <td colspan="5">Please select Filter value.</td>
+                                    </tr>
+                                <?php
+                                }
+                                if ($status != null && sizeof($resultArr) == 0) {
+                                ?>
+                                    <tr>
+                                        <td colspan="5">No record was found for the selected filter value.</td>
+                                    </tr>
+                                <?php }
 
-                    echo '</tbody>
-                        </table>';
-                    ?>
-            </div>
-            </div>
+                                echo '</tbody>
+                        </table>
+                        </div>';
+                                ?>
+                        </div>
+
+                    </div>
+                </div><!-- End Reports -->
             </div>
         </section>
-        </div>
-    </section>
-    </section>
 
+    </main><!-- End #main -->
 
-    <!-- Back top -->
-    <script>
-        $(document).ready(function() {
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#back-to-top').fadeIn();
-                } else {
-                    $('#back-to-top').fadeOut();
-                }
-            });
-            // scroll body to 0px on click
-            $('#back-to-top').click(function() {
-                $('body,html').animate({
-                    scrollTop: 0
-                }, 400);
-                return false;
-            });
-        });
-    </script>
-    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+
 </body>
 
 </html>

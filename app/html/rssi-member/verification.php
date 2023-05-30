@@ -74,7 +74,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     </div>
     <section class="wrapper main-wrapper row">
         <div class="col-md-12">
-            <section class="box" style="padding: 2%;">
+            
                 <form id="myform" action="" method="GET">
                     <div class="form-group" style="display: inline-block;">
                         <div class="col2" style="display: inline-block;">
@@ -83,7 +83,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                     </div>
                     <div class="col2 left" style="display: inline-block;">
                         <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                            <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                            <i class="bi bi-search"></i>&nbsp;Search</button>
                     </div>
                 </form>
 

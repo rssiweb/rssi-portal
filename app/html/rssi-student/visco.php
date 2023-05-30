@@ -171,7 +171,7 @@ if (($filterstatus != 'Active') || ($feesflag == 'd')) {
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
 
-                <section class="box" style="padding: 2%;">
+                
 
                     <div class="container">
                         <!--<span style="color: #F2545F; display: inline;"></span>
@@ -216,7 +216,7 @@ if (($filterstatus != 'Active') || ($feesflag == 'd')) {
                                 </select>
                             </div>
                             <div class="col2">
-                                <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
+                                <button type="button" class="exam_btn" onclick="loaddata()"><i class="bi bi-search"></i>
                                     search</button>
                             </div>
 

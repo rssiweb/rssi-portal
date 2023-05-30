@@ -46,13 +46,11 @@ if (($courseid1 == null && $language1 == 'ALL')) {
     $result1 = pg_query($con, "select * from wbt order by language desc");
 } else if (($courseid1 == null && ($language1 != 'ALL' && $language1 != null))) {
     $result1 = pg_query($con, "select * from wbt where language='$language1' order by language desc");
-}  else if (($courseid1 != null && ($language1 == null || $language1 == 'ALL'))) {
+} else if (($courseid1 != null && ($language1 == null || $language1 == 'ALL'))) {
     $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' order by language desc");
 } else if (($courseid1 != null && ($language1 != 'ALL' && $language1 != null))) {
     $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' AND language='$language1' order by language desc");
-}
-
-else {
+} else {
     $result1 = pg_query($con, "select * from wbt order by language desc");
 }
 if (!$result1) {
@@ -67,21 +65,23 @@ $resultArr1 = pg_fetch_all($result1);
 <html lang="en">
 
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>iExplore</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <!------ Include the above in your HEAD tag ---------->
+    <title>iExplore</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    
+
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -92,179 +92,167 @@ $resultArr1 = pg_fetch_all($result1);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-
-    <style>
-        .checkbox {
-            padding: 0;
-            margin: 0;
-            vertical-align: bottom;
-            position: relative;
-            top: 0px;
-            overflow: hidden;
-        }
-
-        .x-btn:focus,
-        .button:focus,
-        [type="submit"]:focus {
-            outline: none;
-        }
-
-        #passwordHelpBlock {
-            font-size: x-small;
-            display: block;
-        }
-
-        .input-help {
-            vertical-align: top;
-            display: inline-block;
-        }
-    </style>
 </head>
 
 <body>
     <?php include 'header.php'; ?>
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
+
+    <main id="main" class="main">
+
+        <div class="pagetitle">
+            <h1>iExplore</h1>
+            <nav>
+                <!-- <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item active">iExplore</li>
+                </ol> -->
                 <div class="row">
-                    <?php if ($role == 'Admin') { ?>
-                        <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / iExplore Management System
-                        </div>
-                    <?php } else { ?>
-                        <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">Home / iExplore Web-based training (WBT)
-                        </div>
-                    <?php } ?>
-                    <div class="col" style="display: inline-block; width:47%; text-align:right">
+                    <div class="col" style="display: inline-block; width:50%;">
+                        <?php if ($role == 'Admin') { ?>
+                            Home / iExplore Management System
+                        <?php } else { ?>
+                            Home / iExplore Web-based training (WBT)
+                        <?php } ?>
+                    </div>
+                    <div class="col" style="display: inline-block; width:48%; text-align:right">
                         <a href="my_learning.php" target="_self" class="btn btn-danger btn-sm" role="button">My Learnings</a>
                     </div>
                 </div>
-                <?php if ($role == 'Admin') { ?>
 
-                    <?php if (@$courseid != null && @$cmdtuples == 0) { ?>
+            </nav>
+        </div><!-- End Page Title -->
 
-                        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
-                        </div>
-                    <?php
-                    } else if (@$cmdtuples == 1) { ?>
+        <section class="section dashboard">
+            <div class="row">
 
-                        <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Database has been updated successfully for course id <?php echo @$courseid ?>.</span>
-                        </div>
-                <?php } ?>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                    <section class="box" style="padding: 2%;">
-                        <form autocomplete="off" name="wbt" id="wbt" action="iexplore.php" method="POST">
-                            <div class="form-group" style="display: inline-block;">
-                                <div class="col2" style="display: inline-block;">
+                        <div class="card-body">
+                            <br>
+                            <?php if ($role == 'Admin') { ?>
 
-                                    <span class="input-help">
-                                        <input type="text" name="courseid" class="form-control" style="width:max-content; display:inline-block" placeholder="Course id" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Course id</small>
-                                    </span>
-                                    <span class="input-help">
-                                        <input type="text" name="coursename" class="form-control" style="width:max-content; display:inline-block" placeholder="Course name" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Course name</small>
-                                    </span>
+                                <?php if (@$courseid != null && @$cmdtuples == 0) { ?>
 
-                                    <span class="input-help">
-                                        <select name="language" class="form-control" style="width:max-content; display:inline-block" required>
-                                            <?php if ($language == null) { ?>
+                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                                    </div>
+                                <?php
+                                } else if (@$cmdtuples == 1) { ?>
+
+                                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                        <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Database has been updated successfully for course id <?php echo @$courseid ?>.</span>
+                                    </div>
+                                <?php } ?>
+
+                                <form autocomplete="off" name="wbt" id="wbt" action="iexplore.php" method="POST">
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="form-group">
+                                                <input type="text" name="courseid" class="form-control" placeholder="Course ID" required>
+                                                <small class="form-text text-muted">Course ID</small>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-group">
+                                                <input type="text" name="coursename" class="form-control" placeholder="Course Name" required>
+                                                <small class="form-text text-muted">Course Name</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="form-group">
+                                                <select name="language" class="form-select" required>
+                                                    <option value="" disabled selected hidden>Language</option>
+                                                    <option>English</option>
+                                                    <option>Hindi</option>
+                                                    <option>Bengali</option>
+                                                </select>
+                                                <small class="form-text text-muted">Language</small>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-group">
+                                                <input type="number" name="passingmarks" max="100" accuracy="2" min="0" class="form-control" placeholder="Mastery Score" required>
+                                                <small class="form-text text-muted">Mastery Score (%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="form-group">
+                                                <input type="url" name="url" class="form-control" placeholder="URL" required>
+                                                <small class="form-text text-muted">URL</small>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-group">
+                                                <select name="validity" class="form-select" required>
+                                                    <option value="" disabled selected hidden>Validity</option>
+                                                    <option>0.5</option>
+                                                    <option>1</option>
+                                                    <option>2</option>
+                                                    <option>3</option>
+                                                    <option>5</option>
+                                                </select>
+                                                <small class="form-text text-muted">Validity (Year)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="issuedby" class="form-control" value="<?php echo $fullname ?>" required readonly>
+                                    <button type="submit" name="search_by_id" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-plus-lg"></i>&nbsp;Add
+                                    </button>
+                                </form>
+
+                                <br>
+                            <?php } ?>
+                            <?php if ($role != 'Admin') { ?>
+                            <?php } ?>
+                            <form action="" method="GET">
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <input type="text" name="courseid1" class="form-control" placeholder="Course ID" value="<?php echo @$courseid1 ?>">
+                                            <small class="form-text text-muted">Course ID</small>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <select name="language1" class="form-select">
                                                 <option value="" disabled selected hidden>Language</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $language ?></option>
-                                            <?php }
-                                            ?>
-                                            <option>English</option>
-                                            <option>Hindi</option>
-                                            <option>Bengali</option>
-                                        </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Language</small>
-                                    </span>
-                                    <span class="input-help">
-                                        <input type="number" name="passingmarks" max="100" accuracy="2" min="0" class="form-control" style="width:max-content; display:inline-block" placeholder="%" value="" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Mastery Score</small>
-                                    </span>
-
-                                    <span class="input-help">
-                                        <input type="url" name="url" class="form-control" style="width:max-content; display:inline-block" placeholder="URL" value="" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">URL</small>
-                                    </span>
-
-                                    <span class="input-help">
-                                        <select name="validity" class="form-control" style="width:max-content; display:inline-block" required>
-                                            <?php if ($validity == null) { ?>
-                                                <option value="" disabled selected hidden>Validity</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $validity ?></option>
-                                            <?php }
-                                            ?>
-                                            <option>0.5</option>
-                                            <option>1</option>
-                                            <option>2</option>
-                                            <option>3</option>
-                                            <option>5</option>
-                                        </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Validity (Year)</small>
-                                    </span>
-
-                                    <input type="hidden" name="issuedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="<?php echo $fullname ?>" required readonly>
-
+                                                <?php if ($language1 == null) { ?>
+                                                    <option>ALL</option>
+                                                <?php } else { ?>
+                                                    <option hidden selected><?php echo $language1 ?></option>
+                                                <?php } ?>
+                                                <option>English</option>
+                                                <option>Hindi</option>
+                                                <option>Bengali</option>
+                                            </select>
+                                            <small class="form-text text-muted">Language</small>
+                                        </div>
+                                    </div>
                                 </div>
-
-                            </div>
-
-                            <div class="col2 left" style="display: inline-block;">
-                                <button type="submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
-                                    <i class="fa-solid fa-plus"></i>&nbsp;&nbsp;Add</button>
-                            </div>
-                        </form>
-                        <br>
-                <?php } ?>
-                    <?php if ($role != 'Admin') { ?>
-                        <section class="box" style="padding: 2%;">
-                    <?php } ?>
-                        <form action="" method="GET">
-                            <div class="form-group" style="display: inline-block;">
-                                <div class="col2" style="display: inline-block;">
-                                    <span class="input-help">
-                                        <input type="text" name="courseid1" class="form-control" style="width:max-content; display:inline-block" placeholder="Course id" value="<?php echo @$courseid1 ?>">
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Course id</small>
-                                    </span>
-
-                                    <span class="input-help">
-                                        <select name="language1" class="form-control" style="width:max-content; display:inline-block">
-                                            <?php if ($language1 == null) { ?>
-                                                <option value="" disabled selected hidden>Language</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $language1 ?></option>
-                                            <?php }
-                                            ?>
-                                            <option>ALL</option>
-                                            <option>English</option>
-                                            <option>Hindi</option>
-                                            <option>Bengali</option>
-                                        </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Language</small>
-                                    </span>
-
+                                <div class="row">
+                                    <div class="col">
+                                        <button type="submit" name="search_by_id" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-search"></i>&nbsp;Search
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col2 left" style="display: inline-block;">
-                                <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                            </div>
-                        </form>
+                            </form>
 
-                        <div class="col" style="display: inline-block; width:99%; text-align:right">
-                            Record count:&nbsp;<?php echo sizeof($resultArr1) ?>
-                        </div>
-                        <?php echo '
+
+                            <div class="col" style="display: inline-block; width:99%; text-align:right">
+                                Record count:&nbsp;<?php echo sizeof($resultArr1) ?>
+                            </div>
+                            <?php echo '
+                            <div class="table-responsive">
                     <table class="table" id="table-id">
                         <thead>
                             <tr>
@@ -276,56 +264,51 @@ $resultArr1 = pg_fetch_all($result1);
                                 <th scope="col">Assesment</th>
                             </tr>
                         </thead>' ?>
-                        <?php if ($resultArr1 != null) {
-                            echo '<tbody>';
-                            foreach ($resultArr1 as $array) {
-                                echo '
+                            <?php if ($resultArr1 != null) {
+                                echo '<tbody>';
+                                foreach ($resultArr1 as $array) {
+                                    echo '
                             <tr>
                                 <td>' . $array['courseid'] . '</td>
                                 <td>' . $array['coursename'] . '</td>
                                 <td>' . $array['language'] . '</td>
                                 <td>' . $array['passingmarks'] . '%</td>
                                 <td>' . $array['validity'] . '</td>
-                                <td><a href="' . $array['url'] ?><?php echo $associatenumber ?><?php echo '" target="_blank" title="'.$array['coursename'].'-'.$array['language'].'"><button type="button" id="btn" class="btn btn-warning btn-sm" style="outline: none; color:#fff"></span>Launch&nbsp;'.$array['courseid'].'</button></a></td>
+                                <td><a href="' . $array['url'] ?><?php echo $associatenumber ?><?php echo '" target="_blank" title="' . $array['coursename'] . '-' . $array['language'] . '"><button type="button" id="btn" class="btn btn-warning btn-sm" style="outline: none; color:#fff"></span>Launch&nbsp;' . $array['courseid'] . '</button></a></td>
                             </tr>';
-                            }
-                        } else if ($courseid1 == null && $language1 == null) {
-                            echo '<tr>
+                                                                                            }
+                                                                                        } else if ($courseid1 == null && $language1 == null) {
+                                                                                            echo '<tr>
                                           <td colspan="5">Please enter at least one value to get the WBT details.</td>
                                       </tr>';
-                        } else {
-                            echo '<tr>
+                                                                                        } else {
+                                                                                            echo '<tr>
                                       <td colspan="5">No record found for' ?>&nbsp;<?php echo $courseid1 ?>&nbsp;<?php echo $language1 ?>
-                    <?php echo '</td>
+                        <?php echo '</td>
                                   </tr>';
-                        }
-                        echo '</tbody>
-                        </table>';
-                    ?>
+                                                                                        }
+                                                                                        echo '</tbody>
+                        </table>
+                        </div>';
+                        ?>
+                        </div>
+                    </div>
+
+                </div>
+            </div><!-- End Reports -->
             </div>
         </section>
-    </section>
 
-    <!-- Back top -->
-    <script>
-        $(document).ready(function() {
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#back-to-top').fadeIn();
-                } else {
-                    $('#back-to-top').fadeOut();
-                }
-            });
-            // scroll body to 0px on click
-            $('#back-to-top').click(function() {
-                $('body,html').animate({
-                    scrollTop: 0
-                }, 400);
-                return false;
-            });
-        });
-    </script>
-    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+
 </body>
 
 </html>

@@ -22,20 +22,19 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 <html>
 
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>My Document</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-    <link rel="stylesheet" href="/css/style.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <!------ Include the above in your HEAD tag ---------->
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -46,48 +45,83 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-
 </head>
 
 <body>
-    <?php $document_active = 'active'; ?>
     <?php include 'header.php'; ?>
 
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
+    <main id="main" class="main">
 
-                <section class="box" style="padding: 2%;">
+        <div class="pagetitle">
+            <h1>My Document</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">My Services</a></li>
+                    <li class="breadcrumb-item active">My Document</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                    <table class="table" style="font-size: 13px">
-                        <thead>
-                            <tr>
-                                <th scope="col">Official Letter</th>
-                                <th scope="col">Payslip/Reimbursement</th>
-                                <th scope="col">Miscellaneous</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
+        <section class="section dashboard">
+            <div class="row">
 
-                                <td style="line-height: 2;">
-                                    <span class="noticea">
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="container mt-5">
+                                <ul class="nav nav-tabs">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" data-bs-toggle="tab" href="#official-tab">Official Letter</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#payslip-tab">Payslip</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#misc-tab">Miscellaneous</a>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content mt-4">
+                                    <div class="tab-pane fade show active" id="official-tab">
                                         <?php if ($profile != null) { ?>
-                                            <a href="<?php echo $profile ?>" target="_blank" title="<?php echo $filename ?>">Letter of Offer</a><br>
+                                            <p><a href="<?php echo $profile ?>" target="_blank" title="<?php echo $filename ?>">Letter of Offer</a></p>
                                         <?php } ?>
-                                        <a href="my_certificate.php">My Certificate</a></span>
-                                </td>
-                                <td style="line-height: 2;"><span class="noticea"><a href="payslip.php" target="_self">Payslip</a></span></td>
-                                <td style="line-height: 2;"><span class="noticea"><a href="idcard.php" target="_blank">RSSI Identity Card</a><br>
-                                        <a href="gps.php" target="_self">GPS (Global Procurement System)</a>
-                                    </span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
+                                        <p><a href="my_certificate.php">My Certificate</a></p>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="payslip-tab">
+                                        <p><a href="payslip.php" target="_self">Payslip</a></p>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="misc-tab">
+                                        <p><a href="idcard.php" target="_blank">RSSI Identity Card</a></p>
+                                        <p><a href="gps.php" target="_self">GPS (Global Procurement System)</a></p>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+
+                    </div>
+                </div><!-- End Reports -->
             </div>
         </section>
-    </section>
+
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 </body>
 
 </html>

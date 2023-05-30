@@ -83,20 +83,21 @@ if (!$resultr) {
 function getAssessmentStatus($array)
 {
     if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-        return '<span class="label label-danger float-end">Self-assessment</span>';
+        return '<span class="badge bg-danger text-start">Self-assessment</span>';
     } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-        return '<span class="label label-warning float-end">Manager assessment in progress</span>';
+        return '<span class="badge bg-warning text-start">Manager assessment in progress</span>';
     } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") {
-        return '<span class="label label-primary float-end">Reviewer assessment in progress</span>';
+        return '<span class="badge bg-primary text-start">Reviewer assessment in progress</span>';
     } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
-        return '<span class="label label-success float-end">IPF released</span>';
+        return '<span class="badge bg-success text-start">IPF released</span>';
     } else if ($array['ipf_response'] == 'accepted') {
-        return '<span class="label label-success float-end">IPF Accepted</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
+        return '<span class="badge bg-success text-start">IPF Accepted</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
     } else if ($array['ipf_response'] == 'rejected') {
-        return '<span class="label label-danger float-end">IPF Rejected</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
+        return '<span class="badge bg-danger text-start">IPF Rejected</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
     }
 }
 ?>
+
 
 <?php function displayTDs($array)
 {
@@ -113,20 +114,24 @@ function getAssessmentStatus($array)
 <html lang="en">
 
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Appraisal details</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-    <link rel="stylesheet" href="/css/style.css" />
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>My Appraisal</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+
+
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -202,12 +207,12 @@ function getAssessmentStatus($array)
         }
 
 
-        #footer {
+        /* #conf {
             position: fixed;
             bottom: 0;
             width: 81%;
             background-color: #f9f9f9;
-        }
+        } */
 
         #close {
             float: right;
@@ -229,329 +234,348 @@ function getAssessmentStatus($array)
 ============================== -->
 
 <body>
-    <?php $appraisal_active = 'active'; ?>
     <?php include 'header.php'; ?>
 
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
+    <main id="main" class="main">
 
-                <div class="row">
-                    <?php
-                    if ($role == 'Admin') { ?>
-                        <div class="col" style="display: inline-block; width:100%; text-align:right">
-                            <span class="noticea"><a href="process.php" target="_blank" title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" target="_blank" title="Appraisal Workflow">Appraisal Workflow</a></span>
-                        </div>
-                    <?php } ?>
-                    <section class="box" style="padding: 2%;">
+        <div class="pagetitle">
+            <h1>My Appraisal</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Performance management</a></li>
+                    <li class="breadcrumb-item active">My Appraisal</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                        <div class="tabset">
-                            <!-- Tab 1 -->
-                            <input type="radio" name="tabset" id="tab1" aria-controls="marzen" <?php echo (@$_GET['form-type'] == "") ? "checked" : "checked"; ?>>
-                            <label for="tab1">Appraisee</label>
-                            <!-- Tab 2 -->
-                            <input type="radio" name="tabset" id="tab2" aria-controls="rauchbier" <?php if (@$_GET['form-type'] == "manager") {
-                                                                                                        echo "checked";
-                                                                                                    } ?>>
-                            <label for="tab2">Manager</label>
-                            <!-- Tab 3 -->
-                            <input type="radio" name="tabset" id="tab3" aria-controls="dunkles" <?php if (@$_GET['form-type'] == "reviewer") {
-                                                                                                    echo "checked";
-                                                                                                } ?>>
-                            <label for="tab3">Reviewer</label>
+        <section class="section dashboard">
+            <div class="row">
 
-                            <div class="tab-panels">
-                                <section id="marzen" class="tab-panel">
-                                    <form action="" method="GET">
-                                        <div class="form-group" style="display: inline-block;">
-                                            <input type="hidden" name="form-type" value="appraisee">
-                                            <div class="col2" style="display: inline-block;">
-                                                <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
-                                                    <?php if ($type == null) { ?>
-                                                        <option value="" hidden selected>Select Appraisal type</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $type ?></option>
-                                                    <?php }
-                                                    ?>
-                                                    <!--<option>Quarterly 2/2021</option>-->
-                                                    <option>Quarterly</option>
-                                                    <option>Annual</option>
-                                                    <option>Project end</option>
-                                                </select>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                                                <select name="get_year" id="get_year" class="form-control" style="width:max-content; display:inline-block" placeholder="Year" required>
-                                                    <?php if ($year == null) { ?>
-                                                        <option value="" hidden selected>Select Year</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $year ?></option>
-                                                    <?php }
-                                                    ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col2 left" style="display: inline-block;">
-                                            <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                                        </div>
-                                    </form>
-                                    <script>
-                                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                            var currentYear = new Date().getFullYear() - 1;
-                                        <?php } else { ?>
-                                            var currentYear = new Date().getFullYear();
-                                        <?php } ?>
+                        <div class="card-body">
+                            <br>
 
-                                        for (var i = 0; i < 5; i++) {
-                                            var next = currentYear + 1;
-                                            var year = currentYear + '-' + next;
-                                            //next.toString().slice(-2) 
-                                            $('#get_year').append(new Option(year, year));
-                                            currentYear--;
-                                        }
-                                    </script>
-                                    <?php if (sizeof($resultArr) > 0) { ?>
+                            <div class="row">
+                                <?php
+                                if ($role == 'Admin') { ?>
+                                    <div class="col" style="display: inline-block; width:100%; text-align:right">
+                                        <span class="noticea"><a href="process.php" target="_blank" title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" target="_blank" title="Appraisal Workflow">Appraisal Workflow</a></span>
+                                    </div>
+                                <?php } ?>
+                                
 
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">Goal sheet ID</th>
-                                                    <th scope="col">Appraisee</th>
-                                                    <th scope="col">Manager</th>
-                                                    <th scope="col">Reviewer</th>
-                                                    <th scope="col">Appraisal details</th>
-                                                    <th scope="col">Status</th>
-                                                    <th scope="col">IPF</th>
-                                                    <th scope="col">Goal Sheet</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
+                                    <div class="tabset">
+                                        <!-- Tab 1 -->
+                                        <input type="radio" name="tabset" id="tab1" aria-controls="marzen" <?php echo (@$_GET['form-type'] == "") ? "checked" : "checked"; ?>>
+                                        <label for="tab1">Appraisee</label>
+                                        <!-- Tab 2 -->
+                                        <input type="radio" name="tabset" id="tab2" aria-controls="rauchbier" <?php if (@$_GET['form-type'] == "manager") {
+                                                                                                                    echo "checked";
+                                                                                                                } ?>>
+                                        <label for="tab2">Manager</label>
+                                        <!-- Tab 3 -->
+                                        <input type="radio" name="tabset" id="tab3" aria-controls="dunkles" <?php if (@$_GET['form-type'] == "reviewer") {
+                                                                                                                echo "checked";
+                                                                                                            } ?>>
+                                        <label for="tab3">Reviewer</label>
+
+                                        <div class="tab-panels">
+                                            <section id="marzen" class="tab-panel">
+                                                <form action="" method="GET">
+                                                    <div class="form-group" style="display: inline-block;">
+                                                        <input type="hidden" name="form-type" value="appraisee">
+                                                        <div class="col2" style="display: inline-block;">
+                                                            <select name="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
+                                                                <?php if ($type == null) { ?>
+                                                                    <option value="" hidden selected>Select Appraisal type</option>
+                                                                <?php
+                                                                } else { ?>
+                                                                    <option hidden selected><?php echo $type ?></option>
+                                                                <?php }
+                                                                ?>
+                                                                <!--<option>Quarterly 2/2021</option>-->
+                                                                <option>Quarterly</option>
+                                                                <option>Annual</option>
+                                                                <option>Project end</option>
+                                                            </select>
+
+                                                            <select name="get_year" id="get_year" class="form-select" style="width:max-content; display:inline-block" placeholder="Year" required>
+                                                                <?php if ($year == null) { ?>
+                                                                    <option value="" hidden selected>Select Year</option>
+                                                                <?php
+                                                                } else { ?>
+                                                                    <option hidden selected><?php echo $year ?></option>
+                                                                <?php }
+                                                                ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col2 left" style="display: inline-block;">
+                                                        <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
+                                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                                    </div>
+                                                </form>
+                                                <script>
+                                                    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                                        var currentYear = new Date().getFullYear() - 1;
+                                                    <?php } else { ?>
+                                                        var currentYear = new Date().getFullYear();
+                                                    <?php } ?>
+
+                                                    for (var i = 0; i < 5; i++) {
+                                                        var next = currentYear + 1;
+                                                        var year = currentYear + '-' + next;
+                                                        //next.toString().slice(-2) 
+                                                        $('#get_year').append(new Option(year, year));
+                                                        currentYear--;
+                                                    }
+                                                </script>
+                                                <?php if (sizeof($resultArr) > 0) { ?>
+                                                    <div class="table-responsive">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th scope="col">Goal sheet ID</th>
+                                                                    <th scope="col">Appraisee</th>
+                                                                    <th scope="col">Manager</th>
+                                                                    <th scope="col">Reviewer</th>
+                                                                    <th scope="col">Appraisal details</th>
+                                                                    <th scope="col">Status</th>
+                                                                    <th scope="col">IPF</th>
+                                                                    <th scope="col">Goal Sheet</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                foreach ($resultArr as $array) {
+                                                                ?>
+                                                                    <tr>
+
+                                                                        <td><?php echo $array['goalsheetid'] ?></td>
+                                                                        <?php echo displayTDs($array); ?>
+                                                                        <td>
+                                                                            <?php echo getAssessmentStatus($array); ?>
+                                                                        </td>
+                                                                        <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
+                                                                        <td>
+                                                                            <span class="noticea">
+                                                                                <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                <?php } ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
                                                 <?php
-                                                foreach ($resultArr as $array) {
+                                                } else if ($type == null && $year == null) {
                                                 ?>
-                                                    <tr>
-
-                                                        <td><?php echo $array['goalsheetid'] ?></td>
-                                                        <?php echo displayTDs($array); ?>
-                                                        <td>
-                                                            <?php echo getAssessmentStatus($array); ?>
-                                                        </td>
-                                                        <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
-                                                        <td>
-                                                            <span class="noticea">
-                                                                <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                <?php } ?>
-                                            </tbody>
-                                        </table>
-
-                                    <?php
-                                    } else if ($type == null && $year == null) {
-                                    ?>
-                                        <p>Please enter the appraisal type and year.</p>
-                                    <?php
-                                    } else {
-                                    ?>
-                                        <p>No results found for the filter value entered. Please adjust your search criteria and try again.</p>
-                                    <?php } ?>
-                                </section>
-                                <section id="rauchbier" class="tab-panel">
-                                    <form action="" method="GET">
-                                        <div class="form-group" style="display: inline-block;">
-                                            <input type="hidden" name="form-type" value="manager">
-                                            <div class="col2" style="display: inline-block;">
-
-                                                <select name="get_yearm" id="get_yearm" class="form-control" style="width:max-content; display:inline-block" placeholder="Year" required>
-                                                    <?php if ($yearm == null) { ?>
-                                                        <option value="" hidden selected>Select Year</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $yearm ?></option>
-                                                    <?php }
-                                                    ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col2 left" style="display: inline-block;">
-                                            <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                                        </div>
-                                    </form>
-                                    <script>
-                                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                            var currentYearm = new Date().getFullYear() - 1;
-                                        <?php } else { ?>
-                                            var currentYearm = new Date().getFullYear();
-                                        <?php } ?>
-
-                                        for (var i = 0; i < 5; i++) {
-                                            var nextm = currentYearm + 1;
-                                            var yearm = currentYearm + '-' + nextm;
-                                            //next.toString().slice(-2) 
-                                            $('#get_yearm').append(new Option(yearm, yearm));
-                                            currentYearm--;
-                                        }
-                                    </script>
-                                    <?php if (sizeof($resultArrm) > 0) { ?>
-
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">Goal sheet ID</th>
-                                                    <th scope="col">Appraisee</th>
-                                                    <th scope="col">Manager</th>
-                                                    <th scope="col">Reviewer</th>
-                                                    <th scope="col">Appraisal details</th>
-                                                    <th scope="col">Status</th>
-                                                    <th scope="col">IPF</th>
-                                                    <th scope="col">Goal Sheet</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
+                                                    <p>Please enter the appraisal type and year.</p>
                                                 <?php
-                                                foreach ($resultArrm as $array) {
+                                                } else {
                                                 ?>
-
-                                                    <tr>
-                                                        <td><?php echo $array['goalsheetid'] ?></td>
-                                                        <?php echo displayTDs($array); ?>
-                                                        <td>
-                                                            <?php echo getAssessmentStatus($array); ?>
-                                                        </td>
-                                                        <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
-                                                        <td>
-                                                            <span class="noticea">
-                                                                <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
-                                                            </span>
-                                                        </td>
-                                                    </tr>
+                                                    <p>No results found for the filter value entered. Please adjust your search criteria and try again.</p>
                                                 <?php } ?>
-                                            </tbody>
-                                        </table>
+                                            </section>
+                                            <section id="rauchbier" class="tab-panel">
+                                                <form action="" method="GET">
+                                                    <div class="form-group" style="display: inline-block;">
+                                                        <input type="hidden" name="form-type" value="manager">
+                                                        <div class="col2" style="display: inline-block;">
 
-                                    <?php
-                                    } else if ($yearm == null) {
-                                    ?>
-                                        <p>Please enter the appraisal year.</p>
-                                    <?php
-                                    } else {
-                                    ?>
-                                        <p>No results found for the filter value entered. Please adjust your search criteria and try again.</p>
-                                    <?php } ?>
-                                </section>
+                                                            <select name="get_yearm" id="get_yearm" class="form-select" style="width:max-content; display:inline-block" placeholder="Year" required>
+                                                                <?php if ($yearm == null) { ?>
+                                                                    <option value="" hidden selected>Select Year</option>
+                                                                <?php
+                                                                } else { ?>
+                                                                    <option hidden selected><?php echo $yearm ?></option>
+                                                                <?php }
+                                                                ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col2 left" style="display: inline-block;">
+                                                        <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
+                                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                                    </div>
+                                                </form>
+                                                <script>
+                                                    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                                        var currentYearm = new Date().getFullYear() - 1;
+                                                    <?php } else { ?>
+                                                        var currentYearm = new Date().getFullYear();
+                                                    <?php } ?>
 
-                                <!-- REVIEWER -->
+                                                    for (var i = 0; i < 5; i++) {
+                                                        var nextm = currentYearm + 1;
+                                                        var yearm = currentYearm + '-' + nextm;
+                                                        //next.toString().slice(-2) 
+                                                        $('#get_yearm').append(new Option(yearm, yearm));
+                                                        currentYearm--;
+                                                    }
+                                                </script>
+                                                <?php if (sizeof($resultArrm) > 0) { ?>
+                                                    <div class="table-responsive">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th scope="col">Goal sheet ID</th>
+                                                                    <th scope="col">Appraisee</th>
+                                                                    <th scope="col">Manager</th>
+                                                                    <th scope="col">Reviewer</th>
+                                                                    <th scope="col">Appraisal details</th>
+                                                                    <th scope="col">Status</th>
+                                                                    <th scope="col">IPF</th>
+                                                                    <th scope="col">Goal Sheet</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                foreach ($resultArrm as $array) {
+                                                                ?>
 
-                                <section id="dunkles" class="tab-panel">
-                                    <form action="" method="GET">
-                                        <div class="form-group" style="display: inline-block;">
-                                            <input type="hidden" name="form-type" value="reviewer">
-                                            <div class="col2" style="display: inline-block;">
-
-                                                <select name="get_yearr" id="get_yearr" class="form-control" style="width:max-content; display:inline-block" placeholder="Year" required>
-                                                    <?php if ($yearr == null) { ?>
-                                                        <option value="" hidden selected>Select Year</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $yearr ?></option>
-                                                    <?php }
-                                                    ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col2 left" style="display: inline-block;">
-                                            <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                                        </div>
-                                    </form>
-                                    <script>
-                                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                                            var currentYearr = new Date().getFullYear() - 1;
-                                        <?php } else { ?>
-                                            var currentYearr = new Date().getFullYear();
-                                        <?php } ?>
-
-                                        for (var i = 0; i < 5; i++) {
-                                            var nextr = currentYearr + 1;
-                                            var yearr = currentYearr + '-' + nextr;
-                                            //next.toString().slice(-2) 
-                                            $('#get_yearr').append(new Option(yearr, yearr));
-                                            currentYearr--;
-                                        }
-                                    </script>
-                                    <?php if (sizeof($resultArrr) > 0) { ?>
-
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">Goal sheet ID</th>
-                                                    <th scope="col">Appraisee</th>
-                                                    <th scope="col">Manager</th>
-                                                    <th scope="col">Reviewer</th>
-                                                    <th scope="col">Appraisal details</th>
-                                                    <th scope="col">Status</th>
-                                                    <th scope="col">IPF</th>
-                                                    <th scope="col">Goal Sheet</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
+                                                                    <tr>
+                                                                        <td><?php echo $array['goalsheetid'] ?></td>
+                                                                        <?php echo displayTDs($array); ?>
+                                                                        <td>
+                                                                            <?php echo getAssessmentStatus($array); ?>
+                                                                        </td>
+                                                                        <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
+                                                                        <td>
+                                                                            <span class="noticea">
+                                                                                <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                <?php } ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 <?php
-                                                foreach ($resultArrr as $array) {
+                                                } else if ($yearm == null) {
                                                 ?>
-                                                    <tr>
-                                                        <td><?php echo $array['goalsheetid'] ?></td>
-                                                        <?php echo displayTDs($array); ?>
-                                                        <td>
-                                                            <?php echo getAssessmentStatus($array); ?>
-                                                        </td>
-                                                        <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
-                                                        <td>
-                                                            <span class="noticea">
-                                                                <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
-                                                            </span>
-                                                        </td>
-
-                                                    </tr>
+                                                    <p>Please enter the appraisal year.</p>
+                                                <?php
+                                                } else {
+                                                ?>
+                                                    <p>No results found for the filter value entered. Please adjust your search criteria and try again.</p>
                                                 <?php } ?>
-                                            </tbody>
-                                        </table>
+                                            </section>
 
-                                    <?php
-                                    } else if ($yearr == null) {
-                                    ?>
-                                        <p>Please enter the appraisal year.</p>
-                                    <?php
-                                    } else {
-                                    ?>
-                                        <p>No results found for the filter value entered. Please adjust your search criteria and try again.</p>
+                                            <!-- REVIEWER -->
+
+                                            <section id="dunkles" class="tab-panel">
+                                                <form action="" method="GET">
+                                                    <div class="form-group" style="display: inline-block;">
+                                                        <input type="hidden" name="form-type" value="reviewer">
+                                                        <div class="col2" style="display: inline-block;">
+
+                                                            <select name="get_yearr" id="get_yearr" class="form-select" style="width:max-content; display:inline-block" placeholder="Year" required>
+                                                                <?php if ($yearr == null) { ?>
+                                                                    <option value="" hidden selected>Select Year</option>
+                                                                <?php
+                                                                } else { ?>
+                                                                    <option hidden selected><?php echo $yearr ?></option>
+                                                                <?php }
+                                                                ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col2 left" style="display: inline-block;">
+                                                        <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
+                                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                                    </div>
+                                                </form>
+                                                <script>
+                                                    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                                        var currentYearr = new Date().getFullYear() - 1;
+                                                    <?php } else { ?>
+                                                        var currentYearr = new Date().getFullYear();
+                                                    <?php } ?>
+
+                                                    for (var i = 0; i < 5; i++) {
+                                                        var nextr = currentYearr + 1;
+                                                        var yearr = currentYearr + '-' + nextr;
+                                                        //next.toString().slice(-2) 
+                                                        $('#get_yearr').append(new Option(yearr, yearr));
+                                                        currentYearr--;
+                                                    }
+                                                </script>
+                                                <?php if (sizeof($resultArrr) > 0) { ?>
+                                                    <div class="table-responsive">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th scope="col">Goal sheet ID</th>
+                                                                    <th scope="col">Appraisee</th>
+                                                                    <th scope="col">Manager</th>
+                                                                    <th scope="col">Reviewer</th>
+                                                                    <th scope="col">Appraisal details</th>
+                                                                    <th scope="col">Status</th>
+                                                                    <th scope="col">IPF</th>
+                                                                    <th scope="col">Goal Sheet</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                foreach ($resultArrr as $array) {
+                                                                ?>
+                                                                    <tr>
+                                                                        <td><?php echo $array['goalsheetid'] ?></td>
+                                                                        <?php echo displayTDs($array); ?>
+                                                                        <td>
+                                                                            <?php echo getAssessmentStatus($array); ?>
+                                                                        </td>
+                                                                        <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
+                                                                        <td>
+                                                                            <span class="noticea">
+                                                                                <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
+                                                                            </span>
+                                                                        </td>
+
+                                                                    </tr>
+                                                                <?php } ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                <?php
+                                                } else if ($yearr == null) {
+                                                ?>
+                                                    <p>Please enter the appraisal year.</p>
+                                                <?php
+                                                } else {
+                                                ?>
+                                                    <p>No results found for the filter value entered. Please adjust your search criteria and try again.</p>
+                                                <?php } ?>
+                                            </section>
+                                        </div>
+                                    </div>
+
+
+                                    <?php if (@$_GET['form-type'] == "appraisee" && @$array['reviewer_response_complete'] == "yes" && @$array['ipf_response'] == null) { ?>
+                                        <div id="conf">
+                                            <form name="ipfsubmission" action="#" method="POST">
+                                                <span id='close'>x</span>
+                                                <input type="hidden" name="form-type" type="text" value="ipfsubmission">
+                                                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                                                <input type="hidden" type="text" name="ipfid" id="ipfid" value="<?php echo $array['goalsheetid'] ?>" readonly required>
+                                                <input type="hidden" type="text" name="ipf_response_by" id="ipf_response_by" value="<?php echo $associatenumber ?>" readonly required>
+                                                <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with the outcome of your appraisal discussion and the Individual Performance Factor (IPF) issued against the Goal Sheet ID <strong><?php echo @$array['goalsheetid'] ?></strong>, you have the option to reject the IPF. If you choose to reject it, another round of discussion will be scheduled with the concerned team to address your concerns and ensure that the IPF accurately reflects your performance.<br>
+                                                    Please note that if we do not receive a response from you by <?php echo @date('d/m/y h:i:s a', strtotime('+3 days', strtotime($array['goalsheet_reviewed_on']))) ?>, the Goal Sheet will be auto-closed.</p>
+                                                <div style="margin-left:5%;">
+                                                    <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="bi bi-check2" style="font-size: 17px;"></i> Accept</button>
+                                                    <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="bi bi-x-lg" style="font-size: 17px;"></i> Reject</button>
+                                                </div><br>
+                                            </form>
+                                        </div>
                                     <?php } ?>
+
                                 </section>
-                            </div>
-                        </div>
-
-
-                        <?php if (@$_GET['form-type'] == "appraisee" && @$array['reviewer_response_complete'] == "yes" && @$array['ipf_response'] == null) { ?>
-                            <div id="footer">
-                                <form name="ipfsubmission" action="#" method="POST">
-                                    <span id='close'>x</span>
-                                    <input type="hidden" name="form-type" type="text" value="ipfsubmission">
-                                    <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
-                                    <input type="hidden" type="text" name="ipfid" id="ipfid" value="<?php echo $array['goalsheetid'] ?>" readonly required>
-                                    <input type="hidden" type="text" name="ipf_response_by" id="ipf_response_by" value="<?php echo $associatenumber ?>" readonly required>
-                                    <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with the outcome of your appraisal discussion and the Individual Performance Factor (IPF) issued against the Goal Sheet ID <strong><?php echo $array['goalsheetid'] ?></strong>, you have the option to reject the IPF. If you choose to reject it, another round of discussion will be scheduled with the concerned team to address your concerns and ensure that the IPF accurately reflects your performance.<br>
-                                        Please note that if we do not receive a response from you by <?php echo date('d/m/y h:i:s a', strtotime('+3 days', strtotime($array['goalsheet_reviewed_on']))) ?>, the Goal Sheet will be auto-closed.</p>
-                                    <div style="margin-left:5%;">
-                                        <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="fas fa-check" style="font-size: 17px;"></i> Accept</button>
-                                        <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="fas fa-times" style="font-size: 17px;"></i> Reject</button>
-                                    </div><br>
-                                </form>
-                            </div>
-                        <?php } ?>
-
-                    </section>
         </section>
 
         <script>
@@ -586,7 +610,7 @@ function getAssessmentStatus($array)
 
                 $('.close-button2').click(function(e) {
 
-                    $('#footer').delay(10).fadeOut(700);
+                    $('#conf').delay(10).fadeOut(700);
                     e.stopPropagation();
                 });
             });
@@ -604,26 +628,23 @@ function getAssessmentStatus($array)
             }, false);
         </script>
 
-        <!-- Back top -->
-        <script>
-            $(document).ready(function() {
-                $(window).scroll(function() {
-                    if ($(this).scrollTop() > 50) {
-                        $('#back-to-top').fadeIn();
-                    } else {
-                        $('#back-to-top').fadeOut();
-                    }
-                });
-                // scroll body to 0px on click
-                $('#back-to-top').click(function() {
-                    $('body,html').animate({
-                        scrollTop: 0
-                    }, 400);
-                    return false;
-                });
-            });
-        </script>
-        <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+        </div>
+
+        </div>
+        </div><!-- End Reports -->
+        </div>
+        </section>
+
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+
 </body>
 
 </html>

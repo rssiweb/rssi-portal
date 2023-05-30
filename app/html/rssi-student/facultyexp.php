@@ -101,7 +101,7 @@ $resultArr = pg_fetch_all($result);
                     </div>
                 </div>
 
-                <section class="box" style="padding: 2%;">
+                
 
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
@@ -121,7 +121,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                                <i class="bi bi-search"></i>&nbsp;Search</button>
                         </div>
                     </form>
                     <?php
@@ -148,7 +148,7 @@ $resultArr = pg_fetch_all($result);
             <td>' . $array['fullname'] ?>
 
                             <?php if ($array['on_leave'] != null) { ?>
-                                <?php echo '<br><span class="label label-danger">on leave</span>'
+                                <?php echo '<br><span class="badge label-danger">on leave</span>'
                                 ?>
                             <?php    } else {
                             } ?>

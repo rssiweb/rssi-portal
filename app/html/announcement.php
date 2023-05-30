@@ -70,13 +70,13 @@
     <section>
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
-                <section class="box" style="padding: 2%;">
+                
                     <?php echo '
                     <div class="container">
                     <p>Select Number Of Rows</p>
                     <div class="form-group">
                         <!--		Show Numbers Of Rows 		-->
-                        <select class="form-control" name="state" id="maxRows">
+                        <select class="form-select" name="state" id="maxRows">
                             <option value="5000">Show ALL Rows</option>
                             <option value="5">5</option>
                             <option value="10">10</option>
@@ -104,14 +104,14 @@
                             <tr>
                                 <td>' . $array['noticeid'] . '</td>
                                 <td>' . $array['date'] . '</td>
-                                <td>' . $array['subject'] . '&nbsp;<p class="label label-default">' . $array['category'] . '</p></td>
+                                <td>' . $array['subject'] . '&nbsp;<p class="badge label-default">' . $array['category'] . '</p></td>
                                 <td>' . $array['noticebody'] . '</td>' ?>
                         <?php if ($array['url'] == null) { ?>
                             <?php echo '<td></td>' ?>
 
                         <?php } else { ?>
 
-                            <?php echo '<td><a href="' . $array['url'] . '" target="_blank"><i class="fa-regular fa-file-pdf" style="font-size: 16px ;color:#777777" title="' . $array['noticeid'] . '" display:inline;></i></a></td>
+                            <?php echo '<td><a href="' . $array['url'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px ;color:#777777" title="' . $array['noticeid'] . '" display:inline;></i></a></td>
                             </tr>'; ?>
                         <?php } ?>
                     <?php }

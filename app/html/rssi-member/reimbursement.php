@@ -74,24 +74,23 @@ if (@$_POST['form-type'] == "reimbursementapply") {
     }
 }
 ?>
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Reimbursement</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-    <link rel="stylesheet" href="/css/style.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <!------ Include the above in your HEAD tag ---------->
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -100,6 +99,27 @@ if (@$_POST['form-type'] == "reimbursementapply") {
             analytics: 'G-S25QWTFJ2S',
             //facebookPixel: '',
             policyLink: 'https://www.rssi.in/disclaimer'
+        });
+    </script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!---change option value based on other dropdown PHP, Have created another file process-request.php to get the creason option---->
+    <script type="text/javascript" src="http://code.jquery.com/jquery.js"> </script>
+    <!--Here .typeofleave is a class and has been assigned to the input filed id=typeofleave-->
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("select.typeofleave").change(function() {
+                var selectedtypeofleave = $(".typeofleave option:selected").val();
+                $.ajax({
+                    type: "POST",
+                    url: "process-request.php",
+                    data: {
+                        typeofleave: selectedtypeofleave
+                    }
+                }).done(function(data) {
+                    $("#response").html(data);
+                });
+            });
         });
     </script>
     <style>
@@ -119,7 +139,6 @@ if (@$_POST['form-type'] == "reimbursementapply") {
         }
 
         #passwordHelpBlock {
-            font-size: x-small;
             display: block;
         }
 
@@ -137,143 +156,174 @@ if (@$_POST['form-type'] == "reimbursementapply") {
 </head>
 
 <body>
-    <?php $reimbursement_active = 'active'; ?>
+
     <?php include 'header.php'; ?>
 
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
-                <?php if ($role == 'Admin') { ?>
-                    <?php if (@$claimid != null && @$cmdtuples == 0) { ?>
+    <main id="main" class="main">
 
-                        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+        <div class="pagetitle">
+            <h1>Reimbursement</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Claims and Advances</a></li>
+                    <li class="breadcrumb-item active">Reimbursement</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <?php if ($role == 'Admin') { ?>
+                                <?php if (@$claimid != null && @$cmdtuples == 0) { ?>
+
+                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                                    </div>
+                                <?php
+                                } else if (@$cmdtuples == 1) { ?>
+
+                                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                        <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Claim no <?php echo @$claimid ?> has been submitted.</span>
+                                    </div>
+                                    <script>
+                                        if (window.history.replaceState) {
+                                            window.history.replaceState(null, null, window.location.href);
+                                        }
+                                    </script>
+                                <?php } ?>
+                            <?php } ?>
+                            <div class=col style="text-align: right;">
+                                <a href="reimbursementstatus.php" target="_self" class="btn btn-danger btn-sm" role="button">Track Your Claim</a>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Submit claim</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <form autocomplete="off" name="reimbursement" id="reimbursement" action="reimbursement.php" method="POST" enctype="multipart/form-data">
+                                                    <div class="form-group" style="display: inline-block;">
+
+                                                        <input type="hidden" name="form-type" value="reimbursementapply">
+
+                                                        <span class="input-help">
+                                                            <select name="claimhead" id="claimhead" class="form-select" required>
+                                                                <option disabled selected hidden value="">Select</option>
+                                                                <option value="Business Meeting Expenses">Business Meeting Expenses</option>
+                                                                <option value="Client Entertainment">Client Entertainment</option>
+                                                                <option value="Communication Expenses">Communication Expenses</option>
+                                                                <option value="Conference and Training Courses">Conference and Training Courses</option>
+                                                                <option value="IT Peripherals">IT Peripherals</option>
+                                                                <option value="Local Conveyance">Local Conveyance</option>
+                                                                <option value="Marketing Expenses">Marketing Expenses</option>
+                                                                <option value="Office Expense">Office Expense</option>
+                                                                <option value="Professional Membership">Professional Membership</option>
+                                                                <option value="Shift Working / Extended Hours">Shift Working / Extended Hours</option>
+                                                                <option value="Staff Welfare">Staff Welfare</option>
+                                                                <option value="Student Welfare">Student Welfare</option>
+                                                                <option value="Visa & Passport Expenses">Visa & Passport Expenses</option>
+
+                                                            </select>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Claim head<span style="color:red">*</span></small>
+                                                        </span>
+
+                                                        <span class="input-help">
+                                                            <textarea class="form-control" name="claimheaddetails" id="claimheaddetails" placeholder="Claim head details" required></textarea>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Claim head details<span style="color:red">*</span><br>(Please mention the purpose of the expenditure.)</small>
+                                                        </span>
+
+                                                        <span class="input-help">
+                                                            <input type="text" class="form-control" name="billno" id="billno" placeholder="Bill no" required>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Bill no<span style="color:red">*</span><br>(In case of multiple values ​​write it with comma (,).)</small>
+                                                        </span>
+
+                                                        <span class="input-help">
+                                                            <select name="currency" id="currency" class="form-select" required>
+                                                                <option disabled selected hidden value="">Select</option>
+                                                                <option value="INR" selected>INR</option>
+                                                            </select>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Currency<span style="color:red">*</span></small>
+                                                        </span>
+
+                                                        <span class="input-help">
+                                                            <input type="number" class="form-control" name="amount" id="amount" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Amount<span style="color:red">*</span></small>
+                                                        </span>
+
+                                                        <span class="input-help">
+                                                            <input type="file" name="billdoc" class="form-control" required />
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Documents<span style="color:red">*</span></small>
+                                                        </span>
+
+                                                        <div id="filter-checksh">
+                                                            <input type="checkbox" name="ack" id="ack" value="1" required />
+                                                            <label for="ack" style="font-weight: 400;">I, hereby authorize Insurer/TPA to audit/investigate my claims also authorize to share the claim details with Government authorities/IRDA for audit requirements. I also agree and certify that all of the information pertaining to this claim is true and correct if it is found to be false and/or if it is proved that claim documents are manipulated then, I understand and agree that RSSI will initiate appropriate disciplinary proceedings which may also lead to termination of my employment with RSSI.</label>
+                                                        </div>
+                                                        </span>
+                                                        <br>
+                                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Submit</button>
+
+                                                    </div>
+
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Bank Account Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="line-height: 2;">
+                                                <?php if ($resultArr != null) { ?>
+                                                    <?php foreach ($resultArr as $array) { ?>
+
+                                                        <?php echo $array['bankname'] ?><br>
+                                                        Account Number:&nbsp;<b><?php echo $array['accountnumber'] ?></b><br>
+                                                        IFSC Code:&nbsp;<?php echo $array['ifsccode'] ?><br>
+                                                        PAN:&nbsp;<?php echo $array['panno'] ?>
+                                                <?php }
+                                                } ?>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    <?php
-                    } else if (@$cmdtuples == 1) { ?>
-
-                        <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Claim no <?php echo @$claimid ?> has been submitted.</span>
-                        </div>
-                        <script>
-                            if (window.history.replaceState) {
-                                window.history.replaceState(null, null, window.location.href);
-                            }
-                        </script>
-                    <?php } ?>
-                <?php } ?>
-                <div class=col style="text-align: right;">
-                    <a href="reimbursementstatus.php" target="_self" class="btn btn-danger btn-sm" role="button">Track Your Claim</a>
-                </div>
-
-                <section class="box" style="padding: 2%;">
-                    <table class="table" style="font-size:13px">
-                        <thead>
-                            <tr>
-                                <th scope="col">Submit claim</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <form autocomplete="off" name="reimbursement" id="reimbursement" action="reimbursement.php" method="POST" enctype="multipart/form-data">
-                                        <div class="form-group" style="display: inline-block;">
-
-                                            <input type="hidden" name="form-type" value="reimbursementapply">
-
-                                            <span class="input-help">
-                                                <select name="claimhead" id="claimhead" class="form-control" required>
-                                                    <option disabled selected hidden value="">Select</option>
-                                                    <option value="Business Meeting Expenses">Business Meeting Expenses</option>
-                                                    <option value="Client Entertainment">Client Entertainment</option>
-                                                    <option value="Communication Expenses">Communication Expenses</option>
-                                                    <option value="Conference and Training Courses">Conference and Training Courses</option>
-                                                    <option value="IT Peripherals">IT Peripherals</option>
-                                                    <option value="Local Conveyance">Local Conveyance</option>
-                                                    <option value="Marketing Expenses">Marketing Expenses</option>
-                                                    <option value="Office Expense">Office Expense</option>
-                                                    <option value="Professional Membership">Professional Membership</option>
-                                                    <option value="Shift Working / Extended Hours">Shift Working / Extended Hours</option>
-                                                    <option value="Staff Welfare">Staff Welfare</option>
-                                                    <option value="Student Welfare">Student Welfare</option>
-                                                    <option value="Visa & Passport Expenses">Visa & Passport Expenses</option>
-
-                                                </select>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Claim head<span style="color:red">*</span></small>
-                                            </span>
-
-                                            <span class="input-help">
-                                                <textarea class="form-control" name="claimheaddetails" id="claimheaddetails" placeholder="Claim head details" required></textarea>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Claim head details<span style="color:red">*</span><br>(Please mention the purpose of the expenditure.)</small>
-                                            </span>
-
-                                            <span class="input-help">
-                                                <input type="text" class="form-control" name="billno" id="billno" placeholder="Bill no" required>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Bill no<span style="color:red">*</span><br>(In case of multiple values ​​write it with comma (,).)</small>
-                                            </span>
-
-                                            <span class="input-help">
-                                                <select name="currency" id="currency" class="form-control" required>
-                                                    <option disabled selected hidden value="">Select</option>
-                                                    <option value="INR" selected>INR</option>
-                                                </select>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Currency<span style="color:red">*</span></small>
-                                            </span>
-
-                                            <span class="input-help">
-                                                <input type="number" class="form-control" name="amount" id="amount" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Amount<span style="color:red">*</span></small>
-                                            </span>
-
-                                            <span class="input-help">
-                                                <input type="file" name="billdoc" class="form-control" required />
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Documents<span style="color:red">*</span></small>
-                                            </span>
-
-                                            <div id="filter-checksh">
-                                                <input type="checkbox" name="ack" id="ack" value="1" required />
-                                                <label for="ack" style="font-weight: 400;">I, hereby authorize Insurer/TPA to audit/investigate my claims also authorize to share the claim details with Government authorities/IRDA for audit requirements. I also agree and certify that all of the information pertaining to this claim is true and correct if it is found to be false and/or if it is proved that claim documents are manipulated then, I understand and agree that RSSI will initiate appropriate disciplinary proceedings which may also lead to termination of my employment with RSSI.</label>
-                                            </div>
-                                            </span>
-                                            <br>
-                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Submit</button>
-
-                                        </div>
-
-                                    </form>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Bank Account Details</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="line-height: 2;">
-                                    <?php if ($resultArr != null) { ?>
-                                        <?php foreach ($resultArr as $array) { ?>
-
-                                            <?php echo $array['bankname'] ?><br>
-                                            Account Number:&nbsp;<b><?php echo $array['accountnumber'] ?></b><br>
-                                            IFSC Code:&nbsp;<?php echo $array['ifsccode'] ?><br>
-                                            PAN:&nbsp;<?php echo $array['panno'] ?>
-                                    <?php }
-                                    } ?>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
+                    </div>
+                </div><!-- End Reports -->
             </div>
         </section>
-    </section>
+
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+
 </body>
 
 </html>

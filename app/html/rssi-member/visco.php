@@ -17,7 +17,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 
 
-if ($filterstatus != 'Active' || $role=='Member') {
+if ($filterstatus != 'Active' || $role == 'Member') {
 
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
@@ -32,21 +32,26 @@ if ($filterstatus != 'Active' || $role=='Member') {
 <html lang="en">
 
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Visco</title>
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<link rel="stylesheet" href="/css/style.css" />
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>VISCO</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+
+
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <!------ Include the above in your HEAD tag ---------->
 
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
@@ -56,11 +61,7 @@ if ($filterstatus != 'Active' || $role=='Member') {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-
 </head>
-
-
-
 
 <style>
     body {
@@ -131,15 +132,6 @@ if ($filterstatus != 'Active' || $role=='Member') {
         background-color: unset;
     }
 
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        font-family: Roboto;
-    }
-
     .profile-info .profile-details .profile-title {
         color: rgba(174, 178, 183, 1.0);
         font-size: 13px !important;
@@ -172,204 +164,198 @@ if ($filterstatus != 'Active' || $role=='Member') {
 
     <?php include 'header.php'; ?>
 
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
+    <main id="main" class="main">
 
-            <div class="col-md-12">
-                <section class="box" style="padding: 2%;">
+        <div class="pagetitle">
+            <h1>VISCO</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
+                    <li class="breadcrumb-item active">VISCO</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                    <div class="container">
-                        <div class="row" style="background-color: rgb(255, 245,
-                194);height: 110%; padding-top: 0; padding-bottom:
-                1.5%;padding-left: 1.5%">
+        <section class="section dashboard">
+            <div class="row">
 
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                            <div class="col2">
-                                <label for="name">Category<span style="color: #F2545F"></span>&nbsp;</label>
-                                <select name="name" id="name" class="notranslate">
-                                    <option value="--" selected>ALL</option>
-                                    <option>LG3</option>
-                                    <option>LG4S1</option>
-                                    <option>LG4</option>
-                                    <option>LG4S2</option>
-                                    <option>WLG3</option>
-                                    <option>WLG4S1</option>
-                                </select>
-                            </div>
-                            <div class="col2">
-                                <label for="name1">Subject<span style="color: #F2545F"></span>&nbsp;</label>
-                                <select name="name1" id="name1" class="notranslate">
-                                    <option value="--" selected>ALL</option>
-                                    <option>Hindi</option>
-                                    <option>English</option>
-                                    <option>Bengali</option>
-                                    <option>Sanskrit</option>
-                                    <option>Physics</option>
-                                    <option>Chemistry</option>
-                                    <option>Mathematics</option>
-                                    <option>Biology</option>
-                                    <option>Science</option>
-                                    <option>Life science</option>
-                                    <option>Physical science</option>
-                                    <option>Social Science</option>
-                                    <option>Computer</option>
-                                    <option>GK</option>
-                                    <option>Accountancy</option>
-                                </select>
-                            </div>
-                            <div class="col2">
-                                <button type="button" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
-                                    search</button>
-                                <a href="https://docs.google.com/forms/d/e/1FAIpQLSehs8jikEjGGysmho6ceQl939Xfe_Vwdvqe5Os2RJpfmsxZ4w/viewform?usp=pp_url&entry.333758641=<?php echo $fullname ?>" target="_blank"><button type="button" class="exam_btn"><i class="fas fa-plus"></i>
-                                        add</button></a>
-                            </div>
+                        <div class="card-body">
+                            <br>
 
-
-                        </div>
-                    </div>
-
-
-                    <div class="container">
-                        <div class="row">
-                            <div class="col">
-
-                                <body>
-                                    <div class="container text-center my-4" style="overflow-x:
-                            auto;">
-                                        <!-- Table  -->
-                                        <table class="table bordered table-striped" id="testTable">
-                                            <!-- Table head -->
-                                            <thead style="background-color: whitesmoke;
-                                    font-style: oblique;">
-                                                <tr>
-                                                    <th><b>Details</b></th>
-                                                    <th width="50%"><b>Watch video</b></th>
-
-                                                </tr>
-                                            </thead>
-                                            <!-- Table head -->
-
-                                            <!-- Table body -->
-                                            <tbody id="demo">
-
-
-                                            </tbody>
-                                            <!-- Table body -->
-                                        </table>
-                                        <!-- Table  -->
-
+                            <div class="container">
+                                <div class="row bg-light" style="background-color: rgb(255, 245, 194); height: 110%; padding-top: 0; padding-bottom: 1.5%; padding-left: 1.5%">
+                                    <div class="col-2">
+                                        <label for="name" class="form-label">Category<span style="color: #F2545F"></span>&nbsp;</label>
+                                        <select name="name" id="name" class="form-select notranslate">
+                                            <option value="--" selected>ALL</option>
+                                            <option>LG3</option>
+                                            <option>LG4S1</option>
+                                            <option>LG4</option>
+                                            <option>LG4S2</option>
+                                            <option>WLG3</option>
+                                            <option>WLG4S1</option>
+                                        </select>
                                     </div>
+                                    <div class="col-2">
+                                        <label for="name1" class="form-label">Subject<span style="color: #F2545F"></span>&nbsp;</label>
+                                        <select name="name1" id="name1" class="form-select notranslate">
+                                            <option value="--" selected>ALL</option>
+                                            <option>Hindi</option>
+                                            <option>English</option>
+                                            <option>Bengali</option>
+                                            <option>Sanskrit</option>
+                                            <option>Physics</option>
+                                            <option>Chemistry</option>
+                                            <option>Mathematics</option>
+                                            <option>Biology</option>
+                                            <option>Science</option>
+                                            <option>Life science</option>
+                                            <option>Physical science</option>
+                                            <option>Social Science</option>
+                                            <option>Computer</option>
+                                            <option>GK</option>
+                                            <option>Accountancy</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-primary btn-sm me-2" onclick="loaddata()">
+                                            <i class="bi bi-search"></i> Search
+                                        </button>
+                                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSehs8jikEjGGysmho6ceQl939Xfe_Vwdvqe5Os2RJpfmsxZ4w/viewform?usp=pp_url&entry.333758641=<?php echo $fullname ?>" target="_blank">
+                                            <button type="button" class="btn btn-danger btn-sm">
+                                                <i class="bi bi-plus-lg"></i> Add
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="container text-center my-4" style="overflow-x:
+                            auto;">
+                                <!-- Table  -->
+                                <table class="table bordered table-striped" id="testTable">
+                                    <!-- Table head -->
+                                    <thead style="background-color: whitesmoke;
+                                    font-style: oblique;">
+                                        <tr>
+                                            <th><b>Details</b></th>
+                                            <th width="50%"><b>Watch video</b></th>
+
+                                        </tr>
+                                    </thead>
+                                    <!-- Table head -->
+
+                                    <!-- Table body -->
+                                    <tbody id="demo">
+
+
+                                    </tbody>
+                                    <!-- Table body -->
+                                </table>
+                                <!-- Table  -->
 
                             </div>
-                        </div>
-                    </div>
-
-                </section>
-            </div>
-        </section>
-    </section>
-    <!-- =========================
+                            <!-- =========================
      SCRIPTS   
 ============================== -->
-    <script type="text/javascript">
-        var loaddata = function() {
-            var category = document.getElementById('name').value
-            var subject = document.getElementById('name1').value
+                            <script type="text/javascript">
+                                var loaddata = function() {
+                                    var category = document.getElementById('name').value
+                                    var subject = document.getElementById('name1').value
 
-            $.getJSON("https://sheets.googleapis.com/v4/spreadsheets/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/values/videos?alt=json&key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o",
-                function(data) {
-                    document.getElementById('demo').innerHTML = ""
-                    var sheetData = data.values;
-                    var i;
-                    var records = []
-                    for (i = 0; i < sheetData.length; i++) {
-                        var Timestamp = sheetData[i][0];
-                        var Subject = sheetData[i][1];
-                        var Category = sheetData[i][2];
-                        var Fuploadvideo = sheetData[i][8];
-                        var Class = sheetData[i][6];
-                        var Uploadedby = sheetData[i][4];
-                        var Topicofthevideo = sheetData[i][5];
+                                    $.getJSON("https://sheets.googleapis.com/v4/spreadsheets/1wuNRtDoSYUDyaTWCfgBze8wn7k0VbDvF2qOOOug_Df8/values/videos?alt=json&key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o",
+                                        function(data) {
+                                            document.getElementById('demo').innerHTML = ""
+                                            var sheetData = data.values;
+                                            var i;
+                                            var records = []
+                                            for (i = 0; i < sheetData.length; i++) {
+                                                var Timestamp = sheetData[i][0];
+                                                var Subject = sheetData[i][1];
+                                                var Category = sheetData[i][2];
+                                                var Fuploadvideo = sheetData[i][8];
+                                                var Class = sheetData[i][6];
+                                                var Uploadedby = sheetData[i][4];
+                                                var Topicofthevideo = sheetData[i][5];
 
-                        if ((Category === category && Subject === subject) ||
-                            (category === '--' && Subject === subject) ||
-                            (Category === category && subject === '--') ||
-                            (category === '--' && subject === '--')) {
-                            // sort records
-                            records.push({
-                                Timestamp: Timestamp,
-                                Subject: Subject,
-                                Category: Category,
-                                Fuploadvideo: Fuploadvideo,
-                                Uploadedby: Uploadedby,
-                                Topicofthevideo: Topicofthevideo,
-                                Class: Class,
-                            })
-                        }
+                                                if ((Category === category && Subject === subject) ||
+                                                    (category === '--' && Subject === subject) ||
+                                                    (Category === category && subject === '--') ||
+                                                    (category === '--' && subject === '--')) {
+                                                    // sort records
+                                                    records.push({
+                                                        Timestamp: Timestamp,
+                                                        Subject: Subject,
+                                                        Category: Category,
+                                                        Fuploadvideo: Fuploadvideo,
+                                                        Uploadedby: Uploadedby,
+                                                        Topicofthevideo: Topicofthevideo,
+                                                        Class: Class,
+                                                    })
+                                                }
 
-                        // else {document.getElementById('demo').innerHTML= "no record2";}
-                    }
-                    if (records.length == 0) {
-                        document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
-                    } else {
-                        var order = ["LG3", "LG4S1", "LG4", "LG4S2", "WLG3", "WLG4S1"]
-                        // var order = ["1/CT01", "1/CT02", "QT1", "2/CT01", "2/CT02", "QT2", "3/CT01", "3/CT02", "QT3"]
-                        order.forEach(sub => {
-                            records.forEach(item => {
-                                if (sub === item.Category) {
-                                    document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject + '&nbsp;-&nbsp;' + item.Category + '&nbsp;/&nbsp;' + item.Class + '<br>' + item.Topicofthevideo + '<br><br>Uploaded by&nbsp;' + item.Uploadedby + '&nbsp;on&nbsp;' + item.Timestamp + '</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="' + item.Fuploadvideo + '/preview" allowfullscreen></iframe></div></td>' + '</tr>');
+                                                // else {document.getElementById('demo').innerHTML= "no record2";}
+                                            }
+                                            if (records.length == 0) {
+                                                document.getElementById('demo').innerHTML += ('<tr>' + '<td>' + '<p style="color:#F2545F">No record found.</p>' + '</td></tr>');
+                                            } else {
+                                                var order = ["LG3", "LG4S1", "LG4", "LG4S2", "WLG3", "WLG4S1"]
+                                                // var order = ["1/CT01", "1/CT02", "QT1", "2/CT01", "2/CT02", "QT2", "3/CT01", "3/CT02", "QT3"]
+                                                order.forEach(sub => {
+                                                    records.forEach(item => {
+                                                        if (sub === item.Category) {
+                                                            document.getElementById('demo').innerHTML += ('<tr>' + '<td style="line-height:2">' + item.Subject + '&nbsp;-&nbsp;' + item.Category + '&nbsp;/&nbsp;' + item.Class + '<br>' + item.Topicofthevideo + '<br><br>Uploaded by&nbsp;' + item.Uploadedby + '&nbsp;on&nbsp;' + item.Timestamp + '</td>' + '<td><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="' + item.Fuploadvideo + '/preview" allowfullscreen></iframe></div></td>' + '</tr>');
+                                                        }
+                                                    })
+                                                })
+
+                                            }
+                                        });
                                 }
-                            })
-                        })
+                            </script>
 
-                    }
-                });
-        }
-    </script>
+                            <script>
+                                // Initiate an Ajax request on button click
+                                $(document).on("click", "button", function() {
+                                    // Adding timestamp to set cache false
+                                    $.get("viso.php?v=" + $.now(), function(data) {
+                                        $("body").html(data);
+                                    });
+                                });
 
-    <script>
-        // Initiate an Ajax request on button click
-        $(document).on("click", "button", function() {
-            // Adding timestamp to set cache false
-            $.get("viso.php?v=" + $.now(), function(data) {
-                $("body").html(data);
-            });
-        });
+                                // Add remove loading class on body element depending on Ajax request status
+                                $(document).on({
+                                    ajaxStart: function() {
+                                        $("body").addClass("loading");
+                                    },
+                                    ajaxStop: function() {
+                                        $("body").removeClass("loading");
+                                    }
+                                });
+                            </script>
+                        </div>
 
-        // Add remove loading class on body element depending on Ajax request status
-        $(document).on({
-            ajaxStart: function() {
-                $("body").addClass("loading");
-            },
-            ajaxStop: function() {
-                $("body").removeClass("loading");
-            }
-        });
-    </script>
-    <!-- =========================
-     FOOTER   
-============================== -->
-    <!-- Back top -->
-    <script>
-        $(document).ready(function() {
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#back-to-top').fadeIn();
-                } else {
-                    $('#back-to-top').fadeOut();
-                }
-            });
-            // scroll body to 0px on click
-            $('#back-to-top').click(function() {
-                $('body,html').animate({
-                    scrollTop: 0
-                }, 400);
-                return false;
-            });
-        });
-    </script>
-    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+                    </div>
+                </div><!-- End Reports -->
+            </div>
+        </section>
+
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <div class="overlay"></div>
+
 </body>
 
 </html>

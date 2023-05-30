@@ -137,7 +137,7 @@ $resultArr = pg_fetch_all($result);
                             </div>
                             <div class="col2 left" style="display: inline-block;">
                                 <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLScLENQKgw2bEDuhZFRLDuxcmwuXIh-6H7zXm8NbCSv6x63fNw/viewform" target="_blank" class="btn btn-danger btn-sm" role="button"><i class="fa-solid fa-plus"></i>&nbsp;Ticket</a>
+                                    <i class="bi bi-search"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLScLENQKgw2bEDuhZFRLDuxcmwuXIh-6H7zXm8NbCSv6x63fNw/viewform" target="_blank" class="btn btn-danger btn-sm" role="button"><i class="bi bi-plus-lg"></i>&nbsp;Ticket</a>
                             </div>
                         </form>
                     <?php } ?>
@@ -170,7 +170,7 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['assetdetails'] . $array['agreementname'] ?>
 
                             <!-- <?php if ($array['category'] == 'Asset') { ?>
-                                <?php echo '<p class="label label-danger">asset</p>' ?>
+                                <?php echo '<p class="badge label-danger">asset</p>' ?>
                             <?php } else {
                                     } ?> -->
 

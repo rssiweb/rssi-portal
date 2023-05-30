@@ -68,21 +68,27 @@ $resultArr = pg_fetch_all($result);
 <!DOCTYPE html>
 <html lang="en">
 
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>iExplore-My Learning</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <!------ Include the above in your HEAD tag ---------->
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>iExplore</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    
+
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -93,14 +99,6 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <style>
-        @media (min-width:767px) {
-            .left {
-                margin-left: 2%;
-            }
-        }
-    </style>
-
 </head>
 
 <!-- =========================
@@ -109,47 +107,66 @@ $resultArr = pg_fetch_all($result);
 
 <body>
     <?php include 'header.php'; ?>
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
-                <div class="row">
-                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                    </div>
-                    <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        Home / <span class="noticea"><a href="iexplore.php" target="_self">WBT</a></span> / My Learning
-                    </div>
-                </div>
-                <section class="box" style="padding: 2%;">
-                    <form action="" method="GET">
-                        <div class="form-group" style="display: inline-block;">
-                            <div class="col2" style="display: inline-block;">
-                                <?php if ($role == 'Admin') { ?>
-                                    <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aid ?>">
-                                <?php } ?>
 
-                                <select name="wbtstatus" class="form-control" style="width:max-content; display:inline-block">
-                                    <?php if ($wbtstatus == null) { ?>
-                                        <option value="" disabled selected hidden>Status</option>
-                                    <?php
-                                    } else { ?>
-                                        <option hidden selected><?php echo $wbtstatus ?></option>
-                                    <?php }
-                                    ?>
-                                    <option>Completed</option>
-                                    <option>Incomplete</option>
-                                    <option>ALL</option>
-                                </select>
+    <main id="main" class="main">
 
-                                <input name="get_cid" class="form-control" style="width:max-content; display:inline-block" placeholder="Course id" value="<?php echo $cid ?>">
+        <div class="pagetitle">
+            <h1>My Learning</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
+                    <li class="breadcrumb-item"><a href="iexplore.php">iExplore</a></li>
+                    <li class="breadcrumb-item active">My Learning</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div style="text-align: right;">
+                                <div class="col" style="display: inline-block;">
+                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                        </div>
-                    </form>
-                    <?php echo '
+
+                            <form action="" method="GET">
+                                <div class="form-group" style="display: inline-block;">
+                                    <div class="col2" style="display: inline-block;">
+                                        <?php if ($role == 'Admin') { ?>
+                                            <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aid ?>">
+                                        <?php } ?>
+
+                                        <select name="wbtstatus" class="form-select" style="width:max-content; display:inline-block">
+                                            <?php if ($wbtstatus == null) { ?>
+                                                <option value="" disabled selected hidden>Status</option>
+                                            <?php
+                                            } else { ?>
+                                                <option hidden selected><?php echo $wbtstatus ?></option>
+                                            <?php }
+                                            ?>
+                                            <option>Completed</option>
+                                            <option>Incomplete</option>
+                                            <option>ALL</option>
+                                        </select>
+
+                                        <input name="get_cid" class="form-control" style="width:max-content; display:inline-block" placeholder="Course id" value="<?php echo $cid ?>">
+                                    </div>
+                                </div>
+                                <div class="col2 left" style="display: inline-block;">
+                                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                        <i class="bi bi-search"></i>&nbsp;Search</button>
+                                </div>
+                            </form>
+                            <?php echo '
+                            <div class="table-responsive">
                     <table class="table">
                         <thead>
                             <tr>
@@ -162,97 +179,87 @@ $resultArr = pg_fetch_all($result);
                             <th scope="col">Valid upto</th>
                             </tr>
                         </thead>' ?>
-                    <?php if ($resultArr != null) {
-                        echo '<tbody>';
-                        foreach ($resultArr as $array) {
-                            echo '
+                            <?php if ($resultArr != null) {
+                                echo '<tbody>';
+                                foreach ($resultArr as $array) {
+                                    echo '
                                 <tr><td>' . substr($array['wassociatenumber'], 0, 10) . '</td>
                                     <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                     <td>' . $array['courseid'] . '</td>
                                     <td>' . $array['coursename'] . '</td>
                                     <td>' . round((float)$array['f_score'] * 100) . '%' . '</td><td>' ?>
 
-                            <?php
-                            $validity = $array['validity'];
-                            $date = date_create($array['timestamp']);
-                            date_add($date, date_interval_create_from_date_string("$validity years"));
-                            date_format($date, "d/m/Y g:i a");
+                                    <?php
+                                    $validity = $array['validity'];
+                                    $date = date_create($array['timestamp']);
+                                    date_add($date, date_interval_create_from_date_string("$validity years"));
+                                    date_format($date, "d/m/Y g:i a");
 
-                            if (($array['passingmarks'] <= round((float)$array['f_score'] * 100))) { ?>
+                                    if (($array['passingmarks'] <= round((float)$array['f_score'] * 100))) { ?>
 
-                                <?php echo 'Completed' ?>
+                                        <?php echo 'Completed' ?>
 
-                            <?php } else { ?>
+                                    <?php } else { ?>
 
-                                <?php echo 'Incomplete' ?>
-                            <?php } ?>
+                                        <?php echo 'Incomplete' ?>
+                                    <?php } ?>
 
-                            <?php echo
-                            '</td><td>' ?>
-                            <?php if ($array['passingmarks'] <= round((float)$array['f_score'] * 100)) { ?>
-                                <?php
-                                // $validity = $array['validity'];
-                                // $date = date_create($array['timestamp']);
-                                // date_add($date, date_interval_create_from_date_string("$validity years"));
-                                echo date_format($date, "d/m/Y g:i a");
-                                ?>&nbsp;
+                                    <?php echo
+                                    '</td><td>' ?>
+                                    <?php if ($array['passingmarks'] <= round((float)$array['f_score'] * 100)) { ?>
+                                        <?php
+                                        // $validity = $array['validity'];
+                                        // $date = date_create($array['timestamp']);
+                                        // date_add($date, date_interval_create_from_date_string("$validity years"));
+                                        echo date_format($date, "d/m/Y g:i a");
+                                        ?>&nbsp;
 
 
 
-                                <?php if ((date_format($date, "Y-m-d") > date('Y-m-d', time()))) { ?>
+                                        <?php if ((date_format($date, "Y-m-d") > date('Y-m-d', time()))) { ?>
 
-                                    <?php echo '<p class="label label-success">Active</p>' ?>
+                                            <?php echo '<span class="badge bg-success">Active</span>' ?>
 
-                                <?php } else { ?>
+                                        <?php } else { ?>
 
-                                    <?php echo '<p class="label label-default">Expired</p>' ?>
+                                            <?php echo '<span class="badge bg-secondary">Expired</span>' ?>
 
-                                <?php
-                                } ?>
-                            <?php } ?>
-                        <?php echo '</td></tr>';
-                        }
-                    } else if ($role == 'Admin' && $cid == null && $aid == null) { ?>
-                        <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
-                    <?php } else if ($role != 'Admin' && $cid == null) { ?>
-                        <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
-                    <?php } else {
-                        echo '<tr>
+                                        <?php
+                                        } ?>
+                                    <?php } ?>
+                                <?php echo '</td></tr>';
+                                }
+                            } else if ($role == 'Admin' && $cid == null && $aid == null) { ?>
+                                <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
+                            <?php } else if ($role != 'Admin' && $cid == null) { ?>
+                                <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
+                            <?php } else {
+                                echo '<tr>
                         <td colspan="5">No record was found for the selected filter value.' ?>
-                    <?php echo '</td>
+                            <?php echo '</td>
                     </tr>';
-                    }
-                    echo '</tbody>
-                     </table>';
-                    ?>
-            </div>
+                            }
+                            echo '</tbody>
+                     </table>
+                     </div>';
+                            ?>
+                        </div>
+
+                    </div>
+                </div><!-- End Reports -->
             </div>
         </section>
-        </div>
-    </section>
-    </section>
 
+    </main><!-- End #main -->
 
-    <!-- Back top -->
-    <script>
-        $(document).ready(function() {
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#back-to-top').fadeIn();
-                } else {
-                    $('#back-to-top').fadeOut();
-                }
-            });
-            // scroll body to 0px on click
-            $('#back-to-top').click(function() {
-                $('body,html').animate({
-                    scrollTop: 0
-                }, 400);
-                return false;
-            });
-        });
-    </script>
-    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+
 </body>
 
 </html>

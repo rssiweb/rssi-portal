@@ -74,7 +74,7 @@ echo '
             <div class="col-md-12">
             <div style="font-family:Poppins; text-align:Center;font-size:20px;">Rina Shiksha Sahayak Foundation (RSSI)</div>
             <div style="font-family:Roboto; text-align:Center;font-size:20px; line-height:2">Associate Details</div>
-                <section class="box" style="padding: 2%;">
+                
 <table class="table">
 <thead>
     <tr>

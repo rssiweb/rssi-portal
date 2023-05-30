@@ -23,7 +23,6 @@ if ($role == 'Admin') {
     if ($id > 0 && $id != 'ALL') {
         $result = pg_query($con, "SELECT * FROM payslip WHERE associatenumber='$id' order by slno DESC");
         $totalamount = pg_query($con, "SELECT SUM(netpay) FROM payslip WHERE associatenumber='$id'");
-
     } else if ($id == 'ALL') {
         $result = pg_query($con, "SELECT * FROM payslip order by slno DESC");
         $totalamount = pg_query($con, "SELECT SUM(netpay) FROM payslip");
@@ -51,20 +50,19 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
 <html>
 
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Payslip</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-<link rel="stylesheet" href="/css/style.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <!------ Include the above in your HEAD tag ---------->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>My Document</title>
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -75,44 +73,56 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-
 </head>
 
 <body>
     <?php include 'header.php'; ?>
 
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
-                <div class="row">
-                    <!-- <div class="col" style="display: inline-block; width:99%; text-align:right">
-                        <p style="font-size:small"><span class="noticea" style="line-height: 2;"><a href="document.php">My Document</a></span> / Payslip</p>
-                    </div>
+    <main id="main" class="main">
 
-                    <div class="col" style="display: inline-block; width:99%; text-align:right">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                    </div> -->
-                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                        <br>Total paid amount:&nbsp;<p class="label label-success"><?php echo ($resultArrr) ?></p>
-                    </div>
-                </div><br>
-                <?php if ($role == 'Admin') { ?>
-                    <form action="" method="POST">
-                        <div class="form-group" style="display: inline-block;">
-                            <div class="col2" style="display: inline-block;">
-                                <?php if ($role == 'Admin') { ?>
-                                    <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
-                                <?php } ?>
+        <div class="pagetitle">
+            <h1>Pay Slip</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">My Services</a></li>
+                    <li class="breadcrumb-item"><a href="document.php">My Document</a></li>
+                    <li class="breadcrumb-item active">Pay Slip</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="col" style="display: inline-block;">
+                                Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                                <br>Total paid amount:&nbsp;<p class="badge bg-success"><?php echo ($resultArrr) ?></p>
                             </div>
-                        </div>
-                        <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                        </div>
-                    </form>
-                <?php } ?>
-                <?php echo '
+
+                            <?php if ($role == 'Admin') { ?>
+                                <form action="" method="POST">
+                                    <div class="form-group" style="display: inline-block; margin-top:1%">
+                                        <div class="col2" style="display: inline-block;">
+                                            <?php if ($role == 'Admin') { ?>
+                                                <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                    <div class="col2 left" style="display: inline-block;">
+                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                    </div>
+                                </form>
+                            <?php } ?>
+                            <?php echo '
+                <div class="table-responsive">
                        <table class="table">
                         <thead>
                             <tr>
@@ -125,35 +135,49 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
                                 <th scope="col">Payslip</th>
                             </tr>
                         </thead>' ?>
-                <?php if (sizeof($resultArr) > 0) { ?>
-                    <?php
-                    echo '<tbody>';
-                    foreach ($resultArr as $array) {
-                        echo '<tr>
+                            <?php if (sizeof($resultArr) > 0) { ?>
+                                <?php
+                                echo '<tbody>';
+                                foreach ($resultArr as $array) {
+                                    echo '<tr>
                                 <td>' . $array['payslipid'] . '</td>
                                 <td>' . $array['date'] . '</td>
                                 <td>' . $array['dateformat'] . '</td>
                                 <td>' . $array['dayspaid'] . '</td>
                                 <td>' . $array['netpay'] . '</td>
                                 <td>' . $array['transaction_id'] . '</td>
-                                <td><span class="noticea"><a href="' . $array['profile'] . '" target="_blank" title="' . $array['filename'] . '"><i class="far fa-file-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
+                                <td><span class="noticea"><a href="' . $array['profile'] . '" target="_blank" title="' . $array['filename'] . '"><i class="bi bi-file-earmark-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
                                 
                                 </tr>';
-                    } ?>
-                <?php
-                } else {
-                ?>
-                    <tr>
-                        <td colspan="5">No record found or you are not eligible to withdraw salary from the organization.</td>
-                    </tr>
-                <?php }
+                                } ?>
+                            <?php
+                            } else {
+                            ?>
+                                <tr>
+                                    <td colspan="5">No record found or you are not eligible to withdraw salary from the organization.</td>
+                                </tr>
+                            <?php }
 
-                echo '</tbody>
-                                    </table>';
-                ?>
+                            echo '</tbody>
+                                    </table>
+                                    </dv>';
+                            ?>
+                        </div>
+
+                    </div>
+                </div><!-- End Reports -->
             </div>
         </section>
-    </section>
+
+    </main><!-- End #main -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 </body>
 
 </html>

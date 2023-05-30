@@ -88,7 +88,7 @@ if (!$result) {
 <body>
     <div class="col-md-12">
 
-        <section class="box" style="padding: 2%;">
+        
 
             <form action="" method="GET" class="no-print">
                 <div class="form-group" style="display: inline-block;">
@@ -99,8 +99,8 @@ if (!$result) {
                 </div>
                 <div class="col2 left" style="display: inline-block;">
                     <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                        <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                    <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
+                        <i class="bi bi-search"></i>&nbsp;Search</button>
+                    <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;"><i class="bi bi-save"></i>&nbsp;Save</button>
                 </div><br><br>
             </form>
             <?php if ($resultArr != null) { ?>

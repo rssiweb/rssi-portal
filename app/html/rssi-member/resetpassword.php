@@ -114,27 +114,27 @@ if (isset($_POST['login'])) {
 
                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
+                        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
                     </div>
                 <?php }
                 if (@$cmdtuples == 1) { ?>
 
                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
+                        <span><i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
                     </div>
                 <?php }
                 if (@$login_failed_dialog) { ?>
                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
+                        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
                     </div>
 
                 <?php } ?>
                 <div class="col" style="display: inline-block; width:100%; text-align:right">
                     Last password updated on: <?php echo @date("d/m/Y g:i a", strtotime($password_updated_on)) ?>
                 </div>
-                <section class="box" style="padding: 2%;">
+                
                     <div class="col-md-4 col-md-offset-4">
                         <div class="login-panel panel panel-default" style="margin-top: unset;">
                             <div class="panel-heading">

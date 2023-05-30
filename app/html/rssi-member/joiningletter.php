@@ -72,8 +72,9 @@ if (!$result) {
     <?php } ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="/css/style.css">
-    <!-- Main css -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
         @media screen {
             .no-display {
@@ -112,10 +113,12 @@ if (!$result) {
             border-collapse: collapse;
             padding: 5px;
         }
+
+        body {
+            background-color: initial;
+        }
     </style>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -132,116 +135,114 @@ if (!$result) {
 
 <body>
     <div class="col-md-12">
+        <?php if ($role == 'Admin') { ?>
+            <form action="" method="GET" class="no-print">
+                <br>
+                <div class="form-group" style="display: inline-block;">
+                    <div class="col2" style="display: inline-block;">
 
-        <section class="box" style="padding: 2%;">
-
-            <?php if ($role == 'Admin') { ?>
-                <form action="" method="GET" class="no-print">
-                    <div class="form-group" style="display: inline-block;">
-                        <div class="col2" style="display: inline-block;">
-
-                            <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate Id" value="<?php echo $id ?>" required>
-                        </div>
+                        <input name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate Id" value="<?php echo $id ?>" required>
                     </div>
-
-                    <div class="col2 left" style="display: inline-block;">
-                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                            <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                        <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
-                    </div>
-                </form>
-            <?php } ?>
-
-            <?php if ($role != 'Admin') { ?>
-                <div class="col no-print" style="width:99%;margin-left:1.5%;text-align:right;">
-                    <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button><br><br>
                 </div>
-            <?php } ?>
 
-            <?php if ($resultArr != null) { ?>
+                <div class="col2 left" style="display: inline-block;">
+                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                        <i class="bi bi-search"></i>&nbsp;Search</button>
+                    <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;"><i class="bi bi-save"></i>&nbsp;Save</button>
+                </div>
+            </form>
+        <?php } ?>
 
-                <?php foreach ($resultArr as $array) { ?>
+        <?php if ($role != 'Admin') { ?>
+            <div class="col no-print" style="width:99%;margin-left:1.5%;text-align:right;">
+                <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;"><i class="bi bi-save"></i>&nbsp;Save</button><br><br>
+            </div>
+        <?php } ?>
 
-                    <table class="table" border="0">
-                        <thead>
-                            <tr>
-                                <td>
-                                    <div class="col" style="display: inline-block; width:65%;">
+        <?php if ($resultArr != null) { ?>
 
-                                        <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
-                                        <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
-                                    </div>
-                                    <div class="col" style="display: inline-block; width:32%; vertical-align: top; text-align:right;">
-                                        <!-- Scan QR code to check authenticity -->
-                                        <?php
+            <?php foreach ($resultArr as $array) { ?>
 
-                                        $a = 'https://login.rssi.in/rssi-member/verification.php?get_id=';
-                                        $b = $array['associatenumber'];
-                                        $c = $array['photo'];
+                <table class="table" border="0">
+                    <thead>
+                        <tr>
+                            <td>
+                                <div class="col" style="display: inline-block; width:65%;">
 
-                                        $url = $a . $b;
-                                        $url = urlencode($url); ?>
-                                        <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="75px" />
-                                        <!-- <img src=<?php echo $c ?> width=80px height=80px /> -->
-                                    </div>
-                                </td>
-                            </tr>
-                        </thead>
+                                    <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
+                                    <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
+                                </div>
+                                <div class="col" style="display: inline-block; width:32%; vertical-align: top; text-align:right;">
+                                    <!-- Scan QR code to check authenticity -->
+                                    <?php
+
+                                    $a = 'https://login.rssi.in/rssi-member/verification.php?get_id=';
+                                    $b = $array['associatenumber'];
+                                    $c = $array['photo'];
+
+                                    $url = $a . $b;
+                                    $url = urlencode($url); ?>
+                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="75px" />
+                                    <!-- <img src=<?php echo $c ?> width=80px height=80px /> -->
+                                </div>
+                            </td>
+                        </tr>
+                    </thead>
 
 
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <?php echo @date("d/m/Y", strtotime($date)) . '<br>RSSI/' . $array['associatenumber'] . '/' . $array['depb'] . '<br><br>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <?php echo @date("d/m/Y", strtotime($date)) . '<br>RSSI/' . $array['associatenumber'] . '/' . $array['depb'] . '<br><br>
 
                                         ' . $array['fullname'] . '<br>
                                         ' . $array['currentaddress'] . '<br><br>
 
                                         <b>Sub: Joining Letter</b><br><br>'
-                                    ?>
+                                ?>
 
-                                    Dear <?php echo strtok($array['fullname'], ' ')  ?>,<br><br>
+                                Dear <?php echo strtok($array['fullname'], ' ')  ?>,<br><br>
 
-                                    <p>We would like to take this opportunity to extend a very warm welcome to Rina Shiksha Sahayak Foundation (RSSI) family.</p>
-                                    <?php echo '<p>We are pleased to offer you the position of <b>' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ')</b> in the division of <b>' . $array['depb'] . '</b>. This appointment will be effective from <b>' . date('d/M/Y', strtotime($array['doj'])) . '</b>' ?>.</p>
-                                    <p>You are now set to experience learning through our coveted WBT Program. RSSI HR Team will reach out to you over email in the next few days to guide you further on the web-based mandatory training process and steps to be taken to prepare yourself for onboarding.</p>
-                                    <p>
-                                    <p><b><u>Reporting Date and Time</u></b></p>
-                                    <?php echo date('d/M/Y', strtotime($array['doj'])). '&nbsp;&nbsp;3:30 pm'?>
-                                    </p>
-                                    <p><b><u>Reporting Address</u></b></p>
-                                        Rina Shiksha Sahayak Foundation (RSSI)<br>
-                                        624V/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
-                                        Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
-                                    </p>
-                                    
-<br>
-                                    <p>Warm regards,</p>
-                                    <p><b>For Rina Shiksha Sahayak Foundation</b></p>
-                                    <img src="../img/<?php echo $associatenumber ?>.png" width="65px" style="margin-bottom:-5px"><br>
-                                    <p style="line-height: 2;"><?php echo $fullname ?><br>
+                                <p>We would like to take this opportunity to extend a very warm welcome to Rina Shiksha Sahayak Foundation (RSSI) family.</p>
+                                <?php echo '<p>We are pleased to offer you the position of <b>' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ')</b> in the division of <b>' . $array['depb'] . '</b>. This appointment will be effective from <b>' . date('d/M/Y', strtotime($array['doj'])) . '</b>' ?>.</p>
+                                <p>You are now set to experience learning through our coveted WBT Program. RSSI HR Team will reach out to you over email in the next few days to guide you further on the web-based mandatory training process and steps to be taken to prepare yourself for onboarding.</p>
+                                <p>
+                                <p><b><u>Reporting Date and Time</u></b></p>
+                                <?php echo date('d/M/Y', strtotime($array['doj'])) . '&nbsp;&nbsp;3:30 pm' ?>
+                                </p>
+                                <p><b><u>Reporting Address</u></b></p>
+                                Rina Shiksha Sahayak Foundation (RSSI)<br>
+                                624V/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
+                                Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
+                                </p>
 
-                                        <?php if (str_contains($position, "Talent")) { ?>
-                                            <?php echo 'Talent Acquisition & Academic Interface Program (AIP)' ?>
-                                        <?php } else { ?>
-                                            <?php echo $engagement ?>
-                                        <?php } ?>
+                                <br>
+                                <p>Warm regards,</p>
+                                <p><b>For Rina Shiksha Sahayak Foundation</b></p>
+                                <img src="../img/<?php echo $associatenumber ?>.png" width="65px" style="margin-bottom:-5px"><br>
+                                <p style="line-height: 2;"><?php echo $fullname ?><br>
 
-                                    </p>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td>
-                                    <p class=" report-footer">Private and Confidential</p>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                <?php }
-            } else { ?>
-                <p class="no-print">Please enter Associate ID.</p> <?php } ?>
+                                    <?php if (str_contains($position, "Talent")) { ?>
+                                        <?php echo 'Talent Acquisition & Academic Interface Program (AIP)' ?>
+                                    <?php } else { ?>
+                                        <?php echo $engagement ?>
+                                    <?php } ?>
+
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>
+                                <p class=" report-footer">Private and Confidential</p>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            <?php }
+        } else { ?>
+            <p class="no-print">Please enter Associate ID.</p> <?php } ?>
         </section>
     </div>
 </body>

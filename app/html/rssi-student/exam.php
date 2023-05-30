@@ -92,7 +92,7 @@ if ($feesflag == 'd') {
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
 
-                <section class="box" style="padding: 2%;">
+                
 
                     <table class="table">
                         <thead>

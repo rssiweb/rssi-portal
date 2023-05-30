@@ -84,13 +84,13 @@ $resultArr = pg_fetch_all($result);
 
                     <span class="noticet" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
                 </div>
-                <section class="box" style="padding: 2%;">
+                
                     <?php echo '
                     <div class="container">
                     <p>Select Number Of Rows</p>
                     <div class="form-group">
                         <!--		Show Numbers Of Rows 		-->
-                        <select class="form-control" name="state" id="maxRows">
+                        <select class="form-select" name="state" id="maxRows">
                             <option value="5000">Show ALL Rows</option>
                             <option value="5">5</option>
                             <option value="10">10</option>

@@ -87,7 +87,7 @@ $resultArr = pg_fetch_all($result);
                 <div class=col style="text-align: right;">
                     <span class="noticet" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
                 </div>
-                <section class="box" style="padding: 2%;">
+                
                     <form action="" method="POST">
                         <div class="form-group" style="display: inline-block;">
                             <div class="col2" style="display: inline-block;">
@@ -109,7 +109,7 @@ $resultArr = pg_fetch_all($result);
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                                <i class="bi bi-search"></i>&nbsp;Search</button>
                         </div>
                     </form>
                     <?php echo '

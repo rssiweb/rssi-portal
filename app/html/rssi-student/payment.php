@@ -125,7 +125,7 @@ $url = ""
                 <!-- <div class="col" style="display: inline-block; width:100%; text-align:right">
                             <span class="noticea" style="line-height: 2;"><a href="#" onClick="javascript:history.go(-1)">Back to previous page</a></span>
                         </div> -->
-                <section class="box" style="padding: 2%;">
+                
                     <div class="tabset">
                         <!-- Tab 1 -->
                         <input type="radio" name="tabset" id="tab1" aria-controls="marzen" checked>

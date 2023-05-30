@@ -165,14 +165,14 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
 
                         <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                            <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
                         </div>
                     <?php
                     } else if (@$cmdtuples == 1) { ?>
 
                         <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
+                            <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
                         </div>
                         <script>
                             if (window.history.replaceState) {
@@ -182,7 +182,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                     <?php } ?>
                 </div>
 
-                <section class="box" style="padding: 2%;">
+                
 
                     <table class="table">
                         <thead>
@@ -341,7 +341,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                         </div>
                         <div class="col2 left" style="display: inline-block;">
                             <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                                <i class="bi bi-search"></i>&nbsp;Search</button>
                         </div>
                     </form>
                     <div class="col" style="display: inline-block; width:99%; text-align:right">
@@ -351,7 +351,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                     <?php echo '
                        <p>Select Number Of Rows</p>
                        <div class="form-group">
-                           <select class="form-control" name="state" id="maxRows">
+                           <select class="form-select" name="state" id="maxRows">
                                <option value="5000">Show ALL Rows</option>
                                <option value="5">5</option>
                                <option value="10">10</option>

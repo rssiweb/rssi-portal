@@ -16,7 +16,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
- if ($filterstatus != 'Active') {
+if ($filterstatus != 'Active') {
 
     echo '<script type="text/javascript">';
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
@@ -38,8 +38,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu&family=Ubuntu+Condensed&display=swap" rel="stylesheet">
-    <!-- Main css -->
-    <link rel="stylesheet" href="/css/style.css">
+
     <style>
         @media (min-width:767px) {
             .left {
@@ -102,6 +101,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
             top: 42%;
             right: 37%;
         }
+
         .qrimage {
             border: 0;
             position: absolute;
@@ -109,8 +109,24 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
             right: 1%;
             z-index: 1;
         }
+
+        body {
+            background: #ffffff;
+            font-family: "Roboto";
+            font-style: normal;
+            font-weight: 400;
+            overflow-x: hidden;
+            margin: 0;
+            font-size: 13px;
+            /*line-height: 1.42857143;*/
+            color: #444;
+        }
+
+        .prebanner {
+            display: none;
+        }
     </style>
-    
+
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
@@ -136,7 +152,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                 <div class="col noprint" style="display: inline-block; width:100%;margin-left:10%; margin-top:2%">
 
                     <button type="button" onclick="window.print()" name="print" class="btn btn-success btn-sm" style="outline: none;">
-                    <i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button>
+                        <i class="bi bi-save"></i>&nbsp;Save</button>
                 </div>
             </div>
         </div>
@@ -152,7 +168,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                     <p class="first-txt"><?php echo $fullname ?></p>
                     <p class="second-txt"><?php echo $associatenumber ?></p>
                     <p class="third-txt"><?php echo $engagement ?></p>
-                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>" width="74px"/>
+                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>" width="74px" />
                 </div>
             </div>
         </div>

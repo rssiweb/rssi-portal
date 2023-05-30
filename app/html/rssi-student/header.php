@@ -18,28 +18,28 @@
 
                         <li style="height: unset;">
                             <a class="notification" href="https://youtube.com/shorts/ftA0TokZ28g" target="_blank">How to join Google space
-                                <span class="label label-info">Dec 18, 2022</span>
+                                <span class="badge label-info">Dec 18, 2022</span>
                             </a>
                         </li>
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1yDOMpaOaHatAaDBjRyuoaOpuDGCf9h9S/view" target="_blank">How to Accept a Google Meeting Invite
-                                <span class="label label-info">Aug 2, 2021</span>
+                                <span class="badge label-info">Aug 2, 2021</span>
                             </a>
                         </li>
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1GnFHc-WzcmKmLvXo3I1FOWZvio6ETDbX/view" target="_blank">RSSI Library User Guide
-                                <span class="label label-info">Aug 1, 2021</span>
+                                <span class="badge label-info">Aug 1, 2021</span>
                             </a>
                         </li>
 
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/18BQujDNktIXJLgRIzstlJuO9MBlHoWUk/view" target="_blank">Google Chat notification setting
-                                <span class="label label-info">Jul 7, 2021</span>
+                                <span class="badge label-info">Jul 7, 2021</span>
                             </a>
                         </li>
                         <li style="height: unset;">
                             <a class="notification" href="https://drive.google.com/file/d/1-vF45CbqRnWX1IzvbHTC9d5iPBVN4jix/view" target="_blank">Instructions to students during examination
-                                <span class="label label-info">Jul 7, 2021</span>
+                                <span class="badge label-info">Jul 7, 2021</span>
                             </a>
                         </li>
                         <li></li>

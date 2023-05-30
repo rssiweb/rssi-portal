@@ -74,7 +74,7 @@ $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
             <div class="col-md-12">
                 <div class="row">
                     <div class="col" style="display: inline-block; width:50%;margin-left:1.5%; font-size:small">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total fees submitted:&nbsp;<p class="label label-default"><?php echo ($resultArrr) ?></p>
+                        Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total fees submitted:&nbsp;<p class="badge label-default"><?php echo ($resultArrr) ?></p>
                     </div>
                     <div class="col" style="display: inline-block; width:47%; text-align:right">
                         <span class="noticea"><a href="home.php" target="_self">Home</a></span> / Payment history

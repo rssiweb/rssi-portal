@@ -82,10 +82,10 @@ if (!$result) {
 <body>
     <div class="col-md-12">
 
-        <section class="box" style="padding: 2%;">
+        
 
             <div class="col no-print" style="width:99%;margin-left:1.5%;text-align:right;">
-                <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Save</button><br><br>
+                <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;"><i class="bi bi-save"></i>&nbsp;Save</button><br><br>
             </div>
 
             <?php foreach ($resultArr as $array) {

@@ -206,7 +206,7 @@ if ($filterstatus != 'Active') {
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
 
-                <section class="box" style="padding: 2%;">
+                
 
                     <div class="container">
                         <!--<span style="color: #F2545F; display: inline;"></span>
@@ -266,7 +266,7 @@ if ($filterstatus != 'Active') {
                                 </select>
                             </div>
                             <div class="col2">
-                                <button id=search type="button1" class="exam_btn" onclick="loaddata()"><i class="fas fa-search"></i>
+                                <button id=search type="button1" class="exam_btn" onclick="loaddata()"><i class="bi bi-search"></i>
                                     search</button>
                                 <a href="library_status.php"><button type="button" class="exam_btn"><i class="fas fa-shopping-bag"></i>
                                         My Book</button></a>

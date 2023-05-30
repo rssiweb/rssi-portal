@@ -108,7 +108,7 @@ $resultArr = pg_fetch_all($result);
                         Home / <span class="noticea"><a href="my_appraisal.php">My Appraisal</a></span> / Appraisal Workflow<br><br>
                     </div>
                 </div>
-                <section class="box" style="padding: 2%;">
+                
                     <form action="" method="GET">
                         <div class="form-group">
                             <div class="col2" style="display: inline-block;">
@@ -125,7 +125,7 @@ $resultArr = pg_fetch_all($result);
                             </div>
                             <div class="col2 left" style="display: inline-block;">
                                 <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                    <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                                    <i class="bi bi-search"></i>&nbsp;Search</button>
                             </div>
                     </form>
                     <script>
@@ -171,17 +171,17 @@ $resultArr = pg_fetch_all($result);
                         <td>' . date('d/m/y h:i:s a', strtotime($array['goalsheet_created_on'])) . '</td>  
                         <td>' . $array['ipf'] . '</td>     
                         <td>' ?><?php if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-                                    echo '<span class="label label-danger float-end">Self-assessment</span>';
+                                    echo '<span class="badge label-danger float-end">Self-assessment</span>';
                                 } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-                                    echo '<span class="label label-warning float-end">Manager assessment in progress</span>';
+                                    echo '<span class="badge label-warning float-end">Manager assessment in progress</span>';
                                 } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") {
-                                    echo '<span class="label label-primary float-end">Reviewer assessment in progress</span>';
+                                    echo '<span class="badge label-primary float-end">Reviewer assessment in progress</span>';
                                 } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
-                                    echo '<span class="label label-success float-end">IPF released</span>';
+                                    echo '<span class="badge label-success float-end">IPF released</span>';
                                 } else if ($array['ipf_response'] == 'accepted') {
-                                    echo '<span class="label label-success float-end">IPF Accepted</span>';
+                                    echo '<span class="badge label-success float-end">IPF Accepted</span>';
                                 } else if ($array['ipf_response'] == 'rejected') {
-                                    echo '<span class="label label-danger float-end">IPF Rejected</span>';
+                                    echo '<span class="badge label-danger float-end">IPF Rejected</span>';
                                 } ?><?php '</td>' ?>
 
                     <td><?php echo ($array['ipf_response_on'] == null) ? "" : date('d/m/y h:i:s a', strtotime($array['ipf_response_on'])); ?></td>

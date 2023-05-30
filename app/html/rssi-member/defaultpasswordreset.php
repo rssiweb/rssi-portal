@@ -48,13 +48,13 @@ if (isset($_POST['login'])) {
 <?php if (@$newpass != @$oldpass) { ?>
     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
+        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: New password does't match the confirm password.</span>
     </div>
 <?php } ?>
 <?php
 if (@$cmdtuples == 1) {
     echo '<div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">';
-    echo '<span><i class="glyphicon glyphicon-ok" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Password updated successfully! Redirecting to the home page...</span>';
+    echo '<span><i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Password updated successfully! Redirecting to the home page...</span>';
     echo '</div>';
 
     // Redirect the user after a delay
@@ -66,7 +66,7 @@ if (@$cmdtuples == 1) {
 if (@$login_failed_dialog) { ?>
     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-        <span class="blink_me"><i class="glyphicon glyphicon-warning-sign"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
+        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: The current password you entered is incorrect.</span>
     </div>
 <?php } ?>
 <?php if (@$newpass == null) { ?>
@@ -150,7 +150,7 @@ if (@$login_failed_dialog) { ?>
                     <a href="logout.php" target="_self" class="btn btn-danger btn-sm" role="button"><i class="glyphicon glyphicon-log-out"></i>&nbsp;Sign Out</a>
                 </div> -->
 
-                <section class="box" style="padding: 2%;">
+                
                     <div class="col-md-4 col-md-offset-4">
                         <div class="login-panel panel panel-default" style="margin-top: unset;">
                             <div class="panel-heading">

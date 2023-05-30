@@ -68,7 +68,7 @@ $resultArr = pg_fetch_all($result);
     </div>
     <section class="wrapper main-wrapper row">
         <div class="col-md-12">
-            <section class="box" style="padding: 2%;">
+            
                 <form action="" method="GET">
                     <div class="form-group" style="display: inline-block;">
                         <div class="col2" style="display: inline-block;">
@@ -77,7 +77,7 @@ $resultArr = pg_fetch_all($result);
                     </div>
                     <div class="col2 left" style="display: inline-block;">
                         <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                            <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                            <i class="bi bi-search"></i>&nbsp;Search</button>
                     </div>
                 </form>
 
@@ -114,15 +114,15 @@ $resultArr = pg_fetch_all($result);
                         <?php echo '<td>' . $array['invoice'] . '</td><td>' ?>
 
                         <?php if ($array['approvedby'] == "rejected") { ?>
-                            <?php echo '<p class="label label-danger"><?php echo $approvedby ?></p>' ?>
+                            <?php echo '<p class="badge label-danger"><?php echo $approvedby ?></p>' ?>
 
                         <?php } else if ($array['approvedby'] == "--") { ?>
 
-                            <?php echo '<p class="label label-info">on hold</p>' ?>
+                            <?php echo '<p class="badge label-info">on hold</p>' ?>
 
                         <?php } else { ?>
 
-                            <?php echo  '<p class="label label-success">accepted</p>' ?> <?php } ?>
+                            <?php echo  '<p class="badge label-success">accepted</p>' ?> <?php } ?>
 
                         <?php echo '</td>
                             </tr>

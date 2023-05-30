@@ -64,7 +64,7 @@ if ($filterstatus != 'Active') {
         <section class="wrapper main-wrapper row">
             <div class="col-md-12">
 
-                <section class="box" style="padding: 2%;">
+                
 
                     <table class="table" style="font-size: 13px;">
                         <thead>

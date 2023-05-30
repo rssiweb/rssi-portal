@@ -101,7 +101,7 @@ $resultArr = pg_fetch_all($result);
             Home / <span class="noticea"><a href="medimate.php">Medimate</a></span> / Medimate Status<br><br>
           </div>
         </div>
-        <section class="box" style="padding: 2%;">
+        
           <form action="" method="POST">
             <div class="form-group" style="display: inline-block;">
               <div class="col2" style="display: inline-block;">
@@ -123,7 +123,7 @@ $resultArr = pg_fetch_all($result);
             </div>
             <div class="col2 left" style="display: inline-block;">
               <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
+                <i class="bi bi-search"></i>&nbsp;Search</button>
             </div>
           </form>
           <?php echo '
@@ -171,14 +171,14 @@ $resultArr = pg_fetch_all($result);
                                     <td>' . $array['transfereddate'] . '</td>'
               ?>
               <?php if ($array['claimstatus'] == 'review' || $array['claimstatus'] == 'in progress' || $array['claimstatus'] == 'withdrawn') { ?>
-                <?php echo '<td> <p class="label label-warning">' . $array['claimstatus'] . '</p>' ?>
+                <?php echo '<td> <p class="badge label-warning">' . $array['claimstatus'] . '</p>' ?>
 
               <?php } else if ($array['claimstatus'] == 'approved' || $array['claimstatus'] == 'claim settled') { ?>
-                <?php echo '<td><p class="label label-success">' . $array['claimstatus'] . '</p>' ?>
+                <?php echo '<td><p class="badge label-success">' . $array['claimstatus'] . '</p>' ?>
               <?php    } else if ($array['claimstatus'] == 'rejected' || $array['claimstatus'] == 'on hold') { ?>
-                <?php echo '<td><p class="label label-danger">' . $array['claimstatus'] . '</p>' ?>
+                <?php echo '<td><p class="badge label-danger">' . $array['claimstatus'] . '</p>' ?>
               <?php    } else { ?>
-                <?php echo '<td><p class="label label-info">' . $array['claimstatus'] . '</p>' ?>
+                <?php echo '<td><p class="badge label-info">' . $array['claimstatus'] . '</p>' ?>
               <?php } ?>
 
 

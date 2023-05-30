@@ -130,13 +130,13 @@ if (@$_POST['form-type'] == "admission_admin") {
 
         <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <span class="blink_me"><i class="fa-solid fa-xmark"></i></span>&nbsp;&nbsp;<span>Error: We encountered an error while updating the record. Please try again.</span>
+            <span class="blink_me"><i class="bi bi-x-lg"></i></span>&nbsp;&nbsp;<span>Error: We encountered an error while updating the record. Please try again.</span>
         </div>
     <?php } else if (@$cmdtuples == 1) { ?>
 
         <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <span class="blink_me"><i class="fa-solid fa-xmark"></i></i></span>&nbsp;&nbsp;<span>Your changes have been saved successfully.</span>
+            <span class="blink_me"><i class="bi bi-x-lg"></i></i></span>&nbsp;&nbsp;<span>Your changes have been saved successfully.</span>
         </div>
         <script>
             if (window.history.replaceState) {

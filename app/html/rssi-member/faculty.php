@@ -103,26 +103,23 @@ if (!$result) {
 $resultArr = pg_fetch_all($result);
 ?>
 
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>RSSI Faculty</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-    <link rel="stylesheet" href="/css/style.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,-25" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!------ Include the above in your HEAD tag ---------->
+    <title>RSSI Faculty</title>
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -133,27 +130,12 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <style>
         @media (max-width:767px) {
             td {
                 width: 100%
             }
-        }
-
-        td {
-
-            /* css-3 */
-            white-space: -o-pre-wrap;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            white-space: -moz-pre-wrap;
-            white-space: -pre-wrap;
-
-        }
-
-        table {
-            table-layout: fixed;
-            width: 100%
         }
 
         @media (min-width:767px) {
@@ -190,461 +172,420 @@ $resultArr = pg_fetch_all($result);
         }
 
         .modal {
-            display: none;
-            /* Hidden by default */
-            position: fixed;
-            /* Stay in place */
-            z-index: 100;
-            /* Sit on top */
-            padding-top: 100px;
-            /* Location of the box */
-            left: 0;
-            top: 0;
-            width: 100%;
-            /* Full width */
-            height: 100%;
-            /* Full height */
-            overflow: auto;
-            /* Enable scroll if needed */
-            background-color: rgb(0, 0, 0);
-            /* Fallback color */
             background-color: rgba(0, 0, 0, 0.4);
             /* Black w/ opacity */
-        }
-
-        /* Modal Content */
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 100vh;
-        }
-
-        @media (max-width:767px) {
-            .modal-content {
-                width: 50vh;
-            }
-        }
-
-        /* The Close Button */
-
-        .close {
-            color: #aaaaaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            text-align: right;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
         }
     </style>
 
 </head>
 
 <body>
+
     <?php include 'header.php'; ?>
-    <section id="main-content">
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
-                <div class="row">
-                    <div class="col" style="display: inline-block; width:50%;margin-left:1.5%">
-                        Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                    </div>
-                    <div class="col" style="display: inline-block; width:47%; text-align:right">
-                        <a href="facultyexp.php" target="_self" class="btn btn-danger btn-sm" role="button">Faculty Details</a>
-                    </div>
-                </div>
-                <section class="box" style="padding: 2%;">
-                    <form action="" method="POST">
-                        <div class="form-group" style="display: inline-block;">
-                            <div class="col2" style="display: inline-block;">
-                                <select name="get_id" id="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type" disabled>
-                                    <?php if ($id == null) { ?>
-                                        <option value="" disabled selected hidden>Select Status</option>
-                                    <?php
-                                    } else { ?>
-                                        <option hidden selected><?php echo $id ?></option>
+
+    <main id="main" class="main">
+
+        <div class="pagetitle">
+            <h1>RSSI Faculty</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Work</a></li>
+                    <li class="breadcrumb-item active">RSSI Faculty</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section dashboard">
+            <div class="row">
+
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+
+                        <div class="card-body">
+                            <br>
+                            <div class="row">
+                                <div class="col" style="display: inline-block;">
+                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                                </div>
+                                <div class="col" style="display: inline-block; width:47%; text-align:right">
+                                    <a href="facultyexp.php" target="_self" class="btn btn-danger btn-sm" role="button">Faculty Details</a>
+                                </div>
+                            </div>
+
+                            <form action="" method="POST">
+                                <div class="form-group" style="display: inline-block;">
+                                    <div class="col2" style="display: inline-block;">
+                                        <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" disabled>
+                                            <?php if ($id == null) { ?>
+                                                <option value="" disabled selected hidden>Select Status</option>
+                                            <?php
+                                            } else { ?>
+                                                <option hidden selected><?php echo $id ?></option>
+                                            <?php }
+                                            ?>
+                                            <option>Active</option>
+                                            <option>Inactive</option>
+                                        </select>
+                                        <input name="get_aaid" id="get_aaid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aaid ?>">
+                                    </div>
+                                </div>
+                                <select name="adj_academicyear" id="adj_academicyear" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
+                                    <?php if ($lyear != null) { ?>
+                                        <option hidden selected><?php echo $lyear ?></option>
                                     <?php }
                                     ?>
-                                    <option>Active</option>
-                                    <option>Inactive</option>
                                 </select>
-                                <input name="get_aaid" id="get_aaid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aaid ?>">
-                            </div>
-                        </div>
-                        <select name="adj_academicyear" id="adj_academicyear" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-                            <?php if ($lyear != null) { ?>
-                                <option hidden selected><?php echo $lyear ?></option>
-                            <?php }
-                            ?>
-                        </select>
 
-                        <div class="col2 left" style="display: inline-block;">
-                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                <i class="fa-solid fa-magnifying-glass"></i>&nbsp;Search</button>
-                        </div>
+                                <div class="col2 left" style="display: inline-block;">
+                                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                        <i class="bi bi-search"></i>&nbsp;Search</button>
+                                </div>
 
-                        <div id="filter-checks">
-                            <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
-                            <label for="is_user" style="font-weight: 400;">Search by Associate ID</label>
-                        </div>
-                    </form>
-                    <script>
-                        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                            var currentYear = new Date().getFullYear() - 1;
-                        <?php } else { ?>
-                            var currentYear = new Date().getFullYear();
-                        <?php } ?>
-                        for (var i = 0; i < 5; i++) {
-                            var next = currentYear + 1;
-                            var year = currentYear + '-' + next;
-                            //next.toString().slice(-2) 
-                            $('#adj_academicyear').append(new Option(year, year));
-                            currentYear--;
-                        }
-                    </script>
-                    <script>
-                        if ($('#is_user').not(':checked').length > 0) {
-
-                            document.getElementById("get_id").disabled = false;
-                            document.getElementById("get_aaid").disabled = true;
-
-                        } else {
-
-                            document.getElementById("get_id").disabled = true;
-                            document.getElementById("get_aaid").disabled = false;
-
-                        }
-
-                        const checkbox = document.getElementById('is_user');
-
-                        checkbox.addEventListener('change', (event) => {
-                            if (event.target.checked) {
-                                document.getElementById("get_id").disabled = true;
-                                document.getElementById("get_aaid").disabled = false;
-                            } else {
-                                document.getElementById("get_id").disabled = false;
-                                document.getElementById("get_aaid").disabled = true;
-                            }
-                        })
-                    </script>
-                    <?php
-                    echo '<table class="table">
-          <thead>
-          <tr>
-          <th scope="col" id="cw">Photo</th>
-          <th scope="col" id="cw1">Volunteer Details</th>
-          <th scope="col" id="cw2">Contact</th>
-          <th scope="col">Designation</th>
-          <th scope="col">Class URL</th>
-          <th scope="col" id="cw2">Association Status</th>
-          <th scope="col">Productivity</th>
-          <th scope="col">Worklist</th>
-        </tr>
-        </thead>' ?>
-                    <?php if (sizeof($resultArr) > 0) { ?>
-                        <?php
-                        echo '<tbody>';
-                        foreach ($resultArr as $array) {
-                            echo '<tr>
-        <td>';
-                        ?>
-                            <?php if ($array['photo'] != null) { ?>
-                                <?php echo '<div class="icon-container"><img src="' . $array['photo'] . '" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>'; ?>
-                            <?php } else { ?>
-                                <?php echo '<div class="icon-container"><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="img-circle img-inline" class="img-responsive img-circle" width="50" height="50"/>'; ?>
-                            <?php } ?>
-
-                            <?php if ($array['logintime'] != null) { ?>
-                                <?php if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
-                                    <?php echo '<div class="status-circle" title="Online"></div>'; ?>
+                                <div id="filter-checks">
+                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                                    <label for="is_user" style="font-weight: 400;">Search by Associate ID</label>
+                                </div>
+                            </form>
+                            <script>
+                                <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                    var currentYear = new Date().getFullYear() - 1;
                                 <?php } else { ?>
-                                    <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'; ?>
-                                <?php }
-                            } else { ?>
-                                <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'; ?>
-                            <?php }
-                            echo '</div></td>
-        <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
-        <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['originaldoj'])) . '<br>' . $array['yos'] . '</td>
-        <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
-        <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>';
-                            ?>
+                                    var currentYear = new Date().getFullYear();
+                                <?php } ?>
+                                for (var i = 0; i < 5; i++) {
+                                    var next = currentYear + 1;
+                                    var year = currentYear + '-' + next;
+                                    //next.toString().slice(-2) 
+                                    $('#adj_academicyear').append(new Option(year, year));
+                                    currentYear--;
+                                }
+                            </script>
+                            <script>
+                                if ($('#is_user').not(':checked').length > 0) {
 
-                            <?php if ($id == "Active") { ?>
-                                <?php echo '<td><span class="noticea"><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>'; ?>
+                                    document.getElementById("get_id").disabled = false;
+                                    document.getElementById("get_aaid").disabled = true;
+
+                                } else {
+
+                                    document.getElementById("get_id").disabled = true;
+                                    document.getElementById("get_aaid").disabled = false;
+
+                                }
+
+                                const checkbox = document.getElementById('is_user');
+
+                                checkbox.addEventListener('change', (event) => {
+                                    if (event.target.checked) {
+                                        document.getElementById("get_id").disabled = true;
+                                        document.getElementById("get_aaid").disabled = false;
+                                    } else {
+                                        document.getElementById("get_id").disabled = false;
+                                        document.getElementById("get_aaid").disabled = true;
+                                    }
+                                })
+                            </script>
+                            <?php
+                            echo '
+                            <div class="table-responsive">
+                            <table class="table">
+                            <thead>
+                            <tr>
+                            <th scope="col" id="cw">Photo</th>
+                            <th scope="col" id="cw1">Volunteer Details</th>
+                            <th scope="col" id="cw2">Contact</th>
+                            <th scope="col">Designation</th>
+                            <th scope="col">Class URL</th>
+                            <th scope="col" id="cw2">Association Status</th>
+                            <th scope="col">Productivity</th>
+                            <th scope="col">Worklist</th>
+                            </tr>
+                            </thead>' ?>
+                            <?php if (sizeof($resultArr) > 0) { ?>
+                                <?php
+                                echo '<tbody>';
+                                foreach ($resultArr as $array) {
+                                    echo '<tr>
+                                    <td>';
+                                ?>
+                                    <?php if ($array['photo'] != null) { ?>
+                                        <?php echo '<div class="icon-container"><img src="' . $array['photo'] . '" class="rounded-circle me-2" class="img-responsive img-circle" width="50" height="50"/>'; ?>
+                                    <?php } else { ?>
+                                        <?php echo '<div class="icon-container"><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="rounded-circle me-2" class="img-responsive img-circle" width="50" height="50"/>'; ?>
+                                    <?php } ?>
+
+                                    <?php if ($array['logintime'] != null) { ?>
+                                        <?php if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
+                                            <?php echo '<div class="status-circle" title="Online"></div>'; ?>
+                                        <?php } else { ?>
+                                            <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'; ?>
+                                        <?php }
+                                    } else { ?>
+                                        <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'; ?>
+                                    <?php }
+                                    echo '</div></td>
+                                    <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
+                                    <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['doj'])) . '<br>' . $array['yos'] . '</td>
+                                    <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
+                                    <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>';
+                                    ?>
+
+                                    <?php if ($id == "Active") { ?>
+                                        <?php echo '<td><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>'; ?>
+                                    <?php } else { ?>
+                                        <?php echo '<td></td>'; ?>
+                                    <?php } ?>
+
+                                    <?php echo '<td style="white-space:unset">' . $array['astatus'] . '<br>';
+
+                                    if ($array['onleave'] != null) {
+                                        echo '<br><p class="badge bg-danger">on leave</p>';
+                                    }
+
+                                    if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') {
+                                        echo '<br><p class="badge bg-warning">Attd. pending</p>';
+                                    }
+
+                                    if ($array['userid'] != null && $array['status'] != 'Closed') {
+                                        echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="badge bg-warning">agreement</p></a>';
+                                    }
+
+                                    if ($array['taggedto'] != null) {
+                                        echo '<br><a href="gps.php?taggedto=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="badge bg-danger">asset</p></a>';
+                                    }
+
+                                    echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
+                                    <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
+                                    
+                                    
+                                    <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                    <i class="bi bi-box-arrow-up-right"></i></button>
+                                    &nbsp;&nbsp;
+                                    <form name="initiatingonboarding' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
+                                        <input type="hidden" name="form-type" type="text" value="initiatingonboarding">
+                                        <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
+                                        <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
+                                    ?>
+                                    <!-- Initiate onboarding system -->
+                                    <?php if ($role == 'Admin' && $array['onboard_initiated_by'] == null) { ?>
+                                        <?php echo '<button type="submit" id="yes" onclick="validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Onboarding"><i class="bi bi-person-plus"></i></button>'; ?>
+                                    <?php } else {
+                                        echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'];
+                                    }
+                                    echo '</form>&nbsp;&nbsp;
+
+                                <form name="initiatingexit' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
+                                    <input type="hidden" name="form-type" type="text" value="initiatingexit">
+                                    <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
+                                    <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
+                                    ?>
+                                    <!-- Initiate Exit system -->
+                                    <?php if ($role == 'Admin' && $array['exit_initiated_by'] == null) { ?>
+                                        <?php echo '<button type="submit" id="yes" onclick="validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Exit"><i class="bi bi-box-arrow-in-right"></i></button>'; ?>
+                                <?php } else {
+                                        echo date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'];
+                                    }
+                                    echo '</form></td></tr>';
+                                }
+                                echo '</tbody>';
+                                ?>
                             <?php } else { ?>
-                                <?php echo '<td></td>'; ?>
+                                <?php echo '<tbody><tr><td colspan="9">No Data Found</td></tr></tbody></div>'; ?>
                             <?php } ?>
 
-                            <?php echo '<td style="white-space:unset">' . $array['astatus'] . '<br>';
+                            <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Faculty Details</h1>
+                                            <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="d-flex justify-content-end">
+                                                <span id="status" class="fullname badge"></span>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p>WBT Completed: <span class="attd"></span></p>
+                                                </div>
+                                                <div class="col-md-6 text-end">
+                                                    <a id="wbt_details" href="#" target="_blank">
+                                                        <i class="bi bi-eye" style="font-size: 20px; color:#777777" title="WBT Details"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <a id="offer_letter" href="" target="_blank">Offer Letter</a><br>
+                                                    <a id="joining_letter" href="" target="_blank">Joining Letter</a><br>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <a id="certificate_issue" href="" target="_blank">Issue Document</a><br>
+                                                    <a id="certificate_view" href="" target="_blank">View Document</a><br>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <a id="experience_letter" href="" target="_blank">Generate Experience Letter</a><br>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <a id="profile" href="" target="_blank">Profile</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                            if ($array['onleave'] != null) {
-                                echo '<br><p class="label label-danger">on leave</p>';
-                            }
+                            <script>
+                                var data = <?php echo json_encode($resultArr); ?>;
 
-                            if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') {
-                                echo '<br><p class="label label-warning">Attd. pending</p>';
-                            }
+                                // Get the modal
+                                var modal = document.getElementById("myModal");
+                                // Get the <span> element that closes the modal
+                                var closedetails = [
+                                    document.getElementById("closedetails-header"),
+                                    document.getElementById("closedetails-footer")
+                                ];
 
-                            if ($array['userid'] != null && $array['status'] != 'Closed') {
-                                echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-warning">agreement</p></a>';
-                            }
+                                function showDetails(id) {
+                                    var mydata = data.find(item => item.associatenumber === id);
 
-                            if ($array['taggedto'] != null) {
-                                echo '<br><a href="gps.php?taggedto=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="label label-danger">asset</p></a>';
-                            }
+                                    if (mydata) {
+                                        console.log(mydata); // Log the mydata object to the console for debugging
+                                        var keys = Object.keys(mydata);
+                                        keys.forEach(key => {
+                                            var span = modal.querySelector("." + key);
+                                            if (span)
+                                                span.textContent = mydata[key];
+                                        });
 
-                            echo '<br><br>' . $array['effectivedate'] . '&nbsp;' . $array['remarks'] . '</td>
-        <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
-        
-        
-        <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-        <span class="material-symbols-outlined" style="color:#777777">
-format_list_bulleted
-</span></button>
-        &nbsp;&nbsp;
-        <form name="initiatingonboarding' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
-            <input type="hidden" name="form-type" type="text" value="initiatingonboarding">
-            <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
-            <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
-                            ?>
-                            <!-- Initiate onboarding system -->
-                            <?php if ($role == 'Admin' && $array['onboard_initiated_by'] == null) { ?>
-                                <?php echo '<button type="submit" id="yes" onclick="validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Onboarding"><span class="material-symbols-outlined" style="color:#777777">
-                person_add
-                </span></button>'; ?>
-                            <?php } else {
-                                echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'];
-                            }
-                            echo '</form>&nbsp;&nbsp;
+                                        var fullnameBadge = modal.querySelector(".fullname");
+                                        if (fullnameBadge)
+                                            fullnameBadge.textContent = mydata.fullname;
 
-        <form name="initiatingexit' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
-            <input type="hidden" name="form-type" type="text" value="initiatingexit">
-            <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
-            <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
-                            ?>
-                            <!-- Initiate Exit system -->
-                            <?php if ($role == 'Admin' && $array['exit_initiated_by'] == null) { ?>
-                                <?php echo '<button type="submit" id="yes" onclick="validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Exit"><span class="material-symbols-outlined" style="color:#777777">
-                exit_to_app
-                </span></button>'; ?>
-                        <?php } else {
-                                echo date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'];
-                            }
-                            echo '</form></td></tr>';
-                        }
-                        echo '</tbody>';
-                        ?>
-                    <?php } else { ?>
-                        <?php echo '<tbody><tr><td colspan="9" align="center">No Data Found</td></tr></tbody>'; ?>
-                    <?php } ?>
-                </section>
+                                        modal.style.display = "block";
+
+                                        var status = document.getElementById("status");
+                                        if (mydata.filterstatus === "Active") {
+                                            status.classList.add("bg-success");
+                                            status.classList.remove("bg-danger");
+                                        } else {
+                                            status.classList.remove("bg-success");
+                                            status.classList.add("bg-danger");
+                                        }
+
+                                        document.getElementById("wbt_details").href = "/rssi-member/my_learning.php?get_aid=" + mydata.associatenumber;
+                                        document.getElementById("offer_letter").href = "/rssi-member/offerletter.php?get_id=" + mydata.associatenumber;
+                                        document.getElementById("certificate_issue").href = "/rssi-member/my_certificate.php?awarded_to_id=" + mydata.associatenumber + "&awarded_to_name=" + mydata.fullname;
+                                        document.getElementById("certificate_view").href = "/rssi-member/my_certificate.php?get_nomineeid=" + mydata.associatenumber;
+                                        document.getElementById("experience_letter").href = "/rssi-member/expletter.php?get_id=" + mydata.associatenumber;
+                                        document.getElementById("joining_letter").href = "/rssi-member/joiningletter.php?get_id=" + mydata.associatenumber;
+                                        document.getElementById("profile").href = "/rssi-member/myprofile.php?get_id=" + mydata.associatenumber;
+                                    }
+                                }
+
+                                // Close modal using either cross or close button
+                                closedetails.forEach(function(element) {
+                                    element.addEventListener("click", closeModal);
+                                });
+
+                                function closeModal() {
+                                    modal.style.display = "none";
+                                }
+
+                                // When the user clicks anywhere outside of the modal, close it
+                                window.onclick = function(event) {
+                                    if (event.target === modal) {
+                                        modal.style.display = "none";
+                                    }
+                                };
+                            </script>
+
+
+                            <script>
+                                var data = <?php echo json_encode($resultArr) ?>;
+                                var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
+
+                                const scriptURL = 'payment-api.php'
+
+                                function validateForm() {
+                                    if (confirm('Are you sure you want to onboard this associate?')) {
+
+                                        data.forEach(item => {
+                                            const form = document.forms['initiatingonboarding' + item.associatenumber]
+                                            form.addEventListener('submit', e => {
+                                                e.preventDefault()
+                                                fetch(scriptURL, {
+                                                        method: 'POST',
+                                                        body: new FormData(document.forms['initiatingonboarding' + item.associatenumber])
+                                                    })
+                                                    .then(response => response.text())
+                                                    .then(result => {
+                                                        if (result == 'success') {
+                                                            alert("The associate's onboarding process has been initiated successfully.") + location.reload()
+                                                        } else {
+                                                            alert("An error occurred while processing your request. Please try again later.") + location.reload()
+                                                        }
+                                                    })
+                                            })
+                                        })
+                                    } else {
+                                        alert("The onboarding process has been cancelled.");
+                                        return false;
+                                    }
+                                }
+
+                                function exit_validateForm() {
+                                    if (confirm('Are you sure you want to initiate the exit process for this associate?')) {
+
+                                        data.forEach(item => {
+                                            const form = document.forms['initiatingexit' + item.associatenumber]
+                                            form.addEventListener('submit', e => {
+                                                e.preventDefault()
+                                                fetch(scriptURL, {
+                                                        method: 'POST',
+                                                        body: new FormData(document.forms['initiatingexit' + item.associatenumber])
+                                                    })
+                                                    .then(response => response.text())
+                                                    .then(result => {
+                                                        if (result == 'success') {
+                                                            alert("The process has been successfully initiated.") + location.reload()
+                                                        } else {
+                                                            alert("An error occurred while processing your request. Please try again later.") + location.reload()
+                                                        }
+                                                    })
+                                            })
+                                        })
+                                    } else {
+                                        alert("The process has been canceled.");
+                                        return false;
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div><!-- End Reports -->
             </div>
         </section>
-    </section>
 
-    <div id="myModal" class="modal">
-    <!-- Modal content -->
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <div class="modal-header">
-            <p id="status" class="label"><span class="fullname"></span></p>
-        </div>
-        <div class="modal-body">
-        <div class="row">
-                <div class="col-md-6">
-                    <p>WBT Completed: <span class="attd"></span></p>
-                </div>
-                <div class="col-md-6 text-right">
-                    <a id="wbt_details" href="#" target="_blank">
-                        <i class="fa-regular fa-eye" style="font-size: 20px; color:#777777" title="WBT Details"></i>
-                    </a>
-                </div>
-            </div>
-            <hr>
-            <div class="row">
-                <div class="col-md-6">
-                    <span class="noticea"><a id="offer_letter" href="#" target="_blank">Offer Letter</a></span><br>
-                    <span class="noticea"><a id="joining_letter" href="#" target="_blank">Joining Letter</a></span><br>
-                </div>
-                <div class="col-md-6">
-                    <span class="noticea"><a id="certificate_issue" href="#" target="_blank">Issue Document</a></span><br>
-                    <span class="noticea"><a id="certificate_view" href="#" target="_blank">View Document</a></span><br>
-                </div>
-            </div>
-            <hr>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <span class="noticea"><a id="experience_letter" href="#" target="_blank">Generate Experience Letter</a></span><br>
-                </div>
-                <div class="col-md-6">
-                    <span class="noticea"><a id="profile" href="#" target="_blank">Profile</a></span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    </main><!-- End #main -->
 
-    <script>
-        var data = <?php echo json_encode($resultArr) ?>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-        // Get the modal
-        var modal = document.getElementById("myModal");
-        // Get the <span> element that closes the modal
-        var span = document.getElementsByClassName("close")[0];
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
-        function showDetails(id) {
-            // console.log(modal)
-            // console.log(modal.getElementsByClassName("data"))
-            var mydata = undefined
-            data.forEach(item => {
-                if (item["associatenumber"] == id) {
-                    mydata = item;
-                }
-            })
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 
-            var keys = Object.keys(mydata)
-            keys.forEach(key => {
-                var span = modal.getElementsByClassName(key)
-                if (span.length > 0)
-                    span[0].innerHTML = mydata[key];
-            })
-            modal.style.display = "block";
-
-            //class add 
-            var status = document.getElementById("status")
-            if (mydata["filterstatus"] === "Active") {
-                status.classList.add("label-success")
-                status.classList.remove("label-danger")
-            } else {
-                status.classList.remove("label-success")
-                status.classList.add("label-danger")
-            }
-            //class add end
-
-            var profile = document.getElementById("wbt_details")
-            profile.href = "/rssi-member/my_learning.php?get_aid=" + mydata["associatenumber"]
-            profile = document.getElementById("offer_letter")
-            profile.href = "/rssi-member/offerletter.php?get_id=" + mydata["associatenumber"]
-            profile = document.getElementById("certificate_issue")
-            profile.href = "/rssi-member/my_certificate.php?awarded_to_id=" + mydata["associatenumber"] + "&awarded_to_name=" + mydata["fullname"]
-            profile = document.getElementById("certificate_view")
-            profile.href = "/rssi-member/my_certificate.php?get_nomineeid=" + mydata["associatenumber"]
-            profile = document.getElementById("experience_letter")
-            profile.href = "/rssi-member/expletter.php?get_id=" + mydata["associatenumber"]
-            profile = document.getElementById("joining_letter")
-            profile.href = "/rssi-member/joiningletter.php?get_id=" + mydata["associatenumber"]
-            profile = document.getElementById("profile")
-            profile.href = "/rssi-member/myprofile.php?get_id=" + mydata["associatenumber"]
-
-
-        }
-        // When the user clicks the button, open the modal 
-        // When the user clicks on <span> (x), close the modal
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-        // When the user clicks anywhere outside of the modal, close it
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    </script>
-    <!-- <script>
-        function myFunction() {
-            alert("IPF has been initiated in the system.");
-        }
-    </script> -->
-    <script>
-        var data = <?php echo json_encode($resultArr) ?>;
-        var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
-
-        const scriptURL = 'payment-api.php'
-
-        function validateForm() {
-            if (confirm('Are you sure you want to onboard this associate?')) {
-
-                data.forEach(item => {
-                    const form = document.forms['initiatingonboarding' + item.associatenumber]
-                    form.addEventListener('submit', e => {
-                        e.preventDefault()
-                        fetch(scriptURL, {
-                                method: 'POST',
-                                body: new FormData(document.forms['initiatingonboarding' + item.associatenumber])
-                            })
-                            .then(response => response.text())
-                            .then(result => {
-                                if (result == 'success') {
-                                    alert("The associate's onboarding process has been initiated successfully.") + location.reload()
-                                } else {
-                                    alert("An error occurred while processing your request. Please try again later.") + location.reload()
-                                }
-                            })
-                    })
-                })
-            } else {
-                alert("The onboarding process has been cancelled.");
-                return false;
-            }
-        }
-
-        function exit_validateForm() {
-            if (confirm('Are you sure you want to initiate the exit process for this associate?')) {
-
-                data.forEach(item => {
-                    const form = document.forms['initiatingexit' + item.associatenumber]
-                    form.addEventListener('submit', e => {
-                        e.preventDefault()
-                        fetch(scriptURL, {
-                                method: 'POST',
-                                body: new FormData(document.forms['initiatingexit' + item.associatenumber])
-                            })
-                            .then(response => response.text())
-                            .then(result => {
-                                if (result == 'success') {
-                                    alert("The process has been successfully initiated.") + location.reload()
-                                } else {
-                                    alert("An error occurred while processing your request. Please try again later.") + location.reload()
-                                }
-                            })
-                    })
-                })
-            } else {
-                alert("The process has been canceled.");
-                return false;
-            }
-        }
-    </script>
-    <!-- Back top -->
-    <script>
-        $(document).ready(function() {
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#back-to-top').fadeIn();
-                } else {
-                    $('#back-to-top').fadeOut();
-                }
-            });
-            // scroll body to 0px on click
-            $('#back-to-top').click(function() {
-                $('body,html').animate({
-                    scrollTop: 0
-                }, 400);
-                return false;
-            });
-        });
-    </script>
-    <a id="back-to-top" href="#" class="go-top" role="button"><i class="fa fa-angle-up"></i></a>
 </body>
 
 </html>
