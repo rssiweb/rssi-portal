@@ -81,7 +81,7 @@ if (@$_POST['form-type'] == "leaveapply") {
                 "category" => $creason,
                 "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1),
                 "now" => $now,
-            ), $email);
+            ), $email, False);
         }
         if ($halfday == 1) {
             sendEmail("leaveapply_admin", array(
@@ -94,7 +94,7 @@ if (@$_POST['form-type'] == "leaveapply") {
                 "category" => $creason,
                 "day" => round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2,
                 "now" => $now,
-            ), $email);
+            ), $email, False);
         }
     }
 }

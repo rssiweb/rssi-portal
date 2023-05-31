@@ -93,7 +93,7 @@ if ($role == "Admin") {
                     "now" => @date("d/m/Y g:i a", strtotime($now)),
                     "adj_appliedby" => $adj_appliedby,
                     "adj_reason" => $adj_reason,
-                ), $emailemail);
+                ), $emailemail, False);
             }
         }
     }

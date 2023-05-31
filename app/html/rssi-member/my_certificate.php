@@ -87,7 +87,7 @@ include("../../util/email.php");
                 "awarded_to_id" => $awarded_to_id,
                 "fullname" => $fullname_nominee,
                 "doclink" => $doclink,
-            ), $email_nominee);
+            ), $email_nominee, False);
         }
     }
 

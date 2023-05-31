@@ -217,7 +217,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
             "appraisalyear" => @$appraisalyear,
             "appraisee_name" => @$appraisee_name,
             "link" => "https://login.rssi.in/rssi-member/my_appraisal.php?form-type=appraisee&get_id=" . urlencode(@$appraisaltype) . "&get_year=" . @$appraisalyear,
-        ), $appraisee_email);
+        ), $appraisee_email, False);
     }
 } ?>
 
