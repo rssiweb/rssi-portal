@@ -220,17 +220,16 @@ if (!$result) {
                             <br>
                             <div class="row">
                                 <?php if (@$leaveid != null && @$cmdtuples == 0) { ?>
-
-                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <span>ERROR: Oops, something wasn't right.</span>
                                     </div>
-                                <?php
-                                } else if (@$cmdtuples == 1) { ?>
-
-                                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
+                                <?php } else if (@$cmdtuples == 1) { ?>
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-check2"></i>
+                                        <span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {
@@ -238,7 +237,6 @@ if (!$result) {
                                         }
                                     </script>
                                 <?php } ?>
-
                                 <div class="col" style="display: inline-block; width:47%; text-align:right">
                                     <span class="noticea"><a href="leaveadjustment.php" target="_blank" title="Click to adjust leave">Leave Adjustment</a></span> | <span class="noticea"><a href="leaveallo.php" target="_blank" title="Click to allocate leave">Leave Allocation</a></span>
                                 </div>
@@ -508,17 +506,17 @@ if (!$result) {
                                 <td>' . $array['comment'] . '</td>
                                 <td>
                                 <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['leaveid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                <i class="bi bi-box-arrow-up-right" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;' ?>
+                                <i class="bi bi-box-arrow-up-right" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>' ?>
                                         <?php if (($array['phone'] != null || $array['contact'] != null)) { ?>
                                             <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ABased on your timesheet data, system-enforced leave has been initiated for ' . @date("d/m/Y", strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])) . ' (' . $array['days'] . ' day(s)) in the system.%0A%0AIf you think this is done by mistake, please call on 7980168159 or write to us at info@rssi.in.
                                 %0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                 " target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>' ?>
                                         <?php } else { ?>
                                             <?php echo '<i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
-                                            <?php } ?>&nbsp;&nbsp;
+                                        <?php } ?>
 
-                                            <?php if ((@$array['email'] != null || @$array['emailaddress'] != null)) { ?>
-                                                <?php echo '<form  action="#" name="email-form-' . $array['leaveid'] . '" method="POST" style="display: -webkit-inline-box;" >
+                                        <?php if ((@$array['email'] != null || @$array['emailaddress'] != null)) { ?>
+                                            <?php echo '<form  action="#" name="email-form-' . $array['leaveid'] . '" method="POST" style="display: -webkit-inline-box;" >
                                 <input type="hidden" name="template" type="text" value="leaveconf">
                                 <input type="hidden" name="data[leaveid]" type="text" value="' . $array['leaveid'] . '">
                                 <input type="hidden" name="data[applicantid]" type="text" value="' . $array['applicantid'] . '">
@@ -535,477 +533,442 @@ if (!$result) {
                                 <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
                                  type="submit"><i class="bi bi-envelope-at" style="color:#444444;" title="Send Email ' . @$array['email'] . @$array['emailaddress'] . '"></i></button>
                             </form>' ?>
-                                            <?php } else { ?>
-                                                <?php echo '<i class="bi bi-envelope-at" style="color:#A2A2A2;" title="Send Email"></i>' ?>
-                                            <?php } ?>
+                                        <?php } else { ?>
+                                            <?php echo '<i class="bi bi-envelope-at" style="color:#A2A2A2;" title="Send Email"></i>' ?>
+                                        <?php } ?>
 
-                                            <?php echo '&nbsp;&nbsp;<form name="leavedelete_' . $array['leaveid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                        <?php echo '<form name="leavedelete_' . $array['leaveid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
                                 <input type="hidden" name="form-type" type="text" value="leavedelete">
                                 <input type="hidden" name="leavedeleteid" id="leavedeleteid" type="text" value="' . $array['leaveid'] . '">
                                 
                                 <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['leaveid'] . '"><i class="bi bi-x-lg"></i></button> </form>
                                 </td>' ?>
-                                        <?php } ?>
-                                    <?php
+                                    <?php } ?>
+                                <?php
                                 } else if ($id == null) {
-                                    ?>
-                                        <tr>
-                                            <td colspan="5">Please select Filter value.</td>
-                                        </tr>
-                                    <?php
+                                ?>
+                                    <tr>
+                                        <td colspan="5">Please select Filter value.</td>
+                                    </tr>
+                                <?php
                                 } else {
-                                    ?>
-                                        <tr>
-                                            <td colspan="5">No record was found for the selected filter value.</td>
-                                        </tr>
-                                    <?php }
+                                ?>
+                                    <tr>
+                                        <td colspan="5">No record was found for the selected filter value.</td>
+                                    </tr>
+                                <?php }
 
                                 echo '</tbody>
                                     </table>
                                     </div>';
-                                    ?>
-                                    <!-- Start Pagination -->
-                                    <div class="pagination-container">
-                                        <nav>
-                                            <ul class="pagination">
-                                                <li class="page-item" data-page="prev">
-                                                    <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
-                                                </li>
-                                                <!-- Here the JS Function Will Add the Rows -->
-                                                <li class="page-item">
-                                                    <button class="page-link pagination-button">1</button>
-                                                </li>
-                                                <li class="page-item">
-                                                    <button class="page-link pagination-button">2</button>
-                                                </li>
-                                                <li class="page-item">
-                                                    <button class="page-link pagination-button">3</button>
-                                                </li>
-                                                <li class="page-item" data-page="next" id="prev">
-                                                    <button class="page-link pagination-button" aria-label="Next">&gt;</button>
-                                                </li>
-                                            </ul>
-                                        </nav>
-                                    </div>
+                                ?>
+                                <!-- Start Pagination -->
+                                <div class="pagination-container">
+                                    <nav>
+                                        <ul class="pagination">
+                                            <li class="page-item" data-page="prev">
+                                                <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
+                                            </li>
+                                            <!-- Here the JS Function Will Add the Rows -->
+                                            <li class="page-item">
+                                                <button class="page-link pagination-button">1</button>
+                                            </li>
+                                            <li class="page-item">
+                                                <button class="page-link pagination-button">2</button>
+                                            </li>
+                                            <li class="page-item">
+                                                <button class="page-link pagination-button">3</button>
+                                            </li>
+                                            <li class="page-item" data-page="next" id="prev">
+                                                <button class="page-link pagination-button" aria-label="Next">&gt;</button>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
 
-                                    <script>
-                                        getPagination('#table-id');
+                                <script>
+                                    getPagination('#table-id');
 
-                                        function getPagination(table) {
-                                            var lastPage = 1;
+                                    function getPagination(table) {
+                                        var lastPage = 1;
 
-                                            $('#maxRows').on('change', function(evt) {
-                                                lastPage = 1;
-                                                $('.pagination').find('li').slice(1, -1).remove();
-                                                var trnum = 0;
-                                                var maxRows = parseInt($(this).val());
+                                        $('#maxRows').on('change', function(evt) {
+                                            lastPage = 1;
+                                            $('.pagination').find('li').slice(1, -1).remove();
+                                            var trnum = 0;
+                                            var maxRows = parseInt($(this).val());
 
-                                                if (maxRows == 5000) {
-                                                    $('.pagination').hide();
-                                                } else {
-                                                    $('.pagination').show();
+                                            if (maxRows == 5000) {
+                                                $('.pagination').hide();
+                                            } else {
+                                                $('.pagination').show();
+                                            }
+
+                                            var totalRows = $(table + ' tbody tr').length;
+                                            $(table + ' tr:gt(0)').each(function() {
+                                                trnum++;
+                                                if (trnum > maxRows) {
+                                                    $(this).hide();
+                                                }
+                                                if (trnum <= maxRows) {
+                                                    $(this).show();
+                                                }
+                                            });
+
+                                            if (totalRows > maxRows) {
+                                                var pagenum = Math.ceil(totalRows / maxRows);
+                                                for (var i = 1; i <= pagenum; i++) {
+                                                    $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
+                                                <button class="page-link pagination-button">' + i + '</button>\
+                                                </li>').show();
+                                                }
+                                            }
+
+                                            $('.pagination [data-page="1"]').addClass('active');
+                                            $('.pagination li').on('click', function(evt) {
+                                                evt.stopImmediatePropagation();
+                                                evt.preventDefault();
+                                                var pageNum = $(this).attr('data-page');
+
+                                                var maxRows = parseInt($('#maxRows').val());
+
+                                                if (pageNum == 'prev') {
+                                                    if (lastPage == 1) {
+                                                        return;
+                                                    }
+                                                    pageNum = --lastPage;
+                                                }
+                                                if (pageNum == 'next') {
+                                                    if (lastPage == $('.pagination li').length - 2) {
+                                                        return;
+                                                    }
+                                                    pageNum = ++lastPage;
                                                 }
 
-                                                var totalRows = $(table + ' tbody tr').length;
+                                                lastPage = pageNum;
+                                                var trIndex = 0;
+                                                $('.pagination li').removeClass('active');
+                                                $('.pagination [data-page="' + lastPage + '"]').addClass('active');
+                                                limitPagging();
                                                 $(table + ' tr:gt(0)').each(function() {
-                                                    trnum++;
-                                                    if (trnum > maxRows) {
+                                                    trIndex++;
+                                                    if (
+                                                        trIndex > maxRows * pageNum ||
+                                                        trIndex <= maxRows * pageNum - maxRows
+                                                    ) {
                                                         $(this).hide();
-                                                    }
-                                                    if (trnum <= maxRows) {
+                                                    } else {
                                                         $(this).show();
                                                     }
                                                 });
-
-                                                if (totalRows > maxRows) {
-                                                    var pagenum = Math.ceil(totalRows / maxRows);
-                                                    for (var i = 1; i <= pagenum; i++) {
-                                                        $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
-                                                <button class="page-link pagination-button">' + i + '</button>\
-                                                </li>').show();
-                                                    }
-                                                }
-
-                                                $('.pagination [data-page="1"]').addClass('active');
-                                                $('.pagination li').on('click', function(evt) {
-                                                    evt.stopImmediatePropagation();
-                                                    evt.preventDefault();
-                                                    var pageNum = $(this).attr('data-page');
-
-                                                    var maxRows = parseInt($('#maxRows').val());
-
-                                                    if (pageNum == 'prev') {
-                                                        if (lastPage == 1) {
-                                                            return;
-                                                        }
-                                                        pageNum = --lastPage;
-                                                    }
-                                                    if (pageNum == 'next') {
-                                                        if (lastPage == $('.pagination li').length - 2) {
-                                                            return;
-                                                        }
-                                                        pageNum = ++lastPage;
-                                                    }
-
-                                                    lastPage = pageNum;
-                                                    var trIndex = 0;
-                                                    $('.pagination li').removeClass('active');
-                                                    $('.pagination [data-page="' + lastPage + '"]').addClass('active');
-                                                    limitPagging();
-                                                    $(table + ' tr:gt(0)').each(function() {
-                                                        trIndex++;
-                                                        if (
-                                                            trIndex > maxRows * pageNum ||
-                                                            trIndex <= maxRows * pageNum - maxRows
-                                                        ) {
-                                                            $(this).hide();
-                                                        } else {
-                                                            $(this).show();
-                                                        }
-                                                    });
-                                                });
-                                                limitPagging();
-                                            }).val(5).change();
-                                        }
-
-                                        function limitPagging() {
-                                            if ($('.pagination li').length > 7) {
-                                                if ($('.pagination li.active').attr('data-page') <= 3) {
-                                                    $('.pagination li.page-item:gt(5)').hide();
-                                                    $('.pagination li.page-item:lt(5)').show();
-                                                    $('.pagination [data-page="next"]').show();
-                                                }
-                                                if ($('.pagination li.active').attr('data-page') > 3) {
-                                                    $('.pagination li.page-item').hide();
-                                                    $('.pagination [data-page="next"]').show();
-                                                    var currentPage = parseInt($('.pagination li.active').attr('data-page'));
-                                                    for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-                                                        $('.pagination [data-page="' + i + '"]').show();
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    </script>
-
-                                    <!--------------- POP-UP BOX ------------
--------------------------------------->
-                                    <style>
-                                        .modal {
-                                            display: none;
-                                            /* Hidden by default */
-                                            position: fixed;
-                                            /* Stay in place */
-                                            z-index: 100;
-                                            /* Sit on top */
-                                            padding-top: 100px;
-                                            /* Location of the box */
-                                            left: 0;
-                                            top: 0;
-                                            width: 100%;
-                                            /* Full width */
-                                            height: 100%;
-                                            /* Full height */
-                                            overflow: auto;
-                                            /* Enable scroll if needed */
-                                            background-color: rgb(0, 0, 0);
-                                            /* Fallback color */
-                                            background-color: rgba(0, 0, 0, 0.4);
-                                            /* Black w/ opacity */
-                                        }
-
-                                        /* Modal Content */
-
-                                        .modal-content {
-                                            background-color: #fefefe;
-                                            margin: auto;
-                                            padding: 20px;
-                                            border: 1px solid #888;
-                                            width: 100vh;
-                                        }
-
-                                        @media (max-width:767px) {
-                                            .modal-content {
-                                                width: 50vh;
-                                            }
-                                        }
-
-                                        /* The Close Button */
-
-                                        .close {
-                                            color: #aaaaaa;
-                                            float: right;
-                                            font-size: 28px;
-                                            font-weight: bold;
-                                            text-align: right;
-                                        }
-
-                                        .close:hover,
-                                        .close:focus {
-                                            color: #000;
-                                            text-decoration: none;
-                                            cursor: pointer;
-                                        }
-                                    </style>
-                                    <div id="myModal" class="modal">
-
-                                        <!-- Modal content -->
-                                        <div class="modal-content">
-                                            <span class="close">&times;</span>
-                                            <div style="width:100%; text-align:right">
-                                                <p id="status" class="badge " style="display: inline !important;"><span class="leaveid"></span></p>
-                                            </div>
-
-                                            <form id="leavereviewform" name="leavereviewform" action="#" method="POST">
-                                                <input type="hidden" class="form-control" name="form-type" type="text" value="leavereviewform" readonly>
-                                                <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
-                                                <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
-                                                <input type="hidden" class="form-control" name="leaveidd" id="leaveidd" type="text" value="" readonly>
-                                                <span class="input-help">
-                                                    <input type="date" class="form-control" name="fromdate" id="fromdated" type="text" value="">
-                                                    <small id="passwordHelpBlock" class="form-text text-muted">From</small>
-                                                </span>
-                                                <span class="input-help">
-                                                    <input type="date" class="form-control" name="todate" id="todated" type="text" value="">
-                                                    <small id="passwordHelpBlock" class="form-text text-muted">To</small>
-                                                </span>
-
-                                                <select name="leave_status" id="leave_status" class="form-control" style="display: -webkit-inline-box; width:20vh; " required>
-                                                    <option value="" disabled selected hidden>Status</option>
-                                                    <option value="Approved">Approved</option>
-                                                    <option value="Under review">Under review</option>
-                                                    <option value="Rejected">Rejected</option>
-                                                </select>
-
-                                                <span class="input-help">
-                                                    <textarea type="text" name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="HR remarks" value=""></textarea>
-                                                    <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
-                                                </span>
-                                                <div id="filter-checkshr">
-                                                    <input type="checkbox" name="is_userhr" id="" value="" />
-                                                    <label for="is_userhr" style="font-weight: 400;">Half day</label>
-                                                </div>
-                                                <br>
-                                                <button type="submit" id="leaveupdate" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
-                                            </form>
-                                        </div>
-
-                                    </div>
-                                    <script>
-                                        var data = <?php echo json_encode($resultArr) ?>
-
-                                        // Get the modal
-                                        var modal = document.getElementById("myModal");
-                                        // Get the <span> element that closes the modal
-                                        var span = document.getElementsByClassName("close")[0];
-
-                                        function showDetails(id) {
-                                            // console.log(modal)
-                                            // console.log(modal.getElementsByClassName("data"))
-                                            var mydata = undefined
-                                            data.forEach(item => {
-                                                if (item["leaveid"] == id) {
-                                                    mydata = item;
-                                                }
-                                            })
-
-                                            var keys = Object.keys(mydata)
-                                            keys.forEach(key => {
-                                                var span = modal.getElementsByClassName(key)
-                                                if (span.length > 0)
-                                                    span[0].innerHTML = mydata[key];
-                                            })
-                                            modal.style.display = "block";
-
-                                            //class add 
-                                            var status = document.getElementById("status")
-                                            if (mydata["status"] === "Approved") {
-                                                status.classList.add("bg-success")
-                                                status.classList.remove("bg-danger")
-                                            } else {
-                                                status.classList.remove("bg-success")
-                                                status.classList.add("bg-danger")
-                                            }
-                                            //class add end
-
-                                            var profile = document.getElementById("leaveidd")
-                                            profile.value = mydata["leaveid"]
-                                            if (mydata["status"] !== null) {
-                                                profile = document.getElementById("leave_status")
-                                                profile.value = mydata["status"]
-                                            }
-                                            if (mydata["comment"] !== null) {
-                                                profile = document.getElementById("reviewer_remarks")
-                                                profile.value = mydata["comment"]
-                                            }
-
-                                            if (mydata["fromdate"] !== null) {
-                                                profile = document.getElementById("fromdated")
-                                                profile.value = mydata["fromdate"]
-                                            }
-                                            if (mydata["todate"] !== null) {
-                                                profile = document.getElementById("todated")
-                                                profile.value = mydata["todate"]
-                                            }
-
-                                            // document.getElementsByName("leavereviewform")[0].id = "leavereviewform" + mydata["leaveid"];
-                                            document.getElementsByName("is_userhr")[0].id = "is_userhr" + mydata["leaveid"];
-
-                                            profile = document.getElementById("is_userhr" + mydata["leaveid"])
-                                            profile.value = mydata["halfday"]
-
-                                            $('input[type="checkbox"]').on('change', function() {
-                                                this.value ^= 1;
                                             });
+                                            limitPagging();
+                                        }).val(5).change();
+                                    }
 
-
-                                            if (mydata["halfday"] == 1) {
-                                                document.getElementById("is_userhr" + mydata["leaveid"]).checked = true;
-                                            } else {
-                                                document.getElementById("is_userhr" + mydata["leaveid"]).checked = false;
+                                    function limitPagging() {
+                                        if ($('.pagination li').length > 7) {
+                                            if ($('.pagination li.active').attr('data-page') <= 3) {
+                                                $('.pagination li.page-item:gt(5)').hide();
+                                                $('.pagination li.page-item:lt(5)').show();
+                                                $('.pagination [data-page="next"]').show();
                                             }
-
-                                            if (mydata["status"] == 'Approved' || mydata["status"] == 'Rejected') {
-                                                document.getElementById("leaveupdate").disabled = true;
-                                            } else {
-                                                document.getElementById("leaveupdate").disabled = false;
-                                            }
-                                        }
-                                        // When the user clicks the button, open the modal 
-                                        // When the user clicks on <span> (x), close the modal
-                                        span.onclick = function() {
-                                            modal.style.display = "none";
-                                        }
-                                        // When the user clicks anywhere outside of the modal, close it
-                                        window.onclick = function(event) {
-                                            if (event.target == modal) {
-                                                modal.style.display = "none";
-                                            } else if (event.target == modal1) {
-                                                modal1.style.display = "none";
+                                            if ($('.pagination li.active').attr('data-page') > 3) {
+                                                $('.pagination li.page-item').hide();
+                                                $('.pagination [data-page="next"]').show();
+                                                var currentPage = parseInt($('.pagination li.active').attr('data-page'));
+                                                for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+                                                    $('.pagination [data-page="' + i + '"]').show();
+                                                }
                                             }
                                         }
-                                    </script>
-                                    <div id="myModalpdf" class="modal">
+                                    }
+                                </script>
 
-                                        <!-- Modal content -->
+                                <!--------------- POP-UP BOX ------------
+-------------------------------------->
+                                <style>
+                                    .modal {
+                                        background-color: rgba(0, 0, 0, 0.4);
+                                        /* Black w/ opacity */
+                                    }
+                                </style>
+                                <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
                                         <div class="modal-content">
-                                            <span id="closepdf" class="close">&times;</span>
-
-                                            <div style="width:100%; text-align:right">
-                                                <p id="status2" class="badge " style="display: inline !important;"><span class="status"></span></p>
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Leave Details</h1>
+                                                <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
+                                            <div class="modal-body">
 
-                                            <p>
-                                                Leave Id: <span class="leaveid"></span><br>
-                                                <object name="docid" id="" data="" type="application/pdf" width="100%" height="450px"></object>
-                                            </p>
+                                                <div style="width:100%; text-align:right">
+                                                    <p id="status" class="badge " style="display: inline !important;"><span class="leaveid"></span></p>
+                                                </div>
+
+                                                <form id="leavereviewform" name="leavereviewform" action="#" method="POST">
+                                                    <input type="hidden" class="form-control" name="form-type" type="text" value="leavereviewform" readonly>
+                                                    <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
+                                                    <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
+                                                    <input type="hidden" class="form-control" name="leaveidd" id="leaveidd" type="text" value="" readonly>
+                                                    <span class="input-help">
+                                                        <input type="date" class="form-control" name="fromdate" id="fromdated" type="text" value="">
+                                                        <small id="passwordHelpBlock" class="form-text text-muted">From</small>
+                                                    </span>
+                                                    <span class="input-help">
+                                                        <input type="date" class="form-control" name="todate" id="todated" type="text" value="">
+                                                        <small id="passwordHelpBlock" class="form-text text-muted">To</small>
+                                                    </span>
+
+                                                    <select name="leave_status" id="leave_status" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
+                                                        <option value="" disabled selected hidden>Status</option>
+                                                        <option value="Approved">Approved</option>
+                                                        <option value="Under review">Under review</option>
+                                                        <option value="Rejected">Rejected</option>
+                                                    </select>
+
+                                                    <span class="input-help">
+                                                        <textarea type="text" name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="HR remarks" value=""></textarea>
+                                                        <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
+                                                    </span>
+                                                    <div id="filter-checkshr">
+                                                        <input type="checkbox" name="is_userhr" id="" value="" />
+                                                        <label for="is_userhr" style="font-weight: 400;">Half day</label>
+                                                    </div>
+                                                    <br>
+                                                    <button type="submit" id="leaveupdate" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
+                                                </form>
+                                                <div class="modal-footer">
+                                                    <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <script>
+                                    var data = <?php echo json_encode($resultArr) ?>
+
+                                    // Get the modal
+                                    var modal = document.getElementById("myModal");
+                                    // Get the <span> element that closes the modal
+                                    var closedetails = [
+                                        document.getElementById("closedetails-header"),
+                                        document.getElementById("closedetails-footer")
+                                    ];
+
+                                    function showDetails(id) {
+                                        // console.log(modal)
+                                        // console.log(modal.getElementsByClassName("data"))
+                                        var mydata = undefined
+                                        data.forEach(item => {
+                                            if (item["leaveid"] == id) {
+                                                mydata = item;
+                                            }
+                                        })
+
+                                        var keys = Object.keys(mydata)
+                                        keys.forEach(key => {
+                                            var span = modal.getElementsByClassName(key)
+                                            if (span.length > 0)
+                                                span[0].innerHTML = mydata[key];
+                                        })
+                                        modal.style.display = "block";
+
+                                        //class add 
+                                        var status = document.getElementById("status")
+                                        if (mydata["status"] === "Approved") {
+                                            status.classList.add("bg-success")
+                                            status.classList.remove("bg-danger")
+                                        } else {
+                                            status.classList.remove("bg-success")
+                                            status.classList.add("bg-danger")
+                                        }
+                                        //class add end
+
+                                        var profile = document.getElementById("leaveidd")
+                                        profile.value = mydata["leaveid"]
+                                        if (mydata["status"] !== null) {
+                                            profile = document.getElementById("leave_status")
+                                            profile.value = mydata["status"]
+                                        }
+                                        if (mydata["comment"] !== null) {
+                                            profile = document.getElementById("reviewer_remarks")
+                                            profile.value = mydata["comment"]
+                                        }
+
+                                        if (mydata["fromdate"] !== null) {
+                                            profile = document.getElementById("fromdated")
+                                            profile.value = mydata["fromdate"]
+                                        }
+                                        if (mydata["todate"] !== null) {
+                                            profile = document.getElementById("todated")
+                                            profile.value = mydata["todate"]
+                                        }
+
+                                        // document.getElementsByName("leavereviewform")[0].id = "leavereviewform" + mydata["leaveid"];
+                                        document.getElementsByName("is_userhr")[0].id = "is_userhr" + mydata["leaveid"];
+
+                                        profile = document.getElementById("is_userhr" + mydata["leaveid"])
+                                        profile.value = mydata["halfday"]
+
+                                        $('input[type="checkbox"]').on('change', function() {
+                                            this.value ^= 1;
+                                        });
+
+
+                                        if (mydata["halfday"] == 1) {
+                                            document.getElementById("is_userhr" + mydata["leaveid"]).checked = true;
+                                        } else {
+                                            document.getElementById("is_userhr" + mydata["leaveid"]).checked = false;
+                                        }
+
+                                        if (mydata["status"] == 'Approved' || mydata["status"] == 'Rejected') {
+                                            document.getElementById("leaveupdate").disabled = true;
+                                        } else {
+                                            document.getElementById("leaveupdate").disabled = false;
+                                        }
+                                    }
+                                    // When the user clicks the button, open the modal 
+                                    // When the user clicks on <span> (x), close the modal
+                                    closedetails.forEach(function(element) {
+                                        element.addEventListener("click", closeModal);
+                                    });
+
+                                    function closeModal() {
+                                        var modal1 = document.getElementById("myModal");
+                                        modal1.style.display = "none";
+                                    }
+                                    // When the user clicks anywhere outside of the modal, close it
+                                    // window.onclick = function(event) {
+                                    //     if (event.target == modal) {
+                                    //         modal.style.display = "none";
+                                    //     } else if (event.target == modal1) {
+                                    //         modal1.style.display = "none";
+                                    //     }
+                                    // }
+                                </script>
+                                <div id="myModalpdf" class="modal">
+
+                                    <!-- Modal content -->
+                                    <div class="modal-content">
+                                        <span id="closepdf" class="close">&times;</span>
+
+                                        <div style="width:100%; text-align:right">
+                                            <p id="status2" class="badge " style="display: inline !important;"><span class="status"></span></p>
                                         </div>
 
+                                        <p>
+                                            Leave Id: <span class="leaveid"></span><br>
+                                            <object name="docid" id="" data="" type="application/pdf" width="100%" height="450px"></object>
+                                        </p>
                                     </div>
-                                    <script>
-                                        var data1 = <?php echo json_encode($resultArr) ?>
 
-                                        // Get the modal
-                                        var modal1 = document.getElementById("myModalpdf");
-                                        var closepdf = document.getElementById("closepdf");
+                                </div>
+                                <script>
+                                    var data1 = <?php echo json_encode($resultArr) ?>
 
-                                        function showpdf(id1) {
-                                            var mydata1 = undefined
-                                            data1.forEach(item1 => {
-                                                if (item1["leaveid"] == id1) {
-                                                    mydata1 = item1;
-                                                }
-                                            })
-                                            var keys1 = Object.keys(mydata1)
-                                            keys1.forEach(key => {
-                                                var span1 = modal1.getElementsByClassName(key)
-                                                if (span1.length > 0)
-                                                    span1[0].innerHTML = mydata1[key];
-                                            })
-                                            modal1.style.display = "block";
+                                    // Get the modal
+                                    var modal1 = document.getElementById("myModalpdf");
+                                    var closepdf = document.getElementById("closepdf");
 
-                                            //class add 
-                                            var statuss = document.getElementById("status2")
-                                            if (mydata1["status"] === "Approved") {
-                                                statuss.classList.add("bg-success")
-                                                statuss.classList.remove("bg-danger")
-                                            } else if (mydata1["status"] === "Rejected") {
-                                                statuss.classList.remove("bg-success")
-                                                statuss.classList.add("bg-danger")
-                                            } else {
-                                                statuss.classList.remove("bg-success")
-                                                statuss.classList.remove("bg-danger")
+                                    function showpdf(id1) {
+                                        var mydata1 = undefined
+                                        data1.forEach(item1 => {
+                                            if (item1["leaveid"] == id1) {
+                                                mydata1 = item1;
                                             }
-                                            //class add end
-                                            document.getElementsByName("docid")[0].id = "docid" + mydata1["leaveid"];
+                                        })
+                                        var keys1 = Object.keys(mydata1)
+                                        keys1.forEach(key => {
+                                            var span1 = modal1.getElementsByClassName(key)
+                                            if (span1.length > 0)
+                                                span1[0].innerHTML = mydata1[key];
+                                        })
+                                        modal1.style.display = "block";
 
-                                            randomvar = document.getElementById("docid" + mydata1["leaveid"])
-                                            randomvar.data = mydata1["docp"]
+                                        //class add 
+                                        var statuss = document.getElementById("status2")
+                                        if (mydata1["status"] === "Approved") {
+                                            statuss.classList.add("bg-success")
+                                            statuss.classList.remove("bg-danger")
+                                        } else if (mydata1["status"] === "Rejected") {
+                                            statuss.classList.remove("bg-success")
+                                            statuss.classList.add("bg-danger")
+                                        } else {
+                                            statuss.classList.remove("bg-success")
+                                            statuss.classList.remove("bg-danger")
                                         }
-                                        closepdf.onclick = function() {
-                                            modal1.style.display = "none";
-                                        }
-                                    </script>
+                                        //class add end
+                                        document.getElementsByName("docid")[0].id = "docid" + mydata1["leaveid"];
 
-                                    <script>
-                                        var data = <?php echo json_encode($resultArr) ?>;
-                                        const scriptURL = 'payment-api.php'
+                                        randomvar = document.getElementById("docid" + mydata1["leaveid"])
+                                        randomvar.data = mydata1["docp"]
+                                    }
+                                    closepdf.onclick = function() {
+                                        modal1.style.display = "none";
+                                    }
+                                </script>
 
-                                        function validateForm() {
-                                            if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+                                <script>
+                                    var data = <?php echo json_encode($resultArr) ?>;
+                                    const scriptURL = 'payment-api.php'
 
-                                                data.forEach(item => {
-                                                    const form = document.forms['leavedelete_' + item.leaveid]
-                                                    form.addEventListener('submit', e => {
-                                                        e.preventDefault()
-                                                        fetch(scriptURL, {
-                                                                method: 'POST',
-                                                                body: new FormData(document.forms['leavedelete_' + item.leaveid])
-                                                            })
-                                                            .then(response =>
-                                                                alert("Record has been deleted.") +
-                                                                location.reload()
-                                                            )
-                                                            .catch(error => console.error('Error!', error.message))
-                                                    })
+                                    function validateForm() {
+                                        if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
 
-                                                    console.log(item)
+                                            data.forEach(item => {
+                                                const form = document.forms['leavedelete_' + item.leaveid]
+                                                form.addEventListener('submit', e => {
+                                                    e.preventDefault()
+                                                    fetch(scriptURL, {
+                                                            method: 'POST',
+                                                            body: new FormData(document.forms['leavedelete_' + item.leaveid])
+                                                        })
+                                                        .then(response =>
+                                                            alert("Record has been deleted.") +
+                                                            location.reload()
+                                                        )
+                                                        .catch(error => console.error('Error!', error.message))
                                                 })
-                                            } else {
-                                                alert("Record has NOT been deleted.");
-                                                return false;
-                                            }
-                                        }
 
-                                        const form = document.getElementById('leavereviewform')
+                                                console.log(item)
+                                            })
+                                        } else {
+                                            alert("Record has NOT been deleted.");
+                                            return false;
+                                        }
+                                    }
+
+                                    const form = document.getElementById('leavereviewform')
+                                    form.addEventListener('submit', e => {
+                                        e.preventDefault()
+                                        fetch(scriptURL, {
+                                                method: 'POST',
+                                                body: new FormData(document.getElementById('leavereviewform'))
+                                            })
+                                            .then(response =>
+                                                alert("Record has been updated.") +
+                                                location.reload()
+                                            )
+                                            .catch(error => console.error('Error!', error.message))
+                                    })
+
+                                    data.forEach(item => {
+                                        const formId = 'email-form-' + item.leaveid
+                                        const form = document.forms[formId]
                                         form.addEventListener('submit', e => {
                                             e.preventDefault()
-                                            fetch(scriptURL, {
+                                            fetch('mailer.php', {
                                                     method: 'POST',
-                                                    body: new FormData(document.getElementById('leavereviewform'))
+                                                    body: new FormData(document.forms[formId])
                                                 })
                                                 .then(response =>
-                                                    alert("Record has been updated.") +
-                                                    location.reload()
+                                                    alert("Email has been sent.")
                                                 )
                                                 .catch(error => console.error('Error!', error.message))
                                         })
-
-                                        data.forEach(item => {
-                                            const formId = 'email-form-' + item.leaveid
-                                            const form = document.forms[formId]
-                                            form.addEventListener('submit', e => {
-                                                e.preventDefault()
-                                                fetch('mailer.php', {
-                                                        method: 'POST',
-                                                        body: new FormData(document.forms[formId])
-                                                    })
-                                                    .then(response =>
-                                                        alert("Email has been sent.")
-                                                    )
-                                                    .catch(error => console.error('Error!', error.message))
-                                            })
-                                        })
-                                    </script>
+                                    })
+                                </script>
 
                             </div>
                         </div>

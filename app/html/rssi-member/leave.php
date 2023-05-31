@@ -271,28 +271,22 @@ $resultArr = pg_fetch_all($result);
                             <br>
                             <div class="row">
                                 <?php if (@$leaveid != null && @$cmdtuples == 0 && @$typeofleave == "Sick Leave") { ?>
-
-                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <span class="blink_me"><i class="bi bi-x-lg"></i></span>&nbsp;&nbsp;<span>ERROR: Your SL
-                                            request has not been submitted because you have applied for more than the leave
-                                            balance.</span>
+                                    <div class="alert alert-danger alert-dismissible text-center" role="alert">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-x-lg"></i>
+                                        <span>ERROR: Your SL request has not been submitted because you have applied for more than the leave balance.</span>
                                     </div>
                                 <?php } else if (@$leaveid != null && @$cmdtuples == 0 && @$typeofleave == "Casual Leave") { ?>
-
-                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <span class="blink_me"><i class="bi bi-x-lg"></i></i></span>&nbsp;&nbsp;<span>ERROR: Your
-                                            CL request has not been submitted because you have applied for more than the leave
-                                            balance.</span>
+                                    <div class="alert alert-danger alert-dismissible text-center" role="alert">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-x-lg"></i>
+                                        <span>ERROR: Your CL request has not been submitted because you have applied for more than the leave balance.</span>
                                     </div>
-                                <?php
-                                } else if (@$cmdtuples == 1) { ?>
-
-                                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your
-                                            request has been submitted. Leave id <?php echo $leaveid ?>.</span>
+                                <?php } else if (@$cmdtuples == 1) { ?>
+                                    <div class="alert alert-success alert-dismissible text-center" role="alert">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-check2"></i>
+                                        <span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {
@@ -300,30 +294,28 @@ $resultArr = pg_fetch_all($result);
                                         }
                                     </script>
                                 <?php } ?>
+
                                 <?php
                                 if (($clbalance == 0 || @$clbalance < 0) && ($slbalance == 0 || $slbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
                                 ?>
-                                    <div class="alert alert-danger" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="bi bi-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Inadequate SL and CL
-                                        balance. You are not eligible to take leave. Please take a makeup class to enable the apply
-                                        leave option.
+                                    <div class="alert alert-danger text-center" role="alert">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <span>Inadequate SL and CL balance. You are not eligible to take leave.
+                                            Please take a makeup class to enable the apply leave option.</span>
                                     </div>
-                                <?php
-                                } else if ((@$clbalance == 0 || @$clbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
-                                ?>
-                                    <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="bi bi-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient CL balance. You
-                                        are not eligible for casual leave. Please take makeup class to increase CL balance.
+                                <?php } else if ((@$clbalance == 0 || @$clbalance < 0) && $filterstatus == 'Active' && $lyear != null) { ?>
+                                    <div class="alert alert-warning text-center" role="alert">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <span>Insufficient CL balance. You are not eligible for casual leave.
+                                            Please take a makeup class to increase CL balance.</span>
                                     </div>
-                                <?php
-                                } else if ((@$slbalance == 0 || @$slbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
-                                ?>
-                                    <div class="alert alert-warning" role="alert" style="text-align: -webkit-center;"><span class="blink_me"><i class="bi bi-exclamation-triangle" style="color: #A9444C;"></i></span>&nbsp;
-                                        <b><span id="demo" style="display: inline-block;"></span></b>&nbsp; Insufficient SL balance. You
-                                        are not eligible for sick leave. Please take makeup class to increase SL balance.
+                                <?php } else if ((@$slbalance == 0 || @$slbalance < 0) && $filterstatus == 'Active' && $lyear != null) { ?>
+                                    <div class="alert alert-warning text-center" role="alert">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <span>Insufficient SL balance. You are not eligible for sick leave.
+                                            Please take a makeup class to increase SL balance.</span>
                                     </div>
-                                <?php
-                                } ?>
+                                <?php } ?>
                                 <div class="text-end">
                                     <span class="link-secondary"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span>
                                     <span class="separator"> | </span>

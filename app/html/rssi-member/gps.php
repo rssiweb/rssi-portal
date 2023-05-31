@@ -196,17 +196,14 @@ $resultArr = pg_fetch_all($result);
                             <br>
                             <?php if ($role == 'Admin') { ?>
                                 <?php if (@$itemid != null && @$cmdtuples == 0) { ?>
-
                                     <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                        <a href="#" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></a>
                                         <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
                                     </div>
-                                <?php
-                                } else if (@$cmdtuples == 1) { ?>
-
+                                <?php } else if (@$cmdtuples == 1) { ?>
                                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Database has been updated successfully for asset id <?php echo @$itemid ?>.</span>
+                                        <a href="#" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></a>
+                                        <i class="bi bi-check2" style="font-size: medium;"></i>&nbsp;&nbsp;<span>Database has been updated successfully for asset id <?php echo @$itemid ?>.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {
@@ -215,6 +212,7 @@ $resultArr = pg_fetch_all($result);
                                     </script>
                             <?php }
                             } ?>
+
                             <?php if ($role == 'Admin') { ?>
                                 <form autocomplete="off" name="gps" id="gps" action="gps.php" method="POST">
                                     <div class="form-group" style="display: inline-block;">
@@ -629,138 +627,94 @@ $resultArr = pg_fetch_all($result);
 -------------------------------------->
                             <style>
                                 .modal {
-                                    display: none;
-                                    /* Hidden by default */
-                                    position: fixed;
-                                    /* Stay in place */
-                                    z-index: 100;
-                                    /* Sit on top */
-                                    padding-top: 100px;
-                                    /* Location of the box */
-                                    left: 0;
-                                    top: 0;
-                                    width: 100%;
-                                    /* Full width */
-                                    height: 100%;
-                                    /* Full height */
-                                    overflow: auto;
-                                    /* Enable scroll if needed */
-                                    background-color: rgb(0, 0, 0);
-                                    /* Fallback color */
                                     background-color: rgba(0, 0, 0, 0.4);
                                     /* Black w/ opacity */
                                 }
-
-                                /* Modal Content */
-
-                                .modal-content {
-                                    background-color: #fefefe;
-                                    margin: auto;
-                                    padding: 20px;
-                                    border: 1px solid #888;
-                                    width: 100vh;
-                                }
-
-                                @media (max-width:767px) {
-                                    .modal-content {
-                                        width: 50vh;
-                                    }
-                                }
-
-                                /* The Close Button */
-
-                                .close {
-                                    color: #aaaaaa;
-                                    float: right;
-                                    font-size: 28px;
-                                    font-weight: bold;
-                                    text-align: right;
-                                }
-
-                                .close:hover,
-                                .close:focus {
-                                    color: #000;
-                                    text-decoration: none;
-                                    cursor: pointer;
-                                }
                             </style>
 
-                            <div id="myModal" class="modal">
-
-                                <!-- Modal content -->
-                                <div class="modal-content">
-                                    <div class="col2 left" style="display: inline-block;">
-                                        <span class="close">&times;</span>
-
-                                        <div style="width:100%; text-align:right">
-                                            <p class="badge label-info"><span class="itemid"></span></p>
-
+                            <!-- Modal content -->
+                            <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-xl">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">GPS Details</h1>
+                                            <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
+                                        <div class="modal-body">
 
-                                        <form id="gpsform" action="#" method="POST">
-                                            <div class="form-group" style="display: inline-block;">
-                                                <div class="col2" style="display: inline-block;">
-
-                                                    <input type="hidden" class="form-control" name="itemid1" id="itemid1" type="text" value="" readonly>
-
-                                                    <input type="hidden" class="form-control" name="form-type" type="text" value="gpsedit" readonly>
-
-                                                    <span class="input-help">
-                                                        <select name="itemtype" id="itemtype" class="form-control" style="width:max-content; display:inline-block" required>
-                                                            <?php if ($itemtype == null) { ?>
-                                                                <option value="" disabled selected hidden>Item type</option>
-                                                            <?php
-                                                            } else { ?>
-                                                                <option hidden selected><?php echo $itemtype ?></option>
-                                                            <?php }
-                                                            ?>
-                                                            <option>Purchased</option>
-                                                            <option>Donation</option>
-                                                        </select>
-                                                        <small id="passwordHelpBlock" class="form-text text-muted">Item type*</small>
-                                                    </span>
-
-                                                    <span class="input-help">
-                                                        <input type="text" name="itemname" id="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" value="" required>
-                                                        <small id="passwordHelpBlock" class="form-text text-muted">Item name*</small>
-                                                    </span>
-
-                                                    <span class="input-help">
-                                                        <input type="number" name="quantity" id="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" value="" min="1" required>
-                                                        <small id="passwordHelpBlock" class="form-text text-muted">Quantity*</small>
-                                                    </span>
-
-                                                    <span class="input-help">
-                                                        <textarea type="text" name="remarks" id="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
-                                                        <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
-                                                    </span>
-                                                    <span class="input-help">
-                                                        <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="" required>
-                                                        <small id="passwordHelpBlock" class="form-text text-muted"> Issued by*</small>
-                                                    </span>
-                                                    <span class="input-help">
-                                                        <input type="text" name="taggedto" id="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="">
-                                                        <small id="passwordHelpBlock" class="form-text text-muted"> Tagged to</small>
-                                                    </span>
-
-                                                </div>
+                                            <div style="width:100%; text-align:right">
+                                                <p class="badge bg-info"><span class="itemid"></span></p>
 
                                             </div>
 
-                                            <button type="submit" name="search_by_id3" class="btn btn-danger btn-sm" style="outline: none;">
-                                                Update</button>
-                                        </form>
+                                            <form id="gpsform" action="#" method="POST">
+                                                <div class="form-group">
+                                                    <div class="col2" style="display: inline-block;">
+                                                        <input type="hidden" class="form-control" name="itemid1" id="itemid1" type="text" value="" readonly>
+                                                        <input type="hidden" class="form-control" name="form-type" type="text" value="gpsedit" readonly>
+
+                                                        <span class="input-help">
+                                                            <select name="itemtype" id="itemtype" class="form-select" style="width:max-content; display:inline-block" required>
+                                                                <?php if ($itemtype == null) { ?>
+                                                                    <option value="" disabled selected hidden>Item type</option>
+                                                                <?php } else { ?>
+                                                                    <option hidden selected><?php echo $itemtype ?></option>
+                                                                <?php } ?>
+                                                                <option>Purchased</option>
+                                                                <option>Donation</option>
+                                                            </select>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Item type*</small>
+                                                        </span>
+
+                                                        <span class="input-help">
+                                                            <input type="text" name="itemname" id="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" value="" required>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Item name*</small>
+                                                        </span>
+
+                                                        <span class="input-help">
+                                                            <input type="number" name="quantity" id="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" value="" min="1" required>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Quantity*</small>
+                                                        </span>
+
+                                                        <span class="input-help">
+                                                            <textarea type="text" name="remarks" id="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
+                                                        </span>
+
+                                                        <span class="input-help">
+                                                            <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="" required>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Issued by*</small>
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="col2" style="display: inline-block;">
+                                                        <span class="input-help">
+                                                            <input type="text" name="taggedto" id="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="">
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Tagged to</small>
+                                                        </span>
+
+                                                        <button type="submit" name="search_by_id3" class="btn btn-danger btn-sm" style="outline: none;">Update</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+
+                                            <div class="modal-footer">
+                                                <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>
 
                                 // Get the modal
                                 var modal = document.getElementById("myModal");
                                 // Get the <span> element that closes the modal
-                                var span = document.getElementsByClassName("close")[0];
+                                var closedetails = [
+                                    document.getElementById("closedetails-header"),
+                                    document.getElementById("closedetails-footer")
+                                ];
 
                                 function showDetails(id) {
                                     // console.log(modal)
@@ -811,19 +765,24 @@ $resultArr = pg_fetch_all($result);
                                 }
                                 // When the user clicks the button, open the modal 
                                 // When the user clicks on <span> (x), close the modal
-                                span.onclick = function() {
-                                    modal.style.display = "none";
+                                closedetails.forEach(function(element) {
+                                    element.addEventListener("click", closeModal);
+                                });
+
+                                function closeModal() {
+                                    var modal1 = document.getElementById("myModal");
+                                    modal1.style.display = "none";
                                 }
                                 // When the user clicks anywhere outside of the modal, close it
-                                window.onclick = function(event) {
-                                    if (event.target == modal) {
-                                        modal.style.display = "none";
-                                    } else if (event.target == modal1) {
-                                        modal1.style.display = "none";
-                                    } else if (event.target == modal2) {
-                                        modal2.style.display = "none";
-                                    }
-                                }
+                                // window.onclick = function(event) {
+                                //     if (event.target == modal) {
+                                //         modal.style.display = "none";
+                                //     } else if (event.target == modal1) {
+                                //         modal1.style.display = "none";
+                                //     } else if (event.target == modal2) {
+                                //         modal2.style.display = "none";
+                                //     }
+                                // }
                             </script>
 
 

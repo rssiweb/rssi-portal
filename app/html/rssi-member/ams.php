@@ -116,17 +116,16 @@ if ($_POST) {
                         <div class="card-body">
                             <br>
                             <?php if (@$noticeid != null && @$cmdtuples == 0) { ?>
-
-                                <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                    <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>ERROR: Oops, something wasn't right.</span>
                                 </div>
-                            <?php
-                            } else if (@$cmdtuples == 1) { ?>
-
-                                <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                    <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Database has been updated successfully for notice id <?php echo @$noticeid ?>.</span>
+                            <?php } else if (@$cmdtuples == 1) { ?>
+                                <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-check2"></i>
+                                    <span>Database has been updated successfully for notice id <?php echo @$noticeid ?>.</span>
                                 </div>
                             <?php } ?>
 
@@ -236,7 +235,7 @@ if ($_POST) {
 
                                     <?php echo '&nbsp;
 
-                                <button type="button" id="edit_' . $array['noticeid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="bi bi-box-arrow-up-right"></i></button>&nbsp;
+                                <button type="button" id="edit_' . $array['noticeid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="bi bi-pencil-square"></i></button>&nbsp;
 
                                 <button type="submit" id="save_' . $array['noticeid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="bi bi-save"></i></button>
                                 

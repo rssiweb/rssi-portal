@@ -137,17 +137,16 @@ $resultArrr = pg_fetch_all($result);
                             <br>
 
                             <?php if (@$type != null && @$cmdtuples == 0) { ?>
-
-                                <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                    <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: The association type and user ID you entered is incorrect.</span>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>ERROR: The association type and user ID you entered is incorrect.</span>
                                 </div>
-                            <?php
-                            } else if (@$cmdtuples == 1) { ?>
-
-                                <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                    <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Password has been updated successfully for <?php echo @$user_id ?>.</span>
+                            <?php } else if (@$cmdtuples == 1) { ?>
+                                <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-check2"></i>
+                                    <span>Password has been updated successfully for <?php echo @$user_id ?>.</span>
                                 </div>
                             <?php } ?>
 

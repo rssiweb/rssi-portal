@@ -250,17 +250,16 @@ include("../../util/email.php");
                             <div class="row">
                                 <?php if ($role == 'Admin') { ?>
                                     <?php if (@$certificate_no != null && @$cmdtuples == 0) { ?>
-
-                                        <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                            <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                                        <div class="alert alert-danger alert-dismissible text-center" role="alert">
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                            <span>ERROR: Oops, something wasn't right.</span>
                                         </div>
-                                    <?php
-                                    } else if (@$cmdtuples == 1) { ?>
-
-                                        <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                            <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Certificate no <?php echo @$certificate_no ?> has been added.</span>
+                                    <?php } else if (@$cmdtuples == 1) { ?>
+                                        <div class="alert alert-success alert-dismissible text-center" role="alert">
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            <i class="bi bi-check2"></i>
+                                            <span>Certificate no <?php echo @$certificate_no ?> has been added.</span>
                                         </div>
                                         <script>
                                             if (window.history.replaceState) {
@@ -269,35 +268,6 @@ include("../../util/email.php");
                                         </script>
                                     <?php } ?>
                                 <?php } ?>
-
-                                <!-- <div class="col" style="display: inline-block; width:100%; text-align:right">
-
-                                    <?php if ($role == 'Admin') { ?>
-                                        <div class="col" style="display: inline-block; width:47%; text-align:right">
-
-                                            <?php if ($resultArrr_admin - $resultArrrr_admin != null) { ?>
-                                                <div style="display: inline-block; width:100%; text-align:right;"><i class="bi bi-gem" style="font-size: medium;" title="RSSI Gems"></i>&nbsp;<p class="badge bg-success">
-                                                        <?php echo ($resultArrr_admin - $resultArrrr_admin) ?></p>
-                                                </div>
-                                            <?php } else { ?>
-
-                                                <i class="bi bi-gem" style="font-size: medium;" title="RSSI Gems"></i>&nbsp;<p class="badge bg-secondary">You're almost there</p>
-                                            <?php } ?>
-                                        </div>
-                                    <?php } else { ?>
-                                        <div class="col" style="display: inline-block; width:47%; text-align:right">
-
-                                            <?php if ($resultArrr - $resultArrrr != null) { ?>
-                                                <div style="display: inline-block; width:100%; text-align:right;"><i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-success"><?php echo ($resultArrr - $resultArrrr) ?></p>
-                                                </div>
-                                            <?php } else { ?>
-
-                                                <i class="fa-regular fa-gem" style="font-size:medium;" title="RSSI Gems"></i>&nbsp;<p class="label label-default">You're almost there</p>
-                                            <?php } ?>
-                                        </div>
-                                    <?php } ?><br>
-                                    <a href="redeem_gems.php" target="_self" class="btn btn-danger btn-sm" role="button">Redeem Gems</a>
-                                </div> -->
                             </div>
                             <?php if ($resultArrr == null) { ?>
                             <?php } ?>
