@@ -268,6 +268,11 @@
               <span>Announcement</span>
             </a>
           </li>
+          <li>
+            <a id="userlogLink" href="userlog.php">
+              <span>User log</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Forms Nav -->
 
@@ -499,6 +504,11 @@
         id: 'performance',
         linkId: 'my_appraisalLink',
         url: 'ipf-management.php'
+      },
+      {
+        id: 'work',
+        linkId: 'userlogLink',
+        url: 'userlog.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
@@ -515,13 +525,13 @@
       }
     });
   </script>
-<script>
-  // Check if the current page is home.php
-  if (window.location.href.includes('home.php')) {
-    // Remove the "collapsed" class from the appropriate element
-    document.addEventListener('DOMContentLoaded', function() {
-      var homeLink = document.getElementById('homeLink');
-      homeLink.classList.remove('collapsed');
-    });
-  }
-</script>
+  <script>
+    // Check if the current page is home.php
+    if (window.location.href.includes('home.php')) {
+      // Remove the "collapsed" class from the appropriate element
+      document.addEventListener('DOMContentLoaded', function() {
+        var homeLink = document.getElementById('homeLink');
+        homeLink.classList.remove('collapsed');
+      });
+    }
+  </script>
