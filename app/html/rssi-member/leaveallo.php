@@ -189,17 +189,16 @@ $resultArr = pg_fetch_all($result);
                             <br>
                             <div class="row">
                                 <?php if (@$leaveallocationid != null && @$cmdtuples == 0) { ?>
-
-                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                                    <div class="alert alert-danger alert-dismissible text-center" role="alert">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <span>ERROR: Oops, something wasn't right.</span>
                                     </div>
-                                <?php
-                                } else if (@$cmdtuples == 1) { ?>
-
-                                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave allocation id <?php echo $leaveallocationid ?>.</span>
+                                <?php } else if (@$cmdtuples == 1) { ?>
+                                    <div class="alert alert-success alert-dismissible text-center" role="alert">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-check2"></i>
+                                        <span>Your request has been submitted. Leave allocation id <?php echo $leaveallocationid ?>.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {
@@ -207,6 +206,7 @@ $resultArr = pg_fetch_all($result);
                                         }
                                     </script>
                                 <?php } ?>
+
 
                                 <!-- <section style="padding: 2%;"> -->
                                 <?php if ($role == "Admin") { ?>
