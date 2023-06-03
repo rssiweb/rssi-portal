@@ -172,7 +172,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
 
                         <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
+                            <i class="bi bi-check2-circle" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
                         </div>
                         <script>
                             if (window.history.replaceState) {

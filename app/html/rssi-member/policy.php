@@ -120,7 +120,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
                                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Database has been updated successfully for policy id <?php echo @$policyid ?>.</span>
+                                        <i class="bi bi-check2-circle" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Database has been updated successfully for policy id <?php echo @$policyid ?>.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {

@@ -141,7 +141,7 @@ if (isset($_POST['login'])) {
                                 if (@$cmdtuples == 1) { ?>
                                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: center;">
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <span><i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
+                                        <span><i class="bi bi-check2-circle" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully.</span>
                                     </div>
                                 <?php }
                                 if (@$login_failed_dialog) { ?>

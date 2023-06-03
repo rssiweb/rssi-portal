@@ -145,7 +145,7 @@ $resultArrr = pg_fetch_all($result);
                             <?php } else if (@$cmdtuples == 1) { ?>
                                 <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-check2"></i>
+                                    <i class="bi bi-check2-circle"></i>
                                     <span>Password has been updated successfully for <?php echo @$user_id ?>.</span>
                                 </div>
                             <?php } ?>

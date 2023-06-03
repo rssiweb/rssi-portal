@@ -258,7 +258,7 @@ include("../../util/email.php");
                                     <?php } else if (@$cmdtuples == 1) { ?>
                                         <div class="alert alert-success alert-dismissible text-center" role="alert">
                                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                            <i class="bi bi-check2"></i>
+                                            <i class="bi bi-check2-circle"></i>
                                             <span>Certificate no <?php echo @$certificate_no ?> has been added.</span>
                                         </div>
                                         <script>

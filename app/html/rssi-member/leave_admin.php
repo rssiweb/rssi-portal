@@ -228,7 +228,7 @@ if (!$result) {
                                 <?php } else if (@$cmdtuples == 1) { ?>
                                     <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-check2"></i>
+                                        <i class="bi bi-check2-circle"></i>
                                         <span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
                                     </div>
                                     <script>
@@ -828,7 +828,6 @@ if (!$result) {
                                             document.getElementById("leaveupdate").disabled = false;
                                         }
                                     }
-                                    // When the user clicks the button, open the modal 
                                     // When the user clicks on <span> (x), close the modal
                                     closedetails.forEach(function(element) {
                                         element.addEventListener("click", closeModal);
@@ -838,38 +837,38 @@ if (!$result) {
                                         var modal1 = document.getElementById("myModal");
                                         modal1.style.display = "none";
                                     }
-                                    // When the user clicks anywhere outside of the modal, close it
-                                    // window.onclick = function(event) {
-                                    //     if (event.target == modal) {
-                                    //         modal.style.display = "none";
-                                    //     } else if (event.target == modal1) {
-                                    //         modal1.style.display = "none";
-                                    //     }
-                                    // }
                                 </script>
-                                <div id="myModalpdf" class="modal">
-
-                                    <!-- Modal content -->
-                                    <div class="modal-content">
-                                        <span id="closepdf" class="close">&times;</span>
-
-                                        <div style="width:100%; text-align:right">
-                                            <p id="status2" class="badge " style="display: inline !important;"><span class="status"></span></p>
+                                <div class="modal" id="myModalpdf" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Supporting documents</h1>
+                                                <button type="button" id="closepdf-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div style="width:100%;">
+                                                    <span style="float: left;">Leave Id: <span class="leaveid"></span></span>
+                                                    <span style="float: right;">
+                                                        <p id="status2" class="badge" style="display: inline !important;"><span class="status"></span></p>
+                                                    </span>
+                                                </div>
+                                                <object name="docid" id="" data="" type="application/pdf" width="100%" height="450px"></object>
+                                                <div class="modal-footer">
+                                                    <button type="button" id="closepdf-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
                                         </div>
-
-                                        <p>
-                                            Leave Id: <span class="leaveid"></span><br>
-                                            <object name="docid" id="" data="" type="application/pdf" width="100%" height="450px"></object>
-                                        </p>
                                     </div>
-
                                 </div>
                                 <script>
                                     var data1 = <?php echo json_encode($resultArr) ?>
 
                                     // Get the modal
                                     var modal1 = document.getElementById("myModalpdf");
-                                    var closepdf = document.getElementById("closepdf");
+                                    var closepdf = [
+                                        document.getElementById("closepdf-header"),
+                                        document.getElementById("closepdf-footer")
+                                    ];
 
                                     function showpdf(id1) {
                                         var mydata1 = undefined
@@ -903,9 +902,15 @@ if (!$result) {
 
                                         randomvar = document.getElementById("docid" + mydata1["leaveid"])
                                         randomvar.data = mydata1["docp"]
-                                    }
-                                    closepdf.onclick = function() {
-                                        modal1.style.display = "none";
+
+                                        closepdf.forEach(function(element) {
+                                            element.addEventListener("click", closeModel);
+                                        });
+
+                                        function closeModel() {
+                                            var modal1 = document.getElementById("myModalpdf");
+                                            modal1.style.display = "none";
+                                        }
                                     }
                                 </script>
 

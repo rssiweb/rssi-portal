@@ -117,7 +117,7 @@ if (isset($_POST['login'])) {
                 if (@$cmdtuples == 1) { ?>
 
                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                        <span><i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully. Please sign out and sign in using the new password.</span>
+                        <span><i class="bi bi-check2-circle" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Your password has been changed successfully. Please sign out and sign in using the new password.</span>
                     </div>
                 <?php }
                 if (@$login_failed_dialog) { ?>

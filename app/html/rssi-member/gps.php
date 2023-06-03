@@ -203,7 +203,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php } else if (@$cmdtuples == 1) { ?>
                                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                                         <a href="#" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></a>
-                                        <i class="bi bi-check2" style="font-size: medium;"></i>&nbsp;&nbsp;<span>Database has been updated successfully for asset id <?php echo @$itemid ?>.</span>
+                                        <i class="bi bi-check2-circle" style="font-size: medium;"></i>&nbsp;&nbsp;<span>Database has been updated successfully for asset id <?php echo @$itemid ?>.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {

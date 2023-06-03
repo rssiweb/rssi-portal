@@ -54,7 +54,7 @@ if (isset($_POST['login'])) {
 <?php
 if (@$cmdtuples == 1) {
     echo '<div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">';
-    echo '<span><i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Password updated successfully! Redirecting to the home page...</span>';
+    echo '<span><i class="bi bi-check2-circle" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Password updated successfully! Redirecting to the home page...</span>';
     echo '</div>';
 
     // Redirect the user after a delay

@@ -142,7 +142,7 @@ $resultArr1 = pg_fetch_all($result1);
                                 <?php } else if (@$cmdtuples == 1) { ?>
                                     <div class="alert alert-success alert-dismissible text-center" role="alert">
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-check2"></i>
+                                        <i class="bi bi-check2-circle"></i>
                                         <span>Database has been updated successfully for course id <?php echo @$courseid ?>.</span>
                                     </div>
                                 <?php } ?>

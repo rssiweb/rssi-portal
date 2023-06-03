@@ -193,7 +193,7 @@ if (@$_POST['form-type'] == "reimbursementapply") {
 
                                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <i class="bi bi-check2" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Claim no <?php echo @$claimid ?> has been submitted.</span>
+                                        <i class="bi bi-check2-circle" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Claim no <?php echo @$claimid ?> has been submitted.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {

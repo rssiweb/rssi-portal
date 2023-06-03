@@ -263,7 +263,7 @@ function getAssessmentStatus($array)
                                 <?php
                                 if ($role == 'Admin') { ?>
                                     <div class="col" style="display: inline-block; width:100%; text-align:right">
-                                        <span class="noticea"><a href="process.php" target="_blank" title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" target="_blank" title="Appraisal Workflow">Appraisal Workflow</a></span>
+                                        <span class="noticea"><a href="process.php" target="_blank" title="Set Goals Now">Goal Setting Form</a> | <a href="ipf-management.php" title="Appraisal Workflow">Appraisal Workflow</a></span>
                                     </div>
                                 <?php } ?>
                                 
@@ -568,7 +568,7 @@ function getAssessmentStatus($array)
                                                 <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with the outcome of your appraisal discussion and the Individual Performance Factor (IPF) issued against the Goal Sheet ID <strong><?php echo @$array['goalsheetid'] ?></strong>, you have the option to reject the IPF. If you choose to reject it, another round of discussion will be scheduled with the concerned team to address your concerns and ensure that the IPF accurately reflects your performance.<br>
                                                     Please note that if we do not receive a response from you by <?php echo @date('d/m/y h:i:s a', strtotime('+3 days', strtotime($array['goalsheet_reviewed_on']))) ?>, the Goal Sheet will be auto-closed.</p>
                                                 <div style="margin-left:5%;">
-                                                    <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="bi bi-check2" style="font-size: 17px;"></i> Accept</button>
+                                                    <button type="submit" id="yes" class="btn btn-success btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word"><i class="bi bi-check2-circle" style="font-size: 17px;"></i> Accept</button>
                                                     <button type="submit" id="no" class="btn btn-danger btn-sm close-button2" style="white-space:normal !important;word-wrap:break-word;"><i class="bi bi-x-lg" style="font-size: 17px;"></i> Reject</button>
                                                 </div><br>
                                             </form>

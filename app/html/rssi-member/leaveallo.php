@@ -197,7 +197,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php } else if (@$cmdtuples == 1) { ?>
                                     <div class="alert alert-success alert-dismissible text-center" role="alert">
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-check2"></i>
+                                        <i class="bi bi-check2-circle"></i>
                                         <span>Your request has been submitted. Leave allocation id <?php echo $leaveallocationid ?>.</span>
                                     </div>
                                     <script>

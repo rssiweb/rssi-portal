@@ -222,7 +222,7 @@ if (@$_POST['form-type'] == "gms") {
                             <?php } else if (@$cmdtuples == 1) { ?>
                                 <div class="alert alert-success alert-dismissible text-center" role="alert">
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-check2"></i>
+                                    <i class="bi bi-check2-circle"></i>
                                     <span>Your request has been submitted. Redeem id <?php echo $redeem_id1 ?>.</span>
                                 </div>
                                 <script>

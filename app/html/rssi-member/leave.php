@@ -285,7 +285,7 @@ $resultArr = pg_fetch_all($result);
                                 <?php } else if (@$cmdtuples == 1) { ?>
                                     <div class="alert alert-success alert-dismissible text-center" role="alert">
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-check2"></i>
+                                        <i class="bi bi-check2-circle"></i>
                                         <span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
                                     </div>
                                     <script>
@@ -757,84 +757,41 @@ $resultArr = pg_fetch_all($result);
                             -------------------------------------->
                             <style>
                                 .modal {
-                                    display: none;
-                                    /* Hidden by default */
-                                    position: fixed;
-                                    /* Stay in place */
-                                    z-index: 100;
-                                    /* Sit on top */
-                                    padding-top: 100px;
-                                    /* Location of the box */
-                                    left: 0;
-                                    top: 0;
-                                    width: 100%;
-                                    /* Full width */
-                                    height: 100%;
-                                    /* Full height */
-                                    overflow: auto;
-                                    /* Enable scroll if needed */
-                                    background-color: rgb(0, 0, 0);
-                                    /* Fallback color */
                                     background-color: rgba(0, 0, 0, 0.4);
                                     /* Black w/ opacity */
                                 }
-
-                                /* Modal Content */
-
-                                .modal-content {
-                                    background-color: #fefefe;
-                                    margin: auto;
-                                    padding: 20px;
-                                    border: 1px solid #888;
-                                    width: 100vh;
-                                }
-
-                                @media (max-width:767px) {
-                                    .modal-content {
-                                        width: 50vh;
-                                    }
-                                }
-
-                                /* The Close Button */
-
-                                .close {
-                                    color: #aaaaaa;
-                                    float: right;
-                                    font-size: 28px;
-                                    font-weight: bold;
-                                    text-align: right;
-                                }
-
-                                .close:hover,
-                                .close:focus {
-                                    color: #000;
-                                    text-decoration: none;
-                                    cursor: pointer;
-                                }
                             </style>
-                            <div id="myModalpdf" class="modal">
-
-                                <!-- Modal content -->
-                                <div class="modal-content">
-                                    <span id="closepdf" class="close">&times;</span>
-
-                                    <div style="width:100%; text-align:right">
-                                        <p id="status2" class="badge " style="display: inline !important;"><span class="status"></span></p>
+                            <div class="modal" id="myModalpdf" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-xl">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Supporting documents</h1>
+                                            <button type="button" id="closepdf-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div style="width:100%;">
+                                                <span style="float: left;">Leave Id: <span class="leaveid"></span></span>
+                                                <span style="float: right;">
+                                                    <p id="status2" class="badge" style="display: inline !important;"><span class="status"></span></p>
+                                                </span>
+                                            </div>
+                                            <object name="docid" id="" data="" type="application/pdf" width="100%" height="450px"></object>
+                                            <div class="modal-footer">
+                                                <button type="button" id="closepdf-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <p style="font-size: small;">
-                                        Leave Id: <span class="leaveid"></span><br>
-                                        <object name="docid" id="" data="#" type="application/pdf" width="100%" height="450px"></object>
-                                    </p>
                                 </div>
-
                             </div>
                             <script>
                                 var data1 = <?php echo json_encode($resultArr) ?>
 
                                 // Get the modal
                                 var modal1 = document.getElementById("myModalpdf");
-                                var closepdf = document.getElementById("closepdf");
+                                var closepdf = [
+                                    document.getElementById("closepdf-header"),
+                                    document.getElementById("closepdf-footer")
+                                ];
 
                                 function showpdf(id1) {
                                     var mydata1 = undefined
@@ -868,16 +825,22 @@ $resultArr = pg_fetch_all($result);
 
                                     randomvar = document.getElementById("docid" + mydata1["leaveid"])
                                     randomvar.data = mydata1["docp"]
-                                }
-                                closepdf.onclick = function() {
-                                    modal1.style.display = "none";
-                                }
-                                // When the user clicks anywhere outside of the modal, close it
-                                window.onclick = function(event) {
-                                    if (event.target == modal1) {
+
+                                    closepdf.forEach(function(element) {
+                                        element.addEventListener("click", closeModel);
+                                    });
+
+                                    function closeModel() {
+                                        var modal1 = document.getElementById("myModalpdf");
                                         modal1.style.display = "none";
                                     }
                                 }
+                                // When the user clicks anywhere outside of the modal, close it
+                                // window.onclick = function(event) {
+                                //     if (event.target == modal1) {
+                                //         modal1.style.display = "none";
+                                //     }
+                                // }
                             </script>
 
                             <script>
