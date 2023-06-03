@@ -147,3 +147,8 @@ DROP SEQUENCE IF EXISTS resourcemovement_serial_number_seq CASCADE;
 CREATE SEQUENCE onboarding_serial_number_seq START WITH 1;
 
 ALTER TABLE onboarding ALTER COLUMN serial_number SET DEFAULT nextval('onboarding_serial_number_seq'::regclass);
+
+
+
+-- Truncate the table with Foreign key
+TRUNCATE TABLE payslip_entry CASCADE;
