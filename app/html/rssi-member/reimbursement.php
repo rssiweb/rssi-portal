@@ -183,17 +183,16 @@ if (@$_POST['form-type'] == "reimbursementapply") {
                             <br>
                             <?php if ($role == 'Admin') { ?>
                                 <?php if (@$claimid != null && @$cmdtuples == 0) { ?>
-
-                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <span class="blink_me"><i class="bi bi-exclamation-triangle"></i></span>&nbsp;&nbsp;<span>ERROR: Oops, something wasn't right.</span>
+                                    <div class="alert alert-danger alert-dismissible text-center" role="alert">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <span>ERROR: Oops, something wasn't right.</span>
                                     </div>
-                                <?php
-                                } else if (@$cmdtuples == 1) { ?>
-
-                                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                        <i class="bi bi-check2-circle" style="font-size: medium;"></i></span>&nbsp;&nbsp;<span>Claim no <?php echo @$claimid ?> has been submitted.</span>
+                                <?php } else if (@$cmdtuples == 1) { ?>
+                                    <div class="alert alert-success alert-dismissible text-center" role="alert">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-check2-circle" style="font-size: medium;"></i>
+                                        <span>Claim no <?php echo @$claimid ?> has been submitted.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {
@@ -202,6 +201,7 @@ if (@$_POST['form-type'] == "reimbursementapply") {
                                     </script>
                                 <?php } ?>
                             <?php } ?>
+
                             <div class=col style="text-align: right;">
                                 <a href="reimbursementstatus.php" target="_self" class="btn btn-danger btn-sm" role="button">Track Your Claim</a>
                             </div>

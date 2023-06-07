@@ -383,7 +383,7 @@ $resultArr = pg_fetch_all($result);
                                     ?>
                                     <!-- Initiate Exit system -->
                                     <?php if ($role == 'Admin' && $array['exit_initiated_by'] == null) { ?>
-                                        <?php echo '<button type="submit" id="yes" onclick="validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Exit"><i class="bi bi-box-arrow-in-right"></i></button>'; ?>
+                                        <?php echo '<button type="submit" id="yes" onclick="exit_validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Exit"><i class="bi bi-box-arrow-in-right"></i></button>'; ?>
                                 <?php } else {
                                         echo date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'];
                                     }

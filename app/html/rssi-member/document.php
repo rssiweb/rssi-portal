@@ -94,7 +94,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                     </div>
 
                                     <div class="tab-pane fade" id="payslip-tab">
-                                        <p><a href="payslip.php" target="_self">Payslip</a></p>
+                                        <p><a href="pay_details.php" target="_self">Pay Details</a></p>
                                     </div>
 
                                     <div class="tab-pane fade" id="misc-tab">

@@ -254,6 +254,11 @@
             </a>
           </li>
           <li>
+            <a id="payroll_processingLink" href="payroll_processing.php" target="_blank">
+              <span>Payroll Processing</span>
+            </a>
+          </li>
+          <li>
             <a id="donationinfo_adminLink" href="donationinfo_admin.php">
               <span>Donation</span>
             </a>
@@ -359,7 +364,7 @@
       {
         id: 'myservices',
         linkId: 'documentLink',
-        url: 'payslip.php'
+        url: 'pay_details.php'
       },
       {
         id: 'myservices',
@@ -474,6 +479,11 @@
         id: 'work',
         linkId: 'medistatusLink',
         url: 'medistatus.php'
+      },
+      {
+        id: 'work',
+        linkId: 'payroll_processingLink',
+        url: 'payroll_processing.php'
       },
       {
         id: 'work',
