@@ -152,3 +152,10 @@ ALTER TABLE onboarding ALTER COLUMN serial_number SET DEFAULT nextval('onboardin
 
 -- Truncate the table with Foreign key
 TRUNCATE TABLE payslip_entry CASCADE;
+
+<!-- Secure-->
+$name = $_GET['name']
+$age = $_GET['age']
+
+$sql = 'INSERT INTO employee (name, age) VALUES($1, $2);';
+$result = pg_query_params($connection, $sql, array($name, $age));

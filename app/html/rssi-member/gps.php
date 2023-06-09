@@ -3,7 +3,6 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
 
-
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     $_SESSION["login_redirect_params"] = $_GET;
@@ -28,11 +27,12 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         @$itemname = $_POST['itemname'];
         @$quantity = $_POST['quantity'];
         @$remarks = $_POST['remarks'];
+        @$asset_status = $_POST['asset_status'];
         @$collectedby = strtoupper($_POST['collectedby']);
         @$now = date('Y-m-d H:i:s');
         if ($itemtype != "") {
-            $gps = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby')";
-            $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby')";
+            $gps = "INSERT INTO gps (itemid, date, itemtype, itemname, quantity, remarks, collectedby,asset_status) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$asset_status')";
+            $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,asset_status) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$asset_status')";
             $result = pg_query($con, $gps);
             $result = pg_query($con, $gpshistory);
             $cmdtuples = pg_affected_rows($result);
@@ -43,51 +43,49 @@ date_default_timezone_set('Asia/Kolkata'); ?>
     @$item_type = $_GET['item_type'];
     @$assetid = $_GET['assetid'];
     @$is_user = $_GET['is_user'];
+    @$assetstatus = $_GET['assetstatus'];
 
-    if ($item_type == 'ALL' && $taggedto == "" && $assetid == "") {
-        $gpsdetails = "SELECT * from gps 
-    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
-    order by itemname asc";
-    } else if ($item_type == 'ALL' && $taggedto != "" && $assetid == "") {
-        $gpsdetails = "SELECT * from gps 
-    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
-    where taggedto='$taggedto' order by itemname asc";
-    } else if ($item_type == "" && $taggedto != "" && $assetid == "") {
-        $gpsdetails = "SELECT * from gps 
-    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  
-    where taggedto='$taggedto' order by itemname asc";
-    } else if ($item_type != "ALL" && $item_type != "" && $taggedto != "" && $assetid == "") {
-        $gpsdetails = "SELECT * from gps 
-    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  
-    where taggedto='$taggedto' and itemtype='$item_type' order by itemname asc";
-    } else if ($item_type != "ALL" && $item_type != "" && $taggedto == "" && $assetid == "") {
-        $gpsdetails = "SELECT * from gps 
-    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
-    where itemtype='$item_type' order by itemname asc";
-    } else if ($assetid != "") {
-        $gpsdetails = "SELECT * from gps 
-    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber 
-    where itemid='$assetid' order by itemname asc";
-    } else {
-        $gpsdetails = "SELECT * from gps 
-    left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  order by itemname asc";
+    $conditions = [];
+
+    if ($item_type != "ALL" && $item_type != "") {
+        $conditions[] = "itemtype = '$item_type'";
     }
+
+    if ($taggedto != "") {
+        $conditions[] = "taggedto = '$taggedto'";
+    }
+
+    if ($assetid != "") {
+        $conditions[] = "itemid = '$assetid'";
+    }
+
+    if ($assetstatus != "") {
+        $conditions[] = "asset_status = '$assetstatus'";
+    }
+
+    $query = "SELECT * FROM gps
+    LEFT JOIN (
+        SELECT fullname AS tfullname, associatenumber AS tassociatenumber, phone AS tphone, email AS temail
+        FROM rssimyaccount_members
+    ) AS tmember ON gps.taggedto = tmember.tassociatenumber
+    LEFT JOIN (
+        SELECT fullname AS ifullname, associatenumber AS iassociatenumber, phone AS iphone, email AS iemail
+        FROM rssimyaccount_members
+    ) AS imember ON gps.collectedby = imember.iassociatenumber";
+
+    if (!empty($conditions)) {
+        $query .= " WHERE " . implode(" AND ", $conditions);
+    }
+
+    $query .= " ORDER BY itemname ASC";
+
+    $gpsdetails = $query;
 } ?>
 
 <?php if ($role != 'Admin') {
-
-    @$taggedto = $associatenumber;
-
     $gpsdetails = "SELECT * from gps 
     left join (select fullname as tfullname,associatenumber as tassociatenumber,phone as tphone,email as temail from rssimyaccount_members) as tmember ON gps.taggedto=tmember.tassociatenumber 
-    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  where taggedto='$associatenumber' order by itemname asc";
+    left join (select fullname as ifullname,associatenumber as iassociatenumber,phone as iphone,email as iemail from rssimyaccount_members) as imember ON gps.collectedby=imember.iassociatenumber  where taggedto='$associatenumber' AND asset_status = 'Active' order by itemname asc";
 } ?>
 <?php
 $result = pg_query($con, $gpsdetails);
@@ -244,6 +242,20 @@ $resultArr = pg_fetch_all($result);
                                                 <input type="number" name="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" value="" min="1" required>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Quantity</small>
                                             </span>
+                                            <span class="input-help">
+                                                <select name="asset_status" class="form-select" style="width:max-content; display:inline-block" required>
+                                                    <?php if ($asset_status == null) { ?>
+                                                        <option value="" disabled selected hidden>Asset status</option>
+                                                    <?php
+                                                    } else { ?>
+                                                        <option hidden selected><?php echo $asset_status ?></option>
+                                                    <?php }
+                                                    ?>
+                                                    <option>Active</option>
+                                                    <option>Inactive</option>
+                                                </select>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset status</small>
+                                            </span>
 
                                             <span class="input-help">
                                                 <textarea type="text" name="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
@@ -262,8 +274,6 @@ $resultArr = pg_fetch_all($result);
                                     </div>
                                 </form>
 
-
-                                <!-- <br><span class="heading">Asset details</span><br><br> -->
                                 <form name="gpsdetails" id="gpsdetails" action="" method="GET">
                                     <div class="form-group" style="display: inline-block;">
                                         <div class="col2" style="display: inline-block;">
@@ -280,8 +290,22 @@ $resultArr = pg_fetch_all($result);
                                                 <option>Donation</option>
                                                 <option>ALL</option>
                                             </select>&nbsp;
+                                            <span class="input-help">
+                                                <select name="assetstatus" class="form-select" style="width:max-content; display:inline-block" required>
+                                                    <?php if ($assetstatus == null) { ?>
+                                                        <option value="" disabled selected hidden>Asset status</option>
+                                                    <?php
+                                                    } else { ?>
+                                                        <option hidden selected><?php echo $assetstatus ?></option>
+                                                    <?php }
+                                                    ?>
+                                                    <option>Active</option>
+                                                    <option>Inactive</option>
+                                                </select>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Asset status</small>
+                                            </span>
+                                            &nbsp;
                                             <input type="text" name="taggedto" class="form-control" style="width:max-content; display:inline-block" placeholder="Tagged to" value="<?php echo $taggedto ?>">
-
                                             &nbsp;
                                             <span class="input-help">
                                                 <input type="text" name="assetid" class="form-control" style="width:max-content; display:inline-block" placeholder="Asset id" value="<?php echo $assetid ?>" required>
@@ -303,17 +327,20 @@ $resultArr = pg_fetch_all($result);
                                     const assetIdInput = document.getElementsByName('assetid')[0];
                                     const itemTypeInput = document.getElementsByName('item_type')[0];
                                     const taggedToInput = document.getElementsByName('taggedto')[0];
+                                    const itemStatusInput = document.getElementsByName('assetstatus')[0];
 
                                     if ($('#is_user').not(':checked').length > 0) {
 
                                         assetIdInput.disabled = true;
                                         itemTypeInput.disabled = false;
+                                        itemStatusInput.disabled = false;
                                         taggedToInput.disabled = false;
 
                                     } else {
 
                                         assetIdInput.disabled = false;
                                         itemTypeInput.disabled = true;
+                                        itemStatusInput.disabled = true;
                                         taggedToInput.disabled = true;
 
                                     }
@@ -321,11 +348,13 @@ $resultArr = pg_fetch_all($result);
                                         if (event.target.checked) {
                                             assetIdInput.disabled = false;
                                             itemTypeInput.disabled = true;
+                                            itemStatusInput.disabled = true;
                                             taggedToInput.disabled = true;
 
                                         } else {
                                             assetIdInput.disabled = true;
                                             itemTypeInput.disabled = false;
+                                            itemStatusInput.disabled = false;
                                             taggedToInput.disabled = false;
 
                                         }
@@ -338,12 +367,13 @@ $resultArr = pg_fetch_all($result);
                                 <form method="POST" action="export_function.php">
                                     <input type="hidden" value="gps" name="export_type" />
                                     <input type="hidden" value="<?php echo @$item_type ?>" name="item_type" />
-                                    <input type="hidden" value="<?php echo @$taggedto ?>" name="taggedto" />
+                                    <input type="hidden" value="<?php echo ($role !== 'Admin') ? $associatenumber : $taggedto; ?>" name="taggedto" />
                                     <input type="hidden" value="<?php echo @$assetid ?>" name="assetid" />
+                                    <input type="hidden" value="<?php echo ($role !== 'Admin') ? 'Active' : $assetstatus; ?>" name="asset_status" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
-                        border: none;" title="Export CSV"><i class="fa-regular fa-file-excel" style="font-size:large;"></i></button>
+                        border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
                                 </form>
                             </div>
 
@@ -385,7 +415,7 @@ $resultArr = pg_fetch_all($result);
                                 foreach ($resultArr as $array) {
                                     echo '<tr>
                                 <td>
-                                <span class="noticeas"><a href="gps_history.php?assetid=' . $array['itemid'] . '" target="_blank" title="Asset History">' . $array['itemid'] . '</a></span>
+                                <a href="gps_history.php?assetid=' . $array['itemid'] . '" target="_blank" title="Asset History">' . $array['itemid'] . '</a>
                                 </td><td>' ?>
 
                                     <?php if (@strlen($array['itemname']) <= 50) {
@@ -482,7 +512,7 @@ $resultArr = pg_fetch_all($result);
                                     }
                                 } ?>
                             <?php
-                            } else if ($taggedto == null && $item_type == null && $assetid == null) {
+                            } else if ($taggedto == null && $item_type == null && $assetid == null && $assetstatus == null) {
                             ?>
                                 <tr>
                                     <td colspan="5">Please select Filter value.</td>
@@ -677,6 +707,21 @@ $resultArr = pg_fetch_all($result);
                                                         </span>
 
                                                         <span class="input-help">
+                                                            <select name="asset_status" id="asset_status" class="form-select" style="width:max-content; display:inline-block" required>
+                                                                <?php if ($asset_status == null) { ?>
+                                                                    <option value="" disabled selected hidden>Asset status</option>
+                                                                <?php
+                                                                } else { ?>
+                                                                    <option hidden selected><?php echo $asset_status ?></option>
+                                                                <?php }
+                                                                ?>
+                                                                <option>Active</option>
+                                                                <option>Inactive</option>
+                                                            </select>
+                                                            <small id="passwordHelpBlock" class="form-text text-muted">Asset status</small>
+                                                        </span>
+
+                                                        <span class="input-help">
                                                             <textarea type="text" name="remarks" id="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
                                                             <small id="passwordHelpBlock" class="form-text text-muted">Remarks (Optional)</small>
                                                         </span>
@@ -760,6 +805,10 @@ $resultArr = pg_fetch_all($result);
                                         profile = document.getElementById("taggedto")
                                         profile.value = mydata["taggedto"]
                                     }
+                                    if (mydata["asset_status"] !== null) {
+                                        profile = document.getElementById("asset_status")
+                                        profile.value = mydata["asset_status"]
+                                    }
                                     profile = document.getElementById("itemid1")
                                     profile.value = mydata["itemid"]
                                 }
@@ -774,31 +823,39 @@ $resultArr = pg_fetch_all($result);
                                     modal1.style.display = "none";
                                 }
                                 // When the user clicks anywhere outside of the modal, close it
-                                // window.onclick = function(event) {
-                                //     if (event.target == modal) {
-                                //         modal.style.display = "none";
-                                //     } else if (event.target == modal1) {
-                                //         modal1.style.display = "none";
-                                //     } else if (event.target == modal2) {
-                                //         modal2.style.display = "none";
-                                //     }
-                                // }
+                                window.onclick = function(event) {
+                                    // if (event.target == modal) {
+                                    //     modal.style.display = "none";
+                                    // } else 
+                                    if (event.target == modal1) {
+                                        modal1.style.display = "none";
+                                    } else if (event.target == modal2) {
+                                        modal2.style.display = "none";
+                                    }
+                                }
                             </script>
 
 
-                            <div id="myModal1" class="modal">
+                            <div class="modal" id="myModal1" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Remarks</h1>
+                                            <button type="button" id="closeremarks-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
 
-                                <!-- Modal content -->
-                                <div class="modal-content">
-                                    <span id="closeremarks" class="close">&times;</span>
+                                            <div style="width:100%; text-align:right">
+                                                <p class="badge bg-info" style="display: inline !important;"><span class="itemid"></span></p>
+                                            </div>
 
-                                    <div style="width:100%; text-align:right">
-                                        <p class="badge label-info" style="display: inline !important;"><span class="itemid"></span></p>
+                                            <span class="remarks"></span>
+                                            <div class="modal-footer">
+                                                <button type="button" id="closeremarks-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <span class="remarks"></span>
                                 </div>
-
                             </div>
 
                             <script>
@@ -806,7 +863,10 @@ $resultArr = pg_fetch_all($result);
 
                                 // Get the modal
                                 var modal1 = document.getElementById("myModal1");
-                                var closeremarks = document.getElementById("closeremarks");
+                                var closeremarks = [
+                                    document.getElementById("closeremarks-header"),
+                                    document.getElementById("closeremarks-footer")
+                                ];
 
                                 function showremarks(id1) {
                                     var mydata1 = undefined
@@ -824,33 +884,48 @@ $resultArr = pg_fetch_all($result);
                                     modal1.style.display = "block";
 
                                 }
-                                closeremarks.onclick = function() {
+                                // When the user clicks on <span> (x), close the modal
+                                closeremarks.forEach(function(element) {
+                                    element.addEventListener("click", closeModal);
+                                });
+
+                                function closeModal() {
+                                    var modal1 = document.getElementById("myModal1");
                                     modal1.style.display = "none";
                                 }
                                 // When the user clicks anywhere outside of the modal, close it SEE OTHER SCRIPT
                             </script>
 
-                            <div id="myModal2" class="modal">
+                            <div class="modal" id="myModal2" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Item name</h1>
+                                            <button type="button" id="closename-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
 
-                                <!-- Modal content -->
-                                <div class="modal-content">
-                                    <span id="closename" class="close">&times;</span>
+                                            <div style="width:100%; text-align:right">
+                                                <p class="badge bg-info"><span class="itemid"></span></p>
 
-                                    <div style="width:100%; text-align:right">
-                                        <p class="badge label-info" style="display: inline !important;"><span class="itemid"></span></p>
+                                            </div>
+                                            <span class="itemname"></span>
+                                            <div class="modal-footer">
+                                                <button type="button" id="closename-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <span class="itemname"></span>
                                 </div>
-
                             </div>
-
                             <script>
                                 var data2 = <?php echo json_encode($resultArr) ?>
 
                                 // Get the modal
                                 var modal2 = document.getElementById("myModal2");
-                                var closeremarks = document.getElementById("closename");
+                                var closename = [
+                                    document.getElementById("closename-header"),
+                                    document.getElementById("closename-footer")
+                                ];
 
                                 function showname(id2) {
                                     var mydata2 = undefined
@@ -868,8 +943,14 @@ $resultArr = pg_fetch_all($result);
                                     modal2.style.display = "block";
 
                                 }
-                                closename.onclick = function() {
-                                    modal2.style.display = "none";
+                                // When the user clicks on <span> (x), close the modal
+                                closename.forEach(function(element) {
+                                    element.addEventListener("click", closeModal);
+                                });
+
+                                function closeModal() {
+                                    var modal1 = document.getElementById("myModal2");
+                                    modal1.style.display = "none";
                                 }
                                 // When the user clicks anywhere outside of the modal, close it SEE OTHER SCRIPT
                             </script>

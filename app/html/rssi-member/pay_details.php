@@ -21,9 +21,13 @@ if ($role == 'Admin') {
     @$id = strtoupper($_POST['get_aid']);
 
     if ($id > 0 && $id != 'ALL') {
-        $result = pg_query($con, "SELECT * FROM payslip_entry WHERE employeeid='$id' order by payslip_issued_on DESC");
+        $result = pg_query($con, "SELECT * FROM payslip_entry 
+        left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) associate ON payslip_entry.employeeid=associate.associatenumber
+        WHERE employeeid='$id' order by payslip_issued_on DESC");
     } else if ($id == 'ALL') {
-        $result = pg_query($con, "SELECT * FROM payslip_entry order by payslip_issued_on DESC");
+        $result = pg_query($con, "SELECT * FROM payslip_entry
+        left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) associate ON payslip_entry.employeeid=associate.associatenumber
+        order by payslip_issued_on DESC");
     } else {
         $result = pg_query($con, "SELECT * FROM payslip_entry WHERE payslip_entry_id is null");
     }
@@ -121,12 +125,14 @@ $resultArr = pg_fetch_all($result);
 
                         <div class="card-body">
                             <br>
-                            <div class="col" style="display: inline-block;">
-                                Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                                <br>Total paid amount:&nbsp;<p class="badge bg-success"><?php echo ($totalNetPay) ?></p>
-                            </div>
-                            <div style="float: right;">
-                                <a href="old_payslip.php">Payslip till May 23 >></a>
+                            <div class="row">
+                                <div class="col">
+                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                                    <br>Total paid amount:&nbsp;<p class="badge bg-success"><?php echo ($totalNetPay) ?></p>
+                                </div>
+                                <div class="col text-end">
+                                    <a href="old_payslip.php">Payslip till May 23 >></a>
+                                </div>
                             </div>
 
                             <?php if ($role == 'Admin') { ?>
@@ -149,12 +155,15 @@ $resultArr = pg_fetch_all($result);
                        <table class="table">
                         <thead>
                             <tr>
-                                <th scope="col">Reference number</th>
-                                <th scope="col">Issuance Date</th>
+                                <th scope="col">Reference number</th>' ?>
+                            <?php if ($role == 'Admin') { ?>
+                                <th scope="col">ID/F Name</th>
+                            <?php } ?>
+                            <?php echo '<th scope="col">Issuance Date</th>
                                 <th scope="col">Pay month</th>
                                 <th scope="col">Days paid</th>
                                 <th scope="col">Netpay</th>
-                                <th scope="col">Transaction ID</th>
+                                <th scope="col">HR comments</th>
                                 <th scope="col">Payslip</th>
                             </tr>
                         </thead>' ?>
@@ -175,13 +184,30 @@ $resultArr = pg_fetch_all($result);
                                     // Calculate net pay
                                     $net_pay = $total_earning - $total_deduction;
                                     echo '<tr>
-                                <td>' . $array['payslip_entry_id'] . '</td>
-                                <td>' . (($array['payslip_issued_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['payslip_issued_on'])) : '') . '</td>
+                                <td>' . $array['payslip_entry_id'] . '</td>' ?>
+                                    <?php if ($role == 'Admin') { ?>
+                                        <?php echo '<td>' . $array['associatenumber'] . '/' . strtok($array['fullname'], ' ') . '</td>' ?>
+                                    <?php } ?>
+                                    <?php echo '<td>' . (($array['payslip_issued_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['payslip_issued_on'])) : '') . '</td>
                                 <td>' . date('F', mktime(0, 0, 0, $array['paymonth'], 1)) . '&nbsp;' . $array['payyear'] . '</td>
                                 <td>' . $array['dayspaid'] . '</td>
                                 <td>' . $net_pay . '</td>
-                                <td>' . $array['comment'] . '</td>
-                                <td><span class="noticea"><a href="payslip.php?ref=' . $array['payslip_entry_id'] . '" target="_blank" title="' . $array['payslip_entry_id'] . '"><i class="bi bi-file-earmark-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
+                                <td>
+                                
+                                <form name="comment_' . $array['payslip_entry_id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="pay_comment">
+                                <input type="hidden" name="payslip_entry_id" id="payslip_entry_id" type="text" value="' . $array['payslip_entry_id'] . '">
+                                <textarea id="inp_' . $array['payslip_entry_id'] . '" name="comment" type="text" disabled>' . $array['comment'] . '</textarea>' ?>
+
+                                    <?php if ($role == 'Admin') { ?>
+
+                                        <?php echo '<br><button type="button" id="edit_' . $array['payslip_entry_id'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="bi bi-pencil-square"></i></button>&nbsp;
+
+                                <button type="submit" id="save_' . $array['payslip_entry_id'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="bi bi-save"></i></button>' ?>
+                                    <?php } ?>
+                                <?php echo '</form></td>
+
+                                <td><a href="payslip.php?ref=' . $array['payslip_entry_id'] . '" target="_blank" title="' . $array['payslip_entry_id'] . '"><i class="bi bi-file-earmark-pdf" style="font-size:17px;color: #767676;"></i></a></td>
                                 
                                 </tr>';
                                 } ?>
@@ -213,6 +239,37 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        var data = <?php echo json_encode($resultArr) ?>;
+
+        data.forEach(item => {
+
+            const form = document.getElementById('edit_' + item.payslip_entry_id);
+
+            form.addEventListener('click', function() {
+                document.getElementById('inp_' + item.payslip_entry_id).disabled = false;
+            });
+        })
+
+        //For form submission - to update Remarks
+        const scriptURL = 'payment-api.php'
+
+        data.forEach(item => {
+            const form = document.forms['comment_' + item.payslip_entry_id]
+            form.addEventListener('submit', e => {
+                e.preventDefault()
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['comment_' + item.payslip_entry_id])
+                    })
+                    .then(response => alert("Comment has been updated.") +
+                        location.reload())
+                    .catch(error => console.error('Error!', error.message))
+            })
+
+            console.log(item)
+        })
+    </script>
 </body>
 
 </html>

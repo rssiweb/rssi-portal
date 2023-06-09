@@ -2,52 +2,79 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/email.php");
 
 
 if (!isLoggedIn("aid")) {
-    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    header("Location: index.php");
-    exit;
+  $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+  header("Location: index.php");
+  exit;
 }
 
 if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
 
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
+  echo '<script type="text/javascript">';
+  echo 'window.location.href = "defaultpasswordreset.php";';
+  echo '</script>';
 }
 
 if ($role != 'Admin') {
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
+  echo '<script type="text/javascript">';
+  echo 'alert("Access Denied. You are not authorized to access this web page.");';
+  echo 'window.location.href = "home.php";';
+  echo '</script>';
 }
 
-@$lyear = $_GET['academicYear'];
-@$associate_number = @strtoupper($_GET['lookupEmployeeId']);
-
-$result = pg_query($con, "SELECT *
+// this page is hit with get and post both
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  @$lyear = $_POST['academicYear'];
+  @$associate_number = @strtoupper($_POST['employeeId']);
+} else {
+  @$lyear = $_GET['academicYear'];
+  @$associate_number = @strtoupper($_GET['lookupEmployeeId']);
+}
+$query = "
+    SELECT *, rssimyaccount_members.email AS employee_email, rssimyaccount_members.fullname AS employee_fullname, rssimyaccount_members.associatenumber AS employee_associatenumber, rssimyaccount_members.phone AS employee_phone
     FROM rssimyaccount_members
-    left join (SELECT applicantid, COALESCE(SUM(days),0) as sltd  FROM leavedb_leavedb WHERE typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) sltaken ON rssimyaccount_members.associatenumber=sltaken.applicantid
+    LEFT JOIN (
+        SELECT applicantid, COALESCE(SUM(CASE WHEN typeofleave='Sick Leave' THEN days ELSE 0 END), 0) AS sltd,
+               COALESCE(SUM(CASE WHEN typeofleave='Casual Leave' THEN days ELSE 0 END), 0) AS cltd,
+               COALESCE(SUM(CASE WHEN typeofleave='Leave Without Pay' THEN days ELSE 0 END), 0) AS lwptd
+        FROM leavedb_leavedb
+        WHERE lyear='$lyear' AND status='Approved'
+        GROUP BY applicantid
+    ) AS leave_stats ON rssimyaccount_members.associatenumber = leave_stats.applicantid
+    LEFT JOIN (
+        SELECT applicantid, 1 AS onleave
+        FROM leavedb_leavedb
+        WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved'
+    ) AS on_leave ON rssimyaccount_members.associatenumber = on_leave.applicantid
+    LEFT JOIN (
+        SELECT allo_applicantid, COALESCE(SUM(CASE WHEN allo_leavetype='Sick Leave' THEN allo_daycount ELSE 0 END), 0) AS slad,
+               COALESCE(SUM(CASE WHEN allo_leavetype='Casual Leave' THEN allo_daycount ELSE 0 END), 0) AS clad
+        FROM leaveallocation
+        WHERE allo_academicyear='$lyear'
+        GROUP BY allo_applicantid
+    ) AS leave_allocation ON rssimyaccount_members.associatenumber = leave_allocation.allo_applicantid
+    LEFT JOIN (
+        SELECT adj_applicantid, COALESCE(SUM(CASE WHEN adj_leavetype='Sick Leave' THEN adj_day ELSE 0 END), 0) AS sladd,
+               COALESCE(SUM(CASE WHEN adj_leavetype='Casual Leave' THEN adj_day ELSE 0 END), 0) AS cladd,
+               COALESCE(SUM(CASE WHEN adj_leavetype='Leave Without Pay' THEN adj_day ELSE 0 END), 0) AS lwpadd
+        FROM leaveadjustment
+        WHERE adj_academicyear='$lyear'
+        GROUP BY adj_applicantid
+    ) AS leave_adjustment ON rssimyaccount_members.associatenumber = leave_adjustment.adj_applicantid
+    WHERE rssimyaccount_members.associatenumber = '$associate_number'
+";
 
-    left join (SELECT applicantid, COALESCE(SUM(days),0) as cltd FROM leavedb_leavedb WHERE typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber=cltaken.applicantid
+$result = pg_query($con, $query);
 
-    left join (SELECT applicantid, COALESCE(SUM(days),0) as lwptd FROM leavedb_leavedb WHERE typeofleave='Leave Without Pay' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) lwptaken ON rssimyaccount_members.associatenumber=lwptaken.applicantid
-
-    left join (SELECT applicantid, 1 as onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved') onleave ON rssimyaccount_members.associatenumber=onleave.applicantid
-
-    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as slad FROM leaveallocation WHERE allo_leavetype='Sick Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber=slallo.allo_applicantid
-
-    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as clad FROM leaveallocation WHERE allo_leavetype='Casual Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) clallo ON rssimyaccount_members.associatenumber=clallo.allo_applicantid
-
-    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as sladd FROM leaveadjustment WHERE adj_leavetype='Sick Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) sladj ON rssimyaccount_members.associatenumber=sladj.adj_applicantid
-
-    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as cladd FROM leaveadjustment WHERE adj_leavetype='Casual Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber=cladj.adj_applicantid
-
-    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
-
-    WHERE associatenumber = '$associate_number'");
+if ($row = pg_fetch_assoc($result)) {
+  $employee_email = $row['employee_email'];
+  $employee_fullname = $row['employee_fullname'];
+  $employee_phone = $row['employee_phone'];
+  $employee_associatenumber = $row['employee_associatenumber'];
+}
 
 $resultArr = pg_fetch_all($result);
 if (!$result) {
@@ -105,6 +132,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   } catch (Exception $e) {
     echo "Error: " . $e->getMessage();
     exit;
+  }
+
+  if (@$cmdtuples == 1 && $employee_email != "") {
+    sendEmail("payslip", array(
+      "month" => date('F', mktime(0, 0, 0, $paymonth, 1)),
+      "year" => @$payyear,
+      "fullname" => @$employee_fullname,
+      "associatenumber" => @$employee_associatenumber,
+      "payslipid" => @$uniqueId,
+    ), $employee_email, False);
   }
 }
 ?>
@@ -230,6 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
           <fieldset <?php echo ($array['filterstatus'] != "Active") ? "disabled" : ""; ?>>
             <input type="hidden" name="form-type" value="salaryForm">
             <input type="hidden" class="form-control" id="employeeId" name="employeeId" Value="<?php echo $array['associatenumber'] ?>" required>
+            <input type="hidden" class="form-control" name="lyear" Value="<?php echo $lyear ?>">
             <div class="row">
               <div class="col-md-4 mb-3">
                 <label for="payMonth" class="form-label">Pay Month:</label>
@@ -296,6 +334,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
           </div>
         </div>
       <?php } ?>
+    <?php } else { ?>
+      <!-- Onboarding not initiated -->
+      <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Error</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <?php
+              if (pg_num_rows($result) == 0) {
+                $error_message = "No record found for the entered Associate Number";
+              }
+              if (isset($error_message)) {
+                echo $error_message;
+              } ?>
+            </div>
+          </div>
+        </div>
+      </div>
     <?php } ?>
 
     <script>
@@ -607,6 +666,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 
         return true; // Allow form submission
       }
+    </script>
+
+    <script>
+      window.onload = function() {
+        var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
+          backdrop: 'static',
+          keyboard: false
+        });
+        myModal.show();
+      };
     </script>
 
 </body>

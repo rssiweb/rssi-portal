@@ -184,27 +184,39 @@ function donation_export()
 
 function gps_export()
 {
-
-
   global $con;
   @$taggedto = $_POST['taggedto'];
   @$item_type = $_POST['item_type'];
   @$assetid = $_POST['assetid'];
+  @$asset_status = $_POST['asset_status'];
 
+  $conditions = [];
 
-  if ($item_type == 'ALL' && $taggedto == "" && $assetid == "") {
-    $gpsdetails = "SELECT * from gps order by itemname asc";
-  } else if (($item_type == 'ALL' && $taggedto != "") || ($item_type == "" && $taggedto != "" && $assetid == "")) {
-    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' order by itemname asc";
-  } else if ($item_type != "ALL" && $item_type != "" && $taggedto != "" && $assetid == "") {
-    $gpsdetails = "SELECT * from gps where taggedto='$taggedto' and itemtype='$item_type' order by itemname asc";
-  } else if ($item_type != "ALL" && $item_type != "" && $taggedto == "" && $assetid == "") {
-    $gpsdetails = "SELECT * from gps where itemtype='$item_type' order by itemname asc";
-  } else if ($assetid != "" && $item_type == "" && $taggedto == "") {
-    $gpsdetails = "SELECT * from gps where assetid='$assetid' order by itemname asc";
-  } else {
-    $gpsdetails = "SELECT * from gps";
+  if ($taggedto != "") {
+    $conditions[] = "taggedto = '$taggedto'";
   }
+
+  if ($item_type != "ALL" && $item_type != "") {
+    $conditions[] = "itemtype = '$item_type'";
+  }
+
+  if ($assetid != "") {
+    $conditions[] = "assetid = '$assetid'";
+  }
+
+  if ($asset_status != "") {
+    $conditions[] = "asset_status = '$asset_status'";
+  }
+
+  $query = "SELECT * FROM gps";
+
+  if (!empty($conditions)) {
+    $query .= " WHERE " . implode(" AND ", $conditions);
+  }
+
+  $query .= " ORDER BY itemname ASC";
+
+  $gpsdetails = $query;
 
   $result = pg_query($con, $gpsdetails);
 
@@ -251,7 +263,7 @@ function reimb_export()
       left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
       left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
       WHERE registrationid='$id' AND year='$status' order by timestamp desc");
-    } else if ($id !=null && ($status == 'ALL' || $status == null)) {
+    } else if ($id != null && ($status == 'ALL' || $status == null)) {
       $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
       left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
       left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id

@@ -5,6 +5,7 @@ include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+  $_SESSION["login_redirect_params"] = $_GET;
   header("Location: index.php");
   exit;
 }
@@ -142,25 +143,27 @@ if (!$result_component) {
   <div class="container">
     <?php if ($role == 'Admin') { ?>
       <form action="" method="GET" class="d-print-none">
-        <div class="form-group" style="display: flex; align-items: center; margin-top: 1%;">
-          <div class="col-2">
-            <input name="ref" class="form-control" style="width: max-content;" placeholder="Reference number" value="<?php echo $ref ?>">
+        <div class="form-group" style="display: flex; justify-content: flex-end; margin-top: 5%;">
+          <div class="col2">
+            <input name="ref" class="form-control" placeholder="Reference number" value="<?php echo $ref ?>">
           </div>
-          <div class="col-2">
-            <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-              <i class="bi bi-search"></i>&nbsp;Search
+
+          <div class="col2" style="margin-left: 10px;">
+            <button type="submit" name="search_by_id" class="btn btn-success btn-sm">
+              <i class="bi bi-search"></i> Search
             </button>
-            <button type="button" onclick="window.print()" name="print" class="btn btn-primary btn-sm" style="outline: none;">
-              <i class="bi bi-save"></i>&nbsp;Save
+            <button type="button" onclick="window.print()" name="print" class="btn btn-primary btn-sm">
+              <i class="bi bi-save"></i> Save
             </button>
           </div>
         </div>
       </form>
     <?php } ?>
 
+
     <?php if (sizeof($resultArr) > 0) { ?>
       <?php if ($role != 'Admin') { ?>
-        <div style="display: flex; margin-top: 1%;" class="justify-content-end d-print-none">
+        <div style="display: flex; margin-top: 5%;" class="justify-content-end d-print-none">
           <button type="button" onclick="window.print()" name="print" class="btn btn-primary btn-sm" style="outline: none;">
             <i class="bi bi-save"></i>&nbsp;Save
           </button>
@@ -309,7 +312,7 @@ if (!$result_component) {
               if (empty($ref)) {
                 $error_message = "No reference ID entered.";
               } else {
-                if (pg_num_rows($result) == 0 && $check_employeeid == null) {
+                if (pg_num_rows($result) == 0 && @$check_employeeid == null) {
                   $error_message = "No record found for the entered reference ID";
                 } else if (pg_num_rows($result) == 0 && $check_employeeid != $user_check) {
                   $error_message = "You are trying to access data that does not belong to you. If you think this is a mistake, please contact RSSI support team.";

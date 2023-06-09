@@ -202,7 +202,7 @@ if ($_POST) {
 
                                         <div class="col-12">
                                             <div class="form-check">
-                                                <label for="show-password" class="form-label" style="margin-top: 5px;font-weight: unset;">
+                                                <label for="show-password" class="form-label">
                                                     <input type="checkbox" class="form-check-input" id="show-password" class="field__toggle-input" style="display: inline-block;"> Show password
                                                 </label>
                                             </div>

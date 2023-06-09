@@ -205,7 +205,8 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
                                         <?php echo substr($array['itemname'], 0, 50) .
                                             '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showname(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i></button>' ?>
+<i class="bi bi-box-arrow-up-right"></i></button>' ?>
+
 
                                     <?php }
                                     echo '</td><td>' . $array['quantity'] . '</td>' ?>
@@ -221,7 +222,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
                                             <?php echo substr($array['remarks'], 0, 90) .
                                                 '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showremarks(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i></button>' ?>
+                                <i class="bi bi-box-arrow-up-right"></i></button>' ?>
                                         <?php }
                                         echo '</td>' ?>
                                     <?php } ?>
@@ -243,7 +244,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                 <?php echo '</tr>';
                                 } ?>
                             <?php
-                            } else if ($taggedto == null && $item_type == null) {
+                            } else if ($assetid == null) {
                             ?>
                                 <tr>
                                     <td colspan="5">Please select Filter value.</td>
@@ -387,75 +388,31 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 -------------------------------------->
                             <style>
                                 .modal {
-                                    display: none;
-                                    /* Hidden by default */
-                                    position: fixed;
-                                    /* Stay in place */
-                                    z-index: 100;
-                                    /* Sit on top */
-                                    padding-top: 100px;
-                                    /* Location of the box */
-                                    left: 0;
-                                    top: 0;
-                                    width: 100%;
-                                    /* Full width */
-                                    height: 100%;
-                                    /* Full height */
-                                    overflow: auto;
-                                    /* Enable scroll if needed */
-                                    background-color: rgb(0, 0, 0);
-                                    /* Fallback color */
                                     background-color: rgba(0, 0, 0, 0.4);
                                     /* Black w/ opacity */
                                 }
-
-                                /* Modal Content */
-
-                                .modal-content {
-                                    background-color: #fefefe;
-                                    margin: auto;
-                                    padding: 20px;
-                                    border: 1px solid #888;
-                                    width: 100vh;
-                                }
-
-                                @media (max-width:767px) {
-                                    .modal-content {
-                                        width: 50vh;
-                                    }
-                                }
-
-                                /* The Close Button */
-
-                                .close {
-                                    color: #aaaaaa;
-                                    float: right;
-                                    font-size: 28px;
-                                    font-weight: bold;
-                                    text-align: right;
-                                }
-
-                                .close:hover,
-                                .close:focus {
-                                    color: #000;
-                                    text-decoration: none;
-                                    cursor: pointer;
-                                }
                             </style>
 
-                            <div id="myModal1" class="modal">
+                            <div class="modal" id="myModal1" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Remarks</h1>
+                                            <button type="button" id="closeremarks-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
 
-                                <!-- Modal content -->
-                                <div class="modal-content">
-                                    <span id="closeremarks" class="close">&times;</span>
+                                            <div style="width:100%; text-align:right">
+                                                <p class="badge bg-info" style="display: inline !important;"><span class="itemid"></span></p>
+                                            </div>
 
-                                    <div style="width:100%; text-align:right">
-                                        <p class="badge label-info" style="display: inline !important;"><span class="itemid"></span></p>
+                                            <span class="remarks"></span>
+                                            <div class="modal-footer">
+                                                <button type="button" id="closeremarks-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <span class="remarks"></span>
                                 </div>
-
                             </div>
 
                             <script>
@@ -463,7 +420,10 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 
                                 // Get the modal
                                 var modal1 = document.getElementById("myModal1");
-                                var closeremarks = document.getElementById("closeremarks");
+                                var closeremarks = [
+                                    document.getElementById("closeremarks-header"),
+                                    document.getElementById("closeremarks-footer")
+                                ];
 
                                 function showremarks(id1) {
                                     var mydata1 = undefined
@@ -481,12 +441,20 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                     modal1.style.display = "block";
 
                                 }
-                                closeremarks.onclick = function() {
+                                // When the user clicks on <span> (x), close the modal
+                                closeremarks.forEach(function(element) {
+                                    element.addEventListener("click", closeModal);
+                                });
+
+                                function closeModal() {
+                                    var modal1 = document.getElementById("myModal1");
                                     modal1.style.display = "none";
                                 }
-                                // When the user clicks anywhere outside of the modal, close it SEE OTHER SCRIPT
                                 // When the user clicks anywhere outside of the modal, close it
                                 window.onclick = function(event) {
+                                    // if (event.target == modal) {
+                                    //     modal.style.display = "none";
+                                    // } else 
                                     if (event.target == modal1) {
                                         modal1.style.display = "none";
                                     } else if (event.target == modal2) {
@@ -495,27 +463,36 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                 }
                             </script>
 
-                            <div id="myModal2" class="modal">
+                            <div class="modal" id="myModal2" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Item name</h1>
+                                            <button type="button" id="closename-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
 
-                                <!-- Modal content -->
-                                <div class="modal-content">
-                                    <span id="closename" class="close">&times;</span>
+                                            <div style="width:100%; text-align:right">
+                                                <p class="badge bg-info"><span class="itemid"></span></p>
 
-                                    <div style="width:100%; text-align:right">
-                                        <p class="badge label-info" style="display: inline !important;"><span class="itemid"></span></p>
+                                            </div>
+                                            <span class="itemname"></span>
+                                            <div class="modal-footer">
+                                                <button type="button" id="closename-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <span class="itemname"></span>
                                 </div>
-
                             </div>
-
                             <script>
                                 var data2 = <?php echo json_encode($resultArr) ?>
 
                                 // Get the modal
                                 var modal2 = document.getElementById("myModal2");
-                                var closeremarks = document.getElementById("closename");
+                                var closename = [
+                                    document.getElementById("closename-header"),
+                                    document.getElementById("closename-footer")
+                                ];
 
                                 function showname(id2) {
                                     var mydata2 = undefined
@@ -533,11 +510,18 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                     modal2.style.display = "block";
 
                                 }
-                                closename.onclick = function() {
-                                    modal2.style.display = "none";
+                                // When the user clicks on <span> (x), close the modal
+                                closename.forEach(function(element) {
+                                    element.addEventListener("click", closeModal);
+                                });
+
+                                function closeModal() {
+                                    var modal1 = document.getElementById("myModal2");
+                                    modal1.style.display = "none";
                                 }
                                 // When the user clicks anywhere outside of the modal, close it SEE OTHER SCRIPT
                             </script>
+
                         </div>
                     </div>
                 </div><!-- End Reports -->

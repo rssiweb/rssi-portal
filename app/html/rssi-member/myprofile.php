@@ -66,10 +66,6 @@ if (!$result) {
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <style>
-        table {
-            page-break-inside: avoid;
-        }
-
         @media screen {
             .no-display {
                 display: none;

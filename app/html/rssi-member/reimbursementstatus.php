@@ -17,56 +17,71 @@ if ($role == 'Admin') {
 
   @$id = strtoupper($_POST['get_aid']);
 
+  $query = "SELECT *, REPLACE(uploadeddocuments, 'view', 'preview') docp FROM claim 
+      LEFT JOIN (
+          SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members
+      ) faculty ON claim.registrationid = faculty.associatenumber
+      LEFT JOIN (
+          SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student
+      ) student ON claim.registrationid = student.student_id";
+
+  $condition = [];
+
   if ($id == null && ($status == 'ALL' || $status == null)) {
-    $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-    left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
-    left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
-    order by timestamp desc");
-    $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE claimstatus IS NULL OR claimstatus<>'Rejected'");
+    $condition[] = "1 = 1";
   } else if ($id == null && ($status != 'ALL' && $status != null)) {
-    $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-    left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
-    left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
-    WHERE year='$status' order by timestamp desc");
-    $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE year='$status'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE year='$status' AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
+    $condition[] = "year = '$status'";
   } else if ($id > 0 && ($status != 'ALL' && $status != null)) {
-    $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-    left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
-    left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
-    WHERE registrationid='$id' AND year='$status' order by timestamp desc");
-    $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id' AND year='$status'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND year='$status' AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
+    $condition[] = "registrationid = '$id' AND year = '$status'";
   } else if ($id > 0 && ($status == 'ALL' || $status == null)) {
-    $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-    left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
-    left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
-    WHERE registrationid='$id' order by timestamp desc");
-    $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$id'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$id' AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
+    $condition[] = "registrationid = '$id'";
   }
+
+  if (!empty($condition)) {
+    $query .= " WHERE " . implode(" AND ", $condition);
+  }
+
+  $query .= " ORDER BY timestamp DESC";
+
+  $result = pg_query($con, $query);
+
+  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim" . (!empty($condition) ? " WHERE " . implode(" AND ", $condition) : ""));
+  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE (claimstatus IS NULL OR claimstatus <> 'Rejected')" . (!empty($condition) ? " AND " . implode(" AND ", $condition) : ""));
 }
 
-if ($role != 'Admin' && $status != 'ALL') {
+$queryConditions = [];
 
-  $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-  left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members WHERE associatenumber='$user_check') faculty ON claim.registrationid=faculty.associatenumber
-  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student WHERE student_id='$user_check') student ON claim.registrationid=student.student_id
-  WHERE registrationid='$user_check' AND year='$status' order by timestamp desc");
-  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check' AND year='$status'");
-  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check' AND year='$status' AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
+if ($role != 'Admin') {
+  $queryConditions[] = "registrationid = '$user_check'";
 }
 
-if ($role != 'Admin' && $status == 'ALL') {
-
-  $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-  left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members WHERE associatenumber='$user_check') faculty ON claim.registrationid=faculty.associatenumber
-  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student WHERE student_id='$user_check') student ON claim.registrationid=student.student_id
-  WHERE registrationid='$user_check' order by timestamp desc");
-  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check'");
-  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check'AND (claimstatus IS NULL OR claimstatus<>'Rejected')");
+if ($status != 'ALL') {
+  $queryConditions[] = "year = '$status'";
 }
+
+$conditionString = implode(' AND ', $queryConditions);
+
+$query = "SELECT *, REPLACE(uploadeddocuments, 'view', 'preview') docp FROM claim 
+    LEFT JOIN (
+        SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members WHERE associatenumber = '$user_check'
+    ) faculty ON claim.registrationid = faculty.associatenumber
+    LEFT JOIN (
+        SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student WHERE student_id = '$user_check'
+    ) student ON claim.registrationid = student.student_id";
+
+if (!empty($conditionString)) {
+  $query .= " WHERE $conditionString";
+}
+
+if ($status != 'ALL') {
+  $query .= " ORDER BY timestamp DESC";
+} else {
+  $query .= " ORDER BY timestamp DESC";
+}
+
+$result = pg_query($con, $query);
+$totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE $conditionString");
+$totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE $conditionString AND (claimstatus IS NULL OR claimstatus <> 'Rejected')");
 
 if (!$result) {
   echo "An error occurred.\n";
@@ -193,22 +208,26 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 
             <div class="card-body">
               <br>
-              <div class="col">
-                Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                <br>Total Approved amount:&nbsp;<p class="badge bg-success"><?php echo ($resultArrr) ?></p>&nbsp;/&nbsp;<p class="badge bg-secondary"><?php echo ($resultArrrr) ?></p>
+              <div class="row">
+                <div class="col">
+                  Record count: <?php echo sizeof($resultArr) ?><br>
+                  Total Approved amount: <p class="badge bg-success"><?php echo ($resultArrr) ?></p> / <p class="badge bg-secondary"><?php echo ($resultArrrr) ?></p>
+                </div>
+
+                <div class="col text-end">
+                  <form method="POST" action="export_function.php" style="display:inline-block;">
+                    <input type="hidden" value="reimb" name="export_type" />
+                    <input type="hidden" value="<?php echo $id ?>" name="id" />
+                    <input type="hidden" value="<?php echo $status ?>" name="status" />
+                    <input type="hidden" value="<?php echo $role ?>" name="role" />
+                    <input type="hidden" value="<?php echo $user_check ?>" name="user_check" />
+
+                    <button type="submit" id="export" name="export" style="display:inline-box; outline:none; background:none; border:none;" title="Export CSV">
+                      <i class="bi bi-file-earmark-excel" style="font-size: large;"></i>
+                    </button>
+                  </form>
+                </div>
               </div>
-
-              <form method="POST" action="export_function.php">
-                <input type="hidden" value="reimb" name="export_type" />
-                <input type="hidden" value="<?php echo $id ?>" name="id" />
-                <input type="hidden" value="<?php echo $status ?>" name="status" />
-                <input type="hidden" value="<?php echo $role ?>" name="role" />
-                <input type="hidden" value="<?php echo $user_check ?>" name="user_check" />
-
-                <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                        padding: 0px;
-                        border: none;" title="Export CSV"><i class="fa-regular fa-file-excel" style="font-size:large;"></i></button>
-              </form>
 
               <form action="" method="POST">
                 <div class="form-group" style="display: inline-block;">

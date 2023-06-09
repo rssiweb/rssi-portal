@@ -37,6 +37,13 @@ if ($formtype == "noticebodyedit") {
   $result = pg_query($con, $noticebodyedit);
 }
 
+if ($formtype == "pay_comment") {
+  @$payslip_entry_id = $_POST['payslip_entry_id'];
+  @$comment = $_POST['comment'];
+  $commentedit = "UPDATE payslip_entry SET  comment = '$comment' WHERE payslip_entry_id = '$payslip_entry_id'";
+  $result = pg_query($con, $commentedit);
+}
+
 if ($formtype == "policybodyedit") {
   @$policyid = $_POST['policyid'];
   @$remarks = $_POST['remarks'];

@@ -101,13 +101,15 @@ $resultArrr = pg_fetch_result($totalamount, 0, 0);
 
                         <div class="card-body">
                             <br>
-                            <div class="col" style="display: inline-block;">
-                                Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                                <br>Total paid amount:&nbsp;<p class="badge bg-success"><?php echo ($resultArrr) ?></p>
-                            </div>
-                            <div style="float: right;">
-                                <a href="pay_details.php">
-                                    << New Payslip</a>
+                            <div class="row">
+                                <div class="col">
+                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                                    <br>Total paid amount:&nbsp;<p class="badge bg-success"><?php echo ($resultArrr) ?></p>
+                                </div>
+                                <div class="col text-end">
+                                    <a href="pay_details.php">
+                                        << New Payslip</a>
+                                </div>
                             </div>
 
                             <?php if ($role == 'Admin') { ?>
