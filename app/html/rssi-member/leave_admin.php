@@ -529,6 +529,7 @@ if (!$result) {
                                 <input type="hidden" name="data[todate]" type="text" value="' . @date("d/m/Y", strtotime($array['todate'])) . '">
                                 <input type="hidden" name="data[status]" type="text" value="' . @strtoupper($array['status']) . '">
                                 <input type="hidden" name="email" type="text" value="' . @$array['email'] . @$array['emailaddress'] . '">
+                                <!--<input type="hidden" name="bcc" type="text" value="True">-->
                                 
                                 <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
                                  type="submit"><i class="bi bi-envelope-at" style="color:#444444;" title="Send Email ' . @$array['email'] . @$array['emailaddress'] . '"></i></button>
