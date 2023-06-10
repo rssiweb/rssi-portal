@@ -159,3 +159,9 @@ $age = $_GET['age']
 
 $sql = 'INSERT INTO employee (name, age) VALUES($1, $2);';
 $result = pg_query_params($connection, $sql, array($name, $age));
+
+
+///PDE generate
+npm install puppeteer
+cd /d/RSSILogin/app/html/rssi-member
+node generatePDF.js

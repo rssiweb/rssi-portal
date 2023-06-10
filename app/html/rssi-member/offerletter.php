@@ -83,19 +83,15 @@ if (!$result) {
         }
 
         @media print {
-            table {
-                page-break-inside: auto;
-            }
 
             .report-footer {
                 position: fixed;
-                bottom: 0px;
-                height: 20px;
-                display: block;
-                width: 90%;
-                border-top: solid 1px #ccc;
-                overflow: visible;
-                text-align: right;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background-color: #f8f9fa;
+                padding: 10px;
+                font-size: 12px;
             }
 
             .no-print,
@@ -187,8 +183,6 @@ if (!$result) {
                     <tbody>
                         <tr>
                             <td>
-
-
                                 <?php echo @date("d/m/Y", strtotime($date)) . '<br>RSSI/' . $array['associatenumber'] . '/' . $array['depb'] . '<br><br>
 
                                         ' . $array['fullname'] . '<br>
@@ -218,12 +212,12 @@ if (!$result) {
                                 <ol start="3">
                                     <li>We hope your association with us will be a very long one. However, your association with the Organization can be terminated by Thirty (30) days notice in writing from either side, or you can buy out the notice period set by the Organization. However, in the event of any discrepancy or false information being found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, or any other serious breach of duty which may be prejudicial to the interests of the Organization, has the discretion to terminate your Services immediately or with such notice as it may deem fit.</li>
                                     <li>You are not eligible to take more than 1 leave without notice during your tenure, in case of more than 1 leave without notice, the organization may decide for dismissal.</li>
-                                </ol>
+                                    <!-- </ol>
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <ol start="5">
+                                <ol start="5"> -->
                                     <li>
                                         <?php if ($array['engagement'] == 'Intern') { ?>
                                             You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 1 month from the original joining date in accordance with the Service Agreement clause.
@@ -283,10 +277,10 @@ if (!$result) {
 
                                     <li>Your association will be governed by and constructed in accordance with the laws of India and the courts of Kharagpur, West Bengal alone will have the jurisdiction.</li>
                                 </ol>
-                            </td>
+                                <!-- </td>
                         </tr>
                         <tr>
-                            <td>
+                            <td> -->
                                 <?php if (str_contains($array['position'], "Employee")) { ?>
 
                                     <p><b><u>Increments and Promotions</u></b></p>
@@ -368,8 +362,14 @@ if (!$result) {
                     <tfoot>
                         <tr>
                             <td colspan="2">
-                                Signature of the Associate
-                                <p class="report-footer">Private and Confidential</p>
+                                Signature of the Associate<br><br>
+                                <div class="print-footer d-none d-print-inline-flex">
+                                    <?php if (str_contains($array['position'], "Intern")) { ?>
+                                        Offer letter disclaimer: This letter does not certify your internship involvement or serve as a reference. It is for legal purposes only.
+                                    <?php } else { ?>
+                                        <p style="text-align: right;">Private and Confidential</p>
+                                    <?php } ?>
+                                </div>
                             </td>
                         </tr>
                     </tfoot>
