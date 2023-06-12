@@ -227,11 +227,11 @@ function gps_export()
 
   $resultArr = pg_fetch_all($result);
 
-  echo 'Asset Id,Asset name,Asset type,Quantity,Tagged to' . "\n";
+  echo 'Asset Id,Asset name,Asset type,Quantity,Tagged to,Status' . "\n";
 
   foreach ($resultArr as $array) {
 
-    echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] . "\n";
+    echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] .',' . $array['asset_status'] . "\n";
   }
 }
 

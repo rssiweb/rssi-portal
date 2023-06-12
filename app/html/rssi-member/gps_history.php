@@ -63,7 +63,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>GPS (Global Procurement System)</title>
+    <title>GPS History <?php echo  $assetid ?></title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -188,6 +188,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                             echo '
                                 <th scope="col">Issued by</th>
                                 <th scope="col">Tagged to</th>
+                                <th scope="col">Status</th>
                                 <th scope="col">Last updated on</th></tr>
                         </thead>' ?>
                             <?php if (sizeof($resultArr) > 0) { ?>
@@ -230,6 +231,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                     <?php echo '
                                 <td>' . $array['collectedby'] . '</td>
                                 <td>' . $array['taggedto'] . '</td>
+                                <td>' . $array['asset_status'] . '</td>
                                 <td>' ?>
                                     <?php if ($array['date'] != null) { ?>
 

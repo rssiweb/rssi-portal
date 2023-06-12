@@ -106,24 +106,18 @@ if ($formtype == "gemsdelete") {
   $result = pg_query($con, $gemsdelete);
 }
 
-// if ($formtype == "gpsdelete") {
-//   @$gpsid = $_POST['gpsid'];
-//   $gpsdelete = "DELETE from gps WHERE itemid = '$gpsid'";
-//   $result = pg_query($con, $gpsdelete);
-// }
-
-
 if ($formtype == "gpsedit") {
   @$itemid = $_POST['itemid1'];
   @$itemname = $_POST['itemname'];
   @$itemtype = $_POST['itemtype'];
   @$quantity = $_POST['quantity'];
   @$remarks = $_POST['remarks'];
+  @$asset_status = $_POST['asset_status'];
   @$collectedby = strtoupper($_POST['collectedby']);
   @$taggedto = strtoupper($_POST['taggedto']);
   $now = date('Y-m-d H:i:s');
-  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto')";
-  $tagedit = "UPDATE gps SET  lastupdatedon='$now', itemid='$itemid', itemtype='$itemtype', itemname='$itemname', quantity='$quantity', remarks='$remarks', collectedby='$collectedby',taggedto='$taggedto' WHERE itemid = '$itemid'";
+  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto,asset_status) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto','$asset_status')";
+  $tagedit = "UPDATE gps SET  lastupdatedon='$now', itemid='$itemid', itemtype='$itemtype', itemname='$itemname', quantity='$quantity', remarks='$remarks', collectedby='$collectedby',taggedto='$taggedto',asset_status='$asset_status'WHERE itemid = '$itemid'";
   $result = pg_query($con, $tagedit);
   $result = pg_query($con, $gpshistory);
 }

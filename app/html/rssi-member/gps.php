@@ -406,6 +406,7 @@ $resultArr = pg_fetch_all($result);
                             echo '
                                 <th scope="col">Issued by</th>
                                 <th scope="col">Tagged to</th>
+                                <th scope="col">Status</th>
                                 <th scope="col">Last updated on</th>
                                 <th scope="col"></th></tr>
                         </thead>' ?>
@@ -450,6 +451,7 @@ $resultArr = pg_fetch_all($result);
                                     <?php echo '
                                 <td>' . $array['collectedby'] . '<br>' . $array['ifullname'] . '</td>
                                 <td>' . $array['taggedto'] . '<br>' . $array['tfullname'] . '</td>
+                                <td>' . $array['asset_status'] .'</td>
                                 <td>' ?>
                                     <?php if ($array['lastupdatedon'] != null) { ?>
 
@@ -959,29 +961,6 @@ $resultArr = pg_fetch_all($result);
                                 var data = <?php echo json_encode($resultArr) ?>;
                                 //For form submission - to update Remarks
                                 const scriptURL = 'payment-api.php'
-
-                                // function validateForm() {
-                                //     if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
-
-                                //         const form = document.getElementById('gpsdelete')
-                                //         form.addEventListener('submit', e => {
-                                //             e.preventDefault()
-                                //             fetch(scriptURL, {
-                                //                     method: 'POST',
-                                //                     body: new FormData(document.getElementById('gpsdelete'))
-                                //                 })
-                                //                 .then(response =>
-                                //                     alert("Record has been updated.") +
-                                //                     location.reload()
-                                //                 )
-                                //                 .catch(error => console.error('Error!', error.message))
-                                //         })
-                                //     } else {
-                                //         alert("Record has NOT been deleted.");
-                                //         return false;
-                                //     }
-                                // }
-
                                 const form = document.getElementById('gpsform')
                                 form.addEventListener('submit', e => {
                                     e.preventDefault()
