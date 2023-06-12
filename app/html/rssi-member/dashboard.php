@@ -15,13 +15,56 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';
 }
-$query = "SELECT count(serial_number) AS onboarding_left FROM onboarding WHERE onboarding_flag IS NULL";
-$result = pg_query($con, $query);
-$onboarding_left = pg_fetch_result($result, 0, 'onboarding_left');
+$query = "SELECT
+    (SELECT COUNT(serial_number) FROM onboarding WHERE onboarding_flag IS NULL) AS onboarding_left,
+    (SELECT COUNT(id) FROM associate_exit WHERE exit_flag IS NULL) AS exit_left,
+    rssimyaccount_members.fullname,
+    rssimyaccount_members.associatenumber,
+    rssimyaccount_members.doj,
+    rssimyaccount_members.effectivedate,
+    rssimyaccount_members.remarks,
+    rssimyaccount_members.photo,
+    rssimyaccount_members.engagement,
+    rssimyaccount_members.position,
+    rssimyaccount_members.depb,
+    rssimyaccount_members.filterstatus,
+    'onboarding' AS process_type
+FROM rssimyaccount_members
+WHERE rssimyaccount_members.associatenumber IN (
+    SELECT onboarding_associate_id FROM onboarding WHERE onboarding_flag IS NULL
+)
+UNION ALL
+SELECT
+    NULL AS onboarding_left,
+    NULL AS exit_left,
+    rssimyaccount_members.fullname,
+    rssimyaccount_members.associatenumber,
+    rssimyaccount_members.doj,
+    rssimyaccount_members.effectivedate,
+    rssimyaccount_members.remarks,
+    rssimyaccount_members.photo,
+    rssimyaccount_members.engagement,
+    rssimyaccount_members.position,
+    rssimyaccount_members.depb,
+    rssimyaccount_members.filterstatus,
+    'exit' AS process_type
+FROM rssimyaccount_members
+WHERE rssimyaccount_members.associatenumber IN (
+    SELECT exit_associate_id FROM associate_exit WHERE exit_flag IS NULL
+)";
 
-$query = "SELECT count(id) AS exit_left FROM associate_exit WHERE exit_flag IS NULL";
 $result = pg_query($con, $query);
-$exit_left = pg_fetch_result($result, 0, 'exit_left');
+$resultArr = pg_fetch_all($result);
+
+if ($result) {
+    $onboarding_left = $resultArr[0]['onboarding_left'];
+    $exit_left = $resultArr[0]['exit_left'];
+} else {
+    // Error handling if the query fails
+    $onboarding_left = 0;
+    $exit_left = 0;
+}
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -79,15 +122,70 @@ $exit_left = pg_fetch_result($result, 0, 'exit_left');
 
                         <div class="card-body">
                             <br>
-
                             <div class="row g-3">
                                 <div class="col-md-6 col-lg-4">
                                     <div class="card h-100">
                                         <div class="card-body">
                                             <h4 class="card-title">Onboarding Process</h4>
-                                            <span class="badge rounded-pill text-bg-danger position-absolute top-0 end-0 me-2 mt-2">Pending: <?php echo $onboarding_left ?></span>
-                                            <p class="card-text">Welcome to the RSSI Onboarding Portal - your one-stop destination for a smooth and efficient onboarding process.</p>
-                                            <a href="onboarding.php" target="_blank" class="btn btn-success btn-sm">Launch <i class="bi bi-box-arrow-up-right"></i></a>
+                                            <span class="badge rounded-pill text-bg-danger position-absolute top-0 end-0 me-2 mt-2">
+                                                Pending: <?php echo $onboarding_left; ?>
+                                            </span>
+                                            <p class="card-text">
+                                                Welcome to the RSSI Onboarding Portal - your one-stop destination for a smooth and efficient onboarding process.
+                                            </p>
+                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#myModal">
+                                                Launch <i class="bi bi-box-arrow-up-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Modal -->
+                                <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="exampleModalLabel">Onboarding Process</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <?php echo '
+                                                <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                        <th scope="col">Associate number</th>
+                                                        <th scope="col">Name</th>
+                                                        <th scope="col">Date of joining</th>    
+                                                        <th scope="col">Engagement</th>
+                                                        <th scope="col">Deputed Branch</th>
+                                                        <th scope="col">Action</th>
+                                                        </tr>
+                                                    </thead>' ?>
+                                                <?php if (sizeof($resultArr) > 0) { ?>
+                                                <?php
+                                                    foreach ($resultArr as $array) {
+                                                        if ($array['process_type'] === 'onboarding') {
+                                                            echo '
+                                                        <tr>
+                                                            <td>' . $array['associatenumber'] . '</td>
+                                                            <td>' . $array['fullname'] . '</td>
+                                                            <td>' . date("d/m/Y", strtotime($array['doj'])) . '</td>
+                                                            <td>' . $array['engagement'] . '</td>
+                                                            <td>' . $array['depb'] . '</td>
+                                                            <td><a href="onboarding.php?associate-number=' . $array['associatenumber'] . '">Click Here</a></td>
+                                                        </tr>';
+                                                        }
+                                                    }
+                                                }
+                                                ?>
+                                                <?php echo '</table>
+                                                          </div>'; ?>
+
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -98,7 +196,57 @@ $exit_left = pg_fetch_result($result, 0, 'exit_left');
                                             <h4 class="card-title">Exit Process</h4>
                                             <span class="badge rounded-pill text-bg-danger position-absolute top-0 end-0 me-2 mt-2">Pending: <?php echo $exit_left ?></span>
                                             <p class="card-text">Efficiently manage the separation of associates with the RSSI Exit Process. Conduct exit interviews, collect company property, provide benefit information, and complete necessary formalities in one place.</p>
-                                            <a href="exit.php" target="_blank" class="btn btn-danger btn-sm">Launch <i class="bi bi-box-arrow-up-right"></i></a>
+                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#myModal_exit">
+                                                Launch <i class="bi bi-box-arrow-up-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Modal -->
+                                <div class="modal fade" id="myModal_exit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="exampleModalLabel">Exit Process</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <?php echo '
+                                                <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col">Associate number</th>
+                                                            <th scope="col">Name</th>
+                                                            <th scope="col">Last Working Day</th>    
+                                                            <th scope="col">Engagement</th>
+                                                            <th scope="col">Deputed Branch</th>
+                                                            <th scope="col">Action</th>
+                                                        </tr>
+                                                    </thead>' ?>
+                                                <?php if (sizeof($resultArr) > 0) { ?>
+                                                <?php
+                                                    foreach ($resultArr as $array) {
+                                                        if ($array['process_type'] === 'exit') {
+                                                            echo '
+                                                                <tr>
+                                                                    <td>' . $array['associatenumber'] . '</td>
+                                                                    <td>' . $array['fullname'] . '</td>
+                                                                    <td>' . (($array['effectivedate'] == null) ? "N/A" : date('M d, Y', strtotime($array['effectivedate']))) . '</td>
+                                                                    <td>' . $array['engagement'] . '</td>
+                                                                    <td>' . $array['depb'] . '</td>
+                                                                    <td><a href="exit.php?associate-number=' . $array['associatenumber'] . '">Click Here</a></td>
+                                                                </tr>';
+                                                        }
+                                                    }
+                                                }
+                                                ?>
+                                                <?php echo '</table>
+                                                </div>'; ?>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
