@@ -311,21 +311,28 @@ $resultArr = pg_fetch_all($result);
                                     <td>';
                                 ?>
                                     <?php if ($array['photo'] != null) { ?>
-                                        <?php echo '<div class="icon-container"><img src="' . $array['photo'] . '" class="rounded-circle me-2" class="img-responsive img-circle" width="50" height="50"/>'; ?>
+                                        <div class="icon-container">
+                                            <img src="<?php echo $array['photo']; ?>" class="rounded-circle me-2" alt="User Photo" width="50" height="50" />
+                                        </div>
                                     <?php } else { ?>
-                                        <?php echo '<div class="icon-container"><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="rounded-circle me-2" class="img-responsive img-circle" width="50" height="50"/>'; ?>
+                                        <div class="icon-container">
+                                            <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="rounded-circle me-2" alt="Blank User Photo" width="50" height="50" />
+                                        </div>
                                     <?php } ?>
 
-                                    <?php if ($array['logintime'] != null) { ?>
-                                        <?php if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
-                                            <?php echo '<div class="status-circle" title="Online"></div>'; ?>
-                                        <?php } else { ?>
-                                            <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'; ?>
-                                        <?php }
-                                    } else { ?>
-                                        <?php echo '<div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>'; ?>
-                                    <?php }
-                                    echo '</div></td>
+                                    <div class="status-container">
+                                        <?php if ($array['logintime'] != null) {
+                                            if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
+                                                <div class="status-circle" title="Online"></div>
+                                            <?php } else { ?>
+                                                <div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>
+                                            <?php }
+                                        } else { ?>
+                                            <div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>
+                                        <?php } ?>
+                                    </div>
+
+                                    <?php echo '</div></td>
                                     <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
                                     <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['doj'])) . '<br>' . $array['yos'] . '</td>
                                     <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>

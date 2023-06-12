@@ -773,3 +773,20 @@ body.loading {
 body.loading .overlay {
   display: block;
 }
+
+/* To display a badge on the profile photo indicating online or offline status */
+.status-container {
+  position: relative;
+}
+
+.status-circle {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #92C353;
+  border: 2px solid white;
+  position: absolute;
+  bottom: 0;
+  /* Adjust the left property instead of right */
+  left: calc(100% - 25px);
+}
