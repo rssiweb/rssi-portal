@@ -56,7 +56,7 @@ WHERE rssimyaccount_members.associatenumber IN (
 $result = pg_query($con, $query);
 $resultArr = pg_fetch_all($result);
 
-if ($result) {
+if ($result > 0) {
     $onboarding_left = $resultArr[0]['onboarding_left'];
     $exit_left = $resultArr[0]['exit_left'];
 } else {
