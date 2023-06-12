@@ -201,8 +201,8 @@ if (!$result) {
                                 <p>This is to certify that <?php echo $array['fullname'] ?> has worked with us for the tenure of <?php echo $array['yos'] ?>.
                                     <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?>
 
-                                    has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?> from <?php echo $array['doj'] ?> to <?php if ($array['associationstatus'] != null) { ?>
-                                        <?php echo $array['effectivedate'] ?>
+                                    has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?> from <?php echo date('d/m/Y', strtotime($array['doj'])) ?> to <?php if ($array['associationstatus'] != null) { ?>
+                                        <?php echo date('d/m/Y', strtotime($array['effectivedate'])) ?>
                                     <?php } else { ?> <?php echo 'Present' ?>
                                         <?php } ?>(date in dd/mm/yyyy).<br><br>
 
