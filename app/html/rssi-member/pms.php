@@ -196,7 +196,7 @@ $resultArrr = pg_fetch_all($result);
                                             <option>Associate</option>
                                             <option>Student</option>
                                         </select>&nbsp;
-                                        <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="">
+                                        <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="<?php echo $get_status ?>">
                                     </div>
                                 </div>
                                 <div class="col2 left" style="display: inline-block;">
@@ -229,7 +229,7 @@ $resultArrr = pg_fetch_all($result);
                                 <td>' . @$array['associatenumber'] . @$array['student_id'] ?>
 
                                     <?php if ($array['password_updated_by'] == null || $array['password_updated_on'] < $array['default_pass_updated_on']) { ?>
-                                        <?php echo '<p class="badge label-warning">defaulter</p>' ?><?php } ?>
+                                        <?php echo '<p class="badge bg-warning">defaulter</p>' ?><?php } ?>
 
                                         <?php
                                         echo '</td>' ?>
