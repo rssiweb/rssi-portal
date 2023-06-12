@@ -10,78 +10,48 @@ if (!isLoggedIn("aid")) {
   exit;
 }
 
-
-@$status = $_POST['get_id'];
-
 if ($role == 'Admin') {
-
-  @$id = strtoupper($_POST['get_aid']);
-
-  $query = "SELECT *, REPLACE(uploadeddocuments, 'view', 'preview') docp FROM claim 
-      LEFT JOIN (
-          SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members
-      ) faculty ON claim.registrationid = faculty.associatenumber
-      LEFT JOIN (
-          SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student
-      ) student ON claim.registrationid = student.student_id";
-
-  $condition = [];
-
-  if ($id == null && ($status == 'ALL' || $status == null)) {
-    $condition[] = "1 = 1";
-  } else if ($id == null && ($status != 'ALL' && $status != null)) {
-    $condition[] = "year = '$status'";
-  } else if ($id > 0 && ($status != 'ALL' && $status != null)) {
-    $condition[] = "registrationid = '$id' AND year = '$status'";
-  } else if ($id > 0 && ($status == 'ALL' || $status == null)) {
-    $condition[] = "registrationid = '$id'";
-  }
-
-  if (!empty($condition)) {
-    $query .= " WHERE " . implode(" AND ", $condition);
-  }
-
-  $query .= " ORDER BY timestamp DESC";
-
-  $result = pg_query($con, $query);
-
-  $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim" . (!empty($condition) ? " WHERE " . implode(" AND ", $condition) : ""));
-  $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE (claimstatus IS NULL OR claimstatus <> 'Rejected')" . (!empty($condition) ? " AND " . implode(" AND ", $condition) : ""));
+  $status = isset($_POST['get_id']) ? $_POST['get_id'] : null;
+  $id = isset($_POST['get_aid']) ? strtoupper($_POST['get_aid']) : null;
+} else {
+  $status = isset($_POST['get_id']) ? $_POST['get_id'] : null;
+  $id = $user_check;
 }
 
 $queryConditions = [];
 
-if ($role != 'Admin') {
-  $queryConditions[] = "registrationid = '$user_check'";
+if ($id !== null && $id !== "") {
+  $queryConditions[] = "claim.registrationid = '$id'";
 }
 
-if ($status != 'ALL') {
-  $queryConditions[] = "year = '$status'";
+if ($status !== null && $status !== "" && $status !== 'ALL') {
+  $queryConditions[] = "claim.year = '$status'";
 }
 
 $conditionString = implode(' AND ', $queryConditions);
 
 $query = "SELECT *, REPLACE(uploadeddocuments, 'view', 'preview') docp FROM claim 
-    LEFT JOIN (
-        SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members WHERE associatenumber = '$user_check'
-    ) faculty ON claim.registrationid = faculty.associatenumber
-    LEFT JOIN (
-        SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student WHERE student_id = '$user_check'
-    ) student ON claim.registrationid = student.student_id";
+    LEFT JOIN rssimyaccount_members AS faculty ON claim.registrationid = faculty.associatenumber
+    LEFT JOIN rssimyprofile_student AS student ON claim.registrationid = student.student_id";
 
 if (!empty($conditionString)) {
   $query .= " WHERE $conditionString";
 }
 
-if ($status != 'ALL') {
-  $query .= " ORDER BY timestamp DESC";
-} else {
-  $query .= " ORDER BY timestamp DESC";
-}
+$query .= " ORDER BY claim.timestamp DESC";
 
 $result = pg_query($con, $query);
-$totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE $conditionString");
-$totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE $conditionString AND (claimstatus IS NULL OR claimstatus <> 'Rejected')");
+
+$totalapprovedamountQuery = "SELECT SUM(approvedamount) FROM claim";
+$totalclaimedamountQuery = "SELECT SUM(totalbillamount) FROM claim WHERE (claimstatus IS NULL OR claimstatus <> 'Rejected')";
+
+if (!empty($conditionString)) {
+  $totalapprovedamountQuery .= " WHERE $conditionString";
+  $totalclaimedamountQuery .= " AND $conditionString";
+}
+
+$totalapprovedamount = pg_query($con, $totalapprovedamountQuery);
+$totalclaimedamount = pg_query($con, $totalclaimedamountQuery);
 
 if (!$result) {
   echo "An error occurred.\n";
