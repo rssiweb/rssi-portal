@@ -124,7 +124,10 @@ if (@$cmdtuples == 1) {
 <body>
     <div class="container">
         <form method="get" name="a_lookup" id="a_lookup">
-            <h3>Associate Information Lookup</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Associate Information Lookup</h3>
+                <a href="javascript:history.go(-1)">Go to previous link</a>
+            </div>
             <hr>
             <div class="mb-3">
                 <label for="associate-number" class="form-label">Associate Number:</label>

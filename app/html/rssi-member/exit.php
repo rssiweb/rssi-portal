@@ -122,7 +122,10 @@ if (@$cmdtuples == 1) {
 <body>
     <div class="container">
         <form method="get" name="a_lookup" id="a_lookup">
-            <h3>Associate Information Lookup</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Associate Information Lookup</h3>
+                <a href="javascript:history.go(-1)">Go to previous link</a>
+            </div>
             <hr>
             <div class="mb-3">
                 <label for="associate-number" class="form-label">Associate Number:</label>
@@ -140,11 +143,6 @@ if (@$cmdtuples == 1) {
                         <hr>
                         <div class="container">
                             <div class="row">
-                                <!-- <div class="row">
-                                    <div class="col-md-12 text-end">
-                                        <a href="https://www.google.com/search?q=rssi+ngo&oq=rssi+ngo&aqs=chrome.0.35i39i355i650j46i39i175i199i650j69i64j0i512j69i60l2j69i61j69i65.2251j0j4&sourceid=chrome&ie=UTF-8#lrd=0x399be3fc575228e3:0xbbc4182b61aa1609,1,,,," target="_blank">Google review</a>
-                                    </div>
-                                </div> -->
                                 <div class="col-md-4 text-center mb-3">
                                     <img src="<?php echo $array['photo'] ?>" alt="Profile picture" width="100px">
                                 </div>
