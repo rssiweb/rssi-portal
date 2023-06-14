@@ -519,6 +519,11 @@
         id: 'work',
         linkId: 'userlogLink',
         url: 'userlog.php'
+      },
+      {
+        id: 'work',
+        linkId: 'dashboardLink',
+        url: 'visitor.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },

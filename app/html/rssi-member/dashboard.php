@@ -256,7 +256,7 @@ if ($result > 0) {
                                         <div class="card-body">
                                             <h4 class="card-title">Visitor Registration</h4>
                                             <p class="card-text">Welcome to the RSSI Visitor Registration Portal. This is your one-stop solution to efficiently register and track the details of visitors to our premises.</p>
-                                            <a href="#" class="btn btn-warning btn-sm disabled" aria-disabled="true">Launch <i class="bi bi-box-arrow-up-right"></i></a>
+                                            <a href="visitor.php" class="btn btn-warning btn-sm" aria-disabled="true">Launch <i class="bi bi-box-arrow-up-right"></i></a>
                                         </div>
                                     </div>
                                 </div>
