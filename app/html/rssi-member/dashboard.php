@@ -17,7 +17,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 $query = "SELECT
     (SELECT COUNT(serial_number) FROM onboarding WHERE onboarding_flag IS NULL) AS onboarding_left,
-    (SELECT COUNT(id) FROM associate_exit WHERE exit_flag IS NULL) AS exit_left,
+    NULL AS exit_left,
     rssimyaccount_members.fullname,
     rssimyaccount_members.associatenumber,
     rssimyaccount_members.doj,
@@ -36,7 +36,7 @@ WHERE rssimyaccount_members.associatenumber IN (
 UNION ALL
 SELECT
     NULL AS onboarding_left,
-    NULL AS exit_left,
+    (SELECT COUNT(id) FROM associate_exit WHERE exit_flag IS NULL) AS exit_left,
     rssimyaccount_members.fullname,
     rssimyaccount_members.associatenumber,
     rssimyaccount_members.doj,
