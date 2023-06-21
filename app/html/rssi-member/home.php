@@ -119,7 +119,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                             <a href="https://docs.google.com/spreadsheets/d/1ufn8vcA5tcpoVvbTgGBO9NsXmiYgjmz54Qqg_L2GZxI/edit#gid=311270786" target="_blank">Attendance sheet</a>
                           </span>
                           <?php if (@$attd_pending != null) : ?>
-                            <span class="badge bg-warning text-dark">Pending: <?php echo $attd_pending ?></span>
+                            <span class="badge bg-warning">Pending: <?php echo $attd_pending ?></span>
                           <?php endif; ?>
                         </p>
                       </div>

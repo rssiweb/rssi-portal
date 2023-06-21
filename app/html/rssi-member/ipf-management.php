@@ -93,7 +93,7 @@ $resultArr = pg_fetch_all($result);
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Performance management</a></li>
-                    <li class="breadcrumb-item"><a href="my_appraisal">My Appraisal</a></li>
+                    <li class="breadcrumb-item"><a href="my_appraisal.php">My Appraisal</a></li>
                     <li class="breadcrumb-item active">Appraisal Workflow</li>
                 </ol>
             </nav>
