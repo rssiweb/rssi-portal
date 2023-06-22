@@ -172,8 +172,9 @@ if ($_POST) {
 
                             <div class="container text-center py-4">
                                 <div class="logo">
-                                    <span class="d-lg-block" style="margin-right:10%;">Phoenix</span>
-                                    <span class="by-line">by RSSI NGO</span>
+                                    <!-- <span class="d-lg-block" style="margin-right:10%;">Phoenix</span>
+                                    <span class="by-line">by RSSI NGO</span> -->
+                                    <img src="../img/phoenix.png" alt="Phoenix Logo" width="40%">
                                 </div>
                             </div>
 

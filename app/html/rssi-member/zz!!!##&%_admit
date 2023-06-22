@@ -1,0 +1,214 @@
+<?php
+require_once __DIR__ . "/../../bootstrap.php";
+
+include("../../util/login_util.php");
+
+
+if (!isLoggedIn("aid")) {
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: index.php");
+    exit;
+}
+
+if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
+
+    echo '<script type="text/javascript">';
+    echo 'window.location.href = "defaultpasswordreset.php";';
+    echo '</script>';
+}
+
+if ($role != 'Admin') {
+    echo '<script type="text/javascript">';
+    echo 'alert("Access Denied. You are not authorized to access this web page.");';
+    echo 'window.location.href = "home.php";';
+    echo '</script>';
+}
+$result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE filterstatus='Active' order by category asc, class asc, studentname asc");
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+$resultArr = pg_fetch_all($result);
+?>
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+
+    <title>Admit Card</title>
+
+    <style>
+        .txt-center {
+            text-align: center;
+        }
+
+        .border- {
+            border: 1px solid #000 !important;
+        }
+
+        .padding {
+            padding: 15px;
+        }
+
+        .mar-bot {
+            margin-bottom: 15px;
+        }
+
+        .admit-card {
+            border: 2px solid #000;
+            padding: 15px;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+
+        .BoxA h5,
+        .BoxA p {
+            margin: 0;
+        }
+
+        h5 {
+            text-transform: uppercase;
+        }
+
+        table img {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .table-bordered td,
+        .table-bordered th,
+        .table thead th {
+            border: 1px solid #000000 !important;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <?php if (sizeof($resultArr) > 0) {
+        $recordCount = 0;
+        foreach ($resultArr as $array) {
+            if ($recordCount % 2 === 0) {
+                echo '<div class="row">';
+            }
+            echo '<div class="col-md-6">
+                <div class="admit-card">
+                    <div class="BoxA border- padding mar-bot">
+                        <div class="d-flex">
+                            <div class="col-2">
+                                <img src="../img/brand_logo.png" width="80%" />
+                            </div>
+                            <div class="col-10">
+                                <div class="row">
+                                    <div class="col-9">
+                                        <h5>Rina Shiksha Sahayak Foundation (RSSI NGO)</h5>
+                                        <div style="margin-top: 10px; font-size:small;">
+                                            <!--<p>624V/195/01, Vijayipur, Vijaipur Village, Vishesh Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>-->
+                                            <p>Contact: 7980168159; Email: info@rssi.in; Web: www.rssi.in</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <h5>Admit Card</h5>
+                                        <p>First Term Exam - 2023</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="BoxD border- padding mar-bot">
+                        <div class="row">
+                            <div class="col-10">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <td><b>Student ID:</b> ' . $array['student_id'] . '</td>
+                                            <td><b>Class/Category:</b> ' . $array['class'] . '/' . $array['category'] . '</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Student Name:</b> ' . $array['studentname'] . '</td>
+                                            <td><b>Gender:</b> ' . $array['gender'] . '</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Guardian Name:</b> ' . $array['guardiansname'] . '</td>
+                                            <td><b>DOB:</b> ' . $array['dateofbirth'] . '</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" style="height: 125px;"><b>EXAMINATION VENUE:</b><br>RSSI Offline Learning Centre, Lucknow<br>624V/195/01, Vijayipur, Vijaipur Village, Vishesh Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-2 txt-center">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row txt-center"><img src="' . $array['photourl'] . '" width="100px" height="133px" /></th>
+                                        </tr>
+                                        <!-- <tr>
+                                            <th scope="row txt-center"><img src="http://peoplehelp.in/mewaruni/images/signature.png" /></th>
+                                        </tr> -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="BoxF border- padding mar-bot txt-center">
+                        <div class="row">
+                            <div class="col-12">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Sr. No.</th>
+                                            <th>Subject/Paper</th>
+                                            <th>Exam Date</th>
+                                            <th>Reporting time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1</td>
+                                            <td>English</td>
+                                            <td>5 July 2019</td>
+                                            <td>3:30 pm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2</td>
+                                            <td>English</td>
+                                            <td>5 July 2019</td>
+                                            <td>3:30 pm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>3</td>
+                                            <td>English</td>
+                                            <td>5 July 2019</td>
+                                            <td>3:30 pm</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="txt-center">
+                        <p>*** Rina Shiksha Sahayak Foundation (RSSI) ***</p>
+                    </footer>
+                </div>
+            </div>';
+
+            if ($recordCount % 2 !== 0 || $recordCount === count($resultArr) - 1) {
+                echo '</div>';
+            }
+            $recordCount++;
+        }
+    } ?>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
