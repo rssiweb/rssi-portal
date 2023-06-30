@@ -205,9 +205,18 @@ $resultArr = pg_fetch_all($result);
 
                                 <button type="submit" id="save_' . $array['payslip_entry_id'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="bi bi-save"></i></button>' ?>
                                     <?php } ?>
-                                <?php echo '</form></td>
+                                    <?php echo '</form></td>
 
-                                <td><a href="payslip.php?ref=' . $array['payslip_entry_id'] . '" target="_blank" title="' . $array['payslip_entry_id'] . '"><i class="bi bi-file-earmark-pdf" style="font-size:17px;color: #767676;"></i></a></td>
+                                <td><a href="payslip.php?ref=' . $array['payslip_entry_id'] . '" target="_blank" title="' . $array['payslip_entry_id'] . '"><i class="bi bi-file-earmark-pdf" style="font-size:17px;color: #767676;"></i></a>' ?>
+
+                                    <?php if ($role == 'Admin') { ?>
+                                        <?php echo '&nbsp;
+                                        <a href="https://api.whatsapp.com/send?phone=91' . $array['phone']. '&text=Dear ' . $array['fullname'] . ' (' . $array['associatenumber'] . '),%0A%0AYour salary slip for the month of ' . date('F', mktime(0, 0, 0, $array['paymonth'], 1)) . '&nbsp;' . $array['payyear'] . ' has been issued. Please check your email for more details.%0A%0ANeed help? Call us at +91 7980168159 or contact us at info@rssi.in.
+                                        %0A%0A--RSSI%0A%0A**This is an automatically generated SMS
+                                        " target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] .'"></i></a>
+                                        ' ?>
+                                    <?php } ?>
+                                <?php echo '</td>
                                 
                                 </tr>';
                                 } ?>
