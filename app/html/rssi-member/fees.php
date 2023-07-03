@@ -30,104 +30,75 @@ setlocale(LC_TIME, 'fr_FR.UTF-8');
 @$is_user = $_POST['is_user'];
 
 
-if (($section != null && $section != 'ALL') && ($status != null && $status != 'ALL')) {
-    @$sections = implode("','", $section);
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections') order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections')");
-
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND student.category IN ('$sections') AND pstatus='transferred'");
-}
-
-
-if (($section == 'ALL' || $section == null) && ($status != null && $status != 'ALL')) {
-
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE month=EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) AND feeyear=$id AND pstatus='transferred'");
-}
-
-if (($section != null && $section != 'ALL') && ($status == 'ALL' || $status == null)) {
-
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE feeyear=$id AND student.category='$section' order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE feeyear=$id AND student.category='$section'");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE feeyear=$id AND student.category='$section' AND pstatus='transferred'");
-}
-
-if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == null) && $id != null) {
-
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname,category,contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE feeyear=$id order by id desc");
-
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE feeyear=$id");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE feeyear=$id AND pstatus='transferred'");
-}
+$query = "SELECT fees.*, faculty.associatenumber, faculty.fullname, student.student_id, student.studentname, student.category, student.contact
+          FROM fees
+          LEFT JOIN rssimyaccount_members AS faculty ON fees.collectedby = faculty.associatenumber
+          LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id
+          WHERE ";
 
 if ($stid != null && $status == null && $section == null && $id == null) {
+    $query .= "fees.studentid='$stid'";
+} else {
+    if ($section != null && $section != 'ALL') {
+        $sections = implode("','", $section);
+        $query .= "student.category IN ('$sections')";
+    }
 
-    $result = pg_query($con, "SELECT * FROM fees 
-    
-    left join (SELECT associatenumber, fullname FROM rssimyaccount_members) faculty ON fees.collectedby=faculty.associatenumber
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    
-    WHERE fees.studentid='$stid' order by id desc");
+    if ($status != null && $status != 'ALL') {
+        $month = date('m', strtotime($status));
+        $query .= ($section != null && $section != 'ALL') ? " AND " : "";
+        $query .= "EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = fees.month";
+    }
 
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees 
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE fees.studentid='$stid'");
+    if ($id != null) {
+        $query .= ($section != null || $status != null) ? " AND " : "";
+        $query .= "feeyear = $id";
+    }
 
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees
-    left join (SELECT student_id, studentname, category, contact FROM rssimyprofile_student) student ON fees.studentid=student.student_id
-    WHERE fees.studentid='$stid' AND pstatus='transferred'");
+    if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == null) && $id == null) {
+        $query .= "fees.month = '0'";
+    }
 }
 
-if ($stid == null && $status == null && $section == null && $id == null) {
-    $result = pg_query($con, "SELECT * FROM fees WHERE month='0'");
-    $totalapprovedamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
-    $totaltransferredamount = pg_query($con, "SELECT SUM(fees) FROM fees WHERE month='0'");
-}
+$query .= " ORDER BY fees.id DESC";
+
+$result = pg_query($con, $query);
 
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
+
+$totalapprovedamount_query = "SELECT SUM(fees) FROM fees";
+$totaltransferredamount_query = "SELECT SUM(fees) FROM fees";
+
+if ($section != null && $section != 'ALL') {
+    $totalapprovedamount_query .= " LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id WHERE student.category IN ('$sections')";
+    $totaltransferredamount_query .= " LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id WHERE student.category IN ('$sections')";
+} else {
+    $totalapprovedamount_query .= " LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id";
+    $totaltransferredamount_query .= " LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id";
+}
+
+if ($status != null && $status != 'ALL') {
+    $totalapprovedamount_query .= ($section != null && $section != 'ALL') ? " AND " : " WHERE ";
+    $totalapprovedamount_query .= "EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = fees.month";
+
+    $totaltransferredamount_query .= ($section != null && $section != 'ALL') ? " AND " : " WHERE ";
+    $totaltransferredamount_query .= "EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = fees.month";
+}
+
+if ($id != null) {
+    $totalapprovedamount_query .= ($section != null || $status != null) ? " AND " : " WHERE ";
+    $totalapprovedamount_query .= "feeyear = $id";
+    $totaltransferredamount_query .= ($section != null || $status != null) ? " AND " : " WHERE ";
+    $totaltransferredamount_query .= "feeyear = $id";
+}
+
+$totaltransferredamount_query .= " AND pstatus='transferred'";
+
+$totalapprovedamount = pg_query($con, $totalapprovedamount_query);
+$totaltransferredamount = pg_query($con, $totaltransferredamount_query);
 
 $resultArr = pg_fetch_all($result);
 $resultArrr = pg_fetch_result($totalapprovedamount, 0, 0);
@@ -214,23 +185,26 @@ $categories = [
                             <div class="card-body">
                                 <br>
                                 <div class="row">
-                                    <div class="col" style="display: inline-block;">
-                                        Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total collected amount:&nbsp;<p class="badge bg-secondary"><?php echo ($resultArrr - $resultArrrr) ?></p> + <p class="badge bg-success"><?php echo ($resultArrrr) ?></p> = <p class="badge bg-info"><?php echo ($resultArrr) ?></p>
+                                    <div class="col">
+                                        Record count: <?php echo sizeof($resultArr) ?><br>
+                                        Total collected amount:
+                                        <p class="badge bg-secondary"><?php echo ($resultArrr - $resultArrrr) ?></p>
+                                        + <p class="badge bg-success"><?php echo ($resultArrrr) ?></p>
+                                        = <p class="badge bg-info"><?php echo ($resultArrr) ?></p>
                                     </div>
-                                    <form method="POST" action="export_function.php">
-                                        <input type="hidden" value="fees" name="export_type" />
-                                        <input type="hidden" value="<?php echo $id ?>" name="id" />
-                                        <input type="hidden" value="<?php echo $status ?>" name="status" />
-                                        <input type="hidden" value="<?php echo $section ?>" name="section" />
-                                        <input type="hidden" value="<?php echo $sections ?>" name="sections" />
-                                        <input type="hidden" value="<?php echo $stid ?>" name="stid" />
+                                    <div class="col text-end">
+                                        <form method="POST" action="export_function.php">
+                                            <input type="hidden" value="fees" name="export_type" />
+                                            <input type="hidden" value="<?php echo $id ?>" name="id" />
+                                            <input type="hidden" value="<?php echo $status ?>" name="status" />
+                                            <input type="hidden" value="<?php echo $section ?>" name="section" />
+                                            <input type="hidden" value="<?php echo $sections ?>" name="sections" />
+                                            <input type="hidden" value="<?php echo $stid ?>" name="stid" />
 
-                                        <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                                        padding: 0px;
-                                        border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
-                                    </form>
+                                            <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
+                                        </form>
+                                    </div>
                                 </div>
-
                                 <form action="" method="POST">
                                     <div class="form-group" style="display: inline-block;">
                                         <div class="col2" style="display: inline-block;">
@@ -345,7 +319,7 @@ $categories = [
                                 </script>
                                 <?php echo '
                             <div class="table-responsive">
-                        <table class="table">
+                            <table class="table">
                             <thead>
                                 <tr>
                                 <th scope="col">Ref.</th>
@@ -391,35 +365,51 @@ $categories = [
 
                                             <?php echo '&nbsp;&nbsp;&nbsp;<button type="submit" id="yes" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="bi bi-x-lg"></i></button>' ?>
                                         <?php } ?>
-                                    <?php echo ' </form>
-                        
-                        
-                        
-                        </td></tr>';
+                                    <?php echo ' </form></td></tr>';
                                     } ?>
+
+
+
                                 <?php
                                 } else if ($id == "" && $stid == "") {
-                                ?>
-                                    <tr>
-                                        <td colspan="5">Please select Filter value.</td>
-                                    </tr>
-                                <?php
+                                    echo '<tr>
+                                              <td colspan="5">Please select Filter value.</td>
+                                          </tr>';
                                 } else if (sizeof($resultArr) == 0 && $stid == "") {
-                                ?>
-                                    <tr>
-                                        <td colspan="5">No record found for <?php echo @$id ?>, <?php echo @$status ?> and <?php echo @$section ?></td>
-                                    </tr>
+                                    $filterValues = [];
+                                    if (!empty($id)) {
+                                        if (is_array($id)) {
+                                            $filterValues[] = implode(", ", array_filter($id));
+                                        } else {
+                                            $filterValues[] = $id;
+                                        }
+                                    }
+                                    if (!empty($status)) {
+                                        if (is_array($status)) {
+                                            $filterValues[] = implode(", ", array_filter($status));
+                                        } else {
+                                            $filterValues[] = $status;
+                                        }
+                                    }
+                                    if (!empty($section)) {
+                                        if (is_array($section)) {
+                                            $filterValues[] = implode(", ", array_filter($section));
+                                        } else {
+                                            $filterValues[] = $section;
+                                        }
+                                    }
+                                    $filterString = implode(", ", $filterValues);
+                                    echo '<tr>
+                                              <td colspan="5">No record found for ' . $filterString . '</td>
+                                          </tr>';
+                                } else if (sizeof($resultArr) == 0 && $stid != "") {
+                                    echo '<tr>
+                                              <td colspan="5">No record found for ' . $stid . '</td>
+                                          </tr>';
+                                } ?>
 
-                                <?php } else if (sizeof($resultArr) == 0 && $stid != "") {
-                                ?>
-                                    <tr>
-                                        <td colspan="5">No record found for <?php echo $stid ?></td>
-                                    </tr>
-                                <?php }
-                                echo '</tbody>
-                        </table>
-                        </div>';
-                                ?>
+                                <?php echo '</tbody></table></div>'; ?>
+
                                 <script>
                                     var data = <?php echo json_encode($resultArr) ?>;
                                     var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;

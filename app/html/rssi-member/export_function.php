@@ -231,7 +231,7 @@ function gps_export()
 
   foreach ($resultArr as $array) {
 
-    echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] .',' . $array['asset_status'] . "\n";
+    echo $array['itemid'] . ',"' . $array['itemname'] . '",' . $array['itemtype'] . ',' . $array['quantity'] . ',' . $array['taggedto'] . ',' . $array['asset_status'] . "\n";
   }
 }
 
@@ -319,32 +319,27 @@ function student_export()
   @$stid = $_POST['stid'];
 
 
-  if ($category == null && $class == null) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-    left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-    WHERE filterstatus='$id' AND module='$module' order by category asc, class asc, studentname asc");
+  $query = "SELECT * FROM rssimyprofile_student 
+    LEFT JOIN (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees GROUP BY studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+    WHERE filterstatus='$id' AND module='$module'";
+
+  if ($category != null) {
+    $query .= " AND category='$category'";
   }
 
-  if ($category != null && $class == null) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-    WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc, class asc, studentname asc");
-  }
-
-  if ($category == null && $class != null) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-    WHERE filterstatus='$id' AND module='$module' AND class IN ('$classs') order by category asc, class asc, studentname asc");
-  }
-
-  if ($category != null && $class != null) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-    WHERE filterstatus='$id' AND module='$module' AND class IN ('$classs') AND category='$category' order by category asc, class asc, studentname asc");
+  if ($class != null) {
+    $query .= " AND class IN ('$classs')";
   }
 
   if ($stid != null) {
-    $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-    left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-    WHERE student_id='$stid'");
+    $query = "SELECT * FROM rssimyprofile_student 
+        LEFT JOIN (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees GROUP BY studentid) fees ON fees.studentid=rssimyprofile_student.student_id
+        WHERE student_id='$stid'";
   }
+
+  $query .= " ORDER BY category ASC, class ASC, studentname ASC";
+
+  $result = pg_query($con, $query);
 
   if (!$result) {
     echo "An error occurred.\n";
