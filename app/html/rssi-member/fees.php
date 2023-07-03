@@ -22,45 +22,37 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 <?php
 setlocale(LC_TIME, 'fr_FR.UTF-8');
 
-
 @$id = $_GET['get_aid'];
 @$status = $_GET['get_id'];
 @$section = $_GET['get_category'];
 @$stid = $_GET['get_stid'];
 @$is_user = $_GET['is_user'];
 
-
 $query = "SELECT fees.*, faculty.associatenumber, faculty.fullname, student.student_id, student.studentname, student.category, student.contact
           FROM fees
           LEFT JOIN rssimyaccount_members AS faculty ON fees.collectedby = faculty.associatenumber
           LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id
-          WHERE ";
+          WHERE 1 = 1 ";
 
-if ($stid != null && $status == null && $section == null && $id == null) {
-    $query .= "fees.studentid='$stid'";
-} else {
-    if ($section != null && $section != 'ALL') {
-        $sections = implode("','", $section);
-        $query .= "student.category IN ('$sections')";
-    }
-
-    if ($status != null && $status != 'ALL') {
-        $month = date('m', strtotime($status));
-        $query .= ($section != null && $section != 'ALL') ? " AND " : "";
-        $query .= "EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = fees.month";
-    }
-
-    if ($id != null) {
-        $query .= ($section != null || $status != null) ? " AND " : "";
-        $query .= "feeyear = $id";
-    }
-
-    if (($section == 'ALL' || $section == null) && ($status == 'ALL' || $status == null) && $id == null) {
-        $query .= "fees.month = '0'";
-    }
+if ($stid != null) {
+    $query .= "AND fees.studentid = '$stid' ";
 }
 
-$query .= " ORDER BY fees.id DESC";
+if ($section != null && $section != 'ALL') {
+    $sections = implode("','", $section);
+    $query .= "AND student.category IN ('$sections') ";
+}
+
+if ($status != null && $status != 'ALL') {
+    $month = date('m', strtotime($status));
+    $query .= "AND EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = fees.month ";
+}
+
+if ($id != null) {
+    $query .= "AND fees.feeyear = $id ";
+}
+
+$query .= "ORDER BY fees.id DESC";
 
 $result = pg_query($con, $query);
 
@@ -69,33 +61,36 @@ if (!$result) {
     exit;
 }
 
-$totalapprovedamount_query = "SELECT SUM(fees) FROM fees";
-$totaltransferredamount_query = "SELECT SUM(fees) FROM fees";
+$totalapprovedamount_query = "SELECT COALESCE(SUM(fees), 0) 
+                             FROM fees
+                             WHERE 1=1 ";
 
-if ($section != null && $section != 'ALL') {
-    $totalapprovedamount_query .= " LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id WHERE student.category IN ('$sections')";
-    $totaltransferredamount_query .= " LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id WHERE student.category IN ('$sections')";
+$totaltransferredamount_query = "SELECT COALESCE(SUM(fees), 0) 
+                                FROM fees
+                                WHERE pstatus = 'transferred' ";
+
+if ($stid != null) {
+    $totalapprovedamount_query .= "AND fees.studentid = '$stid' ";
+    $totaltransferredamount_query .= "AND fees.studentid = '$stid' ";
 } else {
-    $totalapprovedamount_query .= " LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id";
-    $totaltransferredamount_query .= " LEFT JOIN rssimyprofile_student AS student ON fees.studentid = student.student_id";
+    if ($section != null && $section != 'ALL') {
+        $totalapprovedamount_query .= "AND fees.studentid IN (SELECT student_id FROM rssimyprofile_student WHERE category IN ('$sections')) ";
+        $totaltransferredamount_query .= "AND fees.studentid IN (SELECT student_id FROM rssimyprofile_student WHERE category IN ('$sections')) ";
+    }
+
+    if ($status != null && $status != 'ALL') {
+        $month = date('m', strtotime($status));
+        $totalapprovedamount_query .= "AND EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = fees.month ";
+        $totaltransferredamount_query .= "AND EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = fees.month ";
+    }
+
+    if ($id != null) {
+        $totalapprovedamount_query .= "AND fees.feeyear = $id ";
+        $totaltransferredamount_query .= "AND fees.feeyear = $id ";
+    }
 }
 
-if ($status != null && $status != 'ALL') {
-    $totalapprovedamount_query .= ($section != null && $section != 'ALL') ? " AND " : " WHERE ";
-    $totalapprovedamount_query .= "EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = fees.month";
-
-    $totaltransferredamount_query .= ($section != null && $section != 'ALL') ? " AND " : " WHERE ";
-    $totaltransferredamount_query .= "EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = fees.month";
-}
-
-if ($id != null) {
-    $totalapprovedamount_query .= ($section != null || $status != null) ? " AND " : " WHERE ";
-    $totalapprovedamount_query .= "feeyear = $id";
-    $totaltransferredamount_query .= ($section != null || $status != null) ? " AND " : " WHERE ";
-    $totaltransferredamount_query .= "feeyear = $id";
-}
-
-$totaltransferredamount_query .= " AND pstatus='transferred'";
+$totaltransferredamount_query .= " AND fees.pstatus = 'transferred'";
 
 $totalapprovedamount = pg_query($con, $totalapprovedamount_query);
 $totaltransferredamount = pg_query($con, $totaltransferredamount_query);
@@ -116,8 +111,9 @@ $categories = [
     "WLG4S1",
     'Undefined',
     "ALL"
-]
+];
 ?>
+
 <!doctype html>
 <html lang="en">
 
@@ -320,10 +316,21 @@ $categories = [
                                         <form name="transfer_all" action="#" method="POST" style="display: -webkit-inline-box;">
                                             <input type="hidden" name="form-type" type="text" value="transfer_all">
                                             <input type="hidden" name="pid" id="pid" value="" readonly>
-                                            <button type="submit" class="btn btn-primary">Transfer <span id="selectedCount">0</span> item/s</button>
+                                            <button type="submit" class="btn btn-primary" id="transferButton" disabled>Bulk Transfer (<span id="selectedCount">0</span>)</button>
                                         </form>
                                     </div>
                                     <script>
+                                        const pidInput = document.getElementById('pid');
+                                        const transferButton = document.getElementById('transferButton');
+
+                                        pidInput.addEventListener('input', () => {
+                                            const pidValue = pidInput.value;
+                                            if (pidValue) {
+                                                transferButton.disabled = false;
+                                            } else {
+                                                transferButton.disabled = true;
+                                            }
+                                        });
                                         $(document).ready(function() {
                                             $('input[name="checkbox[]"]').change(function() {
                                                 var selectedValues = [];
