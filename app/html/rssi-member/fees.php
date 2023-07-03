@@ -317,6 +317,16 @@ $categories = [
                                         currentYear--;
                                     }
                                 </script>
+                                <?php if ($role == 'Admin') { ?>
+                                    <div class="text-end">
+                                        <form name="transfer_all" action="#" method="POST" style="display: -webkit-inline-box;">
+                                            <input type="hidden" name="form-type" type="text" value="transfer_all">
+                                            <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">
+                                            <button class="btn btn-primary">Transfer ALL</button>
+                                        </form>
+                                    </div>
+                                <?php } ?>
+
                                 <?php echo '
                             <div class="table-responsive">
                             <table class="table">
@@ -337,7 +347,10 @@ $categories = [
                                     echo '<tbody>';
                                     foreach ($resultArr as $array) {
                                         echo '<tr>
-                            <td>' . $array['id'] . '</td>
+                            <td>
+                            
+                            <input class="form-check-input" type="checkbox" id="myCheckbox' . $array['id'] . '">
+                            <label class="form-check-label" for="myCheckbox' . $array['id'] . '">' . $array['id'] . '</label></td>
                             <td>' . @date("d/m/Y", strtotime($array['date'])) . '</td>
                         <td>' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . '</td>
                         <td>' . $array['category'] . '</td>   

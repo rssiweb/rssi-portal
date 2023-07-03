@@ -34,8 +34,11 @@ if (@$_POST['form-type'] == "reviewer_remarks_update") {
     SET reviewer_response_complete = 'yes',
     reviewer_remarks = '$reviewer_remarks',
     goalsheet_reviewed_by = '$goalsheet_reviewed_by',
-    goalsheet_reviewed_on = '$goalsheet_reviewed_on'
-        WHERE goalsheetid='$goalsheetid'";
+    goalsheet_reviewed_on = '$goalsheet_reviewed_on',
+    ipf_response = null,
+    ipf_response_on= null,
+    ipf_response_by= null
+    WHERE goalsheetid='$goalsheetid'";
 
     $result = pg_query($con, $reviewer_remarks_update);
     $cmdtuples = pg_affected_rows($result);
