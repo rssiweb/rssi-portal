@@ -274,6 +274,16 @@ if ($formtype == "ipfsubmission") {
   $result_history = pg_query($con, $ipf_history);
 }
 
+if ($formtype == "transfer_all") {
+  $pid = $_POST['pid'];
+  $selectedIds = explode(', ', $pid);
+  $transferAllQuery = "UPDATE fees
+  SET pstatus = 'transferred'
+  WHERE id IN ('" . implode("', '", $selectedIds) . "')";
+
+  $result = pg_query($con, $transferAllQuery);
+}
+
 if ($formtype == "gemsredeem") {
   @$reviewer_id = $_POST['reviewer_id'];
   @$reviewer_name = $_POST['reviewer_name'];

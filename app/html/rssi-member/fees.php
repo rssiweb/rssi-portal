@@ -23,11 +23,11 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 setlocale(LC_TIME, 'fr_FR.UTF-8');
 
 
-@$id = $_POST['get_aid'];
-@$status = $_POST['get_id'];
-@$section = $_POST['get_category'];
-@$stid = $_POST['get_stid'];
-@$is_user = $_POST['is_user'];
+@$id = $_GET['get_aid'];
+@$status = $_GET['get_id'];
+@$section = $_GET['get_category'];
+@$stid = $_GET['get_stid'];
+@$is_user = $_GET['is_user'];
 
 
 $query = "SELECT fees.*, faculty.associatenumber, faculty.fullname, student.student_id, student.studentname, student.category, student.contact
@@ -118,8 +118,6 @@ $categories = [
     "ALL"
 ]
 ?>
-
-
 <!doctype html>
 <html lang="en">
 
@@ -205,7 +203,7 @@ $categories = [
                                         </form>
                                     </div>
                                 </div>
-                                <form action="" method="POST">
+                                <form action="" method="GET">
                                     <div class="form-group" style="display: inline-block;">
                                         <div class="col2" style="display: inline-block;">
 
@@ -270,7 +268,7 @@ $categories = [
                                             <i class="bi bi-search"></i>&nbsp;Search</button>
                                     </div>
                                     <div id="filter-checks">
-                                        <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                                        <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
                                         <label for="is_user" style="font-weight: 400;">Search by Student ID</label>
                                     </div>
                                 </form>
@@ -321,107 +319,136 @@ $categories = [
                                     <div class="text-end">
                                         <form name="transfer_all" action="#" method="POST" style="display: -webkit-inline-box;">
                                             <input type="hidden" name="form-type" type="text" value="transfer_all">
-                                            <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">
-                                            <button class="btn btn-primary">Transfer ALL</button>
+                                            <input type="hidden" name="pid" id="pid" value="" readonly>
+                                            <button type="submit" class="btn btn-primary">Transfer <span id="selectedCount">0</span> item/s</button>
                                         </form>
                                     </div>
+                                    <script>
+                                        $(document).ready(function() {
+                                            $('input[name="checkbox[]"]').change(function() {
+                                                var selectedValues = [];
+                                                $('input[name="checkbox[]"]:checked').each(function() {
+                                                    selectedValues.push($(this).val());
+                                                });
+                                                $('#pid').val(selectedValues.join(', '));
+                                                $('#selectedCount').text(selectedValues.length); // Update selected count
+                                            });
+
+                                            $('form[name="transfer_all"]').submit(function(event) {
+                                                event.preventDefault(); // Prevent form submission
+
+                                                // Submit the form
+                                                $(this).unbind('submit').submit();
+                                            });
+                                        });
+                                    </script>
+
                                 <?php } ?>
 
-                                <?php echo '
-                            <div class="table-responsive">
-                            <table class="table">
-                            <thead>
-                                <tr>
-                                <th scope="col">Ref.</th>
-                                <th scope="col">Fees collection date</th>
-                                <th scope="col">ID/F Name</th>    
-                                <th scope="col">Category</th>
-                                <th scope="col">Month</th>
-                                <th scope="col">Amount (&#8377;)</th>
-                                <th scope="col">Type</th>
-                                <th scope="col">Collected by</th>
-                                <th scope="col"></th>
-                                </tr>
-                            </thead>' ?>
-                                <?php if ($resultArr != null) {
-                                    echo '<tbody>';
-                                    foreach ($resultArr as $array) {
-                                        echo '<tr>
-                            <td>
-                            
-                            <input class="form-check-input" type="checkbox" id="myCheckbox' . $array['id'] . '">
-                            <label class="form-check-label" for="myCheckbox' . $array['id'] . '">' . $array['id'] . '</label></td>
-                            <td>' . @date("d/m/Y", strtotime($array['date'])) . '</td>
-                        <td>' . $array['studentid'] . '/' . strtok($array['studentname'], ' ') . '</td>
-                        <td>' . $array['category'] . '</td>   
-                        <td>' . date('F', mktime(0, 0, 0, $array['month'], 10)) . '-' . $array['feeyear'] . '</td>  
-                        <td>' . $array['fees'] . '</td>
-                        <td>' . $array['ptype'] . '</td>
-                        <td>' . $array['fullname'] . '</td>
-                        <td>
-                        <form name="transfer_' . $array['id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                        <input type="hidden" name="form-type" type="text" value="transfer">
-                        <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">' ?>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Ref.</th>
+                                                <th scope="col">Fees collection date</th>
+                                                <th scope="col">ID/F Name</th>
+                                                <th scope="col">Category</th>
+                                                <th scope="col">Month</th>
+                                                <th scope="col">Amount (&#8377;)</th>
+                                                <th scope="col">Type</th>
+                                                <th scope="col">Collected by</th>
+                                                <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <?php if ($resultArr != null) : ?>
+                                            <tbody>
+                                                <?php foreach ($resultArr as $array) : ?>
+                                                    <tr>
+                                                        <td>
+                                                            <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                                <input class="form-check-input" type="checkbox" id="myCheckbox<?= $array['id'] ?>" name="checkbox[]" value="<?= $array['id'] ?>">
+                                                            <?php endif; ?>
+                                                            <label class="form-check-label" for="myCheckbox<?= $array['id'] ?>"><?= $array['id'] ?></label>
+                                                        </td>
+                                                        <td><?= @date("d/m/Y", strtotime($array['date'])) ?></td>
+                                                        <td><?= $array['studentid'] . '/' . strtok($array['studentname'], ' ') ?></td>
+                                                        <td><?= $array['category'] ?></td>
+                                                        <td><?= date('F', mktime(0, 0, 0, $array['month'], 10)) . '-' . $array['feeyear'] ?></td>
+                                                        <td><?= $array['fees'] ?></td>
+                                                        <td><?= $array['ptype'] ?></td>
+                                                        <td><?= $array['fullname'] ?></td>
+                                                        <td>
+                                                            <form name="transfer_<?= $array['id'] ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                                <input type="hidden" name="form-type" type="text" value="transfer">
+                                                                <input type="hidden" name="pid" id="pid" type="text" value="<?= $array['id'] ?>">
+                                                                <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                                    <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Transfer"><i class="bi bi-upload"></i></button>
+                                                                <?php endif; ?>
+                                                            </form>
 
-                                        <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') { ?>
+                                                            <form name="paydelete_<?= $array['id'] ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                                <input type="hidden" name="form-type" type="text" value="paydelete">
+                                                                <input type="hidden" name="pid" id="pid" type="text" value="<?= $array['id'] ?>">
+                                                                <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                                    &nbsp;&nbsp;&nbsp;<button type="submit" id="yes" onclick="validateForm()" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="bi bi-x-lg"></i></button>
+                                                                <?php endif; ?>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        <?php elseif ($id == "" && $stid == "") : ?>
+                                            <tbody>
+                                                <tr>
+                                                    <td colspan="5">Please select Filter value.</td>
+                                                </tr>
+                                            </tbody>
+                                        <?php elseif (sizeof($resultArr) == 0 && $stid == "") : ?>
+                                            <tbody>
+                                                <?php
+                                                $filterValues = [];
 
-                                            <?php echo '<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Transfer"><i class="bi bi-upload"></i></button>' ?>
-                                        <?php } ?>
-                                        <?php echo ' </form>
+                                                if (!empty($id)) {
+                                                    if (is_array($id)) {
+                                                        $filterValues[] = implode(", ", array_filter($id));
+                                                    } else {
+                                                        $filterValues[] = $id;
+                                                    }
+                                                }
 
+                                                if (!empty($status)) {
+                                                    if (is_array($status)) {
+                                                        $filterValues[] = implode(", ", array_filter($status));
+                                                    } else {
+                                                        $filterValues[] = $status;
+                                                    }
+                                                }
 
-                        <form name="paydelete_' . $array['id'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                        <input type="hidden" name="form-type" type="text" value="paydelete">
-                        <input type="hidden" name="pid" id="pid" type="text" value="' . $array['id'] . '">' ?>
+                                                if (!empty($section)) {
+                                                    if (is_array($section)) {
+                                                        $filterValues[] = implode(", ", array_filter($section));
+                                                    } else {
+                                                        $filterValues[] = $section;
+                                                    }
+                                                }
 
-                                        <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') { ?>
+                                                $filterString = implode(", ", $filterValues);
 
-                                            <?php echo '&nbsp;&nbsp;&nbsp;<button type="submit" id="yes" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="bi bi-x-lg"></i></button>' ?>
-                                        <?php } ?>
-                                    <?php echo ' </form></td></tr>';
-                                    } ?>
+                                                echo '<tr>
+                                                     <td colspan="5">No record found for ' . $filterString . '</td>
+                                                 </tr>';
+                                                ?>
+                                            </tbody>
+                                        <?php elseif (sizeof($resultArr) == 0 && $stid != "") : ?>
+                                            <tbody>
+                                                <tr>
+                                                    <td colspan="5">No record found for <?= $stid ?></td>
+                                                </tr>
+                                            </tbody>
+                                        <?php endif; ?>
+                                    </table>
+                                </div>
 
-
-
-                                <?php
-                                } else if ($id == "" && $stid == "") {
-                                    echo '<tr>
-                                              <td colspan="5">Please select Filter value.</td>
-                                          </tr>';
-                                } else if (sizeof($resultArr) == 0 && $stid == "") {
-                                    $filterValues = [];
-                                    if (!empty($id)) {
-                                        if (is_array($id)) {
-                                            $filterValues[] = implode(", ", array_filter($id));
-                                        } else {
-                                            $filterValues[] = $id;
-                                        }
-                                    }
-                                    if (!empty($status)) {
-                                        if (is_array($status)) {
-                                            $filterValues[] = implode(", ", array_filter($status));
-                                        } else {
-                                            $filterValues[] = $status;
-                                        }
-                                    }
-                                    if (!empty($section)) {
-                                        if (is_array($section)) {
-                                            $filterValues[] = implode(", ", array_filter($section));
-                                        } else {
-                                            $filterValues[] = $section;
-                                        }
-                                    }
-                                    $filterString = implode(", ", $filterValues);
-                                    echo '<tr>
-                                              <td colspan="5">No record found for ' . $filterString . '</td>
-                                          </tr>';
-                                } else if (sizeof($resultArr) == 0 && $stid != "") {
-                                    echo '<tr>
-                                              <td colspan="5">No record found for ' . $stid . '</td>
-                                          </tr>';
-                                } ?>
-
-                                <?php echo '</tbody></table></div>'; ?>
 
                                 <script>
                                     var data = <?php echo json_encode($resultArr) ?>;
@@ -447,6 +474,29 @@ $categories = [
 
                                         console.log(item)
                                     })
+
+                                    const form = document.forms['transfer_all'];
+
+                                    form.addEventListener('submit', async (e) => {
+                                        e.preventDefault();
+
+                                        try {
+                                            const formData = new FormData(form);
+                                            const response = await fetch(scriptURL, {
+                                                method: 'POST',
+                                                body: formData,
+                                            });
+
+                                            if (response.ok) {
+                                                alert('Bulk transfer has been completed.');
+                                                location.reload();
+                                            } else {
+                                                throw new Error('Error occurred during bulk transfer.');
+                                            }
+                                        } catch (error) {
+                                            console.error('Error!', error.message);
+                                        }
+                                    });
 
                                     function validateForm() {
                                         if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
