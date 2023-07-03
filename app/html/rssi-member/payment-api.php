@@ -264,11 +264,14 @@ if ($formtype == "initiatingexit") {
 
 if ($formtype == "ipfsubmission") {
   @$ipfid = $_POST['ipfid'];
+  @$ipf = $_POST['ipf'];
   @$status2 = $_POST['status2'];
   @$ipf_response_by = $_POST['ipf_response_by'];
   $now = date('Y-m-d H:i:s');
   $ipfclose = "UPDATE appraisee_response SET  ipf_response = '$status2', ipf_response_on = '$now', ipf_response_by='$ipf_response_by' WHERE goalsheetid = '$ipfid'";
+  $ipf_history = "INSERT INTO ipf_history (goalsheetid, ipf_response, ipf_response_on, ipf_response_by,ipf) VALUES ('$ipfid','$status2','$now','$ipf_response_by', $ipf)";
   $result = pg_query($con, $ipfclose);
+  $result_history = pg_query($con, $ipf_history);
 }
 
 if ($formtype == "gemsredeem") {
