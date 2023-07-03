@@ -738,7 +738,7 @@ if (!$result) {
                                 </tbody>
                             </table>
                         </fieldset>
-                        <fieldset <?php echo ($array['reviewer_response_complete'] == "yes") ? "disabled" : ""; ?>>
+                        <fieldset <?php echo ($array['reviewer_response_complete'] === "yes" && $array['ipf_response'] !== "rejected") ? "disabled" : ""; ?>>
                             <div class="mb-3">
                                 <label for="reviewer_remarks" class="form-label">Reviewer Remarks:</label>
                                 <textarea class="form-control" id="reviewer_remarks" name="reviewer_remarks" rows="5" placeholder="Enter your remarks here"><?php echo $array['reviewer_remarks'] ?></textarea>
