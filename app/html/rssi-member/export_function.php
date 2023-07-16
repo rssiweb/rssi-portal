@@ -174,11 +174,13 @@ function donation_export()
 
   $resultArr = pg_fetch_all($result);
 
-  echo 'Sl. No.,Pre Acknowledgement Number,ID Code,Unique Identification Number,Section Code,Unique Registration Number (URN),Date of Issuance of Unique Registration Number,Name of donor,Address of donor,Donation Type,Mode of receipt,Amount of donation (Indian rupees)' . "\n";
+  echo 'Sl. No.,Pre Acknowledgement Number,ID Code,Unique Identification Number,Section Code,Unique Registration Number (URN),Date of Issuance of Unique Registration Number,Name of donor,Address of donor,Donation Type,Mode of receipt,Currency,Amount of donation,Invoice no,Invoice link' . "\n";
+  $counter = 1; // Initialize the counter
 
   foreach ($resultArr as $array) {
 
-    echo ',' . ',' . $array['uitype'] . ',' . $array['uinumber'] . ',' . $array['section_code'] . ',AAKCR2540KF20214,' . date("d/m/Y g:i a", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',"' . $array['address'] . '",' . $array['donation_type'] . ',' . $array['modeofpayment'] . ',' . $array['currencyofthedonatedamount'] . ' ' . $array['donatedamount'] . "\n";
+    echo $counter . ',' . ',' . $array['uitype'] . ',' . $array['uinumber'] . ',' . $array['section_code'] . ',AAKCR2540KF20214,' . date("d/m/Y g:i a", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',"' . $array['address'] . '",' . $array['donation_type'] . ',' . $array['modeofpayment'] . ',' . $array['currencyofthedonatedamount'] . ',' . $array['donatedamount'] .',' . $array['invoice'] .',' . $array['profile'] . "\n";
+    $counter++; // Increment the counter for each iteration
   }
 }
 

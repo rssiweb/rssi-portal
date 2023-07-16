@@ -107,17 +107,22 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
 
             <div class="card-body">
               <br>
-              Record count:&nbsp;<?php echo sizeof($resultArr) ?><br>Total donated amount:&nbsp;<p class="badge bg-secondary"><?php echo ($resultArrr) ?></p>
-              <form method="POST" action="export_function.php">
-                <input type="hidden" value="donation" name="export_type" />
-                <input type="hidden" value="<?php echo $id ?>" name="invoice" />
-                <input type="hidden" value="<?php echo $status ?>" name="fyear" />
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  Record count: <?php echo sizeof($resultArr) ?><br>
+                  Total donated amount: <span class="badge bg-secondary"><?php echo $resultArrr ?></span>
+                </div>
+                <form method="POST" action="export_function.php">
+                  <input type="hidden" value="donation" name="export_type" />
+                  <input type="hidden" value="<?php echo $id ?>" name="invoice" />
+                  <input type="hidden" value="<?php echo $status ?>" name="fyear" />
 
-                <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                        padding: 0px;
-                        border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
-              </form>
-
+                  <button type="submit" id="export" name="export" class="btn btn-light border" title="Export CSV">
+                    <i class="bi bi-file-earmark-excel"></i>
+                  </button>
+                </form>
+              </div>
+              <br>
               <form action="" method="POST">
                 <div class="form-group" style="display: inline-block;">
                   <div class="col2" style="display: inline-block;">
