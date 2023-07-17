@@ -117,8 +117,10 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
                   <input type="hidden" value="<?php echo $id ?>" name="invoice" />
                   <input type="hidden" value="<?php echo $status ?>" name="fyear" />
 
-                  <button type="submit" id="export" name="export" class="btn btn-light border" title="Export CSV">
-                    <i class="bi bi-file-earmark-excel"></i>
+                  <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="Export CSV">
+                    <i class="bi bi-file-earmark-excel" style="font-size:large;"></i>
                   </button>
                 </form>
               </div>
