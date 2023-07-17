@@ -176,6 +176,22 @@ if ($formtype == "gen_otp_centr") {
   }
 }
 
+if ($formtype == "get_details") {
+  @$contactnumber = $_POST['contactnumber_verify_input'];
+  $getdetails = "SELECT fullname, email FROM donation_userdata WHERE tel='$contactnumber'";
+  $result = pg_query($con, $getdetails);
+  if ($result) {
+    $row = pg_fetch_assoc($result);
+    if ($row) {
+      echo json_encode(array('status' => 'success', 'data' => $row));
+    } else {
+      echo json_encode(array('status' => 'no_records', 'message' => 'No records found in the database. Donate as a new user.'));
+    }
+  } else {
+    echo json_encode(array('status' => 'error', 'message' => 'Error retrieving user data'));
+  }
+}
+
 if ($formtype == "exit_gen_otp_associate") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
   @$associate_name = $_POST['associate_name'];
@@ -227,7 +243,6 @@ if ($formtype == "exit_gen_otp_centr") {
     echo "bad request";
 }
 
-
 if ($formtype == "initiatingonboarding") {
   @$initiatedfor = $_POST['initiatedfor'];
   @$initiatedby = $_POST['initiatedby'];
@@ -260,7 +275,6 @@ if ($formtype == "initiatingexit") {
   } else
     echo "bad request";
 }
-
 
 if ($formtype == "ipfsubmission") {
   @$ipfid = $_POST['ipfid'];
