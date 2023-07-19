@@ -178,7 +178,7 @@ if ($formtype == "gen_otp_centr") {
 
 if ($formtype == "get_details") {
   @$contactnumber = $_POST['contactnumber_verify_input'];
-  $getdetails = "SELECT fullname, email, donorid FROM donation_userdata WHERE tel='$contactnumber'";
+  $getdetails = "SELECT fullname, email, tel FROM donation_userdata WHERE tel='$contactnumber'";
   $result = pg_query($con, $getdetails);
   if ($result) {
     $row = pg_fetch_assoc($result);

@@ -164,31 +164,24 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
         <?php if ($print == FALSE) { ?>
 
             <div class="noprint" style="display: flex; justify-content: flex-end; margin-top: 2%;">
-
                 <form action="" method="GET" id="formid">
-
-                    <input name="get_stid" class="form-control" style="width:max-content; display:inline-block" required placeholder="Student ID" value="<?php echo @$stid ?>">
-
-                    <select name="get_id" class="form-control" style="width:max-content; display:inline-block" required>
+                    <input name="get_stid" class="form-control" style="width: max-content; display: inline-block;" required placeholder="Student ID" value="<?php echo @$stid ?>">
+                    <select name="get_id" class="form-control" style="width: max-content; display: inline-block;" required>
                         <?php if ($id == null) { ?>
-                            <option value="" disabled selected hidden>Select Exam name</option>
-                        <?php
-                        } else { ?>
+                            <option value="" disabled selected hidden>Select Exam Name</option>
+                        <?php } else { ?>
                             <option hidden selected><?php echo $id ?></option>
-                        <?php }
-                        ?>
+                        <?php } ?>
                         <option>First Term Exam</option>
                         <option>Half Yearly Exam</option>
                         <option>Annual Exam</option>
                     </select>
-                    <select name="get_year" id="get_year" class="form-control" style="width:max-content;display:inline-block" required>
+                    <select name="get_year" id="get_year" class="form-control" style="width: max-content; display: inline-block;" required>
                         <?php if ($year == null) { ?>
                             <option value="" disabled selected hidden>Select Year</option>
-                        <?php
-                        } else { ?>
+                        <?php } else { ?>
                             <option hidden selected><?php echo $year ?></option>
-                        <?php }
-                        ?>
+                        <?php } ?>
                     </select>
                     <div class="col topbutton" style="display: inline-block;">
                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
@@ -199,6 +192,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                 </form>
                 <br>
             </div>
+
             <script>
                 <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
                     var currentYear = new Date().getFullYear() - 1;
@@ -233,11 +227,11 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 </div>
                                 <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
                                     <p style="font-size: small;">Scan QR code to check authenticity</p>
-                                    <?php 
-                                    $exam = str_replace(" ","%20",$id);
+                                    <?php
+                                    $exam = str_replace(" ", "%20", $id);
                                     $url = "https://login.rssi.in/result.php?get_stid=$stid&get_id=$exam&get_year=$year";
                                     $url_u = urlencode($url); ?>
-                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=<?php echo $url_u ?>"/>
+                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=<?php echo $url_u ?>" />
                                     <img src=<?php echo $photourl ?> width=80px height=80px />
                                 </div>
                             </div>
@@ -263,8 +257,8 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <th><?php echo $dateofbirth ?></th>
                     </tr>
                     <tr>
-                        <td colspan="2"></td>
-                        <th colspan="2"><?php echo $examname ?>&nbsp;&nspar;&nbsp;Academic Year:&nbsp;<?php echo $academicyear ?></th>
+                        <td>ASSESSMENT PERIOD</td>
+                        <th colspan="3"><?php echo $examname ?>&nbsp; <?php echo $academicyear ?></th>
                     </tr>
                 </tbody>
             </table>

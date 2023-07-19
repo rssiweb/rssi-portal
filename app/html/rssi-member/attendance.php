@@ -1,31 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
+
+<html>
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Attendance Tracker</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/css/bootstrap.min.css">
+    <title>Continuous QR Code Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
 </head>
 
 <body>
-  <div class="container mt-5">
-    <h1 class="text-center mb-4">Attendance Tracker</h1>
-    <div class="row">
-      <div class="col-md-6 offset-md-3">
-        <form>
-          <div class="mb-3">
-            <label for="fingerprintInput" class="form-label">Fingerprint</label>
-            <input type="text" class="form-control" id="fingerprintInput" placeholder="Scan your fingerprint" disabled>
-          </div>
-          <div class="text-center">
-            <button type="submit" class="btn btn-primary">Submit</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</body>
+    <div id="qr-reader" style="width:500px"></div>
+    <div id="qr-reader-results"></div>
+    <script>
+        var resultContainer = document.getElementById('qr-reader-results');
+        var lastResult, countResults = 0;
 
+        function onScanSuccess(decodedText, decodedResult) {
+            if (decodedText !== lastResult) {
+                ++countResults;
+                lastResult = decodedText;
+                // Handle on success condition with the decoded message.
+                console.log(`Scan result ${decodedText}`, decodedResult);
+                var html = `<div class="result">[${countResults}] - ${decodedText}</div>`;
+                resultContainer.innerHTML += html;
+            }
+        }
+
+        var html5QrcodeScanner = new Html5QrcodeScanner(
+            "qr-reader", { fps: 10, qrbox: 250 });
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+</body>
 
 </html>
