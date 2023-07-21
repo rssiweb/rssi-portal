@@ -192,6 +192,90 @@ if ($formtype == "get_details") {
   }
 }
 
+if ($formtype == "donation_form") {
+  if (isset($_POST['form-type']) && $_POST['form-type'] === "donation_form") {
+    $tel = $_POST['tel'];
+    $currency = $_POST['currency'];
+    $transactionId = $_POST['transactionid'];
+    $message = $_POST['message'];
+    $donationAmount = $_POST['donationAmount'];
+    $timestamp = date('Y-m-d H:i:s');
+    $donationId = uniqid();
+    $cmdtuples = 0; // Initialize cmdtuples
+    $errorOccurred = false; // Flag to track if an error occurred
+    $errorMessage = '';
+
+    if ($_POST['donationType'] === "existing") {
+      $donationQuery = "INSERT INTO donation_paymentdata (donationid, tel, currency, amount, transactionid, message, timestamp) 
+                          VALUES ('$donationId', '$tel', '$currency', '$donationAmount', '$transactionId', '$message', '$timestamp')";
+      $resultUserdata = pg_query($con, $donationQuery);
+
+      if ($resultUserdata) {
+        $cmdtuples = pg_affected_rows($resultUserdata);
+      } else {
+        $errorOccurred = true;
+        $errorMessage = handleInsertionError($con, "Donation insertion", $tel);
+      }
+    } elseif ($_POST['donationType'] === "new") {
+      $fullName = $_POST['fullName'];
+      $email = $_POST['email'];
+      $contactNumberNew = $_POST['contactNumberNew'];
+      $documentType = $_POST['documentType'];
+      $nationalId = $_POST['nationalId'];
+      $postalAddress = $_POST['postalAddress'];
+
+      // Insert userdata
+      $userdataQuery = "INSERT INTO donation_userdata (fullname, email, tel, documenttype, nationalid, postaladdress) 
+                          VALUES ('$fullName', '$email', '$contactNumberNew', '$documentType', '$nationalId', '$postalAddress')";
+      @$resultUserdata = pg_query($con, $userdataQuery);
+
+      if ($resultUserdata) {
+        // Insert donation
+        $donationQuery = "INSERT INTO donation_paymentdata (donationid, tel, currency, amount, transactionid, message, timestamp) 
+                              VALUES ('$donationId', '$contactNumberNew', '$currency', '$donationAmount', '$transactionId', '$message', '$timestamp')";
+        $resultDonation = pg_query($con, $donationQuery);
+
+        if ($resultDonation) {
+          $cmdtuples = pg_affected_rows($resultDonation);
+        } else {
+          $errorOccurred = true;
+          $errorMessage = handleInsertionError($con, "Donation insertion", $contactNumberNew);
+        }
+      } else {
+        $errorOccurred = true;
+        $errorMessage = handleInsertionError($con, "Userdata insertion", $contactNumberNew);
+      }
+    }
+
+    // Prepare the API response data
+    $responseData = array(
+      'error' => $errorOccurred,
+      'errorMessage' => $errorOccurred ? $errorMessage : '', // Return the actual error message if an error occurred
+      'cmdtuples' => $cmdtuples,
+      'donationId' => $donationId
+    );
+
+    // Return the response as JSON
+    echo json_encode($responseData);
+    exit; // Stop further PHP execution
+  }
+}
+
+function handleInsertionError($connection, $errorMessage, $tel)
+{
+  $error = pg_last_error($connection);
+
+  // Check for duplicate key violation error
+  if (strpos($error, 'duplicate key value violates unique constraint') !== false) {
+    return "already_registered"; // Return a specific code for duplicate key violation error
+    // Additional handling specific to duplicate key violation error can be done here
+  } else {
+    // Log or display the generic error message
+    error_log($errorMessage . " error: " . $error);
+    return "generic_error"; // Return a specific code for generic error
+  }
+}
+
 if ($formtype == "exit_gen_otp_associate") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
   @$associate_name = $_POST['associate_name'];
