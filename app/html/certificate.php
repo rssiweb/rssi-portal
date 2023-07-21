@@ -10,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>RSSI-CMS</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <!-- Main css -->
     <link rel="stylesheet" href="/css/style.css" />
@@ -55,12 +56,23 @@
 </div>
 <?php
 
-@$urlscode = $_GET['scode'];
-if (@$urlscode != '') {
-    $result = pg_query($con, "SELECT * FROM certificate LEFT JOIN (SELECT associatenumber, scode FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber WHERE (scode='$urlscode' OR out_scode='$urlscode') AND badge_name != 'Experience Letter' AND badge_name != 'Offer Letter' AND badge_name != 'Joining Letter'");
+$urlscode = isset($_GET['scode']) ? $_GET['scode'] : '';
+
+if ($urlscode !== '') {
+    $query = "SELECT * FROM certificate 
+              LEFT JOIN (SELECT associatenumber, scode, fullname FROM rssimyaccount_members) faculty 
+              ON certificate.awarded_to_id = faculty.associatenumber 
+              WHERE (scode = $1 OR out_scode = $1) 
+              AND badge_name NOT IN ('Experience Letter', 'Offer Letter', 'Joining Letter') order by issuedon desc";
+    $result = pg_query_params($con, $query, array($urlscode));
 } else {
-    $result = pg_query($con, "SELECT * FROM certificate LEFT JOIN (SELECT associatenumber, scode FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber WHERE certificate_no=''");
+    $query = "SELECT * FROM certificate 
+              LEFT JOIN (SELECT associatenumber, scode, fullname FROM rssimyaccount_members) faculty 
+              ON certificate.awarded_to_id = faculty.associatenumber 
+              WHERE certificate_no = ''";
+    $result = pg_query($con, $query);
 }
+
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -71,25 +83,25 @@ $resultArr = pg_fetch_all($result);
 
 echo '
 <section>
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
+    <section class="wrapper main-wrapper row">
+        <div class="col-md-12">
             <div style="font-family:Poppins; text-align:Center;font-size:20px;">Rina Shiksha Sahayak Foundation (RSSI)</div>
             <div style="font-family:Roboto; text-align:Center;font-size:20px; line-height:2">Certificate Details</div>
-                
-<table class="table">
-<thead>
-    <tr>
-    <th scope="col">Certificate no</th>
-       <th scope="col">Nominee id</th>
-        <th scope="col">Nominee name</th>
-        <th scope="col">Badge name</th>
-        <th scope="col">Remarks</th>
-        <th scope="col">Issued on</th>
-        <th scope="col">Issued by</th>
-        <th scope="col">Certificate</th>
-        <th scope="col"></th>
-        </tr>
-        </thead>' ?>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Certificate no</th>
+                        <th scope="col">Nominee id</th>
+                        <th scope="col">Nominee name</th>
+                        <th scope="col">Badge name</th>
+                        <th scope="col">Remarks</th>
+                        <th scope="col">Issued on</th>
+                        <th scope="col">Issued by</th>
+                        <th scope="col">Certificate</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>' ?>
 
 <?php if ($resultArr != null) {
 
@@ -97,7 +109,7 @@ echo '
         echo '<tbody><tr>
         <td>' . $array['certificate_no'] . '</td>
         <td>' . $array['awarded_to_id'] . '</td>
-        <td>' . $array['awarded_to_name'] . '</td>
+        <td>' . $array['awarded_to_name'] . $array['fullname'] . '</td>
         <td>' . $array['badge_name'] . '</td>
         <td>' . $array['comment'] . '</td>' ?>
         <?php if ($array['issuedon'] == null) { ?>
