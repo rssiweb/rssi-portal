@@ -191,7 +191,8 @@ if (@$cmdtuples == 1) {
 
                             <div class="mb-3">
                                 <label for="reason-for-leaving" class="form-label">Reason for Leaving:</label>
-                                <textarea class="form-control" rows="5" name="reason-for-leaving" id="reason-for-leaving"><?php echo $array['exit_remarks'] ?></textarea>
+                                <textarea class="form-control" rows="5" name="reason-for-leaving" id="reason-for-leaving"><?php echo $array['exit_remarks'] === null ? $array['reason_remarks'] : $array['exit_remarks']; ?>
+                                </textarea>
                                 <div class="form-text">Enter the reason for the associate leaving the company.</div>
                             </div>
 
