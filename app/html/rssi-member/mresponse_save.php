@@ -72,7 +72,7 @@ if (@$_POST['form-type'] == "manager_remarks_update") {
     });
 
     if (count($values_without_null) > 0) {
-        $average = array_sum($values_without_null) / count($values_without_null);
+        $average = round(array_sum($values_without_null) / count($values_without_null), 2);
     } else {
         $average = 'NULL';
     }
