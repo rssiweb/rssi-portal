@@ -140,9 +140,17 @@ if (!$result) {
                                 <span class="badge bg-warning float-end">Manager assessment in progress</span>
                             <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") { ?>
                                 <span class="badge bg-primary float-end">Reviewer assessment in progress</span>
-                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes") { ?>
-                                <span class="badge bg-success float-end">IPF released</span>
+                                <?php } else {
 
+                                if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) { ?>
+                                    <span class="badge bg-success float-end">IPF released</span>
+                                <?php } ?>
+                                <?php if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == "accepted") { ?>
+                                    <span class="badge bg-success float-end">IPF Accepted</span>
+                                <?php } ?>
+                                <?php if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == "rejected") { ?>
+                                    <span class="badge bg-danger float-end">IPF Rejected</span>
+                                <?php } ?>
 
                             <?php } ?>
 

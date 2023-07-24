@@ -18,58 +18,60 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
-$result = pg_query($con, "select panno,bankname,accountnumber,ifsccode from rssimyaccount_members WHERE associatenumber='$associatenumber'"); //select query for viewing users.  
+$query = "SELECT panno, bankname, accountnumber, ifsccode FROM rssimyaccount_members WHERE associatenumber = $1";
+
+$result = pg_prepare($con, "view_users", $query);
+$result = pg_execute($con, "view_users", array($associatenumber));
 
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
+
 $resultArr = pg_fetch_all($result);
 
-if (@$_POST['form-type'] == "reimbursementapply") {
-    @$claimid = 'RSC' . time();
-    @$claimhead = $_POST['claimhead'];
-    @$claimheaddetails = $_POST['claimheaddetails'];
-    @$billno = $_POST['billno'];
-    //echo json_encode($_FILES);
-    @$uploadedFile = $_FILES['billdoc'];
-    @$currency = $_POST['currency'];
-    @$amount = $_POST['amount'];
-    @$appliedby = $_POST['appliedby'];
-    @$ack = $_POST['ack'] ?? 0;
-    @$email = $email;
-    @$applicantid = $associatenumber;
-    @$now = date('Y-m-d H:i:s');
-    if (date('m') == 1 || date('m') == 2 || date('m') == 3) { //Upto March
-        $currentAcademicYear = (date('Y') - 1) . '-' . date('Y');
-    } else { //After MARCH
-        $currentAcademicYear = date('Y') . '-' . (date('Y') + 1);
-    }
+if (isset($_POST['form-type']) && $_POST['form-type'] === "reimbursementapply") {
+    // Sanitize and validate user inputs
+    $claimid = 'RSC' . time();
+    $claimhead = filter_var($_POST['claimhead'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $claimheaddetails = filter_var($_POST['claimheaddetails'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $billno = filter_var($_POST['billno'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $uploadedFile = $_FILES['billdoc'] ?? null;
+    $currency = filter_var($_POST['currency'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $amount = filter_var($_POST['amount'] ?? '', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+    $ack = filter_var($_POST['ack'] ?? 0, FILTER_VALIDATE_INT);
+    $email = $email ?? ''; // Make sure you have the $email variable defined somewhere
+    $applicantid = $associatenumber ?? ''; // Make sure you have the $associatenumber variable defined somewhere
+    $now = date('Y-m-d H:i:s');
+    $currentAcademicYear = (date('m') >= 1 && date('m') <= 3) ? (date('Y') - 1) . '-' . date('Y') : date('Y') . '-' . (date('Y') + 1);
 
     // send $file to google =======> google (rssi.in) // robotic service account credential.json
+    $doclink = null;
+    if (!empty($uploadedFile['name'])) {
+        $filename = "doc_" . $claimid . "_" . $applicantid;
+        $parent = '1MPw1VqHe_dvY3bZ-O1EWYYRsXGEx2wilyEGaCdHOq4HG2Fhg8qgNWfOejgB0USBGfZJNlnsC';
+        $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
+    }
 
-    if ($claimid != "") {
-
-        if (empty($_FILES['billdoc']['name'])) {
-            $doclink = null;
-        } else {
-            $filename = "doc_" . $claimid . "_" . $applicantid;
-            $parent = '1MPw1VqHe_dvY3bZ-O1EWYYRsXGEx2wilyEGaCdHOq4HG2Fhg8qgNWfOejgB0USBGfZJNlnsC';
-            $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
-        }
-        $claimsubmit = "INSERT INTO claim (timestamp,reimbid,registrationid,selectclaimheadfromthelistbelow,claimheaddetails,billno,currency,totalbillamount,uploadeddocuments,ack,year) VALUES ('$now','$claimid','$applicantid','$claimhead','$claimheaddetails','$billno','$currency','$amount','$doclink','$ack','$currentAcademicYear')";
-
-        $result = pg_query($con, $claimsubmit);
+    if ($claimid !== "") {
+        // Insert the claim using prepared statements
+        $claimsubmit = "INSERT INTO claim (timestamp, reimbid, registrationid, selectclaimheadfromthelistbelow, claimheaddetails, billno, currency, totalbillamount, uploadeddocuments, ack, year)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)";
+        pg_prepare($con, "insert_claim", $claimsubmit);
+        $data = array($now, $claimid, $applicantid, $claimhead, $claimheaddetails, $billno, $currency, $amount, $doclink, $ack, $currentAcademicYear);
+        $result = pg_execute($con, "insert_claim", $data);
         $cmdtuples = pg_affected_rows($result);
     }
-    if (@$cmdtuples == 1 && $email != "") {
+
+    if ($cmdtuples === 1 && !empty($email)) {
+        // ... Send email notification ...
         sendEmail("claimapply", array(
             "reimbid" => $claimid,
-            "registrationid" => @$associatenumber,
-            "fullname" => @$fullname,
+            "registrationid" => $associatenumber,
+            "fullname" => $fullname,
             "totalbillamount" => $amount,
             "currency" => $currency,
-            "timestamp" => @date("d/m/Y g:i a", strtotime($now))
+            "timestamp" => date("d/m/Y g:i a", strtotime($now))
         ), $email);
     }
 }
@@ -103,25 +105,6 @@ if (@$_POST['form-type'] == "reimbursementapply") {
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-    <!---change option value based on other dropdown PHP, Have created another file process-request.php to get the creason option---->
-    <script type="text/javascript" src="http://code.jquery.com/jquery.js"> </script>
-    <!--Here .typeofleave is a class and has been assigned to the input filed id=typeofleave-->
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("select.typeofleave").change(function() {
-                var selectedtypeofleave = $(".typeofleave option:selected").val();
-                $.ajax({
-                    type: "POST",
-                    url: "process-request.php",
-                    data: {
-                        typeofleave: selectedtypeofleave
-                    }
-                }).done(function(data) {
-                    $("#response").html(data);
-                });
-            });
-        });
-    </script>
     <style>
         .checkbox {
             padding: 0;
