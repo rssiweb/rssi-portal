@@ -33,7 +33,7 @@ if (@$_GET['form-type'] == "appraisee") {
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
-    WHERE appraisee_associatenumber='$associatenumber' AND appraisaltype='$type' AND appraisalyear='$year'");
+    WHERE appraisee_associatenumber='$associatenumber' AND appraisaltype='$type' AND appraisalyear='$year' order by goalsheet_created_on desc");
 } else {
     $result = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
 }
@@ -51,7 +51,7 @@ if (@$_GET['form-type'] == "manager") {
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
-    WHERE manager_associatenumber='$associatenumber'AND appraisalyear='$yearm' order by manager_evaluation_complete desc");
+    WHERE manager_associatenumber='$associatenumber' AND appraisalyear='$yearm' AND appraisee_response_complete='yes' AND manager_evaluation_complete IS NULL order by goalsheet_evaluated_on desc");
 } else {
     $resultm = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
 }
@@ -69,7 +69,7 @@ if (@$_GET['form-type'] == "reviewer") {
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
-    WHERE reviewer_associatenumber='$associatenumber'AND appraisalyear='$yearr' order by reviewer_response_complete desc");
+    WHERE reviewer_associatenumber='$associatenumber' AND appraisalyear='$yearr' AND appraisee_response_complete='yes' AND manager_evaluation_complete='yes' AND reviewer_response_complete IS NULL order by goalsheet_evaluated_on desc");
 } else {
     $resultr = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
 }
@@ -300,7 +300,7 @@ function getAssessmentStatus($array)
                                                             <!--<option>Quarterly 2/2021</option>-->
                                                             <option>Quarterly</option>
                                                             <option>Annual</option>
-                                                            <option>Project end</option>
+                                                            <option>Project End</option>
                                                         </select>
 
                                                         <select name="get_year" id="get_year" class="form-select" style="width:max-content; display:inline-block" placeholder="Year" required>
@@ -550,7 +550,7 @@ function getAssessmentStatus($array)
                                             <?php
                                             } else {
                                             ?>
-                                                <p>No results found for the filter value entered. Please adjust your search criteria and try again.</p>
+                                                <p>You're up-to-date! No review is pending at your end.</p>
                                             <?php } ?>
                                         </section>
                                     </div>

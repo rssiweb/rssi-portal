@@ -144,245 +144,267 @@ $resultArr = pg_fetch_all($result);
                                 }
                             </script>
                             <br><br>
-                            <?php echo '
                             <p>Select Number Of Rows</p>
                             <div class="form-group">
-                           <select class="form-select" name="state" id="maxRows">
-                               <option value="5000">Show ALL Rows</option>
-                               <option value="5">5</option>
-                               <option value="10">10</option>
-                               <option value="15">15</option>
-                               <option value="20">20</option>
-                               <option value="50">50</option>
-                               <option value="70">70</option>
-                               <option value="100">100</option>
-                           </select>
+                                <select class="form-select" name="state" id="maxRows">
+                                    <option value="5000">Show ALL Rows</option>
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="15">15</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="70">70</option>
+                                    <option value="100">100</option>
+                                </select>
                             </div>
                             <div class="table-responsive">
-                        <table class="table" id="table-id">
-                            <thead>
-                                <tr>
-                                <th scope="col">Goal sheet ID</th>
-                                <th scope="col">Appraisee</th>    
-                                <th scope="col">Manager</th>
-                                <th scope="col">Reviewer</th>
-                                <th scope="col">Appraisal details</th>
-                                <th scope="col">Initiated on</th>
-                                <th scope="col">IPF</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Appraisee responded on</th>
-                                <th scope="col">Closed on</th>
-                                </tr>
-                            </thead>' ?>
-                            <?php if ($resultArr != null) {
-                                echo '<tbody>';
-                                foreach ($resultArr as $array) {
-                                    echo '<tr><td>' . $array['goalsheetid'] . '</td>
-                        <td>' . $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')' . '</td>
-                        <td>' . $array['mname'] . ' (' . $array['manager_associatenumber'] . ')' . '</td>
-                        <td>' . $array['rname'] . ' (' . $array['manager_associatenumber'] . ')' . '</td>
-                        <td>' . $array['appraisaltype'] . '<br>' . $array['appraisalyear'] . '</td>
-                        <td>' . date('d/m/y h:i:s a', strtotime($array['goalsheet_created_on'])) . '</td>  
-                        <td>' . $array['ipf'] . '</td>     
-                        <td>' ?><?php if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-                                        echo '<span class="badge bg-danger text-start">Self-assessment</span>';
-                                    } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-                                        echo '<span class="badge bg-warning text-start">Manager assessment in progress</span>';
-                                    } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") {
-                                        echo '<span class="badge bg-primary text-start">Reviewer assessment in progress</span>';
-                                    } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
-                                        echo '<span class="badge bg-success text-start">IPF released</span>';
-                                    } else if ($array['ipf_response'] == 'accepted') {
-                                        echo '<span class="badge bg-success text-start">IPF Accepted</span>';
-                                    } else if ($array['ipf_response'] == 'rejected') {
-                                        echo '<span class="badge bg-danger text-start">IPF Rejected</span>';
-                                    } ?><?php '</td>' ?>
-
-                            <td><?php echo ($array['ipf_response_on'] == null) ? "" : date('d/m/y h:i:s a', strtotime($array['ipf_response_on'])); ?></td>
-
-
-                            <?php echo '<td>
-
-                        <form name="ipfclose' . $array['goalsheetid'] . '" action="#" method="POST">
-                        <input type="hidden" name="form-type" type="text" value="ipfclose">
-                        <input type="hidden" name="ipfid" id="ipfid" type="text" value="' . $array['goalsheetid'] . '">
-                        <input type="hidden" name="ipf_process_closed_by" id="ipf_process_closed_by" type="text" value="' . $associatenumber . '">' ?>
-
-                            <?php if ($array['ipf_process_closed_by'] == null && $role == 'Admin') { ?>
-
-                                <?php echo '<button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                        padding: 0px;
-                        border: none;" title="Closed"><i class="bi bi-box-arrow-up"></i></button>' ?>
-                            <?php } ?>
-                            <?php echo '</form>' ?>
-
-                            <?php if ($array['ipf_process_closed_by'] != null) { ?>
-                                <?php echo date('d/m/y h:i:s a', strtotime($array['ipf_process_closed_on'])) ?>
-                            <?php } else {
-                                    } ?>
-
-                            <?php echo '</td>' ?>
-                            <?php  }
-                            } else if (@$id == null) {
-                                echo '<tr>
-                                <td colspan="6">Please select Filter value.</td>
-                            </tr>';
-                            } else {
-                                echo '<tr>
-                            <td colspan="6">No record found for' ?>&nbsp;<?php echo @$id ?>
-                        <?php echo '</td>
-                        </tr>';
-                            }
-                            echo '</tbody>
-                        </table>
-                        </div>';
-                        ?>
-                        <!-- Start Pagination -->
-                        <div class="pagination-container">
-                            <nav>
-                                <ul class="pagination">
-                                    <li class="page-item" data-page="prev">
-                                        <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
-                                    </li>
-                                    <!-- Here the JS Function Will Add the Rows -->
-                                    <li class="page-item">
-                                        <button class="page-link pagination-button">1</button>
-                                    </li>
-                                    <li class="page-item">
-                                        <button class="page-link pagination-button">2</button>
-                                    </li>
-                                    <li class="page-item">
-                                        <button class="page-link pagination-button">3</button>
-                                    </li>
-                                    <li class="page-item" data-page="next" id="prev">
-                                        <button class="page-link pagination-button" aria-label="Next">&gt;</button>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-
-                        <script>
-                            getPagination('#table-id');
-
-                            function getPagination(table) {
-                                var lastPage = 1;
-
-                                $('#maxRows').on('change', function(evt) {
-                                    lastPage = 1;
-                                    $('.pagination').find('li').slice(1, -1).remove();
-                                    var trnum = 0;
-                                    var maxRows = parseInt($(this).val());
-
-                                    if (maxRows == 5000) {
-                                        $('.pagination').hide();
-                                    } else {
-                                        $('.pagination').show();
-                                    }
-
-                                    var totalRows = $(table + ' tbody tr').length;
-                                    $(table + ' tr:gt(0)').each(function() {
-                                        trnum++;
-                                        if (trnum > maxRows) {
-                                            $(this).hide();
-                                        }
-                                        if (trnum <= maxRows) {
-                                            $(this).show();
-                                        }
-                                    });
-
-                                    if (totalRows > maxRows) {
-                                        var pagenum = Math.ceil(totalRows / maxRows);
-                                        for (var i = 1; i <= pagenum; i++) {
-                                            $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
-                                                <button class="page-link pagination-button">' + i + '</button>\
-                                                </li>').show();
-                                        }
-                                    }
-
-                                    $('.pagination [data-page="1"]').addClass('active');
-                                    $('.pagination li').on('click', function(evt) {
-                                        evt.stopImmediatePropagation();
-                                        evt.preventDefault();
-                                        var pageNum = $(this).attr('data-page');
-
-                                        var maxRows = parseInt($('#maxRows').val());
-
-                                        if (pageNum == 'prev') {
-                                            if (lastPage == 1) {
-                                                return;
-                                            }
-                                            pageNum = --lastPage;
-                                        }
-                                        if (pageNum == 'next') {
-                                            if (lastPage == $('.pagination li').length - 2) {
-                                                return;
-                                            }
-                                            pageNum = ++lastPage;
-                                        }
-
-                                        lastPage = pageNum;
-                                        var trIndex = 0;
-                                        $('.pagination li').removeClass('active');
-                                        $('.pagination [data-page="' + lastPage + '"]').addClass('active');
-                                        limitPagging();
-                                        $(table + ' tr:gt(0)').each(function() {
-                                            trIndex++;
-                                            if (
-                                                trIndex > maxRows * pageNum ||
-                                                trIndex <= maxRows * pageNum - maxRows
-                                            ) {
-                                                $(this).hide();
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Goal sheet ID</th>
+                                            <th scope="col">Appraisee</th>
+                                            <th scope="col">Manager</th>
+                                            <th scope="col">Reviewer</th>
+                                            <th scope="col">Appraisal details</th>
+                                            <th scope="col">Initiated on</th>
+                                            <th scope="col">IPF</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Appraisee responded on</th>
+                                            <th scope="col">Closed on</th>
+                                        </tr>
+                                    </thead>
+                                    <?php
+                                    if ($resultArr != null) {
+                                        echo '<tbody>';
+                                        foreach ($resultArr as $array) {
+                                            $roleBasedLink = "";
+                                            if ($associatenumber == $array['appraisee_associatenumber']) {
+                                                // If the logged-in person is the appraisee
+                                                $roleBasedLink = 'reviewer_response.php?goalsheetid=' . $array['goalsheetid'];
+                                            } elseif ($associatenumber == $array['manager_associatenumber']) {
+                                                // If the logged-in person is the manager
+                                                $roleBasedLink = 'manager_response.php?goalsheetid=' . $array['goalsheetid'];
+                                            } elseif ($associatenumber == $array['reviewer_associatenumber']) {
+                                                // If the logged-in person is the reviewer
+                                                $roleBasedLink = 'reviewer_response.php?goalsheetid=' . $array['goalsheetid'];
                                             } else {
+                                                // For any other role (optional)
+                                                $roleBasedLink = '';
+                                            }
+                                    ?>
+                                            <tr>
+                                                <td>
+                                                    <?php
+                                                    if ($roleBasedLink != '') {
+                                                        echo '<a href="' . $roleBasedLink . '" target="_blank">' . $array['goalsheetid'] . '</a>';
+                                                    } else {
+                                                        echo $array['goalsheetid'];
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td><?php echo $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')'; ?></td>
+                                                <td><?php echo $array['mname'] . ' (' . $array['manager_associatenumber'] . ')'; ?></td>
+                                                <td><?php echo $array['rname'] . ' (' . $array['manager_associatenumber'] . ')'; ?></td>
+                                                <td><?php echo $array['appraisaltype'] . '<br>' . $array['appraisalyear']; ?></td>
+                                                <td><?php echo date('d/m/y h:i:s a', strtotime($array['goalsheet_created_on'])); ?></td>
+                                                <td><?php echo $array['ipf']; ?></td>
+                                                <td>
+                                                    <?php
+                                                    if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
+                                                        echo '<span class="badge bg-danger text-start">Self-assessment</span>';
+                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
+                                                        echo '<span class="badge bg-warning text-start">Manager assessment in progress</span>';
+                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") {
+                                                        echo '<span class="badge bg-primary text-start">Reviewer assessment in progress</span>';
+                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
+                                                        echo '<span class="badge bg-success text-start">IPF released</span>';
+                                                    } elseif ($array['ipf_response'] == 'accepted') {
+                                                        echo '<span class="badge bg-success text-start">IPF Accepted</span>';
+                                                    } elseif ($array['ipf_response'] == 'rejected') {
+                                                        echo '<span class="badge bg-danger text-start">IPF Rejected</span>';
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td><?php echo ($array['ipf_response_on'] == null ? "" : date('d/m/y h:i:s a', strtotime($array['ipf_response_on']))); ?></td>
+                                                <td>
+                                                    <?php
+                                                    if ($array['ipf_process_closed_by'] == null && $role == 'Admin') {
+                                                        echo '
+                            <form name="ipfclose' . $array['goalsheetid'] . '" action="#" method="POST">
+                                <input type="hidden" name="form-type" type="text" value="ipfclose">
+                                <input type="hidden" name="ipfid" id="ipfid" type="text" value="' . $array['goalsheetid'] . '">
+                                <input type="hidden" name="ipf_process_closed_by" id="ipf_process_closed_by" type="text" value="' . $associatenumber . '">
+                                <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                                padding: 0px;
+                                border: none;" title="Closed"><i class="bi bi-box-arrow-up"></i></button>
+                            </form>
+                            ';
+                                                    }
+                                                    ?>
+                                                </td>
+                                            </tr>
+                                    <?php
+                                        }
+                                        echo '</tbody>';
+                                    } elseif (@$id == null) {
+                                        echo '<tr>
+                    <td colspan="6">Please select Filter value.</td>
+                </tr>';
+                                    } else {
+                                        echo '<tr>
+                    <td colspan="6">No record found for ' . @$id . '</td>
+                </tr>';
+                                    }
+                                    ?>
+                                </table>
+                            </div>
+
+                            <!-- Start Pagination -->
+                            <div class="pagination-container">
+                                <nav>
+                                    <ul class="pagination">
+                                        <li class="page-item" data-page="prev">
+                                            <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
+                                        </li>
+                                        <!-- Here the JS Function Will Add the Rows -->
+                                        <li class="page-item">
+                                            <button class="page-link pagination-button">1</button>
+                                        </li>
+                                        <li class="page-item">
+                                            <button class="page-link pagination-button">2</button>
+                                        </li>
+                                        <li class="page-item">
+                                            <button class="page-link pagination-button">3</button>
+                                        </li>
+                                        <li class="page-item" data-page="next" id="prev">
+                                            <button class="page-link pagination-button" aria-label="Next">&gt;</button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+
+                            <script>
+                                getPagination('#table-id');
+
+                                function getPagination(table) {
+                                    var lastPage = 1;
+
+                                    $('#maxRows').on('change', function(evt) {
+                                        lastPage = 1;
+                                        $('.pagination').find('li').slice(1, -1).remove();
+                                        var trnum = 0;
+                                        var maxRows = parseInt($(this).val());
+
+                                        if (maxRows == 5000) {
+                                            $('.pagination').hide();
+                                        } else {
+                                            $('.pagination').show();
+                                        }
+
+                                        var totalRows = $(table + ' tbody tr').length;
+                                        $(table + ' tr:gt(0)').each(function() {
+                                            trnum++;
+                                            if (trnum > maxRows) {
+                                                $(this).hide();
+                                            }
+                                            if (trnum <= maxRows) {
                                                 $(this).show();
                                             }
                                         });
-                                    });
-                                    limitPagging();
-                                }).val(5).change();
-                            }
 
-                            function limitPagging() {
-                                if ($('.pagination li').length > 7) {
-                                    if ($('.pagination li.active').attr('data-page') <= 3) {
-                                        $('.pagination li.page-item:gt(5)').hide();
-                                        $('.pagination li.page-item:lt(5)').show();
-                                        $('.pagination [data-page="next"]').show();
-                                    }
-                                    if ($('.pagination li.active').attr('data-page') > 3) {
-                                        $('.pagination li.page-item').hide();
-                                        $('.pagination [data-page="next"]').show();
-                                        var currentPage = parseInt($('.pagination li.active').attr('data-page'));
-                                        for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-                                            $('.pagination [data-page="' + i + '"]').show();
+                                        if (totalRows > maxRows) {
+                                            var pagenum = Math.ceil(totalRows / maxRows);
+                                            for (var i = 1; i <= pagenum; i++) {
+                                                $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
+                                                <button class="page-link pagination-button">' + i + '</button>\
+                                                </li>').show();
+                                            }
+                                        }
+
+                                        $('.pagination [data-page="1"]').addClass('active');
+                                        $('.pagination li').on('click', function(evt) {
+                                            evt.stopImmediatePropagation();
+                                            evt.preventDefault();
+                                            var pageNum = $(this).attr('data-page');
+
+                                            var maxRows = parseInt($('#maxRows').val());
+
+                                            if (pageNum == 'prev') {
+                                                if (lastPage == 1) {
+                                                    return;
+                                                }
+                                                pageNum = --lastPage;
+                                            }
+                                            if (pageNum == 'next') {
+                                                if (lastPage == $('.pagination li').length - 2) {
+                                                    return;
+                                                }
+                                                pageNum = ++lastPage;
+                                            }
+
+                                            lastPage = pageNum;
+                                            var trIndex = 0;
+                                            $('.pagination li').removeClass('active');
+                                            $('.pagination [data-page="' + lastPage + '"]').addClass('active');
+                                            limitPagging();
+                                            $(table + ' tr:gt(0)').each(function() {
+                                                trIndex++;
+                                                if (
+                                                    trIndex > maxRows * pageNum ||
+                                                    trIndex <= maxRows * pageNum - maxRows
+                                                ) {
+                                                    $(this).hide();
+                                                } else {
+                                                    $(this).show();
+                                                }
+                                            });
+                                        });
+                                        limitPagging();
+                                    }).val(5).change();
+                                }
+
+                                function limitPagging() {
+                                    if ($('.pagination li').length > 7) {
+                                        if ($('.pagination li.active').attr('data-page') <= 3) {
+                                            $('.pagination li.page-item:gt(5)').hide();
+                                            $('.pagination li.page-item:lt(5)').show();
+                                            $('.pagination [data-page="next"]').show();
+                                        }
+                                        if ($('.pagination li.active').attr('data-page') > 3) {
+                                            $('.pagination li.page-item').hide();
+                                            $('.pagination [data-page="next"]').show();
+                                            var currentPage = parseInt($('.pagination li.active').attr('data-page'));
+                                            for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+                                                $('.pagination [data-page="' + i + '"]').show();
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        </script>
+                            </script>
 
-                        <script>
-                            var data = <?php echo json_encode($resultArr) ?>;
+                            <script>
+                                var data = <?php echo json_encode($resultArr) ?>;
 
-                            const scriptURL = 'payment-api.php'
+                                const scriptURL = 'payment-api.php'
 
-                            data.forEach(item => {
-                                const form = document.forms['ipfclose' + item.goalsheetid]
-                                form.addEventListener('submit', e => {
-                                    e.preventDefault()
-                                    fetch(scriptURL, {
-                                            method: 'POST',
-                                            body: new FormData(document.forms['ipfclose' + item.goalsheetid])
-                                        })
-                                        .then(response =>
-                                            alert("The process has been closed in the system.") +
-                                            location.reload()
-                                        )
-                                        .catch(error => console.error('Error!', error.message))
+                                data.forEach(item => {
+                                    const form = document.forms['ipfclose' + item.goalsheetid]
+                                    form.addEventListener('submit', e => {
+                                        e.preventDefault()
+                                        fetch(scriptURL, {
+                                                method: 'POST',
+                                                body: new FormData(document.forms['ipfclose' + item.goalsheetid])
+                                            })
+                                            .then(response =>
+                                                alert("The process has been closed in the system.") +
+                                                location.reload()
+                                            )
+                                            .catch(error => console.error('Error!', error.message))
+                                    })
+
+                                    console.log(item)
                                 })
-
-                                console.log(item)
-                            })
-                        </script>
+                            </script>
 
                         </div>
                     </div>
