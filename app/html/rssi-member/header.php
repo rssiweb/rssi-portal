@@ -274,6 +274,11 @@
             </a>
           </li>
           <li>
+            <a id="onexitLink" href="onexit.php">
+              <span>OnExit</span>
+            </a>
+          </li>
+          <li>
             <a id="userlogLink" href="userlog.php">
               <span>User log</span>
             </a>
@@ -524,6 +529,10 @@
         id: 'work',
         linkId: 'dashboardLink',
         url: 'visitor.php'
+      }, {
+        id: 'work',
+        linkId: 'onexitLink',
+        url: 'onexit.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
