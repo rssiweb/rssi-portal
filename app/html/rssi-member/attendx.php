@@ -121,16 +121,8 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                             <div class="col" style="display: inline-block; width:100%; text-align:right">
                                 <a href="in_out_tracker.php" target="_blank" title="Set Goals Now">In-out Tracker</a>
                             </div>
-                            <!-- <div id="qr-reader" style="width:800px"></div>
-                            <div id="qr-reader-results"></div> -->
-                            <div class="row justify-content-left">
-                                <div class="col-12 col-md-8">
-                                    <div id="qr-reader"></div>
-                                </div>
-                                <div class="col-12 col-md-8 mt-3">
-                                    <div id="qr-reader-results"></div>
-                                </div>
-                            </div>
+                            <div id="qr-reader" style="width:800px"></div>
+                            <div id="qr-reader-results"></div>
                             <script>
                                 var resultContainer = document.getElementById('qr-reader-results');
                                 var lastResult, lastScanTime = 0;
@@ -150,14 +142,31 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                                         }
                                     }
                                 }
+                                // Adjust qrbox size dynamically based on screen width
+                                function adjustQrBoxSize() {
+                                    var qrReaderDiv = document.getElementById('qr-reader');
+                                    var screenWidth = window.innerWidth;
+                                    var qrboxSize = Math.min(screenWidth * 0.9, 800); // Maximum width is 800px or 90% of screen width
+                                    qrReaderDiv.style.width = qrboxSize + 'px';
+                                }
 
-                                var html5QrcodeScanner = new Html5QrcodeScanner(
-                                    "qr-reader", {
-                                        fps: 10,
-                                        qrbox: 400,
-                                        disableFlip: true,
-                                    });
+                                // Call the function once on page load
+                                adjustQrBoxSize();
+                                // Re-adjust the qrbox size when the window is resized
+                                window.addEventListener('resize', adjustQrBoxSize);
+
+                                var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
+                                    fps: 10,
+                                    disableFlip: true,
+                                });
                                 html5QrcodeScanner.render(onScanSuccess);
+                                // var html5QrcodeScanner = new Html5QrcodeScanner(
+                                //     "qr-reader", {
+                                //         fps: 10,
+                                //         qrbox: 400,
+                                //         disableFlip: true,
+                                //     });
+                                // html5QrcodeScanner.render(onScanSuccess);
 
                                 function playNotificationSound() {
                                     var notificationSound = document.getElementById('notification-sound');
