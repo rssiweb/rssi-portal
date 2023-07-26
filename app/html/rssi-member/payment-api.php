@@ -521,7 +521,7 @@ if ($formtype === "attendance") {
       array(
         "userId" => $user_id,
         "userName" => $name,
-        "punchIn" => $punch_in,
+        "punchIn" => date('d/m/Y h:i:s a', strtotime($punch_in)),
         "status" => $status
       )
     );

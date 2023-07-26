@@ -20,7 +20,25 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
-} ?>
+}
+$formattedTodayDate = date('Y-m-d');
+$query = "
+SELECT p.sl_no, p.user_id, p.punch_in, p.ip_address, p.recorded_by,
+       COALESCE(m.fullname, s.studentname) AS user_name,
+       COALESCE(m.filterstatus, s.filterstatus) AS status
+FROM attendance p
+LEFT JOIN rssimyaccount_members m ON p.user_id = m.associatenumber
+LEFT JOIN rssimyprofile_student s ON p.user_id = s.student_id
+WHERE DATE(p.punch_in) = '$formattedTodayDate'
+ORDER BY p.punch_in DESC";
+
+$result = pg_query($con, $query);
+$resultArr = pg_fetch_all($result);
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+?>
 
 <!doctype html>
 <html lang="en">
@@ -105,16 +123,16 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                 <!-- Reports -->
                 <div class="col-12">
                     <audio id="notification-sound" src="../img/success.mp3"></audio>
-                    <div id="success-toast" class="toast position-absolute top-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                    <div id="success-toast" class="toast position-fixed top-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
                         <div class="toast-header">
+                            <img src="../img/success.png" class="rounded mr-2" alt="success">&nbsp;
                             <strong class="me-auto">Notification</strong>
                             <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                         <div class="toast-body">
-                            <img src="../img/success.png" class="rounded mr-2" alt="success"> Attendance for <span id='success-userid'></span> recorded successfully!
+                            Attendance for <span id='success-username'></span> (<span id='success-userid'></span>) recorded successfully!
                         </div>
                     </div>
-
                     <div class="card">
                         <div class="card-body">
                             <br>
@@ -173,11 +191,13 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                                     notificationSound.play();
                                 }
 
-                                function showSuccessToast(userId) {
+                                function showSuccessToast(userId, userName) {
                                     var successToast = document.getElementById('success-toast');
                                     successToast.style.display = 'block';
                                     var useridEl = document.getElementById('success-userid');
                                     useridEl.innerHTML = userId
+                                    var usernameEl = document.getElementById('success-username');
+                                    usernameEl.innerHTML = userName
 
                                     // Hide the toast after a few seconds (adjust the time as needed)
                                     setTimeout(function() {
@@ -212,7 +232,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                                             } else {
                                                 addRowInAttendanceTable(result)
                                                 playNotificationSound(); // Play notification sound on successful form submission
-                                                showSuccessToast(result.userId); // Show the success notification toast
+                                                showSuccessToast(result.userId, result.userName); // Show the success notification toast
                                             }
                                         })
                                 }
@@ -236,6 +256,18 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                                     <?php
                                     echo '<tbody>';
                                     echo '<tr style="display:none" id="last-row"></tr>';
+                                    if ($resultArr != null) {
+                                        foreach ($resultArr as $array) {
+                                            echo '<tr>';
+                                            echo '<td>' . $array['user_id'] . '</td>';
+                                            echo '<td>' . $array['user_name'] . '</td>';
+                                            echo '<td>' . $array['status'] . '</td>';
+                                            echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
+                                            echo '</tr>';
+                                        }
+                                    } else {
+                                        echo '<tr><td colspan="8">No records found.</td></tr>';
+                                    }
                                     echo '</tbody>';
                                     ?>
                                 </table>
