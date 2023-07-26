@@ -171,27 +171,66 @@ $resultArr = pg_fetch_all($result);
                         <div class="card-body">
                             <br>
                             <form action="" method="GET" class="row g-2 align-items-center">
-                                To customize the view result, please select a filter value.
-                                <div class="form-group" style="display: inline-block;">
-                                    <div class="col-2" style="display: inline-block;">
-                                        <input type="text" name="get_aid" id="get_aid" class="form-control" placeholder="User Id" value="<?php echo isset($_GET['get_aid']) ? htmlspecialchars($_GET['get_aid']) : ''; ?>">
+                                <div class="col-8 mb-3 d-none d-sm-block">
+                                    To customize the view result, please select a filter value.
+                                </div>
+                                <div class="col-4 text-end mb-3 d-none d-sm-block">
+                                    Record count: <?php echo sizeof($resultArr); ?>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12 col-sm-2">
+                                        <div class="form-group">
+                                            <input type="text" name="get_aid" id="get_aid" class="form-control" placeholder="User Id" value="<?php echo isset($_GET['get_aid']) ? htmlspecialchars($_GET['get_aid']) : ''; ?>">
+                                            <small class="form-text text-muted">Enter User Id</small>
+                                        </div>
                                     </div>
-                                    <div class="col-2" style="display: inline-block;">
-                                        <input type="date" name="get_date" id="get_date" class="form-control" value="<?php echo isset($_GET['get_date']) ? htmlspecialchars($_GET['get_date']) : ''; ?>">
+
+                                    <div class="col-12 col-sm-2">
+                                        <div class="form-group">
+                                            <input type="date" name="get_date" id="get_date" class="form-control" value="<?php echo isset($_GET['get_date']) ? htmlspecialchars($_GET['get_date']) : ''; ?>">
+                                            <small class="form-text text-muted">Select Date</small>
+                                        </div>
                                     </div>
-                                    <div class="col-2" style="display: inline-block; vertical-align: bottom;">
+
+                                    <div class="col-12 col-sm-2">
                                         <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
                                             <i class="bi bi-search"></i> Search
                                         </button>
                                     </div>
                                 </div>
+
                             </form>
-                            <div style="display: inline-block; width:100%; text-align:right;">Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                            </div>
+
                             <?php if ($showingTodayData) {
                                 $formattedToday = date('F j, Y'); // Format the current date in a user-friendly way
-                                echo '<div class="notification">You are viewing data for <span class="blink-text">' . $formattedToday . '</span></div>';
-                            } ?>
+                            ?>
+
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="notification">
+                                            You are viewing data for <span class="blink-text"><?= $formattedToday ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 text-end"> <!-- Use the text-end class to align the button to the right -->
+                                        <button id="syncLiveDataBtn" class="btn btn-primary" onclick="showLoading()">Sync LIVE Data</button>
+                                    </div>
+                                </div>
+
+                                <script>
+                                    function showLoading() {
+                                        var button = document.getElementById('syncLiveDataBtn');
+                                        button.innerHTML = 'Loading...';
+                                        button.disabled = true;
+                                        setTimeout(function() {
+                                            location.reload();
+                                        }, 1000); // Adjust the time (in milliseconds) as needed
+                                    }
+                                </script>
+
+                            <?php } ?>
+
+
                             <!-- HTML Table -->
                             <div class="table-responsive">
                                 <table class="table" id="table-id">
