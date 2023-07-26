@@ -174,22 +174,17 @@ $resultArr = pg_fetch_all($result);
                             <div id="qr-reader-results"></div>
                             <script>
                                 var resultContainer = document.getElementById('qr-reader-results');
-                                var lastResult, countResults = 0;
-
+                                
                                 function onScanSuccess(decodedText, decodedResult) {
-                                    if (decodedText !== lastResult) {
-                                        ++countResults;
-                                        lastResult = decodedText;
-                                        // Handle on success condition with the decoded message.
-                                        var segments = decodedText.split("get_id=");
-                                        resultContainer.innerHTML = "";
-                                        if (segments.length > 1) {
-                                            submitAttendance(segments[1]);
-                                        } else {
-                                            var html = `<div class="result">User ID not found in QR Code</div>`;
-                                            resultContainer.innerHTML = html;
-                                        }
+                                    var segments = decodedText.split("get_id=");
+                                    resultContainer.innerHTML = "";
+                                    if (segments.length > 1) {
+                                        submitAttendance(segments[1]);
+                                    } else {
+                                        var html = `<div class="result">User ID not found in QR Code</div>`;
+                                        resultContainer.innerHTML = html;
                                     }
+                                
                                 }
 
                                 var html5QrcodeScanner = new Html5QrcodeScanner(
