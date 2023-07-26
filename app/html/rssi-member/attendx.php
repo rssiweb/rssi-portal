@@ -23,7 +23,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 }
 $formattedTodayDate = date('Y-m-d');
 $query = "
-SELECT p.sl_no, p.user_id, p.punch_in, p.ip_address, p.recorded_by,
+SELECT p.sl_no, p.user_id, p.punch_in, p.ip_address, p.recorded_by, p.gps_location,
        COALESCE(m.fullname, s.studentname) AS user_name,
        COALESCE(m.filterstatus, s.filterstatus) AS status
 FROM attendance p
@@ -160,6 +160,7 @@ if (!$result) {
                                         }
                                     }
                                 }
+
                                 // Adjust qrbox size dynamically based on screen width
                                 function adjustQrBoxSize() {
                                     var qrReaderDiv = document.getElementById('qr-reader');
@@ -178,13 +179,6 @@ if (!$result) {
                                     disableFlip: true,
                                 });
                                 html5QrcodeScanner.render(onScanSuccess);
-                                // var html5QrcodeScanner = new Html5QrcodeScanner(
-                                //     "qr-reader", {
-                                //         fps: 10,
-                                //         qrbox: 400,
-                                //         disableFlip: true,
-                                //     });
-                                // html5QrcodeScanner.render(onScanSuccess);
 
                                 function playNotificationSound() {
                                     var notificationSound = document.getElementById('notification-sound');
@@ -195,9 +189,9 @@ if (!$result) {
                                     var successToast = document.getElementById('success-toast');
                                     successToast.style.display = 'block';
                                     var useridEl = document.getElementById('success-userid');
-                                    useridEl.innerHTML = userId
+                                    useridEl.innerHTML = userId;
                                     var usernameEl = document.getElementById('success-username');
-                                    usernameEl.innerHTML = userName
+                                    usernameEl.innerHTML = userName;
 
                                     // Hide the toast after a few seconds (adjust the time as needed)
                                     setTimeout(function() {
@@ -205,38 +199,65 @@ if (!$result) {
                                     }, 3000); // 3000 milliseconds = 3 seconds (adjust the time as needed)
                                 }
 
-                                function addRowInAttendanceTable(attendanceRow) {
-                                    var lastTr = document.getElementById('last-row')
-                                    var newTr = document.createElement('tr')
-                                    for (var key of ["userId", "userName", "status", "punchIn"]) {
-                                        var td = document.createElement('td')
-                                        td.innerText = attendanceRow[key]
-                                        newTr.appendChild(td)
-                                    }
-                                    lastTr.insertAdjacentElement("afterend", newTr)
+                                var latitude; // Variable to store latitude
+                                var longitude; // Variable to store longitude
+
+                                function getLocation() {
+                                    return new Promise((resolve, reject) => {
+                                        if (navigator.geolocation) {
+                                            navigator.geolocation.getCurrentPosition(
+                                                position => {
+                                                    latitude = position.coords.latitude; // Store latitude in the variable
+                                                    longitude = position.coords.longitude; // Store longitude in the variable
+                                                    resolve(); // Resolve the promise when location is retrieved
+                                                },
+                                                error => {
+                                                    alert("Error getting location: " + error.message);
+                                                    reject(error); // Reject the promise on error
+                                                }
+                                            );
+                                        } else {
+                                            alert("Geolocation is not supported by this browser.");
+                                            reject(new Error("Geolocation not supported"));
+                                        }
+                                    });
                                 }
 
-                                function submitAttendance(userId) {
-                                    var data = new FormData()
-                                    data.set("userId", userId)
-                                    data.set("form-type", "attendance")
-                                    fetch("payment-api.php", {
+                                async function submitAttendance(userId) {
+                                    try {
+                                        // Get latitude and longitude values
+                                        await getLocation();
+
+                                        var data = new FormData();
+                                        data.set("userId", userId);
+                                        data.set("form-type", "attendance");
+                                        data.set("latitude", latitude);
+                                        data.set("longitude", longitude);
+
+                                        const response = await fetch("payment-api.php", {
                                             method: 'POST',
                                             body: data
-                                        })
-                                        .then(response => response.json())
-                                        .then(result => {
-                                            if (result.error) {
+                                        });
 
-                                                alert("Errorrecording attendance. Please try again later or contact support.")
-                                            } else {
-                                                addRowInAttendanceTable(result)
-                                                playNotificationSound(); // Play notification sound on successful form submission
-                                                showSuccessToast(result.userId, result.userName); // Show the success notification toast
-                                            }
-                                        })
+                                        const result = await response.json();
+
+                                        if (result.error) {
+                                            alert("Error recording attendance. Please try again later or contact support.");
+                                        } else {
+                                            addRowInAttendanceTable(result);
+                                            playNotificationSound(); // Play notification sound on successful form submission
+                                            showSuccessToast(result.userId, result.userName); // Show the success notification toast
+                                        }
+                                    } catch (error) {
+                                        console.error(error);
+                                    }
+                                }
+
+                                function addRowInAttendanceTable(attendanceRow) {
+                                    // Your logic to add a new row to the attendance table
                                 }
                             </script>
+
                             <br>
                             <?php
                             $formattedToday = date('F j, Y'); // Format the current date in a user-friendly way
@@ -251,6 +272,8 @@ if (!$result) {
                                             <th scope="col">User Name</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Timestamp</th>
+                                            <th scope="col">IP Address</th>
+                                            <th scope="col">GPS location</th>
                                         </tr>
                                     </thead>
                                     <?php
@@ -263,6 +286,8 @@ if (!$result) {
                                             echo '<td>' . $array['user_name'] . '</td>';
                                             echo '<td>' . $array['status'] . '</td>';
                                             echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
+                                            echo '<td>' . $array['ip_address'] . '</td>';
+                                            echo '<td>' . $array['gps_location'] . '</td>';
                                             echo '</tr>';
                                         }
                                     } else {
