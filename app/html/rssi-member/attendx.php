@@ -20,74 +20,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
     echo 'alert("Access Denied. You are not authorized to access this web page.");';
     echo 'window.location.href = "home.php";';
     echo '</script>';
-}
-
-$id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : null;
-$date = isset($_GET['get_date']) ? $_GET['get_date'] : '';
-
-$query = "
-WITH PunchInOut AS (
-    SELECT
-        a.user_id,
-        DATE(a.punch_in) AS punch_date,
-        MIN(a.punch_in) AS punch_in,
-        CASE
-            WHEN COUNT(*) = 1 THEN NULL
-            ELSE MAX(a.punch_in)
-        END AS punch_out
-    FROM attendance a
-    GROUP BY a.user_id, DATE(a.punch_in)
-)
-SELECT
-    p.user_id,
-    COALESCE(m.fullname, s.studentname) AS user_name,
-    COALESCE(m.filterstatus, s.filterstatus) AS status,
-    p.punch_in,
-    p.punch_out
-FROM PunchInOut p
-LEFT JOIN rssimyaccount_members m ON p.user_id = m.associatenumber
-LEFT JOIN rssimyprofile_student s ON p.user_id = s.student_id";
-
-// Now you can use the $query variable to execute the SQL query using your preferred database connection method.
-
-
-// Add conditions based on user input
-if (!empty($id) && !empty($date)) {
-    // Case 4: If both user_id and date are provided
-    $formattedDate = date('Y-m-d', strtotime($date));
-    $query .= " WHERE p.user_id = '$id' AND DATE(p.punch_in) = '$formattedDate'";
-} elseif (!empty($id) && empty($date)) {
-    // Case 2: If only user_id is provided
-    $query .= " WHERE p.user_id = '$id'";
-} elseif (empty($id) && !empty($date)) {
-    // Case 1: If only date is provided
-    $formattedDate = date('Y-m-d', strtotime($date));
-    $query .= " WHERE DATE(p.punch_in) = '$formattedDate'";
-} else {
-    // Case 3: If both user_id and date are null, show data based on today's date
-    $formattedTodayDate = date('Y-m-d');
-    $query .= " WHERE DATE(p.punch_in) = '$formattedTodayDate'";
-}
-
-$query .= " ORDER BY p.punch_in DESC";
-
-// Add a variable to check if today's data is being shown
-$showingTodayData = false;
-
-// Check if both $id and $date are null (Case 3)
-if (empty($id) && empty($date)) {
-    $showingTodayData = true;
-}
-
-$result = pg_query($con, $query);
-
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-}
-
-$resultArr = pg_fetch_all($result);
-?>
+} ?>
 
 <!doctype html>
 <html lang="en">
@@ -135,6 +68,11 @@ $resultArr = pg_fetch_all($result);
                 opacity: 1;
             }
         }
+
+        #success-toast {
+            display: none;
+            z-index: 1050;
+        }
     </style>
 
 
@@ -166,15 +104,28 @@ $resultArr = pg_fetch_all($result);
 
                 <!-- Reports -->
                 <div class="col-12">
-                    <div class="card">
+                    <audio id="notification-sound" src="../img/success.mp3"></audio>
+                    <div id="success-toast" class="toast position-absolute top-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                        <div class="toast-header">
+                            <strong class="me-auto">Notification</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            <img src="../img/success.png" class="rounded mr-2" alt="success"> Attendance recorded successfully!
+                        </div>
+                    </div>
 
+                    <div class="card">
                         <div class="card-body">
                             <br>
+                            <div class="col" style="display: inline-block; width:100%; text-align:right">
+                                <span class="noticea"><a href="in_out_tracker.php" target="_blank" title="Set Goals Now">In-out Tracker</a></span>
+                            </div>
                             <div id="qr-reader" style="width:500px"></div>
                             <div id="qr-reader-results"></div>
                             <script>
                                 var resultContainer = document.getElementById('qr-reader-results');
-                                
+
                                 function onScanSuccess(decodedText, decodedResult) {
                                     var segments = decodedText.split("get_id=");
                                     resultContainer.innerHTML = "";
@@ -184,7 +135,7 @@ $resultArr = pg_fetch_all($result);
                                         var html = `<div class="result">User ID not found in QR Code</div>`;
                                         resultContainer.innerHTML = html;
                                     }
-                                
+
                                 }
 
                                 var html5QrcodeScanner = new Html5QrcodeScanner(
@@ -194,18 +145,25 @@ $resultArr = pg_fetch_all($result);
                                     });
                                 html5QrcodeScanner.render(onScanSuccess);
 
+                                function playNotificationSound() {
+                                    var notificationSound = document.getElementById('notification-sound');
+                                    notificationSound.play();
+                                }
+
+                                function showSuccessToast() {
+                                    var successToast = document.getElementById('success-toast');
+                                    successToast.style.display = 'block';
+
+                                    // Hide the toast after a few seconds (adjust the time as needed)
+                                    setTimeout(function() {
+                                        successToast.style.display = 'none';
+                                    }, 3000); // 3000 milliseconds = 3 seconds (adjust the time as needed)
+                                }
+
                                 function addRowInAttendanceTable(attendanceRow) {
-                                    //  attendanceRow = {
-                                    //     userId: "ABCD", 
-                                    //    userName:"Somnath Saha",
-                                    //    status:"Active",
-                                    //    punchIn:"201020",
-                                    //    punchOut:"Punch Out"
-                                    //      }
-                                    // document.getbyId('table-id')
                                     var lastTr = document.getElementById('last-row')
                                     var newTr = document.createElement('tr')
-                                    for (var key of ["userId", "userName", "status", "punchIn", "punchOut"]) {
+                                    for (var key of ["userId", "userName", "status", "punchIn"]) {
                                         var td = document.createElement('td')
                                         td.innerText = attendanceRow[key]
                                         newTr.appendChild(td)
@@ -217,7 +175,6 @@ $resultArr = pg_fetch_all($result);
                                     var data = new FormData()
                                     data.set("userId", userId)
                                     data.set("form-type", "attendance")
-                                    data.set("gps", "london")
                                     fetch("payment-api.php", {
                                             method: 'POST',
                                             body: data
@@ -229,70 +186,30 @@ $resultArr = pg_fetch_all($result);
                                                 alert("Errorrecording attendance. Please try again later or contact support.")
                                             } else {
                                                 addRowInAttendanceTable(result)
-                                                //alert("Attendace recorded successfully")
+                                                playNotificationSound(); // Play notification sound on successful form submission
+                                                showSuccessToast(); // Show the success notification toast
                                             }
                                         })
                                 }
                             </script>
                             <br>
-                            <form action="" method="GET" class="row g-2 align-items-center">
-                                To customize the view result, please select a filter value.
-                                <div class="form-group" style="display: inline-block;">
-                                    <div class="col-2" style="display: inline-block;">
-                                        <input type="text" name="get_aid" id="get_aid" class="form-control" placeholder="User Id" value="<?php echo isset($_GET['get_aid']) ? htmlspecialchars($_GET['get_aid']) : ''; ?>">
-                                    </div>
-                                    <div class="col-2" style="display: inline-block;">
-                                        <input type="date" name="get_date" id="get_date" class="form-control" value="<?php echo isset($_GET['get_date']) ? htmlspecialchars($_GET['get_date']) : ''; ?>">
-                                    </div>
-                                    <div class="col-2" style="display: inline-block; vertical-align: bottom;">
-                                        <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
-                                            <i class="bi bi-search"></i> Search
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                            <div style="display: inline-block; width:100%; text-align:right;">Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                            </div>
-                            <?php if ($showingTodayData) {
-                                $formattedToday = date('F j, Y'); // Format the current date in a user-friendly way
-                                echo '<div class="notification">You are viewing data for <span class="blink-text">' . $formattedToday . '</span></div>';
-                            } ?>
+                            <?php
+                            $formattedToday = date('F j, Y'); // Format the current date in a user-friendly way
+                            echo '<div class="notification">You are viewing data for <span class="blink-text">' . $formattedToday . '</span></div>';
+                            ?>
                             <!-- HTML Table -->
                             <div class="table-responsive">
                                 <table class="table" id="table-id">
                                     <thead>
                                         <tr>
-                                            <!-- <th scope="col">Sl_no</th> -->
                                             <th scope="col">User ID</th>
                                             <th scope="col">User Name</th>
                                             <th scope="col">Status</th>
-                                            <th scope="col">Punch In</th>
-                                            <th scope="col">Punch Out</th>
-                                            <!-- <th scope="col">IP Address</th>
-                                            <th scope="col">GPS Location</th>
-                                            <th scope="col">Recorded By</th> -->
+                                            <th scope="col">Timestamp</th>
                                         </tr>
                                     </thead>
                                     <?php
                                     echo '<tbody>';
-                                    if ($resultArr != null) {
-                                        foreach ($resultArr as $array) {
-                                            echo '<tr>';
-                                            // echo '<td>' . $array['sl_no'] . '</td>';
-                                            echo '<td>' . $array['user_id'] . '</td>';
-                                            echo '<td>' . $array['user_name'] . '</td>';
-                                            echo '<td>' . $array['status'] . '</td>';
-                                            echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
-                                            echo '<td>' . ($array['punch_out'] ? date('d/m/Y h:i:s a', strtotime($array['punch_out'])) : 'Not Available') . '</td>';
-                                            // echo '<td>' . $array['ip_address'] . '</td>';
-                                            // echo '<td>' . $array['gps_location'] . '</td>';
-                                            // echo '<td>' . $array['recorded_by'] . '</td>';
-                                            echo '</tr>';
-                                        }
-                                    } else {
-                                        echo '<tr><td colspan="8">No records found.</td></tr>';
-                                    }
-
                                     echo '<tr style="display:none" id="last-row"></tr>';
                                     echo '</tbody>';
                                     ?>

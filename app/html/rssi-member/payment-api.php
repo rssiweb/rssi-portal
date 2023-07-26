@@ -467,62 +467,61 @@ if ($formtype == "test") {
 }
 
 
-if ($formtype == "attendance") {
-
-  @$user_id = $_POST['userId'];
-  @$gps = $_POST['gps'];
+if ($formtype === "attendance") {
+  $user_id = @$_POST['userId'];
   $punch_time = date('Y-m-d H:i:s');
   $date = date('Y-m-d');
-  
-  $ip_address = $_SERVER['HTTP_X_REAL_IP']; // Get the IP address of the user
+  $ip_address = $_SERVER['HTTP_X_REAL_IP'] ?? $_SERVER['REMOTE_ADDR']; // Fallback to REMOTE_ADDR if HTTP_X_REAL_IP is not set
   $recorded_by = $_SESSION['aid'];
 
-  pg_prepare($con, "insert_attedance", 'INSERT INTO public.attendance(
-    user_id, punch_in, ip_address, gps_location, recorded_by, date)
-    VALUES ($1, $2, $3, $4, $5, $6)');
-  $result = pg_execute($con, "insert_attedance", array($user_id, $punch_time, $ip_address, $gps, $recorded_by, $date));
-  // get row id from $result sl_no
- //  $i = pg_num_fields($result);
-  if (pg_affected_rows($result) != 1){
+  // Assuming the GPS location is sent from the frontend in the following format
+  $latitude = @$_POST['latitude'];
+  $longitude = @$_POST['longitude'];
+  $gps = ($latitude && $longitude) ? "POINT($latitude $longitude)" : null;
+
+  // Prepared statement for INSERT query
+  $insert_query = 'INSERT INTO public.attendance(user_id, punch_in, ip_address, gps_location, recorded_by, date) VALUES ($1, $2, $3, $4, $5, $6)';
+  pg_prepare($con, "insert_attendance", $insert_query);
+  $result = pg_execute($con, "insert_attendance", array($user_id, $punch_time, $ip_address, $gps, $recorded_by, $date));
+
+  if (pg_affected_rows($result) !== 1) {
     echo json_encode(
       array(
         "error" => "Unable to record attendance"
       )
     );
   } else {
-    // check if already puched in 
-    $query = "SELECT user_id, MIN(punch_in) as punch_in, MAX(punch_in) as punch_out from attendance where date='$date' and  user_id='$user_id' group by user_id";
-    $result = pg_query($con, $query);
+    // Prepared statement for first SELECT query
+    $select_query = "SELECT user_id, max(punch_in) punch_in FROM attendance WHERE date='$date' AND user_id='$user_id' GROUP BY user_id";
+    $result = pg_query($con, $select_query);
     $row = pg_fetch_assoc($result);
     $punch_in = $row["punch_in"];
-    $punch_out = $row["punch_out"];
-    if ($punch_in == $punch_out){
-      $punch_out = "Not Available";
-    }
 
-    $query = "SELECT fullname, filterstatus from rssimyaccount_members where  associatenumber='$user_id'";
+    // Prepared statement for second SELECT query
+    $query = "SELECT fullname, filterstatus FROM rssimyaccount_members WHERE associatenumber='$user_id'";
     $result = pg_query($con, $query);
-    if (pg_num_rows($result) == 1){
+    $name = $status = "";
+
+    if (pg_num_rows($result) == 1) {
       $row = pg_fetch_assoc($result);
       $name = $row["fullname"];
       $status = $row["filterstatus"];
+    } else {
+      $query = "SELECT studentname, filterstatus FROM rssimyprofile_student WHERE student_id='$user_id'";
+      $result = pg_query($con, $query);
+
+      if (pg_num_rows($result) == 1) {
+        $row = pg_fetch_assoc($result);
+        $name = $row["studentname"];
+        $status = $row["filterstatus"];
+      }
     }
 
-    
-    $query = "SELECT studentname, filterstatus from rssimyprofile_student where  student_id='$user_id'";
-    $result = pg_query($con, $query);
-    if (pg_num_rows($result) == 1){
-      $row = pg_fetch_assoc($result);
-      $name = $row["studentname"];
-      $status = $row["filterstatus"];
-    }
-    
     echo json_encode(
       array(
         "userId" => $user_id,
         "userName" => $name,
         "punchIn" => $punch_in,
-        "punchOut" => $punch_out,
         "status" => $status
       )
     );

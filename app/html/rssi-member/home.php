@@ -105,19 +105,17 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
                         </div>
                         <p class="card-text">
                           <strong>Class URL:</strong>
-                          <span class="noticea">
+                         
                             <?php if ($gm) : ?>
                               <a href="<?php echo $gm ?>" target="_blank"><?php echo substr($gm, -12) ?></a>
                             <?php else : ?>
                               Not available
                             <?php endif; ?>
-                          </span>
                         </p>
                         <p class="card-text">
-                          <strong>Class Attendance:</strong>
-                          <span class="noticea">
-                            <a href="https://docs.google.com/spreadsheets/d/1ufn8vcA5tcpoVvbTgGBO9NsXmiYgjmz54Qqg_L2GZxI/edit#gid=311270786" target="_blank">Attendance sheet</a>
-                          </span>
+                          <strong>Class Attendance:</strong>       
+                            <a href="https://docs.google.com/spreadsheets/d/1ufn8vcA5tcpoVvbTgGBO9NsXmiYgjmz54Qqg_L2GZxI/edit#gid=311270786" target="_blank">Attendance sheet</a><br>      
+                            <a href="attendx.php">New Attendance System</a>      
                           <?php if (@$attd_pending != null) : ?>
                             <span class="badge bg-warning">Pending: <?php echo $attd_pending ?></span>
                           <?php endif; ?>
