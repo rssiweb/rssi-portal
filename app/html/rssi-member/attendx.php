@@ -111,7 +111,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                             <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                         <div class="toast-body">
-                            <img src="../img/success.png" class="rounded mr-2" alt="success"> Attendance recorded successfully!
+                            <img src="../img/success.png" class="rounded mr-2" alt="success"> Attendance for <span id='success-userid'></span> recorded successfully!
                         </div>
                     </div>
 
@@ -121,27 +121,33 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                             <div class="col" style="display: inline-block; width:100%; text-align:right">
                                 <span class="noticea"><a href="in_out_tracker.php" target="_blank" title="Set Goals Now">In-out Tracker</a></span>
                             </div>
-                            <div id="qr-reader" style="width:500px"></div>
+                            <div id="qr-reader" style="width:800px"></div>
                             <div id="qr-reader-results"></div>
                             <script>
                                 var resultContainer = document.getElementById('qr-reader-results');
+                                var lastResult, lastScanTime = 0;
 
                                 function onScanSuccess(decodedText, decodedResult) {
-                                    var segments = decodedText.split("get_id=");
-                                    resultContainer.innerHTML = "";
-                                    if (segments.length > 1) {
-                                        submitAttendance(segments[1]);
-                                    } else {
-                                        var html = `<div class="result">User ID not found in QR Code</div>`;
-                                        resultContainer.innerHTML = html;
+                                    var diff = (Number(new Date()) - lastScanTime)
+                                    if (decodedText !== lastResult || diff >= 60000) {
+                                        lastResult = decodedText;
+                                        lastScanTime = Number(new Date());
+                                        var segments = decodedText.split("get_id=");
+                                        resultContainer.innerHTML = "";
+                                        if (segments.length > 1) {
+                                            submitAttendance(segments[1]);
+                                        } else {
+                                            var html = `<div class="result">User ID not found in QR Code</div>`;
+                                            resultContainer.innerHTML = html;
+                                        }
                                     }
-
                                 }
 
                                 var html5QrcodeScanner = new Html5QrcodeScanner(
                                     "qr-reader", {
-                                        fps: 1,
-                                        qrbox: 400
+                                        fps: 10,
+                                        qrbox: 400,
+                                        disableFlip: true,
                                     });
                                 html5QrcodeScanner.render(onScanSuccess);
 
@@ -150,9 +156,11 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                                     notificationSound.play();
                                 }
 
-                                function showSuccessToast() {
+                                function showSuccessToast(userId) {
                                     var successToast = document.getElementById('success-toast');
                                     successToast.style.display = 'block';
+                                    var useridEl = document.getElementById('success-userid');
+                                    useridEl.innerHTML = userId
 
                                     // Hide the toast after a few seconds (adjust the time as needed)
                                     setTimeout(function() {
@@ -187,7 +195,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                                             } else {
                                                 addRowInAttendanceTable(result)
                                                 playNotificationSound(); // Play notification sound on successful form submission
-                                                showSuccessToast(); // Show the success notification toast
+                                                showSuccessToast(result.userId); // Show the success notification toast
                                             }
                                         })
                                 }
