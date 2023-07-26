@@ -465,3 +465,66 @@ if ($formtype == "test") {
     )
   );
 }
+
+
+if ($formtype == "attendance") {
+
+  @$user_id = $_POST['userId'];
+  @$gps = $_POST['gps'];
+  $punch_time = date('Y-m-d H:i:s');
+  $date = date('Y-m-d');
+  
+  $ip_address = $_SERVER['HTTP_X_REAL_IP']; // Get the IP address of the user
+  $recorded_by = $_SESSION['aid'];
+
+  pg_prepare($con, "insert_attedance", 'INSERT INTO public.attendance(
+    user_id, punch_in, ip_address, gps_location, recorded_by, date)
+    VALUES ($1, $2, $3, $4, $5, $6)');
+  $result = pg_execute($con, "insert_attedance", array($user_id, $punch_time, $ip_address, $gps, $recorded_by, $date));
+  // get row id from $result sl_no
+ //  $i = pg_num_fields($result);
+  if (pg_affected_rows($result) != 1){
+    echo json_encode(
+      array(
+        "error" => "Unable to record attendance"
+      )
+    );
+  } else {
+    // check if already puched in 
+    $query = "SELECT user_id, MIN(punch_in) as punch_in, MAX(punch_in) as punch_out from attendance where date='$date' and  user_id='$user_id' group by user_id";
+    $result = pg_query($con, $query);
+    $row = pg_fetch_assoc($result);
+    $punch_in = $row["punch_in"];
+    $punch_out = $row["punch_out"];
+    if ($punch_in == $punch_out){
+      $punch_out = "Not Available";
+    }
+
+    $query = "SELECT fullname, filterstatus from rssimyaccount_members where  associatenumber='$user_id'";
+    $result = pg_query($con, $query);
+    if (pg_num_rows($result) == 1){
+      $row = pg_fetch_assoc($result);
+      $name = $row["fullname"];
+      $status = $row["filterstatus"];
+    }
+
+    
+    $query = "SELECT studentname, filterstatus from rssimyprofile_student where  student_id='$user_id'";
+    $result = pg_query($con, $query);
+    if (pg_num_rows($result) == 1){
+      $row = pg_fetch_assoc($result);
+      $name = $row["studentname"];
+      $status = $row["filterstatus"];
+    }
+    
+    echo json_encode(
+      array(
+        "userId" => $user_id,
+        "userName" => $name,
+        "punchIn" => $punch_in,
+        "punchOut" => $punch_out,
+        "status" => $status
+      )
+    );
+  }
+}

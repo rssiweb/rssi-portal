@@ -181,9 +181,14 @@ $resultArr = pg_fetch_all($result);
                                         ++countResults;
                                         lastResult = decodedText;
                                         // Handle on success condition with the decoded message.
-                                        console.log(`Scan result ${decodedText}`, decodedResult);
-                                        var html = `<div class="result">[${countResults}] - ${decodedText}</div>`;
-                                        resultContainer.innerHTML += html;
+                                        var segments = decodedText.split("get_id=");
+                                        resultContainer.innerHTML = "";
+                                        if (segments.length > 1) {
+                                            submitAttendance(segments[1]);
+                                        } else {
+                                            var html = `<div class="result">User ID not found in QR Code</div>`;
+                                            resultContainer.innerHTML = html;
+                                        }
                                     }
                                 }
 
@@ -193,6 +198,46 @@ $resultArr = pg_fetch_all($result);
                                         qrbox: 250
                                     });
                                 html5QrcodeScanner.render(onScanSuccess);
+
+                                function addRowInAttendanceTable(attendanceRow) {
+                                    //  attendanceRow = {
+                                    //     userId: "ABCD", 
+                                    //    userName:"Somnath Saha",
+                                    //    status:"Active",
+                                    //    punchIn:"201020",
+                                    //    punchOut:"Punch Out"
+                                    //      }
+                                    // document.getbyId('table-id')
+                                    var lastTr = document.getElementById('last-row')
+                                    var newTr = document.createElement('tr')
+                                    for (var key of ["userId", "userName", "status", "punchIn", "punchOut"]) {
+                                        var td = document.createElement('td')
+                                        td.innerText = attendanceRow[key]
+                                        newTr.appendChild(td)
+                                    }
+                                    lastTr.insertAdjacentElement("afterend", newTr)
+                                }
+
+                                function submitAttendance(userId) {
+                                    var data = new FormData()
+                                    data.set("userId", userId)
+                                    data.set("form-type", "attendance")
+                                    data.set("gps", "london")
+                                    fetch("payment-api.php", {
+                                            method: 'POST',
+                                            body: data
+                                        })
+                                        .then(response => response.json())
+                                        .then(result => {
+                                            if (result.error) {
+
+                                                alert("Errorrecording attendance. Please try again later or contact support.")
+                                            } else {
+                                                addRowInAttendanceTable(result)
+                                                //alert("Attendace recorded successfully")
+                                            }
+                                        })
+                                }
                             </script>
                             <br>
                             <form action="" method="GET" class="row g-2 align-items-center">
@@ -234,8 +279,8 @@ $resultArr = pg_fetch_all($result);
                                         </tr>
                                     </thead>
                                     <?php
+                                    echo '<tbody>';
                                     if ($resultArr != null) {
-                                        echo '<tbody>';
                                         foreach ($resultArr as $array) {
                                             echo '<tr>';
                                             // echo '<td>' . $array['sl_no'] . '</td>';
@@ -249,10 +294,12 @@ $resultArr = pg_fetch_all($result);
                                             // echo '<td>' . $array['recorded_by'] . '</td>';
                                             echo '</tr>';
                                         }
-                                        echo '</tbody>';
                                     } else {
-                                        echo '<tbody><tr><td colspan="8">No records found.</td></tr></tbody>';
+                                        echo '<tr><td colspan="8">No records found.</td></tr>';
                                     }
+
+                                    echo '<tr style="display:none" id="last-row"></tr>';
+                                    echo '</tbody>';
                                     ?>
                                 </table>
                             </div>
@@ -275,18 +322,3 @@ $resultArr = pg_fetch_all($result);
 </body>
 
 </html>
-
-
-<!-- <html>
-
-<head>
-    <title>Continuous QR Code Scanner</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-
-</head>
-
-<body>
-
-</body>
-
-</html> -->
