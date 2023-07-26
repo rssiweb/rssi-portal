@@ -140,8 +140,8 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 
                                 var html5QrcodeScanner = new Html5QrcodeScanner(
                                     "qr-reader", {
-                                        fps: 10,
-                                        qrbox: 250
+                                        fps: 1,
+                                        qrbox: 400
                                     });
                                 html5QrcodeScanner.render(onScanSuccess);
 
