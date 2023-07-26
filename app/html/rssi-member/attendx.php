@@ -311,7 +311,7 @@ if (!$result) {
         function addRowInAttendanceTable(attendanceRow) {
             var lastTr = document.getElementById('last-row')
             var newTr = document.createElement('tr')
-            for (var key of ["userId", "userName", "status", "punchIn"]) {
+            for (var key of ["userId", "userName", "status", "punchIn", "ipAddress", "gpsLocation"]) {
                 var td = document.createElement('td')
                 td.innerText = attendanceRow[key]
                 newTr.appendChild(td)

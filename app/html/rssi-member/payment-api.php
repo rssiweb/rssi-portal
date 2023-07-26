@@ -522,7 +522,9 @@ if ($formtype === "attendance") {
         "userId" => $user_id,
         "userName" => $name,
         "punchIn" => date('d/m/Y h:i:s a', strtotime($punch_in)),
-        "status" => $status
+        "status" => $status,
+        "ipAddress" => $ip_address,
+        "gpsLocation" => $gps
       )
     );
   }
