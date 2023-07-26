@@ -119,10 +119,18 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                         <div class="card-body">
                             <br>
                             <div class="col" style="display: inline-block; width:100%; text-align:right">
-                                <span class="noticea"><a href="in_out_tracker.php" target="_blank" title="Set Goals Now">In-out Tracker</a></span>
+                                <a href="in_out_tracker.php" target="_blank" title="Set Goals Now">In-out Tracker</a>
                             </div>
-                            <div id="qr-reader" style="width:800px"></div>
-                            <div id="qr-reader-results"></div>
+                            <!-- <div id="qr-reader" style="width:800px"></div>
+                            <div id="qr-reader-results"></div> -->
+                            <div class="row justify-content-left">
+                                <div class="col-12 col-md-8">
+                                    <div id="qr-reader"></div>
+                                </div>
+                                <div class="col-12 col-md-8 mt-3">
+                                    <div id="qr-reader-results"></div>
+                                </div>
+                            </div>
                             <script>
                                 var resultContainer = document.getElementById('qr-reader-results');
                                 var lastResult, lastScanTime = 0;
