@@ -239,6 +239,8 @@ $resultArr = pg_fetch_all($result);
                                 border: none;" title="Closed"><i class="bi bi-box-arrow-up"></i></button>
                             </form>
                             ';
+                                                    } else {
+                                                        echo date('d/m/y h:i:s a', strtotime($array['ipf_process_closed_on']));
                                                     }
                                                     ?>
                                                 </td>
