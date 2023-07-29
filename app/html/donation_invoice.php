@@ -1,3 +1,31 @@
+<?php
+$searchField = isset($_GET['searchField']) ? $_GET['searchField'] : '';
+
+// Set up the database connection ($con) here if not already done.
+
+if ($searchField !== '') {
+    // Use parameterized queries to prevent SQL injection
+    $query = "SELECT pd.*, ud.name, ud.address, ud.other_demographic_columns
+              FROM donation_paymentdata AS pd
+              LEFT JOIN donation_userdata AS ud ON pd.tel = ud.tel
+              WHERE pd.donationid = $1"; // Using $1 as a placeholder for the parameter
+    $result = pg_query_params($con, $query, array($searchField));
+} else {
+    // If $searchField is empty, set an empty result array
+    $resultArr = array();
+}
+
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+// Fetch all the rows as an associative array
+$resultArr = pg_fetch_all($result);
+
+// Use $resultArr as needed for further processing or displaying data.
+?>
+
 <!DOCTYPE html>
 <html>
 
@@ -89,10 +117,6 @@
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <!-- JavaScript functions for search and print -->
     <script>
-        function search() {
-            // Implement your search functionality here
-        }
-
         function printDocument() {
             window.print();
         }
@@ -120,16 +144,19 @@
 <body>
     <div class="container mt-3">
         <!-- Search and print section (Not visible in print preview) -->
-        <div class="row mb-3 search-print-section">
-            <div class="col-md-3">
-                <input type="text" class="form-control" id="searchField" placeholder="Donation reference ID">
+        <form action="donation_invoice.php" method="get">
+            <div class="row mb-3 search-print-section">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="searchField" name="searchField" placeholder="Donation reference ID">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search"></i>&nbsp;Search</button>
+                    <!-- Add a small gap between the buttons -->
+                    <button type="button" class="btn btn-danger btn-sm ms-1" onclick="printDocument()"><i class="bi bi-save"></i>&nbsp;Save</button>
+                </div>
             </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-primary btn-sm" onclick="search()"><i class="bi bi-search"></i>&nbsp;Search</button>
-                <!-- Add a small gap between the buttons -->
-                <button type="button" class="btn btn-danger btn-sm ms-1" onclick="printDocument()"><i class="bi bi-save"></i>&nbsp;Save</button>
-            </div>
-        </div>
+        </form>
+
 
         <div class="row">
             <div class="col-md-6">

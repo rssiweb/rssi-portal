@@ -42,6 +42,9 @@ SELECT
     p.user_id,
     COALESCE(m.fullname, s.studentname) AS user_name,
     COALESCE(m.filterstatus, s.filterstatus) AS status,
+    s.category AS category,
+    s.class AS class,
+    m.engagement AS engagement,
     p.punch_in,
     p.punch_out
 FROM PunchInOut p
@@ -87,6 +90,43 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
+
+// If $date is null or empty, use today's date
+$date_count = $date ? $date : date('Y-m-d');
+
+// Prepare the SQL query with placeholders
+$querycount = "SELECT
+    s.category AS category,
+    COUNT(DISTINCT a.user_id) AS category_count,
+    COUNT(DISTINCT CASE WHEN s.class = 'Pre-school' THEN a.user_id END) AS preschool_count,
+    COUNT(DISTINCT CASE WHEN s.class = '1' THEN a.user_id END) AS class_1_count,
+    COUNT(DISTINCT CASE WHEN s.class = '2' THEN a.user_id END) AS class_2_count
+FROM attendance a
+LEFT JOIN rssimyprofile_student s ON a.user_id = s.student_id
+WHERE DATE(a.punch_in) = COALESCE($1, DATE(a.punch_in))
+GROUP BY s.category";
+
+// Prepare the statement
+$stmt = pg_prepare($con, "querycount", $querycount);
+
+// Execute the prepared statement with the date parameter
+$resultcount = pg_execute($con, "querycount", array($date_count));
+
+// Check if the query was successful before fetching the results
+if ($resultcount) {
+    $resultArrcount = pg_fetch_all($resultcount);
+
+    // Calculate the total count
+    $totalCount = 0;
+    foreach ($resultArrcount as $entry) {
+        $totalCount += $entry['category_count'];
+    }
+} else {
+    // Set default values if the query fails
+    $resultArrcount = array();
+    $totalCount = 0;
+}
+
 ?>
 
 <!doctype html>
@@ -170,14 +210,66 @@ $resultArr = pg_fetch_all($result);
 
                         <div class="card-body">
                             <br>
-                            <form action="" method="GET" class="row g-2 align-items-center">
-                                <div class="col-8 mb-3 d-none d-sm-block">
-                                    To customize the view result, please select a filter value.
-                                </div>
-                                <div class="col-4 text-end mb-3 d-none d-sm-block">
-                                    Record count: <?php echo sizeof($resultArr); ?>
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <p>To customize the view result, please select a filter value.</p>
                                 </div>
 
+                                <div class="col-md-4 mb-3 d-flex justify-content-end">
+                                    <a href="#" id="toggleCategoryCount">Show Category Counts</a>
+                                </div>
+
+                                <div class="col-md-12" id="categoryCountSection" style="display: none;">
+                                    <table class="table table-bordered table-sm" style="width: 30%; float: right;">
+                                        <tbody>
+                                            <?php foreach ($resultArrcount as $entry) : ?>
+                                                <?php
+                                                $category = $entry['category'];
+                                                $category_count = $entry['category_count'];
+                                                $preschool_count = isset($entry['preschool_count']) ? $entry['preschool_count'] : null;
+                                                $class_1_count = isset($entry['class_1_count']) ? $entry['class_1_count'] : null;
+                                                $class_2_count = isset($entry['class_2_count']) ? $entry['class_2_count'] : null;
+                                                ?>
+                                                <tr>
+                                                    <td><?php echo ($category !== null) ? $category : 'Associate'; ?></td>
+                                                    <?php if ($category === 'LG2-A') : ?>
+                                                        <td><?php echo $category_count; ?></td>
+                                                        <td><?php echo $preschool_count; ?></td>
+                                                        <td><?php echo $class_1_count; ?></td>
+                                                        <td><?php echo $class_2_count; ?></td>
+                                                    <?php else : ?>
+                                                        <td><?php echo $category_count; ?></td>
+                                                        <td colspan="4"></td>
+
+                                                    <?php endif; ?>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                            <tr>
+                                                <td><b>Total:</b></td>
+                                                <td><?php echo $totalCount; ?></td>
+                                                <td colspan="4"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <script>
+                                document.getElementById('toggleCategoryCount').addEventListener('click', function(event) {
+                                    event.preventDefault(); // Prevent the default behavior of the anchor tag
+                                    var categoryCountSection = document.getElementById('categoryCountSection');
+                                    if (categoryCountSection.style.display === 'none') {
+                                        categoryCountSection.style.display = 'block';
+                                        this.textContent = 'Hide Category Counts';
+                                    } else {
+                                        categoryCountSection.style.display = 'none';
+                                        this.textContent = 'Show Category Counts';
+                                    }
+                                });
+                            </script>
+
+
+                            <form action="" method="GET" class="row g-2 align-items-center">
                                 <div class="row">
                                     <div class="col-12 col-sm-2">
                                         <div class="form-group">
@@ -238,6 +330,8 @@ $resultArr = pg_fetch_all($result);
                                         <tr>
                                             <th scope="col">User ID</th>
                                             <th scope="col">User Name</th>
+                                            <th scope="col">Category</th>
+                                            <th scope="col">Class</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Punch In</th>
                                             <th scope="col">Punch Out</th>
@@ -250,6 +344,9 @@ $resultArr = pg_fetch_all($result);
                                             echo '<tr>';
                                             echo '<td>' . $array['user_id'] . '</td>';
                                             echo '<td>' . $array['user_name'] . '</td>';
+                                            // echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '-' . $array['class'] : '') . '</td>';
+                                            echo '<td>' . $array['category'] . $array['engagement'] . '</td>';
+                                            echo '<td>' . $array['class'] . '</td>';
                                             echo '<td>' . $array['status'] . '</td>';
                                             echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
                                             echo '<td>' . ($array['punch_out'] ? date('d/m/Y h:i:s a', strtotime($array['punch_out'])) : 'Not Available') . '</td>';

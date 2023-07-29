@@ -25,7 +25,10 @@ $formattedTodayDate = date('Y-m-d');
 $query = "
 SELECT p.sl_no, p.user_id, p.punch_in, p.ip_address, p.recorded_by, p.gps_location,
        COALESCE(m.fullname, s.studentname) AS user_name,
-       COALESCE(m.filterstatus, s.filterstatus) AS status
+       COALESCE(m.filterstatus, s.filterstatus) AS status,
+       s.category AS category,
+       s.class AS class,
+       m.engagement AS engagement
 FROM attendance p
 LEFT JOIN rssimyaccount_members m ON p.user_id = m.associatenumber
 LEFT JOIN rssimyprofile_student s ON p.user_id = s.student_id
@@ -153,6 +156,7 @@ if (!$result) {
                                         <tr>
                                             <th scope="col">User ID</th>
                                             <th scope="col">User Name</th>
+                                            <th scope="col">Category</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Timestamp</th>
                                             <th scope="col">IP Address</th>
@@ -167,6 +171,8 @@ if (!$result) {
                                             echo '<tr>';
                                             echo '<td>' . $array['user_id'] . '</td>';
                                             echo '<td>' . $array['user_name'] . '</td>';
+                                            // echo '<td>' . $array['category'] . $array['engagement'] . '</td>';
+                                            echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '/' . $array['class'] : '') . '</td>';
                                             echo '<td>' . $array['status'] . '</td>';
                                             echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
                                             echo '<td>' . $array['ip_address'] . '</td>';
@@ -319,7 +325,7 @@ if (!$result) {
         function addRowInAttendanceTable(attendanceRow) {
             var lastTr = document.getElementById('last-row')
             var newTr = document.createElement('tr')
-            for (var key of ["userId", "userName", "status", "punchIn", "ipAddress", "gpsLocation"]) {
+            for (var key of ["userId", "userName", "status", "category", "punchIn", "ipAddress", "gpsLocation"]) {
                 var td = document.createElement('td')
                 td.innerText = attendanceRow[key]
                 newTr.appendChild(td)

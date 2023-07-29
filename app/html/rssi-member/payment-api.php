@@ -507,13 +507,14 @@ if ($formtype === "attendance") {
       $name = $row["fullname"];
       $status = $row["filterstatus"];
     } else {
-      $query = "SELECT studentname, filterstatus FROM rssimyprofile_student WHERE student_id='$user_id'";
+      $query = "SELECT studentname, filterstatus, category FROM rssimyprofile_student WHERE student_id='$user_id'";
       $result = pg_query($con, $query);
 
       if (pg_num_rows($result) == 1) {
         $row = pg_fetch_assoc($result);
         $name = $row["studentname"];
         $status = $row["filterstatus"];
+        $category = $row["category"];
       }
     }
 
@@ -523,6 +524,7 @@ if ($formtype === "attendance") {
         "userName" => $name,
         "punchIn" => date('d/m/Y h:i:s a', strtotime($punch_in)),
         "status" => $status,
+        "category" => $category,
         "ipAddress" => $ip_address,
         "gpsLocation" => $gps
       )
