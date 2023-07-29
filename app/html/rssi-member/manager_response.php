@@ -122,13 +122,33 @@ if (!$result) {
         </form>
         <br>
         <h2 class="text-center mb-4" style="background-color:#CE1212; color:white; padding:10px;">Manager Evaluation</h2>
-
-
-        <p>Unique Id: WB/2021/0282726 (NGO Darpan, NITI Aayog, Government of India)</p>
-        <p></p>
-        <hr>
         <?php if (sizeof($resultArr) > 0) { ?>
             <?php foreach ($resultArr as $array) { ?>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p>Unique Id: WB/2021/0282726 (NGO Darpan, NITI Aayog, Government of India)</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <?php
+                        // Check if appraisee_response_complete is null or manager_evaluation_complete is yes
+                        $disableButton = ($array['appraisee_response_complete'] === null || $array['manager_evaluation_complete'] === 'yes');
+
+                        // Check if ipf_response is not null (if the previous conditions are not met)
+                        if (!$disableButton) {
+                            $disableButton = ($array['ipf_response'] !== null);
+                        }
+
+                        echo '<form name="manager_unlock" action="#" method="POST" style="display: -webkit-inline-box;">
+                                    <input type="hidden" name="form-type" value="manager_unlock">
+                                    <input type="hidden" name="goalsheetid" value="' . $array['goalsheetid'] . '">             
+                                    <button type="submit" id="submit3" class="btn btn-sm btn-warning" ' . ($disableButton ? 'disabled' : '') . '>Unlock Goalsheet</button>
+                                </form>';
+                        ?>
+                    </div>
+                </div>
+
+                <!-- <p></p> -->
+                <hr>
                 <?php if (($array['appraisee_response_complete'] == "yes" && $array['manager_associatenumber'] == $associatenumber) || $role == 'Admin') { ?>
                     <form method="post" name="m_response" id="m_response">
 
@@ -866,10 +886,6 @@ if (!$result) {
             }
         }
     </script>
-
-
-
-
     <script>
         var form = document.getElementById('m_response');
         var submit1Button = document.getElementById('submit1');
@@ -890,6 +906,34 @@ if (!$result) {
                 $(this).closest('.form-group').find('label').append(' <span style="color: red">*</span>');
             });
         });
+    </script>
+
+    <script>
+        const scriptURL = 'payment-api.php';
+
+        // Add an event listener to the submit button with id "submit_gen_otp_associate"
+        document.getElementById("submit3").addEventListener("click", function(event) {
+            event.preventDefault(); // prevent default form submission
+
+            if (confirm('Are you sure you want to unlock Goalsheet?')) {
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(document.forms['manager_unlock'])
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        if (result == 'success') {
+                            alert("The Goalsheet has been successfully unlocked.")
+                            location.reload()
+                        } else {
+                            alert("Error unlocking Goalsheet. Please try again later or contact support.")
+                        }
+                    })
+            } else {
+                alert("Goalsheet unlock cancelled.");
+                return false;
+            }
+        })
     </script>
 </body>
 

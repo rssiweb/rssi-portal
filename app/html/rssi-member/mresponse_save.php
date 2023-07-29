@@ -19,117 +19,69 @@ if ($password_updated_by == NULL || $password_updated_on < $default_pass_updated
 }
 ?>
 <?php
-if (@$_POST['form-type'] == "manager_remarks_update") {
+if (@$_POST['form-type'] === "manager_remarks_update") {
     $goalsheetid = $_POST['goalsheetid'];
     $appraisee_associatenumber = $_POST['appraisee_associatenumber'];
     $manager_associatenumber = $_POST['manager_associatenumber'];
-    $manager_remarks_1 = $_POST['manager_remarks_1'];
-    $manager_remarks_2 = $_POST['manager_remarks_2'];
-    $manager_remarks_3 = $_POST['manager_remarks_3'];
-    $manager_remarks_4 = $_POST['manager_remarks_4'];
-    $manager_remarks_5 = $_POST['manager_remarks_5'];
-    $manager_remarks_6 = $_POST['manager_remarks_6'];
-    $manager_remarks_7 = $_POST['manager_remarks_7'];
-    $manager_remarks_8 = $_POST['manager_remarks_8'];
-    $manager_remarks_9 = $_POST['manager_remarks_9'];
-    $manager_remarks_10 = $_POST['manager_remarks_10'];
-    $manager_remarks_11 = $_POST['manager_remarks_11'];
-    $manager_remarks_12 = $_POST['manager_remarks_12'];
-    $manager_remarks_13 = $_POST['manager_remarks_13'];
-    $manager_remarks_14 = $_POST['manager_remarks_14'];
-    $manager_remarks_15 = $_POST['manager_remarks_15'];
-    $manager_remarks_16 = $_POST['manager_remarks_16'];
-    $manager_remarks_17 = $_POST['manager_remarks_17'];
-    $manager_remarks_18 = $_POST['manager_remarks_18'];
-    $manager_remarks_19 = $_POST['manager_remarks_19'];
-    $manager_remarks_20 = $_POST['manager_remarks_20'];
-    $rating_obtained_1 = $_POST['rating_obtained_1'] ?? 'NULL';
-    $rating_obtained_2 = $_POST['rating_obtained_2'] ?? 'NULL';
-    $rating_obtained_3 = $_POST['rating_obtained_3'] ?? 'NULL';
-    $rating_obtained_4 = $_POST['rating_obtained_4'] ?? 'NULL';
-    $rating_obtained_5 = $_POST['rating_obtained_5'] ?? 'NULL';
-    $rating_obtained_6 = $_POST['rating_obtained_6'] ?? 'NULL';
-    $rating_obtained_7 = $_POST['rating_obtained_7'] ?? 'NULL';
-    $rating_obtained_8 = $_POST['rating_obtained_8'] ?? 'NULL';
-    $rating_obtained_9 = $_POST['rating_obtained_9'] ?? 'NULL';
-    $rating_obtained_10 = $_POST['rating_obtained_10'] ?? 'NULL';
-    $rating_obtained_11 = $_POST['rating_obtained_11'] ?? 'NULL';
-    $rating_obtained_12 = $_POST['rating_obtained_12'] ?? 'NULL';
-    $rating_obtained_13 = $_POST['rating_obtained_13'] ?? 'NULL';
-    $rating_obtained_14 = $_POST['rating_obtained_14'] ?? 'NULL';
-    $rating_obtained_15 = $_POST['rating_obtained_15'] ?? 'NULL';
-    $rating_obtained_16 = $_POST['rating_obtained_16'] ?? 'NULL';
-    $rating_obtained_17 = $_POST['rating_obtained_17'] ?? 'NULL';
-    $rating_obtained_18 = $_POST['rating_obtained_18'] ?? 'NULL';
-    $rating_obtained_19 = $_POST['rating_obtained_19'] ?? 'NULL';
-    $rating_obtained_20 = $_POST['rating_obtained_20'] ?? 'NULL';
+    $manager_remarks = array();
+    $rating_obtained = array();
 
+    // Collect the manager remarks and rating obtained from $_POST and store them in arrays
+    for ($i = 1; $i <= 20; $i++) {
+        $manager_remarks[$i] = $_POST['manager_remarks_' . $i];
+        $rating_obtained[$i] = isset($_POST['rating_obtained_' . $i]) ? (int)$_POST['rating_obtained_' . $i] : null;
+    }
 
-    $values = array($rating_obtained_1, $rating_obtained_2, $rating_obtained_3, $rating_obtained_4, $rating_obtained_5, $rating_obtained_6, $rating_obtained_7, $rating_obtained_8, $rating_obtained_9, $rating_obtained_10, $rating_obtained_11, $rating_obtained_12, $rating_obtained_13, $rating_obtained_14, $rating_obtained_15, $rating_obtained_16, $rating_obtained_17, $rating_obtained_18, $rating_obtained_19, $rating_obtained_20);
+    // Prepare the SQL update query with placeholders for both manager_remarks and rating_obtained
+    $sql = "UPDATE appraisee_response
+            SET ";
 
-    $values_without_null = array_filter($values, function ($value) {
-        return $value != 'NULL';
+    // Generate the SET clause of the query dynamically
+    for ($i = 1; $i <= 20; $i++) {
+        // Use the appropriate data type casting in the SQL statement
+        $sql .= "manager_remarks_$i = $" . $i . "::text, ";
+        // Use the same placeholder for rating_obtained values
+        $sql .= "rating_obtained_$i = $" . ($i + 20) . "::integer";
+        if ($i !== 20) {
+            $sql .= ", ";
+        }
+    }
+
+    // Calculate the average rating_obtained
+    $rating_obtained_without_null = array_filter($rating_obtained, function ($value) {
+        return $value !== null;
     });
 
-    if (count($values_without_null) > 0) {
-        $average = round(array_sum($values_without_null) / count($values_without_null), 2);
+    if (count($rating_obtained_without_null) > 0) {
+        $average_rating = round(array_sum($rating_obtained_without_null) / count($rating_obtained_without_null), 2);
     } else {
-        $average = 'NULL';
+        $average_rating = null;
     }
 
-    $manager_remarks_update = "UPDATE appraisee_response
-    SET manager_remarks_1 = '$manager_remarks_1',
-        manager_remarks_2 = '$manager_remarks_2',
-        manager_remarks_3 = '$manager_remarks_3',
-        manager_remarks_4 = '$manager_remarks_4',
-        manager_remarks_5 = '$manager_remarks_5',
-        manager_remarks_6 = '$manager_remarks_6',
-        manager_remarks_7 = '$manager_remarks_7',
-        manager_remarks_8 = '$manager_remarks_8',
-        manager_remarks_9 = '$manager_remarks_9',
-        manager_remarks_10 = '$manager_remarks_10',
-        manager_remarks_11 = '$manager_remarks_11',
-        manager_remarks_12 = '$manager_remarks_12',
-        manager_remarks_13 = '$manager_remarks_13',
-        manager_remarks_14 = '$manager_remarks_14',
-        manager_remarks_15 = '$manager_remarks_15',
-        manager_remarks_16 = '$manager_remarks_16',
-        manager_remarks_17 = '$manager_remarks_17',
-        manager_remarks_18 = '$manager_remarks_18',
-        manager_remarks_19 = '$manager_remarks_19',
-        manager_remarks_20 = '$manager_remarks_20',
-        rating_obtained_1 = $rating_obtained_1,
-        rating_obtained_2 = $rating_obtained_2,
-        rating_obtained_3 = $rating_obtained_3,
-        rating_obtained_4 = $rating_obtained_4,
-        rating_obtained_5 = $rating_obtained_5,
-        rating_obtained_6 = $rating_obtained_6,
-        rating_obtained_7 = $rating_obtained_7,
-        rating_obtained_8 = $rating_obtained_8,
-        rating_obtained_9 = $rating_obtained_9,
-        rating_obtained_10 = $rating_obtained_10,
-        rating_obtained_11 = $rating_obtained_11,
-        rating_obtained_12 = $rating_obtained_12,
-        rating_obtained_13 = $rating_obtained_13,
-        rating_obtained_14 = $rating_obtained_14,
-        rating_obtained_15 = $rating_obtained_15,
-        rating_obtained_16 = $rating_obtained_16,
-        rating_obtained_17 = $rating_obtained_17,
-        rating_obtained_18 = $rating_obtained_18,
-        rating_obtained_19 = $rating_obtained_19,
-        rating_obtained_20 = $rating_obtained_20,
-        ipf= $average
-        WHERE goalsheetid='$goalsheetid'";
+    // Append the average rating to the query
+    $sql .= ", ipf = $" . ($i + 20) . "::numeric";
 
-    $result = pg_query($con, $manager_remarks_update);
-    $cmdtuples = pg_affected_rows($result);
-    if (!$result) {
-        echo "An error occurred.\n";
-        exit;
+    // Add the WHERE clause to update only the rows with the specified goalsheetid
+    $sql .= " WHERE goalsheetid = $" . ($i + 21); // The goalsheetid will be passed as the 41st parameter
+
+    // Prepare the statement
+    $stmt = pg_prepare($con, "update_query", $sql);
+
+    // Merge the two arrays of manager_remarks and rating_obtained, and add the goalsheetid and average_rating to the parameters
+    $params = array_merge($manager_remarks, $rating_obtained, array($average_rating, $goalsheetid));
+
+    // Execute the prepared statement with the parameters
+    $result = pg_execute($con, "update_query", $params);
+
+    if ($result !== false) {
+        $cmdtuples = pg_affected_rows($result);
+    } else {
+        // In case of an error, you might want to log or handle it appropriately
+        echo "Error while executing the update query: " . pg_last_error($con);
+        $cmdtuples = 0; // Set cmdtuples to 0 to indicate an error
     }
-
-    $resultArr = pg_fetch_all($result);
-} ?>
+}
+?>
 
 <head>
     <meta name="description" content="">
@@ -155,7 +107,7 @@ if (@$_POST['form-type'] == "manager_remarks_update") {
         </div>
     </div>
 
-<?php } else if (@$cmdtuples == 1) { ?>
+<?php } else if (@$cmdtuples>0) { ?>
 
     <div class="container">
         <div class="alert alert-success" role="alert">

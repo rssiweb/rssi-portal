@@ -26,15 +26,26 @@ if (@$_POST['form-type'] == "reviewer_remarks_update") {
     $reviewer_associatenumber = $_POST['reviewer_associatenumber'];
     $reviewer_remarks = $_POST['reviewer_remarks'];
 
-    $reviewer_remarks_update = "UPDATE appraisee_response
-    SET manager_evaluation_complete = null,
-        reviewer_remarks = '$reviewer_remarks'
+    // Prepare the SQL update query using a parameterized query
+    $sql = "UPDATE appraisee_response
+            SET manager_evaluation_complete = null,
+            reviewer_response_complete = null,
+                reviewer_remarks = $1  -- Use placeholder $1 for the value
+            WHERE goalsheetid = $2"; // Use placeholder $2 for the value
 
-        WHERE goalsheetid='$goalsheetid'";
+    // Prepare the statement
+    $stmt = pg_prepare($con, "reviewer_remarks_update_query", $sql);
 
-    $result = pg_query($con, $reviewer_remarks_update);
-    $cmdtuples = pg_affected_rows($result);
-    if (!$result) {
+    // Bind the values to the placeholders in the prepared statement
+    $result = pg_execute($con, "reviewer_remarks_update_query", array(
+        $reviewer_remarks,
+        $goalsheetid
+    ));
+
+    // Check if the query was successful
+    if ($result) {
+        $cmdtuples = pg_affected_rows($result);
+    } else {
         echo "An error occurred.\n";
         exit;
     }

@@ -514,7 +514,7 @@ $resultArr = pg_fetch_all($result);
                                     }
                                 } ?>
                             <?php
-                            } else if ($taggedto == null && $item_type == null && $assetid == null && $assetstatus == null) {
+                            } else if (@$taggedto == null && @$item_type == null && @$assetid == null && @$assetstatus == null) {
                             ?>
                                 <tr>
                                     <td colspan="5">Please select Filter value.</td>

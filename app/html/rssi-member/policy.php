@@ -221,7 +221,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                 echo '
                             <tr>
                                 <td>' . $array['policyid'] . '</td>
-                                <td>' . $array['policyname'] . '&nbsp;<p class="badge label-default">' . $array['policytype'] . '</p></td>
+                                <td>' . $array['policyname'] . '&nbsp;<p class="badge bg-secondary">' . $array['policytype'] . '</p></td>
                                 <td>
                                 
                                 <form name="policybody_' . $array['policyid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">

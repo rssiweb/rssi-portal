@@ -444,6 +444,18 @@ if ($formtype == "ipfclose") {
   $result = pg_query($con, $ipfclose);
 }
 
+if ($formtype == "manager_unlock") {
+  @$goalsheetid = $_POST['goalsheetid'];
+  $manager_unlock = "UPDATE appraisee_response SET appraisee_response_complete= null WHERE goalsheetid='$goalsheetid'";
+  $result = pg_query($con, $manager_unlock);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+  } else
+    echo "failed";
+}
+
 if ($formtype == "test") {
   @$sname = $_POST['sname'];
   @$sid = $_POST['sid'];

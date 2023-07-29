@@ -69,7 +69,7 @@ if (@$_GET['form-type'] == "reviewer") {
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
-    WHERE reviewer_associatenumber='$associatenumber' AND appraisalyear='$yearr' AND appraisee_response_complete='yes' AND manager_evaluation_complete='yes' AND reviewer_response_complete IS NULL order by goalsheet_evaluated_on desc");
+    WHERE reviewer_associatenumber='$associatenumber' AND appraisalyear='$yearr' AND appraisee_response_complete='yes' AND manager_evaluation_complete='yes' AND (reviewer_response_complete IS NULL OR ipf_response='rejected') order by goalsheet_evaluated_on desc");
 } else {
     $resultr = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
 }

@@ -28,21 +28,32 @@ if (@$_POST['form-type'] == "reviewer_remarks_update") {
     $goalsheet_reviewed_by = $associatenumber;
     $goalsheet_reviewed_on = date('Y-m-d H:i:s');
 
+    // Prepare the SQL update query using a parameterized query
+    $sql = "UPDATE appraisee_response
+            SET reviewer_response_complete = 'yes',
+                reviewer_remarks = $1,  -- Use placeholder $1 for the value
+                goalsheet_reviewed_by = $2, -- Use placeholder $2 for the value
+                goalsheet_reviewed_on = $3, -- Use placeholder $3 for the value
+                ipf_response = null,
+                ipf_response_on = null,
+                ipf_response_by = null
+            WHERE goalsheetid = $4"; // Use placeholder $4 for the value
 
+    // Prepare the statement
+    $stmt = pg_prepare($con, "reviewer_remarks_update_query", $sql);
 
-    $reviewer_remarks_update = "UPDATE appraisee_response
-    SET reviewer_response_complete = 'yes',
-    reviewer_remarks = '$reviewer_remarks',
-    goalsheet_reviewed_by = '$goalsheet_reviewed_by',
-    goalsheet_reviewed_on = '$goalsheet_reviewed_on',
-    ipf_response = null,
-    ipf_response_on= null,
-    ipf_response_by= null
-    WHERE goalsheetid='$goalsheetid'";
+    // Bind the values to the placeholders in the prepared statement
+    $result = pg_execute($con, "reviewer_remarks_update_query", array(
+        $reviewer_remarks,
+        $goalsheet_reviewed_by,
+        $goalsheet_reviewed_on,
+        $goalsheetid
+    ));
 
-    $result = pg_query($con, $reviewer_remarks_update);
-    $cmdtuples = pg_affected_rows($result);
-    if (!$result) {
+    // Check if the query was successful
+    if ($result) {
+        $cmdtuples = pg_affected_rows($result);
+    } else {
         echo "An error occurred.\n";
         exit;
     }
