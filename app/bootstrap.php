@@ -6,6 +6,8 @@ date_default_timezone_set('Asia/Kolkata');
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
+use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
+use Doctrine\Migrations\DependencyFactory;
 
 $config = ORMSetup::createAnnotationMetadataConfiguration(
     paths: array(__DIR__ . "/models"),

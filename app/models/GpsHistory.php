@@ -78,6 +78,13 @@ class GpsHistory
      */
     private $taggedto;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="asset_status", type="text", nullable=true)
+     */
+    private $assetStatus;
+
 
 
     /**
@@ -280,5 +287,29 @@ class GpsHistory
     public function getTaggedto()
     {
         return $this->taggedto;
+    }
+
+    /**
+     * Set assetStatus.
+     *
+     * @param string|null $assetStatus
+     *
+     * @return GpsHistory
+     */
+    public function setAssetStatus($assetStatus = null)
+    {
+        $this->assetStatus = $assetStatus;
+
+        return $this;
+    }
+
+    /**
+     * Get assetStatus.
+     *
+     * @return string|null
+     */
+    public function getAssetStatus()
+    {
+        return $this->assetStatus;
     }
 }

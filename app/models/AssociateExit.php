@@ -13,21 +13,21 @@ use Doctrine\ORM\Mapping as ORM;
 class AssociateExit
 {
     /**
+     * @var string
+     *
+     * @ORM\Column(name="exit_associate_id", type="string", nullable=false)
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="SEQUENCE")
+     * @ORM\SequenceGenerator(sequenceName="associate_exit_exit_associate_id_seq", allocationSize=1, initialValue=1)
+     */
+    private $exitAssociateId;
+
+    /**
      * @var int
      *
      * @ORM\Column(name="id", type="integer", nullable=false)
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="SEQUENCE")
-     * @ORM\SequenceGenerator(sequenceName="associate_exit_id_seq", allocationSize=1, initialValue=1)
      */
     private $id;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="exit_associate_id", type="string", nullable=true)
-     */
-    private $exitAssociateId;
 
     /**
      * @var string|null
@@ -172,6 +172,30 @@ class AssociateExit
 
 
     /**
+     * Get exitAssociateId.
+     *
+     * @return string
+     */
+    public function getExitAssociateId()
+    {
+        return $this->exitAssociateId;
+    }
+
+    /**
+     * Set id.
+     *
+     * @param int $id
+     *
+     * @return AssociateExit
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    /**
      * Get id.
      *
      * @return int
@@ -179,30 +203,6 @@ class AssociateExit
     public function getId()
     {
         return $this->id;
-    }
-
-    /**
-     * Set exitAssociateId.
-     *
-     * @param string|null $exitAssociateId
-     *
-     * @return AssociateExit
-     */
-    public function setExitAssociateId($exitAssociateId = null)
-    {
-        $this->exitAssociateId = $exitAssociateId;
-
-        return $this;
-    }
-
-    /**
-     * Get exitAssociateId.
-     *
-     * @return string|null
-     */
-    public function getExitAssociateId()
-    {
-        return $this->exitAssociateId;
     }
 
     /**
