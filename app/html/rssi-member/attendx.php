@@ -199,18 +199,19 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-
+    <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
         var enableLocationCheck = false
         var isFullScreen = false;
         var lastResult, lastScanTime = 0;
         var latitude; // Variable to store latitude
         var longitude; // Variable to store longitude
+        const sameQRScanInterval = 60000; // Threshold value for same QR code scan in milliseconds
         var resultContainer = document.getElementById('qr-reader-results');
 
         function onScanSuccess(decodedText, decodedResult) {
             var diff = (Number(new Date()) - lastScanTime)
-            if (decodedText !== lastResult || diff >= 60000) {
+            if (decodedText !== lastResult || diff >= sameQRScanInterval) {
                 lastResult = decodedText;
                 lastScanTime = Number(new Date());
                 var segments = decodedText.split("get_id=");
@@ -316,12 +317,10 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
           
         
         function showLoading(){
-            loading = true;
             var loadingEl = document.getElementById('loading');
             loadingEl.style.display = 'block';
         }
         function hideLoading(){
-            loading = false;
             var loadingEl = document.getElementById('loading');
             loadingEl.style.display = 'none';
         }
@@ -389,10 +388,8 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
             }
         }
 
-        async function checkIfAtOffice(){
+        function checkIfAtOffice(){
             // Get latitude and longitude values
-            loading = true;
-            await getLocation();
             console.log(latitude, longitude);
             if (!latitude || !longitude) {
                 hideLoading();
@@ -446,6 +443,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
                     addRowInAttendanceTable(result);
                     playNotificationSound(); // Play notification sound on successful form submission
                     showSuccessToast(result.userId, result.userName); // Show the success notification toast
+                    publishAttendanceEvent(result); // Publish the attendance event on MQTT server
                 }
             } catch (error) {
                 console.error(error);
@@ -456,7 +454,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
             var lastTr = document.getElementById('last-row');
             var newTr = document.createElement('tr');
 
-            for (var key of ["userId", "userName", "category", "status", "punchIn", "ipAddress", "gpsLocation"]) {
+            for (var key of ["userId", "userName", "category", "status", "timestamp", "ipAddress", "gpsLocation"]) {
                 var td = document.createElement('td');
 
                 // If the key is "category" or "class", concatenate them with a slash (/) in between if "class" is available
@@ -477,9 +475,28 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
             showLoading();
             checkIfAtOffice();
         } else {
+            getLocation();
             hideLoading();
             setUpCameraForScan();
         }
+
+        // Publish events on MQTT server
+        const mqttClient = mqtt.connect('wss://mqtt.local')
+        const TOPIC = "attendance-record-events";
+        mqttClient.on("connect", () => {
+            console.log("MQTT client connected.");
+        })
+
+        function publishAttendanceEvent(record) {
+            if (!mqttClient.connected) {
+                console.log("MQTT client not connected. Skipping MQTT publish.");
+                return;
+            };
+            var message = JSON.stringify(record);
+            mqttClient.publish(TOPIC, message);
+            console.log("MQTT message published on topic:", TOPIC, "message:", message);
+        }
+
     </script>
 
 </body>

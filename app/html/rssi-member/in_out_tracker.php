@@ -176,6 +176,9 @@ if ($resultcount) {
                 opacity: 1;
             }
         }
+        .bg-success {
+            background-color: #198754!important;
+        }
     </style>
 </head>
 
@@ -323,7 +326,7 @@ if ($resultcount) {
                                     echo '<tbody>';
                                     if ($resultArr != null) {
                                         foreach ($resultArr as $array) {
-                                            echo '<tr>';
+                                            echo '<tr id="'. $array['user_id'] .'">';
                                             echo '<td>' . $array['user_id'] . '</td>';
                                             echo '<td>' . $array['user_name'] . '</td>';
                                             // echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '-' . $array['class'] : '') . '</td>';
@@ -358,6 +361,69 @@ if ($resultcount) {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
+    <script>
+        const mqttClient = mqtt.connect('wss://mqtt.local')
+        const TOPIC = "attendance-record-events";
+        mqttClient.on("connect", () => {
+            console.log("MQTT client connected.");
+            mqttClient.subscribe(TOPIC);
+        })
+        mqttClient.on('message', (topic, message) => {
+            if (topic == TOPIC) {
+                onNewAttendanceRecordEvent(message);
+            }
+        })
+        function onNewAttendanceRecordEvent(message) {
+            var attendanceRow = JSON.parse(message);
+            addOrUpdateRowInAttendanceTable(attendanceRow);
+        }
+
+        function addRow(attendanceRow){
+            var lastTr = document.getElementById('last-row')
+            tr = document.createElement('tr')
+            tr.id = attendanceRow.userId
+            for (var key of ["userId", "userName", "category", "class", "status", "punchIn", "punchOut"]) {
+                var td = document.createElement('td')
+                if (key == "punchIn" || key == "punchOut") {
+                    td.innerText = attendanceRow[key] ? attendanceRow[key] : "Not Available"
+                } else {
+                    td.innerText = attendanceRow[key]
+                }
+                tr.appendChild(td)
+            }
+            lastTr.insertAdjacentElement("afterend", tr)
+            return tr
+        }
+        function updateRow(tr, attendanceRow){
+            for (var key of ["userId", "userName", "category", "class", "status", "punchIn", "punchOut"]) {
+                var keyIndex = ["userId", "userName", "category", "class", "status", "punchIn", "punchOut"].indexOf(key)
+                var td = tr.querySelector('td:nth-child(' + (keyIndex + 1) + ')')
+                if (key == "punchIn" || key == "punchOut") {
+                    td.innerText = attendanceRow[key] ? attendanceRow[key] : "Not Available"
+                } else {
+                    td.innerText = attendanceRow[key]
+                }
+            }
+        }
+
+        function addOrUpdateRowInAttendanceTable(attendanceRow) {
+            const userId = attendanceRow['userId']
+            var tr = document.getElementById(userId)
+            if (tr != null) {
+                // update tds inside tr
+                updateRow(tr, attendanceRow)
+            }else{
+                // insert new row
+                tr = addRow(attendanceRow)
+            }
+            // flash the tr green 
+            tr.classList.add('bg-success')
+            setTimeout(function() {
+                tr.classList.remove('bg-success')
+            }, 1000)
+        }
+    </script>
 
 </body>
 
