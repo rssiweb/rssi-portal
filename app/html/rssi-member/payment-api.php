@@ -442,6 +442,12 @@ if ($formtype == "ipfclose") {
   $now = date('Y-m-d H:i:s');
   $ipfclose = "UPDATE appraisee_response SET  ipf_process_closed_by = '$ipf_process_closed_by', ipf_process_closed_on = '$now' WHERE goalsheetid = '$ipfid'";
   $result = pg_query($con, $ipfclose);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+  } else
+    echo "failed";
 }
 
 if ($formtype == "manager_unlock") {

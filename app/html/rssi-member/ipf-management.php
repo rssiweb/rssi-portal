@@ -30,7 +30,7 @@ if ($id != null) {
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
-    WHERE appraisalyear='$id' ORDER BY (ipf IS NULL) DESC, goalsheet_created_on DESC");
+    WHERE appraisalyear='$id' ORDER BY ipf_process_closed_on DESC, (ipf IS NULL) DESC, goalsheet_created_on DESC");
 }
 
 if ($id == null) {
@@ -362,7 +362,7 @@ $resultArr = pg_fetch_all($result);
                                             });
                                         });
                                         limitPagging();
-                                    }).val(5).change();
+                                    }).val(10).change();
                                 }
 
                                 function limitPagging() {
@@ -386,28 +386,39 @@ $resultArr = pg_fetch_all($result);
 
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
-
-                                const scriptURL = 'payment-api.php'
+                                const scriptURL = 'payment-api.php';
 
                                 data.forEach(item => {
                                     const form = document.forms['ipfclose' + item.goalsheetid]
                                     form.addEventListener('submit', e => {
-                                        e.preventDefault()
-                                        fetch(scriptURL, {
-                                                method: 'POST',
-                                                body: new FormData(document.forms['ipfclose' + item.goalsheetid])
-                                            })
-                                            .then(response =>
-                                                alert("The process has been closed in the system.") +
-                                                location.reload()
-                                            )
-                                            .catch(error => console.error('Error!', error.message))
-                                    })
+                                        e.preventDefault();
 
-                                    console.log(item)
-                                })
+                                        if (confirm('Are you sure you want to close the process?')) {
+                                            fetch(scriptURL, {
+                                                    method: 'POST',
+                                                    // body: new FormData(document.forms['ipfclose' + item.goalsheetid])
+                                                    body: new FormData(e.target)
+
+                                                })
+                                                .then(response => response.text())
+                                                .then(result => {
+                                                    if (result === 'success') {
+                                                        alert("The process for form ID " + item.goalsheetid + " has been closed in the system.");
+                                                        location.reload();
+                                                    } else {
+                                                        alert("Error closing the process for form ID " + item.goalsheetid + ". Please try again later or contact support.");
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    console.error('Error!', error.message);
+                                                });
+                                        } else {
+                                            alert("Process close cancelled.");
+                                        }
+                                    });
+                                    console.log(item);
+                                });
                             </script>
-
                         </div>
                     </div>
                 </div><!-- End Reports -->
