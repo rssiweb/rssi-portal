@@ -230,25 +230,6 @@ if (!$result) {
             });
         html5QrcodeScanner.render(onScanSuccess);
 
-        // // Adjust qrbox size dynamically based on screen width
-        // function adjustQrBoxSize() {
-        //     var qrReaderDiv = document.getElementById('qr-reader');
-        //     var screenWidth = window.innerWidth;
-        //     var qrboxSize = Math.min(screenWidth * 0.9, 800); // Maximum width is 800px or 90% of screen width
-        //     qrReaderDiv.style.width = qrboxSize + 'px';
-        // }
-
-        // // Call the function once on page load
-        // adjustQrBoxSize();
-        // // Re-adjust the qrbox size when the window is resized
-        // window.addEventListener('resize', adjustQrBoxSize);
-
-        // var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
-        //     fps: 10,
-        //     disableFlip: true,
-        // });
-        // html5QrcodeScanner.render(onScanSuccess);
-
         function playNotificationSound() {
             var notificationSound = document.getElementById('notification-sound');
             notificationSound.play();
@@ -323,14 +304,23 @@ if (!$result) {
         }
 
         function addRowInAttendanceTable(attendanceRow) {
-            var lastTr = document.getElementById('last-row')
-            var newTr = document.createElement('tr')
-            for (var key of ["userId", "userName", "status", "category", "punchIn", "ipAddress", "gpsLocation"]) {
-                var td = document.createElement('td')
-                td.innerText = attendanceRow[key]
-                newTr.appendChild(td)
+            var lastTr = document.getElementById('last-row');
+            var newTr = document.createElement('tr');
+
+            for (var key of ["userId", "userName", "category", "status", "punchIn", "ipAddress", "gpsLocation"]) {
+                var td = document.createElement('td');
+
+                // If the key is "category" or "class", concatenate them with a slash (/) in between if "class" is available
+                if (key === "category" && attendanceRow["class"]) {
+                    td.innerText = attendanceRow["category"] + '/' + attendanceRow["class"];
+                } else {
+                    td.innerText = attendanceRow[key];
+                }
+
+                newTr.appendChild(td);
             }
-            lastTr.insertAdjacentElement("afterend", newTr)
+
+            lastTr.insertAdjacentElement("afterend", newTr);
         }
     </script>
 

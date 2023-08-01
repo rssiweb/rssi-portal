@@ -130,19 +130,27 @@ if (!$result) {
                     </div>
                     <div class="col-md-6 text-end">
                         <?php
-                        // Check if appraisee_response_complete is null or manager_evaluation_complete is yes
-                        $disableButton = ($array['appraisee_response_complete'] === null || $array['manager_evaluation_complete'] === 'yes');
-
-                        // Check if ipf_response is not null (if the previous conditions are not met)
-                        if (!$disableButton) {
-                            $disableButton = ($array['ipf_response'] !== null);
+                        // Check if unlock_request is null
+                        if ($array['unlock_request'] === null) {
+                            $enableButton = false;
+                        } else {
+                            // Check if unlock_request is not null and manager_evaluation_complete is null and ipf_response is null
+                            $enableButton = ($array['manager_evaluation_complete'] === null && $array['ipf_response'] === null);
                         }
 
+                        // Check if manager_unlocked is not null
+                        if ($array['manager_unlocked'] !== null) {
+                            $enableButton = false;
+                        }
+
+                        // Set the button text
+                        $buttonText = ($array['manager_unlocked'] === 'yes') ? 'Goal sheet unlocked' : 'Unlock Goalsheet';
+
                         echo '<form name="manager_unlock" action="#" method="POST" style="display: -webkit-inline-box;">
-                                    <input type="hidden" name="form-type" value="manager_unlock">
-                                    <input type="hidden" name="goalsheetid" value="' . $array['goalsheetid'] . '">             
-                                    <button type="submit" id="submit3" class="btn btn-sm btn-warning" ' . ($disableButton ? 'disabled' : '') . '>Unlock Goalsheet</button>
-                                </form>';
+                            <input type="hidden" name="form-type" value="manager_unlock">
+                            <input type="hidden" name="goalsheetid" value="' . $array['goalsheetid'] . '">             
+                            <button type="submit" id="submit3" class="btn btn-sm btn-warning" ' . ($enableButton ? '' : 'disabled') . '>' . $buttonText . '</button>
+                        </form>';
                         ?>
                     </div>
                 </div>

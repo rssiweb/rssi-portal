@@ -446,8 +446,20 @@ if ($formtype == "ipfclose") {
 
 if ($formtype == "manager_unlock") {
   @$goalsheetid = $_POST['goalsheetid'];
-  $manager_unlock = "UPDATE appraisee_response SET appraisee_response_complete= null WHERE goalsheetid='$goalsheetid'";
+  $manager_unlock = "UPDATE appraisee_response SET appraisee_response_complete= null, manager_unlocked= 'yes' WHERE goalsheetid='$goalsheetid'";
   $result = pg_query($con, $manager_unlock);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+  } else
+    echo "failed";
+}
+
+if ($formtype == "unlock_request") {
+  @$goalsheetid = $_POST['goalsheetid'];
+  $unlock_request = "UPDATE appraisee_response SET unlock_request= 'yes' WHERE goalsheetid='$goalsheetid'";
+  $result = pg_query($con, $unlock_request);
   if ($result) {
     $cmdtuples = pg_affected_rows($result);
     if ($cmdtuples == 1)
@@ -510,16 +522,17 @@ if ($formtype === "attendance") {
     $punch_in = $row["punch_in"];
 
     // Prepared statement for second SELECT query
-    $query = "SELECT fullname, filterstatus FROM rssimyaccount_members WHERE associatenumber='$user_id'";
+    $query = "SELECT fullname, filterstatus, engagement FROM rssimyaccount_members WHERE associatenumber='$user_id'";
     $result = pg_query($con, $query);
-    $name = $status = "";
+    $name = $status = $engagement = $category = $class = "";
 
     if (pg_num_rows($result) == 1) {
       $row = pg_fetch_assoc($result);
       $name = $row["fullname"];
       $status = $row["filterstatus"];
+      $engagement = $row["engagement"];
     } else {
-      $query = "SELECT studentname, filterstatus, category FROM rssimyprofile_student WHERE student_id='$user_id'";
+      $query = "SELECT studentname, filterstatus, category, class FROM rssimyprofile_student WHERE student_id='$user_id'";
       $result = pg_query($con, $query);
 
       if (pg_num_rows($result) == 1) {
@@ -527,8 +540,12 @@ if ($formtype === "attendance") {
         $name = $row["studentname"];
         $status = $row["filterstatus"];
         $category = $row["category"];
+        $class = $row["class"];
       }
     }
+
+    // Set the category field based on its availability (either category or engagement)
+    $categoryValue = ($category !== "") ? $category : $engagement;
 
     echo json_encode(
       array(
@@ -536,7 +553,8 @@ if ($formtype === "attendance") {
         "userName" => $name,
         "punchIn" => date('d/m/Y h:i:s a', strtotime($punch_in)),
         "status" => $status,
-        "category" => $category,
+        "category" => $categoryValue,
+        "class" => $class,
         "ipAddress" => $ip_address,
         "gpsLocation" => $gps
       )
