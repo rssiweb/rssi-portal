@@ -108,26 +108,32 @@ $resultArr = pg_fetch_all($result);
 
                         <div class="card-body">
                             <br>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <form action="" method="GET">
+                                        <div class="form-group">
+                                            <div class="col2" style="display: inline-block;">
+                                                <select name="get_aid" id="get_aid" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
+                                                    <?php if ($id == null) { ?>
+                                                        <option value="" hidden selected>Select year</option>
+                                                    <?php } else { ?>
+                                                        <option hidden selected><?php echo $id ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </div>
+                                            <div class="col2 left" style="display: inline-block;">
+                                                <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                                    <i class="bi bi-search"></i>&nbsp;Search
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    Record count: <?php echo sizeof($resultArr) ?>
+                                </div>
+                            </div>
 
-                            <form action="" method="GET">
-                                <div class="form-group">
-                                    <div class="col2" style="display: inline-block;">
-
-                                        <select name="get_aid" id="get_aid" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
-                                            <?php if ($id == null) { ?>
-                                                <option value="" hidden selected>Select year</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $id ?></option>
-                                            <?php }
-                                            ?>
-                                        </select>
-                                    </div>
-                                    <div class="col2 left" style="display: inline-block;">
-                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                            <i class="bi bi-search"></i>&nbsp;Search</button>
-                                    </div>
-                            </form>
                             <script>
                                 <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
                                     var currentYear = new Date().getFullYear() - 1;
