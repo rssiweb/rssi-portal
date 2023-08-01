@@ -368,7 +368,7 @@ $resultArr = pg_fetch_all($result);
                                             });
                                         });
                                         limitPagging();
-                                    }).val(10).change();
+                                    }).val(5).change();
                                 }
 
                                 function limitPagging() {
