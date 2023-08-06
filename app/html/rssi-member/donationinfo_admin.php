@@ -31,7 +31,8 @@ function calculateFinancialYear($timestamp)
 $searchField = isset($_POST['searchField']) ? $_POST['searchField'] : '';
 $fyear = isset($_POST['get_fyear']) ? $_POST['get_fyear'] : '';
 
-if ($searchField !== '' || $fyear !== '') {
+function fetchDataAndTotalAmount($con, $searchField, $fyear)
+{
   $query = "SELECT
   pd.*,
   ud.*,
@@ -43,39 +44,63 @@ if ($searchField !== '' || $fyear !== '') {
       WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
       ELSE EXTRACT(YEAR FROM pd.timestamp)
   END AS financial_year
-FROM donation_paymentdata AS pd
-LEFT JOIN donation_userdata AS ud ON pd.tel = ud.tel
-WHERE pd.donationid = $1 OR
-      (CASE 
-          WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
-          ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
-      END || '-' ||
-      CASE 
-          WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
-          ELSE EXTRACT(YEAR FROM pd.timestamp)
-      END) = $2"; // Using $1 and $2 as placeholders
-  // Using $1 as a placeholder for the parameter
-  $result = pg_query_params($con, $query, array($searchField, $fyear));
+  FROM donation_paymentdata AS pd
+  LEFT JOIN donation_userdata AS ud ON pd.tel = ud.tel
+  WHERE ((pd.tel = $1 AND pd.donationid IS NOT NULL) OR $1 IS NULL) AND
+        (((CASE 
+            WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+            ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+        END || '-' ||
+        CASE 
+            WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+            ELSE EXTRACT(YEAR FROM pd.timestamp)
+        END) = $2 AND $2 IS NOT NULL) OR $2 IS NULL) ORDER BY pd.timestamp DESC";
+
+  $params = array();
+  if ($searchField !== '') {
+    $params[] = $searchField;
+  } else {
+    $params[] = null; // Placeholder value for $1
+  }
+
+  if ($fyear !== '') {
+    $params[] = $fyear;
+  } else {
+    $params[] = null; // Placeholder value for $2
+  }
+
+  $result = pg_query_params($con, $query, $params);
 
   $resultArr = pg_fetch_all($result);
 
-  // Calculate total donated amount
   $totalAmountQuery = "SELECT SUM(pd.amount) 
-                    FROM donation_paymentdata AS pd
-                    WHERE pd.donationid = $1 OR (CASE 
+                      FROM donation_paymentdata AS pd
+                      WHERE ((pd.tel = $1 AND pd.donationid IS NOT NULL) OR $1 IS NULL) AND
+                            (((CASE 
                                 WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
                                 ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
                             END || '-' ||
                             CASE 
                                 WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
                                 ELSE EXTRACT(YEAR FROM pd.timestamp)
-                            END) = $2";
-  $totalAmountResult = pg_query_params($con, $totalAmountQuery, array($searchField, $fyear));
+                            END) = $2 AND $2 IS NOT NULL) OR $2 IS NULL)";
+
+  $totalAmountResult = pg_query_params($con, $totalAmountQuery, $params);
   $totalDonatedAmount = pg_fetch_result($totalAmountResult, 0, 0);
+
+  return array($resultArr, $totalDonatedAmount);
+}
+
+$searchField = isset($_POST['searchField']) ? $_POST['searchField'] : '';
+$fyear = isset($_POST['get_fyear']) ? $_POST['get_fyear'] : '';
+
+if ($searchField !== '' || $fyear !== '') {
+  list($resultArr, $totalDonatedAmount) = fetchDataAndTotalAmount($con, $searchField, $fyear);
 } else {
   $resultArr = array();
   $totalDonatedAmount = 0;
 }
+
 ?>
 
 
@@ -146,8 +171,8 @@ WHERE pd.donationid = $1 OR
                 </div>
                 <form method="POST" action="export_function.php">
                   <input type="hidden" value="donation" name="export_type" />
-                  <input type="hidden" value="<?php echo $searchField ?>" name="invoice" />
-                  <input type="hidden" value="<?php echo $fyear ?>" name="fyear" />
+                  <input type="hidden" value="<?php echo $searchField ?>" name="searchField_export" />
+                  <input type="hidden" value="<?php echo $fyear ?>" name="fyear_export" />
 
                   <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
@@ -160,7 +185,7 @@ WHERE pd.donationid = $1 OR
               <form action="" method="POST">
                 <div class="form-group" style="display: inline-block;">
                   <div class="col2" style="display: inline-block;">
-                    <input name="searchField" class="form-control" style="width:max-content; display:inline-block" placeholder="Invoice number" value="<?php echo $searchField ?>">
+                    <input name="searchField" class="form-control" style="width:max-content; display:inline-block" placeholder="Contact number" value="<?php echo $searchField ?>">
                     <select name="get_fyear" id="get_fyear" class="form-select" style="width:max-content;display:inline-block" required>
                       <?php if ($fyear == null) { ?>
                         <option value="" disabled selected hidden>Select Year</option>
@@ -264,11 +289,11 @@ WHERE pd.donationid = $1 OR
                   }
                 } else if ($fyear == null) {
                   echo '<tr>
-                            <td colspan="5">Please select invoice no.</td>
+                            <td colspan="5">Please select Filter value.</td>
                         </tr>';
                 } else {
                   echo '<tr>
-                        <td colspan="5">No record found for' ?>&nbsp;<?php echo $fyear ?>
+                        <td colspan="5">No record found for' ?>&nbsp;<?php echo $searchField ?><?php echo $fyear ?>
                   <?php echo '</td>
                     </tr>';
                 }

@@ -143,43 +143,64 @@ function fees_export()
 
 function donation_export()
 {
-
-
   global $con;
-  @$id = $_POST['invoice'];
-  @$status = $_POST['fyear'];
+  $searchField = $_POST['searchField_export'];
+  $fyear = $_POST['fyear_export'];
 
+  function fetchData($con, $searchField, $fyear)
+  {
+    $query = "SELECT
+      pd.*,
+      ud.*,
+      CASE 
+          WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+          ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+      END || '-' ||
+      CASE 
+          WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+          ELSE EXTRACT(YEAR FROM pd.timestamp)
+      END AS financial_year
+      FROM donation_paymentdata AS pd
+      LEFT JOIN donation_userdata AS ud ON pd.tel = ud.tel
+      WHERE ((pd.tel = $1 AND pd.donationid IS NOT NULL) OR $1 IS NULL) AND
+            (((CASE 
+                WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+                ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+            END || '-' ||
+            CASE 
+                WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+                ELSE EXTRACT(YEAR FROM pd.timestamp)
+            END) = $2 AND $2 IS NOT NULL) OR $2 IS NULL) ORDER BY pd.timestamp DESC";
 
-  if ($id == null && $status == 'ALL') {
-    $result = pg_query($con, "SELECT * FROM donation order by id desc");
-    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
-  } else if ($id == null && $status != 'ALL') {
-    $result = pg_query($con, "SELECT * FROM donation WHERE year='$status' order by id desc");
-    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE year='$status'");
-  } else if ($id > 0 && $status != 'ALL') {
-    $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' AND year='$status' order by id desc");
-    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id' AND year='$status'");
-  } else if ($id > 0 && $status == 'ALL') {
-    $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' order by id desc");
-    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id'");
-  } else {
-    $result = pg_query($con, "SELECT * FROM donation order by id desc");
-    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
+    $params = array();
+    if ($searchField !== '') {
+      $params[] = $searchField;
+    } else {
+      $params[] = null; // Placeholder value for $1
+    }
+
+    if ($fyear !== '') {
+      $params[] = $fyear;
+    } else {
+      $params[] = null; // Placeholder value for $2
+    }
+
+    $result = pg_query_params($con, $query, $params);
+
+    $resultArr = pg_fetch_all($result);
+
+    return $resultArr;
   }
 
-  if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-  }
+  $resultArr = fetchData($con, $searchField, $fyear);
 
-  $resultArr = pg_fetch_all($result);
 
   echo 'Sl. No.,Pre Acknowledgement Number,ID Code,Unique Identification Number,Section Code,Unique Registration Number (URN),Date of Issuance of Unique Registration Number,Name of donor,Address of donor,Donation Type,Mode of receipt,Currency,Amount of donation,Invoice no,Invoice link' . "\n";
   $counter = 1; // Initialize the counter
 
   foreach ($resultArr as $array) {
 
-    echo $counter . ',' . ',' . $array['uitype'] . ',' . $array['uinumber'] . ',' . $array['section_code'] . ',AAKCR2540KF20214,' . date("d/m/Y g:i a", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',"' . $array['address'] . '",' . $array['donation_type'] . ',' . $array['modeofpayment'] . ',' . $array['currencyofthedonatedamount'] . ',' . $array['donatedamount'] .',' . $array['invoice'] .',' . $array['profile'] . "\n";
+    echo $counter . ',' . ',' . $array['documenttype'] . ',' . $array['nationalid'] . ',' . 'Section 80G' . ',' . 'AAKCR2540KF20214' . ',' . date("d/m/Y g:i a", strtotime($array['timestamp'])) . ',' . $array['fullname'] . ',"' . $array['postaladdress'] . '",' . 'Corpus' . ',' . 'Electronic modes including account payee cheque/draft' . ',' . $array['currency'] . ',' . $array['amount'] . ',' . $array['donationid'] . ',' . 'https://login.rssi.in/donation_invoice.php?searchField=' . $array['donationid'] . "\n";
     $counter++; // Increment the counter for each iteration
   }
 }
