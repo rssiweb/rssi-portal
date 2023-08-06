@@ -247,6 +247,36 @@ if ($formtype == "donation_form") {
       }
     }
 
+    // After successful form submission
+    if (!$errorOccurred) {
+      // Sending email based on the donation type
+      $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel='$tel'";
+      $result = pg_query($con, $emailQuery);
+
+      if ($result) {
+        $row = pg_fetch_assoc($result);
+        $email = $row['email'];
+        $name = $row['fullname'];
+      } else {
+        // Handle error if the query fails
+        $email = null;
+        $name = null;
+      }
+
+      if (($_POST['donationType'] === "existing" || $_POST['donationType'] === "new") && $email != "") {
+        sendEmail("donation_ack", array(
+          "fullname" => $name,
+          "donationId" => $donationId,
+          "timestamp" => $timestamp,
+          "tel" => $tel,
+          "email" => $email,
+          "transactionid" => $transactionId,
+          "currency" => $currency,
+          "amount" => $donationAmount
+        ), $email, false);
+      }
+    }
+
     // Prepare the API response data
     $responseData = array(
       'error' => $errorOccurred,
@@ -391,6 +421,22 @@ if ($formtype == "gemsredeem") {
   $now = date('Y-m-d H:i:s');
   $gemsredeem = "UPDATE gems SET  reviewer_id = '$reviewer_id',  reviewer_name = '$reviewer_name', reviewer_status = '$reviewer_status', reviewer_remarks = '$reviewer_remarks', reviewer_status_updated_on = '$now' WHERE redeem_id = '$redeem_idd'";
   $result = pg_query($con, $gemsredeem);
+}
+
+if ($formtype == "donation_review") {
+  @$reviewer_id = $_POST['reviewer_id'];
+  @$donationid = $_POST['donationid'];
+  @$reviewer_status = $_POST['reviewer_status'];
+  @$reviewer_remarks = $_POST['reviewer_remarks'];
+  $now = date('Y-m-d H:i:s');
+  $donation_review = "UPDATE donation_paymentdata SET  reviewedby = '$reviewer_id', status = '$reviewer_status', reviewer_remarks = '$reviewer_remarks', reviewedon = '$now' WHERE donationid = '$donationid'";
+  $result = pg_query($con, $donation_review);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+  } else
+    echo "failed";
 }
 
 if ($formtype == "leavereviewform") {

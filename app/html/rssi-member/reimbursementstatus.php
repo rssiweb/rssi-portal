@@ -383,7 +383,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                         <div class="modal-body">
 
                           <div style="width:100%; text-align:right">
-                            <p id="status1" class="badge " style="display: inline !important;"><span class="reimbid"></span></p>
+                            <p id="status_details" class="badge" style="display: inline;"></p>
                           </div>
 
                           <?php if ($role != "Admin") { ?>
@@ -443,29 +443,6 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                       </div>
                     </div>
                   </div>
-
-                  <div class="modal" id="myModalpdf" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-xl">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h1 class="modal-title fs-5" id="exampleModalLabel">Document</h1>
-                          <button type="button" id="closepdf-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                          <div style="width:100%; text-align:right">
-                            <p id="status2" class="badge" style="display: inline !important;"><span class="claimstatus"></span></p>
-                          </div>
-
-                          Claim Number: <span class="reimbid"></span><br>
-                          <object id="docid" data="#" type="application/pdf" width="100%" height="450px"></object>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" id="closepdf-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   <script>
                     var data = <?php echo json_encode($resultArr) ?>
 
@@ -477,8 +454,6 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                     ];
 
                     function showDetails(id) {
-                      // console.log(modal)
-                      // console.log(modal.getElementsByClassName("data"))
                       var mydata = undefined
                       data.forEach(item => {
                         if (item["reimbid"] == id) {
@@ -494,18 +469,24 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                       })
                       modal.style.display = "block";
 
+                      // Update status_details content with the reimbid value
+                      var statusDetailsElement = document.getElementById("status_details");
+                      if (statusDetailsElement) {
+                        statusDetailsElement.textContent = mydata["reimbid"];
+                      }
+
                       //class add 
-                      var status = document.getElementById("status1")
+                      var status_details = document.getElementById("status_details")
                       if (mydata["claimstatus"] === "Claim settled") {
-                        status.classList.add("bg-success")
-                        status.classList.remove("bg-danger")
+                        status_details.classList.add("bg-success")
+                        status_details.classList.remove("bg-danger")
                       } else if (mydata["claimstatus"] === "Rejected") {
-                        status.classList.remove("bg-success")
-                        status.classList.add("bg-danger")
+                        status_details.classList.remove("bg-success")
+                        status_details.classList.add("bg-danger")
                       } else {
-                        status.classList.remove("bg-success")
-                        status.classList.remove("bg-danger")
-                        status.classList.add("bg-secondary")
+                        status_details.classList.remove("bg-success")
+                        status_details.classList.remove("bg-danger")
+                        status_details.classList.add("bg-secondary")
                       }
                       //class add end
 
@@ -587,8 +568,6 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                         document.getElementById("claimupdate").disabled = false;
                       }
                     }
-                    // When the user clicks the button, open the modal 
-                    //close model using either cross or close button
                     closedetails.forEach(function(element) {
                       element.addEventListener("click", closeModal);
                     });
@@ -597,16 +576,29 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                       var modal1 = document.getElementById("myModal");
                       modal1.style.display = "none";
                     }
-
-                    // When the user clicks anywhere outside of the modal, close it
-                    // window.onclick = function(event) {
-                    //   if (event.target == modal) {
-                    //     modal.style.display = "none";
-                    //   } else if (event.target == modal1) {
-                    //     modal1.style.display = "none";
-                    //   }
-                    // }
                   </script>
+
+                  <div class="modal" id="myModalpdf" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-xl">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h1 class="modal-title fs-5" id="exampleModalLabel">Document</h1>
+                          <button type="button" id="closepdf-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div style="width:100%; text-align:right">
+                            <p id="status2" class="badge" style="display: inline !important;"><span class="claimstatus"></span></p>
+                          </div>
+
+                          Claim Number: <span class="reimbid"></span><br>
+                          <object id="docid" data="#" type="application/pdf" width="100%" height="450px"></object>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" id="closepdf-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
                   <script>
                     var data1 = <?php echo json_encode($resultArr) ?>

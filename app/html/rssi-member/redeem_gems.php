@@ -196,7 +196,7 @@ if (@$_POST['form-type'] == "gms") {
                                         </div>
                                     <?php } else { ?>
                                         <i class="bi bi-gem" title="RSSI Gems"></i>&nbsp;
-                                        <p class="badge bg-default">You're almost there</p>
+                                        <p class="badge bg-secondary">You're almost there</p>
                                     <?php } ?>
                                 </div>
                             <?php } else { ?>

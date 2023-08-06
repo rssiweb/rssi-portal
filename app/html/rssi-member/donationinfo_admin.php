@@ -17,33 +17,65 @@ if ($role != 'Admin') {
   echo '</script>';
 }
 
-@$id = $_POST['get_aid'];
-@$status = $_POST['get_id'];
+function calculateFinancialYear($timestamp)
+{
+  $date = date('Y-m-d', $timestamp);
+  $year = date('Y', $timestamp);
+  $startYear = ($date < $year . '-04-01') ? ($year - 1) : $year;
+  $endYear = $startYear + 1;
 
-if ($id == null && $status == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM donation order by id desc");
-  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
-} else if ($id == null && $status != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM donation WHERE year='$status' order by id desc");
-  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE year='$status'");
-} else if ($id > 0 && $status != 'ALL') {
-  $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' AND year='$status' order by id desc");
-  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id' AND year='$status'");
-} else if ($id > 0 && $status == 'ALL') {
-  $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' order by id desc");
-  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id'");
+  $financialYear = $startYear . '-' . $endYear;
+  return $financialYear;
+}
+
+$searchField = isset($_POST['searchField']) ? $_POST['searchField'] : '';
+$fyear = isset($_POST['get_fyear']) ? $_POST['get_fyear'] : '';
+
+if ($searchField !== '' || $fyear !== '') {
+  $query = "SELECT
+  pd.*,
+  ud.*,
+  CASE 
+      WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+      ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+  END || '-' ||
+  CASE 
+      WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+      ELSE EXTRACT(YEAR FROM pd.timestamp)
+  END AS financial_year
+FROM donation_paymentdata AS pd
+LEFT JOIN donation_userdata AS ud ON pd.tel = ud.tel
+WHERE pd.donationid = $1 OR
+      (CASE 
+          WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+          ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+      END || '-' ||
+      CASE 
+          WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+          ELSE EXTRACT(YEAR FROM pd.timestamp)
+      END) = $2"; // Using $1 and $2 as placeholders
+  // Using $1 as a placeholder for the parameter
+  $result = pg_query_params($con, $query, array($searchField, $fyear));
+
+  $resultArr = pg_fetch_all($result);
+
+  // Calculate total donated amount
+  $totalAmountQuery = "SELECT SUM(pd.amount) 
+                    FROM donation_paymentdata AS pd
+                    WHERE pd.donationid = $1 OR (CASE 
+                                WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp)
+                                ELSE EXTRACT(YEAR FROM pd.timestamp) - 1
+                            END || '-' ||
+                            CASE 
+                                WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
+                                ELSE EXTRACT(YEAR FROM pd.timestamp)
+                            END) = $2";
+  $totalAmountResult = pg_query_params($con, $totalAmountQuery, array($searchField, $fyear));
+  $totalDonatedAmount = pg_fetch_result($totalAmountResult, 0, 0);
 } else {
-  $result = pg_query($con, "SELECT * FROM donation order by id desc");
-  $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
+  $resultArr = array();
+  $totalDonatedAmount = 0;
 }
-
-if (!$result) {
-  echo "An error occurred.\n";
-  exit;
-}
-
-$resultArr = pg_fetch_all($result);
-$resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
 ?>
 
 
@@ -110,12 +142,12 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
               <div class="d-flex justify-content-between align-items-center">
                 <div>
                   Record count: <?php echo sizeof($resultArr) ?><br>
-                  Total donated amount: <span class="badge bg-secondary"><?php echo $resultArrr ?></span>
+                  Total donated amount: <span class="badge bg-secondary"><?php echo $totalDonatedAmount ?></span>
                 </div>
                 <form method="POST" action="export_function.php">
                   <input type="hidden" value="donation" name="export_type" />
-                  <input type="hidden" value="<?php echo $id ?>" name="invoice" />
-                  <input type="hidden" value="<?php echo $status ?>" name="fyear" />
+                  <input type="hidden" value="<?php echo $searchField ?>" name="invoice" />
+                  <input type="hidden" value="<?php echo $fyear ?>" name="fyear" />
 
                   <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
@@ -128,13 +160,13 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
               <form action="" method="POST">
                 <div class="form-group" style="display: inline-block;">
                   <div class="col2" style="display: inline-block;">
-                    <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Invoice number" value="<?php echo $id ?>">
-                    <select name="get_id" id="get_id" class="form-select" style="width:max-content;display:inline-block" required>
-                      <?php if ($status == null) { ?>
+                    <input name="searchField" class="form-control" style="width:max-content; display:inline-block" placeholder="Invoice number" value="<?php echo $searchField ?>">
+                    <select name="get_fyear" id="get_fyear" class="form-select" style="width:max-content;display:inline-block" required>
+                      <?php if ($fyear == null) { ?>
                         <option value="" disabled selected hidden>Select Year</option>
                       <?php
                       } else { ?>
-                        <option hidden selected><?php echo $status ?></option>
+                        <option hidden selected><?php echo $fyear ?></option>
                       <?php }
                       ?>
                     </select>
@@ -152,15 +184,14 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
                             <tr>
                             <th scope="col">Date</th>
                             <th scope="col">Name</th>    
-                            <th scope="col">Contact</th>
+                            <th scope="col">FY</th>
                                 <th scope="col">Transaction id</th>
                                 <th scope="col">Amount</th>
                                 <th scope="col">National Identifier/Number</th>
                         <th scope="col">Mode of payment</th>
-                        <th scope="col">Project</th>
                         <th scope="col">Invoice</th>
                         <th scope="col">Status</th>
-                        <th scope="col">By</th>
+                        <th scope="col">Action</th>
                             </tr>
                         </thead>' ?>
               <?php if ($resultArr != null) {
@@ -172,76 +203,95 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
                   echo '
 
                                 <td>' . date("d/m/Y", strtotime($array['timestamp'])) . '</td>
-                                <td>' . $array['firstname'] . '&nbsp;' . $array['lastname'] . '</td>   
-                                    <td>' . $array['mobilenumber'] . '<br>' . $array['emailaddress'] . '</td>
+                                <td>' . $array['fullname'] . '<br>' . $array['tel'] . '<br>' . $array['email'] . '</td>
+                                <td>' . $array['financial_year'] . '</td>
                                     <td>' . $array['transactionid'] . '</td>
-                                    <td>' . $array['currencyofthedonatedamount'] . '&nbsp;' . $array['donatedamount'] . '</td>
-                                    <td>' . $array['uitype'] . '/' . $array['uinumber'] . '</td>
-                                    <td>' . $array['modeofpayment'] . '</td>
-                                    <td>' . $array['youwantustospendyourdonationfor'] . '</td>' ?>
+                                    <td>' . $array['currency'] . '&nbsp;' . $array['amount'] . '</td>
+                                    <td>' . $array['documenttype'] . '/' . $array['nationalid'] . '</td>
+                                    <td>Online</td>' ?>
 
 
-                  <?php if ($array['profile'] != null) { ?>
+                  <?php if ($array['donationid'] != null) { ?>
                     <?php
-                    echo '<td><span class="noticea"><a href="' . $array['profile'] . '" target="_blank">' . $array['invoice'] . '</a></span></td>'
+                    echo '<td><a href="/donation_invoice.php?searchField=' . $array['donationid'] . '" target="_blank">' . $array['donationid'] . '</a></span></td>'
                     ?>
                     <?php    } else { ?><?php
-                                        echo '<td>' . $array['invoice'] . '</td>' ?>
+                                        echo '<td>' . $array['donationid'] . '</td>' ?>
                   <?php } ?>
+                  <?php echo '<td>' . $array['status'] . '</td>' ?>
 
+                  <?php if ($role == 'Admin') { ?>
 
-                  <?php if ($array['approvedby'] != '--' && $array['approvedby'] != 'rejected') { ?>
-                    <?php echo '<td> <p class="badge label-success">accepted</p>' ?>
+                    <?php echo '
 
-                  <?php } else if ($array['approvedby'] == 'rejected') { ?>
-                    <?php echo '<td><p class="badge label-danger">' . $array['approvedby'] . '</p>' ?>
-                  <?php    } else { ?>
-                    <?php echo '<td><p class="badge label-info">on hold</p>' ?>
-                  <?php } ?>
+<td>
+<button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['donationid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+<i class="bi bi-box-arrow-up-right" style="font-size: 14px ;color:#777777" title="Show Details" display:inline;></i></button>&nbsp;&nbsp;' ?>
+                    <?php if (($array['tel'] != null) && $array['status'] == 'Approved') { ?>
 
-                  <?php echo '</td>' ?>
+                      <?php
+                      $phone = $array['tel'];
+                      $fullname = $array['fullname'];
+                      $donationid = $array['donationid'];
 
-                  <?php if ($array['approvedby'] != 'rejected') { ?>
-                    <?php
-                    echo '<td>' . $array['approvedby'] . '</td>'
-                    ?>
-                    <?php    } else { ?><?php
-                                        echo '<td></td>' ?>
-                  <?php } ?>
+                      $message = urlencode("Dear $fullname ($phone),\n\nThank you for your generous donation! Your invoice for Donation ID $donationid has been issued and emailed to your registered email address.\n\nWe greatly appreciate your support for our cause. Please feel free to reach out if you have any questions or need assistance.\n\n--RSSI\n\n**This is an automatically generated SMS");
 
+                      $whatsappLink = "https://api.whatsapp.com/send?phone=91$phone&text=$message";
+                      ?>
+                      <a href="<?php echo $whatsappLink; ?>" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tel'] . '"></i></a>
 
-                  <?php echo '</tr>';
-                }
-              } else if ($status == null) {
-                echo '<tr>
+                    <?php } else { ?>
+                      <?php echo '<i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
+                      <?php } ?>&nbsp;&nbsp;
+
+                      <?php if (($array['email'] != null) && $array['status'] == 'Approved') { ?>
+                        <?php echo '<form  action="#" name="email-form-' . $array['donationid'] . '" method="POST" style="display: -webkit-inline-box;" >
+                          <input type="hidden" name="template" type="text" value="donation_invoice">
+                          <input type="hidden" name="data[donationid]" type="text" value="' . $array['donationid'] . '">
+                          <input type="hidden" name="data[fullname]" type="text" value="' . $array['fullname'] . '">
+                          <input type="hidden" name="email" type="text" value="' . $array['email'] . '">
+                          <button  style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
+                          type="submit"><i class="bi bi-envelope-at" style="color:#444444;" title="Send Email ' . $array['email'] . '"></i></button>
+                          </form>' ?>
+                      <?php } else { ?>
+                        <?php echo '<i class="bi bi-envelope-at" style="color:#A2A2A2;" title="Send Email"></i>' ?>
+                      <?php } ?>
+
+                      <?php echo '</td>' ?>
+                    <?php } ?>
+
+                    <?php echo '</tr>';
+                  }
+                } else if ($fyear == null) {
+                  echo '<tr>
                             <td colspan="5">Please select invoice no.</td>
                         </tr>';
-              } else {
-                echo '<tr>
-                        <td colspan="5">No record found for' ?>&nbsp;<?php echo $status ?>
-                <?php echo '</td>
+                } else {
+                  echo '<tr>
+                        <td colspan="5">No record found for' ?>&nbsp;<?php echo $fyear ?>
+                  <?php echo '</td>
                     </tr>';
-              }
-              echo '</tbody>
+                }
+                echo '</tbody>
                      </table>
                      </div>';
-                ?>
+                  ?>
 
-                <script>
-                  <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-                    var currentYear = new Date().getFullYear() - 1;
-                  <?php } else { ?>
-                    var currentYear = new Date().getFullYear();
-                  <?php } ?>
+                  <script>
+                    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                      var currentYear = new Date().getFullYear() - 1;
+                    <?php } else { ?>
+                      var currentYear = new Date().getFullYear();
+                    <?php } ?>
 
-                  for (var i = 0; i < 5; i++) {
-                    var next = currentYear + 1;
-                    var status = currentYear + '-' + next;
-                    //next.toString().slice(-2) 
-                    $('#get_id').append(new Option(status, status));
-                    currentYear--;
-                  }
-                </script>
+                    for (var i = 0; i < 5; i++) {
+                      var next = currentYear + 1;
+                      var status = currentYear + '-' + next;
+                      //next.toString().slice(-2) 
+                      $('#get_fyear').append(new Option(status, status));
+                      currentYear--;
+                    }
+                  </script>
 
 
             </div>
@@ -259,6 +309,174 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
+
+  <!--------------- POP-UP BOX --------------->
+  <style>
+    .modal {
+      background-color: rgba(0, 0, 0, 0.4);
+      /* Black w/ opacity */
+    }
+  </style>
+  <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Donation Review</h1>
+          <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div style="width: 100%; text-align: right;">
+            <p id="status" class="badge" style="display: inline;"><span class="donationid"></span></p>
+          </div>
+
+          <form id="donation_review" action="#" method="POST">
+            <input type="hidden" name="form-type" value="donation_review" readonly>
+            <input type="hidden" name="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
+            <input type="hidden" name="donationid" id="donationid" value="" readonly>
+
+            <div class="mb-3">
+              <label for="reviewer_status" class="form-label">Status</label>
+              <select name="reviewer_status" id="reviewer_status" class="form-select" required>
+                <option value="" disabled selected hidden>Status</option>
+                <option value="Approved">Approved</option>
+                <option value="Under review">Under review</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="reviewer_remarks" class="form-label">Reviewer Remarks</label>
+              <textarea name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="Reviewer remarks"></textarea>
+              <small id="passwordHelpBlock" class="form-text text-muted">Reviewer remarks</small>
+            </div>
+
+            <button type="submit" id="donationupdate" class="btn btn-danger btn-sm">Update</button>
+          </form>
+
+          <div class="modal-footer">
+            <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+          <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Updated by: <span class="reviewedby"></span> on <span class="reviewedon"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var data = <?php echo json_encode($resultArr) ?>
+
+    // Get the modal
+    var modal = document.getElementById("myModal");
+    // Get the <span> element that closes the modal
+    var closedetails = [
+      document.getElementById("closedetails-header"),
+      document.getElementById("closedetails-footer")
+    ];
+
+    function showDetails(id) {
+      // console.log(modal)
+      // console.log(modal.getElementsByClassName("data"))
+      var mydata = undefined
+      data.forEach(item => {
+        if (item["donationid"] == id) {
+          mydata = item;
+        }
+      })
+
+      var keys = Object.keys(mydata)
+      keys.forEach(key => {
+        var span = modal.getElementsByClassName(key)
+        if (span.length > 0)
+          span[0].innerHTML = mydata[key];
+      })
+      modal.style.display = "block";
+
+      //class add 
+      var status = document.getElementById("status")
+      if (mydata["status"] === "Approved") {
+        status.classList.add("bg-success")
+        status.classList.remove("bg-danger")
+      } else {
+        status.classList.remove("bg-success")
+        status.classList.add("bg-danger")
+      }
+      //class add end
+
+      var profile = document.getElementById("donationid")
+      profile.value = mydata["donationid"]
+      if (mydata["status"] !== null) {
+        profile = document.getElementById("reviewer_status")
+        profile.value = mydata["status"]
+      }
+      if (mydata["status"] !== null) {
+        profile = document.getElementById("reviewer_remarks")
+        profile.value = mydata["reviewer_remarks"]
+      }
+
+      if (mydata["status"] == 'Approved' || mydata["status"] == 'Rejected') {
+        document.getElementById("donationupdate").disabled = true;
+      } else {
+        document.getElementById("donationupdate").disabled = false;
+      }
+    }
+    // When the user clicks the button, open the modal 
+    // When the user clicks on <span> (x), close the modal
+    closedetails.forEach(function(element) {
+      element.addEventListener("click", closeModal);
+    });
+
+    function closeModal() {
+      var modal1 = document.getElementById("myModal");
+      modal1.style.display = "none";
+    }
+    // When the user clicks anywhere outside of the modal, close it
+    // window.onclick = function(event) {
+    //     if (event.target == modal) {
+    //         modal.style.display = "none";
+    //     }
+    // }
+  </script>
+  <script>
+    var data = <?php echo json_encode($resultArr) ?>;
+    //For form submission - to update Remarks
+    const scriptURL = 'payment-api.php'
+
+    const form = document.getElementById('donation_review')
+    form.addEventListener('submit', e => {
+      e.preventDefault()
+      fetch(scriptURL, {
+          method: 'POST',
+          body: new FormData(document.getElementById('donation_review'))
+        })
+        .then(response => response.text())
+        .then(result => {
+          if (result === 'success') {
+            alert("Record has been updated.");
+            location.reload();
+          } else {
+            alert("Error updating record. Please try again later or contact support.");
+          }
+        })
+        .catch(error => {
+          console.error('Error!', error.message);
+        });
+    });
+
+    data.forEach(item => {
+      const formId = 'email-form-' + item.donationid
+      const form = document.forms[formId]
+      form.addEventListener('submit', e => {
+        e.preventDefault()
+        fetch('mailer.php', {
+            method: 'POST',
+            body: new FormData(document.forms[formId])
+          })
+          .then(response =>
+            alert("Email has been sent.")
+          )
+          .catch(error => console.error('Error!', error.message))
+      })
+    })
+  </script>
 
 </body>
 
