@@ -54,7 +54,7 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Donation</title>
+  <title>Old_Donation (till June 23)</title>
 
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
@@ -107,11 +107,17 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
 
             <div class="card-body">
               <br>
-              <div class="d-flex justify-content-between align-items-center">
-                <div>
-                  Record count: <?php echo sizeof($resultArr) ?><br>
-                  Total donated amount: <span class="badge bg-secondary"><?php echo $resultArrr ?></span>
+              <div class="row">
+                <div class="col">
+                  Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                  <br>Total donated amount:&nbsp;<p class="badge bg-secondary"><?php echo $resultArrr ?></p>
                 </div>
+                <div class="col text-end">
+                  <a href="donationinfo_admin.php">
+                    << New Donation data</a>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center position-absolute top-5 end-0 p-3">
                 <form method="POST" action="export_function.php">
                   <input type="hidden" value="donation" name="export_type" />
                   <input type="hidden" value="<?php echo $id ?>" name="invoice" />

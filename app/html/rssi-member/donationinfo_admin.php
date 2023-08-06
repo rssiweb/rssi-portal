@@ -164,11 +164,16 @@ if ($searchField !== '' || $fyear !== '') {
 
             <div class="card-body">
               <br>
-              <div class="d-flex justify-content-between align-items-center">
-                <div>
-                  Record count: <?php echo sizeof($resultArr) ?><br>
-                  Total donated amount: <span class="badge bg-secondary"><?php echo $totalDonatedAmount ?></span>
+              <div class="row">
+                <div class="col">
+                  Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                  <br>Total donated amount:&nbsp;<p class="badge bg-secondary"><?php echo $totalDonatedAmount ?></p>
                 </div>
+                <div class="col text-end">
+                  <a href="old_donationinfo_admin.php">Donation till June 23 >></a>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center position-absolute top-5 end-0 p-3">
                 <form method="POST" action="export_function.php">
                   <input type="hidden" value="donation" name="export_type" />
                   <input type="hidden" value="<?php echo $searchField ?>" name="searchField_export" />
