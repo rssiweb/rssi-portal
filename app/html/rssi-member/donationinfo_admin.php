@@ -83,7 +83,7 @@ function fetchDataAndTotalAmount($con, $searchField, $fyear)
                             CASE 
                                 WHEN EXTRACT(MONTH FROM pd.timestamp) >= 4 THEN EXTRACT(YEAR FROM pd.timestamp) + 1
                                 ELSE EXTRACT(YEAR FROM pd.timestamp)
-                            END) = $2 AND $2 IS NOT NULL) OR $2 IS NULL)";
+                            END) = $2 AND $2 IS NOT NULL) OR $2 IS NULL) AND status='Approved'";
 
   $totalAmountResult = pg_query_params($con, $totalAmountQuery, $params);
   $totalDonatedAmount = pg_fetch_result($totalAmountResult, 0, 0);

@@ -250,7 +250,7 @@ if ($formtype == "donation_form") {
     // After successful form submission
     if (!$errorOccurred) {
       // Sending email based on the donation type
-      $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel='$tel'";
+      $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel='$tel' OR tel='$contactNumberNew'";
       $result = pg_query($con, $emailQuery);
 
       if ($result) {
