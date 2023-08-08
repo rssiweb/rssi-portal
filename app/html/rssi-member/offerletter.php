@@ -199,7 +199,7 @@ if (!$result) {
 
                                 <p>Please sign the offer letter and email the scanned copy to us at info@rssi.in as a token of your acceptance. If not accepted within 3 calendar days, it will be construed that you are not interested in this employment and this offer will be automatically withdrawn.</p>
 
-                                <p>Along with the offer letter, you are also given a joining letter indicating the details of your joining date and initial place of posting. However, the joining letter will be considered valid only after fulfilling all the prerequisites of the onboarding process.</p>
+                                <p>Upon acceptance of the offer, you will receive a joining letter outlining your designated start date and initial assignment location. Please note that the validity of the joining letter is contingent upon the successful completion of all onboarding prerequisites.</p>
 
                                 <p>Please find attached the terms and conditions of your employment.</p>
                                 <p><b><u>COMPENSATION and BENEFITS</u></b></p>
@@ -210,14 +210,9 @@ if (!$result) {
                                 </ol>
                                 <p><b><u>TERMS AND CONDITIONS</u></b></p>
                                 <ol start="3">
-                                    <li>We hope your association with us will be a very long one. However, your association with the Organization can be terminated by Thirty (30) days notice in writing from either side, or you can buy out the notice period set by the Organization. However, in the event of any discrepancy or false information being found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, or any other serious breach of duty which may be prejudicial to the interests of the Organization, has the discretion to terminate your Services immediately or with such notice as it may deem fit.</li>
+                                    <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a thirty (30) days' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
+                                    <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
                                     <li>You are not eligible to take more than 1 leave without notice during your tenure, in case of more than 1 leave without notice, the organization may decide for dismissal.</li>
-                                    <!-- </ol>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <ol start="5"> -->
                                     <li>
                                         <?php if ($array['engagement'] == 'Intern') { ?>
                                             You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 1 month from the original joining date in accordance with the Service Agreement clause.
@@ -230,20 +225,21 @@ if (!$result) {
                                         <?php } ?>
 
                                     <li>You are expected to be active and responsive throughout your service period.</li>
-                                    <li>Working Hours —
+                                    <li>
+                                        <p>Working Hours:</p>
                                         <?php if (str_contains($array['position'], "Intern")) { ?>
-                                            4 days a week, 2.5 hours per day
+                                            The work schedule comprises 4 days per week, with each day requiring a three-hour commitment, inclusive of essential administrative tasks as required.
                                         <?php } else if (str_contains($array['position'], "Employee")) { ?>
-                                            6 days a week, 2.5 hours per day + Administrative activities as required.
+                                            The work schedule comprises 6 days per week, with each day requiring a three-hour commitment, inclusive of essential administrative tasks as required.
                                         <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
-                                            3 days a week, 2.5 hours per day
+                                            The work schedule comprises 3 days per week, with each day requiring a three-hour commitment, inclusive of essential administrative tasks as required.
                                         <?php } ?>
-
-                                        <br>The working hours can be extended up to a maximum of 30 minutes depending on the real time situation for other activities including prayer, and management i.e. student admission, and other non-academic activities etc. You should be flexible in terms of working hours.
+                                        <br>The regular working hours may be subject to an extension of up to a maximum of 30 minutes, contingent upon real-time demands pertaining to non-academic activities and similar operational necessities. You should be flexible in terms of working hours.
                                     </li>
-                                    <li>Primary responsibility —
-                                        Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills.To learn more about your role and responsibilities, please refer to the documents listed here.
-                                        <ol type="i">
+                                    <li>
+                                        <p>Primary responsibility:</p>
+                                        Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills. For a comprehensive understanding of your duties and obligations, please refer to the documents listed here.
+                                        <ol type="A">
                                             <?php if (str_contains($array['position'], "Intern")) { ?>
                                                 <li>
                                                     <a href="https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view" target="_blank">Responsibilities of the Teaching Intern</a>
@@ -271,16 +267,16 @@ if (!$result) {
                                     <li>Please note, with this post you will/may get access to the confidential data of our volunteers/interns/employees (Aadhar card number, PAN, Voter Card number, etc.) and students (Aadhar number of students and parents, Date of birth, contact number - especially for girls students), please handle those carefully. No part of the RSSI website, pictures, or documents labelled as RSSI Internal or RSSI confidential may be republished, displayed, or distributed on or through any means or media without explicit prior written permission. You would be liable for any kind of Data Breach if it takes place using your credentials.</li>
 
                                     <li>The Organization will retain ownership of all intellectual properties generated during your service period as part of your duties or associated responsibilities. All intellectual property rights on all ‘works’ (as per Copyright Act, 1957 and subsequent amendments) generated or modified by you individually or as part of a team during your service period and as part of your service period will be wholly vested in the Organization. By this contract, you have also signed any associated documents to confirm the above ownership further. Unless permitted by an explicit agreement you are also bound to keep such matters confidential and shall use such work for the sole benefit of the Organization required by your employer.
-                                        RSSI is a smoke, drug & alcohol-free workplace. Alcohol or drugs (unless prescribed for you by your treating medical practitioner) are not permitted to be carried with you or used on any RSSI premises or vehicles.</li>
+                                    </li>
+                                    <li>RSSI is a smoke, drug & alcohol-free workplace. Alcohol or drugs (unless prescribed for you by your treating medical practitioner) are not permitted to be carried with you or used on any RSSI premises or vehicles.</li>
 
-                                    <li>By accepting this offer letter you are also accepting all HR policies applicable to RSSI <?php echo $array['engagement'] ?> like PoSH, Leave Policy etc. HR can take action in case of any non-compliance.</li>
+                                    <li>By accepting the offer letter you are also accepting all HR policies applicable to RSSI <?php echo $array['engagement'] ?> like PoSH, Leave Policy etc. HR can take action in case of any non-compliance.</li>
+
+                                    <li>By accepting the offer letter, you provide consent for your service record to be included in the NGO DARPAN portal (NITI Aayog, Government of India) or other relevant government portals for administrative purposes.</li>
 
                                     <li>Your association will be governed by and constructed in accordance with the laws of India and the courts of Kharagpur, West Bengal alone will have the jurisdiction.</li>
                                 </ol>
-                                <!-- </td>
-                        </tr>
-                        <tr>
-                            <td> -->
+
                                 <?php if (str_contains($array['position'], "Employee")) { ?>
 
                                     <p><b><u>Increments and Promotions</u></b></p>
@@ -288,8 +284,13 @@ if (!$result) {
 
                                     <p><b><u>Maternity Leave</u></b></p>
 
-                                    <p>Full-time women employees are eligible to avail of maternity leave of 12 weeks. Out of these 12 weeks, six weeks of leave is post-natal leave. In case of miscarriage or medical termination of pregnancy, a worker is entitled to two weeks of paid maternity leave. Adopting or commissioning mothers, may avail of maternity leave for four weeks. For more details on the benefits and eligibility, please refer to RSSI Policy - Maternity Leave once you join.</p>
+                                    <p>Female full-time employees can access 12 weeks of maternity leave, including six weeks of post-natal leave. In situations of miscarriage or medical pregnancy termination, two weeks of paid maternity leave are granted. For adopting or commissioning mothers, a four-week maternity leave is available. For more details on the benefits and eligibility, please refer to RSSI Policy Maternity Leave once you join.</p>
                                 <?php } ?>
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
 
                                 <p><b><u>Disclaimer</u></b></p>
 
@@ -300,11 +301,10 @@ if (!$result) {
 
                                 <p>I look forward to your continued commitment to RSSI in the years to come.</p>
 
-
                                 <p>Sincerely,</p>
                                 <p><b>For Rina Shiksha Sahayak Foundation</b></p>
                                 <img src="../img/<?php echo $associatenumber ?>.png" width="65px" style="margin-bottom:-5px"><br>
-                                <p style="line-height: 2;"><?php echo $fullname ?><br>
+                                <p><?php echo $fullname ?><br>
                                     <?php if (str_contains($position, "Talent")) { ?>
                                         <?php echo 'Talent Acquisition & Academic Interface Program (AIP)' ?>
                                     <?php } else { ?>

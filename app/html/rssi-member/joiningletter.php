@@ -83,11 +83,8 @@ if (!$result) {
         }
 
         @media print {
-            table {
-                page-break-inside: auto;
-            }
 
-            .report-footer {
+            /* .report-footer {
                 position: fixed;
                 bottom: 0px;
                 height: 20px;
@@ -95,6 +92,15 @@ if (!$result) {
                 width: 90%;
                 border-top: solid 1px #ccc;
                 overflow: visible;
+            } */
+            .report-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background-color: #f8f9fa;
+                padding: 10px;
+                font-size: 12px;
             }
 
             .no-print,
@@ -117,6 +123,44 @@ if (!$result) {
         body {
             background-color: initial;
         }
+
+
+        .info-box {
+            display: flex;
+            justify-content: space-between;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .address {
+            margin-bottom: 10px;
+        }
+
+        .date-time {
+            font-weight: bold;
+        }
+
+        .qr-code {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .qr-message {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .qr-image {
+            width: 200px;
+        }
+    </style>
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <!------ Include the above in your HEAD tag ---------->
@@ -205,17 +249,99 @@ if (!$result) {
 
                                 <p>We would like to take this opportunity to extend a very warm welcome to Rina Shiksha Sahayak Foundation (RSSI) family.</p>
                                 <?php echo '<p>We are pleased to offer you the position of <b>' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ')</b> in the division of <b>' . $array['depb'] . '</b>. This appointment will be effective from <b>' . date('d/M/Y', strtotime($array['doj'])) . '</b>' ?>.</p>
-                                <p>You are now set to experience learning through our coveted WBT Program. RSSI HR Team will reach out to you over email in the next few days to guide you further on the web-based mandatory training process and steps to be taken to prepare yourself for onboarding.</p>
-                                <p>
-                                <p><b><u>Reporting Date and Time</u></b></p>
-                                <?php echo date('d/M/Y', strtotime($array['doj'])) . '&nbsp;&nbsp;3:30 pm' ?>
-                                </p>
-                                <p><b><u>Reporting Address</u></b></p>
-                                Rina Shiksha Sahayak Foundation (RSSI)<br>
-                                624V/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
-                                Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
-                                </p>
+                                <p>The joining letter does not serve as proof of employment or a work experience letter. Its purpose is to inform associates about the onboarding process. Successful completion of the prerequisites below makes the associate eligible for onboarding in the system. The mentioned joining date is the expected reporting date; however, non-completion of prerequisites may result in a change of the joining date.</p>
 
+                                <p><b>Onboarding Checklist</b></p>
+                                <ol>
+                                    <li>
+                                        <p>Please send the scanned copies of all documents for verification to info@rssi.in.</p>
+                                        <ol type="A">
+                                            <li>Highschool Marksheet</li>
+                                            <li>Intermediate Marksheet</li>
+                                            <li>Graduation Marksheet /Certificate OR Any supporting document with college ID.</li>
+                                            <li>Post-Graduation or equivalent Marksheet /Certificate (If applicable)</li>
+                                            <li>Additional training or course Certificate (If the certificate is not available or issued, please share the admit card or any supporting document)</li>
+                                            <li>PAN Card</li>
+                                            <li>
+                                                <p>If you are joining as an employee, kindly forward the following bank account details via email.</p>
+                                                <ol type="i">
+                                                    <li>Bank Account Number
+                                                    <li>Name of the Bank</li>
+                                                    <li>Bank IFSC Code</li>
+                                                    <li>Name of the account holder - This should be your account.</li>
+
+                                                </ol>
+                                            </li>
+                                        </ol>
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <ol start=2>
+                                    <li>
+                                        <p>Please complete the web-based training as outlined below. To complete the web-based training, you are permitted multiple attempts to reach a passing score or higher. Once you do, you may take a screenshot for your reference. To access the training, please use the following iExplore URL: https://login.rssi.in/rssi-member/iexplore.php</p>
+                                        <div class="container">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Course ID</th>
+                                                        <th>Course Title</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>11202</td>
+                                                        <td>WBT on Child Sexual Abuse</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>11217</td>
+                                                        <td>WBT on Classroom Teaching</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>11218</td>
+                                                        <td>WBT on Corporal Punishment</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>11216</td>
+                                                        <td>WBT on Digital Etiquette</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>11215</td>
+                                                        <td>WBT on Information Security Awareness</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>11213</td>
+                                                        <td>Occupational Health and Safety Policy</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+
+                                    </li>
+                                </ol>
+
+                                <div class="info-box">
+                                    <div class="left-column">
+                                        <div class="info-title">Address</div>
+                                        <div class="address">
+                                            Rina Shiksha Sahayak Foundation (RSSI NGO)<br> 624V/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
+                                            <!-- <a href="https://maps.app.goo.gl/BNq37UdBq4bUcM7a8">Google Map</a> -->
+                                            Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
+                                        </div>
+                                        <div class="date-time">
+                                            <p>Reporting Date and Time:</p>
+                                            <p><?php echo date('d/M/Y', strtotime($array['doj'])); ?>&nbsp;&nbsp;<span class="time">3:30 pm</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="right-column">
+                                        <div class="qr-code">
+                                            <img class="qr-image" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://maps.app.goo.gl/BNq37UdBq4bUcM7a8" alt="QR Code">
+                                            <p class="qr-message">Scan the QR code to view location in Google Maps</p>
+                                        </div>
+                                    </div>
+                                </div>
                                 <br>
                                 <p>Warm regards,</p>
                                 <p><b>For Rina Shiksha Sahayak Foundation</b></p>
@@ -232,18 +358,22 @@ if (!$result) {
                             </td>
                         </tr>
                     </tbody>
+
                     <tfoot>
                         <tr>
-                            <td>
-                                <p class=" report-footer">Private and Confidential</p>
+                            <td colspan="2">
+                                <div class="print-footer d-none d-print-inline-flex">
+                                    <p style="text-align: right;">Internal</p>
+                                </div>
                             </td>
                         </tr>
                     </tfoot>
-                </table>
-            <?php }
+
+
+                <?php }
         } else { ?>
-            <p class="no-print">Please enter Associate ID.</p> <?php } ?>
-        </section>
+                <p class="no-print">Please enter Associate ID.</p> <?php } ?>
+            </section>
     </div>
 </body>
 
