@@ -227,6 +227,7 @@ $resultArr = pg_fetch_all($result);
                                             ?>
                                             <option>Active</option>
                                             <option>Inactive</option>
+                                            <option>In Progress</option>
                                         </select>
                                         <input name="get_aaid" id="get_aaid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aaid ?>">
                                     </div>
@@ -345,7 +346,7 @@ $resultArr = pg_fetch_all($result);
                                         <?php echo '<td></td>'; ?>
                                     <?php } ?>
 
-                                    <?php echo '<td style="white-space:unset">' . $array['astatus'] . '<br>';
+                                    <?php echo '<td style="white-space:unset">' . $array['filterstatus'] . '<br>';
 
                                     if ($array['onleave'] != null) {
                                         echo '<br><p class="badge bg-danger">on leave</p>';
