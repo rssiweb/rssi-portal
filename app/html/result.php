@@ -256,13 +256,14 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <td>DATE OF BIRTH</td>
                         <th><?php echo $dateofbirth ?></th>
                     </tr>
-                    <tr>
-                        <td>ASSESSMENT PERIOD</td>
-                        <th colspan="3"><?php echo $examname ?>&nbsp; <?php echo $academicyear ?></th>
-                    </tr>
                 </tbody>
             </table>
-
+            <table>
+                <tr>
+                    <td style="text-align:center;font-family: 'Roboto Mono', monospace; font-size:large;"><b><?php echo $examname ?>&nbsp; <?php echo $academicyear ?></b></td>
+                </tr>
+            </table>
+<br>
             <table class="table" border="1" align="center" style="width: 100%;">
                 <tbody>
                     <tr bgcolor="#428BCA" style="color: #fff;">
