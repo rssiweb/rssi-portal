@@ -112,14 +112,23 @@ if ($formtype == "gpsedit") {
   @$itemtype = $_POST['itemtype'];
   @$quantity = $_POST['quantity'];
   @$remarks = $_POST['remarks'];
+  @$updatedby = $_POST['updatedby'];
   @$asset_status = $_POST['asset_status'];
   @$collectedby = strtoupper($_POST['collectedby']);
   @$taggedto = strtoupper($_POST['taggedto']);
   $now = date('Y-m-d H:i:s');
-  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto,asset_status) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto','$asset_status')";
-  $tagedit = "UPDATE gps SET  lastupdatedon='$now', itemid='$itemid', itemtype='$itemtype', itemname='$itemname', quantity='$quantity', remarks='$remarks', collectedby='$collectedby',taggedto='$taggedto',asset_status='$asset_status'WHERE itemid = '$itemid'";
+  $gpshistory = "INSERT INTO gps_history (itemid, date, itemtype, itemname, quantity, remarks, collectedby,taggedto,asset_status,updatedby) VALUES ('$itemid','$now','$itemtype','$itemname','$quantity','$remarks','$collectedby','$taggedto','$asset_status','$updatedby')";
+  $tagedit = "UPDATE gps SET  lastupdatedon='$now', itemid='$itemid', itemtype='$itemtype', itemname='$itemname', quantity='$quantity', remarks='$remarks', collectedby='$collectedby',taggedto='$taggedto',asset_status='$asset_status', lastupdatedby='$updatedby' WHERE itemid = '$itemid'";
   $result = pg_query($con, $tagedit);
   $result = pg_query($con, $gpshistory);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+    else
+      echo "failed";
+  } else
+    echo "bad request";
 }
 
 

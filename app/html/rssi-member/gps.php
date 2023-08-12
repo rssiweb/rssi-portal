@@ -77,7 +77,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         $query .= " WHERE " . implode(" AND ", $conditions);
     }
 
-    $query .= " ORDER BY itemname ASC";
+    $query .= " ORDER BY date DESC";
 
     $gpsdetails = $query;
 } ?>
@@ -451,11 +451,12 @@ $resultArr = pg_fetch_all($result);
                                     <?php echo '
                                 <td>' . $array['collectedby'] . '<br>' . $array['ifullname'] . '</td>
                                 <td>' . $array['taggedto'] . '<br>' . $array['tfullname'] . '</td>
-                                <td>' . $array['asset_status'] .'</td>
+                                <td>' . $array['asset_status'] . '</td>
                                 <td>' ?>
                                     <?php if ($array['lastupdatedon'] != null) { ?>
 
-                                        <?php echo @date("d/m/Y g:i a", strtotime($array['lastupdatedon'])) ?>
+                                        <?php echo @date("d/m/Y g:i a", strtotime($array['lastupdatedon'])) ?>&nbsp;by&nbsp;
+                                        <?php echo $array['lastupdatedby'] ?>
 
                                     <?php } else {
                                     }
@@ -684,6 +685,7 @@ $resultArr = pg_fetch_all($result);
                                                     <div class="col2" style="display: inline-block;">
                                                         <input type="hidden" class="form-control" name="itemid1" id="itemid1" type="text" value="" readonly>
                                                         <input type="hidden" class="form-control" name="form-type" type="text" value="gpsedit" readonly>
+                                                        <input type="hidden" class="form-control" name="updatedby" type="text" value="<?php echo $associatenumber ?>" readonly>
 
                                                         <span class="input-help">
                                                             <select name="itemtype" id="itemtype" class="form-select" style="width:max-content; display:inline-block" required>
@@ -968,11 +970,18 @@ $resultArr = pg_fetch_all($result);
                                             method: 'POST',
                                             body: new FormData(document.getElementById('gpsform'))
                                         })
-                                        .then(response =>
-                                            alert("Record has been updated.") +
-                                            location.reload()
-                                        )
-                                        .catch(error => console.error('Error!', error.message))
+                                        .then(response => response.text())
+                                        .then(result => {
+                                            if (result === 'success') {
+                                                alert("Record has been updated.");
+                                                location.reload();
+                                            } else {
+                                                alert("Error updating record. Please try again later or contact support.");
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Error!', error.message);
+                                        });
                                 })
 
                                 data.forEach(item => {

@@ -205,7 +205,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                     <?php } else { ?>
 
                                         <?php echo substr($array['itemname'], 0, 50) .
-                                            '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showname(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                            '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showname(\'' . $array['id'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
 <i class="bi bi-box-arrow-up-right"></i></button>' ?>
 
 
@@ -222,7 +222,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                         <?php } else { ?>
 
                                             <?php echo substr($array['remarks'], 0, 90) .
-                                                '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showremarks(\'' . $array['itemid'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                                '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showremarks(\'' . $array['id'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
                                 <i class="bi bi-box-arrow-up-right"></i></button>' ?>
                                         <?php }
                                         echo '</td>' ?>
@@ -235,7 +235,8 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                 <td>' ?>
                                     <?php if ($array['date'] != null) { ?>
 
-                                        <?php echo @date("d/m/Y g:i a", strtotime($array['date'])) ?>
+                                        <?php echo @date("d/m/Y g:i a", strtotime($array['date'])) ?>&nbsp;by&nbsp;
+                                        <?php echo $array['updatedby'] ?>
 
                                     <?php } else {
                                     } ?>
@@ -430,7 +431,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                 function showremarks(id1) {
                                     var mydata1 = undefined
                                     data1.forEach(item1 => {
-                                        if (item1["itemid"] == id1) {
+                                        if (item1["id"] == id1) {
                                             mydata1 = item1;
                                         }
                                     })
@@ -499,7 +500,7 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
                                 function showname(id2) {
                                     var mydata2 = undefined
                                     data2.forEach(item2 => {
-                                        if (item2["itemid"] == id2) {
+                                        if (item2["id"] == id2) {
                                             mydata2 = item2;
                                         }
                                     })
