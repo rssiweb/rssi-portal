@@ -260,10 +260,10 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
             </table>
             <table>
                 <tr>
-                    <td style="text-align:center;font-family: 'Roboto Mono', monospace; font-size:large;"><b><?php echo $examname ?>&nbsp; <?php echo $academicyear ?></b></td>
+                    <td style="text-align:center;"><b><?php echo $examname ?>&nbsp; <?php echo $academicyear ?></b></td>
                 </tr>
             </table>
-<br>
+            <br>
             <table class="table" border="1" align="center" style="width: 100%;">
                 <tbody>
                     <tr bgcolor="#428BCA" style="color: #fff;">
@@ -319,13 +319,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $hnd_o;
                                 }
 
-                                if ($hnd_o == "A" && ($hnd != "A" && $hnd != "-")) {
+                                if (($hnd_o == "A" || $hnd_o == null) && ($hnd != "A" && $hnd != "-")) {
                                     echo $hnd;
                                 }
                                 if ($hnd == "A" && ($hnd_o != "A" && $hnd_o != "-")) {
                                     echo $hnd_o;
                                 }
-                                if (($hnd != "A" && $hnd != "-") && ($hnd_o != "A" && $hnd_o != "-")) {
+                                if (($hnd != "A" && $hnd != "-") && ($hnd_o != "A" && $hnd_o != "-" && $hnd_o != null)) {
                                     echo $hnd_o + $hnd;
                                 }
 
@@ -371,13 +371,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $eng_o;
                                 }
 
-                                if ($eng_o == "A" && ($eng != "A" && $eng != "-")) {
+                                if (($eng_o == "A" || $eng_o == null) && ($eng != "A" && $eng != "-")) {
                                     echo $eng;
                                 }
                                 if ($eng == "A" && ($eng_o != "A" && $eng_o != "-")) {
                                     echo $eng_o;
                                 }
-                                if (($eng != "A" && $eng != "-") && ($eng_o != "A" && $eng_o != "-")) {
+                                if (($eng != "A" && $eng != "-") && ($eng_o != "A" && $eng_o != "-" && $eng_o != null)) {
                                     echo $eng_o + $eng;
                                 } ?>
                             </th>
@@ -421,13 +421,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $mth_o;
                                 }
 
-                                if ($mth_o == "A" && ($mth != "A" && $mth != "-")) {
+                                if (($mth_o == "A" || $mth_o == null) && ($mth != "A" && $mth != "-")) {
                                     echo $mth;
                                 }
                                 if ($mth == "A" && ($mth_o != "A" && $mth_o != "-")) {
                                     echo $mth_o;
                                 }
-                                if (($mth != "A" && $mth != "-") && ($mth_o != "A" && $mth_o != "-")) {
+                                if (($mth != "A" && $mth != "-") && ($mth_o != "A" && $mth_o != "-" && $mth_o != null)) {
                                     echo $mth_o + $mth;
                                 } ?>
                             </th>
@@ -471,13 +471,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $sce_o;
                                 }
 
-                                if ($sce_o == "A" && ($sce != "A" && $sce != "-")) {
+                                if (($sce_o == "A" || $sce_o == null) && ($sce != "A" && $sce != "-")) {
                                     echo $sce;
                                 }
                                 if ($sce == "A" && ($sce_o != "A" && $sce_o != "-")) {
                                     echo $sce_o;
                                 }
-                                if (($sce != "A" && $sce != "-") && ($sce_o != "A" && $sce_o != "-")) {
+                                if (($sce != "A" && $sce != "-") && ($sce_o != "A" && $sce_o != "-" && $sce_o != null)) {
                                     echo $sce_o + $sce;
                                 } ?></th>
                             <td style="text-align:left"></td>
@@ -520,13 +520,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $ssc_o;
                                 }
 
-                                if ($ssc_o == "A" && ($ssc != "A" && $ssc != "-")) {
+                                if (($ssc_o == "A" || $ssc_o == null) && ($ssc != "A" && $ssc != "-")) {
                                     echo $ssc;
                                 }
                                 if ($ssc == "A" && ($ssc_o != "A" && $ssc_o != "-")) {
                                     echo $ssc_o;
                                 }
-                                if (($ssc != "A" && $ssc != "-") && ($ssc_o != "A" && $ssc_o != "-")) {
+                                if (($ssc != "A" && $ssc != "-") && ($ssc_o != "A" && $ssc_o != "-" && $ssc_o != null)) {
                                     echo $ssc_o + $ssc;
                                 } ?>
                             </th>
@@ -577,13 +577,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $gka_o;
                                 }
 
-                                if ($gka_o == "A" && ($gka != "A" && $gka != "-")) {
+                                if (($gka_o == "A" || $gka_o == null) && ($gka != "A" && $gka != "-")) {
                                     echo $gka;
                                 }
                                 if ($gka == "A" && ($gka_o != "A" && $gka_o != "-")) {
                                     echo $gka_o;
                                 }
-                                if (($gka != "A" && $gka != "-") && ($gka_o != "A" && $gka_o != "-")) {
+                                if (($gka != "A" && $gka != "-") && ($gka_o != "A" && $gka_o != "-" && $gka_o != null)) {
                                     echo $gka_o + $gka;
                                 } ?>
                             </th>
@@ -627,13 +627,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $com_o;
                                 }
 
-                                if ($com_o == "A" && ($com != "A" && $com != "-")) {
+                                if (($com_o == "A" || $com_o == null) && ($com != "A" && $com != "-")) {
                                     echo $com;
                                 }
                                 if ($com == "A" && ($com_o != "A" && $com_o != "-")) {
                                     echo $com_o;
                                 }
-                                if (($com != "A" && $com != "-") && ($com_o != "A" && $com_o != "-")) {
+                                if (($com != "A" && $com != "-") && ($com_o != "A" && $com_o != "-" && $com_o != null)) {
                                     echo $com_o + $com;
                                 } ?>
                             </th>
@@ -677,13 +677,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $bio_o;
                                 }
 
-                                if ($bio_o == "A" && ($bio != "A" && $bio != "-")) {
+                                if (($bio_o == "A" || $bio_o == null) && ($bio != "A" && $bio != "-")) {
                                     echo $bio;
                                 }
                                 if ($bio == "A" && ($bio_o != "A" && $bio_o != "-")) {
                                     echo $bio_o;
                                 }
-                                if (($bio != "A" && $bio != "-") && ($bio_o != "A" && $bio_o != "-")) {
+                                if (($bio != "A" && $bio != "-") && ($bio_o != "A" && $bio_o != "-" && $bio_o != null)) {
                                     echo $bio_o + $bio;
                                 } ?>
                             </th>
@@ -727,13 +727,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $phy_o;
                                 }
 
-                                if ($phy_o == "A" && ($phy != "A" && $phy != "-")) {
+                                if (($phy_o == "A" || $phy_o == null) && ($phy != "A" && $phy != "-")) {
                                     echo $phy;
                                 }
                                 if ($phy == "A" && ($phy_o != "A" && $phy_o != "-")) {
                                     echo $phy_o;
                                 }
-                                if (($phy != "A" && $phy != "-") && ($phy_o != "A" && $phy_o != "-")) {
+                                if (($phy != "A" && $phy != "-") && ($phy_o != "A" && $phy_o != "-" && $phy_o != null)) {
                                     echo $phy_o + $phy;
                                 } ?>
                             </th>
@@ -777,13 +777,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $chm_o;
                                 }
 
-                                if ($chm_o == "A" && ($chm != "A" && $chm != "-")) {
+                                if (($chm_o == "A" || $chm_o == null) && ($chm != "A" && $chm != "-")) {
                                     echo $chm;
                                 }
                                 if ($chm == "A" && ($chm_o != "A" && $chm_o != "-")) {
                                     echo $chm_o;
                                 }
-                                if (($chm != "A" && $chm != "-") && ($chm_o != "A" && $chm_o != "-")) {
+                                if (($chm != "A" && $chm != "-") && ($chm_o != "A" && $chm_o != "-" && $chm_o != null)) {
                                     echo $chm_o + $chm;
                                 } ?>
                             </th>
@@ -827,13 +827,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $acc_o;
                                 }
 
-                                if ($acc_o == "A" && ($acc != "A" && $acc != "-")) {
+                                if (($acc_o == "A" || $acc_o == null) && ($acc != "A" && $acc != "-")) {
                                     echo $acc;
                                 }
                                 if ($acc == "A" && ($acc_o != "A" && $acc_o != "-")) {
                                     echo $acc_o;
                                 }
-                                if (($acc != "A" && $acc != "-") && ($acc_o != "A" && $acc_o != "-")) {
+                                if (($acc != "A" && $acc != "-") && ($acc_o != "A" && $acc_o != "-" && $acc_o != null)) {
                                     echo $acc_o + $acc;
                                 } ?>
                             </th>
@@ -845,7 +845,19 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <tr>
                             <td style="text-align:left"> Sulekh, Imla, Arts & Crafts </td>
                             <td style="text-align:left"> </td>
-                            <td style="text-align:left"> <?php echo $fullmarks + $fullmarks_o ?></td>
+                            <td style="text-align:left"> <?php
+                                                            $sum = 0;
+
+                                                            if (is_numeric($fullmarks)) {
+                                                                $sum += $fullmarks;
+                                                            }
+
+                                                            if (is_numeric($fullmarks_o)) {
+                                                                $sum += $fullmarks_o;
+                                                            }
+
+                                                            echo $sum;
+                                                            ?></td>
                             <th style="text-align:left"> </th>
                             <th style="text-align:left">
                                 <?php if ($hd_o == "-" && $hd == "-") {
@@ -868,13 +880,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $hd_o;
                                 }
 
-                                if ($hd_o == "A" && ($hd != "A" && $hd != "-")) {
+                                if (($hd_o == "A" || $hd_o == null) && ($hd != "A" && $hd != "-")) {
                                     echo $hd;
                                 }
                                 if ($hd == "A" && ($hd_o != "A" && $hd_o != "-")) {
                                     echo $hd_o;
                                 }
-                                if (($hd != "A" && $hd != "-") && ($hd_o != "A" && $hd_o != "-")) {
+                                if (($hd != "A" && $hd != "-") && ($hd_o != "A" && $hd_o != "-" && $hd_o != null)) {
                                     echo $hd_o + $hd;
                                 } ?>
                             </th>
@@ -899,13 +911,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $hd_o;
                                 }
 
-                                if ($hd_o == "A" && ($hd != "A" && $hd != "-")) {
+                                if (($hd_o == "A" || $hd_o == null) && ($hd != "A" && $hd != "-")) {
                                     echo $hd;
                                 }
                                 if ($hd == "A" && ($hd_o != "A" && $hd_o != "-")) {
                                     echo $hd_o;
                                 }
-                                if (($hd != "A" && $hd != "-") && ($hd_o != "A" && $hd_o != "-")) {
+                                if (($hd != "A" && $hd != "-") && ($hd_o != "A" && $hd_o != "-" && $hd_o != null)) {
                                     echo $hd_o + $hd;
                                 } ?>
                             </th>
@@ -949,13 +961,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     echo $pt_o;
                                 }
 
-                                if ($pt_o == "A" && ($pt != "A" && $pt != "-")) {
+                                if (($pt_o == "A" || $pt_o == null) && ($pt != "A" && $pt != "-")) {
                                     echo $pt;
                                 }
                                 if ($pt == "A" && ($pt_o != "A" && $pt_o != "-")) {
                                     echo $pt_o;
                                 }
-                                if (($pt != "A" && $pt != "-") && ($pt_o != "A" && $pt_o != "-")) {
+                                if (($pt != "A" && $pt != "-") && ($pt_o != "A" && $pt_o != "-" && $pt_o != null)) {
                                     echo $pt_o + $pt;
                                 } ?>
                             </th>
