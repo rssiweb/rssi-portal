@@ -195,7 +195,7 @@ if ($resultcount) {
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Class details</a></li>
-                    <li class="breadcrumb-item"><a href="#">AttendX</a></li>
+                    <li class="breadcrumb-item"><a href="attendx.php">AttendX</a></li>
                     <li class="breadcrumb-item active">In-out tracker</li>
                 </ol>
             </nav>
@@ -216,11 +216,12 @@ if ($resultcount) {
                                 </div>
 
                                 <div class="col-md-4 mb-3 d-flex justify-content-end">
-                                    <a href="#" id="toggleCategoryCount">Show Category Counts</a>
+                                    <!-- <a href="#" id="toggleCategoryCount">Hide Category Counts</a> -->
+                                    <a href="attendx.php">Go to AttendX</a>
                                 </div>
 
                                 <div class="col-md-12" id="categoryCountSection" style="display: none;">
-                                    <table class="table table-bordered table-sm" style="width: 30%; float: right;">
+                                    <table class="table table-bordered table-sm" style="width: 20%; float: right;">
                                         <tbody>
                                             <?php foreach ($resultArrcount as $entry) : ?>
                                                 <?php
@@ -254,7 +255,7 @@ if ($resultcount) {
                                 </div>
                             </div>
 
-                            <script>
+                            <!-- <script>
                                 document.getElementById('toggleCategoryCount').addEventListener('click', function(event) {
                                     event.preventDefault(); // Prevent the default behavior of the anchor tag
                                     var categoryCountSection = document.getElementById('categoryCountSection');
@@ -266,7 +267,26 @@ if ($resultcount) {
                                         this.textContent = 'Show Category Counts';
                                     }
                                 });
-                            </script>
+                            </script> -->
+                            <!-- <script>
+                                var toggleButton = document.getElementById('toggleCategoryCount');
+                                var categoryCountSection = document.getElementById('categoryCountSection');
+
+                                // Show the category count section initially
+                                categoryCountSection.style.display = 'block';
+
+                                toggleButton.addEventListener('click', function(event) {
+                                    event.preventDefault(); // Prevent the default behavior of the anchor tag
+
+                                    if (categoryCountSection.style.display === 'none') {
+                                        categoryCountSection.style.display = 'block';
+                                        this.textContent = 'Hide Category Counts';
+                                    } else {
+                                        categoryCountSection.style.display = 'none';
+                                        this.textContent = 'Show Category Counts';
+                                    }
+                                });
+                            </script> -->
 
 
                             <form action="" method="GET" class="row g-2 align-items-center">

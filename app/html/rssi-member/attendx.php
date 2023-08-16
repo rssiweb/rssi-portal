@@ -140,7 +140,7 @@ if (!$result) {
                         <div class="card-body">
                             <br>
                             <div class="col" style="display: inline-block; width:100%; text-align:right">
-                                <a href="in_out_tracker.php" target="_blank" title="Set Goals Now">In-out Tracker</a>
+                                <a href="in_out_tracker.php" target="_self" title="In-out Tracker">In-out Tracker</a> | <a href="monthly_attd_report.php" target="_self" title="Monthly Attendance Report">Monthly Attendance Report</a>
                             </div>
                             <div id="qr-reader" style="width:800px"></div>
                             <div id="qr-reader-results"></div>
