@@ -157,6 +157,8 @@ if ($resultcount) {
         });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-KyZXEAg3QhqLMpG8r+K/Sc6sWYS1/Jp6jz0c2i+cbS5J+d2G4n3ddN7jW5tM2Elk" crossorigin="anonymous">
+
     <style>
         .blink-text {
             color: red;
@@ -175,8 +177,28 @@ if ($resultcount) {
             }
         }
     </style>
+    <style>
+        .sync-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 5px;
+        }
 
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
 
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 </head>
 
 <!-- =========================
@@ -210,11 +232,11 @@ if ($resultcount) {
 
                         <div class="card-body">
                             <br>
-                            <div class="row">
+                            <div class="row" style="display: flex; align-items: center;">
                                 <div class="col-md-8 mb-3">
                                     <p>To customize the view result, please select a filter value.</p>
                                 </div>
-                                <div class="col-md-12" id="categoryCountSection" style="display: none;">
+                                <div class="col-md-4" id="categoryCountSection" style="margin-left: auto;">
                                     <table class="table table-bordered table-sm" style="width: 20%; float: right;">
                                         <tbody>
                                             <?php foreach ($resultArrcount as $entry) : ?>
@@ -248,40 +270,6 @@ if ($resultcount) {
                                     </table>
                                 </div>
                             </div>
-
-                            <!-- <script>
-                                document.getElementById('toggleCategoryCount').addEventListener('click', function(event) {
-                                    event.preventDefault(); // Prevent the default behavior of the anchor tag
-                                    var categoryCountSection = document.getElementById('categoryCountSection');
-                                    if (categoryCountSection.style.display === 'none') {
-                                        categoryCountSection.style.display = 'block';
-                                        this.textContent = 'Hide Category Counts';
-                                    } else {
-                                        categoryCountSection.style.display = 'none';
-                                        this.textContent = 'Show Category Counts';
-                                    }
-                                });
-                            </script> -->
-                            <!-- <script>
-                                var toggleButton = document.getElementById('toggleCategoryCount');
-                                var categoryCountSection = document.getElementById('categoryCountSection');
-
-                                // Show the category count section initially
-                                categoryCountSection.style.display = 'block';
-
-                                toggleButton.addEventListener('click', function(event) {
-                                    event.preventDefault(); // Prevent the default behavior of the anchor tag
-
-                                    if (categoryCountSection.style.display === 'none') {
-                                        categoryCountSection.style.display = 'block';
-                                        this.textContent = 'Hide Category Counts';
-                                    } else {
-                                        categoryCountSection.style.display = 'none';
-                                        this.textContent = 'Show Category Counts';
-                                    }
-                                });
-                            </script> -->
-
 
                             <form action="" method="GET" class="row g-2 align-items-center">
                                 <div class="row">
@@ -318,8 +306,10 @@ if ($resultcount) {
                                             You are viewing data for <span class="blink-text"><?= $formattedToday ?></span>
                                         </div>
                                     </div>
-                                    <div class="col-6 text-end"> <!-- Use the text-end class to align the button to the right -->
-                                        <button id="syncLiveDataBtn" class="btn btn-primary" onclick="showLoading()">Sync LIVE Data</button>
+                                    <div class="col-6 text-end">
+                                        <button id="syncLiveDataBtn" class="btn btn-danger btn-sm" onclick="showLoading()">
+                                            <span class="sync-icon"></span> Sync LIVE Data
+                                        </button>
                                     </div>
                                 </div>
 
