@@ -177,28 +177,6 @@ if ($resultcount) {
             }
         }
     </style>
-    <style>
-        .sync-icon {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid transparent;
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 5px;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
 </head>
 
 <!-- =========================
@@ -308,7 +286,7 @@ if ($resultcount) {
                                     </div>
                                     <div class="col-6 text-end">
                                         <button id="syncLiveDataBtn" class="btn btn-danger btn-sm" onclick="showLoading()">
-                                            <span class="sync-icon"></span> Sync LIVE Data
+                                        Sync LIVE Data
                                         </button>
                                     </div>
                                 </div>
