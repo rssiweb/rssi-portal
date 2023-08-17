@@ -214,12 +214,6 @@ if ($resultcount) {
                                 <div class="col-md-8 mb-3">
                                     <p>To customize the view result, please select a filter value.</p>
                                 </div>
-
-                                <div class="col-md-4 mb-3 d-flex justify-content-end">
-                                    <!-- <a href="#" id="toggleCategoryCount">Hide Category Counts</a> -->
-                                    <a href="attendx.php">Go to AttendX</a>
-                                </div>
-
                                 <div class="col-md-12" id="categoryCountSection" style="display: none;">
                                     <table class="table table-bordered table-sm" style="width: 20%; float: right;">
                                         <tbody>
