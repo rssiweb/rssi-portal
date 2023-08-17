@@ -164,25 +164,23 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "reimbursementapply") 
 
                         <div class="card-body">
                             <br>
-                            <?php if ($role == 'Admin') { ?>
-                                <?php if (@$claimid != null && @$cmdtuples == 0) { ?>
-                                    <div class="alert alert-danger alert-dismissible text-center" role="alert">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                        <span>ERROR: Oops, something wasn't right.</span>
-                                    </div>
-                                <?php } else if (@$cmdtuples == 1) { ?>
-                                    <div class="alert alert-success alert-dismissible text-center" role="alert">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-check2-circle" style="font-size: medium;"></i>
-                                        <span>Claim no <?php echo @$claimid ?> has been submitted.</span>
-                                    </div>
-                                    <script>
-                                        if (window.history.replaceState) {
-                                            window.history.replaceState(null, null, window.location.href);
-                                        }
-                                    </script>
-                                <?php } ?>
+                            <?php if (@$claimid != null && @$cmdtuples == 0) { ?>
+                                <div class="alert alert-danger alert-dismissible text-center" role="alert">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>ERROR: Oops, something wasn't right.</span>
+                                </div>
+                            <?php } else if (@$cmdtuples == 1) { ?>
+                                <div class="alert alert-success alert-dismissible text-center" role="alert">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-check2-circle" style="font-size: medium;"></i>
+                                    <span>Claim no <?php echo @$claimid ?> has been submitted.</span>
+                                </div>
+                                <script>
+                                    if (window.history.replaceState) {
+                                        window.history.replaceState(null, null, window.location.href);
+                                    }
+                                </script>
                             <?php } ?>
 
                             <div class=col style="text-align: right;">
