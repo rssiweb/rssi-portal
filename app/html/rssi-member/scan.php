@@ -205,7 +205,7 @@ if (!$result) {
     <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
         var enableLocationCheck = true
-        var isFullScreen = false;
+        var isFullScreen = true;
         var lastResult, lastScanTime = 0;
         var latitude; // Variable to store latitude
         var longitude; // Variable to store longitude
@@ -399,8 +399,8 @@ if (!$result) {
             // restrict the location to the office location (50m radius) of a set point 
             var officeLocation = {
                 //  RSSI LKO office
-                latitude: 26.8659136,
-                longitude: 81.0158809
+                // latitude: 26.8659136,
+                // longitude: 81.0158809
 
                 // zee home
                 // latitude: 19.3173098 ,
