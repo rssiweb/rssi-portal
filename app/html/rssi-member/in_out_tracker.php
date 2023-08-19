@@ -363,7 +363,7 @@ if ($resultcount) {
     <script src="../assets_new/js/main.js"></script>
     <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
-        const mqttClient = mqtt.connect('wss://mqtt.local')
+        const mqttClient = mqtt.connect('wss://mqtt.rssi.in')
         const TOPIC = "attendance-record-events";
         mqttClient.on("connect", () => {
             console.log("MQTT client connected.");
@@ -374,6 +374,7 @@ if ($resultcount) {
                 onNewAttendanceRecordEvent(message);
             }
         })
+
         function onNewAttendanceRecordEvent(message) {
             var attendanceRow = JSON.parse(message);
             addOrUpdateRowInAttendanceTable(attendanceRow);

@@ -60,7 +60,7 @@ if (@$_POST['form-type'] == "onboarding") {
         $reporting_date_time = $_POST['reporting-date-time'];
         $disclaimer = $_POST['onboarding_complete'];
         $now = date('Y-m-d H:i:s');
-        $ip_address = $_SERVER['HTTP_X_REAL_IP']; // Get the IP address of the user
+        $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user
         $onboarded = "UPDATE onboarding SET onboarding_photo='$onboarding_photo', reporting_date_time='$reporting_date_time', onboarding_otp_associate='$otp_associate', onboarding_otp_center_incharge='$otp_centreincharge', onboarding_submitted_by='$associatenumber', onboarding_submitted_on='$now', onboarding_flag='yes', disclaimer='$disclaimer', ip_address='$ip_address' where onboarding_associate_id='$otp_initiatedfor_main'";
         $result = pg_query($con, $onboarded);
         $cmdtuples = pg_affected_rows($result);

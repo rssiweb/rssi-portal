@@ -59,7 +59,7 @@ if (@$_POST['form-type'] == "exit") {
         $exit_interview = $_POST['exit-interview'];
         $exit_date_time = $_POST['exit-date-time'];
         $now = date('Y-m-d H:i:s');
-        $ip_address = $_SERVER['HTTP_X_REAL_IP']; // Get the IP address of the user
+        $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user
         $exit = "UPDATE associate_exit SET exit_photo='$exit_photo', exit_date_time='$exit_date_time', otp_associate='$otp_associate', otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', ip_address='$ip_address', remarks='$exit_remarks', asset_clearance=$asset_clearance, financial_clearance=$financial_clearance, security_clearance=$security_clearance, hr_clearance=$hr_clearance, work_clearance=$work_clearance,legal_clearance=$legal_clearance, exit_interview='$exit_interview' where exit_associate_id='$otp_initiatedfor_main'";
         $result = pg_query($con, $exit);
         $cmdtuples = pg_affected_rows($result);

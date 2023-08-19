@@ -24,8 +24,8 @@ function afterlogin($con, $date)
     $default_pass_updated_on = $row[53];
     // $role = $row[62];
 
-    // instead of REMOTE_ADDR use HTTP_X_REAL_IP to get real client IP
-    $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$student_id','$_SERVER[HTTP_X_REAL_IP]','$date')";
+    // instead of REMOTE_ADDR use REMOTE_ADDR to get real client IP
+    $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$student_id','$_SERVER[REMOTE_ADDR]','$date')";
     $result = pg_query($con, $query);
 
     if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {

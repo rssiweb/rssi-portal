@@ -556,7 +556,7 @@ if ($formtype === "attendance") {
   $user_id = @$_POST['userId'];
   $punch_time = date('Y-m-d H:i:s');
   $date = date('Y-m-d');
-  $ip_address = $_SERVER['HTTP_X_REAL_IP'] ?? $_SERVER['REMOTE_ADDR']; // Fallback to REMOTE_ADDR if HTTP_X_REAL_IP is not set
+  $ip_address = $_SERVER['REMOTE_ADDR'] ?? $_SERVER['REMOTE_ADDR']; // Fallback to REMOTE_ADDR if REMOTE_ADDR is not set
   $recorded_by = $_SESSION['aid'];
 
   // Assuming the GPS location is sent from the frontend in the following format

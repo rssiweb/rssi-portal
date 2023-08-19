@@ -175,7 +175,7 @@ if (!$result) {
                                             // echo '<td>' . $array['category'] . $array['engagement'] . '</td>';
                                             echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '/' . $array['class'] : '') . '</td>';
                                             echo '<td>' . $array['status'] . '</td>';
-                                            echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
+                                            echo '<td>' . date('d/m/Y h:i:s a', strtotime($array['timestamp'])) . '</td>';
                                             echo '<td>' . $array['ip_address'] . '</td>';
                                             echo '<td>' . $array['gps_location'] . '</td>';
                                             echo '</tr>';
@@ -204,7 +204,7 @@ if (!$result) {
     <script src="../assets_new/js/main.js"></script>
     <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
-        var enableLocationCheck = false
+        var enableLocationCheck = true
         var isFullScreen = false;
         var lastResult, lastScanTime = 0;
         var latitude; // Variable to store latitude
@@ -392,7 +392,7 @@ if (!$result) {
             // Get latitude and longitude values
             console.log(latitude, longitude);
             if (!latitude || !longitude) {
-                hideLoading();
+                
                 alert("Error getting location. Please try again later or contact support.");
                 return;
             }
@@ -401,6 +401,12 @@ if (!$result) {
                 //  RSSI LKO office
                 latitude: 26.8659136,
                 longitude: 81.0158809
+
+                // zee home
+                // latitude: 19.3173098 ,
+                // longitude: -81.1816173
+                
+                
             };
             var distance = getDistance(latitude, longitude, officeLocation.latitude, officeLocation.longitude);
             console.log("distance is:", distance);
@@ -490,17 +496,22 @@ if (!$result) {
         }
 
         var allowAttendance = !enableLocationCheck;
+        
         if (enableLocationCheck) {
             showLoading();
-            checkIfAtOffice();
+            getLocation().then(()=>{
+                hideLoading();
+                checkIfAtOffice();
+            });
         } else {
-            getLocation();
-            hideLoading();
-            setUpCameraForScan();
+            getLocation().then(()=>{
+                hideLoading();
+                setUpCameraForScan();
+            });
         }
 
         // Publish events on MQTT server
-        const mqttClient = mqtt.connect('wss://mqtt.local')
+        const mqttClient = mqtt.connect('wss://mqtt.rssi.in')
         const TOPIC = "attendance-record-events";
         mqttClient.on("connect", () => {
             console.log("MQTT client connected.");
