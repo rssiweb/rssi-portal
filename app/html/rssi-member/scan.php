@@ -255,7 +255,7 @@ if (!$result) {
                 disableFlip: true, 
                 videoConstraints: null
             };
-            html5QrCode.start({ facingMode: "user" }, config, onScanSuccess);
+            html5QrCode.start({  }, config, onScanSuccess);
         }
 
         function playNotificationSound() {
