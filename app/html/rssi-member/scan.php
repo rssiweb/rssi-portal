@@ -204,7 +204,7 @@ if (!$result) {
     <script src="../assets_new/js/main.js"></script>
     <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
-        var enableLocationCheck = true
+        var enableLocationCheck = false
         var isFullScreen = true;
         var lastResult, lastScanTime = 0;
         var latitude; // Variable to store latitude
@@ -255,7 +255,9 @@ if (!$result) {
                 disableFlip: true, 
                 videoConstraints: null
             };
-            html5QrCode.start({  }, config, onScanSuccess);
+            html5QrCode.start({
+                facingMode :"environment"
+            }, config, onScanSuccess);
         }
 
         function playNotificationSound() {
@@ -495,16 +497,20 @@ if (!$result) {
             lastTr.insertAdjacentElement("afterend", newTr);
         }
 
+
         var allowAttendance = !enableLocationCheck;
         
         if (enableLocationCheck) {
+            console.log("getting location")
             showLoading();
             getLocation().then(()=>{
                 hideLoading();
                 checkIfAtOffice();
             });
         } else {
+            console.log("getting location")
             getLocation().then(()=>{
+                console.log("getting location 1")
                 hideLoading();
                 setUpCameraForScan();
             });
