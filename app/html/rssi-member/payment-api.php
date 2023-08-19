@@ -626,7 +626,6 @@ if ($formtype === "attendance") {
         "class" => $class,
         "ipAddress" => $ip_address,
         "gpsLocation" => $gps,
-        "class" => $class,
         "punchOut" => $punch_out,
       )
     );

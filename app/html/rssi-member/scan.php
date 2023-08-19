@@ -175,7 +175,7 @@ if (!$result) {
                                             // echo '<td>' . $array['category'] . $array['engagement'] . '</td>';
                                             echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '/' . $array['class'] : '') . '</td>';
                                             echo '<td>' . $array['status'] . '</td>';
-                                            echo '<td>' . date('d/m/Y h:i:s a', strtotime($array['timestamp'])) . '</td>';
+                                            echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
                                             echo '<td>' . $array['ip_address'] . '</td>';
                                             echo '<td>' . $array['gps_location'] . '</td>';
                                             echo '</tr>';

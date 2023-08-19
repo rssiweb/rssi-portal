@@ -338,7 +338,7 @@ if ($resultcount) {
                                             echo '</tr>';
                                         }
                                     } else {
-                                        echo '<tr><td colspan="8">No records found.</td></tr>';
+                                        echo '<tr id="no-record" ><td colspan="8">No records found.</td></tr>';
                                     }
 
                                     echo '<tr style="display:none" id="last-row"></tr>';
@@ -407,8 +407,13 @@ if ($resultcount) {
                 }
             }
         }
-
+        function removeNoRecordTr(){
+            var tr = document.getElementById("no-record")
+            if(tr)
+                tr.remove()
+        }
         function addOrUpdateRowInAttendanceTable(attendanceRow) {
+            removeNoRecordTr()
             const userId = attendanceRow['userId']
             var tr = document.getElementById(userId)
             if (tr != null) {
