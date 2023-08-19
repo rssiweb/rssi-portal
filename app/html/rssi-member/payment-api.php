@@ -556,7 +556,7 @@ if ($formtype === "attendance") {
   $user_id = @$_POST['userId'];
   $punch_time = date('Y-m-d H:i:s');
   $date = date('Y-m-d');
-  $ip_address = $_SERVER['HTTP_X_REAL_IP'] ?? $_SERVER['REMOTE_ADDR']; // Fallback to REMOTE_ADDR if HTTP_X_REAL_IP is not set
+  $ip_address = $_SERVER['REMOTE_ADDR'] ?? $_SERVER['REMOTE_ADDR']; // Fallback to REMOTE_ADDR if REMOTE_ADDR is not set
   $recorded_by = $_SESSION['aid'];
 
   // Assuming the GPS location is sent from the frontend in the following format
@@ -577,10 +577,17 @@ if ($formtype === "attendance") {
     );
   } else {
     // Prepared statement for first SELECT query
-    $select_query = "SELECT user_id, max(punch_in) punch_in FROM attendance WHERE date='$date' AND user_id='$user_id' GROUP BY user_id";
+    $select_query = "SELECT user_id, min(punch_in) punch_in, max(punch_in) punch_out FROM attendance WHERE date='$date' AND user_id='$user_id' GROUP BY user_id";
     $result = pg_query($con, $select_query);
     $row = pg_fetch_assoc($result);
     $punch_in = $row["punch_in"];
+    $punch_out = $row["punch_out"];
+    if (strtotime($punch_in) === strtotime($punch_out)) {
+      // not yet punched out
+      $punch_out = "";
+    }else{
+      $punch_out = date('d/m/Y h:i:s a', strtotime($punch_out));
+    }
 
     // Prepared statement for second SELECT query
     $query = "SELECT fullname, filterstatus, engagement FROM rssimyaccount_members WHERE associatenumber='$user_id'";
@@ -613,11 +620,14 @@ if ($formtype === "attendance") {
         "userId" => $user_id,
         "userName" => $name,
         "punchIn" => date('d/m/Y h:i:s a', strtotime($punch_in)),
+        "timestamp" => date('d/m/Y h:i:s a', strtotime($punch_time)),
         "status" => $status,
         "category" => $categoryValue,
         "class" => $class,
         "ipAddress" => $ip_address,
-        "gpsLocation" => $gps
+        "gpsLocation" => $gps,
+        "class" => $class,
+        "punchOut" => $punch_out,
       )
     );
   }

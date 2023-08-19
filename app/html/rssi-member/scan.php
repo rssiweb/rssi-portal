@@ -139,7 +139,11 @@ if (!$result) {
                     <div class="card">
                         <div class="card-body">
                             <br>
-                            <div id="qr-reader" style="width:800px"></div>
+                            <div id="qr-reader" style="width:100%"></div>
+                            <div id="loading" class="text-center">
+                                <div class="spinner-border" role="status"></div>
+                                <div>Loading</div>
+                            </div>
                             <div id="qr-reader-results"></div>
                             <br>
                             <?php
@@ -171,7 +175,7 @@ if (!$result) {
                                             // echo '<td>' . $array['category'] . $array['engagement'] . '</td>';
                                             echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '/' . $array['class'] : '') . '</td>';
                                             echo '<td>' . $array['status'] . '</td>';
-                                            echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
+                                            echo '<td>' . date('d/m/Y h:i:s a', strtotime($array['timestamp'])) . '</td>';
                                             echo '<td>' . $array['ip_address'] . '</td>';
                                             echo '<td>' . $array['gps_location'] . '</td>';
                                             echo '</tr>';
@@ -198,10 +202,15 @@ if (!$result) {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-
+    <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
-        var resultContainer = document.getElementById('qr-reader-results');
+        var enableLocationCheck = true
+        var isFullScreen = false;
         var lastResult, lastScanTime = 0;
+        var latitude; // Variable to store latitude
+        var longitude; // Variable to store longitude
+        const sameQRScanInterval = 60000; // Threshold value for same QR code scan in milliseconds
+        var resultContainer = document.getElementById('qr-reader-results');
 
         function onScanSuccess(decodedText, decodedResult) {
             var diff = (Number(new Date()) - lastScanTime)
@@ -219,13 +228,35 @@ if (!$result) {
             }
         }
 
-        var html5QrcodeScanner = new Html5QrcodeScanner(
-            "qr-reader", {
-                fps: 10,
-                qrbox: 400,
-                disableFlip: true,
-            });
-        html5QrcodeScanner.render(onScanSuccess);
+        function setUpCameraForScan(){
+            var qrBoxSize = 400
+            const width = window.innerWidth
+            const height = window.innerHeight
+            const aspectRatio = width / height
+            const reverseAspectRatio = height / width
+
+            const mobileAspectRatio = reverseAspectRatio > 1.5
+                ? reverseAspectRatio + (reverseAspectRatio * 12 / 100)
+                : reverseAspectRatio
+
+            const videoConstraints = {
+                facingMode: 'environment',
+                aspectRatio: width < 600
+                    ? mobileAspectRatio
+                    : aspectRatio,
+            }
+            qrBoxSize = Math.round(width * 0.5)
+            console.log('qrBoxSize', qrBoxSize)
+            
+            const html5QrCode = new Html5Qrcode("qr-reader", { formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] });
+            const config = {
+                fps: 10, 
+                qrbox: qrBoxSize, 
+                disableFlip: true, 
+                videoConstraints: null
+            };
+            html5QrCode.start({ facingMode: "user" }, config, onScanSuccess);
+        }
 
         function playNotificationSound() {
             var notificationSound = document.getElementById('notification-sound');
@@ -246,8 +277,6 @@ if (!$result) {
             }, 3000); // 3000 milliseconds = 3 seconds (adjust the time as needed)
         }
 
-        var latitude; // Variable to store latitude
-        var longitude; // Variable to store longitude
 
         function getLocation() {
             return new Promise((resolve, reject) => {
@@ -269,12 +298,157 @@ if (!$result) {
                 }
             });
         }
+        
+        function deg2rad(deg) {
+            return deg * (Math.PI/180)
+        }
+
+        function getDistance(lat,lon,office_lat, office_lon){
+            var R = 6371; // Radius of the earth in km
+            var dLat = deg2rad(lat-office_lat);  // deg2rad below
+            var dLon = deg2rad(lon-office_lon); 
+            var a = 
+              Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(deg2rad(office_lat)) * Math.cos(deg2rad(lat)) * 
+              Math.sin(dLon/2) * Math.sin(dLon/2)
+              ; 
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+            var d = R * c; // Distance in km
+            return d;
+        }
+
+        function showLoading(){
+            var loadingEl = document.getElementById('loading');
+            loadingEl.style.display = 'block';
+        }
+
+        function hideLoading(){
+            var loadingEl = document.getElementById('loading');
+            loadingEl.style.display = 'none';
+        }
+
+        var elementStyleBackup = {
+            width: "",
+            height: "",
+            position: "",
+            top: "",
+            left: "",
+            zIndex: "",
+        }
+        const elementStyleFullScreen = {
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            top: "0",
+            left: "0",
+            zIndex: "1000",
+        }
+
+        function setElementBackToNormal(){
+            var elem = document.getElementById("qr-reader");
+            if (!elem) return;
+            if (!isFullScreen) return;
+            elem.style.width = elementStyleBackup.width;
+            elem.style.height = elementStyleBackup.height;
+            elem.style.position = elementStyleBackup.position;
+            elem.style.top = elementStyleBackup.top;
+            elem.style.left = elementStyleBackup.left;
+            elem.style.zIndex = elementStyleBackup.zIndex;
+            isFullScreen = false;
+        }
+        function setElementToFullScreen(){
+            var elem = document.getElementById("qr-reader");
+            if (!elem) return;
+            if (isFullScreen) return;
+            elementStyleBackup = {
+                width: elem.style.width,
+                height: elem.style.height,
+                position: elem.style.position,
+                top: elem.style.top,
+                left: elem.style.left,
+                zIndex: elem.style.zIndex,
+            }
+            elem.style.width = elementStyleFullScreen.width;
+            elem.style.height = elementStyleFullScreen.height;
+            elem.style.position = elementStyleFullScreen.position;
+            elem.style.top = elementStyleFullScreen.top;
+            elem.style.left = elementStyleFullScreen.left;
+            elem.style.zIndex = elementStyleFullScreen.zIndex;
+            // div {width: 100%; height: 100%;}
+            // div {position: absolute; top: 0; left: 0;}
+            // z-index: 1000;
+            isFullScreen = true;
+        }
+        function toggleFullScreen(){
+            if (isFullScreen) {
+                setElementBackToNormal();
+                setUpCameraForScan();
+            } else {
+                setElementToFullScreen();
+                setUpCameraForScan();
+            }
+        }
+        function checkIfAtOffice(){
+            // Get latitude and longitude values
+            console.log(latitude, longitude);
+            if (!latitude || !longitude) {
+                
+                alert("Error getting location. Please try again later or contact support.");
+                return;
+            }
+            // restrict the location to the office location (50m radius) of a set point 
+            var officeLocation = {
+                //  RSSI LKO office
+                latitude: 26.8659136,
+                longitude: 81.0158809
+
+                // zee home
+                // latitude: 19.3173098 ,
+                // longitude: -81.1816173
+                
+                
+            };
+            var distance = getDistance(latitude, longitude, officeLocation.latitude, officeLocation.longitude);
+            console.log("distance is:", distance);
+            tolerance = 0.05; // 50m
+            if (distance > tolerance) {
+                hideLoading();
+                distance = Math.round(distance * 100) / 100;
+                alert(`Seems like you are not in office (${distance} KM away from office). Please try again when you are in office.`);
+                return;
+            }else{
+                allowAttendance = true;
+                hideLoading();
+                setUpCameraForScan();
+            }
+        }
+
+        function playNotificationSound() {
+            var notificationSound = document.getElementById('notification-sound');
+            notificationSound.play();
+        }
+
+        function showSuccessToast(userId, userName) {
+            var successToast = document.getElementById('success-toast');
+            successToast.style.display = 'block';
+            var useridEl = document.getElementById('success-userid');
+            useridEl.innerHTML = userId;
+            var usernameEl = document.getElementById('success-username');
+            usernameEl.innerHTML = userName;
+
+            // Hide the toast after a few seconds (adjust the time as needed)
+            setTimeout(function() {
+                successToast.style.display = 'none';
+            }, 3000); // 3000 milliseconds = 3 seconds (adjust the time as needed)
+        }
+
 
         async function submitAttendance(userId) {
+            if(!allowAttendance){
+                alert("You are not in office. Please try again when you are in office.");
+                return;
+            }
             try {
-                // Get latitude and longitude values
-                await getLocation();
-
                 var data = new FormData();
                 data.set("userId", userId);
                 data.set("form-type", "attendance");
@@ -294,6 +468,7 @@ if (!$result) {
                     addRowInAttendanceTable(result);
                     playNotificationSound(); // Play notification sound on successful form submission
                     showSuccessToast(result.userId, result.userName); // Show the success notification toast
+                    publishAttendanceEvent(result); // Publish the attendance event on MQTT server
                 }
             } catch (error) {
                 console.error(error);
@@ -304,7 +479,7 @@ if (!$result) {
             var lastTr = document.getElementById('last-row');
             var newTr = document.createElement('tr');
 
-            for (var key of ["userId", "userName", "category", "status", "punchIn", "ipAddress", "gpsLocation"]) {
+            for (var key of ["userId", "userName", "category", "status", "timestamp", "ipAddress", "gpsLocation"]) {
                 var td = document.createElement('td');
 
                 // If the key is "category" or "class", concatenate them with a slash (/) in between if "class" is available
@@ -318,6 +493,39 @@ if (!$result) {
             }
 
             lastTr.insertAdjacentElement("afterend", newTr);
+        }
+
+        var allowAttendance = !enableLocationCheck;
+        
+        if (enableLocationCheck) {
+            showLoading();
+            getLocation().then(()=>{
+                hideLoading();
+                checkIfAtOffice();
+            });
+        } else {
+            getLocation().then(()=>{
+                hideLoading();
+                setUpCameraForScan();
+            });
+        }
+
+        // Publish events on MQTT server
+        const mqttClient = mqtt.connect('wss://mqtt.rssi.in')
+        const TOPIC = "attendance-record-events";
+        mqttClient.on("connect", () => {
+            console.log("MQTT client connected.");
+            //TODO: show notification on successful connection
+        })
+
+        function publishAttendanceEvent(record) {
+            if (!mqttClient.connected) {
+                console.log("MQTT client not connected. Skipping MQTT publish.");
+                return;
+            };
+            var message = JSON.stringify(record);
+            mqttClient.publish(TOPIC, message);
+            console.log("MQTT message published on topic:", TOPIC, "message:", message);
         }
     </script>
 

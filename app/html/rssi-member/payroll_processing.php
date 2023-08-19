@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   $comment = $_POST['comment'];
   $uniqueId = uniqid();
   $now = date('Y-m-d H:i:s');
-  $ip_address = $_SERVER['HTTP_X_REAL_IP']; // Get the IP address of the user
+  $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user
 
   // Ensure that the form fields are arrays
   $salaryComponents = is_array($_POST['componentName']) ? $_POST['componentName'] : [$_POST['componentName']];
