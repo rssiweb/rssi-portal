@@ -259,7 +259,11 @@ if ($formtype == "donation_form") {
     // After successful form submission
     if (!$errorOccurred) {
       // Sending email based on the donation type
-      $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel='{$tel}{$contactNumberNew}'";
+      if ($_POST['donationType'] === "existing") {
+        $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel='$tel'";
+      } else if ($_POST['donationType'] === "new") {
+        $emailQuery = "SELECT email, fullname FROM donation_userdata WHERE tel='$contactNumberNew'";
+      }
       $result = pg_query($con, $emailQuery);
 
       if ($result) {
@@ -277,7 +281,7 @@ if ($formtype == "donation_form") {
           "fullname" => $name,
           "donationId" => $donationId,
           "timestamp" => $timestamp,
-          "tel" => $tel . $contactNumberNew,
+          "tel" => @$tel . @$contactNumberNew,
           "email" => $email,
           "transactionid" => $transactionId,
           "currency" => $currency,
@@ -585,7 +589,7 @@ if ($formtype === "attendance") {
     if (strtotime($punch_in) === strtotime($punch_out)) {
       // not yet punched out
       $punch_out = "";
-    }else{
+    } else {
       $punch_out = date('d/m/Y h:i:s a', strtotime($punch_out));
     }
 
