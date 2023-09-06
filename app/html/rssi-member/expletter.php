@@ -207,7 +207,7 @@ if (!$result) {
                                         <?php } ?>(date in dd/mm/yyyy).<br><br>
 
                                         <?php echo $array['fullname'] ?> has been an exemplary associate and has always worked diligently to complete tasks assigned to
-                                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?>. <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?> has been a valuable asset to the team and has consistently met the required goals and expectations. We appreciate <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> commitment to excellence, hard work and dedication.<br><br>
+                                        <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?>. <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?> has been a valuable asset to the team and has consistently met the required goals and expectations. We appreciate <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> commitment to excellence, hard work and dedication.<br><br>
                                         We wish <?php if ($array['gender'] == 'Male') { ?><?php echo 'him' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> all the best for <?php if ($array['gender'] == 'Male') { ?><?php echo 'his' ?><?php } else { ?> <?php echo 'her' ?><?php } ?> future endeavors.<br><br>
 
                                         Sincerely,<br><br><br><br>
