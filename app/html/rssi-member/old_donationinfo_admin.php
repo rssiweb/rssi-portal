@@ -119,7 +119,7 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
               </div>
               <div class="d-flex justify-content-between align-items-center position-absolute top-5 end-0 p-3">
                 <form method="POST" action="export_function.php">
-                  <input type="hidden" value="donation" name="export_type" />
+                  <input type="hidden" value="donation_old" name="export_type" />
                   <input type="hidden" value="<?php echo $id ?>" name="invoice" />
                   <input type="hidden" value="<?php echo $status ?>" name="fyear" />
 

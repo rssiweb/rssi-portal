@@ -21,6 +21,8 @@ if ($export_type == "fees") {
   gps_export();
 } else if ($export_type == "reimb") {
   reimb_export();
+} else if ($export_type == "donation_old") {
+  donation_old_export();
 }
 
 function fees_export()
@@ -376,5 +378,46 @@ function student_export()
   foreach ($resultArr as $array) {
 
     echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['doa'] . ',' . $array['maxmonth'] . ',' . $array['special_service'] . "\n";
+  }
+}
+function donation_old_export()
+{
+
+
+  global $con;
+  @$id = $_POST['invoice'];
+  @$status = $_POST['fyear'];
+
+
+  if ($id == null && $status == 'ALL') {
+    $result = pg_query($con, "SELECT * FROM donation order by id desc");
+    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
+  } else if ($id == null && $status != 'ALL') {
+    $result = pg_query($con, "SELECT * FROM donation WHERE year='$status' order by id desc");
+    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE year='$status'");
+  } else if ($id > 0 && $status != 'ALL') {
+    $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' AND year='$status' order by id desc");
+    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id' AND year='$status'");
+  } else if ($id > 0 && $status == 'ALL') {
+    $result = pg_query($con, "SELECT * FROM donation WHERE invoice='$id' order by id desc");
+    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation WHERE invoice='$id'");
+  } else {
+    $result = pg_query($con, "SELECT * FROM donation order by id desc");
+    $totaldonatedamount = pg_query($con, "SELECT SUM(donatedamount) FROM donation");
+  }
+
+  if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+  }
+
+  $resultArr = pg_fetch_all($result);
+  echo 'Sl. No.,Pre Acknowledgement Number,ID Code,Unique Identification Number,Section Code,Unique Registration Number (URN),Date of Issuance of Unique Registration Number,Name of donor,Address of donor,Donation Type,Mode of receipt,Currency,Amount of donation,Invoice no,Invoice link' . "\n";
+  $counter = 1; // Initialize the counter
+
+  foreach ($resultArr as $array) {
+
+    echo $counter . ',' . ',' . $array['uitype'] . ',' . $array['uinumber'] . ',' . 'Section 80G' . ',' . 'AAKCR2540KF20214' . ',' . date("d/m/Y g:i a", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',"' . $array['address'] . '",' . $array['donation_type'] . ',' . $array['modeofpayment'] . ',' . $array['currencyofthedonatedamount'] . ',' . $array['donatedamount'] . ',' . $array['invoice'] . ',' . $array['profile'] . "\n";
+    $counter++; // Increment the counter for each iteration
   }
 }
