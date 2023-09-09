@@ -319,6 +319,7 @@ $categories = [
                                             <button type="submit" class="btn btn-primary" id="transferButton" disabled>Bulk Transfer (<span id="selectedCount">0</span>)</button>
                                         </form>
                                     </div>
+
                                     <script>
                                         const pidInput = document.getElementById('pid');
                                         const transferButton = document.getElementById('transferButton');
@@ -331,6 +332,7 @@ $categories = [
                                                 transferButton.disabled = true;
                                             }
                                         });
+
                                         $(document).ready(function() {
                                             $('input[name="checkbox[]"]').change(function() {
                                                 var selectedValues = [];
@@ -339,6 +341,7 @@ $categories = [
                                                 });
                                                 $('#pid').val(selectedValues.join(', '));
                                                 $('#selectedCount').text(selectedValues.length); // Update selected count
+                                                pidInput.dispatchEvent(new Event('input')); // Trigger the input event
                                             });
 
                                             $('form[name="transfer_all"]').submit(function(event) {
