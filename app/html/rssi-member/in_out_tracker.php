@@ -219,33 +219,23 @@ if ($resultcount) {
                                     <p>To customize the view result, please select a filter value.</p>
                                 </div>
                                 <div class="col-md-4" id="categoryCountSection" style="margin-left: auto;">
-                                    <table class="table table-bordered table-sm" style="width: 20%; float: right;">
+                                    <table class="table table-bordered table-sm" style="width: 20%; float: right;" id="summaryTable">
                                         <tbody>
-                                            <?php foreach ($resultArrcount as $entry) : ?>
-                                                <?php
-                                                $category = $entry['category'];
-                                                $category_count = $entry['category_count'];
-                                                $preschool_count = isset($entry['preschool_count']) ? $entry['preschool_count'] : null;
-                                                $class_1_count = isset($entry['class_1_count']) ? $entry['class_1_count'] : null;
-                                                $class_2_count = isset($entry['class_2_count']) ? $entry['class_2_count'] : null;
-                                                ?>
-                                                <tr id="<?php echo ($category !== null) ? $category : 'Associate'; ?>">
-                                                    <td><?php echo ($category !== null) ? $category : 'Associate'; ?></td>
-                                                    <?php if ($category === 'LG2-A') : ?>
-                                                        <td><?php echo $category_count; ?></td>
-                                                        <td><?php echo $preschool_count; ?></td>
-                                                        <td><?php echo $class_1_count; ?></td>
-                                                        <td><?php echo $class_2_count; ?></td>
-                                                    <?php else : ?>
-                                                        <td><?php echo $category_count; ?></td>
-                                                        <td colspan="4"></td>
-
-                                                    <?php endif; ?>
-                                                </tr>
-                                            <?php endforeach; ?>
+                                            <tr v-for="row in summaryRows">
+                                                <td>{{ row.category || "Associate" }}</td>
+                                                <td>{{ row.category_count }}</td>
+                                                <template v-if="row.category == 'LG2-A'">
+                                                    <td>{{ row.preschool_count }}</td>
+                                                    <td>{{ row.class_1_count }}</td>
+                                                    <td>{{ row.class_2_count }}</td>
+                                                </template>
+                                                <template v-else>
+                                                    <td colspan="4"></td>
+                                                </template>
+                                            </tr>
                                             <tr>
                                                 <td><b>Total:</b></td>
-                                                <td id="totalCount"><?php echo $totalCount; ?></td>
+                                                <td id="totalCount">{{totalCount}}</td>
                                                 <td colspan="4"></td>
                                             </tr>
                                         </tbody>
@@ -362,6 +352,62 @@ if ($resultcount) {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <script>
+        const { createApp, ref } = Vue
+        const summaryApp = createApp({
+            setup() {
+                const summaryRows = ref(<?php echo json_encode($resultArrcount); ?>)
+                const totalCount = ref(<?php echo $totalCount; ?>)
+                const addRow = (attendanceRow) => {
+                    // update summary, by category
+                    console.log(attendanceRow)
+                    const category = attendanceRow.category
+                    const summaryRow = summaryRows.value.find(row => row.category == category)
+                    if (summaryRow) {
+                        summaryRow.category_count += 1
+                        if (attendanceRow.class == "2") {
+                            summaryRow.class_2_count += 1
+                        } else if (attendanceRow.class == "1") {
+                            summaryRow.class_1_count += 1
+                        } else if (attendanceRow.class == "Pre-school") {
+                            summaryRow.preschool_count += 1
+                        }
+                    } else {
+                        summaryRows.value.push({
+                            category: attendanceRow.category,
+                            category_count: 1,
+                            preschool_count: attendanceRow.class == "Pre-school" ? 1 : 0,
+                            class_1_count: attendanceRow.class == "1" ? 1 : 0,
+                            class_2_count: attendanceRow.class == "2" ? 1 : 0
+                        })
+                    }
+                    totalCount.value += 1
+                }
+                return {
+                    summaryRows,
+                    addRow,
+                    totalCount
+                }
+            }
+        }).mount('#summaryTable')
+        
+        // function addDummyRecord(){
+        //     summaryApp.addRow({
+        //         userId: "VTHN20008" , 
+        //         userName: "Somnath Saha",
+        //         category: "LG3", 
+        //         class: "1", 
+        //         status: "Active",
+        //         punchIn: "10/09/2023 12:17:42 am",
+        //         punchOut: "10/09/2023 12:17:43 am"
+        //     })
+        // }
+        // call addDummyRecord after every 2 sec
+        // setInterval(addDummyRecord, 2000)
+    </script>
+
     <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
         const mqttClient = mqtt.connect('wss://mqtt.rssi.in')
@@ -431,7 +477,7 @@ if ($resultcount) {
             } else {
                 // insert new row
                 tr = addRow(attendanceRow)
-                updateTotalCount(attendanceRow)
+                updateSummary(attendanceRow)
             }
             // flash the tr green 
             tr.classList.add('bg-success')
@@ -439,40 +485,6 @@ if ($resultcount) {
                 tr.classList.remove('bg-success')
             }, 1000)
         }
-
-        function updateTotalCount(attendanceRow) {
-            var category = document.getElementById("category")
-            var categoryCount = document.getElementById("category_count")
-            var preschoolCount = document.getElementById("preschool_count")
-            var class1Count = document.getElementById("class_1_count")
-            var class2Count = document.getElementById("class_2_count")
-            var totalCount = document.getElementById("totalCount")
-            
-            var category_int = categoryCount ? parseInt(categoryCount.innerHTML || '0') : 0
-            var categoryCount_int = categoryCount ? parseInt(categoryCount.innerHTML || '0') : 0
-            var preschoolCount_int = preschoolCount ? parseInt(preschoolCount.innerHTML || '0') : 0
-            var class1Count_int = class1Count ? parseInt(class1Count.innerHTML || '0') : 0
-            var class2Count_int = class2Count ? parseInt(class2Count.innerHTML || '0') : 0
-            var totalCount_int = totalCount ? parseInt(totalCount.innerHTML || '0') : 0
-            
-            console.log(categoryCount_int);
-            console.log(preschoolCount_int);
-            console.log(class1Count_int);
-            console.log(class2Count_int);
-            console.log(totalCount_int);
-        }
-
-        // setTimeout(()=>{
-        //     updateTotalCount({
-        //         userId: "VTHN20008" , 
-        //         userName: "Somnath Saha",
-        //         category: "Director", 
-        //         class: "12", 
-        //         status: "Active",
-        //         punchIn: "10/09/2023 12:17:42 am",
-        //         punchOut: "10/09/2023 12:17:43 am"
-        //     })
-        // }, 2000)
     </script>
 </body>
 
