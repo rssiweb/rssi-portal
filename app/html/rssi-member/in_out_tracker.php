@@ -176,8 +176,9 @@ if ($resultcount) {
                 opacity: 1;
             }
         }
+
         .bg-success {
-            background-color: #198754!important;
+            background-color: #198754 !important;
         }
     </style>
 </head>
@@ -228,7 +229,7 @@ if ($resultcount) {
                                                 $class_1_count = isset($entry['class_1_count']) ? $entry['class_1_count'] : null;
                                                 $class_2_count = isset($entry['class_2_count']) ? $entry['class_2_count'] : null;
                                                 ?>
-                                                <tr>
+                                                <tr id="<?php echo ($category !== null) ? $category : 'Associate'; ?>">
                                                     <td><?php echo ($category !== null) ? $category : 'Associate'; ?></td>
                                                     <?php if ($category === 'LG2-A') : ?>
                                                         <td><?php echo $category_count; ?></td>
@@ -244,7 +245,7 @@ if ($resultcount) {
                                             <?php endforeach; ?>
                                             <tr>
                                                 <td><b>Total:</b></td>
-                                                <td><?php echo $totalCount; ?></td>
+                                                <td id="totalCount"><?php echo $totalCount; ?></td>
                                                 <td colspan="4"></td>
                                             </tr>
                                         </tbody>
@@ -289,7 +290,7 @@ if ($resultcount) {
                                     </div>
                                     <div class="col-6 text-end">
                                         <button id="syncLiveDataBtn" class="btn btn-danger btn-sm" onclick="showLoading()">
-                                        Sync LIVE Data
+                                            Sync LIVE Data
                                         </button>
                                     </div>
                                 </div>
@@ -326,7 +327,7 @@ if ($resultcount) {
                                     echo '<tbody>';
                                     if ($resultArr != null) {
                                         foreach ($resultArr as $array) {
-                                            echo '<tr id="'. $array['user_id'] .'">';
+                                            echo '<tr id="' . $array['user_id'] . '">';
                                             echo '<td>' . $array['user_id'] . '</td>';
                                             echo '<td>' . $array['user_name'] . '</td>';
                                             // echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '-' . $array['class'] : '') . '</td>';
@@ -367,8 +368,13 @@ if ($resultcount) {
         const TOPIC = "attendance-record-events";
         mqttClient.on("connect", () => {
             console.log("MQTT client connected.");
+            //add new code to show the connection etablished.
             mqttClient.subscribe(TOPIC);
         })
+        mqttClient.on('error', (error) => {
+            console.log("MQTT client ERROR."); // never fires
+            //add new code to show the connection NOT etablished.
+        });
         mqttClient.on('message', (topic, message) => {
             if (topic == TOPIC) {
                 onNewAttendanceRecordEvent(message);
@@ -380,7 +386,7 @@ if ($resultcount) {
             addOrUpdateRowInAttendanceTable(attendanceRow);
         }
 
-        function addRow(attendanceRow){
+        function addRow(attendanceRow) {
             var lastTr = document.getElementById('last-row')
             tr = document.createElement('tr')
             tr.id = attendanceRow.userId
@@ -396,7 +402,8 @@ if ($resultcount) {
             lastTr.insertAdjacentElement("afterend", tr)
             return tr
         }
-        function updateRow(tr, attendanceRow){
+
+        function updateRow(tr, attendanceRow) {
             for (var key of ["userId", "userName", "category", "class", "status", "punchIn", "punchOut"]) {
                 var keyIndex = ["userId", "userName", "category", "class", "status", "punchIn", "punchOut"].indexOf(key)
                 var td = tr.querySelector('td:nth-child(' + (keyIndex + 1) + ')')
@@ -407,11 +414,13 @@ if ($resultcount) {
                 }
             }
         }
-        function removeNoRecordTr(){
+
+        function removeNoRecordTr() {
             var tr = document.getElementById("no-record")
-            if(tr)
+            if (tr)
                 tr.remove()
         }
+
         function addOrUpdateRowInAttendanceTable(attendanceRow) {
             removeNoRecordTr()
             const userId = attendanceRow['userId']
@@ -419,9 +428,10 @@ if ($resultcount) {
             if (tr != null) {
                 // update tds inside tr
                 updateRow(tr, attendanceRow)
-            }else{
+            } else {
                 // insert new row
                 tr = addRow(attendanceRow)
+                updateTotalCount(attendanceRow)
             }
             // flash the tr green 
             tr.classList.add('bg-success')
@@ -429,8 +439,41 @@ if ($resultcount) {
                 tr.classList.remove('bg-success')
             }, 1000)
         }
-    </script>
 
+        function updateTotalCount(attendanceRow) {
+            var category = document.getElementById("category")
+            var categoryCount = document.getElementById("category_count")
+            var preschoolCount = document.getElementById("preschool_count")
+            var class1Count = document.getElementById("class_1_count")
+            var class2Count = document.getElementById("class_2_count")
+            var totalCount = document.getElementById("totalCount")
+            
+            var category_int = categoryCount ? parseInt(categoryCount.innerHTML || '0') : 0
+            var categoryCount_int = categoryCount ? parseInt(categoryCount.innerHTML || '0') : 0
+            var preschoolCount_int = preschoolCount ? parseInt(preschoolCount.innerHTML || '0') : 0
+            var class1Count_int = class1Count ? parseInt(class1Count.innerHTML || '0') : 0
+            var class2Count_int = class2Count ? parseInt(class2Count.innerHTML || '0') : 0
+            var totalCount_int = totalCount ? parseInt(totalCount.innerHTML || '0') : 0
+            
+            console.log(categoryCount_int);
+            console.log(preschoolCount_int);
+            console.log(class1Count_int);
+            console.log(class2Count_int);
+            console.log(totalCount_int);
+        }
+
+        // setTimeout(()=>{
+        //     updateTotalCount({
+        //         userId: "VTHN20008" , 
+        //         userName: "Somnath Saha",
+        //         category: "Director", 
+        //         class: "12", 
+        //         status: "Active",
+        //         punchIn: "10/09/2023 12:17:42 am",
+        //         punchOut: "10/09/2023 12:17:43 am"
+        //     })
+        // }, 2000)
+    </script>
 </body>
 
 </html>

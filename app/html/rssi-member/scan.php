@@ -228,35 +228,37 @@ if (!$result) {
             }
         }
 
-        function setUpCameraForScan(){
+        function setUpCameraForScan() {
             var qrBoxSize = 400
             const width = window.innerWidth
             const height = window.innerHeight
             const aspectRatio = width / height
             const reverseAspectRatio = height / width
 
-            const mobileAspectRatio = reverseAspectRatio > 1.5
-                ? reverseAspectRatio + (reverseAspectRatio * 12 / 100)
-                : reverseAspectRatio
+            const mobileAspectRatio = reverseAspectRatio > 1.5 ?
+                reverseAspectRatio + (reverseAspectRatio * 12 / 100) :
+                reverseAspectRatio
 
             const videoConstraints = {
                 facingMode: 'environment',
-                aspectRatio: width < 600
-                    ? mobileAspectRatio
-                    : aspectRatio,
+                aspectRatio: width < 600 ?
+                    mobileAspectRatio :
+                    aspectRatio,
             }
             qrBoxSize = Math.round(width * 0.5)
             console.log('qrBoxSize', qrBoxSize)
-            
-            const html5QrCode = new Html5Qrcode("qr-reader", { formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] });
+
+            const html5QrCode = new Html5Qrcode("qr-reader", {
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+            });
             const config = {
-                fps: 10, 
-                qrbox: qrBoxSize, 
-                disableFlip: true, 
+                fps: 10,
+                qrbox: qrBoxSize,
+                disableFlip: true,
                 videoConstraints: null
             };
             html5QrCode.start({
-                facingMode :"environment"
+                facingMode: "environment"
             }, config, onScanSuccess);
         }
 
@@ -300,31 +302,30 @@ if (!$result) {
                 }
             });
         }
-        
+
         function deg2rad(deg) {
-            return deg * (Math.PI/180)
+            return deg * (Math.PI / 180)
         }
 
-        function getDistance(lat,lon,office_lat, office_lon){
+        function getDistance(lat, lon, office_lat, office_lon) {
             var R = 6371; // Radius of the earth in km
-            var dLat = deg2rad(lat-office_lat);  // deg2rad below
-            var dLon = deg2rad(lon-office_lon); 
-            var a = 
-              Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(deg2rad(office_lat)) * Math.cos(deg2rad(lat)) * 
-              Math.sin(dLon/2) * Math.sin(dLon/2)
-              ; 
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+            var dLat = deg2rad(lat - office_lat); // deg2rad below
+            var dLon = deg2rad(lon - office_lon);
+            var a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(deg2rad(office_lat)) * Math.cos(deg2rad(lat)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             var d = R * c; // Distance in km
             return d;
         }
 
-        function showLoading(){
+        function showLoading() {
             var loadingEl = document.getElementById('loading');
             loadingEl.style.display = 'block';
         }
 
-        function hideLoading(){
+        function hideLoading() {
             var loadingEl = document.getElementById('loading');
             loadingEl.style.display = 'none';
         }
@@ -346,7 +347,7 @@ if (!$result) {
             zIndex: "1000",
         }
 
-        function setElementBackToNormal(){
+        function setElementBackToNormal() {
             var elem = document.getElementById("qr-reader");
             if (!elem) return;
             if (!isFullScreen) return;
@@ -358,7 +359,8 @@ if (!$result) {
             elem.style.zIndex = elementStyleBackup.zIndex;
             isFullScreen = false;
         }
-        function setElementToFullScreen(){
+
+        function setElementToFullScreen() {
             var elem = document.getElementById("qr-reader");
             if (!elem) return;
             if (isFullScreen) return;
@@ -381,7 +383,8 @@ if (!$result) {
             // z-index: 1000;
             isFullScreen = true;
         }
-        function toggleFullScreen(){
+
+        function toggleFullScreen() {
             if (isFullScreen) {
                 setElementBackToNormal();
                 setUpCameraForScan();
@@ -390,11 +393,12 @@ if (!$result) {
                 setUpCameraForScan();
             }
         }
-        function checkIfAtOffice(){
+
+        function checkIfAtOffice() {
             // Get latitude and longitude values
             console.log(latitude, longitude);
             if (!latitude || !longitude) {
-                
+
                 alert("Error getting location. Please try again later or contact support.");
                 return;
             }
@@ -407,8 +411,8 @@ if (!$result) {
                 // zee home
                 // latitude: 19.3173098 ,
                 // longitude: -81.1816173
-                
-                
+
+
             };
             var distance = getDistance(latitude, longitude, officeLocation.latitude, officeLocation.longitude);
             console.log("distance is:", distance);
@@ -418,7 +422,7 @@ if (!$result) {
                 distance = Math.round(distance * 100) / 100;
                 alert(`Seems like you are not in office (${distance} KM away from office). Please try again when you are in office.`);
                 return;
-            }else{
+            } else {
                 allowAttendance = true;
                 hideLoading();
                 setUpCameraForScan();
@@ -446,7 +450,7 @@ if (!$result) {
 
 
         async function submitAttendance(userId) {
-            if(!allowAttendance){
+            if (!allowAttendance) {
                 alert("You are not in office. Please try again when you are in office.");
                 return;
             }
@@ -499,17 +503,17 @@ if (!$result) {
 
 
         var allowAttendance = !enableLocationCheck;
-        
+
         if (enableLocationCheck) {
             console.log("getting location")
             showLoading();
-            getLocation().then(()=>{
+            getLocation().then(() => {
                 hideLoading();
                 checkIfAtOffice();
             });
         } else {
             console.log("getting location")
-            getLocation().then(()=>{
+            getLocation().then(() => {
                 console.log("getting location 1")
                 hideLoading();
                 setUpCameraForScan();
@@ -523,6 +527,10 @@ if (!$result) {
             console.log("MQTT client connected.");
             //TODO: show notification on successful connection
         })
+        mqttClient.on('error', (error) => {
+            console.log("MQTT client ERROR."); // never fires
+            //add new code to show the connection NOT etablished.
+        });
 
         function publishAttendanceEvent(record) {
             if (!mqttClient.connected) {
