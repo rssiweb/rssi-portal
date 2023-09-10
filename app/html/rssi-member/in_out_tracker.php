@@ -493,7 +493,7 @@ if ($resultcount) {
             } else {
                 // insert new row
                 tr = addRow(attendanceRow)
-                updateSummary(attendanceRow)
+                summaryApp.addRow(attendanceRow)
             }
             // flash the tr green 
             tr.classList.add('bg-success')
