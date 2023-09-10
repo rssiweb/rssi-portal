@@ -214,6 +214,9 @@ if ($resultcount) {
 
                         <div class="card-body">
                             <br>
+                            <div class="alert alert-warning" id="status" role="alert">Connecting...</div>
+                            <script src="your-script.js"></script>
+                            <script src="your-script.js"></script>
                             <div class="row" style="display: flex; align-items: center;">
                                 <div class="col-md-8 mb-3">
                                     <p>To customize the view result, please select a filter value.</p>
@@ -355,7 +358,10 @@ if ($resultcount) {
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 
     <script>
-        const { createApp, ref } = Vue
+        const {
+            createApp,
+            ref
+        } = Vue
         const summaryApp = createApp({
             setup() {
                 const summaryRows = ref(<?php echo json_encode($resultArrcount); ?>)
@@ -392,7 +398,7 @@ if ($resultcount) {
                 }
             }
         }).mount('#summaryTable')
-        
+
         // function addDummyRecord(){
         //     summaryApp.addRow({
         //         userId: "VTHN20008" , 
@@ -410,22 +416,32 @@ if ($resultcount) {
 
     <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
-        const mqttClient = mqtt.connect('wss://mqtt.rssi.in')
+        const mqttClient = mqtt.connect('wss://mqtt.rssi.in');
         const TOPIC = "attendance-record-events";
+        const statusElement = document.getElementById('status');
+
         mqttClient.on("connect", () => {
             console.log("MQTT client connected.");
-            //add new code to show the connection etablished.
+            setStatus("Connected", "alert-success");
             mqttClient.subscribe(TOPIC);
-        })
-        mqttClient.on('error', (error) => {
-            console.log("MQTT client ERROR."); // never fires
-            //add new code to show the connection NOT etablished.
         });
+
+        mqttClient.on('error', (error) => {
+            console.log("MQTT client ERROR.");
+            setStatus("Error: " + error.message, "alert-danger");
+        });
+
+        function setStatus(message, alertClass) {
+            statusElement.textContent = message;
+            statusElement.classList.remove("alert-warning", "alert-success", "alert-danger");
+            statusElement.classList.add(alertClass);
+        }
+
         mqttClient.on('message', (topic, message) => {
             if (topic == TOPIC) {
                 onNewAttendanceRecordEvent(message);
             }
-        })
+        });
 
         function onNewAttendanceRecordEvent(message) {
             var attendanceRow = JSON.parse(message);
