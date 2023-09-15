@@ -3,6 +3,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/paytm-util.php");
 include("../../util/email.php");
+include("../../util/drive.php");
 // require_once("email.php");
 
 date_default_timezone_set('Asia/Kolkata');
@@ -633,5 +634,112 @@ if ($formtype === "attendance") {
         "punchOut" => $punch_out,
       )
     );
+  }
+}
+
+if (@$_POST['form-type'] == "admission") {
+
+  $type_of_admission = $_POST['type-of-admission'];
+  $student_name = $_POST['student-name'];
+  $date_of_birth = $_POST['date-of-birth'];
+  $gender = $_POST['gender'];
+  $uploadedFile_student_photo = $_FILES['student-photo'];
+  $aadhar_available = $_POST['aadhar-card'];
+  $aadhar_card = $_POST['aadhar-number'];
+  $uploadedFile_aadhar_card = $_FILES['aadhar-card-upload'];
+  $guardian_name = $_POST['guardian-name'];
+  $guardian_relation = $_POST['relation'];
+  $guardian_aadhar = $_POST['guardian-aadhar-number'];
+  $state_of_domicile = $_POST['state'];
+  $postal_address = $_POST['postal-address'];
+  $telephone_number = $_POST['telephone'];
+  $email_address = $_POST['email'];
+  $preferred_branch = $_POST['branch'];
+  $class = $_POST['class'];
+  $school_admission_required = $_POST['school-required'];
+  $school_name = $_POST['school-name'];
+  $board_name = $_POST['board-name'];
+  $medium = $_POST['medium'];
+  $family_monthly_income = $_POST['income'];
+  $total_family_members = $_POST['family-members'];
+  $payment_mode = $_POST['payment-mode'];
+  $c_authentication_code = $_POST['c-authentication-code'];
+  $transaction_id = $_POST['transaction-id'];
+  $subject_select = $_POST['subject-select'];
+  @$timestamp = date('Y-m-d H:i:s');
+
+  // Determine if student is new admission or not
+  $is_new_admission = ''; // Set to true if new admission, false otherwise
+
+  if ($type_of_admission == 'New Admission') {
+    $is_new_admission = 'A';
+  } else {
+    $is_new_admission = 'B';
+  }
+
+  // Determine branch code
+  $branch = ''; // Set branch code (LKO for Lucknow, KOL for West Bengal)
+
+  // Replace with the correct branch code based on the branch location
+  if ($preferred_branch == 'Lucknow') {
+    $branch = 'LKO';
+  } elseif ($preferred_branch == 'West Bengal') {
+    $branch = 'KOL';
+  }
+
+  // Determine current year
+  $current_year = date('y'); // Two-digit year from current date
+
+  // Generate a random 3-digit number
+  $random_number = str_pad(mt_rand(0, 999), 3, '0', STR_PAD_LEFT);
+
+  // Generate student ID
+  $logic_1 = $is_new_admission; // Logic 1
+  $logic_2 = $branch; // Logic 2
+  $logic_3 = $current_year; // Logic 3
+  $logic_4 = $random_number; // Logic 4
+
+  $student_id = $logic_1 . $logic_2 . $logic_3 . $logic_4; // Concatenate all four logics
+
+  // send uploaded file to drive
+  // get the drive link
+  if (empty($_FILES['aadhar-card-upload']['name'])) {
+    $doclink_aadhar_card = null;
+  } else {
+    $filename_aadhar_card = "doc_" . $student_name . "_" . time();
+    $parent_aadhar_card = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+    $doclink_aadhar_card = uploadeToDrive($uploadedFile_aadhar_card, $parent_aadhar_card, $filename_aadhar_card);
+  }
+  if (empty($_FILES['student-photo']['name'])) {
+    $doclink_student_photo = null;
+  } else {
+    $filename_student_photo = "doc_" . $student_name . "_" . time();
+    $parent_student_photo = '1ziDLJgSG7zTYG5i0LzrQ6pNq9--LQx3_t0_SoSR2tSJW8QTr-7EkPUBR67zn0os5NRfgeuDH';
+    $doclink_student_photo = uploadeToDrive($uploadedFile_student_photo, $parent_student_photo, $filename_student_photo);
+  }
+
+  $student = "INSERT INTO student (type_of_admission,student_name,date_of_birth,gender,student_photo,aadhar_available,student_aadhar,aadhar_card,guardian_name,guardian_relation,guardian_aadhar,state_of_domicile,postal_address,telephone_number,email_address,preferred_branch,class,school_admission_required,school_name,board_name,medium,family_monthly_income,total_family_members,payment_mode,c_authentication_code,transaction_id,student_id,subject_select) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id','$subject_select')";
+
+  $result = pg_query($con, $student);
+
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1) {
+      $response = array("success" => true, "message" => "Form submitted successfully.");
+      echo json_encode($response);
+      // if (@$cmdtuples == 1 && $email_address != "") {
+      //   sendEmail("admission_success", array(
+      //     "student_id" => $student_id,
+      //     "student_name" => $student_name,
+      //     "timestamp" => @date("d/m/Y g:i a", strtotime($timestamp))
+      //   ), $email_address);
+      // }
+    } else {
+      $response = array("success" => false, "message" => "Form submission failed.");
+      echo json_encode($response);
+    }
+  } else {
+    $response = array("success" => false, "message" => "Form submission failed.");
+    echo json_encode($response);
   }
 }
