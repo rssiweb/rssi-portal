@@ -42,42 +42,37 @@ $query = "WITH date_range AS (
 ),
 attendance_data AS (
     SELECT
-        student_id,
-        filterstatus,
-        studentname,
-        category,
-        class,
-        attendance_date,
+        s.student_id,
+        s.filterstatus,
+        s.studentname,
+        s.category,
+        s.class,
+        s.effectivefrom,
+        s.doa,
+        d.attendance_date,
         COALESCE(
             CASE
-                WHEN user_id IS NOT NULL THEN 'P'
-                WHEN user_id IS NULL AND attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
+                WHEN a.user_id IS NOT NULL THEN 'P'
+                WHEN a.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
+                WHEN TO_DATE(s.doa, 'DD/MM/YYYY') > d.attendance_date THEN NULL
                 ELSE 'A'
             END
         ) AS attendance_status
-    FROM (
-        SELECT DISTINCT ON (s.student_id, d.attendance_date)
-            s.student_id,
-            s.filterstatus,
-            s.studentname,
-            s.category,
-            s.class,
-            s.doa,
-            s.effectivefrom,
-            d.attendance_date,
-            a.user_id
-        FROM
-            date_range d
-        CROSS JOIN
-            rssimyprofile_student s
-        LEFT JOIN
-            attendance a
-            ON s.student_id = a.user_id AND a.date = d.attendance_date
-        WHERE s.filterstatus = 'Active' AND s.category != 'LG4'
-        -- WHERE TO_DATE('$month', 'YYYY-MM-DD') >= TO_DATE(doa, 'DD/MM/YYYY')
-        --     AND TO_DATE('$month', 'YYYY-MM-DD') <= TO_DATE(effectivefrom, 'DD/MM/YYYY')
+    FROM
+        date_range d
+    CROSS JOIN
+        rssimyprofile_student s
+    LEFT JOIN
+        attendance a
+        ON s.student_id = a.user_id AND a.date = d.attendance_date
+    WHERE
+        (
+        s.effectivefrom = '' OR
+        DATE_TRUNC('month', TO_DATE(s.effectivefrom, 'DD/MM/YYYY'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        )
+        AND DATE_TRUNC('month', TO_DATE(s.doa, 'DD/MM/YYYY'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        AND s.category != 'LG4'
         $idCondition
-    ) AS subquery
 )
 SELECT
     student_id,
@@ -87,37 +82,19 @@ SELECT
     class,
     attendance_date,
     attendance_status,
-    (
-        SELECT COUNT(*) FROM attendance_data sub
-        WHERE sub.student_id = main.student_id
-        AND sub.attendance_status IN ('P', 'A')
-    ) AS total_classes,
-    (
-        SELECT COUNT(*) FROM attendance_data sub
-        WHERE sub.student_id = main.student_id
-        AND sub.attendance_status = 'P'
-    ) AS attended_classes,
+    COUNT(*) FILTER (WHERE attendance_status != '') OVER (PARTITION BY student_id) AS total_classes,
+    COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY student_id) AS attended_classes,
     CASE
-        WHEN (
-            SELECT COUNT(*) FROM attendance_data sub
-            WHERE sub.student_id = main.student_id
-            AND sub.attendance_status IN ('P', 'A')
-        ) = 0 THEN NULL
-        ELSE CONCAT(ROUND(
-            (
-                (
-                    SELECT COUNT(*) FROM attendance_data sub
-                    WHERE sub.student_id = main.student_id
-                    AND sub.attendance_status = 'P'
-                ) * 100.0
-            ) / (
-                SELECT COUNT(*) FROM attendance_data sub
-                WHERE sub.student_id = main.student_id
-                AND sub.attendance_status IN ('P', 'A')
-            ), 2
-        ), '%')
+        WHEN COUNT(*) FILTER (WHERE attendance_status != '') OVER (PARTITION BY student_id) = 0 THEN NULL
+        ELSE CONCAT(
+            ROUND(
+                (COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY student_id) * 100.0) /
+                COUNT(*) FILTER (WHERE attendance_status != '') OVER (PARTITION BY student_id), 2
+            ),
+            '%'
+        )
     END AS attendance_percentage
-FROM attendance_data main
+FROM attendance_data
 GROUP BY
     student_id,
     filterstatus,
@@ -131,7 +108,9 @@ ORDER BY
     category,
     class,
     student_id,
-    attendance_date;";
+    attendance_date;
+";
+
 $result = pg_query($con, $query);
 
 if (!$result) {
@@ -143,10 +122,7 @@ if (!$result) {
 $attendanceData = pg_fetch_all($result);
 
 // Close the connection
-pg_close($con);
-
-
-?>
+pg_close($con); ?>
 
 <!doctype html>
 <html lang="en">
@@ -255,7 +231,7 @@ pg_close($con);
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <input type="text" name="get_month" id="get_month" class="form-control" placeholder="Month" value="<?php echo isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : ''; ?>">
+                                                <input type="text" name="get_month" id="get_month" class="form-control" placeholder="Month" value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
                                                 <small class="form-text text-muted">Select Month</small>
                                             </div>
                                         </div>
@@ -321,8 +297,9 @@ pg_close($con);
                                                 <th>Student Name</th>
                                                 <th>Category</th>
                                                 <th>Class</th>
+                                                <th>Status</th>
                                                 <th>Present</th>
-                                                <!-- <th>Total Class</th> -->
+                                                <th>Total Class</th>
                                                 <th>Percentage</th>
 
                                                 <?php
@@ -349,8 +326,9 @@ pg_close($con);
                                                         <td>{$row['studentname']}</td>
                                                         <td>{$row['category']}</td>
                                                         <td>{$row['class']}</td>
+                                                        <td>{$row['filterstatus']}</td>
                                                         <td>{$row['attended_classes']}</td>
-                                                        <!--<td>{$row['total_classes']}</td>-->
+                                                        <td>{$row['total_classes']}</td>
                                                         <td>{$row['attendance_percentage']}</td>";
                                                     $currentStudent = $row['student_id'];
                                                 }
