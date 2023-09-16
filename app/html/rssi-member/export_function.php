@@ -427,8 +427,9 @@ function exportAttendanceToCSV($attendanceData, $startDate, $endDate)
 {
   // Set headers for CSV export
   header('Content-Type: text/csv');
-  // header('Content-Disposition: attachment; filename="attendance_report.csv"');
-
+  $today = date("YmdHis");
+  $startMonthYear = date('M-Y', strtotime($startDate));
+  header("Content-Disposition: attachment; filename={$startMonthYear}_attendance_report_$today.csv");
   // Create output stream
   $output = fopen('php://output', 'w');
 

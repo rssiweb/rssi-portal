@@ -120,6 +120,8 @@ if (!$result) {
 
 // Fetch attendance data
 $attendanceData = pg_fetch_all($result);
+$uniqueStudentIDs = array_unique(array_column($attendanceData, 'student_id'));
+$studentIDCount = count($uniqueStudentIDs);
 
 // Close the connection
 pg_close($con); ?>
@@ -218,6 +220,7 @@ pg_close($con); ?>
                             <br>
                             <div class="row">
                                 <div class="col-md-8 mb-3">
+                                    Record count:&nbsp;<?php echo $studentIDCount ?>
                                     <p>To customize the view result, please select a filter value.</p>
                                 </div>
                                 <form action="" method="GET" class="row g-2 align-items-center">
