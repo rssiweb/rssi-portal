@@ -39,6 +39,45 @@ $query = "WITH date_range AS (
     SELECT generate_series(
         '$startDate'::date, '$endDate'::date, '1 day'::interval
     )::date AS attendance_date
+),
+attendance_data AS (
+    SELECT
+        student_id,
+        filterstatus,
+        studentname,
+        category,
+        class,
+        attendance_date,
+        COALESCE(
+            CASE
+                WHEN user_id IS NOT NULL THEN 'P'
+                WHEN user_id IS NULL AND attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
+                ELSE 'A'
+            END
+        ) AS attendance_status
+    FROM (
+        SELECT DISTINCT ON (s.student_id, d.attendance_date)
+            s.student_id,
+            s.filterstatus,
+            s.studentname,
+            s.category,
+            s.class,
+            s.doa,
+            s.effectivefrom,
+            d.attendance_date,
+            a.user_id
+        FROM
+            date_range d
+        CROSS JOIN
+            rssimyprofile_student s
+        LEFT JOIN
+            attendance a
+            ON s.student_id = a.user_id AND a.date = d.attendance_date
+        WHERE s.filterstatus = 'Active' AND s.category != 'LG4'
+        -- WHERE TO_DATE('$month', 'YYYY-MM-DD') >= TO_DATE(doa, 'DD/MM/YYYY')
+        --     AND TO_DATE('$month', 'YYYY-MM-DD') <= TO_DATE(effectivefrom, 'DD/MM/YYYY')
+        $idCondition
+    ) AS subquery
 )
 SELECT
     student_id,
@@ -47,36 +86,52 @@ SELECT
     category,
     class,
     attendance_date,
-    COALESCE(
-        CASE
-        WHEN user_id IS NOT NULL THEN 'P'
-        WHEN user_id IS NULL AND attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
-        ELSE 'A'
-    END
-    ) AS attendance_status
-FROM (
-    SELECT DISTINCT ON (s.student_id, d.attendance_date)
-        s.student_id,
-        s.filterstatus,
-        s.studentname,
-        s.category,
-        s.class,
-        d.attendance_date,
-        a.user_id
-    FROM
-        date_range d
-    CROSS JOIN
-        rssimyprofile_student s
-    LEFT JOIN
-        attendance a
-        ON s.student_id = a.user_id AND a.date = d.attendance_date
-    WHERE s.filterstatus = 'Active'
-    $idCondition
-) AS subquery
+    attendance_status,
+    (
+        SELECT COUNT(*) FROM attendance_data sub
+        WHERE sub.student_id = main.student_id
+        AND sub.attendance_status IN ('P', 'A')
+    ) AS total_classes,
+    (
+        SELECT COUNT(*) FROM attendance_data sub
+        WHERE sub.student_id = main.student_id
+        AND sub.attendance_status = 'P'
+    ) AS attended_classes,
+    CASE
+        WHEN (
+            SELECT COUNT(*) FROM attendance_data sub
+            WHERE sub.student_id = main.student_id
+            AND sub.attendance_status IN ('P', 'A')
+        ) = 0 THEN NULL
+        ELSE CONCAT(ROUND(
+            (
+                (
+                    SELECT COUNT(*) FROM attendance_data sub
+                    WHERE sub.student_id = main.student_id
+                    AND sub.attendance_status = 'P'
+                ) * 100.0
+            ) / (
+                SELECT COUNT(*) FROM attendance_data sub
+                WHERE sub.student_id = main.student_id
+                AND sub.attendance_status IN ('P', 'A')
+            ), 2
+        ), '%')
+    END AS attendance_percentage
+FROM attendance_data main
+GROUP BY
+    student_id,
+    filterstatus,
+    studentname,
+    category,
+    class,
+    attendance_date,
+    attendance_status
 ORDER BY
-    CASE WHEN class = 'Pre-school' THEN 0 ELSE 1 END, -- Order Pre-school first
-    category, class, student_id, attendance_date;";
-
+    CASE WHEN class = 'Pre-school' THEN 0 ELSE 1 END,
+    category,
+    class,
+    student_id,
+    attendance_date;";
 $result = pg_query($con, $query);
 
 if (!$result) {
@@ -171,6 +226,20 @@ pg_close($con);
 
                         <div class="card-body">
                             <br>
+                            <div class="d-flex justify-content-between align-items-center position-absolute top-5 end-0 p-3">
+                                <form method="POST" action="export_function.php">
+                                    <input type="hidden" value="monthly_attd" name="export_type" />
+                                    <input type="hidden" value="<?php echo $id ?>" name="id" />
+                                    <input type="hidden" value="<?php echo $month ?>" name="month" />
+
+                                    <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
+                        padding: 0px;
+                        border: none;" title="Export CSV">
+                                        <i class="bi bi-file-earmark-excel" style="font-size:large;"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            <br>
                             <div class="row">
                                 <div class="col-md-8 mb-3">
                                     <p>To customize the view result, please select a filter value.</p>
@@ -252,6 +321,9 @@ pg_close($con);
                                                 <th>Student Name</th>
                                                 <th>Category</th>
                                                 <th>Class</th>
+                                                <th>Present</th>
+                                                <!-- <th>Total Class</th> -->
+                                                <th>Percentage</th>
 
                                                 <?php
                                                 // Generate header row with attendance dates
@@ -264,7 +336,6 @@ pg_close($con);
                                             </tr>
                                         </thead>
                                         <tbody>
-
                                             <?php
                                             // Process attendance data and fill the table
                                             $currentStudent = null;
@@ -274,16 +345,18 @@ pg_close($con);
                                                         echo "</tr>";
                                                     }
                                                     echo "<tr>
-                                <td>{$row['student_id']}</td>
-                                <td>{$row['studentname']}</td>
-                                <td>{$row['category']}</td>
-                                <td>{$row['class']}</td>";
+                                                        <td>{$row['student_id']}</td>
+                                                        <td>{$row['studentname']}</td>
+                                                        <td>{$row['category']}</td>
+                                                        <td>{$row['class']}</td>
+                                                        <td>{$row['attended_classes']}</td>
+                                                        <!--<td>{$row['total_classes']}</td>-->
+                                                        <td>{$row['attendance_percentage']}</td>";
                                                     $currentStudent = $row['student_id'];
                                                 }
                                                 echo "<td>{$row['attendance_status']}</td>";
                                             }
                                             ?>
-
                                         </tbody>
                                     </table>
                                 </div>

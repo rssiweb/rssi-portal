@@ -23,6 +23,8 @@ if ($export_type == "fees") {
   reimb_export();
 } else if ($export_type == "donation_old") {
   donation_old_export();
+} else if ($export_type == "monthly_attd") {
+  monthly_attd_export();
 }
 
 function fees_export()
@@ -420,4 +422,161 @@ function donation_old_export()
     echo $counter . ',' . ',' . $array['uitype'] . ',' . $array['uinumber'] . ',' . 'Section 80G' . ',' . 'AAKCR2540KF20214' . ',' . date("d/m/Y g:i a", strtotime($array['timestamp'])) . ',' . $array['firstname'] . ' ' . $array['lastname'] . ',"' . $array['address'] . '",' . $array['donation_type'] . ',' . $array['modeofpayment'] . ',' . $array['currencyofthedonatedamount'] . ',' . $array['donatedamount'] . ',' . $array['invoice'] . ',' . $array['profile'] . "\n";
     $counter++; // Increment the counter for each iteration
   }
+}
+function monthly_attd_export()
+{
+  global $con;
+  @$id = $_POST['id'];
+  @$month = $_POST['month'];
+
+  // Calculate the start and end dates of the month
+  $startDate = date("Y-m-01", strtotime($month));
+  $endDate = date("Y-m-t", strtotime($month));
+
+  $idCondition = "";
+  if ($id != null) {
+    $idCondition = "AND s.student_id = '$id'";
+  }
+
+  $result = pg_query($con, "WITH date_range AS (
+    SELECT generate_series(
+        '$startDate'::date, '$endDate'::date, '1 day'::interval
+    )::date AS attendance_date
+),
+attendance_data AS (
+    SELECT
+        student_id,
+        filterstatus,
+        studentname,
+        category,
+        class,
+        attendance_date,
+        COALESCE(
+            CASE
+                WHEN user_id IS NOT NULL THEN 'P'
+                WHEN user_id IS NULL AND attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
+                ELSE 'A'
+            END
+        ) AS attendance_status
+    FROM (
+        SELECT DISTINCT ON (s.student_id, d.attendance_date)
+            s.student_id,
+            s.filterstatus,
+            s.studentname,
+            s.category,
+            s.class,
+            d.attendance_date,
+            a.user_id
+        FROM
+            date_range d
+        CROSS JOIN
+            rssimyprofile_student s
+        LEFT JOIN
+            attendance a
+            ON s.student_id = a.user_id AND a.date = d.attendance_date
+        WHERE s.filterstatus = 'Active' AND s.category != 'LG4'
+        $idCondition
+    ) AS subquery
+)
+SELECT
+    student_id,
+    filterstatus,
+    studentname,
+    category,
+    class,
+    " . generate_date_columns($startDate, $endDate) . ", -- Add a comma here
+    (
+      SELECT COUNT(*) FROM attendance_data sub
+      WHERE sub.student_id = main.student_id
+      AND sub.attendance_status IN ('P', 'A')
+  ) AS total_classes,
+  (
+      SELECT COUNT(*) FROM attendance_data sub
+      WHERE sub.student_id = main.student_id
+      AND sub.attendance_status = 'P'
+  ) AS attended_classes,
+  CASE
+      WHEN (
+          SELECT COUNT(*) FROM attendance_data sub
+          WHERE sub.student_id = main.student_id
+          AND sub.attendance_status IN ('P', 'A')
+      ) = 0 THEN NULL
+      ELSE CONCAT(ROUND(
+          (
+              (
+                  SELECT COUNT(*) FROM attendance_data sub
+                  WHERE sub.student_id = main.student_id
+                  AND sub.attendance_status = 'P'
+              ) * 100.0
+          ) / (
+              SELECT COUNT(*) FROM attendance_data sub
+              WHERE sub.student_id = main.student_id
+              AND sub.attendance_status IN ('P', 'A')
+          ), 2
+      ), '%')
+  END AS attendance_percentage
+
+FROM attendance_data main
+GROUP BY
+    student_id,
+    filterstatus,
+    studentname,
+    category,
+    class
+ORDER BY
+    CASE WHEN class = 'Pre-school' THEN 0 ELSE 1 END,
+    category,
+    class,
+    student_id;");
+
+  if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+  }
+
+  $resultArr = pg_fetch_all($result);
+  echo 'Sl. No.,Student ID,Student Name,Category,Class,Present,Percentage,' . // Generate header row with date columns
+    generate_date_headers($startDate, $endDate) . "\n";
+  $counter = 1; // Initialize the counter
+
+  foreach ($resultArr as $array) {
+    echo $counter . ',' . $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['attended_classes'] . ',' . $array['attendance_percentage'] . ',';
+    echo generate_date_values($array, $startDate, $endDate) . "\n";
+    $counter++; // Increment the counter for each iteration
+  }
+}
+
+function generate_date_columns($startDate, $endDate)
+{
+  $dates = [];
+  $currentDate = $startDate;
+  while ($currentDate <= $endDate) {
+    $columnAlias = "day_" . date("j", strtotime($currentDate));
+    $dates[] = "MAX(CASE WHEN attendance_date = '$currentDate' THEN attendance_status END) AS \"$columnAlias\"";
+    $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
+  }
+  return implode(', ', $dates);
+}
+
+function generate_date_headers($startDate, $endDate)
+{
+  $dates = [];
+  $currentDate = $startDate;
+  while ($currentDate <= $endDate) {
+    $dates[] = date("j", strtotime($currentDate));
+    $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
+  }
+  return implode(',', $dates);
+}
+
+function generate_date_values($array, $startDate, $endDate)
+{
+  $values = [];
+  $currentDate = $startDate;
+  while ($currentDate <= $endDate) {
+    $columnAlias = "day_" . date("j", strtotime($currentDate));
+    $values[] = $array[$columnAlias];
+    $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
+  }
+  return implode(',', $values);
 }
