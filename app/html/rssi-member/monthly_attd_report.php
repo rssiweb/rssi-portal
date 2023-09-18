@@ -23,7 +23,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 }
 ?>
 <?php
-$id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : null;
+$id = isset($_GET['get_aid']) ? $_GET['get_aid'] : null;
 $month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
 
 // Calculate the start and end dates of the month
@@ -32,7 +32,7 @@ $endDate = date("Y-m-t", strtotime($month));
 
 $idCondition = "";
 if ($id != null) {
-    $idCondition = "AND s.student_id = '$id'";
+    $idCondition = "AND s.filterstatus = '$id'";
 }
 
 $query = "WITH date_range AS (
@@ -227,8 +227,18 @@ pg_close($con); ?>
                                     <div class="row">
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <input type="text" name="get_aid" id="get_aid" class="form-control" placeholder="User Id" value="<?php echo isset($_GET['get_aid']) ? htmlspecialchars($_GET['get_aid']) : ''; ?>">
-                                                <small class="form-text text-muted">Enter User Id</small>
+                                                <select name="get_aid" id="get_aid" class="form-select" style="display:inline-block" required>
+                                                    <?php if ($id == null) { ?>
+                                                        <option value="" disabled selected hidden>Select Status</option>
+                                                    <?php
+                                                    } else { ?>
+                                                        <option hidden selected><?php echo $id ?></option>
+                                                    <?php }
+                                                    ?>
+                                                    <option>Active</option>
+                                                    <option>Inactive</option>
+                                                </select>
+                                                <small class="form-text text-muted">Select Status</small>
                                             </div>
                                         </div>
 
