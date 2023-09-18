@@ -532,7 +532,7 @@ function monthly_attd_export()
 
   $idCondition = "";
   if ($id != null) {
-    $idCondition = "AND s.student_id = '$id'";
+    $idCondition = "AND s.filterstatus = '$id'";
   }
 
   // Construct the SQL query
