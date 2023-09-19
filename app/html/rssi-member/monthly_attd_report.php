@@ -23,7 +23,7 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 }
 ?>
 <?php
-$id = isset($_GET['get_aid']) ? $_GET['get_aid'] : null;
+$id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
 $month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
 
 // Calculate the start and end dates of the month
