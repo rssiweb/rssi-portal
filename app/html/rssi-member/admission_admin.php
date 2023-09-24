@@ -28,7 +28,7 @@ if ($role != 'Admin') {
 ?>
 <?php
 // Retrieve student ID from form input
-@$student_id = $_GET['student_id'];
+@$student_id = trim($_GET['student_id']);
 // Query database for student information based on ID
 
 $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE student_id = '$student_id'");
@@ -130,12 +130,12 @@ if (@$_POST['form-type'] == "admission_admin") {
     <?php if (@$type_of_admission != null && @$cmdtuples == 0) { ?>
         <div class="alert alert-danger alert-dismissible text-center" role="alert">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            <span class="blink_me"><i class="bi bi-x-lg"></i></span>&nbsp;&nbsp;<span>Error: We encountered an error while updating the record. Please try again.</span>
+            <span>Error: We encountered an error while updating the record. Please try again.</span>
         </div>
     <?php } else if (@$cmdtuples == 1) { ?>
         <div class="alert alert-success alert-dismissible text-center" role="alert">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            <span class="blink_me"><i class="bi bi-check-lg"></i></span>&nbsp;&nbsp;<span>Your changes for <?php echo $student_id; ?> have been saved successfully.</span>
+            <span>Your changes for <?php echo $student_id ?> have been saved successfully.</span>
         </div>
         <script>
             if (window.history.replaceState) {

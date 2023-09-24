@@ -67,11 +67,12 @@ attendance_data AS (
         ON s.student_id = a.user_id AND a.date = d.attendance_date
     WHERE
         (
-        s.effectivefrom = '' OR
+        (s.effectivefrom IS NULL OR s.effectivefrom='') OR
         DATE_TRUNC('month', TO_DATE(s.effectivefrom, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         )
         AND DATE_TRUNC('month', TO_DATE(s.doa, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-        AND s.category != 'LG4'
+        AND 
+        s.category != 'LG4'
         $idCondition
 )
 SELECT

@@ -92,7 +92,7 @@ $classlist = [
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
   <!-- Vendor CSS Files -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
   <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
@@ -350,294 +350,272 @@ $classlist = [
               </script>
 
               <?php
-              echo '
-          <div class="table-responsive">
-          <table class="table">
-          <thead>
-          <tr>
-          <th scope="col" id="cw">Photo</th>
-          <th scope="col" id="cw1">Student Details</th>
-          <th scope="col">Class</th>
-          <th scope="col">Contact</th>
-          <th scope="col">Medium</th>
-          <th scope="col">Status</th>
-          <th scope="col"></th>
-        </tr>
-        </thead>' ?>
-              <?php if (sizeof($resultArr) > 0) { ?>
-                <?php
-                echo '<tbody>';
+              function formatContact($role, $contact)
+              {
+                return ($role == 'Admin' || $role == 'Offline Manager') ? $contact : "xxxxxx" . substr($contact, 6);
+              }
+
+              function formatPaidBadge($maxmonth, $role)
+              {
+                return ($maxmonth != null && ($role == 'Admin' || $role == 'Offline Manager')) ? '<p style="display: inline !important;" class="badge bg-secondary">PAID&nbsp;-&nbsp;' . $maxmonth . '</p>' : '';
+              }
+
+              echo '<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col" id="cw">Photo</th>
+                <th scope="col" id="cw1">Student Details</th>
+                <th scope="col">Class</th>
+                <th scope="col">Contact</th>
+                <th scope="col">Status</th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>';
+
+              if (sizeof($resultArr) > 0) {
                 foreach ($resultArr as $array) {
+                  $paidBadge = formatPaidBadge($array['maxmonth'], $role);
+                  $contact = formatContact($role, $array['contact']);
+
                   echo '<tr>
-            <td><img src="' . $array['photourl'] . '" width=50px/></td>
+            <td><img src="' . $array['photourl'] . '" width="50px"/></td>
             <td>Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>
-            <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
-            <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] ?>
-
-                  <?php if ($array['maxmonth'] != null && ($role == 'Admin' || $role == 'Offline Manager')) { ?>
-
-                    <?php echo '<p style="display: inline !important;" class="badge bg-secondary">PAID&nbsp;-&nbsp;' . $array['maxmonth'] . '</p></td><td style="white-space: unset;">' ?>
-                    <?php    } else { ?><?php echo '</td><td style="white-space: unset;">' ?><?php   } ?>
-
-                    <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
-
-                      <?php echo $array['contact'] ?>
-                    <?php    } else { ?>
-
-                      <?php echo "xxxxxx" . substr($array['contact'], 6) ?>
-
-                    <?php   } ?>
-                  <?php echo $array['emailaddress'] . '</td>
-            <td>' . $array['medium'] . '/' . $array['nameoftheboard'] . '</td>
+                <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
+            <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] . '&nbsp;' . $paidBadge . '</td>
+            <td style="white-space: unset;">' . $contact . $array['emailaddress'] . '</td>
             <td style="white-space: unset">' . $array['filterstatus'] . '</td>
-
-            <td><a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')"><button type="button" id="btn" class="btn btn-primary btn-sm" style="outline: none"><i class="bi bi-eye"></i>&nbsp;Details</button></a>
-            
-            
-            </td>
+            <td style="white-space: unset"><a href="admission_admin.php?student_id=' . $array['student_id'] . ' "target="_blank"><i style="font-size: 16px ;color:#777777" class="fa-regular fa-pen-to-square" title="Edit Profile"></i></a> </td>
+            <td><a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')"><button type="button" id="btn" class="btn btn-primary btn-sm" style="outline: none"><i class="bi bi-eye"></i>&nbsp;Details</button></a></td>
         </tr>';
-                } ?>
-                <?php
-              } else if ($module == "" && $stid == "") {
-                ?>
-                  <tr>
-                    <td colspan="5">Please select a Module and Status from the dropdown menus to view the results.</td>
-                  </tr>
-                <?php
-              } else if (sizeof($resultArr) == 0 && $stid == "") {
-                ?>
-                  <tr>
-                    <td colspan="5">No record found for <?php echo $module ?>, <?php echo $id ?> and <?php echo $category ?>&nbsp;<?php echo str_replace("'", "", $classs) ?></td>
-                  </tr>
-
-                <?php } else if (sizeof($resultArr) == 0 && $stid != "") {
-                ?>
-                  <tr>
-                    <td colspan="5">No record found for <?php echo $stid ?></td>
-                  </tr>
-                <?php }
+                }
+              } elseif ($module == "" && $stid == "") {
+                echo '<tr>
+        <td colspan="7">Please select a Module and Status from the dropdown menus to view the results.</td>
+    </tr>';
+              } elseif (sizeof($resultArr) == 0 && $stid == "") {
+                echo '<tr>
+        <td colspan="7">No record found for ' . $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", $classs) . '</td>
+    </tr>';
+              } elseif (sizeof($resultArr) == 0 && $stid != "") {
+                echo '<tr>
+        <td colspan="7">No record found for ' . $stid . '</td>
+    </tr>';
+              }
 
               echo '</tbody>
-                        </table>
-                        </div>';
-                ?>
+    </table>
+</div>';
+              ?>
 
-                <!--------------- POP-UP BOX ------------
+              <!--------------- POP-UP BOX ------------
 -------------------------------------->
-                <style>
-                  .modal {
-                    background-color: rgba(0, 0, 0, 0.4);
-                    /* Black w/ opacity */
-                  }
-                </style>
-                <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Student Details</h1>
-                        <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
+              <style>
+                .modal {
+                  background-color: rgba(0, 0, 0, 0.4);
+                  /* Black w/ opacity */
+                }
+              </style>
+              <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="exampleModalLabel">Student Details</h1>
+                      <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
 
-                        <div class="d-flex align-items-center">
-                          <img id="profileimage" src="#" class="rounded-circle me-2" width="50" height="50" />
-                          <div>
-                            <b><span class="studentname"></span>&nbsp;(<span class="student_id"></span>)</b>
-                            <span id="status" class="badge"></span>
-                          </div>
-                          <a id="profile" href="#" target="_blank" class="ms-auto text-secondary"><i class="fa-regular fa-pen-to-square" style="font-size: 20px;" title="Edit Profile"></i></a>
-                        </div><br>
-                        <p>
-                          Subject: <span class="nameofthesubjects"></span>
-                        </p>
-                        <p>Remarks: <span class="remarks"></span></p>
+                      <div class="d-flex align-items-center">
+                        <img id="profileimage" src="#" class="rounded-circle me-2" width="50" height="50" />
+                        <div>
+                          <b><span class="studentname"></span>&nbsp;(<span class="student_id"></span>)</b>
+                          <span id="status" class="badge"></span>
+                        </div>
+                        <!-- <a id="profile" href="#" target="_blank" class="ms-auto text-secondary"><i class="fa-regular fa-pen-to-square" style="font-size: 20px;" title="Edit Profile"></i></a> -->
+                      </div><br>
+                      <p>
+                        Subject: <span class="nameofthesubjects"></span>
+                      </p>
+                      <p>Remarks: <span class="remarks"></span></p>
 
-                        <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
+                      <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
 
-                          <p><strong>Fee</strong>&nbsp;
-                            <span style="display: inline !important;" class="badge bg-secondary">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></span>
+                        <p><strong>Fee</strong>&nbsp;
+                          <span style="display: inline !important;" class="badge bg-secondary">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></span>
 
-                          <form name="payment" action="#" method="POST">
-                            <input type="hidden" name="form-type" type="text" value="payment">
-                            <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
-                            <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
-                            <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
+                        <form name="payment" action="#" method="POST">
+                          <input type="hidden" name="form-type" type="text" value="payment">
+                          <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
+                          <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
+                          <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
 
-                            <select name="year" id="year" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                              <!-- <option value="" disabled selected hidden>Select Year</option> -->
-                            </select>
+                          <select name="year" id="year" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
+                            <!-- <option value="" disabled selected hidden>Select Year</option> -->
+                          </select>
 
-                            <select name="ptype" id="ptype" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                              <option value="" disabled selected hidden>Select Type</option>
-                              <option value="Fees" selected>Fees</option>
-                              <option value="Admission Fee">Admission Fee</option>
-                              <option value="Fine">Fine</option>
-                              <option value="Other">Other</option>
-                            </select>
+                          <select name="ptype" id="ptype" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
+                            <option value="" disabled selected hidden>Select Type</option>
+                            <option value="Fees" selected>Fees</option>
+                            <option value="Admission Fee">Admission Fee</option>
+                            <option value="Fine">Fine</option>
+                            <option value="Other">Other</option>
+                          </select>
 
-                            <select name="month" id="month" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                              <option value="" disabled selected hidden>Select Month</option>
-                              <option value="1">January</option>
-                              <option value="2">February</option>
-                              <option value="3">March</option>
-                              <option value="4">April</option>
-                              <option value="5">May</option>
-                              <option value="6">June</option>
-                              <option value="7">July</option>
-                              <option value="8">August</option>
-                              <option value="9">September</option>
-                              <option value="10">October</option>
-                              <option value="11">November</option>
-                              <option value="12">December</option>
-                            </select>
+                          <select name="month" id="month" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
+                            <option value="" disabled selected hidden>Select Month</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                          </select>
 
-                            <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;" placeholder="Amount" required>&nbsp;
-                            <br><br>
-                            <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
-                          </form>
+                          <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;" placeholder="Amount" required>&nbsp;
+                          <br><br>
+                          <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
+                        </form>
 
-                          <br>
-                          <script>
-                            var currentYear = new Date().getFullYear();
-                            for (var i = 0; i < 5; i++) {
-                              var year = currentYear;
-                              //next.toString().slice(-2)
-                              $('#year').append(new Option(year));
-                              currentYear--;
-                            }
-                          </script>
-                          <script>
-                            const scriptURL = 'payment-api.php'
-                            const form = document.forms['payment']
+                        <br>
+                        <script>
+                          var currentYear = new Date().getFullYear();
+                          for (var i = 0; i < 5; i++) {
+                            var year = currentYear;
+                            //next.toString().slice(-2)
+                            $('#year').append(new Option(year));
+                            currentYear--;
+                          }
+                        </script>
+                        <script>
+                          const scriptURL = 'payment-api.php'
+                          const form = document.forms['payment']
 
-                            form.addEventListener('submit', e => {
-                              e.preventDefault()
-                              fetch(scriptURL, {
-                                  method: 'POST',
-                                  body: new FormData(document.forms['payment'])
-                                })
-                                .then(response => alert("Fee has been deposited successfully.") +
-                                  location.reload())
-                                .catch(error => console.error('Error!', error.message))
-                            })
-                          </script>
-                          <div class="modal-footer">
-                            <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                          </div>
-                      </div>
+                          form.addEventListener('submit', e => {
+                            e.preventDefault()
+                            fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(document.forms['payment'])
+                              })
+                              .then(response => alert("Fee has been deposited successfully.") +
+                                location.reload())
+                              .catch(error => console.error('Error!', error.message))
+                          })
+                        </script>
+                        <div class="modal-footer">
+                          <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
                     </div>
                   </div>
                 </div>
-              <?php } ?>
-              <script>
-                var data = <?php echo json_encode($resultArr) ?>;
-                var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
+              </div>
+            <?php } ?>
+            <script>
+              var data = <?php echo json_encode($resultArr) ?>;
+              var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
 
-                // Get the modal
-                var modal = document.getElementById("myModal");
-                // Get the <span> element that closes the modal
-                var closedetails = [
-                  document.getElementById("closedetails-header"),
-                  document.getElementById("closedetails-footer")
-                ];
+              // Get the modal
+              var modal = document.getElementById("myModal");
+              // Get the <span> element that closes the modal
+              var closedetails = [
+                document.getElementById("closedetails-header"),
+                document.getElementById("closedetails-footer")
+              ];
 
-                function showDetails(id) {
-                  // console.log(modal)
-                  // console.log(modal.getElementsByClassName("data"))
-                  var mydata = undefined
-                  data.forEach(item => {
-                    if (item["student_id"] == id) {
-                      mydata = item;
-                    }
-                  })
-
-                  var keys = Object.keys(mydata)
-                  keys.forEach(key => {
-                    var span = modal.getElementsByClassName(key)
-                    if (span.length > 0)
-                      span[0].innerHTML = mydata[key];
-                  })
-                  modal.style.display = "block";
-                  //class add 
-                  // var status = document.getElementById("status")
-                  // if (mydata["filterstatus"] === "Active") {
-                  //   status.classList.add("bg-success")
-                  //   status.classList.remove("bg-danger")
-                  // } else {
-                  //   status.classList.remove("bg-success")
-                  //   status.classList.add("bg-danger")
-                  // }
-                  //class add end
-
-                  //Print something start
-
-                  var status = document.getElementById("status")
-                  status.innerHTML = mydata["filterstatus"]
-                  if (mydata["filterstatus"] === "Active") {
-                    status.classList.add("bg-success")
-                    status.classList.remove("bg-danger")
-                  } else {
-                    status.classList.remove("bg-success")
-                    status.classList.add("bg-danger")
+              function showDetails(id) {
+                // console.log(modal)
+                // console.log(modal.getElementsByClassName("data"))
+                var mydata = undefined
+                data.forEach(item => {
+                  if (item["student_id"] == id) {
+                    mydata = item;
                   }
-                  // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
-                  //Print something END
+                })
 
-                  var profileimage = document.getElementById("profileimage")
-                  profileimage.src = mydata["photourl"]
+                var keys = Object.keys(mydata)
+                keys.forEach(key => {
+                  var span = modal.getElementsByClassName(key)
+                  if (span.length > 0)
+                    span[0].innerHTML = mydata[key];
+                })
+                modal.style.display = "block";
 
+                //Print something start
 
-                  var profile = document.getElementById("profile")
-                  profile.href = "/rssi-member/admission_admin.php?student_id=" + mydata["student_id"]
-
-                  var sname = document.getElementById("sname")
-                  sname.value = mydata["studentname"]
-
-                  var studentid = document.getElementById("studentid")
-                  studentid.value = mydata["student_id"]
-
-                  var collectedby = document.getElementById("collectedby")
-                  collectedby.value = aid
-
-                  //Program to disable or enable a button using javascript
-
-                  // const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                  // const d = new Date();
-
-                  // var dd = String(d.getDate()).padStart(2, '0');
-                  // var mm = String(d.getMonth() + 1).padStart(2, '0');
-                  // var yyyy = d.getFullYear();
-                  // document.write("The date is : " + monthNames[d.getMonth()]);
-
-                  // if (mydata["maxmonth"] === monthNames[d.getMonth() - 1] && mydata["feecycle"] !== "A") {
-                  //   yes.disabled = true; //button remains disabled
-                  // } else if (mydata["maxmonth"] === monthNames[d.getMonth()] && mydata["feecycle"] === "A") {
-                  //   yes.disabled = true;
-                  // } else {
-                  //   yes.disabled = false;
-                  // }
+                var status = document.getElementById("status")
+                status.innerHTML = mydata["filterstatus"]
+                if (mydata["filterstatus"] === "Active") {
+                  status.classList.add("bg-success")
+                  status.classList.remove("bg-danger")
+                } else {
+                  status.classList.remove("bg-success")
+                  status.classList.add("bg-danger")
                 }
+                // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
+                //Print something END
 
-                // When the user clicks the button, open the modal 
+                var profileimage = document.getElementById("profileimage")
+                profileimage.src = mydata["photourl"]
 
-                // When the user clicks on <span> (x), close the modal
-                //close model using either cross or close button
-                closedetails.forEach(function(element) {
-                  element.addEventListener("click", closeModal);
-                });
 
-                function closeModal() {
-                  var modal1 = document.getElementById("myModal");
-                  modal1.style.display = "none";
-                }
+                // var profile = document.getElementById("profile")
+                // profile.href = "/rssi-member/admission_admin.php?student_id=" + mydata["student_id"]
 
-                // When the user clicks anywhere outside of the modal, close it
-                // window.onclick = function(event) {
-                //   if (event.target == modal) {
-                //     modal.style.display = "none";
-                //   }
+                var sname = document.getElementById("sname")
+                sname.value = mydata["studentname"]
+
+                var studentid = document.getElementById("studentid")
+                studentid.value = mydata["student_id"]
+
+                var collectedby = document.getElementById("collectedby")
+                collectedby.value = aid
+
+                //Program to disable or enable a button using javascript
+
+                // const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                // const d = new Date();
+
+                // var dd = String(d.getDate()).padStart(2, '0');
+                // var mm = String(d.getMonth() + 1).padStart(2, '0');
+                // var yyyy = d.getFullYear();
+                // document.write("The date is : " + monthNames[d.getMonth()]);
+
+                // if (mydata["maxmonth"] === monthNames[d.getMonth() - 1] && mydata["feecycle"] !== "A") {
+                //   yes.disabled = true; //button remains disabled
+                // } else if (mydata["maxmonth"] === monthNames[d.getMonth()] && mydata["feecycle"] === "A") {
+                //   yes.disabled = true;
+                // } else {
+                //   yes.disabled = false;
                 // }
-              </script>
+              }
+
+              // When the user clicks the button, open the modal 
+
+              // When the user clicks on <span> (x), close the modal
+              //close model using either cross or close button
+              closedetails.forEach(function(element) {
+                element.addEventListener("click", closeModal);
+              });
+
+              function closeModal() {
+                var modal1 = document.getElementById("myModal");
+                modal1.style.display = "none";
+              }
+
+              // When the user clicks anywhere outside of the modal, close it
+              // window.onclick = function(event) {
+              //   if (event.target == modal) {
+              //     modal.style.display = "none";
+              //   }
+              // }
+            </script>
 
             </div>
           </div>
@@ -650,7 +628,7 @@ $classlist = [
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <!-- Vendor JS Files -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
