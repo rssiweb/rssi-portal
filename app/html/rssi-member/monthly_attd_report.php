@@ -54,7 +54,7 @@ attendance_data AS (
             CASE
                 WHEN a.user_id IS NOT NULL THEN 'P'
                 WHEN a.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
-                WHEN TO_DATE(s.doa, 'DD/MM/YYYY') > d.attendance_date THEN NULL
+                WHEN TO_DATE(s.doa, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
                 ELSE 'A'
             END
         ) AS attendance_status
@@ -68,9 +68,9 @@ attendance_data AS (
     WHERE
         (
         s.effectivefrom = '' OR
-        DATE_TRUNC('month', TO_DATE(s.effectivefrom, 'DD/MM/YYYY'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        DATE_TRUNC('month', TO_DATE(s.effectivefrom, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         )
-        AND DATE_TRUNC('month', TO_DATE(s.doa, 'DD/MM/YYYY'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        AND DATE_TRUNC('month', TO_DATE(s.doa, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         AND s.category != 'LG4'
         $idCondition
 )

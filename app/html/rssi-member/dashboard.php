@@ -57,14 +57,30 @@ $result = pg_query($con, $query);
 $resultArr = pg_fetch_all($result);
 
 if ($resultArr > 0) {
-    $onboarding_left = $resultArr[0]['onboarding_left']??0;
-    $exit_left = $resultArr[0]['exit_left']??0;
+    $onboarding_left = $resultArr[0]['onboarding_left'] ?? 0;
+    $exit_left = $resultArr[0]['exit_left'] ?? 0;
 } else {
     // Error handling if the query fails
     $onboarding_left = 0;
     $exit_left = 0;
 }
 
+
+$query_admission = "SELECT studentname, emailaddress, contact, preferredbranch, student_id, doa, module,
+    'admission' AS process_type,
+    (SELECT COUNT(*) FROM rssimyprofile_student WHERE module IS NULL) AS row_count
+FROM rssimyprofile_student
+WHERE module IS NULL";
+
+$result_admission = pg_query($con, $query_admission);
+$resultArr_admission = pg_fetch_all($result_admission);
+
+if ($resultArr_admission > 0) {
+    $admission_left = $resultArr_admission[0]['row_count'] ?? 0;
+} else {
+    // Error handling if the query fails
+    $admission_left = 0;
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -142,7 +158,7 @@ if ($resultArr > 0) {
 
                                 <!-- Modal -->
                                 <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg">
+                                    <div class="modal-dialog modal-xl">
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title" id="exampleModalLabel">Onboarding Process</h5>
@@ -204,7 +220,7 @@ if ($resultArr > 0) {
                                 </div>
                                 <!-- Modal -->
                                 <div class="modal fade" id="myModal_exit" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg">
+                                    <div class="modal-dialog modal-xl">
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title" id="exampleModalLabel">Exit Process</h5>
@@ -265,8 +281,61 @@ if ($resultArr > 0) {
                                     <div class="card h-100">
                                         <div class="card-body">
                                             <h4 class="card-title">Student Registration</h4>
+                                            <span class="badge rounded-pill text-bg-danger position-absolute top-0 end-0 me-2 mt-2">
+                                                Pending: <?php echo $admission_left; ?>
+                                            </span>
                                             <p class="card-text">Welcome to the RSSI Student Admission Portal. Here, you can easily manage student data and track their admission process.</p>
-                                            <a href="#" class="btn btn-primary btn-sm disabled" aria-disabled="true">Launch <i class="bi bi-box-arrow-up-right"></i></a>
+                                            <a href="#" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#myModal_admission">Launch <i class="bi bi-box-arrow-up-right"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Modal -->
+                                <div class="modal fade" id="myModal_admission" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="exampleModalLabel">New Admission</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <?php echo '
+                                                <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col">Date of application</th>    
+                                                            <th scope="col">Student Id</th>
+                                                            <th scope="col">Name</th>
+                                                            <th scope="col">Preferred Branch</th>
+                                                            <th scope="col">Contact</th>
+                                                            <th scope="col">Email</th>
+                                                            <th scope="col">Action</th>
+                                                        </tr>
+                                                    </thead>' ?>
+                                                <?php if (sizeof($resultArr_admission) > 0) { ?>
+                                                <?php
+                                                    foreach ($resultArr_admission as $array) {
+                                                        if ($array['process_type'] === 'admission') {
+                                                            echo '
+                                                                <tr>
+                                                                    <td>' . $array['doa'] . '</td>
+                                                                    <td>' . $array['student_id'] . '</td>
+                                                                    <td>' . $array['studentname'] . '</td>
+                                                                    <td>' . $array['preferredbranch'] . '</td>
+                                                                    <td>' . $array['contact'] . '</td>
+                                                                    <td>' . $array['emailaddress'] . '</td>
+                                                                    <td><a href="admission_admin.php?student_id=' . $array['student_id'] . '">Click Here</a></td>
+                                                                </tr>';
+                                                        }
+                                                    }
+                                                }
+                                                ?>
+                                                <?php echo '</table>
+                                                </div>'; ?>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

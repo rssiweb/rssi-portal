@@ -718,7 +718,7 @@ if (@$_POST['form-type'] == "admission") {
     $doclink_student_photo = uploadeToDrive($uploadedFile_student_photo, $parent_student_photo, $filename_student_photo);
   }
 
-  $student = "INSERT INTO student (type_of_admission,student_name,date_of_birth,gender,student_photo,aadhar_available,student_aadhar,aadhar_card,guardian_name,guardian_relation,guardian_aadhar,state_of_domicile,postal_address,telephone_number,email_address,preferred_branch,class,school_admission_required,school_name,board_name,medium,family_monthly_income,total_family_members,payment_mode,c_authentication_code,transaction_id,student_id,subject_select) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id','$subject_select')";
+  $student = "INSERT INTO rssimyprofile_student (type_of_admission,studentname,dateofbirth,gender,student_photo_raw,aadhar_available,studentaadhar,upload_aadhar_card,guardiansname,relationwithstudent,guardianaadhar,stateofdomicile,postaladdress,contact,emailaddress,preferredbranch,class,schooladmissionrequired,nameoftheschool,nameoftheboard,medium,familymonthlyincome,totalnumberoffamilymembers,payment_mode,c_authentication_code,transaction_id,student_id,nameofthesubjects,doa) VALUES ('$type_of_admission','$student_name','$date_of_birth','$gender','$doclink_student_photo','$aadhar_available','$aadhar_card','$doclink_aadhar_card','$guardian_name','$guardian_relation','$guardian_aadhar','$state_of_domicile','$postal_address','$telephone_number','$email_address','$preferred_branch','$class','$school_admission_required','$school_name','$board_name','$medium','$family_monthly_income','$total_family_members','$payment_mode','$c_authentication_code','$transaction_id','$student_id','$subject_select','$timestamp')";
 
   $result = pg_query($con, $student);
 
@@ -727,13 +727,14 @@ if (@$_POST['form-type'] == "admission") {
     if ($cmdtuples == 1) {
       $response = array("success" => true, "message" => "Form submitted successfully.");
       echo json_encode($response);
-      // if (@$cmdtuples == 1 && $email_address != "") {
-      //   sendEmail("admission_success", array(
-      //     "student_id" => $student_id,
-      //     "student_name" => $student_name,
-      //     "timestamp" => @date("d/m/Y g:i a", strtotime($timestamp))
-      //   ), $email_address);
-      // }
+      if (@$cmdtuples == 1 && $email_address != "") {
+        sendEmail("admission_success", array(
+          "student_id" => $student_id,
+          "student_name" => $student_name,
+          "preferred_branch" => $preferred_branch,
+          "timestamp" => @date("d/m/Y g:i a", strtotime($timestamp))
+        ), $email_address);
+      }
     } else {
       $response = array("success" => false, "message" => "Form submission failed.");
       echo json_encode($response);
