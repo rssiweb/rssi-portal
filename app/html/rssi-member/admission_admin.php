@@ -106,6 +106,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!------ Include the above in your HEAD tag ---------->
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -121,6 +122,36 @@ if (@$_POST['form-type'] == "admission_admin") {
     <style>
         .prebanner {
             display: none;
+        }
+
+        .back-to-top {
+            position: fixed;
+            visibility: hidden;
+            opacity: 0;
+            right: 15px;
+            bottom: 15px;
+            z-index: 99999;
+            background: #4154f1;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            transition: all 0.4s;
+        }
+
+        .back-to-top i {
+            font-size: 24px;
+            color: #fff;
+            line-height: 0;
+        }
+
+        .back-to-top:hover {
+            background: #6776f4;
+            color: #fff;
+        }
+
+        .back-to-top.active {
+            visibility: visible;
+            opacity: 1;
         }
     </style>
 
@@ -240,7 +271,8 @@ if (@$_POST['form-type'] == "admission_admin") {
                 <hr>
                 <form name="admission_admin" id="admission_admin" action="admission_admin.php" method="post" enctype="multipart/form-data">
 
-                    <button type="submit" id="submitBtn" class="btn btn-danger">Save Changes</button>
+                    <button type="submit" id="submitBtn" class="btn btn-danger">Save Changes</button>&nbsp;<button type="button" class="btn btn-warning reload-button"><i class="bi bi-x-lg"></i>&nbsp;Discard
+                    </button>
                     <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Last updated on <?php echo $array['updated_on'] ?> by <?php echo $array['updated_by'] ?></p>
 
                     <fieldset>
@@ -667,7 +699,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                         </div>
                         <div class="form-group">
                             <label for="effectivefrom">Effective From</label>
-                            <input type="date" class="form-control" id="effectivefrom" name="effectivefrom" value="<?php echo $array['effectivefrom'] ?>">
+                            <input type="date" class="form-control" id="effectivefrom" name="effectivefrom" value="<?php echo $array['effectivefrom'] !== null && $array['effectivefrom'] !== '' ? date("Y-m-d", strtotime($array['effectivefrom'])) : ''; ?>">
                         </div>
                         <div class="form-group">
                             <label for="remarks">Remarks</label>
@@ -682,7 +714,8 @@ if (@$_POST['form-type'] == "admission_admin") {
                             <input type="text" class="form-control" id="updatedby" name="updatedby" placeholder="Enter Exit Interview" value="<?php echo $associatenumber ?>" readonly>
                         </div>
                         <br>
-                        <button type="submit" id="submitBtn" class="btn btn-danger">Save Changes</button>
+                        <button type="submit" id="submitBtn" class="btn btn-danger">Save Changes</button>&nbsp;<button type="button" class="btn btn-warning reload-button"><i class="bi bi-x-lg"></i>&nbsp;Discard
+                        </button>
                         <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Last updated on <?php echo $array['updated_on'] ?> by <?php echo $array['updated_by'] ?></p>
                 </form>
                 </fieldset>
@@ -698,9 +731,13 @@ if (@$_POST['form-type'] == "admission_admin") {
         <?php } ?>
 
     </div>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
             $('input[required], select[required], textarea[required]').each(function() {
@@ -741,6 +778,15 @@ if (@$_POST['form-type'] == "admission_admin") {
             });
             myModal.show();
         };
+    </script>
+    <script>
+        var buttons = document.querySelectorAll(".reload-button");
+
+        buttons.forEach(function(button) {
+            button.addEventListener("click", function() {
+                location.reload();
+            });
+        });
     </script>
 </body>
 

@@ -357,7 +357,7 @@ $classlist = [
 
               function formatPaidBadge($maxmonth, $role)
               {
-                return ($maxmonth != null && ($role == 'Admin' || $role == 'Offline Manager')) ? '<p style="display: inline !important;" class="badge bg-secondary">PAID&nbsp;-&nbsp;' . $maxmonth . '</p>' : '';
+                return ($maxmonth != null && ($role == 'Admin' || $role == 'Offline Manager')) ? '<p style="display: inline !important;">' . $maxmonth . '</p>' : '';
               }
 
               echo '<div class="table-responsive">
@@ -365,11 +365,16 @@ $classlist = [
         <thead>
             <tr>
                 <th scope="col" id="cw">Photo</th>
-                <th scope="col" id="cw1">Student Details</th>
+                <th scope="col">Student ID</th>
+                <th scope="col">Student Name</th>
+                <th scope="col">Gender</th>
+                <th scope="col">Age</th>
+                <th scope="col">DOA</th>
                 <th scope="col">Class</th>
                 <th scope="col">Contact</th>
                 <th scope="col">Status</th>
-                <th scope="col"></th>
+                <th scope="col">Paid up to</th>
+                <th scope="col">Due</th>
                 <th scope="col"></th>
             </tr>
         </thead>
@@ -381,14 +386,18 @@ $classlist = [
                   $contact = formatContact($role, $array['contact']);
 
                   echo '<tr>
-            <td><img src="' . $array['photourl'] . '" width="50px"/></td>
-            <td>Name - <b>' . $array['studentname'] . '</b><br>Student ID - <b>' . $array['student_id'] . '</b>
-                <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOA - ' . $array['doa'] . '</td>
-            <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] . '&nbsp;' . $paidBadge . '</td>
-            <td style="white-space: unset;">' . $contact . $array['emailaddress'] . '</td>
-            <td style="white-space: unset">' . $array['filterstatus'] . '</td>
-            <td style="white-space: unset"><a href="admission_admin.php?student_id=' . $array['student_id'] . ' "target="_blank"><i style="font-size: 16px ;color:#777777" class="fa-regular fa-pen-to-square" title="Edit Profile"></i></a> </td>
-            <td><a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')"><button type="button" id="btn" class="btn btn-primary btn-sm" style="outline: none"><i class="bi bi-eye"></i>&nbsp;Details</button></a></td>
+            <td><img src="' . $array['photourl'] . '" class="rounded-circle me-2" width="50" height="50"/></td>
+            <td style="white-space: unset;">' . $array['student_id'] . '</td>
+            <td style="white-space: unset;">' . $array['studentname'] . '</td>
+            <td style="white-space: unset;">' . $array['gender'] . '</td>
+            <td style="white-space: unset;">' . $array['age'] . '</td>
+            <td style="white-space: unset;">' . $array['doa'] . '</td>
+            <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] .'</td>'?>
+            <td style="white-space: unset;"><?php echo $contact . (isset($array['emailaddress']) ? '<br>' . $array['emailaddress'] : ''); ?></td>
+            <?php echo '<td style="white-space: unset">' . $array['filterstatus'] . '</td>
+            <td style="white-space: unset;">' . $paidBadge . '</td>
+            <td style="white-space: unset;"></td>
+            <td style="white-space: unset"><a href="admission_admin.php?student_id=' . $array['student_id'] . ' "target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')">Fee</a></td>
         </tr>';
                 }
               } elseif ($module == "" && $stid == "") {
