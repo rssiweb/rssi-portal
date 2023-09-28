@@ -84,6 +84,15 @@ $classlist = [
 <html lang="en">
 
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-11316670180');
+</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -355,9 +364,9 @@ $classlist = [
                 return ($role == 'Admin' || $role == 'Offline Manager') ? $contact : "xxxxxx" . substr($contact, 6);
               }
 
-              function formatPaidBadge($maxmonth, $role)
+              function formatPaidBadge($maxmonth, $role,$student_id)
               {
-                return ($maxmonth != null && ($role == 'Admin' || $role == 'Offline Manager')) ? '<p style="display: inline !important;">' . $maxmonth . '</p>' : '';
+                return ($maxmonth != null && ($role == 'Admin' || $role == 'Offline Manager')) ? '<p style="display: inline !important;">' . $maxmonth . '</p>&nbsp;<a href="fees.php?get_stid=' . $student_id . '" target=_blank"><i class="bi bi-clock-history" style="font-size: 16px ;color:#777777" title="View Payment History"></i></a>' : '';
               }
 
               echo '<div class="table-responsive">
@@ -383,7 +392,7 @@ $classlist = [
 
               if (sizeof($resultArr) > 0) {
                 foreach ($resultArr as $array) {
-                  $paidBadge = formatPaidBadge($array['maxmonth'], $role);
+                  $paidBadge = formatPaidBadge($array['maxmonth'], $role, $array['student_id']);
                   $contact = formatContact($role, $array['contact']);
 
                   echo '<tr>
@@ -404,15 +413,15 @@ $classlist = [
                 }
               } elseif ($module == "" && $stid == "") {
                 echo '<tr>
-        <td colspan="7">Please select a Module and Status from the dropdown menus to view the results.</td>
+        <td colspan="13">Please select a Module and Status from the dropdown menus to view the results.</td>
     </tr>';
               } elseif (sizeof($resultArr) == 0 && $stid == "") {
                 echo '<tr>
-        <td colspan="7">No record found for ' . $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", $classs) . '</td>
+        <td colspan="13">No record found for ' . $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", $classs) . '</td>
     </tr>';
               } elseif (sizeof($resultArr) == 0 && $stid != "") {
                 echo '<tr>
-        <td colspan="7">No record found for ' . $stid . '</td>
+        <td colspan="13">No record found for ' . $stid . '</td>
     </tr>';
               }
 

@@ -51,7 +51,9 @@ if ($status != null && $status != 'ALL') {
 if ($id != null) {
     $query .= "AND fees.feeyear = $id ";
 }
-
+if ($id === null && $status === null && $section === null && $stid === null) {
+    $query .= "AND fees.studentid = '' ";
+}
 $query .= "ORDER BY fees.id DESC";
 
 $result = pg_query($con, $query);
@@ -88,6 +90,10 @@ if ($stid != null) {
         $totalapprovedamount_query .= "AND fees.feeyear = $id ";
         $totaltransferredamount_query .= "AND fees.feeyear = $id ";
     }
+    if ($id === null && $status === null && $section === null && $stid === null) {
+        $totalapprovedamount_query .= "AND fees.studentid = '' ";
+        $totaltransferredamount_query .= "AND fees.studentid = '' ";
+    }
 }
 
 $totaltransferredamount_query .= " AND fees.pstatus = 'transferred'";
@@ -118,6 +124,18 @@ $categories = [
 <html lang="en">
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -178,6 +196,7 @@ $categories = [
 
                             <div class="card-body">
                                 <br>
+
                                 <div class="row">
                                     <div class="col">
                                         Record count: <?php echo sizeof($resultArr) ?><br>
@@ -187,7 +206,7 @@ $categories = [
                                         = <p class="badge bg-info"><?php echo ($resultArrr) ?></p>
                                     </div>
                                     <div class="col text-end">
-                                        <form method="POST" action="export_function.php">
+                                        <form method="POST" action="export_function.php" style="display:inline">
                                             <input type="hidden" value="fees" name="export_type" />
                                             <input type="hidden" value="<?php echo $id ?>" name="id" />
                                             <input type="hidden" value="<?php echo $status ?>" name="status" />
@@ -197,6 +216,8 @@ $categories = [
 
                                             <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
                                         </form>
+                                        <span style="display:inline">|</span>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Import file</a>
                                     </div>
                                 </div>
                                 <form action="" method="GET">
@@ -410,7 +431,7 @@ $categories = [
                                         <?php elseif ($id == "" && $stid == "") : ?>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="5">Please select Filter value.</td>
+                                                    <td colspan="9">Please select Filter value.</td>
                                                 </tr>
                                             </tbody>
                                         <?php elseif (sizeof($resultArr) == 0 && $stid == "") : ?>
@@ -539,6 +560,37 @@ $categories = [
             </section>
 
         </main><!-- End #main -->
+        <!-- Popup -->
+        <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <!-- Header -->
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="popupLabel">Import file</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <!-- Body -->
+                    <div class="modal-body">
+                        <!-- <div class="container mt-5"> -->
+                        <form action="upload.php" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="fileInput" class="form-label">Choose a File</label>
+                                <input type="file" class="form-control" id="fileInput" name="fileInput" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Upload File</button>
+                        </form>
+                        <!-- </div> -->
+
+
+                    </div>
+                    <!-- Footer -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

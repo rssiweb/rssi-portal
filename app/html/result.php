@@ -78,6 +78,15 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
 <html lang="en">
 
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-11316670180');
+</script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
