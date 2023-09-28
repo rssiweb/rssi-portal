@@ -370,6 +370,7 @@ $classlist = [
                 <th scope="col">Gender</th>
                 <th scope="col">Age</th>
                 <th scope="col">DOA</th>
+                <th scope="col">DOT</th>
                 <th scope="col">Class</th>
                 <th scope="col">Contact</th>
                 <th scope="col">Status</th>
@@ -386,15 +387,16 @@ $classlist = [
                   $contact = formatContact($role, $array['contact']);
 
                   echo '<tr>
-            <td><img src="' . $array['photourl'] . '" class="rounded-circle me-2" width="50" height="50"/></td>
-            <td style="white-space: unset;">' . $array['student_id'] . '</td>
-            <td style="white-space: unset;">' . $array['studentname'] . '</td>
-            <td style="white-space: unset;">' . $array['gender'] . '</td>
-            <td style="white-space: unset;">' . $array['age'] . '</td>
-            <td style="white-space: unset;">' . $array['doa'] . '</td>
-            <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] .'</td>'?>
-            <td style="white-space: unset;"><?php echo $contact . (isset($array['emailaddress']) ? '<br>' . $array['emailaddress'] : ''); ?></td>
-            <?php echo '<td style="white-space: unset">' . $array['filterstatus'] . '</td>
+                  <td><img src="' . (($array['photourl'] !== null && $array['photourl'] !== '') ? $array['photourl'] : 'https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg') . '" width="50"></td>
+                  <td style="white-space: unset;">' . $array['student_id'] . '</td>
+                  <td style="white-space: unset;">' . $array['studentname'] . '</td>
+                  <td style="white-space: unset;">' . $array['gender'] . '</td>
+                  <td style="white-space: unset;">' . $array['age'] . '</td>
+                  <td style="white-space: unset;">' . date('d/m/Y', strtotime($array['doa'])) . '</td>
+                  <td style="white-space: unset;">' . (empty($array['effectivefrom']) ? NULL : date('d/m/Y', strtotime($array['effectivefrom']))) . '</td>
+                  <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] . '</td>' ?>
+                  <td style="white-space: unset;"><?php echo $contact . (isset($array['emailaddress']) ? '<br>' . $array['emailaddress'] : ''); ?></td>
+              <?php echo '<td style="white-space: unset">' . $array['filterstatus'] . '</td>
             <td style="white-space: unset;">' . $paidBadge . '</td>
             <td style="white-space: unset;"></td>
             <td style="white-space: unset"><a href="admission_admin.php?student_id=' . $array['student_id'] . ' "target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')">Fee</a></td>
