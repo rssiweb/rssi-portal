@@ -11,7 +11,6 @@ date_default_timezone_set('Asia/Kolkata');
 $formtype = $_POST['form-type'];
 
 if ($formtype == "payment") {
-  @$sname = strtoupper($_POST['sname']);
   @$studentid = $_POST['studentid'];
   @$fees = $_POST['fees'];
   // @$month = join(',', $_POST['month']);
@@ -20,7 +19,7 @@ if ($formtype == "payment") {
   @$ptype = $_POST['ptype'];
   @$feeyear = $_POST['year'];
   $now = date('Y-m-d H:i:s');
-  $feesupdate = "INSERT INTO fees (date, sname, studentid, fees, month, collectedby, ptype,feeyear) VALUES ('$now','$sname','$studentid','$fees','$month','$collectedby','$ptype','$feeyear')";
+  $feesupdate = "INSERT INTO fees (date, studentid, fees, month, collectedby, ptype,feeyear) VALUES ('$now','$studentid','$fees','$month','$collectedby','$ptype','$feeyear')";
   $result = pg_query($con, $feesupdate);
   // echo json_encode($result);
 }
@@ -420,10 +419,25 @@ if ($formtype == "transfer_all") {
   $pid = $_POST['pid'];
   $selectedIds = explode(', ', $pid);
   $transferAllQuery = "UPDATE fees
-  SET pstatus = 'transferred'
-  WHERE id IN ('" . implode("', '", $selectedIds) . "')";
+                       SET pstatus = 'transferred'
+                       WHERE id IN (" . implode(',', $selectedIds) . ")";
+  $result = pg_query_params($con, $transferAllQuery, array());
 
-  $result = pg_query($con, $transferAllQuery);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples > 0) {
+      echo "success";
+    } else {
+      echo "failed";
+    }
+  } else {
+    // Handle the error here
+    error_log(pg_last_error($con));
+    echo "failed";
+  }
+
+  // Close the database connection
+  pg_close($con);
 }
 
 if ($formtype == "gemsredeem") {

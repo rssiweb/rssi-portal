@@ -106,15 +106,18 @@ $resultArr = pg_fetch_all($result);
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -219,6 +222,9 @@ $resultArr = pg_fetch_all($result);
 
                                 <!-- <section style="padding: 2%;"> -->
                                 <?php if ($role == "Admin") { ?>
+                                    <div class="col text-end">
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Import file</a>
+                                    </div>
                                     <table class="table">
                                         <thead>
                                             <tr>
@@ -611,6 +617,37 @@ $resultArr = pg_fetch_all($result);
         </section>
 
     </main><!-- End #main -->
+    <!-- Popup -->
+    <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <!-- Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="popupLabel">Import file</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Body -->
+                <div class="modal-body">
+                    <!-- <div class="container mt-5"> -->
+                    <form action="upload.php" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="fileInput" class="form-label">Choose a File</label>
+                            <input type="file" class="form-control" id="fileInput" name="fileInput" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Upload File</button>
+                    </form>
+                    <!-- </div> -->
+
+
+                </div>
+                <!-- Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

@@ -84,15 +84,18 @@ $classlist = [
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+
+    gtag('config', 'AW-11316670180');
+  </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -364,7 +367,7 @@ $classlist = [
                 return ($role == 'Admin' || $role == 'Offline Manager') ? $contact : "xxxxxx" . substr($contact, 6);
               }
 
-              function formatPaidBadge($maxmonth, $role,$student_id)
+              function formatPaidBadge($maxmonth, $role, $student_id)
               {
                 return ($maxmonth != null && ($role == 'Admin' || $role == 'Offline Manager')) ? '<p style="display: inline !important;">' . $maxmonth . '</p>&nbsp;<a href="fees.php?get_stid=' . $student_id . '" target=_blank"><i class="bi bi-clock-history" style="font-size: 16px ;color:#777777" title="View Payment History"></i></a>' : '';
               }
@@ -467,7 +470,6 @@ $classlist = [
 
                         <form name="payment" action="#" method="POST">
                           <input type="hidden" name="form-type" type="text" value="payment">
-                          <input type="hidden" class="form-control" name="sname" id="sname" type="text" value="">
                           <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
                           <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
 
@@ -550,8 +552,6 @@ $classlist = [
               ];
 
               function showDetails(id) {
-                // console.log(modal)
-                // console.log(modal.getElementsByClassName("data"))
                 var mydata = undefined
                 data.forEach(item => {
                   if (item["student_id"] == id) {
@@ -580,46 +580,16 @@ $classlist = [
                 }
                 // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
                 //Print something END
-
                 var profileimage = document.getElementById("profileimage")
                 profileimage.src = mydata["photourl"]
-
-
-                // var profile = document.getElementById("profile")
-                // profile.href = "/rssi-member/admission_admin.php?student_id=" + mydata["student_id"]
-
-                var sname = document.getElementById("sname")
-                sname.value = mydata["studentname"]
 
                 var studentid = document.getElementById("studentid")
                 studentid.value = mydata["student_id"]
 
                 var collectedby = document.getElementById("collectedby")
                 collectedby.value = aid
-
-                //Program to disable or enable a button using javascript
-
-                // const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                // const d = new Date();
-
-                // var dd = String(d.getDate()).padStart(2, '0');
-                // var mm = String(d.getMonth() + 1).padStart(2, '0');
-                // var yyyy = d.getFullYear();
-                // document.write("The date is : " + monthNames[d.getMonth()]);
-
-                // if (mydata["maxmonth"] === monthNames[d.getMonth() - 1] && mydata["feecycle"] !== "A") {
-                //   yes.disabled = true; //button remains disabled
-                // } else if (mydata["maxmonth"] === monthNames[d.getMonth()] && mydata["feecycle"] === "A") {
-                //   yes.disabled = true;
-                // } else {
-                //   yes.disabled = false;
-                // }
               }
 
-              // When the user clicks the button, open the modal 
-
-              // When the user clicks on <span> (x), close the modal
-              //close model using either cross or close button
               closedetails.forEach(function(element) {
                 element.addEventListener("click", closeModal);
               });
@@ -628,13 +598,6 @@ $classlist = [
                 var modal1 = document.getElementById("myModal");
                 modal1.style.display = "none";
               }
-
-              // When the user clicks anywhere outside of the modal, close it
-              // window.onclick = function(event) {
-              //   if (event.target == modal) {
-              //     modal.style.display = "none";
-              //   }
-              // }
             </script>
 
             </div>

@@ -334,46 +334,12 @@ $categories = [
                                 </script>
                                 <?php if ($role == 'Admin') { ?>
                                     <div class="text-end">
-                                        <form name="transfer_all" action="#" method="POST" style="display: -webkit-inline-box;">
+                                        <form name="transfer_all" action="payment-api.php" method="POST" style="display: -webkit-inline-box;">
                                             <input type="hidden" name="form-type" type="text" value="transfer_all">
                                             <input type="hidden" name="pid" id="pid" value="" readonly>
                                             <button type="submit" class="btn btn-primary" id="transferButton" disabled>Bulk Transfer (<span id="selectedCount">0</span>)</button>
                                         </form>
                                     </div>
-
-                                    <script>
-                                        const pidInput = document.getElementById('pid');
-                                        const transferButton = document.getElementById('transferButton');
-
-                                        pidInput.addEventListener('input', () => {
-                                            const pidValue = pidInput.value;
-                                            if (pidValue) {
-                                                transferButton.disabled = false;
-                                            } else {
-                                                transferButton.disabled = true;
-                                            }
-                                        });
-
-                                        $(document).ready(function() {
-                                            $('input[name="checkbox[]"]').change(function() {
-                                                var selectedValues = [];
-                                                $('input[name="checkbox[]"]:checked').each(function() {
-                                                    selectedValues.push($(this).val());
-                                                });
-                                                $('#pid').val(selectedValues.join(', '));
-                                                $('#selectedCount').text(selectedValues.length); // Update selected count
-                                                pidInput.dispatchEvent(new Event('input')); // Trigger the input event
-                                            });
-
-                                            $('form[name="transfer_all"]').submit(function(event) {
-                                                event.preventDefault(); // Prevent form submission
-
-                                                // Submit the form
-                                                $(this).unbind('submit').submit();
-                                            });
-                                        });
-                                    </script>
-
                                 <?php } ?>
 
                                 <div class="table-responsive">
@@ -409,21 +375,20 @@ $categories = [
                                                         <td><?= $array['ptype'] ?></td>
                                                         <td><?= $array['fullname'] ?></td>
                                                         <td>
-                                                            <form name="transfer_<?= $array['id'] ?>" action="#" method="POST" style="display: -webkit-inline-box;">
-                                                                <input type="hidden" name="form-type" type="text" value="transfer">
-                                                                <input type="hidden" name="pid" id="pid" type="text" value="<?= $array['id'] ?>">
-                                                                <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                            <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                                <form name="transfer_<?= $array['id'] ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                                    <input type="hidden" name="form-type" type="text" value="transfer">
+                                                                    <input type="hidden" name="pid" id="pid" type="text" value="<?= $array['id'] ?>">
                                                                     <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Transfer"><i class="bi bi-upload"></i></button>
-                                                                <?php endif; ?>
-                                                            </form>
-
-                                                            <form name="paydelete_<?= $array['id'] ?>" action="#" method="POST" style="display: -webkit-inline-box;">
-                                                                <input type="hidden" name="form-type" type="text" value="paydelete">
-                                                                <input type="hidden" name="pid" id="pid" type="text" value="<?= $array['id'] ?>">
-                                                                <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                                </form>
+                                                            <?php endif; ?>
+                                                            <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                                <form name="paydelete_<?= $array['id'] ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                                    <input type="hidden" name="form-type" type="text" value="paydelete">
+                                                                    <input type="hidden" name="pid" id="pid" type="text" value="<?= $array['id'] ?>">
                                                                     &nbsp;&nbsp;&nbsp;<button type="submit" id="yes" onclick="validateForm()" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="bi bi-x-lg"></i></button>
-                                                                <?php endif; ?>
-                                                            </form>
+                                                                </form>
+                                                            <?php endif; ?>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -479,85 +444,26 @@ $categories = [
                                         <?php endif; ?>
                                     </table>
                                 </div>
-
-
-                                <script>
-                                    var data = <?php echo json_encode($resultArr) ?>;
-                                    var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
-
-                                    //var pid = document.getElementById("pid")
-                                    //pid.value = mydata["pid"]
-
-                                    const scriptURL = 'payment-api.php'
-
-                                    data.forEach(item => {
-                                        const form = document.forms['transfer_' + item.id]
-                                        form.addEventListener('submit', e => {
-                                            e.preventDefault()
-                                            fetch(scriptURL, {
-                                                    method: 'POST',
-                                                    body: new FormData(document.forms['transfer_' + item.id])
-                                                })
-                                                .then(response => alert("Amount has been transferred.") +
-                                                    location.reload())
-                                                .catch(error => console.error('Error!', error.message))
-                                        })
-
-                                        console.log(item)
-                                    })
-
-                                    const form = document.forms['transfer_all'];
-
-                                    form.addEventListener('submit', async (e) => {
-                                        e.preventDefault();
-
-                                        try {
-                                            const formData = new FormData(form);
-                                            const response = await fetch(scriptURL, {
-                                                method: 'POST',
-                                                body: formData,
-                                            });
-
-                                            if (response.ok) {
-                                                alert('Bulk transfer has been completed.');
-                                                location.reload();
-                                            } else {
-                                                throw new Error('Error occurred during bulk transfer.');
-                                            }
-                                        } catch (error) {
-                                            console.error('Error!', error.message);
-                                        }
-                                    });
-
-                                    function validateForm() {
-                                        if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
-                                            data.forEach(item => {
-                                                const form = document.forms['paydelete_' + item.id]
-                                                form.addEventListener('submit', e => {
-                                                    e.preventDefault()
-                                                    fetch(scriptURL, {
-                                                            method: 'POST',
-                                                            body: new FormData(document.forms['paydelete_' + item.id])
-                                                        })
-                                                        .then(response => alert("Record has been deleted.") +
-                                                            location.reload())
-                                                        .catch(error => console.error('Error!', error.message))
-                                                })
-
-                                                console.log(item)
-                                            })
-                                        } else {
-                                            alert("Record has NOT been deleted.");
-                                            return false;
-                                        }
-                                    }
-                                </script>
-
                             </div>
                         </div>
                     </div><!-- End Reports -->
                 </div>
             </section>
+            <!-- Bootstrap Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p id="loadingMessage">Submission in progress. Please do not close or reload this page.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </main><!-- End #main -->
         <!-- Popup -->
@@ -593,6 +499,111 @@ $categories = [
         </div>
 
         <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+        <script>
+            const pidInput = document.getElementById('pid');
+            const transferButton = document.getElementById('transferButton');
+
+            pidInput.addEventListener('input', () => {
+                const pidValue = pidInput.value;
+                if (pidValue) {
+                    transferButton.disabled = false;
+                } else {
+                    transferButton.disabled = true;
+                }
+            });
+
+            $(document).ready(function() {
+                $('input[name="checkbox[]"]').change(function() {
+                    var selectedValues = [];
+                    $('input[name="checkbox[]"]:checked').each(function() {
+                        selectedValues.push($(this).val());
+                    });
+                    $('#pid').val(selectedValues.join(', '));
+                    $('#selectedCount').text(selectedValues.length); // Update selected count
+                    pidInput.dispatchEvent(new Event('input')); // Trigger the input event
+                });
+
+                $('form[name="transfer_all"]').submit(function(event) {
+                    event.preventDefault(); // Prevent the default form submission
+                    const formData = $(this).serialize(); // Serialize form data
+                    const scriptURL = 'payment-api.php';
+                    // Show the Bootstrap modal
+                    const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+                    myModal.show();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: scriptURL,
+                        data: formData,
+                        success: function(response) {
+                            myModal.hide();
+                            if (response === 'success') {
+                                alert('Bulk transfer has been completed.');
+                                location.reload();
+                            } else {
+                                alert('Error occurred during bulk transfer.');
+                            }
+                        },
+                        error: function() {
+                            myModal.hide();
+                            alert('Error occurred during the AJAX request.');
+                        }
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            var data = <?php echo json_encode($resultArr) ?>;
+            var aid = <?php echo json_encode($_SESSION['aid']) ?>; // Enclose session data in json_encode
+
+            const scriptURL = 'payment-api.php';
+
+            data.forEach(item => {
+                const form = document.querySelector(`form[name='transfer_${item.id}']`);
+                form.addEventListener('submit', e => {
+                    e.preventDefault();
+                    fetch(scriptURL, {
+                            method: 'POST',
+                            body: new FormData(form)
+                        })
+                        .then(response => response.text())
+                        .then(data => {
+                            alert("Amount has been transferred.");
+                            location.reload();
+                        })
+                        .catch(error => console.error('Error!', error.message));
+                });
+            });
+
+            function validateForm() {
+                if (confirm('Are you sure you want to delete this record? Once you click OK, the record cannot be reverted.')) {
+                    data.forEach(item => {
+                        const form = document.querySelector(`form[name='paydelete_${item.id}']`);
+                        form.addEventListener('submit', e => {
+                            e.preventDefault();
+                            fetch(scriptURL, {
+                                    method: 'POST',
+                                    body: new FormData(form)
+                                })
+                                .then(response => response.text())
+                                .then(data => {
+                                    alert("Record has been deleted.");
+                                    location.reload();
+                                })
+                                .catch(error => console.error('Error!', error.message));
+                        });
+                    });
+                } else {
+                    alert("Record has NOT been deleted.");
+                    return false;
+                }
+            }
+        </script>
+
 
         <!-- Vendor JS Files -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
