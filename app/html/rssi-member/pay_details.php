@@ -74,15 +74,18 @@ $resultArr = pg_fetch_all($result);
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -220,9 +223,9 @@ $resultArr = pg_fetch_all($result);
 
                                     <?php if ($role == 'Admin') { ?>
                                         <?php echo '&nbsp;
-                                        <a href="https://api.whatsapp.com/send?phone=91' . $array['phone']. '&text=Dear ' . $array['fullname'] . ' (' . $array['associatenumber'] . '),%0A%0AYour salary slip for the month of ' . date('F', mktime(0, 0, 0, $array['paymonth'], 1)) . '&nbsp;' . $array['payyear'] . ' has been issued. Please check your email for more details.%0A%0ANeed help? Call us at +91 7980168159 or contact us at info@rssi.in.
+                                        <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['fullname'] . ' (' . $array['associatenumber'] . '),%0A%0AYour salary slip for the month of ' . date('F', mktime(0, 0, 0, $array['paymonth'], 1)) . '&nbsp;' . $array['payyear'] . ' has been issued. Please check your email for more details.%0A%0AYour salary payment has been processed. It may take standard time for it to reflect in your account.%0A%0ANeed help? Call us at +91 7980168159 or contact us at info@rssi.in.
                                         %0A%0A--RSSI%0A%0A**This is an automatically generated SMS
-                                        " target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] .'"></i></a>
+                                        " target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . '"></i></a>
                                         ' ?>
                                     <?php } ?>
                                 <?php echo '</td>
