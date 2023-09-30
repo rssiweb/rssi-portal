@@ -150,15 +150,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+
+    gtag('config', 'AW-11316670180');
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Payroll Processing</title>
@@ -463,10 +466,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 
       // ... Existing code ...
     </script>
-
-
-
-
     <script>
       function updateDaysPaid() {
         var payMonth = document.getElementById("payMonth").value;
@@ -507,14 +506,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
         var componentNameSelect = createSelectField("componentName[]", "Component Name", [
           "Earning", "Deduction"
         ]);
-        var subCategorySelect = createSelectField("subCategory[]", "Sub-Category", [
-          ["Basic Salary", "Bonus"],
-          ["Payment adjustment", "LWP deduction", "Service Charge"]
-        ]);
+        var subCategorySelect = createSelectField("subCategory[]", "Sub-Category", []);
         var amountInput = createInputField("amount[]", "Amount");
 
         // Add the 'required' attribute to the input field
         amountInput.querySelector("input").required = true;
+        subCategorySelect.querySelector("select").disabled = true;
 
         // Append the select fields and input field to the row
         row.appendChild(componentNameSelect);
@@ -548,7 +545,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 
         // Add event listener to the componentNameSelect dropdown
         componentNameSelect.querySelector("select").addEventListener("change", function() {
-          updateSubCategoryOptions(this);
+          updateSubCategoryOptions(this, subCategorySelect);
         });
       }
 
@@ -624,29 +621,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
         var selectedComponent = componentSelect.value;
         var subCategorySelect = componentSelect.parentNode.nextSibling.querySelector("select");
 
-        // Clear existing sub-category options
-        subCategorySelect.innerHTML = "";
+        subCategorySelect.disabled = selectedComponent === "";
 
-        // Set default option
-        var defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.innerHTML = "Sub-Category";
-        defaultOption.selected = true;
-        defaultOption.disabled = true;
-        subCategorySelect.appendChild(defaultOption);
+        // Clear existing sub-category options if "Component Name" is not selected
+        if (selectedComponent === "") {
+          subCategorySelect.innerHTML = "";
+          var defaultOption = document.createElement("option");
+          defaultOption.value = "";
+          defaultOption.innerHTML = "Sub-Category";
+          defaultOption.selected = true;
+          defaultOption.disabled = true;
+          subCategorySelect.appendChild(defaultOption);
+        } else {
+          // Add sub-category options based on the selected component
+          subCategorySelect.innerHTML = ""; // Clear existing options
+          var subCategoryOptions = [];
 
-        // Add sub-category options based on the selected component
-        if (selectedComponent === "Earning") {
-          var earningOptions = ["Basic Salary", "Bonus"];
-          earningOptions.forEach(function(option) {
-            var optionElement = document.createElement("option");
-            optionElement.value = option;
-            optionElement.text = option;
-            subCategorySelect.appendChild(optionElement);
-          });
-        } else if (selectedComponent === "Deduction") {
-          var deductionOptions = ["Payment adjustment", "LWP deduction", "Service Charge"];
-          deductionOptions.forEach(function(option) {
+          if (selectedComponent === "Earning") {
+            subCategoryOptions = ["Basic Salary", "Bonus"];
+          } else if (selectedComponent === "Deduction") {
+            subCategoryOptions = ["Payment adjustment", "LWP deduction", "Service Charge"];
+          } else {
+            subCategoryOptions = [];
+          }
+
+          subCategoryOptions.forEach(function(option) {
             var optionElement = document.createElement("option");
             optionElement.value = option;
             optionElement.text = option;

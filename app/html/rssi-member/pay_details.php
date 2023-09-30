@@ -16,26 +16,59 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo '</script>';
 }
 
+
+
+setlocale(LC_TIME, 'fr_FR.UTF-8');
+
+$year = isset($_POST['get_year']) ? $_POST['get_year'] : '';
+$months = isset($_POST['get_month']) ? $_POST['get_month'] : [];
 if ($role == 'Admin') {
+    $id = isset($_POST['get_aid']) ? strtoupper($_POST['get_aid']) : '';
+    // Construct the WHERE clause for filtering by year
+    $yearFilter = !empty($year) ? "AND payyear = $year" : '';
 
-    @$id = strtoupper($_POST['get_aid']);
-
-    if ($id > 0 && $id != 'ALL') {
-        $result = pg_query($con, "SELECT * FROM payslip_entry 
-        left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) associate ON payslip_entry.employeeid=associate.associatenumber
-        WHERE employeeid='$id' order by payslip_issued_on DESC");
-    } else if ($id == 'ALL') {
-        $result = pg_query($con, "SELECT * FROM payslip_entry
-        left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) associate ON payslip_entry.employeeid=associate.associatenumber
-        order by payslip_issued_on DESC");
-    } else {
-        $result = pg_query($con, "SELECT * FROM payslip_entry WHERE payslip_entry_id is null");
+    // Construct the WHERE clause for filtering by month
+    $monthFilter = '';
+    if (!empty($months)) {
+        // Ensure $months is always an array
+        if (!is_array($months)) {
+            $months = [$months];
+        }
+        $monthFilter = "AND paymonth::integer IN (" . implode(',', $months) . ")";
     }
-}
 
+    // Construct the SQL query with proper handling of empty $id
+    $idFilter = !empty($id) ? "AND employeeid = '$id'" : '';
 
-if ($role != 'Admin') {
-    $result = pg_query($con, "SELECT * FROM payslip_entry WHERE employeeid = '$user_check' ORDER BY payslip_issued_on DESC");
+    // Construct the full SQL query
+    $query = "SELECT * FROM payslip_entry 
+        LEFT JOIN (
+            SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members
+        ) AS associate ON payslip_entry.employeeid=associate.associatenumber
+        WHERE 1=1 $idFilter $yearFilter $monthFilter
+        ORDER BY payslip_issued_on DESC";
+
+    $result = pg_query($con, $query);
+} elseif ($role != 'Admin') {
+    // Construct the WHERE clause for filtering by year
+    $yearFilter = !empty($year) ? "AND payyear = $year" : '';
+
+    // Construct the WHERE clause for filtering by month
+    $monthFilter = '';
+    if (!empty($months)) {
+        // Ensure $months is always an array
+        if (!is_array($months)) {
+            $months = [$months];
+        }
+        $monthFilter = "AND paymonth::integer IN (" . implode(',', $months) . ")";
+    }
+
+    // Construct the SQL query for non-Admin role with month and year filters
+    $query = "SELECT * FROM payslip_entry 
+        WHERE employeeid = '$user_check' $yearFilter $monthFilter
+        ORDER BY payslip_issued_on DESC";
+
+    $result = pg_query($con, $query);
 }
 
 if (!$result) {
@@ -109,6 +142,7 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 </head>
 
 <body>
@@ -147,21 +181,53 @@ $resultArr = pg_fetch_all($result);
                                 </div>
                             </div>
 
-                            <?php if ($role == 'Admin') { ?>
-                                <form action="" method="POST">
-                                    <div class="form-group" style="display: inline-block; margin-top:1%">
-                                        <div class="col2" style="display: inline-block;">
-                                            <?php if ($role == 'Admin') { ?>
-                                                <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
-                                            <?php } ?>
-                                        </div>
+                            <form action="" method="POST">
+                                <div class="form-group" style="display: inline-block; margin-top:1%">
+                                    <div class="col2" style="display: inline-block;">
+                                        <?php if ($role == 'Admin') { ?>
+                                            <input name="get_aid" class="form-control" style="width:max-content;display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
+                                        <?php } ?>
+                                        <select name="get_year" id="get_year" class="form-select" style="width:max-content;display:inline-block" placeholder="Select policy year" required>
+                                            <?php if ($year == null) { ?>
+                                                <option value="" hidden selected>Select year</option>
+                                            <?php
+                                            } else { ?>
+                                                <option hidden selected><?php echo $year ?></option>
+                                            <?php }
+                                            ?>
+                                        </select>
+                                        <select name="get_month[]" id="get_month" class="form-select" style="width:max-content;display:inline-block" placeholder="Select policy year" multiple>
+                                            <option value="0" hidden>Select month</option>
+                                            <option value="1" <?php if (in_array('1', $months)) echo 'selected'; ?>>January</option>
+                                            <option value="2" <?php if (in_array('2', $months)) echo 'selected'; ?>>February</option>
+                                            <option value="3" <?php if (in_array('3', $months)) echo 'selected'; ?>>March</option>
+                                            <option value="4" <?php if (in_array('4', $months)) echo 'selected'; ?>>April</option>
+                                            <option value="5" <?php if (in_array('5', $months)) echo 'selected'; ?>>May</option>
+                                            <option value="6" <?php if (in_array('6', $months)) echo 'selected'; ?>>June</option>
+                                            <option value="7" <?php if (in_array('7', $months)) echo 'selected'; ?>>July</option>
+                                            <option value="8" <?php if (in_array('8', $months)) echo 'selected'; ?>>August</option>
+                                            <option value="9" <?php if (in_array('9', $months)) echo 'selected'; ?>>September</option>
+                                            <option value="10" <?php if (in_array('10', $months)) echo 'selected'; ?>>October</option>
+                                            <option value="11" <?php if (in_array('11', $months)) echo 'selected'; ?>>November</option>
+                                            <option value="12" <?php if (in_array('12', $months)) echo 'selected'; ?>>December</option>
+                                        </select>
                                     </div>
                                     <div class="col2 left" style="display: inline-block;">
                                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                             <i class="bi bi-search"></i>&nbsp;Search</button>
                                     </div>
-                                </form>
-                            <?php } ?>
+                                </div>
+                            </form>
+                            <script>
+                                var currentYear = new Date().getFullYear();
+                                for (var i = 0; i < 5; i++) {
+                                    var year = currentYear;
+                                    //next.toString().slice(-2)
+                                    $('#get_year').append(new Option(year));
+                                    currentYear--;
+                                }
+                            </script>
+
                             <?php echo '
                 <div class="table-responsive">
                        <table class="table">
@@ -223,7 +289,7 @@ $resultArr = pg_fetch_all($result);
 
                                     <?php if ($role == 'Admin') { ?>
                                         <?php echo '&nbsp;
-                                        <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['fullname'] . ' (' . $array['associatenumber'] . '),%0A%0AYour salary slip for the month of ' . date('F', mktime(0, 0, 0, $array['paymonth'], 1)) . '&nbsp;' . $array['payyear'] . ' has been issued. Please check your email for more details.%0A%0AYour salary payment has been processed. It may take standard time for it to reflect in your account.%0A%0ANeed help? Call us at +91 7980168159 or contact us at info@rssi.in.
+                                        <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . '&text=Dear ' . $array['fullname'] . ' (' . $array['associatenumber'] . '),%0A%0AYour salary slip for the month of ' . date('F', mktime(0, 0, 0, $array['paymonth'], 1)) . '&nbsp;' . $array['payyear'] . ' has been issued. Please check your email for more details.%0A%0AYour salary payment has been processed. It may take standard time for it to be reflected in your account.%0A%0ANeed help? Call us at +91 7980168159 or contact us at info@rssi.in.
                                         %0A%0A--RSSI%0A%0A**This is an automatically generated SMS
                                         " target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . '"></i></a>
                                         ' ?>
@@ -236,7 +302,7 @@ $resultArr = pg_fetch_all($result);
                             } else {
                             ?>
                                 <tr>
-                                    <td colspan="5">No record found or you are not eligible to withdraw salary from the organization.</td>
+                                    <td colspan="7">No record found or you are not eligible to withdraw salary from the organization.</td>
                                 </tr>
                             <?php }
 

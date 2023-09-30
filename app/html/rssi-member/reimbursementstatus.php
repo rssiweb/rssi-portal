@@ -315,7 +315,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                         <?php echo '
                   
                   <a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ',%0A%0AYour claim number ' . $array['reimbid'] . ' against the policy issued by the organization has been settled at Rs.' . $array['approvedamount'] . ' as against the amount claimed for Rs.' . $array['totalbillamount'] . ' on ' . @date("d/m/Y", strtotime($array['transfereddate'])) . '.
-                  %0A%0AThe amount has been credited to your account. It may take standard time for it to reflect in your account.%0A%0AYou can track the status of your claim in real-time from https://login.rssi.in/rssi-member/reimbursementstatus.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>'
+                  %0A%0AThe amount has been credited to your account. It may take standard time for it to be reflected in your account.%0A%0AYou can track the status of your claim in real-time from https://login.rssi.in/rssi-member/reimbursementstatus.php. For more information, please contact your HR or immediate supervisor.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i></a>'
                         ?>
                       <?php } else if ($array['claimstatus'] == "Rejected") { ?>
                         <?php echo '
