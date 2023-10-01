@@ -573,11 +573,13 @@ function getAssessmentStatus($array)
                                     <div id="conf">
                                         <form name="ipfsubmission" action="#" method="POST">
                                             <span id='close'>x</span>
-                                            <input type="hidden" name="form-type" type="text" value="ipfsubmission">
-                                            <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
-                                            <input type="hidden" type="number" name="ipf" id="ipf" value="<?php echo $array['ipf'] ?>" readonly required>
-                                            <input type="hidden" type="text" name="ipfid" id="ipfid" value="<?php echo $array['goalsheetid'] ?>" readonly required>
-                                            <input type="hidden" type="text" name="ipf_response_by" id="ipf_response_by" value="<?php echo $associatenumber ?>" readonly required>
+                                            <input type="hidden" name="form-type" value="ipfsubmission">
+                                            <input type="hidden" name="status2" id="count2" value="" readonly required>
+                                            <input type="hidden" name="ipf" id="ipf" value="<?php echo $array['ipf']; ?>" readonly required>
+                                            <input type="hidden" name="ipfid" id="ipfid" value="<?php echo $array['goalsheetid']; ?>" readonly required>
+                                            <input type="hidden" name="ipf_response_by" id="ipf_response_by" value="<?php echo $associatenumber; ?>" readonly required>
+                                            <input type="hidden" name="ipf_response_by_name" id="ipf_response_by_name" value="<?php echo $fullname; ?>" readonly required>
+                                            <input type="hidden" name="ipf_response_by_email" id="ipf_response_by_email" value="<?php echo $email; ?>" readonly required>
                                             <p style="display: inline-block; word-break: break-word; margin-left:5%; margin-top:2%">If you are not satisfied with the outcome of your appraisal discussion and the Individual Performance Factor (IPF) issued against the Goal Sheet ID <strong><?php echo @$array['goalsheetid'] ?></strong>, you have the option to reject the IPF. If you choose to reject it, another round of discussion will be scheduled with the concerned team to address your concerns and ensure that the IPF accurately reflects your performance.<br>
                                                 Please note that if we do not receive a response from you by <?php echo @date('d/m/y h:i:s a', strtotime('+3 days', strtotime($array['goalsheet_reviewed_on']))) ?>, the Goal Sheet will be auto-closed.</p>
                                             <div style="margin-left:5%;">
@@ -611,11 +613,15 @@ function getAssessmentStatus($array)
                         method: 'POST',
                         body: new FormData(document.forms['ipfsubmission'])
                     })
-                    .then(response =>
-                        alert("Your response has been recorded.") +
-                        location.reload()
-                    )
-                    .catch(error => console.error('Error!', error.message))
+                    .then(response => response.text())
+                    .then(result => {
+                        if (result == 'success') {
+                            alert("Your response has been recorded.") +
+                                location.reload()
+                        } else {
+                            alert("An error occurred while processing your request. Please try again later.") + location.reload()
+                        }
+                    })
             })
         </script>
         <script>
