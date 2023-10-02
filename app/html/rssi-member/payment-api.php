@@ -421,6 +421,7 @@ if ($formtype == "ipfsubmission") {
       echo "success";
     if ($email != "") {
       sendEmail("ipfsubmission", array(
+        "goalsheetid" => @$ipfid,
         "responseby" => @$ipf_response_by,
         "name" => @$name,
         "status" => @$status2,
