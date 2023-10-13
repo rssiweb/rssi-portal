@@ -21,7 +21,34 @@ if ($formtype == "payment") {
   $now = date('Y-m-d H:i:s');
   $feesupdate = "INSERT INTO fees (date, studentid, fees, month, collectedby, ptype,feeyear) VALUES ('$now','$studentid','$fees','$month','$collectedby','$ptype','$feeyear')";
   $result = pg_query($con, $feesupdate);
-  // echo json_encode($result);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+    else
+      echo "failed";
+  } else
+    echo "bad request";
+}
+
+if ($formtype == "distribution") {
+  @$distributedto = $_POST['distributedto'];
+  @$distributedby = $_POST['distributedby'];
+  @$items = $_POST['items'];
+  @$quantity = $_POST['quantity'];
+  @$amount = $_POST['amount'];
+  @$issuance_date = $_POST['issuance_date'];
+  $now = date('Y-m-d H:i:s');
+  $distribution_data = "INSERT INTO distribution_data (distributedto, distributedby, items, quantity, issuance_date,timestamp) VALUES ('$distributedto', '$distributedby', '$items', '$quantity', '$issuance_date','$now')";
+  $result = pg_query($con, $distribution_data);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+    else
+      echo "failed";
+  } else
+    echo "bad request";
 }
 
 if ($formtype == "transfer") {

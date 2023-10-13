@@ -442,7 +442,7 @@ $classlist = [
                 }
               </style>
               <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
+                <div class="modal-dialog modal-xl">
                   <div class="modal-content">
                     <div class="modal-header">
                       <h1 class="modal-title fs-5" id="exampleModalLabel">Student Details</h1>
@@ -458,15 +458,15 @@ $classlist = [
                         </div>
                         <!-- <a id="profile" href="#" target="_blank" class="ms-auto text-secondary"><i class="fa-regular fa-pen-to-square" style="font-size: 20px;" title="Edit Profile"></i></a> -->
                       </div><br>
-                      <p>
+                      <!-- <p>
                         Subject: <span class="nameofthesubjects"></span>
-                      </p>
+                      </p> -->
                       <p>Remarks: <span class="remarks"></span></p>
 
                       <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
 
-                        <p><strong>Fee</strong>&nbsp;
-                          <span style="display: inline !important;" class="badge bg-secondary">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></span>
+                        <p><strong>Fee</strong></p>
+                        <!-- <span style="display: inline !important;" class="badge bg-secondary">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></span> -->
 
                         <form name="payment" action="#" method="POST">
                           <input type="hidden" name="form-type" type="text" value="payment">
@@ -482,7 +482,8 @@ $classlist = [
                             <option value="Fees" selected>Fees</option>
                             <option value="Admission Fee">Admission Fee</option>
                             <option value="Fine">Fine</option>
-                            <option value="Other">Other</option>
+                            <option value="Uniform">Uniform</option>
+                            <option value="ID Card">ID Card</option>
                           </select>
 
                           <select name="month" id="month" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
@@ -501,11 +502,30 @@ $classlist = [
                             <option value="12">December</option>
                           </select>
 
-                          <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;" placeholder="Amount" required>&nbsp;
-                          <br><br>
+                          <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;" placeholder="Amount" required>
                           <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
                         </form>
-
+                        <hr>
+                        <p><strong>Distributed items and supplies</strong></p>
+                        <form name="distribution" action="#" method="POST">
+                          <input type="hidden" name="form-type" value="distribution">
+                          <input type="hidden" class="form-control" name="distributedto" id="distributedto" value="">
+                          <input type="hidden" class="form-control" name="distributedby" id="distributedby" value="">
+                          <div style="display: flex; flex-direction: row; align-items: center;">
+                            <select name="items" id="items" class="form-select" style="display: -webkit-inline-box; width:20vh;  margin-right: 10px;" required>
+                              <option value="" disabled selected hidden>Select Item</option>
+                              <option value="Uniform">Uniform</option>
+                              <option value="ID Card">ID Card</option>
+                              <option value="Notebook">Notebook</option>
+                              <option value="Pen">Pen</option>
+                              <option value="Pencil">Pencil</option>
+                              <option value="Sanitary Pads">Sanitary Pads</option>
+                            </select>
+                            <input type="number" name="quantity" id="quantity" class="form-control" style="width: 15vh; margin-right: 10px;" placeholder="Quantity" required>
+                            <input type="date" name="issuance_date" id="issuance_date" class="form-control" style="width: 15vh; margin-right: 10px;" placeholder="Issuance Date" required>
+                            <button type="submit" id="submit_distribution" class="btn btn-danger btn-sm" style="outline: none;">Update</button>
+                          </div>
+                        </form>
                         <br>
                         <script>
                           var currentYear = new Date().getFullYear();
@@ -516,21 +536,6 @@ $classlist = [
                             currentYear--;
                           }
                         </script>
-                        <script>
-                          const scriptURL = 'payment-api.php'
-                          const form = document.forms['payment']
-
-                          form.addEventListener('submit', e => {
-                            e.preventDefault()
-                            fetch(scriptURL, {
-                                method: 'POST',
-                                body: new FormData(document.forms['payment'])
-                              })
-                              .then(response => alert("Fee has been deposited successfully.") +
-                                location.reload())
-                              .catch(error => console.error('Error!', error.message))
-                          })
-                        </script>
                         <div class="modal-footer">
                           <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
@@ -539,6 +544,74 @@ $classlist = [
                 </div>
               </div>
             <?php } ?>
+            <script>
+              const scriptURL = 'payment-api.php';
+              const paymentForm = document.forms['payment'];
+              const distributionForm = document.forms['distribution'];
+
+              // Automatically show the modal when the form is submitted
+              const showModal = () => {
+                $('#myModal_p').modal('show');
+              };
+
+              // Automatically hide the modal when the submission is complete
+              const hideModal = () => {
+                $('#myModal_p').modal('hide');
+              };
+
+              paymentForm.addEventListener('submit', e => {
+                e.preventDefault();
+
+                showModal(); // Show the modal when the form is submitted
+
+                fetch(scriptURL, {
+                    method: 'POST',
+                    body: new FormData(paymentForm)
+                  })
+                  .then(response => response.text())
+                  .then(result => {
+                    hideModal(); // Hide the modal when the submission is complete
+
+                    if (result === 'success') {
+                      alert("Fee has been deposited successfully.");
+                      location.reload();
+                    } else {
+                      alert("Failed to deposit fee. Please try again later or contact our support team for assistance.");
+                    }
+                  })
+                  .catch(error => {
+                    hideModal(); // Hide the modal in case of an error
+                    console.error('Error!', error.message);
+                  });
+              });
+
+              distributionForm.addEventListener('submit', e => {
+                e.preventDefault();
+
+                showModal(); // Show the modal when the form is submitted
+
+                fetch(scriptURL, {
+                    method: 'POST',
+                    body: new FormData(distributionForm)
+                  })
+                  .then(response => response.text())
+                  .then(result => {
+                    hideModal(); // Hide the modal when the submission is complete
+
+                    if (result === 'success') {
+                      alert("Record has been updated.");
+                      location.reload();
+                    } else {
+                      alert("Error updating record. Please try again later or contact support.");
+                    }
+                  })
+                  .catch(error => {
+                    hideModal(); // Hide the modal in case of an error
+                    console.error('Error!', error.message);
+                  });
+              });
+            </script>
+
             <script>
               var data = <?php echo json_encode($resultArr) ?>;
               var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
@@ -588,6 +661,11 @@ $classlist = [
 
                 var collectedby = document.getElementById("collectedby")
                 collectedby.value = aid
+
+                var distributedto = document.getElementById("distributedto")
+                distributedto.value = mydata["student_id"]
+                var distributedby = document.getElementById("distributedby")
+                distributedby.value = aid
               }
 
               closedetails.forEach(function(element) {
@@ -605,6 +683,21 @@ $classlist = [
         </div><!-- End Reports -->
       </div>
     </section>
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="myModal_p" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="text-center">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p id="loadingMessage">Submission in progress. Please do not close or reload this page.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </main><!-- End #main -->
 
