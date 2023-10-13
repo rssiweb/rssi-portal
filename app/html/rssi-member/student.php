@@ -411,7 +411,7 @@ $classlist = [
               <?php echo '<td style="white-space: unset">' . $array['filterstatus'] . '</td>
             <td style="white-space: unset;">' . $paidBadge . '</td>
             <td style="white-space: unset;"></td>
-            <td style="white-space: unset"><a href="admission_admin.php?student_id=' . $array['student_id'] . ' "target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')">Fee</a></td>
+            <td style="white-space: unset"><a href="admission_admin.php?student_id=' . $array['student_id'] . ' "target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')">misc.</a></td>
         </tr>';
                 }
               } elseif ($module == "" && $stid == "") {
