@@ -423,18 +423,6 @@ if (@$cmdtuples == 1) {
             myModal.show();
         };
     </script>
-    <!-- <script>
-        var myModal = document.getElementById('myModal');
-
-        myModal.addEventListener('click', function(event) {
-            if (event.target === myModal) {
-                // Clicked outside the modal - close it and unfreeze the background
-                $('#myModal').modal('hide');
-                $('body').removeClass('modal-open');
-                $('.modal-backdrop').remove();
-            }
-        });
-    </script> -->
 
     <script>
         const scriptURL = 'payment-api.php';

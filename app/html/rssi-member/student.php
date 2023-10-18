@@ -409,7 +409,7 @@ $classlist = [
                   <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] . '</td>' ?>
                   <td style="white-space: unset;"><?php echo $contact . (isset($array['emailaddress']) ? '<br>' . $array['emailaddress'] : ''); ?></td>
               <?php echo '<td style="white-space: unset">' . $array['filterstatus'] . '</td>
-            <td style="white-space: unset;">' . $paidBadge . '</td>
+            <td style="white-space: unset;">' . $paidBadge . '&nbsp;<i class="bi bi-bag" style="font-size: 17px ;color:#777777" title="Distribution History"></i></td>
             <td style="white-space: unset;"></td>
             <td style="white-space: unset"><a href="admission_admin.php?student_id=' . $array['student_id'] . ' "target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')">misc.</a></td>
         </tr>';
@@ -432,7 +432,6 @@ $classlist = [
     </table>
 </div>';
               ?>
-
               <!--------------- POP-UP BOX ------------
 -------------------------------------->
               <style>
@@ -551,6 +550,10 @@ $classlist = [
 
               // Automatically show the modal when the form is submitted
               const showModal = () => {
+                $('#myModal_p').modal({
+                  backdrop: 'static',
+                  keyboard: false
+                });
                 $('#myModal_p').modal('show');
               };
 
@@ -685,7 +688,7 @@ $classlist = [
     </section>
     <!-- Bootstrap Modal -->
     <div class="modal fade" id="myModal_p" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-body">
             <div class="text-center">

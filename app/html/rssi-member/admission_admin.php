@@ -96,15 +96,18 @@ if (@$_POST['form-type'] == "admission_admin") {
 ?>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -172,17 +175,16 @@ if (@$_POST['form-type'] == "admission_admin") {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             <span>Error: We encountered an error while updating the record. Please try again.</span>
         </div>
-    <?php } else if (@$cmdtuples == 1) { ?>
-        <div class="alert alert-success alert-dismissible text-center" role="alert">
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            <span>Your changes for <?php echo $student_id ?> have been saved successfully.</span>
-        </div>
-        <script>
-            if (window.history.replaceState) {
-                window.history.replaceState(null, null, window.location.href);
-            }
-        </script>
-    <?php } ?>
+    <?php } else if (@$cmdtuples == 1) {
+
+        echo '<script>
+        var student_id = "' . $student_id . '";
+        if (confirm("The student profile has been updated successfully! Click OK to view the updated profile.")) {
+            window.location.href = "admission_admin.php?student_id=" + student_id;
+        }
+    </script>';
+    }
+    ?>
 
     <div class="container">
         <form method="get" name="a_lookup" id="a_lookup">
@@ -456,7 +458,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                         </div>
                         <div class="form-group">
                             <label for="telephone">Telephone Number:</label>
-                            <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="Enter telephone number" value="<?php echo $array['contact'] ?>" required>
+                            <input type="tel" class="form-control" id="telephone" name="telephone" placeholder="Enter telephone number" value="<?php echo $array['contact'] ?>">
                             <small id="telephone-help" class="form-text text-muted">Please enter a valid telephone number.</small>
                         </div>
                         <div class="form-group">
