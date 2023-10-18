@@ -75,6 +75,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     $photo_url = $_POST['photo-url'];
     $id_card_issued = $_POST['id-card-issued'];
     $status = $_POST['status'];
+    $age = $_POST['age'];
 
     if (!empty($_POST['effectivefrom'])) {
         $effective_from = $_POST['effectivefrom'];
@@ -89,7 +90,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     $student_id = $_POST['student-id'];
     @$timestamp = date('Y-m-d H:i:s');
 
-    @$student_update = "UPDATE rssimyprofile_student SET type_of_admission='$type_of_admission', studentname='$student_name', dateofbirth='$date_of_birth', gender='$gender', student_photo_raw='$doclink_student_photo', aadhar_available='$aadhar_available', studentaadhar='$aadhar_card', upload_aadhar_card='$doclink_aadhar_card', guardiansname='$guardian_name', relationwithstudent='$guardian_relation', guardianaadhar='$guardian_aadhar', stateofdomicile='$state_of_domicile', postaladdress='$postal_address', contact='$telephone_number', emailaddress='$email_address', preferredbranch='$preferred_branch', class='$class', schooladmissionrequired='$school_admission_required', nameoftheschool='$school_name', nameoftheboard='$board_name', medium='$medium', familymonthlyincome='$family_monthly_income', totalnumberoffamilymembers='$total_family_members', payment_mode='$payment_mode', c_authentication_code='$c_authentication_code', transaction_id='$transaction_id', student_id='$student_id', nameofthesubjects='$subject_select', module='$module', category='$category', photourl='$photo_url', id_card_issued='$id_card_issued', filterstatus='$status', remarks='$remarks', $effective_from_str, scode='$scode', updated_by='$updated_by', updated_on='$timestamp' WHERE student_id = '$student_id'";
+    @$student_update = "UPDATE rssimyprofile_student SET type_of_admission='$type_of_admission', studentname='$student_name', dateofbirth='$date_of_birth', gender='$gender', student_photo_raw='$doclink_student_photo', aadhar_available='$aadhar_available', studentaadhar='$aadhar_card', upload_aadhar_card='$doclink_aadhar_card', guardiansname='$guardian_name', relationwithstudent='$guardian_relation', guardianaadhar='$guardian_aadhar', stateofdomicile='$state_of_domicile', postaladdress='$postal_address', contact='$telephone_number', emailaddress='$email_address', preferredbranch='$preferred_branch', class='$class', schooladmissionrequired='$school_admission_required', nameoftheschool='$school_name', nameoftheboard='$board_name', medium='$medium', familymonthlyincome='$family_monthly_income', totalnumberoffamilymembers='$total_family_members', payment_mode='$payment_mode', c_authentication_code='$c_authentication_code', transaction_id='$transaction_id', student_id='$student_id', nameofthesubjects='$subject_select', module='$module', category='$category', photourl='$photo_url', id_card_issued='$id_card_issued', filterstatus='$status', remarks='$remarks', $effective_from_str, scode='$scode', updated_by='$updated_by', age='$age', updated_on='$timestamp' WHERE student_id = '$student_id'";
     $resultt = pg_query($con, $student_update);
     $cmdtuples = pg_affected_rows($resultt);
 }
@@ -190,7 +191,7 @@ if (@$_POST['form-type'] == "admission_admin") {
         <form method="get" name="a_lookup" id="a_lookup">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3>Student Information Lookup</h3>
-                <a href="javascript:history.go(-1)">Go to previous link</a>
+                <!-- <a href="javascript:history.go(-1)">Go to previous link</a> -->
             </div>
             <hr>
             <div class="mb-3">
