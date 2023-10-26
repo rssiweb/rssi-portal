@@ -56,15 +56,18 @@ if (!$result) {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -263,7 +266,7 @@ if (!$result) {
                                 <p><b>Onboarding Checklist</b></p>
                                 <ol>
                                     <li>
-                                        <p>Please send the scanned copies of all documents for verification to info@rssi.in.</p>
+                                        <p>Please send the scanned copies of all documents for verification to info@rssi.in. (This should include any documents that were not previously provided to RSSI during the interview.)</p>
                                         <ol type="A">
                                             <li>Highschool Marksheet</li>
                                             <li>Intermediate Marksheet</li>
@@ -289,7 +292,7 @@ if (!$result) {
                             <td>
                                 <ol start=2>
                                     <li>
-                                        <p>Please complete the web-based training as outlined below. To complete the web-based training, you are permitted multiple attempts to reach a passing score or higher. Once you do, you may take a screenshot for your reference. To access the training, please use the following iExplore URL: https://login.rssi.in/rssi-member/iexplore.php</p>
+                                        <p>Please complete the mandatory web-based training within one month of your joining date. To complete the web-based training, you are permitted multiple attempts to reach a passing score or higher. Once you do, you may take a screenshot for your reference. To access the training, please use the following iExplore URL: https://login.rssi.in/rssi-member/iexplore.php</p>
                                         <div class="container">
                                             <table class="table">
                                                 <thead>
