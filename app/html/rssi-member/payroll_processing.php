@@ -640,7 +640,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
           if (selectedComponent === "Earning") {
             subCategoryOptions = ["Basic Salary", "Bonus"];
           } else if (selectedComponent === "Deduction") {
-            subCategoryOptions = ["Payment adjustment", "LWP deduction", "Service Charge"];
+            subCategoryOptions = ["Payment adjustment", "LWP deduction", "Service Charge", "Salary Advance Recovery"];
           } else {
             subCategoryOptions = [];
           }
