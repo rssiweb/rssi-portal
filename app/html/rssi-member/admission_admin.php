@@ -54,13 +54,13 @@ if (@$_POST['form-type'] == "admission_admin") {
     $guardian_relation = $_POST['relation'];
     $guardian_aadhar = $_POST['guardian-aadhar-number'];
     $state_of_domicile = $_POST['state'];
-    $postal_address = $_POST['postal-address'];
+    $postal_address = htmlspecialchars($_POST['postal-address'], ENT_QUOTES, 'UTF-8');
     $telephone_number = $_POST['telephone'];
     $email_address = $_POST['email'];
     $preferred_branch = $_POST['branch'];
     $class = $_POST['class'];
     $school_admission_required = $_POST['school-required'];
-    $school_name = $_POST['school-name'];
+    $school_name = htmlspecialchars($_POST['school-name'], ENT_QUOTES, 'UTF-8');
     $board_name = $_POST['board-name'];
     $medium = $_POST['medium'];
     $family_monthly_income = $_POST['income'];
@@ -84,7 +84,7 @@ if (@$_POST['form-type'] == "admission_admin") {
         $effective_from_str = "effectivefrom=null";
     }
 
-    $remarks = $_POST['remarks'];
+    $remarks = htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8');
     $scode = $_POST['scode'];
     $updated_by = $_POST['updatedby'];
     $student_id = $_POST['student-id'];

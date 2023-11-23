@@ -66,7 +66,7 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$creason = $_POST['creason'];
     @$comment = $_POST['comment'];
     @$appliedby = $_POST['appliedby'];
-    @$applicantcomment = $_POST['applicantcomment'];
+    @$applicantcomment = htmlspecialchars($_POST['applicantcomment'], ENT_QUOTES, 'UTF-8');
     @$ack = $_POST['ack'] ?? 0;
     @$halfday = $_POST['is_userh'] ?? 0;
     @$email = $email;
@@ -174,15 +174,18 @@ $resultArr = pg_fetch_all($result);
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 

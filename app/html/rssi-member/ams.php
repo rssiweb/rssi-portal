@@ -30,7 +30,7 @@ if ($_POST) {
     @$noticeid = $_POST['noticeid'];
     @$category = $_POST['category'];
     @$noticesub = $_POST['noticesub'];
-    @$noticebody = $_POST['noticebody'];
+    @$noticebody = htmlspecialchars($_POST['noticebody'], ENT_QUOTES, 'UTF-8');
     @$url = $_POST['url'];
     @$issuedby = $_POST['issuedby'];
     @$now = date('Y-m-d H:i:s');

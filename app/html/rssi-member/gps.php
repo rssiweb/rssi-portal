@@ -26,7 +26,7 @@ date_default_timezone_set('Asia/Kolkata'); ?>
         @$itemtype = $_POST['itemtype'];
         @$itemname = $_POST['itemname'];
         @$quantity = $_POST['quantity'];
-        @$remarks = $_POST['remarks'];
+        @$remarks = htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8');
         @$asset_status = $_POST['asset_status'];
         @$collectedby = strtoupper($_POST['collectedby']);
         @$now = date('Y-m-d H:i:s');

@@ -47,7 +47,7 @@ if (@$_POST['form-type'] == "exit") {
     if ($authSuccess) {
         $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
         $exit_photo = $_POST['photo'];
-        $exit_remarks = $_POST['reason-for-leaving'];
+        $exit_remarks = htmlspecialchars($_POST['reason-for-leaving'], ENT_QUOTES, 'UTF-8');
 
         $asset_clearance = isset($_POST['clearance']) && in_array('asset-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
         $financial_clearance = isset($_POST['clearance']) && in_array('financial-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
@@ -56,7 +56,7 @@ if (@$_POST['form-type'] == "exit") {
         $work_clearance = isset($_POST['clearance']) && in_array('work-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
         $legal_clearance = isset($_POST['clearance']) && in_array('legal-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
 
-        $exit_interview = $_POST['exit-interview'];
+        $exit_interview = htmlspecialchars($_POST['exit-interview'], ENT_QUOTES, 'UTF-8');
         $exit_date_time = $_POST['exit-date-time'];
         $now = date('Y-m-d H:i:s');
         $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user

@@ -27,7 +27,7 @@ include("../../util/email.php");
         @$certificate_no = 'RSC' . time();
         @$awarded_to_id = strtoupper($_POST['awarded_to_id'] ?? "na");
         @$badge_name = $_POST['badge_name'];
-        @$comment = $_POST['comment'];
+        @$comment = htmlspecialchars($_POST['comment'], ENT_QUOTES, 'UTF-8');
         @$gems = $_POST['gems'];
         @$certificate_url = $_POST['certificate_url'];
         @$issuedby = $fullname;

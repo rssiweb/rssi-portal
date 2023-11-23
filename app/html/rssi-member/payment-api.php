@@ -233,7 +233,7 @@ if ($formtype == "donation_form") {
     $tel = $_POST['tel'];
     $currency = $_POST['currency'];
     $transactionId = $_POST['transactionid'];
-    $message = $_POST['message'];
+    $message = htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8');
     $donationAmount = $_POST['donationAmount'];
     $timestamp = date('Y-m-d H:i:s');
     $donationId = uniqid();
@@ -258,7 +258,7 @@ if ($formtype == "donation_form") {
       $contactNumberNew = $_POST['contactNumberNew'];
       $documentType = $_POST['documentType'];
       $nationalId = $_POST['nationalId'];
-      $postalAddress = $_POST['postalAddress'];
+      $postalAddress = htmlspecialchars($_POST['postalAddress'], ENT_QUOTES, 'UTF-8');
 
       // Insert userdata
       $userdataQuery = "INSERT INTO donation_userdata (fullname, email, tel, documenttype, nationalid, postaladdress) 
@@ -710,13 +710,13 @@ if (@$_POST['form-type'] == "admission") {
   $guardian_relation = $_POST['relation'];
   $guardian_aadhar = $_POST['guardian-aadhar-number'];
   $state_of_domicile = $_POST['state'];
-  $postal_address = $_POST['postal-address'];
+  $postal_address = htmlspecialchars($_POST['postal-address'], ENT_QUOTES, 'UTF-8');
   $telephone_number = $_POST['telephone'];
   $email_address = $_POST['email'];
   $preferred_branch = $_POST['branch'];
   $class = $_POST['class'];
   $school_admission_required = $_POST['school-required'];
-  $school_name = $_POST['school-name'];
+  $school_name = htmlspecialchars($_POST['school-name'], ENT_QUOTES, 'UTF-8');
   $board_name = $_POST['board-name'];
   $medium = $_POST['medium'];
   $family_monthly_income = $_POST['income'];

@@ -40,7 +40,7 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$todate = $_POST['todate'];
     @$typeofleave = $_POST['typeofleave'];
     @$creason = $_POST['creason'];
-    @$comment = $_POST['comment'];
+    @$comment = htmlspecialchars($_POST['comment'], ENT_QUOTES, 'UTF-8');
     @$appliedby = $_POST['appliedby'];
     @$halfday = $_POST['is_userh'] ?? 0;
 
