@@ -216,7 +216,7 @@ if (!$result) {
     <script src="../assets_new/js/main.js"></script>
     <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
     <script>
-        var enableLocationCheck = false
+        var enableLocationCheck = true;
         var isFullScreen = true;
         var lastResult, lastScanTime = 0;
         var latitude; // Variable to store latitude
