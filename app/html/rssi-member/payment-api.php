@@ -629,7 +629,7 @@ if ($formtype === "attendance") {
   $gps = ($latitude && $longitude) ? "POINT($latitude $longitude)" : null;
 
   // Fetch the status from rssimyprofile_student table
-  $select_status_query = 'SELECT filterstatus FROM rssimyprofile_student WHERE student_id = $1 LIMIT 1';
+  $select_status_query = 'SELECT studentname, filterstatus, category, class FROM rssimyprofile_student WHERE student_id = $1 LIMIT 1';
   pg_prepare($con, "select_status", $select_status_query);
   $status_result = pg_execute($con, "select_status", array($user_id));
   $status_row = pg_fetch_assoc($status_result);
@@ -637,9 +637,13 @@ if ($formtype === "attendance") {
   if ($status_row) {
     // If a result is found in rssimyprofile_student table
     $status = $status_row['filterstatus'];
+    $name = $status_row['studentname'];
+    $category = $status_row['category'];
+    $class = $status_row['class'];
+    $engagement = ""; // Assuming engagement is not present in rssimyprofile_student
   } else {
-    // If no result is found, fetch from rssimyaccount_members table
-    $select_status_query = 'SELECT filterstatus FROM rssimyaccount_members WHERE associatenumber = $1 LIMIT 1';
+    // If no result is found in rssimyprofile_student table, fetch from rssimyaccount_members table
+    $select_status_query = 'SELECT filterstatus, fullname, engagement FROM rssimyaccount_members WHERE associatenumber = $1 LIMIT 1';
     pg_prepare($con, "select_status_members", $select_status_query);
     $status_result_members = pg_execute($con, "select_status_members", array($user_id));
     $status_row_members = pg_fetch_assoc($status_result_members);
@@ -647,11 +651,21 @@ if ($formtype === "attendance") {
     if ($status_row_members) {
       // If a result is found in rssimyaccount_members table
       $status = $status_row_members['filterstatus'];
+      $name = $status_row_members['fullname'];
+      $engagement = $status_row_members['engagement'];
+      $category = ""; // Set a default value or handle accordingly, as this column doesn't exist in rssimyaccount_members
+      $class = ""; // Set a default value or handle accordingly, as this column doesn't exist in rssimyaccount_members
     } else {
-      // If no result is found in both tables, set a default value or handle accordingly
+      // If no result is found in both tables, set default values or handle accordingly
       $status = 'default_status';
+      $name = 'default_name';
+      $engagement = 'default_engagement';
+      $category = 'default_category';
+      $class = 'default_class';
     }
   }
+
+  // Now $status, $name, $engagement, $category, and $class contain the desired values.
 
   // Prepared statement for INSERT query
   $insert_query = 'INSERT INTO public.attendance(user_id, punch_in, ip_address, gps_location, recorded_by, date, status) VALUES ($1, $2, $3, $4, $5, $6, $7)';
@@ -676,29 +690,6 @@ if ($formtype === "attendance") {
       $punch_out = "";
     } else {
       $punch_out = date('d/m/Y h:i:s a', strtotime($punch_out));
-    }
-
-    // Prepared statement for second SELECT query
-    $query = "SELECT fullname, filterstatus, engagement FROM rssimyaccount_members WHERE associatenumber='$user_id'";
-    $result = pg_query($con, $query);
-    // $name = $status = $engagement = $category = $class = "";
-
-    if (pg_num_rows($result) == 1) {
-      $row = pg_fetch_assoc($result);
-      $name = $row["fullname"];
-      //$status = $row["filterstatus"];
-      $engagement = $row["engagement"];
-    } else {
-      $query = "SELECT studentname, filterstatus, category, class FROM rssimyprofile_student WHERE student_id='$user_id'";
-      $result = pg_query($con, $query);
-
-      if (pg_num_rows($result) == 1) {
-        $row = pg_fetch_assoc($result);
-        $name = $row["studentname"];
-        //$status = $row["filterstatus"];
-        $category = $row["category"];
-        $class = $row["class"];
-      }
     }
 
     // Set the category field based on its availability (either category or engagement)
