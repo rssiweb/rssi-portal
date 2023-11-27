@@ -47,15 +47,18 @@ if (!$result) {
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -251,8 +254,7 @@ if (!$result) {
             const videoConstraints = {
                 facingMode: 'environment',
                 aspectRatio: width < 600 ?
-                    mobileAspectRatio :
-                    aspectRatio,
+                    mobileAspectRatio : aspectRatio,
             }
             qrBoxSize = Math.round(width * 0.5)
             console.log('qrBoxSize', qrBoxSize)
@@ -414,8 +416,12 @@ if (!$result) {
             // restrict the location to the office location (50m radius) of a set point 
             var officeLocation = {
                 //  RSSI LKO office
-                latitude: 26.8659136,
-                longitude: 81.0158809
+                // latitude: 26.8659136,
+                // longitude: 81.0158809
+
+                //  Vadodara location
+                latitude: 22.2867883,
+                longitude: 73.1564496
 
                 // zee home
                 // latitude: 19.3173098 ,
