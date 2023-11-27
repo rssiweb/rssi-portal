@@ -639,7 +639,7 @@ if ($formtype === "attendance") {
     $status = $status_row['filterstatus'];
   } else {
     // If no result is found, fetch from rssimyaccount_members table
-    $select_status_query = 'SELECT filterstatus FROM rssimyaccount_members WHERE member_id = $1 LIMIT 1';
+    $select_status_query = 'SELECT filterstatus FROM rssimyaccount_members WHERE associatenumber = $1 LIMIT 1';
     pg_prepare($con, "select_status_members", $select_status_query);
     $status_result_members = pg_execute($con, "select_status_members", array($user_id));
     $status_row_members = pg_fetch_assoc($status_result_members);

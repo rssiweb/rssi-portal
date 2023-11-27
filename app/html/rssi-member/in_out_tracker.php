@@ -29,6 +29,7 @@ $query = "
 WITH PunchInOut AS (
     SELECT
         a.user_id,
+		a.status,
         DATE(a.punch_in) AS punch_date,
         MIN(a.punch_in) AS punch_in,
         CASE
@@ -36,12 +37,12 @@ WITH PunchInOut AS (
             ELSE MAX(a.punch_in)
         END AS punch_out
     FROM attendance a
-    GROUP BY a.user_id, DATE(a.punch_in)
+    GROUP BY a.user_id, a.status, DATE(a.punch_in)
 )
 SELECT
     p.user_id,
+	p.status,
     COALESCE(m.fullname, s.studentname) AS user_name,
-    COALESCE(m.filterstatus, s.filterstatus) AS status,
     s.category AS category,
     s.class AS class,
     m.engagement AS engagement,
@@ -133,15 +134,18 @@ if ($resultcount) {
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
