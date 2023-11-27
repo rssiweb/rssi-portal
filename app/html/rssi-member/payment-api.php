@@ -628,10 +628,35 @@ if ($formtype === "attendance") {
   $longitude = @$_POST['longitude'];
   $gps = ($latitude && $longitude) ? "POINT($latitude $longitude)" : null;
 
+  // Fetch the status from rssimyprofile_student table
+  $select_status_query = 'SELECT filterstatus FROM rssimyprofile_student WHERE student_id = $1 LIMIT 1';
+  pg_prepare($con, "select_status", $select_status_query);
+  $status_result = pg_execute($con, "select_status", array($user_id));
+  $status_row = pg_fetch_assoc($status_result);
+
+  if ($status_row) {
+    // If a result is found in rssimyprofile_student table
+    $status = $status_row['filterstatus'];
+  } else {
+    // If no result is found, fetch from rssimyaccount_members table
+    $select_status_query = 'SELECT filterstatus FROM rssimyaccount_members WHERE member_id = $1 LIMIT 1';
+    pg_prepare($con, "select_status_members", $select_status_query);
+    $status_result_members = pg_execute($con, "select_status_members", array($user_id));
+    $status_row_members = pg_fetch_assoc($status_result_members);
+
+    if ($status_row_members) {
+      // If a result is found in rssimyaccount_members table
+      $status = $status_row_members['filterstatus'];
+    } else {
+      // If no result is found in both tables, set a default value or handle accordingly
+      $status = 'default_status';
+    }
+  }
+
   // Prepared statement for INSERT query
-  $insert_query = 'INSERT INTO public.attendance(user_id, punch_in, ip_address, gps_location, recorded_by, date) VALUES ($1, $2, $3, $4, $5, $6)';
+  $insert_query = 'INSERT INTO public.attendance(user_id, punch_in, ip_address, gps_location, recorded_by, date, status) VALUES ($1, $2, $3, $4, $5, $6, $7)';
   pg_prepare($con, "insert_attendance", $insert_query);
-  $result = pg_execute($con, "insert_attendance", array($user_id, $punch_time, $ip_address, $gps, $recorded_by, $date));
+  $result = pg_execute($con, "insert_attendance", array($user_id, $punch_time, $ip_address, $gps, $recorded_by, $date, $status));
 
   if (pg_affected_rows($result) !== 1) {
     echo json_encode(
@@ -661,7 +686,7 @@ if ($formtype === "attendance") {
     if (pg_num_rows($result) == 1) {
       $row = pg_fetch_assoc($result);
       $name = $row["fullname"];
-      $status = $row["filterstatus"];
+      //$status = $row["filterstatus"];
       $engagement = $row["engagement"];
     } else {
       $query = "SELECT studentname, filterstatus, category, class FROM rssimyprofile_student WHERE student_id='$user_id'";
@@ -670,7 +695,7 @@ if ($formtype === "attendance") {
       if (pg_num_rows($result) == 1) {
         $row = pg_fetch_assoc($result);
         $name = $row["studentname"];
-        $status = $row["filterstatus"];
+        //$status = $row["filterstatus"];
         $category = $row["category"];
         $class = $row["class"];
       }
