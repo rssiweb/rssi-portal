@@ -681,7 +681,7 @@ if ($formtype === "attendance") {
     // Prepared statement for second SELECT query
     $query = "SELECT fullname, filterstatus, engagement FROM rssimyaccount_members WHERE associatenumber='$user_id'";
     $result = pg_query($con, $query);
-    $name = $status = $engagement = $category = $class = "";
+    // $name = $status = $engagement = $category = $class = "";
 
     if (pg_num_rows($result) == 1) {
       $row = pg_fetch_assoc($result);
