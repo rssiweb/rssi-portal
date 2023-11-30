@@ -24,15 +24,18 @@ if ($searchField !== '') {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -150,7 +153,7 @@ if ($searchField !== '') {
 </head>
 
 <body>
-    <div class="container mt-3">
+    <div class="container-lg">
         <!-- Search and print section (Not visible in print preview) -->
         <form action="donation_invoice.php" method="get">
             <div class="row mb-3 search-print-section">
