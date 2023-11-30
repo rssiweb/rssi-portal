@@ -60,15 +60,18 @@ if (!$result_component) {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+
+    gtag('config', 'AW-11316670180');
+  </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -149,7 +152,7 @@ if (!$result_component) {
 </head>
 
 <body>
-  <div class="container">
+  <div class="container-lg">
     <?php if ($role == 'Admin') { ?>
       <form action="" method="GET" class="d-print-none">
         <div class="form-group" style="display: flex; justify-content: flex-end; margin-top: 5%;">
@@ -188,7 +191,7 @@ if (!$result_component) {
             $url = $a . $b;
             $url = urlencode($url);
             ?>
-            <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="75px" />
+            <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
           </div>
         </div>
         <h3>Payslip</h3>
@@ -335,18 +338,19 @@ if (!$result_component) {
         </div>
       </div>
     <?php } ?>
-    <!-- Load Bootstrap JS -->
-    <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-    <script>
-      window.onload = function() {
-        var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
-          backdrop: 'static',
-          keyboard: false
-        });
-        myModal.show();
-      };
-    </script>
+  </div>
+  <!-- Load Bootstrap JS -->
+  <!-- Vendor JS Files -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+  <script>
+    window.onload = function() {
+      var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
+        backdrop: 'static',
+        keyboard: false
+      });
+      myModal.show();
+    };
+  </script>
 </body>
 
 </html>
