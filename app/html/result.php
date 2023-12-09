@@ -103,13 +103,13 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
 
         body {
             background: #ffffff;
-            font-family: "Roboto";
-            font-style: normal;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
+            /* font-style: normal;
             font-weight: 400;
             overflow-x: hidden;
             margin: 0;
             font-size: 14px;
-            color: #444;
+            color: #444; */
         }
 
         @media (min-width:767px) {
@@ -263,7 +263,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <td>NAME OF STUDENT</td>
                         <th><?php echo $studentname ?></th>
                         <td>DATE OF BIRTH</td>
-                        <th><?php echo $dateofbirth ?></th>
+                        <th><?php echo date("d/m/Y", strtotime($dateofbirth)) ?></th>
                     </tr>
                 </tbody>
             </table>
