@@ -226,11 +226,11 @@ if (!$result) {
                                         <?php if ($array['engagement'] == 'Intern') { ?>
                                             You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 1 month from the original joining date in accordance with the Service Agreement clause.
                                         <?php } else if ($array['engagement'] == 'Employee' && substr($array['position'], 0, strrpos($array['position'], "-")) == 'Employee-Faculty cum Centre Incharge') { ?>
-                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 4 month from the original joining date in accordance with the Service Agreement clause.
+                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 8 months from the original joining date in accordance with the Service Agreement clause.
                                         <?php } else if ($array['engagement'] == 'Employee' && substr($array['position'], 0, strrpos($array['position'], "-")) == 'Employee-Faculty') { ?>
-                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 4 month from the original joining date in accordance with the Service Agreement clause.
+                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 8 months from the original joining date in accordance with the Service Agreement clause.
                                         <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
-                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 4 month from the original joining date in accordance with the Service Agreement clause.
+                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 4 months from the original joining date in accordance with the Service Agreement clause.
                                         <?php } ?>
 
                                     <li>You are expected to be active and responsive throughout your service period.</li>
