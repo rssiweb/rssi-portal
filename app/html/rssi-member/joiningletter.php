@@ -344,7 +344,7 @@ if (!$result) {
                                         </div>
                                         <div class="date-time">
                                             <p>Reporting Date and Time:</p>
-                                            <p><?php echo date('d/M/Y', strtotime($array['doj'])); ?>&nbsp;&nbsp;<span class="time">3:30 pm</span></p>
+                                            <p><?php echo date('d/M/Y', strtotime($array['doj'])); ?>&nbsp;&nbsp;<span class="time">2:45 pm</span></p>
                                         </div>
                                     </div>
                                     <div class="right-column">
