@@ -333,17 +333,15 @@ if ($_POST) {
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
-    <div class="modal fade show" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-modal="true"
+    <!--<div class="modal fade show" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-modal="true"
         role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <!-- <h5 class="modal-title" id="exampleModalLabel">Modal Title</h5> -->
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1702192546/Job_Vacancy_Flyer_tccrzt.jpg" alt="Image" width="100%">
-                    <!-- <p>Your modal content text goes here.</p> -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -354,7 +352,7 @@ if ($_POST) {
     <script>
         var myModal = new bootstrap.Modal(document.getElementById('myModal'));
         myModal.show();
-    </script>
+    </script>-->
 
 </body>
 
