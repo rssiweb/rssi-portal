@@ -66,7 +66,7 @@ if ($filterstatus != 'Active') {
 
         .first-txt {
             position: absolute;
-            top: 70%;
+            top: 63%;
             width: 235px !important;
             text-align: center;
             font-family: "Ubuntu";
@@ -78,24 +78,26 @@ if ($filterstatus != 'Active') {
 
         .second-txt {
             position: absolute;
-            top: 75%;
+            top: 68%;
             width: 235px !important;
             text-align: center;
             font-family: "Ubuntu";
             font-size: 13.5px;
             font-weight: bold;
             color: black;
+            z-index: 2;
         }
 
         .third-txt {
             position: absolute;
-            top: 80%;
+            top: 73%;
             width: 235px !important;
             text-align: center;
             font-family: "Ubuntu";
             font-size: 13.5px;
             font-weight: bold;
             color: black;
+            z-index: 2;
         }
 
         .containerdiv {
@@ -107,7 +109,7 @@ if ($filterstatus != 'Active') {
         .cornerimage {
             border: 0;
             position: absolute;
-            top: 42%;
+            top: 35%;
             right: 37%;
         }
 
@@ -172,12 +174,12 @@ if ($filterstatus != 'Active') {
             <div class="row">
                 <div class="col containerdiv" style="display: inline-block; width:246px;margin-left:10%; margin-top:2%">
 
-                    <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1647837724/ID%20Card/ID_Card_FINAL_php.jpg" width="100%" />
+                    <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1690876629/ID%20Card/ID_Card_FINAL_php_V3.jpg" width="100%" />
                     <img class="cornerimage" src=<?php echo $photo ?> width="75px" />
                     <p class="first-txt"><?php echo $fullname ?></p>
                     <p class="second-txt"><?php echo $associatenumber ?></p>
-                    <p class="third-txt"><?php echo $engagement ?></p>
-                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>" width="74px" />
+                    <p class="third-txt"><?php echo explode('-', $position)[1]?></p>
+                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>" width="100" />
                 </div>
             </div>
         </div>
