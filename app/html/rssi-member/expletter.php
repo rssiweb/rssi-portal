@@ -222,7 +222,7 @@ if (!$result) {
                                         Sincerely,<br><br><br><br>
 
                                         <?php echo $fullname ?><br>
-                                        <?php echo $engagement ?><br>
+                                        <?php echo explode('-', $position)[1] ?><br>
                                         Rina Shiksha Sahayak Foundation (RSSI)
 
 
