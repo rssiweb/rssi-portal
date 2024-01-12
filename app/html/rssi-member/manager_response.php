@@ -33,6 +33,11 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
 @$appraisee_name = pg_fetch_result($result_a, 0, 0);
 @$appraisee_email = pg_fetch_result($result_a, 0, 1);
 
+$result_m1 = pg_query($con, "SELECT fullname, email
+FROM appraisee_response
+LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appraisee_response.manager1_associatenumber WHERE goalsheetid = '$goalsheetid'");
+@$manager1_name = pg_fetch_result($result_m1, 0, 0);
+@$manager1_email = pg_fetch_result($result_m1, 0, 1);
 
 $result_m = pg_query($con, "SELECT fullname, email
 FROM appraisee_response
@@ -124,14 +129,33 @@ if (!$result) {
                 <?php echo $greeting ?>, <?php echo $fullname ?> (<?php echo $associatenumber ?>)!
             </p>
         </div>
-        <form method="GET" action="">
+        <form method="GET" action="" id="searchForm">
             <div class="form-group mb-3">
                 <label for="goalsheetid" class="form-label">Goal sheet ID:</label>
                 <input type="text" class="form-control" name="goalsheetid" Value="<?php echo @$_GET['goalsheetid'] ?>" placeholder="Goal sheet ID">
             </div>
-            <input type="submit" name="submit" value="Search">
-            <!-- <button type='button'>Lock / Unlock Form</button> -->
+            <button type="submit" name="submit" class="btn btn-primary mb-3" id="searchBtn">
+                <span id="btnText">Search</span>
+                <span id="loadingIndicator" style="display: none;">Loading...</span>
+            </button>
         </form>
+        <script>
+            document.getElementById('searchForm').addEventListener('submit', function() {
+                // Display loading indicator in the button
+                document.getElementById('btnText').style.display = 'none';
+                document.getElementById('loadingIndicator').style.display = 'inline-block';
+                document.getElementById('searchBtn').setAttribute('disabled', 'disabled');
+
+                // You may want to use AJAX to submit the form and fetch results from the server.
+                // For demonstration purposes, I'll simulate a delay using setTimeout.
+                setTimeout(function() {
+                    // Hide loading indicator and restore button text after a delay (replace this with your actual logic)
+                    document.getElementById('btnText').style.display = 'inline-block';
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('searchBtn').removeAttribute('disabled');
+                }, 2000); // 2000 milliseconds (2 seconds) delay, replace with your actual AJAX call
+            });
+        </script>
         <br>
         <h2 class="text-center mb-4" style="background-color:#CE1212; color:white; padding:10px;">Manager Evaluation</h2>
         <?php if (sizeof($resultArr) > 0) { ?>
@@ -212,6 +236,11 @@ if (!$result) {
                                 </tr>
                                 <tr>
                                     <td>
+                                        <?php if (!empty($manager1_name)) : ?>
+                                            <label for="manager_associate_number" class="form-label">Immediate Manager:</label>
+                                            &nbsp;<?php echo $manager1_name ?> (<?php echo $array['manager1_associatenumber'] ?>)<br>
+                                        <?php endif; ?>
+
                                         <label for="manager_associate_number" class="form-label">Manager:</label>
                                         &nbsp;<?php echo $manager_name ?> (<?php echo $array['manager_associatenumber'] ?>)
                                     </td>

@@ -46,6 +46,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
     $goalsheetid = uniqid();
     $appraisee_associatenumber = $_POST['appraisee_associate_number'];
     $manager_associatenumber = $_POST['manager_associate_number'];
+    $manager1_associatenumber = $_POST['manager1_associate_number'];
     $reviewer_associatenumber = $_POST['reviewer_associate_number'];
     $role = $_POST['role'];
     $appraisaltype = $_POST['appraisal_type'];
@@ -117,6 +118,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
 
     $appraisee_response = "INSERT INTO appraisee_response (goalsheetid,
         appraisee_associatenumber, 
+        manager1_associatenumber,
         manager_associatenumber, 
         reviewer_associatenumber, 
         role, 
@@ -185,7 +187,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
         goalsheet_created_by,
         goalsheet_created_on
       ) VALUES (
-        '$goalsheetid','$appraisee_associatenumber','$manager_associatenumber','$reviewer_associatenumber','$role','$appraisaltype','$appraisalyear','$parameter_1','$expectation_1',$max_rating_1,'$parameter_2','$expectation_2',$max_rating_2,'$parameter_3','$expectation_3',$max_rating_3,'$parameter_4','$expectation_4',$max_rating_4,'$parameter_5','$expectation_5',$max_rating_5,'$parameter_6','$expectation_6',$max_rating_6,'$parameter_7','$expectation_7',$max_rating_7,'$parameter_8','$expectation_8',$max_rating_8,'$parameter_9','$expectation_9',$max_rating_9,'$parameter_10','$expectation_10',$max_rating_10,'$parameter_11','$expectation_11',$max_rating_11,'$parameter_12','$expectation_12',$max_rating_12,'$parameter_13','$expectation_13',$max_rating_13,'$parameter_14','$expectation_14',$max_rating_14,'$parameter_15','$expectation_15',$max_rating_15,'$parameter_16','$expectation_16',$max_rating_16,'$parameter_17','$expectation_17',$max_rating_17,'$parameter_18','$expectation_18',$max_rating_18,'$parameter_19','$expectation_19',$max_rating_19,'$parameter_20','$expectation_20',$max_rating_20,'$goalsheet_created_by','$goalsheet_created_on')";
+        '$goalsheetid','$appraisee_associatenumber','$manager1_associatenumber','$manager_associatenumber','$reviewer_associatenumber','$role','$appraisaltype','$appraisalyear','$parameter_1','$expectation_1',$max_rating_1,'$parameter_2','$expectation_2',$max_rating_2,'$parameter_3','$expectation_3',$max_rating_3,'$parameter_4','$expectation_4',$max_rating_4,'$parameter_5','$expectation_5',$max_rating_5,'$parameter_6','$expectation_6',$max_rating_6,'$parameter_7','$expectation_7',$max_rating_7,'$parameter_8','$expectation_8',$max_rating_8,'$parameter_9','$expectation_9',$max_rating_9,'$parameter_10','$expectation_10',$max_rating_10,'$parameter_11','$expectation_11',$max_rating_11,'$parameter_12','$expectation_12',$max_rating_12,'$parameter_13','$expectation_13',$max_rating_13,'$parameter_14','$expectation_14',$max_rating_14,'$parameter_15','$expectation_15',$max_rating_15,'$parameter_16','$expectation_16',$max_rating_16,'$parameter_17','$expectation_17',$max_rating_17,'$parameter_18','$expectation_18',$max_rating_18,'$parameter_19','$expectation_19',$max_rating_19,'$parameter_20','$expectation_20',$max_rating_20,'$goalsheet_created_by','$goalsheet_created_on')";
 
     $result = pg_query($con, $appraisee_response);
     $cmdtuples = pg_affected_rows($result);
@@ -227,15 +229,18 @@ if (@$_POST['form-type'] == "appraisee_response") {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -270,7 +275,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
     <?php } ?>
 
     <div class="container mt-5">
-        <form method="GET" action="">
+        <form method="GET" action="" id="searchForm">
             <div class="form-group mb-3">
                 <label for="role_search" class="form-label">Role:</label>
                 <select class="form-select" name="role_search" required>
@@ -290,8 +295,29 @@ if (@$_POST['form-type'] == "appraisee_response") {
                     <option value="Other">Other</option>
                 </select>
             </div>
-            <input type="submit" name="submit" value="Search">
-            <!-- <button type='button'>Lock / Unlock Form</button> -->
+            <button type="submit" name="submit" class="btn btn-primary mb-3" id="searchBtn">
+                <span id="btnText">Search</span>
+                <span id="loadingIndicator" style="display: none;">Loading...</span>
+            </button>
+        </form>
+
+        <script>
+            document.getElementById('searchForm').addEventListener('submit', function() {
+                // Display loading indicator in the button
+                document.getElementById('btnText').style.display = 'none';
+                document.getElementById('loadingIndicator').style.display = 'inline-block';
+                document.getElementById('searchBtn').setAttribute('disabled', 'disabled');
+
+                // You may want to use AJAX to submit the form and fetch results from the server.
+                // For demonstration purposes, I'll simulate a delay using setTimeout.
+                setTimeout(function() {
+                    // Hide loading indicator and restore button text after a delay (replace this with your actual logic)
+                    document.getElementById('btnText').style.display = 'inline-block';
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('searchBtn').removeAttribute('disabled');
+                }, 2000); // 2000 milliseconds (2 seconds) delay, replace with your actual AJAX call
+            });
+        </script>
         </form>
         <br>
         <h2 class="text-center mb-4" style="background-color:#CE1212; color:white; padding:10px;">Goal Setting Form</h2>
@@ -308,60 +334,78 @@ if (@$_POST['form-type'] == "appraisee_response") {
 
                     <input type="hidden" name="form-type" value="appraisee_response">
 
-                    <div class="form-group mb-3">
-                        <label for="appraisee_associate_number" class="form-label">Appraisee Associate Number:</label>
-                        <input type="text" class="form-control" name="appraisee_associate_number" required>
-                        <div id="appraisee_associate_number_help" class="form-text">Please enter the unique associate number of the appraisee.</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="appraisee_associate_number" class="form-label">Appraisee Associate Number:</label>
+                                <input type="text" class="form-control" name="appraisee_associate_number" required>
+                                <div id="appraisee_associate_number_help" class="form-text">Please enter the unique associate number of the appraisee.</div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="manager1_associatenumber" class="form-label">Immediate Manager Associate Number:</label>
+                                <input type="text" class="form-control" name="manager1_associatenumber" required>
+                                <div id="manager1_associatenumber_help" class="form-text">Please enter the unique associate number of the immediate manager.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="manager_associate_number" class="form-label">Manager Associate Number:</label>
+                                <input type="text" class="form-control" name="manager_associate_number" required>
+                                <div id="manager_associate_number_help" class="form-text">Please enter the unique associate number of the manager.</div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="reviewer_associate_number" class="form-label">Reviewer Associate Number:</label>
+                                <input type="text" class="form-control" name="reviewer_associate_number" required>
+                                <div id="reviewer_associate_number_help" class="form-text">Please enter the unique associate number of the reviewer.</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label for="manager_associate_number" class="form-label">Manager Associate Number:</label>
-                        <input type="text" class="form-control" name="manager_associate_number" required>
-                        <div id="manager_associate_number_help" class="form-text">Please enter the unique associate number of the manager.</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="role" class="form-label">Role:</label>
+                                <select class="form-select" name="role" required>
+                                    <option value="" disabled selected>--Select Role--</option>
+                                    <option value="Teacher">Teacher</option>
+                                    <option value="Administrator">Administrator</option>
+                                    <option value="Counselor">Counselor</option>
+                                    <option value="Support Staff">Support Staff</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="appraisal_type" class="form-label">Appraisal Type:</label>
+                                <select class="form-select" name="appraisal_type" required>
+                                    <option value="" disabled selected>--Select an option--</option>
+                                    <option value="Annual">Annual</option>
+                                    <option value="Quarterly">Quarterly</option>
+                                    <option value="Project End">Project End</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label for="reviewer_associate_number" class="form-label">Reviewer Associate Number:</label>
-                        <input type="text" class="form-control" name="reviewer_associate_number" required>
-                        <div id="reviewer_associate_number_help" class="form-text">Please enter the unique associate number of the reviewer.</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="appraisal_year" class="form-label">Appraisal Year:</label>
+                                <select class="form-select" name="appraisal_year" id="appraisal_year" required>
+                                    <?php if ($appraisal_year == null) { ?>
+                                        <option value="" hidden selected>--Select Appraisal Year--</option>
+                                    <?php } else { ?>
+                                        <option hidden selected><?php echo $appraisal_year ?></option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="form-group mb-3">
-                        <label for="role" class="form-label">Role:</label>
-                        <select class="form-select" name="role" required>
-                            <option value="" disabled selected>--Select Role--</option>
-                            <option value="Teacher">Teacher</option>
-                            <option value="Administrator">Administrator</option>
-                            <option value="Counselor">Counselor</option>
-                            <option value="Support Staff">Support Staff</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="appraisal_type" class="form-label">Appraisal Type:</label>
-                        <select class="form-select" name="appraisal_type" required>
-                            <option value="" disabled selected>--Select an option--</option>
-                            <option value="Annual">Annual</option>
-                            <option value="Quarterly">Quarterly</option>
-                            <option value="Project End">Project End</option>
-                        </select>
-                    </div>
-
-
-                    <div class="form-group mb-3">
-                        <label for="appraisal_year" class="form-label">Appraisal Year:</label>
-                        <select class="form-select" name="appraisal_year" id="appraisal_year" required>
-                            <?php if ($appraisal_year == null) { ?>
-                                <option value="" hidden selected>--Select Appraisal Year--</option>
-                            <?php
-                            } else { ?>
-                                <option hidden selected><?php echo $appraisal_year ?></option>
-                            <?php }
-                            ?>
-                        </select>
-                    </div>
-
                     <script>
                         var currentYear = new Date().getFullYear();
                         for (var i = 0; i < 5; i++) {
