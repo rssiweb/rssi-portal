@@ -59,15 +59,18 @@ if (!$result) {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -166,7 +169,7 @@ if (!$result) {
 
                 <!-- <p></p> -->
                 <hr>
-                <?php if (($array['appraisee_response_complete'] == "yes" && $array['manager_associatenumber'] == $associatenumber) || $role == 'Admin') { ?>
+                <?php if (($array['appraisee_response_complete'] == "yes" && ($array['manager_associatenumber'] == $associatenumber || $array['manager1_associatenumber'] == $associatenumber)) || $role == 'Admin') { ?>
                     <form method="post" name="m_response" id="m_response">
 
                         <fieldset <?php echo ($array['manager_evaluation_complete'] == "yes") ? "disabled" : ""; ?>>
@@ -785,7 +788,7 @@ if (!$result) {
                                 </tbody>
                             </table>
                             <button type="submit" id="submit1" class="btn btn-success">Save</button>
-                            <button type="submit" id="submit2" class="btn btn-primary">Submit</button>
+                            <button type="submit" id="submit2" class="btn btn-primary" <?php echo ($array['manager_associatenumber'] == $associatenumber || $role == 'Admin') ? '' : 'disabled'; ?>>Submit</button>
                             <br><br>
                             <hr>
 
@@ -833,7 +836,7 @@ if (!$result) {
                     </form>
                 <?php } ?>
             <?php } ?>
-            <?php if ($array['manager_associatenumber'] != $associatenumber && $role != 'Admin') { ?><p>Oops! It looks like you're trying to access a goal sheet that doesn't belong to you.</p><?php } ?>
+            <?php if (($array['manager_associatenumber'] != $associatenumber && $array['manager1_associatenumber'] != $associatenumber) && $role != 'Admin') { ?><p>Oops! It looks like you're trying to access a goal sheet that doesn't belong to you.</p><?php } ?>
             <?php if ($array['appraisee_response_complete'] != "yes" && $array['manager_associatenumber'] == $associatenumber && $role != 'Admin') { ?><p>The goal sheet you are attempting to access is currently in the self-assessment phase. You will be able to access the goal sheet once the self-assessment has been completed.</p><?php } ?>
         <?php
         } else if ($goalsheetid == null) {
