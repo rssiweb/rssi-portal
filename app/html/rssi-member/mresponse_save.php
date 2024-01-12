@@ -23,6 +23,7 @@ if (@$_POST['form-type'] === "manager_remarks_update") {
     $goalsheetid = $_POST['goalsheetid'];
     $appraisee_associatenumber = $_POST['appraisee_associatenumber'];
     $manager_associatenumber = $_POST['manager_associatenumber'];
+    $completeCheckbox = isset($_POST['completeCheckbox']) ? $_POST['completeCheckbox'] : null;
     $manager_remarks = array();
     $rating_obtained = array();
 
@@ -47,6 +48,9 @@ if (@$_POST['form-type'] === "manager_remarks_update") {
         }
     }
 
+    // Add the manager1_response_complete column to the SET clause
+    $sql .= ", manager1_response_complete = $" . ($i + 20) . "::boolean";
+
     // Calculate the average rating_obtained
     $rating_obtained_without_null = array_filter($rating_obtained, function ($value) {
         return $value !== null;
@@ -59,16 +63,16 @@ if (@$_POST['form-type'] === "manager_remarks_update") {
     }
 
     // Append the average rating to the query
-    $sql .= ", ipf = $" . ($i + 20) . "::numeric";
+    $sql .= ", ipf = $" . ($i + 21) . "::numeric";
 
     // Add the WHERE clause to update only the rows with the specified goalsheetid
-    $sql .= " WHERE goalsheetid = $" . ($i + 21); // The goalsheetid will be passed as the 41st parameter
+    $sql .= " WHERE goalsheetid = $" . ($i + 22); // The goalsheetid will be passed as the 41st parameter
 
     // Prepare the statement
     $stmt = pg_prepare($con, "update_query", $sql);
 
     // Merge the two arrays of manager_remarks and rating_obtained, and add the goalsheetid and average_rating to the parameters
-    $params = array_merge($manager_remarks, $rating_obtained, array($average_rating, $goalsheetid));
+    $params = array_merge($manager_remarks, $rating_obtained, array($completeCheckbox, $average_rating, $goalsheetid));
 
     // Execute the prepared statement with the parameters
     $result = pg_execute($con, "update_query", $params);
@@ -84,15 +88,18 @@ if (@$_POST['form-type'] === "manager_remarks_update") {
 ?>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -116,7 +123,7 @@ if (@$_POST['form-type'] === "manager_remarks_update") {
         </div>
     </div>
 
-<?php } else if (@$cmdtuples>0) { ?>
+<?php } else if (@$cmdtuples > 0) { ?>
 
     <div class="container">
         <div class="alert alert-success" role="alert">

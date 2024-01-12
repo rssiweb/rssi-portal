@@ -787,6 +787,15 @@ if (!$result) {
                                     </tr>
                                 </tbody>
                             </table>
+
+                            <?php
+                            $enableCheckbox = ($array['manager1_associatenumber'] == $associatenumber);
+                            ?>
+
+                            <input type="checkbox" id="completeCheckbox" name="completeCheckbox" <?= $enableCheckbox ? ($array['manager1_response_complete'] ? 'checked' : '') : 'disabled' ?>>
+                            <label for="completeCheckbox">I, <?php echo $fullname ?> (<?php echo $associatenumber ?>), confirm completing the goal sheet discussion, including preliminary evaluation, before forwarding for the next level assessment.</label><br><br>
+
+
                             <button type="submit" id="submit1" class="btn btn-success">Save</button>
                             <button type="submit" id="submit2" class="btn btn-primary" <?php echo ($array['manager_associatenumber'] == $associatenumber || $role == 'Admin') ? '' : 'disabled'; ?>>Submit</button>
                             <br><br>
