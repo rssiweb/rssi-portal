@@ -527,7 +527,7 @@ $categories = [
                                     id="fileInput" name="fileInput" required>
                             </div>
                             <div>
-                                <table class="table table-striped" v-if="rows.length > 0">
+                                <table class="table table-striped" v-if="rows.length > 0" v-cloak>
                                     <thead>
                                         <tr>
                                             <th scope="col" v-for="header in headers" :key="header">{{ header }}</th>
@@ -539,8 +539,8 @@ $categories = [
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div class="alert alert-danger" v-if="error">{{error}}</div>
-                                <div class="alert alert-success" v-if="message">{{message}}</div>
+                                <div class="alert alert-danger" v-if="error" v-cloak>{{error}}</div>
+                                <div class="alert alert-success" v-if="message" v-cloak>{{message}}</div>
                             </div>
                         </div>
 
