@@ -78,6 +78,20 @@ class Gps
      */
     private $lastupdatedon;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="asset_status", type="text", nullable=true)
+     */
+    private $assetStatus;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="lastupdatedby", type="text", nullable=true)
+     */
+    private $lastupdatedby;
+
 
 
     /**
@@ -280,5 +294,53 @@ class Gps
     public function getLastupdatedon()
     {
         return $this->lastupdatedon;
+    }
+
+    /**
+     * Set assetStatus.
+     *
+     * @param string|null $assetStatus
+     *
+     * @return Gps
+     */
+    public function setAssetStatus($assetStatus = null)
+    {
+        $this->assetStatus = $assetStatus;
+
+        return $this;
+    }
+
+    /**
+     * Get assetStatus.
+     *
+     * @return string|null
+     */
+    public function getAssetStatus()
+    {
+        return $this->assetStatus;
+    }
+
+    /**
+     * Set lastupdatedby.
+     *
+     * @param string|null $lastupdatedby
+     *
+     * @return Gps
+     */
+    public function setLastupdatedby($lastupdatedby = null)
+    {
+        $this->lastupdatedby = $lastupdatedby;
+
+        return $this;
+    }
+
+    /**
+     * Get lastupdatedby.
+     *
+     * @return string|null
+     */
+    public function getLastupdatedby()
+    {
+        return $this->lastupdatedby;
     }
 }

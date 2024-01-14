@@ -645,6 +645,13 @@ class RssimyaccountMembers
      */
     private $ifsccode;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="grade", type="text", nullable=true)
+     */
+    private $grade;
+
 
 
     /**
@@ -2791,5 +2798,29 @@ class RssimyaccountMembers
     public function getIfsccode()
     {
         return $this->ifsccode;
+    }
+
+    /**
+     * Set grade.
+     *
+     * @param string|null $grade
+     *
+     * @return RssimyaccountMembers
+     */
+    public function setGrade($grade = null)
+    {
+        $this->grade = $grade;
+
+        return $this;
+    }
+
+    /**
+     * Get grade.
+     *
+     * @return string|null
+     */
+    public function getGrade()
+    {
+        return $this->grade;
     }
 }

@@ -32,13 +32,6 @@ class Fees
     /**
      * @var string|null
      *
-     * @ORM\Column(name="sname", type="text", nullable=true)
-     */
-    private $sname;
-
-    /**
-     * @var string|null
-     *
      * @ORM\Column(name="studentid", type="text", nullable=true)
      */
     private $studentid;
@@ -119,30 +112,6 @@ class Fees
     public function getDate()
     {
         return $this->date;
-    }
-
-    /**
-     * Set sname.
-     *
-     * @param string|null $sname
-     *
-     * @return Fees
-     */
-    public function setSname($sname = null)
-    {
-        $this->sname = $sname;
-
-        return $this;
-    }
-
-    /**
-     * Get sname.
-     *
-     * @return string|null
-     */
-    public function getSname()
-    {
-        return $this->sname;
     }
 
     /**

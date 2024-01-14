@@ -400,6 +400,69 @@ class RssimyprofileStudent
      */
     private $effectivefrom;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="type_of_admission", type="text", nullable=true)
+     */
+    private $typeOfAdmission;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="student_photo_raw", type="text", nullable=true)
+     */
+    private $studentPhotoRaw;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="aadhar_available", type="text", nullable=true)
+     */
+    private $aadharAvailable;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="payment_mode", type="text", nullable=true)
+     */
+    private $paymentMode;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="c_authentication_code", type="text", nullable=true)
+     */
+    private $cAuthenticationCode;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="transaction_id", type="text", nullable=true)
+     */
+    private $transactionId;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="id_card_issued", type="text", nullable=true)
+     */
+    private $idCardIssued;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="updated_by", type="text", nullable=true)
+     */
+    private $updatedBy;
+
+    /**
+     * @var \DateTime|null
+     *
+     * @ORM\Column(name="updated_on", type="datetime", nullable=true)
+     */
+    private $updatedOn;
+
 
 
     /**
@@ -1706,5 +1769,221 @@ class RssimyprofileStudent
     public function getEffectivefrom()
     {
         return $this->effectivefrom;
+    }
+
+    /**
+     * Set typeOfAdmission.
+     *
+     * @param string|null $typeOfAdmission
+     *
+     * @return RssimyprofileStudent
+     */
+    public function setTypeOfAdmission($typeOfAdmission = null)
+    {
+        $this->typeOfAdmission = $typeOfAdmission;
+
+        return $this;
+    }
+
+    /**
+     * Get typeOfAdmission.
+     *
+     * @return string|null
+     */
+    public function getTypeOfAdmission()
+    {
+        return $this->typeOfAdmission;
+    }
+
+    /**
+     * Set studentPhotoRaw.
+     *
+     * @param string|null $studentPhotoRaw
+     *
+     * @return RssimyprofileStudent
+     */
+    public function setStudentPhotoRaw($studentPhotoRaw = null)
+    {
+        $this->studentPhotoRaw = $studentPhotoRaw;
+
+        return $this;
+    }
+
+    /**
+     * Get studentPhotoRaw.
+     *
+     * @return string|null
+     */
+    public function getStudentPhotoRaw()
+    {
+        return $this->studentPhotoRaw;
+    }
+
+    /**
+     * Set aadharAvailable.
+     *
+     * @param string|null $aadharAvailable
+     *
+     * @return RssimyprofileStudent
+     */
+    public function setAadharAvailable($aadharAvailable = null)
+    {
+        $this->aadharAvailable = $aadharAvailable;
+
+        return $this;
+    }
+
+    /**
+     * Get aadharAvailable.
+     *
+     * @return string|null
+     */
+    public function getAadharAvailable()
+    {
+        return $this->aadharAvailable;
+    }
+
+    /**
+     * Set paymentMode.
+     *
+     * @param string|null $paymentMode
+     *
+     * @return RssimyprofileStudent
+     */
+    public function setPaymentMode($paymentMode = null)
+    {
+        $this->paymentMode = $paymentMode;
+
+        return $this;
+    }
+
+    /**
+     * Get paymentMode.
+     *
+     * @return string|null
+     */
+    public function getPaymentMode()
+    {
+        return $this->paymentMode;
+    }
+
+    /**
+     * Set cAuthenticationCode.
+     *
+     * @param string|null $cAuthenticationCode
+     *
+     * @return RssimyprofileStudent
+     */
+    public function setCAuthenticationCode($cAuthenticationCode = null)
+    {
+        $this->cAuthenticationCode = $cAuthenticationCode;
+
+        return $this;
+    }
+
+    /**
+     * Get cAuthenticationCode.
+     *
+     * @return string|null
+     */
+    public function getCAuthenticationCode()
+    {
+        return $this->cAuthenticationCode;
+    }
+
+    /**
+     * Set transactionId.
+     *
+     * @param string|null $transactionId
+     *
+     * @return RssimyprofileStudent
+     */
+    public function setTransactionId($transactionId = null)
+    {
+        $this->transactionId = $transactionId;
+
+        return $this;
+    }
+
+    /**
+     * Get transactionId.
+     *
+     * @return string|null
+     */
+    public function getTransactionId()
+    {
+        return $this->transactionId;
+    }
+
+    /**
+     * Set idCardIssued.
+     *
+     * @param string|null $idCardIssued
+     *
+     * @return RssimyprofileStudent
+     */
+    public function setIdCardIssued($idCardIssued = null)
+    {
+        $this->idCardIssued = $idCardIssued;
+
+        return $this;
+    }
+
+    /**
+     * Get idCardIssued.
+     *
+     * @return string|null
+     */
+    public function getIdCardIssued()
+    {
+        return $this->idCardIssued;
+    }
+
+    /**
+     * Set updatedBy.
+     *
+     * @param string|null $updatedBy
+     *
+     * @return RssimyprofileStudent
+     */
+    public function setUpdatedBy($updatedBy = null)
+    {
+        $this->updatedBy = $updatedBy;
+
+        return $this;
+    }
+
+    /**
+     * Get updatedBy.
+     *
+     * @return string|null
+     */
+    public function getUpdatedBy()
+    {
+        return $this->updatedBy;
+    }
+
+    /**
+     * Set updatedOn.
+     *
+     * @param \DateTime|null $updatedOn
+     *
+     * @return RssimyprofileStudent
+     */
+    public function setUpdatedOn($updatedOn = null)
+    {
+        $this->updatedOn = $updatedOn;
+
+        return $this;
+    }
+
+    /**
+     * Get updatedOn.
+     *
+     * @return \DateTime|null
+     */
+    public function getUpdatedOn()
+    {
+        return $this->updatedOn;
     }
 }

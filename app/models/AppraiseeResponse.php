@@ -1037,6 +1037,20 @@ class AppraiseeResponse
      */
     private $ipfProcessClosedBy;
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="unlock_request", type="text", nullable=true)
+     */
+    private $unlockRequest;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="manager_unlocked", type="text", nullable=true)
+     */
+    private $managerUnlocked;
+
 
 
     /**
@@ -4527,5 +4541,53 @@ class AppraiseeResponse
     public function getIpfProcessClosedBy()
     {
         return $this->ipfProcessClosedBy;
+    }
+
+    /**
+     * Set unlockRequest.
+     *
+     * @param string|null $unlockRequest
+     *
+     * @return AppraiseeResponse
+     */
+    public function setUnlockRequest($unlockRequest = null)
+    {
+        $this->unlockRequest = $unlockRequest;
+
+        return $this;
+    }
+
+    /**
+     * Get unlockRequest.
+     *
+     * @return string|null
+     */
+    public function getUnlockRequest()
+    {
+        return $this->unlockRequest;
+    }
+
+    /**
+     * Set managerUnlocked.
+     *
+     * @param string|null $managerUnlocked
+     *
+     * @return AppraiseeResponse
+     */
+    public function setManagerUnlocked($managerUnlocked = null)
+    {
+        $this->managerUnlocked = $managerUnlocked;
+
+        return $this;
+    }
+
+    /**
+     * Get managerUnlocked.
+     *
+     * @return string|null
+     */
+    public function getManagerUnlocked()
+    {
+        return $this->managerUnlocked;
     }
 }
