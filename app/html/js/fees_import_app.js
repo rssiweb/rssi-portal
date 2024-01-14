@@ -14,6 +14,9 @@ createApp({
         "ptype",
         "feeyear",
       ],
+      loading: false,
+      error: null,
+      message: null,
     };
   },
   methods: {
@@ -31,6 +34,7 @@ createApp({
       this.parseFile();
     },
     upload() {
+      this.loading = true;
       fetch("/api/fees.php", {
         method: "POST",
         headers: {
@@ -38,17 +42,23 @@ createApp({
         },
         body: JSON.stringify({ rows: this.rows }),
       })
-        .then((response) => {
-          console.log(response.json());
+        .then(async (response) => {
           if (response.ok) {
-            console.log("Data upload successful");
-            // this.rows = [];
+            var res = await response.json();
+            console.log(res);
+            this.$refs.fileInput.value = "";
+            this.message = res.message;
+            this.rows = [];
+            this.file = null;
           } else {
-            console.log("Data upload failed");
+            this.error = response.error;
           }
+          this.loading = false;
         })
         .catch((error) => {
           console.error("Error:", error);
+          this.loading = false;
+          this.error = `Error: ${error}`;
         });
     },
   },

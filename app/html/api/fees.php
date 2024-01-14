@@ -18,6 +18,7 @@ if ($METHOD == 'POST') {
     // insert using feesRepository doctrine, use transaction 
     $entityManager->getConnection()->beginTransaction();
     try {
+        $count = 0;
         foreach ($rows as $row) {
             $fees = new Fees();
 
@@ -35,11 +36,12 @@ if ($METHOD == 'POST') {
 
             $entityManager->persist($fees);
             $entityManager->flush();
+            $count++;
         }
         $entityManager->getConnection()->commit();
         $response = array();
         $response['status'] = 200;
-        $response['message'] = "Success";
+        $response['message'] = "Successfully inserted " . $count . " fees";
         echo json_encode($response);
     } catch (Exception $e) {
         $entityManager->getConnection()->rollback();

@@ -523,16 +523,11 @@ $categories = [
 
                             <div class="mb-3">
                                 <label for="fileInput" class="form-label">Choose a File</label>
-                                <input @change="onFileSelected" type="file" class="form-control" id="fileInput"
-                                    name="fileInput" required>
+                                <input ref="fileInput" @change="onFileSelected" type="file" class="form-control"
+                                    id="fileInput" name="fileInput" required>
                             </div>
-
-
-
-
                             <div>
-                                <!-- bootstrap table to iterate over rows -->
-                                <table class="table table-striped">
+                                <table class="table table-striped" v-if="rows.length > 0">
                                     <thead>
                                         <tr>
                                             <th scope="col" v-for="header in headers" :key="header">{{ header }}</th>
@@ -544,6 +539,8 @@ $categories = [
                                         </tr>
                                     </tbody>
                                 </table>
+                                <div class="alert alert-danger" v-if="error">{{error}}</div>
+                                <div class="alert alert-success" v-if="message">{{message}}</div>
                             </div>
                         </div>
 
