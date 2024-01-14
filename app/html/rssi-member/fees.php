@@ -127,14 +127,14 @@ $categories = [
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
+    window.dataLayer = window.dataLayer || [];
 
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
 
-        gtag('config', 'AW-11316670180');
+    gtag('config', 'AW-11316670180');
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -144,7 +144,8 @@ $categories = [
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- Template Main CSS File -->
@@ -153,13 +154,22 @@ $categories = [
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://www.rssi.in/disclaimer'
-        });
+    glowCookies.start('en', {
+        analytics: 'G-S25QWTFJ2S',
+        //facebookPixel: '',
+        policyLink: 'https://www.rssi.in/disclaimer'
+    });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- Papa parse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script type="importmap">
+        {
+        "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+        }
+    }
+    </script>
 
 </head>
 
@@ -214,7 +224,10 @@ $categories = [
                                             <input type="hidden" value="<?php echo $sections ?>" name="sections" />
                                             <input type="hidden" value="<?php echo $stid ?>" name="stid" />
 
-                                            <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
+                                            <button type="submit" id="export" name="export"
+                                                style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
+                                                title="Export CSV"><i class="bi bi-file-earmark-excel"
+                                                    style="font-size:large;"></i></button>
                                         </form>
                                         <span style="display:inline">|</span>
                                         <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Import file</a>
@@ -224,22 +237,26 @@ $categories = [
                                     <div class="form-group" style="display: inline-block;">
                                         <div class="col2" style="display: inline-block;">
 
-                                            <select name="get_aid" id="get_aid" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
+                                            <select name="get_aid" id="get_aid" class="form-select"
+                                                style="width:max-content; display:inline-block"
+                                                placeholder="Select policy year" required>
                                                 <?php if ($id == null) { ?>
-                                                    <option value="" hidden selected>Select year</option>
+                                                <option value="" hidden selected>Select year</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option hidden selected><?php echo $id ?></option>
+                                                <option hidden selected><?php echo $id ?></option>
                                                 <?php }
                                                 ?>
                                             </select>
 
-                                            <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year">
+                                            <select name="get_id" id="get_id" class="form-select"
+                                                style="width:max-content; display:inline-block"
+                                                placeholder="Select policy year">
                                                 <?php if ($status == null) { ?>
-                                                    <option value="" hidden selected>Select month</option>
+                                                <option value="" hidden selected>Select month</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option hidden selected><?php echo $status ?></option>
+                                                <option hidden selected><?php echo $status ?></option>
                                                 <?php }
                                                 ?>
                                                 <option>January</option>
@@ -257,19 +274,20 @@ $categories = [
                                                 <option>ALL</option>
                                             </select>
 
-                                            <select name="get_category[]" id="get_category" class="form-control" style="width:max-content;display:inline-block" multiple>
+                                            <select name="get_category[]" id="get_category" class="form-control"
+                                                style="width:max-content;display:inline-block" multiple>
                                                 <?php if ($section == null) { ?>
-                                                    <option value="" disabled selected hidden>Select Category</option>
+                                                <option value="" disabled selected hidden>Select Category</option>
 
-                                                    <?php foreach ($categories as $cat) { ?>
-                                                        <option><?php echo $cat ?></option>
-                                                    <?php } ?>
+                                                <?php foreach ($categories as $cat) { ?>
+                                                <option><?php echo $cat ?></option>
+                                                <?php } ?>
 
-                                                    <?php
+                                                <?php
                                                 } else {
 
                                                     foreach ($categories as $cat) { ?>
-                                                        <option <?php if (in_array($cat, $section)) {
+                                                <option <?php if (in_array($cat, $section)) {
                                                                     echo "selected";
                                                                 } ?>><?php echo $cat ?></option>
                                                 <?php }
@@ -277,69 +295,75 @@ $categories = [
                                                 ?>
 
                                             </select>
-                                            <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>" required>
+                                            <input name="get_stid" id="get_stid" class="form-control"
+                                                style="width:max-content; display:inline-block" placeholder="Student ID"
+                                                value="<?php echo $stid ?>" required>
                                         </div>
                                     </div>
                                     <div class="col2 left" style="display: inline-block;">
-                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm"
+                                            style="outline: none;">
                                             <i class="bi bi-search"></i>&nbsp;Search</button>
                                     </div>
                                     <div id="filter-checks">
-                                        <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                        <input type="checkbox" name="is_user" id="is_user" value="1"
+                                            <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
                                         <label for="is_user" style="font-weight: 400;">Search by Student ID</label>
                                     </div>
                                 </form>
                                 <br>
                                 <script>
-                                    if ($('#is_user').not(':checked').length > 0) {
+                                if ($('#is_user').not(':checked').length > 0) {
 
-                                        document.getElementById("get_aid").disabled = false;
-                                        document.getElementById("get_id").disabled = false;
-                                        document.getElementById("get_category").disabled = false;
-                                        document.getElementById("get_stid").disabled = true;
+                                    document.getElementById("get_aid").disabled = false;
+                                    document.getElementById("get_id").disabled = false;
+                                    document.getElementById("get_category").disabled = false;
+                                    document.getElementById("get_stid").disabled = true;
 
-                                    } else {
+                                } else {
 
+                                    document.getElementById("get_aid").disabled = true;
+                                    document.getElementById("get_id").disabled = true;
+                                    document.getElementById("get_category").disabled = true;
+                                    document.getElementById("get_stid").disabled = false;
+
+                                }
+
+                                const checkbox = document.getElementById('is_user');
+
+                                checkbox.addEventListener('change', (event) => {
+                                    if (event.target.checked) {
                                         document.getElementById("get_aid").disabled = true;
                                         document.getElementById("get_id").disabled = true;
                                         document.getElementById("get_category").disabled = true;
                                         document.getElementById("get_stid").disabled = false;
-
+                                    } else {
+                                        document.getElementById("get_aid").disabled = false;
+                                        document.getElementById("get_id").disabled = false;
+                                        document.getElementById("get_category").disabled = false;
+                                        document.getElementById("get_stid").disabled = true;
                                     }
-
-                                    const checkbox = document.getElementById('is_user');
-
-                                    checkbox.addEventListener('change', (event) => {
-                                        if (event.target.checked) {
-                                            document.getElementById("get_aid").disabled = true;
-                                            document.getElementById("get_id").disabled = true;
-                                            document.getElementById("get_category").disabled = true;
-                                            document.getElementById("get_stid").disabled = false;
-                                        } else {
-                                            document.getElementById("get_aid").disabled = false;
-                                            document.getElementById("get_id").disabled = false;
-                                            document.getElementById("get_category").disabled = false;
-                                            document.getElementById("get_stid").disabled = true;
-                                        }
-                                    })
+                                })
                                 </script>
                                 <script>
-                                    var currentYear = new Date().getFullYear();
-                                    for (var i = 0; i < 5; i++) {
-                                        var year = currentYear;
-                                        //next.toString().slice(-2)
-                                        $('#get_aid').append(new Option(year));
-                                        currentYear--;
-                                    }
+                                var currentYear = new Date().getFullYear();
+                                for (var i = 0; i < 5; i++) {
+                                    var year = currentYear;
+                                    //next.toString().slice(-2)
+                                    $('#get_aid').append(new Option(year));
+                                    currentYear--;
+                                }
                                 </script>
                                 <?php if ($role == 'Admin') { ?>
-                                    <div class="text-end">
-                                        <form name="transfer_all" action="payment-api.php" method="POST" style="display: -webkit-inline-box;">
-                                            <input type="hidden" name="form-type" type="text" value="transfer_all">
-                                            <input type="hidden" name="pid" id="pid" value="" readonly>
-                                            <button type="submit" class="btn btn-primary" id="transferButton" disabled>Bulk Transfer (<span id="selectedCount">0</span>)</button>
-                                        </form>
-                                    </div>
+                                <div class="text-end">
+                                    <form name="transfer_all" action="payment-api.php" method="POST"
+                                        style="display: -webkit-inline-box;">
+                                        <input type="hidden" name="form-type" type="text" value="transfer_all">
+                                        <input type="hidden" name="pid" id="pid" value="" readonly>
+                                        <button type="submit" class="btn btn-primary" id="transferButton" disabled>Bulk
+                                            Transfer (<span id="selectedCount">0</span>)</button>
+                                    </form>
+                                </div>
                                 <?php } ?>
 
                                 <div class="table-responsive">
@@ -358,50 +382,66 @@ $categories = [
                                             </tr>
                                         </thead>
                                         <?php if ($resultArr != null) : ?>
-                                            <tbody>
-                                                <?php foreach ($resultArr as $array) : ?>
-                                                    <tr>
-                                                        <td>
-                                                            <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
-                                                                <input class="form-check-input" type="checkbox" id="myCheckbox<?= $array['id'] ?>" name="checkbox[]" value="<?= $array['id'] ?>">
-                                                            <?php endif; ?>
-                                                            <label class="form-check-label" for="myCheckbox<?= $array['id'] ?>"><?= $array['id'] ?></label>
-                                                        </td>
-                                                        <td><?= @date("d/m/Y", strtotime($array['date'])) ?></td>
-                                                        <td><?= $array['studentid'] . '/' . strtok($array['studentname'], ' ') ?></td>
-                                                        <td><?= $array['category'] ?></td>
-                                                        <td><?= date('F', mktime(0, 0, 0, $array['month'], 10)) . '-' . $array['feeyear'] ?></td>
-                                                        <td><?= $array['fees'] ?></td>
-                                                        <td><?= $array['ptype'] ?></td>
-                                                        <td><?= $array['fullname'] ?></td>
-                                                        <td>
-                                                            <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
-                                                                <form name="transfer_<?= $array['id'] ?>" action="#" method="POST" style="display: -webkit-inline-box;">
-                                                                    <input type="hidden" name="form-type" type="text" value="transfer">
-                                                                    <input type="hidden" name="pid" id="pid" type="text" value="<?= $array['id'] ?>">
-                                                                    <button type="submit" id="yes" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Transfer"><i class="bi bi-upload"></i></button>
-                                                                </form>
-                                                            <?php endif; ?>
-                                                            <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
-                                                                <form name="paydelete_<?= $array['id'] ?>" action="#" method="POST" style="display: -webkit-inline-box;">
-                                                                    <input type="hidden" name="form-type" type="text" value="paydelete">
-                                                                    <input type="hidden" name="pid" id="pid" type="text" value="<?= $array['id'] ?>">
-                                                                    &nbsp;&nbsp;&nbsp;<button type="submit" id="yes" onclick="validateForm()" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete"><i class="bi bi-x-lg"></i></button>
-                                                                </form>
-                                                            <?php endif; ?>
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
+                                        <tbody>
+                                            <?php foreach ($resultArr as $array) : ?>
+                                            <tr>
+                                                <td>
+                                                    <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="myCheckbox<?= $array['id'] ?>" name="checkbox[]"
+                                                        value="<?= $array['id'] ?>">
+                                                    <?php endif; ?>
+                                                    <label class="form-check-label"
+                                                        for="myCheckbox<?= $array['id'] ?>"><?= $array['id'] ?></label>
+                                                </td>
+                                                <td><?= @date("d/m/Y", strtotime($array['date'])) ?></td>
+                                                <td><?= $array['studentid'] . '/' . strtok($array['studentname'], ' ') ?>
+                                                </td>
+                                                <td><?= $array['category'] ?></td>
+                                                <td><?= date('F', mktime(0, 0, 0, $array['month'], 10)) . '-' . $array['feeyear'] ?>
+                                                </td>
+                                                <td><?= $array['fees'] ?></td>
+                                                <td><?= $array['ptype'] ?></td>
+                                                <td><?= $array['fullname'] ?></td>
+                                                <td>
+                                                    <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                    <form name="transfer_<?= $array['id'] ?>" action="#" method="POST"
+                                                        style="display: -webkit-inline-box;">
+                                                        <input type="hidden" name="form-type" type="text"
+                                                            value="transfer">
+                                                        <input type="hidden" name="pid" id="pid" type="text"
+                                                            value="<?= $array['id'] ?>">
+                                                        <button type="submit" id="yes"
+                                                            style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
+                                                            title="Transfer"><i class="bi bi-upload"></i></button>
+                                                    </form>
+                                                    <?php endif; ?>
+                                                    <?php if ($array['pstatus'] != 'transferred' && $role == 'Admin') : ?>
+                                                    <form name="paydelete_<?= $array['id'] ?>" action="#" method="POST"
+                                                        style="display: -webkit-inline-box;">
+                                                        <input type="hidden" name="form-type" type="text"
+                                                            value="paydelete">
+                                                        <input type="hidden" name="pid" id="pid" type="text"
+                                                            value="<?= $array['id'] ?>">
+                                                        &nbsp;&nbsp;&nbsp;<button type="submit" id="yes"
+                                                            onclick="validateForm()"
+                                                            style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;"
+                                                            title="Delete"><i class="bi bi-x-lg"></i></button>
+                                                    </form>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
                                         <?php elseif ($id == "" && $stid == "") : ?>
-                                            <tbody>
-                                                <tr>
-                                                    <td colspan="9">Please select Filter value.</td>
-                                                </tr>
-                                            </tbody>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="9">Please select Filter value.</td>
+                                            </tr>
+                                        </tbody>
                                         <?php elseif (sizeof($resultArr) == 0 && $stid == "") : ?>
-                                            <tbody>
-                                                <?php
+                                        <tbody>
+                                            <?php
                                                 $filterValues = [];
 
                                                 if (!empty($id)) {
@@ -434,13 +474,13 @@ $categories = [
                                                      <td colspan="5">No record found for ' . $filterString . '</td>
                                                  </tr>';
                                                 ?>
-                                            </tbody>
+                                        </tbody>
                                         <?php elseif (sizeof($resultArr) == 0 && $stid != "") : ?>
-                                            <tbody>
-                                                <tr>
-                                                    <td colspan="5">No record found for <?= $stid ?></td>
-                                                </tr>
-                                            </tbody>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="5">No record found for <?= $stid ?></td>
+                                            </tr>
+                                        </tbody>
                                         <?php endif; ?>
                                     </table>
                                 </div>
@@ -458,7 +498,8 @@ $categories = [
                                 <div class="spinner-border" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
-                                <p id="loadingMessage">Submission in progress. Please do not close or reload this page.</p>
+                                <p id="loadingMessage">Submission in progress. Please do not close or reload this page.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -469,7 +510,7 @@ $categories = [
         <!-- Popup -->
         <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl">
-                <div class="modal-content">
+                <div class="modal-content" id="fees-import-app">
                     <!-- Header -->
                     <div class="modal-header">
                         <h5 class="modal-title" id="popupLabel">Import file</h5>
@@ -478,139 +519,163 @@ $categories = [
                     <!-- Body -->
                     <div class="modal-body">
                         <!-- <div class="container mt-5"> -->
-                        <form action="upload.php" method="POST" enctype="multipart/form-data">
+                        <div>
+
                             <div class="mb-3">
                                 <label for="fileInput" class="form-label">Choose a File</label>
-                                <input type="file" class="form-control" id="fileInput" name="fileInput" required>
+                                <input @change="onFileSelected" type="file" class="form-control" id="fileInput"
+                                    name="fileInput" required>
                             </div>
 
-                            <button type="submit" class="btn btn-primary">Upload File</button>
-                        </form>
-                        <!-- </div> -->
+
+
+
+                            <div>
+                                <!-- bootstrap table to iterate over rows -->
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" v-for="header in headers" :key="header">{{ header }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="row in rows" :key="row.id">
+                                            <td v-for="header in headers" :key="header">{{ row[header] }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
 
                     </div>
                     <!-- Footer -->
                     <div class="modal-footer">
+                        <button type="submit" class="btn" @click="upload" :disabled="rows.length == 0"
+                            :class="{ 'btn-outlined': rows.length == 0, 'btn-primary': rows.length > 0 }">Insert</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+        <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+                class="bi bi-arrow-up-short"></i></a>
         <script>
-            const pidInput = document.getElementById('pid');
-            const transferButton = document.getElementById('transferButton');
+        const pidInput = document.getElementById('pid');
+        const transferButton = document.getElementById('transferButton');
 
-            pidInput.addEventListener('input', () => {
-                const pidValue = pidInput.value;
-                if (pidValue) {
-                    transferButton.disabled = false;
-                } else {
-                    transferButton.disabled = true;
-                }
+        pidInput.addEventListener('input', () => {
+            const pidValue = pidInput.value;
+            if (pidValue) {
+                transferButton.disabled = false;
+            } else {
+                transferButton.disabled = true;
+            }
+        });
+
+        $(document).ready(function() {
+            $('input[name="checkbox[]"]').change(function() {
+                var selectedValues = [];
+                $('input[name="checkbox[]"]:checked').each(function() {
+                    selectedValues.push($(this).val());
+                });
+                $('#pid').val(selectedValues.join(', '));
+                $('#selectedCount').text(selectedValues.length); // Update selected count
+                pidInput.dispatchEvent(new Event('input')); // Trigger the input event
             });
 
-            $(document).ready(function() {
-                $('input[name="checkbox[]"]').change(function() {
-                    var selectedValues = [];
-                    $('input[name="checkbox[]"]:checked').each(function() {
-                        selectedValues.push($(this).val());
-                    });
-                    $('#pid').val(selectedValues.join(', '));
-                    $('#selectedCount').text(selectedValues.length); // Update selected count
-                    pidInput.dispatchEvent(new Event('input')); // Trigger the input event
+            $('form[name="transfer_all"]').submit(function(event) {
+                event.preventDefault(); // Prevent the default form submission
+                const formData = $(this).serialize(); // Serialize form data
+                const scriptURL = 'payment-api.php';
+                // Show the Bootstrap modal
+                const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+                    backdrop: 'static',
+                    keyboard: false
                 });
+                myModal.show();
 
-                $('form[name="transfer_all"]').submit(function(event) {
-                    event.preventDefault(); // Prevent the default form submission
-                    const formData = $(this).serialize(); // Serialize form data
-                    const scriptURL = 'payment-api.php';
-                    // Show the Bootstrap modal
-                    const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
-                        backdrop: 'static',
-                        keyboard: false
-                    });
-                    myModal.show();
-
-                    $.ajax({
-                        type: 'POST',
-                        url: scriptURL,
-                        data: formData,
-                        success: function(response) {
-                            myModal.hide();
-                            if (response === 'success') {
-                                alert('Bulk transfer has been completed.');
-                                location.reload();
-                            } else {
-                                alert('Error occurred during bulk transfer.');
-                            }
-                        },
-                        error: function() {
-                            myModal.hide();
-                            alert('Error occurred during the AJAX request.');
+                $.ajax({
+                    type: 'POST',
+                    url: scriptURL,
+                    data: formData,
+                    success: function(response) {
+                        myModal.hide();
+                        if (response === 'success') {
+                            alert('Bulk transfer has been completed.');
+                            location.reload();
+                        } else {
+                            alert('Error occurred during bulk transfer.');
                         }
-                    });
+                    },
+                    error: function() {
+                        myModal.hide();
+                        alert('Error occurred during the AJAX request.');
+                    }
                 });
             });
+        });
         </script>
 
         <script>
-            var data = <?php echo json_encode($resultArr) ?>;
-            var aid = <?php echo json_encode($_SESSION['aid']) ?>; // Enclose session data in json_encode
+        var data = <?php echo json_encode($resultArr) ?>;
+        var aid = <?php echo json_encode($_SESSION['aid']) ?>; // Enclose session data in json_encode
 
-            const scriptURL = 'payment-api.php';
+        const scriptURL = 'payment-api.php';
 
-            data.forEach(item => {
-                const form = document.querySelector(`form[name='transfer_${item.id}']`);
-                form.addEventListener('submit', e => {
-                    e.preventDefault();
-                    fetch(scriptURL, {
-                            method: 'POST',
-                            body: new FormData(form)
-                        })
-                        .then(response => response.text())
-                        .then(data => {
-                            alert("Amount has been transferred.");
-                            location.reload();
-                        })
-                        .catch(error => console.error('Error!', error.message));
-                });
+        data.forEach(item => {
+            const form = document.querySelector(`form[name='transfer_${item.id}']`);
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+                fetch(scriptURL, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        alert("Amount has been transferred.");
+                        location.reload();
+                    })
+                    .catch(error => console.error('Error!', error.message));
             });
+        });
 
-            function validateForm() {
-                if (confirm('Are you sure you want to delete this record? Once you click OK, the record cannot be reverted.')) {
-                    data.forEach(item => {
-                        const form = document.querySelector(`form[name='paydelete_${item.id}']`);
-                        form.addEventListener('submit', e => {
-                            e.preventDefault();
-                            fetch(scriptURL, {
-                                    method: 'POST',
-                                    body: new FormData(form)
-                                })
-                                .then(response => response.text())
-                                .then(data => {
-                                    alert("Record has been deleted.");
-                                    location.reload();
-                                })
-                                .catch(error => console.error('Error!', error.message));
-                        });
+        function validateForm() {
+            if (confirm(
+                    'Are you sure you want to delete this record? Once you click OK, the record cannot be reverted.')) {
+                data.forEach(item => {
+                    const form = document.querySelector(`form[name='paydelete_${item.id}']`);
+                    form.addEventListener('submit', e => {
+                        e.preventDefault();
+                        fetch(scriptURL, {
+                                method: 'POST',
+                                body: new FormData(form)
+                            })
+                            .then(response => response.text())
+                            .then(data => {
+                                alert("Record has been deleted.");
+                                location.reload();
+                            })
+                            .catch(error => console.error('Error!', error.message));
                     });
-                } else {
-                    alert("Record has NOT been deleted.");
-                    return false;
-                }
+                });
+            } else {
+                alert("Record has NOT been deleted.");
+                return false;
             }
+        }
         </script>
 
 
         <!-- Vendor JS Files -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous">
+        </script>
 
         <!-- Template Main JS File -->
         <script src="../assets_new/js/main.js"></script>
-
+        <script type="module" src="/js/fees_import_app.js"></script>
     </body>
 
 </html>

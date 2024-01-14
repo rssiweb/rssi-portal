@@ -1,2 +1,8 @@
-bin/doctrine orm:convert:mapping --force --from-database -- annotation ./models
-bin/doctrine orm:generate:entities --generate-methods=true  ./models/
+#!/bin/bash
+# delete models folder
+rm -rf ./models
+bin/doctrine orm:convert-mapping --from-database --force annotation ./models 
+# to generate methods in entities
+bin/doctrine orm:generate-entities --generate-methods=true ./models 
+#bin/doctrine orm:convert:mapping --force --from-database -- annotation ./models
+#bin/doctrine orm:generate:entities --generate-methods=true  ./models/
