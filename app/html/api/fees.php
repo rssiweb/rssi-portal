@@ -4,10 +4,17 @@ require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/paytm-util.php");
 include("../../util/email.php");
 include("../../util/drive.php");
-// require_once("email.php");
+include("../../util/login_util.php");
 
 date_default_timezone_set('Asia/Kolkata');
 
+if (!isLoggedIn("aid")) {
+    $response = array();
+    $response['status'] = 401;
+    $response['message'] = "Unauthorized";
+    echo json_encode($response);
+    exit();
+}
 
 $METHOD = $_SERVER['REQUEST_METHOD'];
 
