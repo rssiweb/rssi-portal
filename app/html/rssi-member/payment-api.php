@@ -163,7 +163,7 @@ if ($formtype == "gen_otp_associate") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
   @$associate_name = $_POST['associate_name'];
   @$email = $_POST['associate_email'];
-  $item = $entityManager->getRepository('onboarding')->find($otp_initiatedfor); //primary key
+  $item = $entityManager->getRepository('Onboarding')->find($otp_initiatedfor); //primary key
   if ($item) {
     // Generate a random 6 digit number
     $otp = rand(100000, 999999);
@@ -190,7 +190,7 @@ if ($formtype == "gen_otp_centr") {
   @$otp_initiatedfor = $_POST['otp_initiatedfor'];
   @$email = $_POST['centre_incharge_email'];
   @$centre_incharge_name = $_POST['centre_incharge_name'];
-  $item = $entityManager->getRepository('onboarding')->find($otp_initiatedfor); //primary key
+  $item = $entityManager->getRepository('Onboarding')->find($otp_initiatedfor); //primary key
   if ($item) {
     // Generate a random 6 digit number
     $otp = rand(100000, 999999);
