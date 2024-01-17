@@ -19,77 +19,12 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
 }
 ?>
 <?php
-// if (@$_POST['form-type'] == "appraisee_response_update") {
-//     $goalsheetid = $_POST['goalsheetid'];
-//     $appraisee_associatenumber = $_POST['appraisee_associatenumber'];
-//     $appraisee_response_1 = $_POST['appraisee_response_1'];
-//     $appraisee_response_2 = $_POST['appraisee_response_2'];
-//     $appraisee_response_3 = $_POST['appraisee_response_3'];
-//     $appraisee_response_4 = $_POST['appraisee_response_4'];
-//     $appraisee_response_5 = $_POST['appraisee_response_5'];
-//     $appraisee_response_6 = $_POST['appraisee_response_6'];
-//     $appraisee_response_7 = $_POST['appraisee_response_7'];
-//     $appraisee_response_8 = $_POST['appraisee_response_8'];
-//     $appraisee_response_9 = $_POST['appraisee_response_9'];
-//     $appraisee_response_10 = $_POST['appraisee_response_10'];
-//     $appraisee_response_11 = $_POST['appraisee_response_11'];
-//     $appraisee_response_12 = $_POST['appraisee_response_12'];
-//     $appraisee_response_13 = $_POST['appraisee_response_13'];
-//     $appraisee_response_14 = $_POST['appraisee_response_14'];
-//     $appraisee_response_15 = $_POST['appraisee_response_15'];
-//     $appraisee_response_16 = $_POST['appraisee_response_16'];
-//     $appraisee_response_17 = $_POST['appraisee_response_17'];
-//     $appraisee_response_18 = $_POST['appraisee_response_18'];
-//     $appraisee_response_19 = $_POST['appraisee_response_19'];
-//     $appraisee_response_20 = $_POST['appraisee_response_20'];
-//     $goalsheet_submitted_by = $associatenumber;
-//     $goalsheet_submitted_on = date('Y-m-d H:i:s');
-
-
-
-//     $appraisee_response_update = "UPDATE appraisee_response
-//     SET appraisee_response_complete = 'yes',
-//         appraisee_response_1 = '$appraisee_response_1',
-//         appraisee_response_2 = '$appraisee_response_2',
-//         appraisee_response_3 = '$appraisee_response_3',
-//         appraisee_response_4 = '$appraisee_response_4',
-//         appraisee_response_5 = '$appraisee_response_5',
-//         appraisee_response_6 = '$appraisee_response_6',
-//         appraisee_response_7 = '$appraisee_response_7',
-//         appraisee_response_8 = '$appraisee_response_8',
-//         appraisee_response_9 = '$appraisee_response_9',
-//         appraisee_response_10 = '$appraisee_response_10',
-//         appraisee_response_11 = '$appraisee_response_11',
-//         appraisee_response_12 = '$appraisee_response_12',
-//         appraisee_response_13 = '$appraisee_response_13',
-//         appraisee_response_14 = '$appraisee_response_14',
-//         appraisee_response_15 = '$appraisee_response_15',
-//         appraisee_response_16 = '$appraisee_response_16',
-//         appraisee_response_17 = '$appraisee_response_17',
-//         appraisee_response_18 = '$appraisee_response_18',
-//         appraisee_response_19 = '$appraisee_response_19',
-//         appraisee_response_20 = '$appraisee_response_20',
-//         goalsheet_submitted_by = '$goalsheet_submitted_by',
-//         goalsheet_submitted_on = '$goalsheet_submitted_on'
-//         WHERE goalsheetid='$goalsheetid'";
-
-//     $result = pg_query($con, $appraisee_response_update);
-//     $cmdtuples = pg_affected_rows($result);
-//     if (!$result) {
-//         echo "An error occurred.\n";
-//         exit;
-//     }
-
-//     $resultArr = pg_fetch_all($result);
-
-// Assuming you have already established a PostgreSQL database connection using pg_connect().
-
-// Assuming you have already established a database connection, $pdo, using PDO.
-
 
 if (@$_POST['form-type'] === "appraisee_response_update") {
     $goalsheetid = $_POST['goalsheetid'];
     $appraisee_associatenumber = $_POST['appraisee_associatenumber'];
+    $manager_associatenumber = $_POST['manager_associatenumber'];
+    $manager1_associatenumber = $_POST['manager1_associatenumber'];
     $goalsheet_submitted_by = $associatenumber;
     $goalsheet_submitted_on = date('Y-m-d H:i:s');
 
@@ -132,12 +67,6 @@ if (@$_POST['form-type'] === "appraisee_response_update") {
         echo "Error while executing the update query: " . pg_last_error($con);
     }
 
-
-
-
-
-
-
     $result_a = pg_query($con, "SELECT fullname,email
 FROM appraisee_response
 LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appraisee_response.appraisee_associatenumber WHERE goalsheetid = '$goalsheetid'");
@@ -150,6 +79,12 @@ FROM appraisee_response
 LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appraisee_response.manager_associatenumber WHERE goalsheetid = '$goalsheetid'");
     @$manager_name = pg_fetch_result($result_m, 0, 0);
     @$manager_email = pg_fetch_result($result_m, 0, 1);
+
+    $result_m = pg_query($con, "SELECT fullname, email
+FROM appraisee_response
+LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appraisee_response.manager1_associatenumber WHERE goalsheetid = '$goalsheetid'");
+    @$manager1_name = pg_fetch_result($result_m, 0, 0);
+    @$manager1_email = pg_fetch_result($result_m, 0, 1);
 
 
     $result_r = pg_query($con, "SELECT fullname, email
@@ -164,8 +99,21 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
     @$appraisalyear = pg_fetch_result($result_appraisal_details, 0, 1);
     @$appraisee_associatenumber = pg_fetch_result($result_appraisal_details, 0, 2);
 
-    if (@$cmdtuples == 1 && $manager_email != "") {
-        sendEmail("goal_sheet_evaluation_request", array(
+    if (@$cmdtuples == 1 && $manager1_email != "") {
+        sendEmail("goal_sheet_evaluation_request_manager1", array(
+            "goalsheetid" => $goalsheetid,
+            "appraisaltype" => @$appraisaltype,
+            "appraisalyear" => @$appraisalyear,
+            "appraisee_name" => @$appraisee_name,
+            "appraiseeemail" => @$appraisee_email,
+            "appraiseeid" => @$appraisee_associatenumber,
+            "manager1_name" => @$manager1_name,
+        ), $manager1_email);
+    }
+    if (@$cmdtuples == 1) {
+        $emailTemplate = ($manager_email != "") ? "goal_sheet_evaluation_request_manager1_cc" : "goal_sheet_evaluation_request_manager1";
+
+        sendEmail($emailTemplate, array(
             "goalsheetid" => $goalsheetid,
             "appraisaltype" => @$appraisaltype,
             "appraisalyear" => @$appraisalyear,
@@ -173,20 +121,26 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
             "appraiseeemail" => @$appraisee_email,
             "appraiseeid" => @$appraisee_associatenumber,
             "manager_name" => @$manager_name,
+            "manager1_name" => @$manager1_name,
+            "manager1_email" => @$manager1_email,
+            "manager1_associatenumber" => @$manager1_associatenumber,
         ), $manager_email);
     }
 } ?>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">

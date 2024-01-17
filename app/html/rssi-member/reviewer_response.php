@@ -825,6 +825,7 @@ if (!$result) {
                                     <div class="row">
                                         <div class="col-6">Evaluated On:</div>
                                         <div class="col-6">
+                                            <?php echo ($array['goalsheet_evaluated1_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated1_on'])) . ' by ' . $array['goalsheet_evaluated1_by'] : '' ?>
                                             <?php echo ($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '' ?>
                                         </div>
                                     </div>
@@ -844,7 +845,7 @@ if (!$result) {
                 <?php } ?>
             <?php } ?>
             <?php if ($array['reviewer_associatenumber'] != $associatenumber && $role != 'Admin') { ?><p>Oops! It looks like you're trying to access a goal sheet that doesn't belong to you.</p><?php } ?>
-            <?php if ($array['manager_evaluation_complete'] != 'yes' && $array['reviewer_associatenumber'] == $associatenumber && $role != 'Admin') { ?><p>The goal sheet you are trying to access is currently in either the self-assessment or manager evaluation phase. You will be able to access the goal sheet once the manager evaluation phase is completed.</p><?php } ?>
+            <?php if ($array['manager_evaluation_complete'] != 'yes' && $array['reviewer_associatenumber'] == $associatenumber) { ?><p>The goal sheet you are trying to access is currently in either the self-assessment or manager evaluation phase. You will be able to access the goal sheet once the manager evaluation phase is completed.</p><?php } ?>
         <?php
         } else if ($goalsheetid == null) {
         ?>

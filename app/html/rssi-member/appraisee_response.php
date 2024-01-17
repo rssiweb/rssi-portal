@@ -505,6 +505,7 @@ if (!$result) {
                                             <div class="row">
                                                 <div class="col-6">Evaluated On:</div>
                                                 <div class="col-6">
+                                                    <?php echo ($array['goalsheet_evaluated1_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated1_on'])) . ' by ' . $array['goalsheet_evaluated1_by'] : '' ?>
                                                     <?php echo ($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '' ?>
                                                 </div>
                                             </div>

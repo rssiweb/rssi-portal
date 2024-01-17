@@ -193,10 +193,10 @@ if (!$result) {
 
                 <!-- <p></p> -->
                 <hr>
-                <?php if (($array['appraisee_response_complete'] == "yes" && ($array['manager_associatenumber'] == $associatenumber || $array['manager1_associatenumber'] == $associatenumber)) || $role == 'Admin') { ?>
+                <?php if (($array['appraisee_response_complete'] == "yes" && $array['manager1_associatenumber'] == $associatenumber) || ($array['appraisee_response_complete'] == "yes" && $array['manager_associatenumber'] == $associatenumber && $array['manager1_evaluation_complete'] == 'yes') || $role == 'Admin') { ?>
                     <form method="post" name="m_response" id="m_response">
 
-                        <fieldset <?php echo ($array['manager_evaluation_complete'] == "yes") ? "disabled" : ""; ?>>
+                        <fieldset <?php echo ($array['manager_evaluation_complete'] == "yes" || ($array['manager1_associatenumber'] == $associatenumber && $array['manager1_evaluation_complete'] == "yes")) ? "disabled" : ""; ?>>
 
                             <?php if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") { ?>
                                 <span class="badge bg-danger float-end">Self-assessment</span>
@@ -222,6 +222,7 @@ if (!$result) {
                             <input type="hidden" name="goalsheetid" Value="<?php echo $array['goalsheetid'] ?>" readonly>
                             <input type="hidden" name="appraisee_associatenumber" Value="<?php echo $array['appraisee_associatenumber'] ?>" readonly>
                             <input type="hidden" name="manager_associatenumber" Value="<?php echo $array['manager_associatenumber'] ?>" readonly>
+                            <input type="hidden" name="manager1_associatenumber" Value="<?php echo $array['manager1_associatenumber'] ?>" readonly>
 
                             <table class="table">
                                 <tr>
@@ -817,16 +818,34 @@ if (!$result) {
                                 </tbody>
                             </table>
 
-                            <?php
-                            $enableCheckbox = ($array['manager1_associatenumber'] == $associatenumber);
-                            ?>
-
-                            <input type="checkbox" id="completeCheckbox" name="completeCheckbox" <?= $enableCheckbox ? ($array['manager1_response_complete'] ? 'checked' : '') : 'disabled' ?>>
-                            <label for="completeCheckbox">I, <?php echo $fullname ?> (<?php echo $associatenumber ?>), confirm completing the goal sheet discussion, including preliminary evaluation, before forwarding for the next level assessment.</label><br><br>
-
-
                             <button type="submit" id="submit1" class="btn btn-success">Save</button>
-                            <button type="submit" id="submit2" class="btn btn-primary" <?php echo ($array['manager_associatenumber'] == $associatenumber || $role == 'Admin') ? '' : 'disabled'; ?>>Submit</button>
+                            <script>
+                                var form = document.getElementById('m_response');
+                                var submit1Button = document.getElementById('submit1');
+                                // Add event listeners to the submit buttons
+                                submit1Button.addEventListener('click', function() {
+                                    form.action = 'mresponse_save.php'; // Set the form action to submit1.php
+                                });
+                            </script>
+                            <?php if ($array['manager1_associatenumber'] == $associatenumber) : ?>
+                                <button type="submit" id="submit4" class="btn btn-primary">Submit</button>
+                                <script>
+                                    var submit4Button = document.getElementById('submit4');
+                                    submit4Button.addEventListener('click', function() {
+                                        form.action = 'm1response_submit.php'; // Set the form action to submit4.php
+                                    });
+                                </script>
+                            <?php endif; ?>
+                            <?php if ($array['manager_associatenumber'] == $associatenumber || $role == 'Admin') : ?>
+                                <button type="submit" id="submit2" class="btn btn-primary">Submit</button>
+                                <script>
+                                    var submit2Button = document.getElementById('submit2');
+                                    submit2Button.addEventListener('click', function() {
+                                        form.action = 'mresponse_submit.php'; // Set the form action to submit2.php
+                                    });
+                                </script>
+                            <?php endif; ?>
+
                             <br><br>
                             <hr>
 
@@ -855,6 +874,7 @@ if (!$result) {
                                         <div class="row">
                                             <div class="col-6">Evaluated On:</div>
                                             <div class="col-6">
+                                                <?php echo ($array['goalsheet_evaluated1_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated1_on'])) . ' by ' . $array['goalsheet_evaluated1_by'] : '' ?>
                                                 <?php echo ($array['goalsheet_evaluated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_evaluated_on'])) . ' by ' . $array['goalsheet_evaluated_by'] : '' ?>
                                             </div>
                                         </div>
@@ -874,17 +894,20 @@ if (!$result) {
                     </form>
                 <?php } ?>
             <?php } ?>
-            <?php if (($array['manager_associatenumber'] != $associatenumber && $array['manager1_associatenumber'] != $associatenumber) && $role != 'Admin') { ?><p>Oops! It looks like you're trying to access a goal sheet that doesn't belong to you.</p><?php } ?>
-            <?php if ($array['appraisee_response_complete'] != "yes" && $array['manager_associatenumber'] == $associatenumber && $role != 'Admin') { ?><p>The goal sheet you are attempting to access is currently in the self-assessment phase. You will be able to access the goal sheet once the self-assessment has been completed.</p><?php } ?>
-        <?php
-        } else if ($goalsheetid == null) {
-        ?>
-            <p>Please enter the Goal sheet ID.</p>
-        <?php
-        } else {
-        ?>
-            <p>We could not find any records matching the entered Goal sheet ID.</p>
-        <?php } ?>
+            <?php
+            if (($array['manager_associatenumber'] != $associatenumber && $array['manager1_associatenumber'] != $associatenumber) && $role != 'Admin') {
+                echo "<p>Oops! It looks like you're trying to access a goal sheet that doesn't belong to you.</p>";
+            } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_associatenumber'] == $associatenumber && $array['manager1_associatenumber'] != null && $array['manager1_evaluation_complete'] != 'yes') {
+                echo "<p>The goal sheet you are trying to access is currently under review by the immediate manager. Access will be granted once the immediate manager completes their assessment.</p>";
+            } elseif ($array['appraisee_response_complete'] != "yes" && $array['manager_associatenumber'] == $associatenumber && $role != 'Admin') {
+                echo "<p>The goal sheet you are attempting to access is currently in the self-assessment phase. You will be able to access the goal sheet once the self-assessment has been completed.</p>";
+            } elseif ($goalsheetid == null) {
+                echo "<p>Please enter the Goal sheet ID.</p>";
+            }
+            ?>
+        <?php } else {
+            echo "<p>We could not find any records matching the entered Goal sheet ID.</p>";
+        } ?>
 
     </div>
 
@@ -944,20 +967,7 @@ if (!$result) {
             }
         }
     </script>
-    <script>
-        var form = document.getElementById('m_response');
-        var submit1Button = document.getElementById('submit1');
-        var submit2Button = document.getElementById('submit2');
 
-        // Add event listeners to the submit buttons
-        submit1Button.addEventListener('click', function() {
-            form.action = 'mresponse_save.php'; // Set the form action to submit1.php
-        });
-
-        submit2Button.addEventListener('click', function() {
-            form.action = 'mresponse_submit.php'; // Set the form action to submit2.php
-        });
-    </script>
     <script>
         $(document).ready(function() {
             $('input[required], select[required], textarea[required]').each(function() {

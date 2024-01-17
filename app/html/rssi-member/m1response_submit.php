@@ -24,8 +24,9 @@ if (@$_POST['form-type'] === "manager_remarks_update") {
     $goalsheetid = $_POST['goalsheetid'];
     $appraisee_associatenumber = $_POST['appraisee_associatenumber'];
     $manager_associatenumber = $_POST['manager_associatenumber'];
-    $goalsheet_evaluated_by = $associatenumber;
-    $goalsheet_evaluated_on = date('Y-m-d H:i:s');
+    $manager1_associatenumber = $_POST['manager1_associatenumber'];
+    $goalsheet_evaluated1_by = $associatenumber;
+    $goalsheet_evaluated1_on = date('Y-m-d H:i:s');
     $manager_remarks = array();
     $rating_obtained = array();
 
@@ -37,9 +38,9 @@ if (@$_POST['form-type'] === "manager_remarks_update") {
 
     // Prepare the SQL update query with placeholders for both manager_remarks and rating_obtained
     $sql = "UPDATE appraisee_response
-            SET manager_evaluation_complete = 'yes',
-            goalsheet_evaluated_by = '$goalsheet_evaluated_by',
-            goalsheet_evaluated_on = '$goalsheet_evaluated_on',";
+            SET manager1_evaluation_complete = 'yes',
+            goalsheet_evaluated1_by = '$goalsheet_evaluated1_by',
+            goalsheet_evaluated1_on = '$goalsheet_evaluated1_on',";
 
     // Generate the SET clause of the query dynamically
     for ($i = 1; $i <= 20; $i++) {
@@ -99,6 +100,12 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
     @$manager_name = pg_fetch_result($result_m, 0, 0);
     @$manager_email = pg_fetch_result($result_m, 0, 1);
 
+    $result_m = pg_query($con, "SELECT fullname, email
+FROM appraisee_response
+LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appraisee_response.manager1_associatenumber WHERE goalsheetid = '$goalsheetid'");
+    @$manager1_name = pg_fetch_result($result_m, 0, 0);
+    @$manager1_email = pg_fetch_result($result_m, 0, 1);
+
 
     $result_r = pg_query($con, "SELECT fullname, email
 FROM appraisee_response
@@ -112,8 +119,8 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
     @$appraisalyear = pg_fetch_result($result_appraisal_details, 0, 1);
     @$appraisee_associatenumber = pg_fetch_result($result_appraisal_details, 0, 2);
 
-    if (@$cmdtuples == 1 && $reviewer_email != "") {
-        sendEmail("goal_sheet_reviewer_request", array(
+    if (@$cmdtuples == 1 && $manager_email != "") {
+        sendEmail("goal_sheet_immediate_manager_evaluation_complete", array(
             "goalsheetid" => $goalsheetid,
             "appraisaltype" => @$appraisaltype,
             "appraisalyear" => @$appraisalyear,
@@ -121,21 +128,26 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
             "appraiseeemail" => @$appraisee_email,
             "appraiseeid" => @$appraisee_associatenumber,
             "manager_name" => @$manager_name,
-            "reviewer_name" => @$reviewer_name,
-        ), $reviewer_email);
+            "manager1_name" => @$manager1_name,
+            "manager1_email" => @$manager1_email,
+            "manager1_associatenumber" => @$manager1_associatenumber,
+        ), $manager_email);
     }
 } ?>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
