@@ -150,15 +150,18 @@ if (!$result) {
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -363,6 +366,8 @@ if (!$result) {
                                         <tr>
                                             <th scope="col">Search Criteria</th>
                                             <th scope="col">Leave Balance</th>
+                                            <th scope="col">Total Leave Taken</th>
+                                            <th scope="col">Total Allocated Leave</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -445,9 +450,22 @@ if (!$result) {
                                                     Sick Leave - (<?php echo ($resultArrrsl + $resultArr_sladj) - $resultArrsl ?>)
                                                     <br>Casual Leave - (<?php echo ($resultArrrcl + $resultArr_cladj) - $resultArrcl ?>)
                                                     <br>Leave Without Pay - (<?php echo $resultArr_lwptaken - $resultArr_lwpadj ?>)
-                                                    <!-- <?php echo $resultArr_lwptaken ?>
-                                            <?php echo $resultArr_lwpadj ?> -->
+                                                <?php } ?>
+                                            </td>
 
+                                            <td>
+                                                <?php if ($appid != null) { ?>
+
+                                                    Sick Leave - <?php echo $resultArrsl ?>
+                                                    <br>Casual Leave - <?php echo $resultArrcl ?>
+                                                    <br>Leave Without Pay - <?php echo $resultArr_lwptaken ?>
+                                                <?php } ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($appid != null) { ?>
+
+                                                    Sick Leave - <?php echo $resultArrrsl ?>
+                                                    <br>Casual Leave - <?php echo $resultArrrcl ?>
                                                 <?php } ?>
                                             </td>
                                         </tr>
