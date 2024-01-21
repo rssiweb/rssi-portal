@@ -241,7 +241,7 @@ if (!$result) {
                                         <?php } else if (str_contains($array['position'], "Employee")) { ?>
                                             The work schedule comprises 6 days per week, with each day requiring a three-hour commitment, inclusive of essential administrative tasks as required.
                                         <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
-                                            The work schedule comprises 2 days per week, with each day requiring a three-hour commitment, inclusive of essential administrative tasks as required.
+                                            The work schedule comprises 3 days per week, with each day requiring a three-hour commitment, inclusive of essential administrative tasks as required.
                                         <?php } ?>
                                         <br>The regular working hours may be subject to an extension of up to a maximum of 30 minutes, contingent upon real-time demands pertaining to non-academic activities and similar operational necessities. You should be flexible in terms of working hours.
                                     </li>
