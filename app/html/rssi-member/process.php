@@ -293,7 +293,12 @@ if (@$_POST['form-type'] == "appraisee_response") {
                     <?php }
                     ?>
                     <option value="Teacher">Teacher</option>
-                    <option value="Administrator">Administrator</option>
+                    <option value="Faculty">Faculty</option>
+                    <option value="Intern">Intern</option>
+                    <option value="Centre In-Charge">Centre In-Charge</option>
+                    <option value="Centre Coordinator">Centre Coordinator</option>
+                    <option value="Member">Member</option>
+                    <option value="HR">HR</option>
                     <option value="Counselor">Counselor</option>
                     <option value="Support Staff">Support Staff</option>
                     <option value="Other">Other</option>
@@ -378,7 +383,12 @@ if (@$_POST['form-type'] == "appraisee_response") {
                                 <select class="form-select" name="role" required>
                                     <option value="" disabled selected>--Select Role--</option>
                                     <option value="Teacher">Teacher</option>
-                                    <option value="Administrator">Administrator</option>
+                                    <option value="Faculty">Faculty</option>
+                                    <option value="Intern">Intern</option>
+                                    <option value="Centre In-Charge">Centre In-Charge</option>
+                                    <option value="Centre Coordinator">Centre Coordinator</option>
+                                    <option value="Member">Member</option>
+                                    <option value="HR">HR</option>
                                     <option value="Counselor">Counselor</option>
                                     <option value="Support Staff">Support Staff</option>
                                     <option value="Other">Other</option>
