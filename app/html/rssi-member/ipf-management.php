@@ -26,8 +26,9 @@ if ($role != 'Admin') {
 
 if ($id != null) {
 
-    $result = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
+    $result = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager.fullname mname, manager.email memail, manager1.fullname mname1, manager1.email memail1, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
+    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager1 ON manager1.associatenumber = appraisee_response.manager1_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
     WHERE appraisalyear='$id' ORDER BY ipf_process_closed_on DESC, (ipf IS NULL) DESC, goalsheet_created_on DESC");
@@ -51,15 +52,18 @@ $resultArr = pg_fetch_all($result);
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -178,9 +182,12 @@ $resultArr = pg_fetch_all($result);
                                         <tr>
                                             <th scope="col">Goal sheet ID</th>
                                             <th scope="col">Appraisee</th>
+                                            <th scope="col">Manager1</th>
                                             <th scope="col">Manager</th>
                                             <th scope="col">Reviewer</th>
-                                            <th scope="col">Appraisal details</th>
+                                            <th scope="col">Appraisal Type</th>
+                                            <th scope="col">Effective Start Date</th>
+                                            <th scope="col">Effective End Date</th>
                                             <th scope="col">Initiated on</th>
                                             <th scope="col">IPF</th>
                                             <th scope="col">Status</th>
@@ -218,9 +225,20 @@ $resultArr = pg_fetch_all($result);
                                                     ?>
                                                 </td>
                                                 <td><?php echo $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')'; ?></td>
+                                                <td>
+                                                    <?php
+                                                    $managerInfo = $array['mname1'];
+                                                    if (!empty($array['manager1_associatenumber'])) {
+                                                        $managerInfo .= ' (' . $array['manager1_associatenumber'] . ')';
+                                                    }
+                                                    echo $managerInfo;
+                                                    ?>
+                                                </td>
                                                 <td><?php echo $array['mname'] . ' (' . $array['manager_associatenumber'] . ')'; ?></td>
                                                 <td><?php echo $array['rname'] . ' (' . $array['manager_associatenumber'] . ')'; ?></td>
                                                 <td><?php echo $array['appraisaltype'] . '<br>' . $array['appraisalyear']; ?></td>
+                                                <td><?php echo isset($array['effective_start_date']) ? date("d/m/Y", strtotime($array['effective_start_date'])) : null ?></td>
+                                                <td><?php echo isset($array['effective_end_date']) ? date("d/m/Y", strtotime($array['effective_end_date'])) : null ?></td>
                                                 <td><?php echo date('d/m/y h:i:s a', strtotime($array['goalsheet_created_on'])); ?></td>
                                                 <td><?php echo $array['ipf']; ?></td>
                                                 <td>
