@@ -351,7 +351,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
 
                             <div class="form-group mb-3">
                                 <label for="manager1_associatenumber" class="form-label">Immediate Manager Associate Number:</label>
-                                <input type="text" class="form-control" name="manager1_associatenumber" required>
+                                <input type="text" class="form-control" name="manager1_associatenumber">
                                 <div id="manager1_associatenumber_help" class="form-text">Please enter the unique associate number of the immediate manager.</div>
                             </div>
                         </div>
