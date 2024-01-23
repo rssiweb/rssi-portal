@@ -248,8 +248,10 @@ if (!$result) {
                                         </td>
                                         <td>
                                             <label for="appraisal_type" class="form-label">Appraisal Type:</label>
+                                            <?php $effectiveStartDate = isset($array['effective_start_date']) ? date("d/m/Y", strtotime($array['effective_start_date'])) : null;
+                                            $effectiveEndDate = isset($array['effective_end_date']) ? date("d/m/Y", strtotime($array['effective_end_date'])) : null; ?>
+                                            <?php echo ($effectiveStartDate ? $effectiveStartDate : '') . ($effectiveStartDate && $effectiveEndDate ? ' - ' : '') . ($effectiveEndDate ? $effectiveEndDate : ''); ?>
                                             <?php echo $array['appraisaltype'] ?>&nbsp;<?php echo $array['appraisalyear'] ?>
-                                            </select>
                                         </td>
                                     </tr>
 
@@ -476,10 +478,70 @@ if (!$result) {
                                     </tbody>
                                 </table>
                                 <button type="submit" id="submit1" class="btn btn-success">Save</button>
-                                <button type="submit" id="submit2" class="btn btn-primary">Submit</button>
-                                <br><br>
-                                <hr>
+                                <!-- <button type="submit" id="submit2" class="btn btn-primary">Submit</button> -->
+                                <?php
+                                // Get the effective end date from your array
+                                $effectiveEndDate = $array['effective_end_date'];
 
+                                // Calculate the current date
+                                $currentDate = date('Y-m-d');
+
+                                // Calculate the date 30 days before the effective end date
+                                $enableDate = date('Y-m-d', strtotime($effectiveEndDate . ' -30 days'));
+
+                                // Output the values for debugging
+                                // echo "Effective End Date: " . $effectiveEndDate . "<br>";
+                                // echo "Current Date: " . $currentDate . "<br>";
+                                // echo "Enable Date: " . $enableDate . "<br>";
+                                ?>
+
+                                <!-- Your HTML content here -->
+
+                                <button type="submit" id="submit2" class="btn btn-primary">Submit</button>
+
+                                <!-- Add this script in your HTML file -->
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        // Get the submit button element
+                                        var submitButton = document.getElementById('submit2');
+
+                                        // Check if the current date is on or after 30 days before the effective end date
+                                        if ("<?php echo $currentDate; ?>" >= "<?php echo $enableDate; ?>") {
+                                            // Enable the submit button
+                                            submitButton.disabled = false;
+                                        } else {
+                                            // Disable the submit button
+                                            submitButton.disabled = true;
+                                        }
+                                    });
+                                </script>
+                                <br><br>
+                                <?php if ("<?php echo $currentDate; ?>" < "<?php echo $enableDate; ?>") { ?>
+                                    <p>Goal Sheet Submission Opens Soon! To know more details <a href="#" data-bs-toggle="modal" data-bs-target="#popup">click here</a></p>
+                                    <!-- Popup -->
+                                    <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <!-- Header -->
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="popupLabel">Goal Sheet Submission Opens Soon!</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <!-- Body -->
+                                                <div class="modal-body">
+                                                    <p>You can submit your goal sheets starting <b><?php echo date("F j, Y", strtotime($enableDate)) ?></b>.</p>
+                                                    <p>To ensure a complete and timely submission, we encourage you to proactively maintain and update your goal sheet regularly. Don't let your hard work go unnoticed!</p>
+
+                                                </div>
+                                                <!-- Footer -->
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                                <hr>
                                 <div class="card">
                                     <div class="card-header">
                                         Goal Sheet Status
@@ -610,6 +672,7 @@ if (!$result) {
                         }
                     })
                 </script>
+
 </body>
 
 </html>

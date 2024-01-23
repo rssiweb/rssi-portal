@@ -219,8 +219,10 @@ if (!$result) {
                                     </td>
                                     <td>
                                         <label for="appraisal_type" class="form-label">Appraisal Type:</label>
+                                        <?php $effectiveStartDate = isset($array['effective_start_date']) ? date("d/m/Y", strtotime($array['effective_start_date'])) : null;
+                                        $effectiveEndDate = isset($array['effective_end_date']) ? date("d/m/Y", strtotime($array['effective_end_date'])) : null; ?>
+                                        <?php echo ($effectiveStartDate ? $effectiveStartDate : '') . ($effectiveStartDate && $effectiveEndDate ? ' - ' : '') . ($effectiveEndDate ? $effectiveEndDate : ''); ?>
                                         <?php echo $array['appraisaltype'] ?>&nbsp;<?php echo $array['appraisalyear'] ?>
-                                        </select>
                                     </td>
                                 </tr>
 
