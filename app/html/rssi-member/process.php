@@ -46,7 +46,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
     $goalsheetid = uniqid();
     $appraisee_associatenumber = $_POST['appraisee_associate_number'];
     $manager_associatenumber = $_POST['manager_associate_number'];
-    $manager1_associatenumber = $_POST['manager1_associate_number'];
+    $manager1_associatenumber = $_POST['manager1_associatenumber'];
     $reviewer_associatenumber = $_POST['reviewer_associate_number'];
     $effective_start_date = $_POST['effective_start_date'];
     $effective_end_date = $_POST['effective_end_date'];
