@@ -365,7 +365,7 @@ if (!$result) {
                                     <thead>
                                         <tr>
                                             <th scope="col">Search Criteria</th>
-                                            <th scope="col">Leave Balance</th>
+                                            <th scope="col">Current Leave Balance</th>
                                             <th scope="col">Total Leave Taken</th>
                                             <th scope="col">Total Allocated Leave</th>
                                         </tr>

@@ -48,6 +48,8 @@ if (@$_POST['form-type'] == "appraisee_response") {
     $manager_associatenumber = $_POST['manager_associate_number'];
     $manager1_associatenumber = $_POST['manager1_associate_number'];
     $reviewer_associatenumber = $_POST['reviewer_associate_number'];
+    $effective_start_date = $_POST['effective_start_date'];
+    $effective_end_date = $_POST['effective_end_date'];
     $role = $_POST['role'];
     $appraisaltype = $_POST['appraisal_type'];
     $appraisalyear = $_POST['appraisal_year'];
@@ -120,7 +122,9 @@ if (@$_POST['form-type'] == "appraisee_response") {
         appraisee_associatenumber, 
         manager1_associatenumber,
         manager_associatenumber, 
-        reviewer_associatenumber, 
+        reviewer_associatenumber,
+        effective_start_date,
+        effective_end_date, 
         role, 
         appraisaltype, 
         appraisalyear,
@@ -187,7 +191,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
         goalsheet_created_by,
         goalsheet_created_on
       ) VALUES (
-        '$goalsheetid','$appraisee_associatenumber','$manager1_associatenumber','$manager_associatenumber','$reviewer_associatenumber','$role','$appraisaltype','$appraisalyear','$parameter_1','$expectation_1',$max_rating_1,'$parameter_2','$expectation_2',$max_rating_2,'$parameter_3','$expectation_3',$max_rating_3,'$parameter_4','$expectation_4',$max_rating_4,'$parameter_5','$expectation_5',$max_rating_5,'$parameter_6','$expectation_6',$max_rating_6,'$parameter_7','$expectation_7',$max_rating_7,'$parameter_8','$expectation_8',$max_rating_8,'$parameter_9','$expectation_9',$max_rating_9,'$parameter_10','$expectation_10',$max_rating_10,'$parameter_11','$expectation_11',$max_rating_11,'$parameter_12','$expectation_12',$max_rating_12,'$parameter_13','$expectation_13',$max_rating_13,'$parameter_14','$expectation_14',$max_rating_14,'$parameter_15','$expectation_15',$max_rating_15,'$parameter_16','$expectation_16',$max_rating_16,'$parameter_17','$expectation_17',$max_rating_17,'$parameter_18','$expectation_18',$max_rating_18,'$parameter_19','$expectation_19',$max_rating_19,'$parameter_20','$expectation_20',$max_rating_20,'$goalsheet_created_by','$goalsheet_created_on')";
+        '$goalsheetid','$appraisee_associatenumber','$manager1_associatenumber','$manager_associatenumber','$reviewer_associatenumber','$effective_start_date','$effective_end_date','$role','$appraisaltype','$appraisalyear','$parameter_1','$expectation_1',$max_rating_1,'$parameter_2','$expectation_2',$max_rating_2,'$parameter_3','$expectation_3',$max_rating_3,'$parameter_4','$expectation_4',$max_rating_4,'$parameter_5','$expectation_5',$max_rating_5,'$parameter_6','$expectation_6',$max_rating_6,'$parameter_7','$expectation_7',$max_rating_7,'$parameter_8','$expectation_8',$max_rating_8,'$parameter_9','$expectation_9',$max_rating_9,'$parameter_10','$expectation_10',$max_rating_10,'$parameter_11','$expectation_11',$max_rating_11,'$parameter_12','$expectation_12',$max_rating_12,'$parameter_13','$expectation_13',$max_rating_13,'$parameter_14','$expectation_14',$max_rating_14,'$parameter_15','$expectation_15',$max_rating_15,'$parameter_16','$expectation_16',$max_rating_16,'$parameter_17','$expectation_17',$max_rating_17,'$parameter_18','$expectation_18',$max_rating_18,'$parameter_19','$expectation_19',$max_rating_19,'$parameter_20','$expectation_20',$max_rating_20,'$goalsheet_created_by','$goalsheet_created_on')";
 
     $result = pg_query($con, $appraisee_response);
     $cmdtuples = pg_affected_rows($result);
@@ -295,7 +299,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
                     <option value="Other">Other</option>
                 </select>
             </div>
-            <button type="submit" name="submit" class="btn btn-primary mb-3" id="searchBtn">
+            <button type="submit" name="searchBtn" class="btn btn-primary mb-3" id="searchBtn">
                 <span id="btnText">Search</span>
                 <span id="loadingIndicator" style="display: none;">Loading...</span>
             </button>
@@ -318,7 +322,6 @@ if (@$_POST['form-type'] == "appraisee_response") {
                 }, 2000); // 2000 milliseconds (2 seconds) delay, replace with your actual AJAX call
             });
         </script>
-        </form>
         <br>
         <h2 class="text-center mb-4" style="background-color:#CE1212; color:white; padding:10px;">Goal Setting Form</h2>
 
@@ -330,10 +333,14 @@ if (@$_POST['form-type'] == "appraisee_response") {
             <?php
             foreach ($resultArr as $array) {
             ?>
-                <form method="post" name="process" id="process" action="process.php" onsubmit="return checkAssociateNumbers()">
+                <form method="post" name="process" id="process" onsubmit="return checkAssociateNumbers()">
 
                     <input type="hidden" name="form-type" value="appraisee_response">
-
+                    <!-- Add a checkbox at the beginning -->
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="disableFieldsCheckbox">
+                        <label class="form-check-label" for="disableFieldsCheckbox">Modify role-specific goal database</label>
+                    </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group mb-3">
@@ -393,7 +400,25 @@ if (@$_POST['form-type'] == "appraisee_response") {
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+
+                            <div class="form-group mb-3">
+                                <label for="effective_start_date" class="form-label">Effective Start Date:</label>
+                                <input type="date" class="form-control" name="effective_start_date" required>
+                                <div id="effective_start_date_help" class="form-text">Please select the effective start date.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+
+                            <div class="form-group mb-3">
+                                <label for="effective_end_date" class="form-label">Effective End Date:</label>
+                                <input type="date" class="form-control" name="effective_end_date" required>
+                                <div id="effective_end_date_help" class="form-text">Please select the effective end date.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
                             <div class="form-group mb-3">
                                 <label for="appraisal_year" class="form-label">Appraisal Year:</label>
                                 <select class="form-select" name="appraisal_year" id="appraisal_year" required>
@@ -406,21 +431,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
                             </div>
                         </div>
                     </div>
-                    <script>
-                        var currentYear = new Date().getFullYear();
-                        for (var i = 0; i < 5; i++) {
-                            var nextYear = currentYear + 1;
-                            var yearRange = currentYear.toString() + '-' + nextYear.toString();
-                            var option = document.createElement('option');
-                            option.value = yearRange;
-                            option.text = yearRange;
-                            document.getElementById('appraisal_year').appendChild(option);
-                            // currentYear = nextYear;
-                            currentYear--;
-                        }
-                    </script>
-
-
+                    <hr>
                     <h2>Goals</h2>
                     <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
                     <table class="table table-bordered">
@@ -554,7 +565,79 @@ if (@$_POST['form-type'] == "appraisee_response") {
                             </tr>
                         </tbody>
                     </table>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <!--<button type="submit" id="submit2" class="btn btn-warning">Update</button>
+                    <script>
+                        var form = document.getElementById('process');
+                        var submit2Button = document.getElementById('submit2');
+                        // Add event listeners to the submit buttons
+                        submit2Button.addEventListener('click', function() {
+                            form.action = 'goal_db_update.php'; // Set the form action to submit1.php
+                        });
+                    </script>
+                    <button type="submit" id="submit3" class="btn btn-danger">Add New</button>
+                    <script>
+                        var form = document.getElementById('process');
+                        var submit3Button = document.getElementById('submit3');
+                        // Add event listeners to the submit buttons
+                        submit3Button.addEventListener('click', function() {
+                            form.action = 'goal_db_add.php'; // Set the form action to submit1.php
+                        });
+                    </script>
+                    <button type="submit" id="submit" class="btn btn-success">Submit</button>
+                    <script>
+                        var form = document.getElementById('process');
+                        var submit1Button = document.getElementById('submit');
+                        // Add event listeners to the submit buttons
+                        submit1Button.addEventListener('click', function() {
+                            form.action = 'process.php'; // Set the form action to submit1.php
+                        });
+                    </script>-->
+                    <button type="submit" id="submit2" class="btn btn-warning">Update</button>
+                    <button type="submit" id="submit3" class="btn btn-danger">Add New</button>
+                    <button type="submit" id="submit" class="btn btn-success">Submit</button>
+
+                    <script>
+                        var form = document.getElementById('process');
+                        var submit2Button = document.getElementById('submit2');
+                        var submit3Button = document.getElementById('submit3');
+                        var submit1Button = document.getElementById('submit');
+                        var disableCheckbox = document.getElementById('disableFieldsCheckbox');
+
+                        // Initial check on page load
+                        updateButtonVisibility();
+
+                        // Add event listeners to the submit buttons
+                        submit2Button.addEventListener('click', function() {
+                            form.action = 'goal_db_update.php';
+                        });
+
+                        submit3Button.addEventListener('click', function() {
+                            form.action = 'goal_db_add.php';
+                        });
+
+                        submit1Button.addEventListener('click', function() {
+                            form.action = 'process.php';
+                        });
+
+                        // Add an event listener to the checkbox
+                        disableCheckbox.addEventListener('change', function() {
+                            updateButtonVisibility();
+                        });
+
+                        function updateButtonVisibility() {
+                            // If the checkbox is checked, show Update and Add New buttons, and hide Submit button
+                            if (disableCheckbox.checked) {
+                                submit2Button.style.display = 'inline-block';
+                                submit3Button.style.display = 'inline-block';
+                                submit1Button.style.display = 'none';
+                            } else {
+                                // If the checkbox is unchecked, show Submit button, and hide Update and Add New buttons
+                                submit2Button.style.display = 'none';
+                                submit3Button.style.display = 'none';
+                                submit1Button.style.display = 'inline-block';
+                            }
+                        }
+                    </script>
                     <br><br>
                 </form>
 
@@ -578,6 +661,14 @@ if (@$_POST['form-type'] == "appraisee_response") {
 
     <script>
         function checkAssociateNumbers() {
+            // Check if the checkbox is checked
+            var disableCheckbox = document.getElementById('disableFieldsCheckbox');
+            if (disableCheckbox.checked) {
+                // The checkbox is checked, you can perform a different action or skip validation
+                return true;
+            }
+
+            // Perform your validation logic
             var appraisee = document.getElementsByName('appraisee_associate_number')[0].value;
             var manager = document.getElementsByName('manager_associate_number')[0].value;
             var reviewer = document.getElementsByName('reviewer_associate_number')[0].value;
@@ -621,6 +712,44 @@ if (@$_POST['form-type'] == "appraisee_response") {
             $('input[required], select[required], textarea[required]').each(function() {
                 $(this).closest('.form-group').find('label').append(' <span style="color: red">*</span>');
             });
+        });
+    </script>
+    <script>
+        var currentYear = new Date().getFullYear();
+        for (var i = 0; i < 5; i++) {
+            var nextYear = currentYear + 1;
+            var yearRange = currentYear.toString() + '-' + nextYear.toString();
+            var option = document.createElement('option');
+            option.value = yearRange;
+            option.text = yearRange;
+            document.getElementById('appraisal_year').appendChild(option);
+            // currentYear = nextYear;
+            currentYear--;
+        }
+    </script>
+    <script>
+        // Get the checkbox and the fields you want to disable
+        var disableFieldsCheckbox = document.getElementById('disableFieldsCheckbox');
+        var fieldsToDisable = document.querySelectorAll('[name="appraisee_associate_number"], [name="manager1_associatenumber"], [name="manager_associate_number"], [name="reviewer_associate_number"], [name="effective_start_date"], [name="effective_end_date"], [name="appraisal_type"], [name="appraisal_year"]');
+
+        // Add an event listener to the checkbox
+        disableFieldsCheckbox.addEventListener('change', function() {
+            // Toggle the disabled attribute for each field
+            fieldsToDisable.forEach(function(field) {
+                field.disabled = disableFieldsCheckbox.checked;
+            });
+
+            // If the checkbox is checked, remove the "required" attribute from fields
+            if (disableFieldsCheckbox.checked) {
+                fieldsToDisable.forEach(function(field) {
+                    field.removeAttribute('required');
+                });
+            } else {
+                // If the checkbox is unchecked, add the "required" attribute back to fields
+                fieldsToDisable.forEach(function(field) {
+                    field.setAttribute('required', 'required');
+                });
+            }
         });
     </script>
 </body>
