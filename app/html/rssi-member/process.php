@@ -53,148 +53,42 @@ if (@$_POST['form-type'] == "appraisee_response") {
     $role = $_POST['role'];
     $appraisaltype = $_POST['appraisal_type'];
     $appraisalyear = $_POST['appraisal_year'];
-    $parameter_1 = $_POST['parameter_1'];
-    $expectation_1 = $_POST['expectation_1'];
-    $parameter_2 = $_POST['parameter_2'];
-    $expectation_2 = $_POST['expectation_2'];
-    $parameter_3 = $_POST['parameter_3'];
-    $expectation_3 = $_POST['expectation_3'];
-    $parameter_4 = $_POST['parameter_4'];
-    $expectation_4 = $_POST['expectation_4'];
-    $parameter_5 = $_POST['parameter_5'];
-    $expectation_5 = $_POST['expectation_5'];
-    $parameter_6 = $_POST['parameter_6'];
-    $expectation_6 = $_POST['expectation_6'];
-    $parameter_7 = $_POST['parameter_7'];
-    $expectation_7 = $_POST['expectation_7'];
-    $parameter_8 = $_POST['parameter_8'];
-    $expectation_8 = $_POST['expectation_8'];
-    $parameter_9 = $_POST['parameter_9'];
-    $expectation_9 = $_POST['expectation_9'];
-    $parameter_10 = $_POST['parameter_10'];
-    $expectation_10 = $_POST['expectation_10'];
-    $parameter_11 = $_POST['parameter_11'];
-    $expectation_11 = $_POST['expectation_11'];
-    $parameter_12 = $_POST['parameter_12'];
-    $expectation_12 = $_POST['expectation_12'];
-    $parameter_13 = $_POST['parameter_13'];
-    $expectation_13 = $_POST['expectation_13'];
-    $parameter_14 = $_POST['parameter_14'];
-    $expectation_14 = $_POST['expectation_14'];
-    $parameter_15 = $_POST['parameter_15'];
-    $expectation_15 = $_POST['expectation_15'];
-    $parameter_16 = $_POST['parameter_16'];
-    $expectation_16 = $_POST['expectation_16'];
-    $parameter_17 = $_POST['parameter_17'];
-    $expectation_17 = $_POST['expectation_17'];
-    $parameter_18 = $_POST['parameter_18'];
-    $expectation_18 = $_POST['expectation_18'];
-    $parameter_19 = $_POST['parameter_19'];
-    $expectation_19 = $_POST['expectation_19'];
-    $parameter_20 = $_POST['parameter_20'];
-    $expectation_20 = $_POST['expectation_20'];
-    $max_rating_1 = isset($_POST['max_rating_1']) && !empty($_POST['max_rating_1']) ? $_POST['max_rating_1'] : 'NULL';
-    $max_rating_2 = isset($_POST['max_rating_2']) && !empty($_POST['max_rating_2']) ? $_POST['max_rating_2'] : 'NULL';
-    $max_rating_3 = isset($_POST['max_rating_3']) && !empty($_POST['max_rating_3']) ? $_POST['max_rating_3'] : 'NULL';
-    $max_rating_4 = isset($_POST['max_rating_4']) && !empty($_POST['max_rating_4']) ? $_POST['max_rating_4'] : 'NULL';
-    $max_rating_5 = isset($_POST['max_rating_5']) && !empty($_POST['max_rating_5']) ? $_POST['max_rating_5'] : 'NULL';
-    $max_rating_6 = isset($_POST['max_rating_6']) && !empty($_POST['max_rating_6']) ? $_POST['max_rating_6'] : 'NULL';
-    $max_rating_7 = isset($_POST['max_rating_7']) && !empty($_POST['max_rating_7']) ? $_POST['max_rating_7'] : 'NULL';
-    $max_rating_8 = isset($_POST['max_rating_8']) && !empty($_POST['max_rating_8']) ? $_POST['max_rating_8'] : 'NULL';
-    $max_rating_9 = isset($_POST['max_rating_9']) && !empty($_POST['max_rating_9']) ? $_POST['max_rating_9'] : 'NULL';
-    $max_rating_10 = isset($_POST['max_rating_10']) && !empty($_POST['max_rating_10']) ? $_POST['max_rating_10'] : 'NULL';
-    $max_rating_11 = isset($_POST['max_rating_11']) && !empty($_POST['max_rating_11']) ? $_POST['max_rating_11'] : 'NULL';
-    $max_rating_12 = isset($_POST['max_rating_12']) && !empty($_POST['max_rating_12']) ? $_POST['max_rating_12'] : 'NULL';
-    $max_rating_13 = isset($_POST['max_rating_13']) && !empty($_POST['max_rating_13']) ? $_POST['max_rating_13'] : 'NULL';
-    $max_rating_14 = isset($_POST['max_rating_14']) && !empty($_POST['max_rating_14']) ? $_POST['max_rating_14'] : 'NULL';
-    $max_rating_15 = isset($_POST['max_rating_15']) && !empty($_POST['max_rating_15']) ? $_POST['max_rating_15'] : 'NULL';
-    $max_rating_16 = isset($_POST['max_rating_16']) && !empty($_POST['max_rating_16']) ? $_POST['max_rating_16'] : 'NULL';
-    $max_rating_17 = isset($_POST['max_rating_17']) && !empty($_POST['max_rating_17']) ? $_POST['max_rating_17'] : 'NULL';
-    $max_rating_18 = isset($_POST['max_rating_18']) && !empty($_POST['max_rating_18']) ? $_POST['max_rating_18'] : 'NULL';
-    $max_rating_19 = isset($_POST['max_rating_19']) && !empty($_POST['max_rating_19']) ? $_POST['max_rating_19'] : 'NULL';
-    $max_rating_20 = isset($_POST['max_rating_20']) && !empty($_POST['max_rating_20']) ? $_POST['max_rating_20'] : 'NULL';
+
+    $parameters = [];
+    for ($i = 1; $i <= 20; $i++) {
+        $parameter = htmlspecialchars($_POST["parameter_$i"], ENT_QUOTES, 'UTF-8');
+        $expectation = $_POST["expectation_$i"];
+        $maxRating = isset($_POST["max_rating_$i"]) && !empty($_POST["max_rating_$i"]) ? $_POST["max_rating_$i"] : 'NULL';
+
+        $parameters[] = compact("parameter", "expectation", "maxRating");
+    }
 
     $goalsheet_created_by = $associatenumber;
     $goalsheet_created_on = date('Y-m-d H:i:s');
 
+    $columns = ['goalsheetid', 'appraisee_associatenumber', 'manager1_associatenumber', 'manager_associatenumber', 'reviewer_associatenumber', 'effective_start_date', 'effective_end_date', 'role', 'appraisaltype', 'appraisalyear', 'goalsheet_created_by', 'goalsheet_created_on'];
+    $values = [$goalsheetid, $appraisee_associatenumber, $manager1_associatenumber, $manager_associatenumber, $reviewer_associatenumber, $effective_start_date, $effective_end_date, $role, $appraisaltype, $appraisalyear, $goalsheet_created_by, $goalsheet_created_on];
 
-    $appraisee_response = "INSERT INTO appraisee_response (goalsheetid,
-        appraisee_associatenumber, 
-        manager1_associatenumber,
-        manager_associatenumber, 
-        reviewer_associatenumber,
-        effective_start_date,
-        effective_end_date, 
-        role, 
-        appraisaltype, 
-        appraisalyear,
-        parameter_1, 
-        expectation_1, 
-        max_rating_1, 
-        parameter_2, 
-        expectation_2, 
-        max_rating_2, 
-        parameter_3, 
-        expectation_3, 
-        max_rating_3,  
-        parameter_4, 
-        expectation_4, 
-        max_rating_4,  
-        parameter_5, 
-        expectation_5, 
-        max_rating_5,  
-        parameter_6, 
-        expectation_6, 
-        max_rating_6,
-        parameter_7, 
-        expectation_7, 
-        max_rating_7,  
-        parameter_8, 
-        expectation_8, 
-        max_rating_8,  
-        parameter_9, 
-        expectation_9, 
-        max_rating_9,  
-        parameter_10, 
-        expectation_10, 
-        max_rating_10,  
-        parameter_11, 
-        expectation_11, 
-        max_rating_11,  
-        parameter_12, 
-        expectation_12, 
-        max_rating_12,  
-        parameter_13, 
-        expectation_13, 
-        max_rating_13,  
-        parameter_14, 
-        expectation_14, 
-        max_rating_14,  
-        parameter_15, 
-        expectation_15, 
-        max_rating_15,  
-        parameter_16, 
-        expectation_16, 
-        max_rating_16,
-        parameter_17, 
-        expectation_17, 
-        max_rating_17,
-        parameter_18, 
-        expectation_18, 
-        max_rating_18,
-        parameter_19, 
-        expectation_19, 
-        max_rating_19,
-        parameter_20, 
-        expectation_20, 
-        max_rating_20,
-        goalsheet_created_by,
-        goalsheet_created_on
-      ) VALUES (
-        '$goalsheetid','$appraisee_associatenumber','$manager1_associatenumber','$manager_associatenumber','$reviewer_associatenumber','$effective_start_date','$effective_end_date','$role','$appraisaltype','$appraisalyear','$parameter_1','$expectation_1',$max_rating_1,'$parameter_2','$expectation_2',$max_rating_2,'$parameter_3','$expectation_3',$max_rating_3,'$parameter_4','$expectation_4',$max_rating_4,'$parameter_5','$expectation_5',$max_rating_5,'$parameter_6','$expectation_6',$max_rating_6,'$parameter_7','$expectation_7',$max_rating_7,'$parameter_8','$expectation_8',$max_rating_8,'$parameter_9','$expectation_9',$max_rating_9,'$parameter_10','$expectation_10',$max_rating_10,'$parameter_11','$expectation_11',$max_rating_11,'$parameter_12','$expectation_12',$max_rating_12,'$parameter_13','$expectation_13',$max_rating_13,'$parameter_14','$expectation_14',$max_rating_14,'$parameter_15','$expectation_15',$max_rating_15,'$parameter_16','$expectation_16',$max_rating_16,'$parameter_17','$expectation_17',$max_rating_17,'$parameter_18','$expectation_18',$max_rating_18,'$parameter_19','$expectation_19',$max_rating_19,'$parameter_20','$expectation_20',$max_rating_20,'$goalsheet_created_by','$goalsheet_created_on')";
+    foreach ($parameters as $index => $paramData) {
+        $index += 1; // Adjust the index to start from 1
+        $columns[] = "parameter_$index";
+        $values[] = $paramData['parameter'];
+
+        $columns[] = "expectation_$index";
+        $values[] = $paramData['expectation'];
+
+        $columns[] = "max_rating_$index";
+        $values[] = $paramData['maxRating'];
+    }
+
+    $columnsStr = implode(', ', $columns);
+    $valuesStr = "'" . implode("', '", $values) . "'";
+
+    $appraisee_response = "INSERT INTO appraisee_response ($columnsStr) VALUES ($valuesStr)";
 
     $result = pg_query($con, $appraisee_response);
     $cmdtuples = pg_affected_rows($result);
+
     if (!$result) {
         echo "An error occurred.\n";
         exit;
@@ -226,8 +120,6 @@ if (@$_POST['form-type'] == "appraisee_response") {
         ), $appraisee_email, False);
     }
 } ?>
-
-
 
 <!DOCTYPE html>
 <html>
