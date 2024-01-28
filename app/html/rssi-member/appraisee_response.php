@@ -104,6 +104,29 @@ if (!$result) {
             width: 30%;
         }
     </style>
+    <style>
+        .resizable-table th {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .resizable-table th:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 10px;
+            /* Adjust the handle width as needed */
+            cursor: col-resize;
+            background-color: #f4f4f4;
+        }
+
+        .resizable-table th:last-child:after {
+            content: none;
+            /* Hide handle for the last column */
+        }
+    </style>
 </head>
 
 <body>
@@ -285,101 +308,143 @@ if (!$result) {
                                 <h2>Goals</h2>
                                 <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
                                 <?php echo ($array['reviewer_response_complete'] == "yes") ? "<p>Rating Scale: 5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied</p>" : "" ?>
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col" id="cw">Parameter</th>
-                                            <th scope="col" id="cw">Expectation</th>
-                                            <th scope="col">Max Rating</th>
-                                            <th scope="col">Appraisee Response</th>
-                                            <th scope="col">Rating Obtained</th>
-                                            <th scope="col">Manager Remarks</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><?php echo $array['parameter_1'] ?></td>
-                                            <td><?php echo $array['expectation_1'] ?></td>
-                                            <td><?php echo $array['max_rating_1'] ?></td>
-                                            <td><textarea name="appraisee_response_1" id="appraisee_response_1"><?php echo $array['appraisee_response_1'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_1'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_1'] : "" ?></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $array['parameter_2'] ?></td>
-                                            <td><?php echo $array['expectation_2'] ?></td>
-                                            <td><?php echo $array['max_rating_2'] ?></td>
-                                            <td><textarea name="appraisee_response_2" id="appraisee_response_2"><?php echo $array['appraisee_response_2'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_2'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_2'] : "" ?></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $array['parameter_3'] ?></td>
-                                            <td><?php echo $array['expectation_3'] ?></td>
-                                            <td><?php echo $array['max_rating_3'] ?></td>
-                                            <td><textarea name="appraisee_response_3" id="appraisee_response_3"><?php echo $array['appraisee_response_3'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_3'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_3'] : "" ?></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $array['parameter_4'] ?></td>
-                                            <td><?php echo $array['expectation_4'] ?></td>
-                                            <td><?php echo $array['max_rating_4'] ?></td>
-                                            <td><textarea name="appraisee_response_4" id="appraisee_response_4"><?php echo $array['appraisee_response_4'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_4'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_4'] : "" ?></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $array['parameter_5'] ?></td>
-                                            <td><?php echo $array['expectation_5'] ?></td>
-                                            <td><?php echo $array['max_rating_5'] ?></td>
-                                            <td><textarea name="appraisee_response_5" id="appraisee_response_5"><?php echo $array['appraisee_response_5'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_5'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_5'] : "" ?></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $array['parameter_6'] ?></td>
-                                            <td><?php echo $array['expectation_6'] ?></td>
-                                            <td><?php echo $array['max_rating_6'] ?></td>
-                                            <td><textarea name="appraisee_response_6" id="appraisee_response_6"><?php echo $array['appraisee_response_6'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_6'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_6'] : "" ?></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $array['parameter_7'] ?></td>
-                                            <td><?php echo $array['expectation_7'] ?></td>
-                                            <td><?php echo $array['max_rating_7'] ?></td>
-                                            <td><textarea name="appraisee_response_7" id="appraisee_response_7"><?php echo $array['appraisee_response_7'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_7'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_7'] : "" ?></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $array['parameter_8'] ?></td>
-                                            <td><?php echo $array['expectation_8'] ?></td>
-                                            <td><?php echo $array['max_rating_8'] ?></td>
-                                            <td><textarea name="appraisee_response_8" id="appraisee_response_8"><?php echo $array['appraisee_response_8'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_8'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_8'] : "" ?></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $array['parameter_9'] ?></td>
-                                            <td><?php echo $array['expectation_9'] ?></td>
-                                            <td><?php echo $array['max_rating_9'] ?></td>
-                                            <td><textarea name="appraisee_response_9" id="appraisee_response_9"><?php echo $array['appraisee_response_9'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_9'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_9'] : "" ?></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $array['parameter_10'] ?></td>
-                                            <td><?php echo $array['expectation_10'] ?></td>
-                                            <td><?php echo $array['max_rating_10'] ?></td>
-                                            <td><textarea name="appraisee_response_10" id="appraisee_response_10"><?php echo $array['appraisee_response_10'] ?></textarea></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_10'] : "" ?></td>
-                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_10'] : "" ?></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered resizable-table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col" id="cw">Parameter</th>
+                                                <th scope="col" id="cw">Expectation</th>
+                                                <th scope="col">Appraisee Response</th>
+                                                <th scope="col">Rating Obtained</th>
+                                                <th scope="col">Manager Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><?php echo $array['parameter_1'] ?></td>
+                                                <td><?php echo $array['expectation_1'] ?></td>
+                                                <td><textarea name="appraisee_response_1" id="appraisee_response_1"><?php echo $array['appraisee_response_1'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_1'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_1'] : "" ?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $array['parameter_2'] ?></td>
+                                                <td><?php echo $array['expectation_2'] ?></td>
+                                                <td><textarea name="appraisee_response_2" id="appraisee_response_2"><?php echo $array['appraisee_response_2'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_2'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_2'] : "" ?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $array['parameter_3'] ?></td>
+                                                <td><?php echo $array['expectation_3'] ?></td>
+                                                <td><textarea name="appraisee_response_3" id="appraisee_response_3"><?php echo $array['appraisee_response_3'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_3'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_3'] : "" ?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $array['parameter_4'] ?></td>
+                                                <td><?php echo $array['expectation_4'] ?></td>
+                                                <td><textarea name="appraisee_response_4" id="appraisee_response_4"><?php echo $array['appraisee_response_4'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_4'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_4'] : "" ?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $array['parameter_5'] ?></td>
+                                                <td><?php echo $array['expectation_5'] ?></td>
+                                                <td><textarea name="appraisee_response_5" id="appraisee_response_5"><?php echo $array['appraisee_response_5'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_5'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_5'] : "" ?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $array['parameter_6'] ?></td>
+                                                <td><?php echo $array['expectation_6'] ?></td>
+                                                <td><textarea name="appraisee_response_6" id="appraisee_response_6"><?php echo $array['appraisee_response_6'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_6'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_6'] : "" ?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $array['parameter_7'] ?></td>
+                                                <td><?php echo $array['expectation_7'] ?></td>
+                                                <td><textarea name="appraisee_response_7" id="appraisee_response_7"><?php echo $array['appraisee_response_7'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_7'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_7'] : "" ?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $array['parameter_8'] ?></td>
+                                                <td><?php echo $array['expectation_8'] ?></td>
+                                                <td><textarea name="appraisee_response_8" id="appraisee_response_8"><?php echo $array['appraisee_response_8'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_8'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_8'] : "" ?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $array['parameter_9'] ?></td>
+                                                <td><?php echo $array['expectation_9'] ?></td>
+                                                <td><textarea name="appraisee_response_9" id="appraisee_response_9"><?php echo $array['appraisee_response_9'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_9'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_9'] : "" ?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $array['parameter_10'] ?></td>
+                                                <td><?php echo $array['expectation_10'] ?></td>
+                                                <td><textarea name="appraisee_response_10" id="appraisee_response_10"><?php echo $array['appraisee_response_10'] ?></textarea></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_10'] : "" ?></td>
+                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_10'] : "" ?></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
                                 <p>*SLA - Service level agreement, KPI - Key performance indicator</p>
+
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        let isResizing = false;
+                                        let currentTh = null;
+                                        let startX = 0;
+                                        let startWidth = 0;
+
+                                        document.addEventListener('mousemove', function(e) {
+                                            if (!isResizing) return;
+
+                                            const mouseX = e.clientX;
+                                            const movementX = mouseX - startX;
+                                            const newWidth = startWidth + movementX;
+
+                                            currentTh.style.width = newWidth + 'px';
+                                            requestAnimationFrame(() => {
+                                                updateTableWidth();
+                                            });
+                                        });
+
+                                        document.addEventListener('mouseup', function() {
+                                            isResizing = false;
+                                            currentTh = null;
+                                        });
+
+                                        const headers = document.querySelectorAll('.resizable-table th');
+
+                                        headers.forEach(th => {
+                                            th.addEventListener('mousedown', function(e) {
+                                                isResizing = true;
+                                                currentTh = th;
+                                                startX = e.clientX;
+                                                startWidth = currentTh.offsetWidth;
+                                            });
+                                        });
+
+                                        function updateTableWidth() {
+                                            const table = document.querySelector('.resizable-table');
+                                            const thArray = Array.from(table.querySelectorAll('th'));
+                                            const colWidths = thArray.map(th => th.offsetWidth);
+                                            thArray.forEach((th, index) => {
+                                                th.style.width = colWidths[index] + 'px';
+                                            });
+                                        }
+                                    });
+                                </script>
+
+
+
 
                                 <h2>Attributes</h2>
                                 <p>Attributes are competencies essential for performing a role.</p>
@@ -388,7 +453,7 @@ if (!$result) {
                                         <tr>
                                             <th scope="col" id="cw">Parameter</th>
                                             <th scope="col" id="cw1">Expectation</th>
-                                            <th scope="col">Max Rating</th>
+                                            <!-- <th scope="col">Max Rating</th> -->
                                             <th scope="col">Appraisee Response</th>
                                             <th scope="col">Rating Obtained</th>
                                             <th scope="col">Manager Remarks</th>
@@ -398,7 +463,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_11'] ?></td>
                                             <td><?php echo $array['expectation_11'] ?></td>
-                                            <td><?php echo $array['max_rating_11'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_11'] ?></td> -->
                                             <td><textarea name="appraisee_response_11" id="appraisee_response_11"><?php echo $array['appraisee_response_11'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_11'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_11'] : "" ?></td>
@@ -406,7 +471,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_12'] ?></td>
                                             <td><?php echo $array['expectation_12'] ?></td>
-                                            <td><?php echo $array['max_rating_12'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_12'] ?></td> -->
                                             <td><textarea name="appraisee_response_12" id="appraisee_response_12"><?php echo $array['appraisee_response_12'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_12'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_12'] : "" ?></td>
@@ -414,7 +479,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_13'] ?></td>
                                             <td><?php echo $array['expectation_13'] ?></td>
-                                            <td><?php echo $array['max_rating_13'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_13'] ?></td> -->
                                             <td><textarea name="appraisee_response_13" id="appraisee_response_13"><?php echo $array['appraisee_response_13'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_13'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_13'] : "" ?></td>
@@ -422,7 +487,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_14'] ?></td>
                                             <td><?php echo $array['expectation_14'] ?></td>
-                                            <td><?php echo $array['max_rating_14'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_14'] ?></td> -->
                                             <td><textarea name="appraisee_response_14" id="appraisee_response_14"><?php echo $array['appraisee_response_14'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_14'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_14'] : "" ?></td>
@@ -430,7 +495,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_15'] ?></td>
                                             <td><?php echo $array['expectation_15'] ?></td>
-                                            <td><?php echo $array['max_rating_15'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_15'] ?></td> -->
                                             <td><textarea name="appraisee_response_15" id="appraisee_response_15"><?php echo $array['appraisee_response_15'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_15'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_15'] : "" ?></td>
@@ -438,7 +503,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_16'] ?></td>
                                             <td><?php echo $array['expectation_16'] ?></td>
-                                            <td><?php echo $array['max_rating_16'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_16'] ?></td> -->
                                             <td><textarea name="appraisee_response_16" id="appraisee_response_16"><?php echo $array['appraisee_response_16'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_16'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_16'] : "" ?></td>
@@ -446,7 +511,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_17'] ?></td>
                                             <td><?php echo $array['expectation_17'] ?></td>
-                                            <td><?php echo $array['max_rating_17'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_17'] ?></td> -->
                                             <td><textarea name="appraisee_response_17" id="appraisee_response_17"><?php echo $array['appraisee_response_17'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_17'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_17'] : "" ?></td>
@@ -454,7 +519,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_18'] ?></td>
                                             <td><?php echo $array['expectation_18'] ?></td>
-                                            <td><?php echo $array['max_rating_18'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_18'] ?></td> -->
                                             <td><textarea name="appraisee_response_18" id="appraisee_response_18"><?php echo $array['appraisee_response_18'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_18'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_18'] : "" ?></td>
@@ -462,7 +527,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_19'] ?></td>
                                             <td><?php echo $array['expectation_19'] ?></td>
-                                            <td><?php echo $array['max_rating_19'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_19'] ?></td> -->
                                             <td><textarea name="appraisee_response_19" id="appraisee_response_19"><?php echo $array['appraisee_response_19'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_19'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_19'] : "" ?></td>
@@ -470,7 +535,7 @@ if (!$result) {
                                         <tr>
                                             <td><?php echo $array['parameter_20'] ?></td>
                                             <td><?php echo $array['expectation_20'] ?></td>
-                                            <td><?php echo $array['max_rating_20'] ?></td>
+                                            <!-- <td><?php echo $array['max_rating_20'] ?></td> -->
                                             <td><textarea name="appraisee_response_20" id="appraisee_response_20"><?php echo $array['appraisee_response_20'] ?></textarea></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_20'] : "" ?></td>
                                             <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_20'] : "" ?></td>
