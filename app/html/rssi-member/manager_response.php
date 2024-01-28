@@ -105,6 +105,43 @@ if (!$result) {
             width: 30%;
         }
     </style>
+    <style>
+        .resizable-table th {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .resizable-table th:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 10px;
+            /* Adjust the handle width as needed */
+            cursor: col-resize;
+            background-color: #f4f4f4;
+        }
+
+        .resizable-table th:last-child:after {
+            content: none;
+            /* Hide handle for the last column */
+        }
+    </style>
+    <style>
+        #scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
@@ -284,7 +321,7 @@ if (!$result) {
                             <h2>Goals</h2>
                             <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
                             <p>Rating Scale: 5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied</p>
-                            <table class="table table-bordered">
+                            <table class="table table-bordered resizable-table">
                                 <thead>
                                     <tr>
                                         <th scope="col" id="cw">Parameter</th>
@@ -555,7 +592,7 @@ if (!$result) {
 
                             <h2>Attributes</h2>
                             <p>Attributes are competencies essential for performing a role.</p>
-                            <table class="table table-bordered">
+                            <table class="table table-bordered resizable-table">
                                 <thead>
                                     <tr>
                                         <th scope="col" id="cw">Parameter</th>
@@ -1005,6 +1042,73 @@ if (!$result) {
             }
         })
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let isResizing = false;
+            let currentTh = null;
+            let startX = 0;
+            let startWidth = 0;
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+
+                const mouseX = e.clientX;
+                const movementX = mouseX - startX;
+                const newWidth = startWidth + movementX;
+
+                currentTh.style.width = newWidth + 'px';
+                requestAnimationFrame(() => {
+                    updateTableWidth();
+                });
+            });
+
+            document.addEventListener('mouseup', function() {
+                isResizing = false;
+                currentTh = null;
+            });
+
+            const headers = document.querySelectorAll('.resizable-table th');
+
+            headers.forEach(th => {
+                th.addEventListener('mousedown', function(e) {
+                    isResizing = true;
+                    currentTh = th;
+                    startX = e.clientX;
+                    startWidth = currentTh.offsetWidth;
+                });
+            });
+
+            function updateTableWidth() {
+                const table = document.querySelector('.resizable-table');
+                const thArray = Array.from(table.querySelectorAll('th'));
+                const colWidths = thArray.map(th => th.offsetWidth);
+                thArray.forEach((th, index) => {
+                    th.style.width = colWidths[index] + 'px';
+                });
+            }
+        });
+    </script>
+    <button id="scroll-to-top" class="btn btn-primary">Scroll to Top</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var scrollToTopButton = document.getElementById('scroll-to-top');
+
+            window.addEventListener('scroll', function() {
+                if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                    scrollToTopButton.style.display = 'block';
+                } else {
+                    scrollToTopButton.style.display = 'none';
+                }
+            });
+
+            scrollToTopButton.addEventListener('click', function() {
+                document.body.scrollTop = 0; // For Safari
+                document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE, and Opera
+            });
+        });
+    </script>
+
 </body>
 
 </html>

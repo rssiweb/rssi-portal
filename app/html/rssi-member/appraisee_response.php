@@ -127,6 +127,20 @@ if (!$result) {
             /* Hide handle for the last column */
         }
     </style>
+    <style>
+        #scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
@@ -308,147 +322,94 @@ if (!$result) {
                                 <h2>Goals</h2>
                                 <p>Scoping & planning (Operational efficiency, Individual contribution, Gearing up for future, Student centricity, Audits & Compliance)</p>
                                 <?php echo ($array['reviewer_response_complete'] == "yes") ? "<p>Rating Scale: 5- Very Satisfied, 4- Satisfied, 3- Neutral, 2- Unsatisfied, 1- Very Unsatisfied</p>" : "" ?>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered resizable-table">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col" id="cw">Parameter</th>
-                                                <th scope="col" id="cw">Expectation</th>
-                                                <th scope="col">Appraisee Response</th>
-                                                <th scope="col">Rating Obtained</th>
-                                                <th scope="col">Manager Remarks</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td><?php echo $array['parameter_1'] ?></td>
-                                                <td><?php echo $array['expectation_1'] ?></td>
-                                                <td><textarea name="appraisee_response_1" id="appraisee_response_1"><?php echo $array['appraisee_response_1'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_1'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_1'] : "" ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $array['parameter_2'] ?></td>
-                                                <td><?php echo $array['expectation_2'] ?></td>
-                                                <td><textarea name="appraisee_response_2" id="appraisee_response_2"><?php echo $array['appraisee_response_2'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_2'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_2'] : "" ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $array['parameter_3'] ?></td>
-                                                <td><?php echo $array['expectation_3'] ?></td>
-                                                <td><textarea name="appraisee_response_3" id="appraisee_response_3"><?php echo $array['appraisee_response_3'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_3'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_3'] : "" ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $array['parameter_4'] ?></td>
-                                                <td><?php echo $array['expectation_4'] ?></td>
-                                                <td><textarea name="appraisee_response_4" id="appraisee_response_4"><?php echo $array['appraisee_response_4'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_4'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_4'] : "" ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $array['parameter_5'] ?></td>
-                                                <td><?php echo $array['expectation_5'] ?></td>
-                                                <td><textarea name="appraisee_response_5" id="appraisee_response_5"><?php echo $array['appraisee_response_5'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_5'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_5'] : "" ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $array['parameter_6'] ?></td>
-                                                <td><?php echo $array['expectation_6'] ?></td>
-                                                <td><textarea name="appraisee_response_6" id="appraisee_response_6"><?php echo $array['appraisee_response_6'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_6'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_6'] : "" ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $array['parameter_7'] ?></td>
-                                                <td><?php echo $array['expectation_7'] ?></td>
-                                                <td><textarea name="appraisee_response_7" id="appraisee_response_7"><?php echo $array['appraisee_response_7'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_7'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_7'] : "" ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $array['parameter_8'] ?></td>
-                                                <td><?php echo $array['expectation_8'] ?></td>
-                                                <td><textarea name="appraisee_response_8" id="appraisee_response_8"><?php echo $array['appraisee_response_8'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_8'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_8'] : "" ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $array['parameter_9'] ?></td>
-                                                <td><?php echo $array['expectation_9'] ?></td>
-                                                <td><textarea name="appraisee_response_9" id="appraisee_response_9"><?php echo $array['appraisee_response_9'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_9'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_9'] : "" ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $array['parameter_10'] ?></td>
-                                                <td><?php echo $array['expectation_10'] ?></td>
-                                                <td><textarea name="appraisee_response_10" id="appraisee_response_10"><?php echo $array['appraisee_response_10'] ?></textarea></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_10'] : "" ?></td>
-                                                <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_10'] : "" ?></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <table class="table table-bordered resizable-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" id="cw">Parameter</th>
+                                            <th scope="col" id="cw">Expectation</th>
+                                            <th scope="col">Appraisee Response</th>
+                                            <th scope="col">Rating Obtained</th>
+                                            <th scope="col">Manager Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><?php echo $array['parameter_1'] ?></td>
+                                            <td><?php echo $array['expectation_1'] ?></td>
+                                            <td><textarea name="appraisee_response_1" id="appraisee_response_1"><?php echo $array['appraisee_response_1'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_1'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_1'] : "" ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?php echo $array['parameter_2'] ?></td>
+                                            <td><?php echo $array['expectation_2'] ?></td>
+                                            <td><textarea name="appraisee_response_2" id="appraisee_response_2"><?php echo $array['appraisee_response_2'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_2'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_2'] : "" ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?php echo $array['parameter_3'] ?></td>
+                                            <td><?php echo $array['expectation_3'] ?></td>
+                                            <td><textarea name="appraisee_response_3" id="appraisee_response_3"><?php echo $array['appraisee_response_3'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_3'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_3'] : "" ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?php echo $array['parameter_4'] ?></td>
+                                            <td><?php echo $array['expectation_4'] ?></td>
+                                            <td><textarea name="appraisee_response_4" id="appraisee_response_4"><?php echo $array['appraisee_response_4'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_4'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_4'] : "" ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?php echo $array['parameter_5'] ?></td>
+                                            <td><?php echo $array['expectation_5'] ?></td>
+                                            <td><textarea name="appraisee_response_5" id="appraisee_response_5"><?php echo $array['appraisee_response_5'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_5'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_5'] : "" ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?php echo $array['parameter_6'] ?></td>
+                                            <td><?php echo $array['expectation_6'] ?></td>
+                                            <td><textarea name="appraisee_response_6" id="appraisee_response_6"><?php echo $array['appraisee_response_6'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_6'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_6'] : "" ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?php echo $array['parameter_7'] ?></td>
+                                            <td><?php echo $array['expectation_7'] ?></td>
+                                            <td><textarea name="appraisee_response_7" id="appraisee_response_7"><?php echo $array['appraisee_response_7'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_7'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_7'] : "" ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?php echo $array['parameter_8'] ?></td>
+                                            <td><?php echo $array['expectation_8'] ?></td>
+                                            <td><textarea name="appraisee_response_8" id="appraisee_response_8"><?php echo $array['appraisee_response_8'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_8'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_8'] : "" ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?php echo $array['parameter_9'] ?></td>
+                                            <td><?php echo $array['expectation_9'] ?></td>
+                                            <td><textarea name="appraisee_response_9" id="appraisee_response_9"><?php echo $array['appraisee_response_9'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_9'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_9'] : "" ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><?php echo $array['parameter_10'] ?></td>
+                                            <td><?php echo $array['expectation_10'] ?></td>
+                                            <td><textarea name="appraisee_response_10" id="appraisee_response_10"><?php echo $array['appraisee_response_10'] ?></textarea></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['rating_obtained_10'] : "" ?></td>
+                                            <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['manager_remarks_10'] : "" ?></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
 
                                 <p>*SLA - Service level agreement, KPI - Key performance indicator</p>
-
-                                <script>
-                                    document.addEventListener('DOMContentLoaded', function() {
-                                        let isResizing = false;
-                                        let currentTh = null;
-                                        let startX = 0;
-                                        let startWidth = 0;
-
-                                        document.addEventListener('mousemove', function(e) {
-                                            if (!isResizing) return;
-
-                                            const mouseX = e.clientX;
-                                            const movementX = mouseX - startX;
-                                            const newWidth = startWidth + movementX;
-
-                                            currentTh.style.width = newWidth + 'px';
-                                            requestAnimationFrame(() => {
-                                                updateTableWidth();
-                                            });
-                                        });
-
-                                        document.addEventListener('mouseup', function() {
-                                            isResizing = false;
-                                            currentTh = null;
-                                        });
-
-                                        const headers = document.querySelectorAll('.resizable-table th');
-
-                                        headers.forEach(th => {
-                                            th.addEventListener('mousedown', function(e) {
-                                                isResizing = true;
-                                                currentTh = th;
-                                                startX = e.clientX;
-                                                startWidth = currentTh.offsetWidth;
-                                            });
-                                        });
-
-                                        function updateTableWidth() {
-                                            const table = document.querySelector('.resizable-table');
-                                            const thArray = Array.from(table.querySelectorAll('th'));
-                                            const colWidths = thArray.map(th => th.offsetWidth);
-                                            thArray.forEach((th, index) => {
-                                                th.style.width = colWidths[index] + 'px';
-                                            });
-                                        }
-                                    });
-                                </script>
-
-
-
-
                                 <h2>Attributes</h2>
                                 <p>Attributes are competencies essential for performing a role.</p>
-                                <table class="table table-bordered">
+                                <table class="table table-bordered resizable-table">
                                     <thead>
                                         <tr>
                                             <th scope="col" id="cw">Parameter</th>
@@ -577,6 +538,52 @@ if (!$result) {
                                         } else {
                                             // Disable the submit button
                                             submitButton.disabled = true;
+                                        }
+                                    });
+                                </script>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        let isResizing = false;
+                                        let currentTh = null;
+                                        let startX = 0;
+                                        let startWidth = 0;
+
+                                        document.addEventListener('mousemove', function(e) {
+                                            if (!isResizing) return;
+
+                                            const mouseX = e.clientX;
+                                            const movementX = mouseX - startX;
+                                            const newWidth = startWidth + movementX;
+
+                                            currentTh.style.width = newWidth + 'px';
+                                            requestAnimationFrame(() => {
+                                                updateTableWidth();
+                                            });
+                                        });
+
+                                        document.addEventListener('mouseup', function() {
+                                            isResizing = false;
+                                            currentTh = null;
+                                        });
+
+                                        const headers = document.querySelectorAll('.resizable-table th');
+
+                                        headers.forEach(th => {
+                                            th.addEventListener('mousedown', function(e) {
+                                                isResizing = true;
+                                                currentTh = th;
+                                                startX = e.clientX;
+                                                startWidth = currentTh.offsetWidth;
+                                            });
+                                        });
+
+                                        function updateTableWidth() {
+                                            const table = document.querySelector('.resizable-table');
+                                            const thArray = Array.from(table.querySelectorAll('th'));
+                                            const colWidths = thArray.map(th => th.offsetWidth);
+                                            thArray.forEach((th, index) => {
+                                                th.style.width = colWidths[index] + 'px';
+                                            });
                                         }
                                     });
                                 </script>
@@ -736,6 +743,26 @@ if (!$result) {
                             return false;
                         }
                     })
+                </script>
+                <button id="scroll-to-top" class="btn btn-primary">Scroll to Top</button>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var scrollToTopButton = document.getElementById('scroll-to-top');
+
+                        window.addEventListener('scroll', function() {
+                            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                                scrollToTopButton.style.display = 'block';
+                            } else {
+                                scrollToTopButton.style.display = 'none';
+                            }
+                        });
+
+                        scrollToTopButton.addEventListener('click', function() {
+                            document.body.scrollTop = 0; // For Safari
+                            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE, and Opera
+                        });
+                    });
                 </script>
 
 </body>
