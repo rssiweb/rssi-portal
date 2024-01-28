@@ -86,6 +86,7 @@ if (!$result) {
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css">
     <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <style>
         @media (max-width:767px) {
@@ -129,17 +130,34 @@ if (!$result) {
         }
     </style>
     <style>
-        #scroll-to-top {
+        .back-to-top {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: none;
-            background-color: #007bff;
+            visibility: hidden;
+            opacity: 0;
+            right: 15px;
+            bottom: 15px;
+            z-index: 99999;
+            background: #4154f1;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            transition: all 0.4s;
+        }
+
+        .back-to-top i {
+            font-size: 24px;
             color: #fff;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 15px;
-            cursor: pointer;
+            line-height: 0;
+        }
+
+        .back-to-top:hover {
+            background: #6776f4;
+            color: #fff;
+        }
+
+        .back-to-top.active {
+            visibility: visible;
+            opacity: 1;
         }
     </style>
 </head>
@@ -896,12 +914,14 @@ if (!$result) {
         <?php } ?>
 
     </div>
-
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <!-- Bootstrap JS -->
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <script>
         // Get all textarea elements in the form
         const textareas = document.querySelectorAll('form textarea');
@@ -985,27 +1005,6 @@ if (!$result) {
                     th.style.width = colWidths[index] + 'px';
                 });
             }
-        });
-    </script>
-
-    <button id="scroll-to-top" class="btn btn-primary">Scroll to Top</button>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var scrollToTopButton = document.getElementById('scroll-to-top');
-
-            window.addEventListener('scroll', function() {
-                if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-                    scrollToTopButton.style.display = 'block';
-                } else {
-                    scrollToTopButton.style.display = 'none';
-                }
-            });
-
-            scrollToTopButton.addEventListener('click', function() {
-                document.body.scrollTop = 0; // For Safari
-                document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE, and Opera
-            });
         });
     </script>
 </body>
