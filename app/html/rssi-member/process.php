@@ -57,7 +57,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
     $parameters = [];
     for ($i = 1; $i <= 20; $i++) {
         $parameter = htmlspecialchars($_POST["parameter_$i"], ENT_QUOTES, 'UTF-8');
-        $expectation = $_POST["expectation_$i"];
+        $expectation = htmlspecialchars($_POST["expectation_$i"], ENT_QUOTES, 'UTF-8');
         $maxRating = isset($_POST["max_rating_$i"]) && !empty($_POST["max_rating_$i"]) ? $_POST["max_rating_$i"] : 'NULL';
 
         $parameters[] = compact("parameter", "expectation", "maxRating");

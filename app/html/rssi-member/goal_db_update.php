@@ -31,7 +31,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
     for ($i = 1; $i <= 20; $i++) {
         $parameters[$i] = htmlspecialchars($_POST['parameter_' . $i], ENT_QUOTES, 'UTF-8');
         $expectations[$i] = htmlspecialchars($_POST['expectation_' . $i], ENT_QUOTES, 'UTF-8');
-        $max_ratings[$i] = isset($_POST['max_rating_' . $i]) && !empty($_POST['max_rating_' . $i]) ? htmlspecialchars($_POST['max_rating_' . $i], ENT_QUOTES, 'UTF-8') : 'NULL';
+        $max_ratings[$i] = isset($_POST['max_rating_' . $i]) && !empty($_POST['max_rating_' . $i]) ? $_POST['max_rating_' . $i] : 'NULL';
     }
 
     // Build the SQL query
