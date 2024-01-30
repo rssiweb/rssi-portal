@@ -25,25 +25,56 @@ if ($role != 'Admin' && $role != 'Offline Manager') {
 
 date_default_timezone_set('Asia/Kolkata');
 $today = date("Y-m-d");
+
+// Initialize WHERE clause
+$whereClause = "";
+
+// Retrieve form parameters
 @$appid = $_GET['get_appid'];
 @$status = $_GET['get_id'];
+@$visitdatefrom = $_GET['visitdatefrom'];
 
-if ($appid == null && $status == null) {
-    $result = pg_query($con, "select * from visitor WHERE visitorid is null");
-}
-if ($appid != null && ($status == null || $status == 'ALL')) {
-    $result = pg_query($con, "select * from visitor WHERE visitorid='$appid' or existingid='$appid' order by visitdatefrom desc");
-}
-if ($appid != null && $status != null && $status != 'ALL') {
-    $result = pg_query($con, "select * from visitor WHERE (visitorid='$appid' or existingid='$appid') AND EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))=EXTRACT(MONTH FROM visitdatefrom) order by visitdatefrom desc");
-}
-if ($appid == null && $status != null && $status != 'ALL') {
-    $result = pg_query($con, "select * from visitor WHERE EXTRACT(MONTH FROM TO_DATE('$status', 'Month'))=EXTRACT(MONTH FROM visitdatefrom) order by visitdatefrom desc");
+date_default_timezone_set('Asia/Kolkata');
+$today = date("Y-m-d");
+
+// Initialize WHERE clause
+$whereClause = "";
+
+// Retrieve form parameters
+@$appid = $_GET['get_appid'];
+@$status = $_GET['get_id'];
+@$visitdatefrom = $_GET['visitdatefrom'];
+
+// Check if any filter values are provided
+if ($appid != null || ($status != null && $status != 'ALL') || $visitdatefrom != null) {
+    // Add conditions to the WHERE clause based on the provided parameters
+    if ($appid != null) {
+        $whereClause .= " AND (visitorid = '$appid' OR existingid = '$appid') ";
+    }
+
+    if ($status != null && $status != 'ALL') {
+        $whereClause .= " AND EXTRACT(MONTH FROM TO_DATE('$status', 'Month')) = EXTRACT(MONTH FROM visitdatefrom) ";
+    }
+
+    if ($visitdatefrom != null) {
+        // Make sure to use a proper date format in the query
+        $whereClause .= " AND (DATE(visitdatefrom) = '$visitdatefrom'::date) ";
+    }
+} else {
+    // Default condition to return no rows when no filters are provided
+    $whereClause .= " AND 1 = 0 ";
 }
 
-if ($appid == null && $status == 'ALL') {
-    $result = pg_query($con, "select * from visitor order by visitdatefrom desc");
+// Remove the initial WHERE 1, and add WHERE only if conditions are present
+if ($whereClause !== "") {
+    $whereClause = " WHERE " . ltrim($whereClause, " AND ");
 }
+
+// Finalize the query
+$query = "SELECT * FROM visitor" . $whereClause . " ORDER BY visitdatefrom DESC";
+
+// Execute the query
+$result = pg_query($con, $query);
 
 if (!$result) {
     echo "An error occurred.\n";
@@ -51,21 +82,36 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
+
 ?>
 
 <!doctype html>
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <style>
+        .col2 {
+            display: inline-block;
+            vertical-align: top;
+            /* Align the col2 elements to the top */
+        }
 
-  gtag('config', 'AW-11316670180');
-</script>
+        #passwordHelpBlock {
+            display: block;
+        }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -124,10 +170,24 @@ $resultArr = pg_fetch_all($result);
                             </div>
                             <form id="myform" action="" method="GET">
                                 <div class="form-group" style="display: inline-block;">
-                                    <div class="col2" style="display: inline-block;">
-                                        <input name="get_appid" class="form-control" style="width:max-content; display:inline-block" placeholder="Visitor ID" value="<?php echo $appid ?>">
+                                    <div class="col2">
+                                        <input name="get_appid" class="form-control" style="width: max-content; display: inline-block;" placeholder="Visitor ID" value="<?php echo $appid ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Visitor Id<span style="color:red"></span></small>
                                     </div>
-                                    <select name="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year">
+                                    <div class="col2">
+                                        <input type="date" name="visitdatefrom" class="form-control" style="width: max-content; display: inline-block;" placeholder="Select visit date" value="<?php echo $visitdatefrom ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Visit date<span style="color:red"></span></small>
+                                    </div>
+                                </div>
+                                <div class="col2 left" style="display: inline-block;">
+                                    <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                        <i class="bi bi-search"></i>&nbsp;Search
+                                    </button>&nbsp;
+                                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfGLdHHjI8J5b238SMAmf7LMkVVRJPAKnk1SjHcBUZSXATFQA/viewform" target="_blank" class="btn btn-warning btn-sm" role="button">
+                                        <i class="bi bi-plus-lg"></i>&nbsp;Registration
+                                    </a>
+                                </div>
+                                <!-- <select name="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year">
                                         <?php if ($status == null) { ?>
                                             <option value="" hidden selected>Select month</option>
                                         <?php
@@ -148,14 +208,7 @@ $resultArr = pg_fetch_all($result);
                                         <option>November</option>
                                         <option>December</option>
                                         <option>ALL</option>
-                                    </select>
-
-
-                                </div>
-                                <div class="col2 left" style="display: inline-block;">
-                                    <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                        <i class="bi bi-search"></i>&nbsp;Search</button>&nbsp;<a href="https://docs.google.com/forms/d/e/1FAIpQLSfGLdHHjI8J5b238SMAmf7LMkVVRJPAKnk1SjHcBUZSXATFQA/viewform" target="_blank" class="btn btn-info btn-sm" role="button"><i class="bi bi-plus-lg"></i>&nbsp;Registration</a>
-                                </div>
+                                    </select>-->
                             </form>
 
                             <?php echo '
@@ -194,7 +247,7 @@ $resultArr = pg_fetch_all($result);
                                 
                                 <td><span class="noticea"><a href="' . $array['aadharcard'] . '" target="_blank"><i class="bi bi-filetype-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>
                                 
-                                <td><img src="' . str_replace("open", "uc", $array['photo']) . '" width="50" height="50"/></td>
+                                <td><img src="' . str_replace("/open?id=", "/thumbnail?id=", $array['photo']) . '" width="50" height="50"/></td>
                                 <td>' . $array['purposeofvisit'] . '</td>
                                 <td>' . $array['branch'] . '</td>'  ?>
 
@@ -216,7 +269,7 @@ $resultArr = pg_fetch_all($result);
                             <?php } else if ($appid == null) {
                             ?>
                                 <tr>
-                                    <td colspan="5">Please enter filter value.</td>
+                                    <td colspan="5">Please enter either the Visitor ID or the Visit Date.</td>
                                 </tr>
                             <?php
                             } else {
