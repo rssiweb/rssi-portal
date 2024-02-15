@@ -819,3 +819,145 @@ if (@$_POST['form-type'] == "admission") {
     echo json_encode($response);
   }
 }
+
+if ($formtype == "get_details_visit") {
+  @$contactnumber = $_POST['contactnumber_verify_input'];
+  $getdetails = "SELECT fullname, email, tel FROM visitor_userdata WHERE tel='$contactnumber'";
+  $result = pg_query($con, $getdetails);
+  if ($result) {
+    $row = pg_fetch_assoc($result);
+    if ($row) {
+      echo json_encode(array('status' => 'success', 'data' => $row));
+    } else {
+      echo json_encode(array('status' => 'no_records', 'message' => 'No records found in the database. Register as a new user.'));
+    }
+  } else {
+    echo json_encode(array('status' => 'error', 'message' => 'Error retrieving user data'));
+  }
+}
+
+if ($formtype == "visitor_form") {
+  if (isset($_POST['form-type']) && $_POST['form-type'] === "visitor_form") {
+    $tel = $_POST['tel'];
+    $visitbranch = $_POST['visitbranch'];
+    $visitstartdatetime = $_POST['visitstartdatetime'];
+    $visitenddate = $_POST['visitenddate'];
+    $visitpurpose = $_POST['visitpurpose'];
+    $other_reason = htmlspecialchars($_POST['other_reason'], ENT_QUOTES, 'UTF-8');
+    $institutename = $_POST['institutename'];
+    $enrollmentnumber = $_POST['enrollmentnumber'];
+    $instituteid = $_FILES['instituteid'];
+    $mentoremail = $_POST['mentoremail'];
+    $paymentdoc = $_FILES['paymentdoc'];
+    $mentoremail = $_POST['mentoremail'];
+    $declaration = $_POST['declaration'];
+    $message = htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8');
+    $timestamp = date('Y-m-d H:i:s');
+    $visitId = uniqid();
+    $cmdtuples = 0; // Initialize cmdtuples
+    $errorOccurred = false; // Flag to track if an error occurred
+    $errorMessage = '';
+
+    // This is for paymentdoc and instituteid which will be require in both new and existing visitor
+
+    if (empty($_FILES['paymentdoc']['name'])) {
+      $doclink_paymentdoc = null;
+    } else {
+      $filename_paymentdoc = "doc_" . $fullName . "_" . time();
+      $parent_paymentdoc = '1f_UvwDaxvloRyYgNs9rjl6ZGW8nUB8RwXHQtQ3RsA9W6SaYY-7xLNn0kXvGV8A9fAjJ6x9yZ';
+      $doclink_paymentdoc = uploadeToDrive($paymentdoc, $parent_paymentdoc, $filename_paymentdoc);
+    }
+    if (empty($_FILES['instituteid']['name'])) {
+      $doclink_instituteid = null;
+    } else {
+      $filename_instituteid = "doc_" . $fullName . "_" . time();
+      $parent_instituteid = '1OFTSdUFZm1RVYNWaux1jv_EW5iftuKh_RSLHXkdbqLacK9nziY-Vx4KrUrJoiNIvohQPSzi3';
+      $doclink_instituteid = uploadeToDrive($instituteid, $parent_instituteid, $filename_instituteid);
+    }
+
+    if ($_POST['visitorType'] === "existing") {
+      $visitorQuery = "INSERT INTO visitor_visitdata (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, timestamp, other_reason) 
+                          VALUES ('$visitId', '$tel', '$visitbranch', '$visitstartdatetime', '$visitenddate', '$visitpurpose', '$institutename', '$enrollmentnumber', '$doclink_instituteid', '$mentoremail', '$doclink_paymentdoc', '$declaration', '$timestamp', '$other_reason')";
+      $resultUserdata = pg_query($con, $visitorQuery);
+
+      if ($resultUserdata) {
+        $cmdtuples = pg_affected_rows($resultUserdata);
+      } else {
+        $errorOccurred = true;
+        $errorMessage = handleInsertionErrorVisit($con, "Visitor insertion", $tel);
+      }
+    } elseif ($_POST['visitorType'] === "new") {
+      $fullName = $_POST['fullName'];
+      $email = $_POST['email'];
+      $contactNumberNew = $_POST['contactNumberNew'];
+      $nationalId = $_FILES['nationalId'];
+      $photo = $_FILES['photo'];
+
+      // This is for nationalId and photo which will be require for new visitor
+
+      if (empty($_FILES['nationalId']['name'])) {
+        $doclink_nationalId = null;
+      } else {
+        $filename_nationalId = "doc_" . $fullName . "_" . time();
+        $parent_nationalId = '1sdu_dkdrRezOr6IdRMJOknFOSovz1qGP2zRg9Db5IyLIMtVxwWgy-Io8aV36B4uTx9-Gwg3W';
+        $doclink_nationalId = uploadeToDrive($nationalId, $parent_nationalId, $filename_nationalId);
+      }
+      if (empty($_FILES['photo']['name'])) {
+        $doclink_photo = null;
+      } else {
+        $filename_photo = "doc_" . $fullName . "_" . time();
+        $parent_photo = '1bgjv3Ei5Go073xcZa7sXKjlOFSTHdoqo8Ffdba_ICNFdcq4ashhxTHGEr0rbX3KdH3CjDbwH';
+        $doclink_photo = uploadeToDrive($photo, $parent_photo, $filename_photo);
+      }
+
+      // Insert userdata
+      $userdataQuery = "INSERT INTO visitor_userdata (fullname, email, tel, nationalid, photo) 
+                          VALUES ('$fullName', '$email', '$contactNumberNew', '$doclink_nationalId', '$doclink_photo')";
+      @$resultUserdata = pg_query($con, $userdataQuery);
+
+      if ($resultUserdata) {
+        // Insert visit
+        $visitQuery = "INSERT INTO visitor_visitdata (visitid, tel, visitbranch, visitstartdatetime, visitenddate, visitpurpose, institutename, enrollmentnumber, instituteid, mentoremail, paymentdoc, declaration, timestamp, other_reason) 
+                              VALUES ('$visitId', '$contactNumberNew', '$visitbranch', '$visitstartdatetime', '$visitenddate', '$visitpurpose', '$institutename', '$enrollmentnumber', '$doclink_instituteid', '$mentoremail', '$doclink_paymentdoc', '$declaration', '$timestamp', '$other_reason')";
+        $resultVisitor = pg_query($con, $visitQuery);
+
+        if ($resultVisitor) {
+          $cmdtuples = pg_affected_rows($resultVisitor);
+        } else {
+          $errorOccurred = true;
+          $errorMessage = handleInsertionErrorVisit($con, "Visitor insertion", $contactNumberNew);
+        }
+      } else {
+        $errorOccurred = true;
+        $errorMessage = handleInsertionErrorVisit($con, "Userdata insertion", $contactNumberNew);
+      }
+    }
+
+    // Prepare the API response data
+    $responseData = array(
+      'error' => $errorOccurred,
+      'errorMessage' => $errorOccurred ? $errorMessage : '', // Return the actual error message if an error occurred
+      'cmdtuples' => $cmdtuples,
+      'visitorId' => $visitId
+    );
+
+    // Return the response as JSON
+    echo json_encode($responseData);
+    exit; // Stop further PHP execution
+  }
+}
+
+function handleInsertionErrorVisit($connection, $errorMessage, $tel)
+{
+  $error = pg_last_error($connection);
+
+  // Check for duplicate key violation error
+  if (strpos($error, 'duplicate key value violates unique constraint') !== false) {
+    return "already_registered"; // Return a specific code for duplicate key violation error
+    // Additional handling specific to duplicate key violation error can be done here
+  } else {
+    // Log or display the generic error message
+    error_log($errorMessage . " error: " . $error);
+    return "generic_error"; // Return a specific code for generic error
+  }
+}
