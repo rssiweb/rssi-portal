@@ -933,6 +933,40 @@ if ($formtype == "visitor_form") {
       }
     }
 
+    // After successful form submission
+    if (!$errorOccurred) {
+      // Sending email based on the visitor type
+      if ($_POST['visitorType'] === "existing") {
+        $emailQuery = "SELECT email, fullname FROM visitor_userdata WHERE tel='$tel'";
+      } else if ($_POST['visitorType'] === "new") {
+        $emailQuery = "SELECT email, fullname FROM visitor_userdata WHERE tel='$contactNumberNew'";
+      }
+      $result = pg_query($con, $emailQuery);
+
+      if ($result) {
+        $row = pg_fetch_assoc($result);
+        $email = $row['email'];
+        $name = $row['fullname'];
+      } else {
+        // Handle error if the query fails
+        $email = null;
+        $name = null;
+      }
+
+      if (($_POST['visitorType'] === "existing" || $_POST['visitorType'] === "new") && $email != "") {
+        sendEmail("visit_request_ack", array(
+          "fullname" => $name,
+          "visitId" => $visitId,
+          "timestamp" => date("d/m/Y h:i A", strtotime($timestamp)),
+          "tel" => @$tel . @$contactNumberNew,
+          "email" => $email,
+          "visitstartdatetime" => date("d/m/Y h:i A", strtotime($visitstartdatetime)),
+          "visitenddate" => $visitenddate,
+          "visitpurpose" => $visitpurpose
+        ), $email, true);
+      }
+    }
+
     // Prepare the API response data
     $responseData = array(
       'error' => $errorOccurred,
@@ -960,4 +994,16 @@ function handleInsertionErrorVisit($connection, $errorMessage, $tel)
     error_log($errorMessage . " error: " . $error);
     return "generic_error"; // Return a specific code for generic error
   }
+}
+
+if ($formtype == "visitreviewform") {
+  @$reviewer_id = $_POST['reviewer_id'];
+  @$reviewer_name = $_POST['reviewer_name'];
+  @$visitid = $_POST['visitid'];
+  @$visitstatus = $_POST['visitstatus'];
+  @$hrremarks = $_POST['hrremarks'];
+  $now = date('Y-m-d H:i:s');
+
+  $visitapproval = "UPDATE visitor_visitdata SET  visitstatusupdatedby = '$reviewer_id', visitstatusupdatedon = '$now', visitstatus = '$visitstatus',remarks = '$hrremarks' WHERE visitid = '$visitid'";
+  $result = pg_query($con, $visitapproval);
 }
