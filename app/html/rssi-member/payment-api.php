@@ -863,14 +863,14 @@ if ($formtype == "visitor_form") {
     if (empty($_FILES['paymentdoc']['name'])) {
       $doclink_paymentdoc = null;
     } else {
-      $filename_paymentdoc = "doc_" . $fullName . "_" . time();
+      $filename_paymentdoc = "doc_" . $visitId . "_" . time();
       $parent_paymentdoc = '1f_UvwDaxvloRyYgNs9rjl6ZGW8nUB8RwXHQtQ3RsA9W6SaYY-7xLNn0kXvGV8A9fAjJ6x9yZ';
       $doclink_paymentdoc = uploadeToDrive($paymentdoc, $parent_paymentdoc, $filename_paymentdoc);
     }
     if (empty($_FILES['instituteid']['name'])) {
       $doclink_instituteid = null;
     } else {
-      $filename_instituteid = "doc_" . $fullName . "_" . time();
+      $filename_instituteid = "doc_" . $visitId . "_" . time();
       $parent_instituteid = '1OFTSdUFZm1RVYNWaux1jv_EW5iftuKh_RSLHXkdbqLacK9nziY-Vx4KrUrJoiNIvohQPSzi3';
       $doclink_instituteid = uploadeToDrive($instituteid, $parent_instituteid, $filename_instituteid);
     }
