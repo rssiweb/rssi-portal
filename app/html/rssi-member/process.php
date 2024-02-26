@@ -644,12 +644,16 @@ if (@$_POST['form-type'] == "appraisee_response") {
             // If the checkbox is checked, remove the "required" attribute from fields
             if (disableFieldsCheckbox.checked) {
                 fieldsToDisable.forEach(function(field) {
-                    field.removeAttribute('required');
+                    if (field.name !== 'manager1_associatenumber') {
+                        field.removeAttribute('required');
+                    }
                 });
             } else {
                 // If the checkbox is unchecked, add the "required" attribute back to fields
                 fieldsToDisable.forEach(function(field) {
-                    field.setAttribute('required', 'required');
+                    if (field.name !== 'manager1_associatenumber') {
+                        field.setAttribute('required', 'required');
+                    }
                 });
             }
         });

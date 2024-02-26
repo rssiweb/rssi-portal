@@ -263,6 +263,8 @@ if (!$result) {
 
                             <input type="hidden" name="form-type" value="appraisee_response_update">
                             <input type="hidden" name="goalsheetid" Value="<?php echo $array['goalsheetid'] ?>" readonly>
+                            <input type="hidden" name="manager_associatenumber" Value="<?php echo $array['manager_associatenumber'] ?>" readonly>
+                            <input type="hidden" name="manager1_associatenumber" Value="<?php echo $array['manager1_associatenumber'] ?>" readonly>
                             <input type="hidden" name="appraisee_associatenumber" Value="<?php echo $array['appraisee_associatenumber'] ?>" readonly>
                             <table class="table">
                                 <tr>
@@ -281,7 +283,7 @@ if (!$result) {
                                 <tr>
                                     <td>
                                         <?php if (!empty($manager1_name)) : ?>
-                                            <label for="manager_associate_number" class="form-label">Immediate Manager:</label>
+                                            <label for="manager1_associate_number" class="form-label">Immediate Manager:</label>
                                             &nbsp;
                                             <?php echo $manager1_name ?> (
                                             <?php echo $array['manager1_associatenumber'] ?>)<br>

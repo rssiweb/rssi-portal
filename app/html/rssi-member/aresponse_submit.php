@@ -97,8 +97,9 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
     $result_appraisal_details = pg_query($con, "SELECT appraisaltype, appraisalyear, appraisee_associatenumber FROM appraisee_response WHERE goalsheetid = '$goalsheetid'");
     @$appraisaltype = pg_fetch_result($result_appraisal_details, 0, 0);
     @$appraisalyear = pg_fetch_result($result_appraisal_details, 0, 1);
-    @$appraisee_associatenumber = pg_fetch_result($result_appraisal_details, 0, 2);
+    @$appraisee_associatenumber = pg_fetch_result($result_appraisal_details, 0, 2); ?>
 
+<?php
     if (@$cmdtuples == 1 && $manager1_email != "") {
         sendEmail("goal_sheet_evaluation_request_manager1", array(
             "goalsheetid" => $goalsheetid,
@@ -111,7 +112,7 @@ LEFT JOIN rssimyaccount_members ON rssimyaccount_members.associatenumber = appra
         ), $manager1_email);
     }
     if (@$cmdtuples == 1) {
-        $emailTemplate = ($manager_email != "") ? "goal_sheet_evaluation_request_manager1_cc" : "goal_sheet_evaluation_request_manager1";
+        $emailTemplate = ($manager1_email != "") ? "goal_sheet_evaluation_request_cc" : "goal_sheet_evaluation_request_manager1";
 
         sendEmail($emailTemplate, array(
             "goalsheetid" => $goalsheetid,
