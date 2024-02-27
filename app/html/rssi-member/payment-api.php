@@ -1004,9 +1004,52 @@ if ($formtype == "visitreviewform") {
   @$visitstartdatetime = $_POST['visitstartdatetime'];
   @$visitenddate = $_POST['visitenddate'];
   @$visitstatus = $_POST['visitstatus'];
-  @$hrremarks = $_POST['hrremarks'];
+  @$hrremarks = htmlspecialchars($_POST['hrremarks'], ENT_QUOTES, 'UTF-8');
   $now = date('Y-m-d H:i:s');
 
   $visitapproval = "UPDATE visitor_visitdata SET  visitstatusupdatedby = '$reviewer_id', visitstatusupdatedon = '$now', visitstatus = '$visitstatus',remarks = '$hrremarks', visitbranch = '$visitbranch', visitstartdatetime = '$visitstartdatetime', visitenddate = '$visitenddate' WHERE visitid = '$visitid'";
   $result = pg_query($con, $visitapproval);
+}
+
+if ($_POST['form-type'] == "contact_Form") {
+  // Retrieve form data
+  $queryid = uniqid();
+  $name = $_POST['name'];
+  $email = $_POST['email'];
+  $contact = $_POST['contact'];
+  $message = htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8');
+  $timestamp = date('Y-m-d H:i:s');
+
+  // Insert data into the database
+  $contactinsert = "INSERT INTO contact (queryid, name, email, contact, message, timestamp) 
+                      VALUES (
+                          '$queryid', 
+                          '$name', 
+                          '$email', 
+                          '$contact', 
+                          '$message', 
+                          '$timestamp'
+                      );";
+
+  // Execute the query
+  $result = pg_query($con, $contactinsert);
+
+  // Check if the query was successful
+  if ($result) {
+    // Query executed successfully
+    echo json_encode(array("error" => false, "queryid" => $queryid));
+  } else {
+    // Query failed
+    echo json_encode(array("error" => true, "errorMessage" => "Error occurred during form submission."));
+  }
+  if ($email != "") {
+    sendEmail("contact_us_ack", array(
+      "name" => $name,
+      "queryid" => $queryid,
+      "email" => $email,
+      "timestamp" => date("d/m/Y h:i A", strtotime($timestamp)),
+      "contact" => @$contact,
+      "message" => $message
+    ), $email, true);
+  }
 }
