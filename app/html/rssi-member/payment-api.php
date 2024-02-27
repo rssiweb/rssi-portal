@@ -1000,10 +1000,13 @@ if ($formtype == "visitreviewform") {
   @$reviewer_id = $_POST['reviewer_id'];
   @$reviewer_name = $_POST['reviewer_name'];
   @$visitid = $_POST['visitid'];
+  @$visitbranch = $_POST['visitbranch'];
+  @$visitstartdatetime = $_POST['visitstartdatetime'];
+  @$visitenddate = $_POST['visitenddate'];
   @$visitstatus = $_POST['visitstatus'];
   @$hrremarks = $_POST['hrremarks'];
   $now = date('Y-m-d H:i:s');
 
-  $visitapproval = "UPDATE visitor_visitdata SET  visitstatusupdatedby = '$reviewer_id', visitstatusupdatedon = '$now', visitstatus = '$visitstatus',remarks = '$hrremarks' WHERE visitid = '$visitid'";
+  $visitapproval = "UPDATE visitor_visitdata SET  visitstatusupdatedby = '$reviewer_id', visitstatusupdatedon = '$now', visitstatus = '$visitstatus',remarks = '$hrremarks', visitbranch = '$visitbranch', visitstartdatetime = '$visitstartdatetime', visitenddate = '$visitenddate' WHERE visitid = '$visitid'";
   $result = pg_query($con, $visitapproval);
 }

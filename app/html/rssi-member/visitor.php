@@ -27,24 +27,45 @@ date_default_timezone_set('Asia/Kolkata');
 $today = date("Y-m-d");
 
 // Retrieve form parameters
-@$appid = $_GET['get_appid'];
-@$visitstatus = $_GET['get_id'];
+@$visitid = $_GET['visitid'];
+@$contact = $_GET['contact'];
 @$visitdatefrom = $_GET['visitdatefrom'];
 
-// Finalize the query
-$query = "SELECT *
-FROM visitor_userdata AS ud
-JOIN visitor_visitdata AS vd ON ud.tel = vd.tel";
+// Initialize the WHERE clause of the query
+$whereClause = " WHERE 1=1"; // Always true condition to start with
 
-// Execute the query
-$result = pg_query($con, $query);
-
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
+// Add conditions based on the filled input fields
+if (!empty($visitid)) {
+    $whereClause .= " AND vd.visitid = '$visitid'";
 }
 
-$resultArr = pg_fetch_all($result);
+if (!empty($contact)) {
+    $whereClause .= " AND ud.tel = '$contact'";
+}
+
+if (!empty($visitdatefrom)) {
+    $whereClause .= " AND DATE(vd.visitstartdatetime) = '$visitdatefrom'";
+}
+
+// Check if any filter parameters are not empty
+if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom)) {
+    // Finalize the query with the WHERE clause
+    $query = "SELECT * FROM visitor_userdata AS ud
+    JOIN visitor_visitdata AS vd ON ud.tel = vd.tel $whereClause";
+
+    // Execute the query
+    $result = pg_query($con, $query);
+
+    if (!$result) {
+        echo "An error occurred.\n";
+        exit;
+    }
+
+    $resultArr = pg_fetch_all($result);
+} else {
+    // If all filter parameters are empty, set an empty result array
+    $resultArr = [];
+}
 
 ?>
 
@@ -134,8 +155,12 @@ $resultArr = pg_fetch_all($result);
                             <form id="myform" action="" method="GET">
                                 <div class="form-group" style="display: inline-block;">
                                     <div class="col2">
-                                        <input name="get_appid" class="form-control" style="width: max-content; display: inline-block;" placeholder="Visitor ID" value="<?php echo $appid ?>">
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Visitor Id<span style="color:red"></span></small>
+                                        <input name="visitid" class="form-control" style="width: max-content; display: inline-block;" placeholder="Visit ID" value="<?php echo $visitid ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Visit Id<span style="color:red"></span></small>
+                                    </div>
+                                    <div class="col2">
+                                        <input name="contact" class="form-control" style="width: max-content; display: inline-block;" placeholder="Contact" value="<?php echo $contact ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Contact<span style="color:red"></span></small>
                                     </div>
                                     <div class="col2">
                                         <input type="date" name="visitdatefrom" class="form-control" style="width: max-content; display: inline-block;" placeholder="Select visit date" value="<?php echo $visitdatefrom ?>">
@@ -264,10 +289,10 @@ $resultArr = pg_fetch_all($result);
                                     } ?>
                                 <?php echo '</td></tr>';
                                 } ?>
-                            <?php } else if ($appid == null) {
+                            <?php } else if ($visitid == null && $contact == null && $visitdatefrom == null) {
                             ?>
                                 <tr>
-                                    <td colspan="5">Please enter either the Visitor ID or the Visit Date.</td>
+                                    <td colspan="5">Please enter either the Visit ID, Contact or the Visit Date.</td>
                                 </tr>
                             <?php
                             } else {
@@ -319,29 +344,61 @@ $resultArr = pg_fetch_all($result);
                         </p>
                     </div>
                     <?php if ($role == "Admin") { ?>
-                        <form id="visitreviewform" name="visitreviewform" action="#" method="POST">
+                        <form id="visitreviewform" name="visitreviewform" action="#" method="POST" class="row g-3">
+
                             <input type="hidden" class="form-control" name="form-type" type="text" value="visitreviewform" readonly>
                             <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
                             <input type="hidden" class="form-control" name="visitid" id="visitid" type="text" value="" readonly>
 
-                            <span class="input-help">
-                                <select name="visitstatus" id="visitstatus" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                                    <option value="" disabled selected hidden>Status</option>
-                                    <option value="Approved">Approved</option>
-                                    <option value="Rejected">Rejected</option>
-                                    <option value="Visited">Visited</option>
-                                    <option value="Duplicate entry">Duplicate entry</option>
-                                </select>
-                                <small id="passwordHelpBlock" class="form-text text-muted">Visit status<span style="color:red">*</span></small>
-                            </span>
+                            <div class="col-md-3">
+                                <div class="input-help">
+                                    <select class="form-select" id="visitbranch" name="visitbranch" required>
+                                        <option value disabled selected>Select Branch</option>
+                                        <option value="Gomti Nagar, Lucknow">Gomti Nagar, Lucknow</option>
+                                    </select>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">Which branch do you want to visit?<span style="color:red">*</span></small>
+                                </div>
+                            </div>
 
-                            <span class="input-help">
-                                <textarea type="text" name="hrremarks" id="hrremarks" class="form-control" placeholder="HR remarks" value=""></textarea>
-                                <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
-                            </span>
+                            <div class="col-md-3">
+                                <div class="input-help">
+                                    <input type="datetime-local" class="form-control" id="visitstartdatetime" name="visitstartdatetime" required>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit start date<span style="color:red">*</span></small>
+                                </div>
+                            </div>
 
-                            <button type="submit" id="visitupdate" class="btn btn-danger btn-sm" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
+                            <div class="col-md-3">
+                                <div class="input-help">
+                                    <input type="date" class="form-control" id="visitenddate" name="visitenddate" required>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit end date<span style="color:red">*</span></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="input-help">
+                                    <select name="visitstatus" id="visitstatus" class="form-select" required>
+                                        <option value="" disabled selected hidden>Status</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Rejected">Rejected</option>
+                                        <option value="Visited">Visited</option>
+                                        <option value="Duplicate entry">Duplicate entry</option>
+                                    </select>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit status<span style="color:red">*</span></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="input-help">
+                                    <textarea type="text" name="hrremarks" id="hrremarks" class="form-control" placeholder="HR remarks"></textarea>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <button type="submit" id="visitupdate" class="btn btn-danger btn-sm">Update</button>
+                            </div>
                         </form>
+
                     <?php } ?>
                     <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Updated by: <span class="visitstatusupdatedby"></span> on <span class="visitstatusupdatedon"></span>
                     <div class="modal-footer">
@@ -385,6 +442,31 @@ $resultArr = pg_fetch_all($result);
 
             var profile = document.getElementById("visitid")
             profile.value = mydata["visitid"]
+
+            if (mydata["visitbranch"] !== null) {
+                profile = document.getElementById("visitbranch")
+                profile.value = mydata["visitbranch"]
+            } else {
+                profile = document.getElementById("visitbranch")
+                profile.value = ""
+            }
+
+            if (mydata["visitstartdatetime"] !== null) {
+                profile = document.getElementById("visitstartdatetime")
+                profile.value = mydata["visitstartdatetime"]
+            } else {
+                profile = document.getElementById("visitstartdatetime")
+                profile.value = ""
+            }
+
+            if (mydata["visitenddate"] !== null) {
+                profile = document.getElementById("visitenddate")
+                profile.value = mydata["visitenddate"]
+            } else {
+                profile = document.getElementById("visitenddate")
+                profile.value = ""
+            }
+
             if (mydata["visitstatus"] !== null) {
                 profile = document.getElementById("visitstatus")
                 profile.value = mydata["visitstatus"]
