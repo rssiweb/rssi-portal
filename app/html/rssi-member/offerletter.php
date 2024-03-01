@@ -56,15 +56,18 @@ if (!$result) {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -219,16 +222,41 @@ if (!$result) {
                                 </ol>
                                 <p><b><u>TERMS AND CONDITIONS</u></b></p>
                                 <ol start="3">
-                                    <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a thirty (30) days' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
+                                    <?php
+                                    // Assuming $array['job_type'] holds the job type information
+
+                                    // Initialize the notice period
+                                    $notice_period = "";
+
+                                    // Check the job type
+                                    if ($array['job_type'] === "Part-time") {
+                                        $notice_period = "thirty (30) days";
+                                        $mintenure = "8 months";
+                                        $workinghours = "3-hour";
+                                    } elseif ($array['job_type'] === "Full-time") {
+                                        $notice_period = "ninety (90) days";
+                                        $mintenure = "12 months";
+                                        $workinghours = "7.5-hour";
+                                    } else {
+                                        // Handle the case where job type is neither Part-time nor Full-time
+                                        // You may want to set a default notice period here or handle it differently
+                                        $notice_period = "thirty (30) days"; // Defaulting to 30 days for other cases
+                                        $mintenure = "8 months";
+                                        $workinghours = "3-hour";
+                                    }
+
+                                    // Now incorporate the $notice_period into the statement
+                                    ?>
+                                    <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a <?php echo $notice_period; ?>' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
                                     <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
                                     <li>You are not eligible to take more than 1 leave without notice during your tenure, in case of more than 1 leave without notice, the organization may decide for dismissal.</li>
                                     <li>
                                         <?php if ($array['engagement'] == 'Intern') { ?>
                                             You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 1 month from the original joining date in accordance with the Service Agreement clause.
-                                        <?php } else if ($array['engagement'] == 'Employee' && substr($array['position'], 0, strrpos($array['position'], "-")) == 'Employee-Faculty cum Centre Incharge') { ?>
-                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 8 months from the original joining date in accordance with the Service Agreement clause.
+                                        <?php } else if ($array['engagement'] == 'Employee' && (substr($array['position'], 0, strrpos($array['position'], "-")) == 'Employee-Centre Incharge') || substr($array['position'], 0, strrpos($array['position'], "-")) == 'Employee-Senior Centre Incharge') { ?>
+                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least <?php echo $mintenure; ?> from the original joining date in accordance with the Service Agreement clause.
                                         <?php } else if ($array['engagement'] == 'Employee' && substr($array['position'], 0, strrpos($array['position'], "-")) == 'Employee-Faculty') { ?>
-                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 8 months from the original joining date in accordance with the Service Agreement clause.
+                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least <?php echo $mintenure; ?> from the original joining date in accordance with the Service Agreement clause.
                                         <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
                                             You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 4 months from the original joining date in accordance with the Service Agreement clause.
                                         <?php } ?>
@@ -237,11 +265,11 @@ if (!$result) {
                                     <li>
                                         <p>Working Hours:</p>
                                         <?php if (str_contains($array['position'], "Intern")) { ?>
-                                            The work schedule comprises 4 days per week, with each day requiring a three-hour commitment, inclusive of essential administrative tasks as required.
+                                            The work schedule comprises 4 days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
                                         <?php } else if (str_contains($array['position'], "Employee")) { ?>
-                                            The work schedule comprises 6 days per week, with each day requiring a three-hour commitment, inclusive of essential administrative tasks as required.
+                                            The work schedule comprises 6 days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
                                         <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
-                                            The work schedule comprises 3 days per week, with each day requiring a three-hour commitment, inclusive of essential administrative tasks as required.
+                                            The work schedule comprises 3 days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
                                         <?php } ?>
                                         <br>The regular working hours may be subject to an extension of up to a maximum of 30 minutes, contingent upon real-time demands pertaining to non-academic activities and similar operational necessities. You should be flexible in terms of working hours.
                                     </li>
@@ -291,9 +319,9 @@ if (!$result) {
                                     <p><b><u>Increments and Promotions</u></b></p>
                                     <p>Your performance and contribution to RSSI will be an important consideration for salary increments and promotions. Salary increments and promotions will be based on RSSI&#39;s Compensation and Promotion policy.</p>
 
-                                    <p><b><u>Maternity Leave</u></b></p>
+                                    <!-- <p><b><u>Maternity Leave</u></b></p>
 
-                                    <p>Female full-time employees can access 12 weeks of maternity leave, including six weeks of post-natal leave. In situations of miscarriage or medical pregnancy termination, two weeks of paid maternity leave are granted. For adopting or commissioning mothers, a four-week maternity leave is available. For more details on the benefits and eligibility, please refer to RSSI Policy Maternity Leave once you join.</p>
+                                    <p>Female full-time employees can access 12 weeks of maternity leave, including six weeks of post-natal leave. In situations of miscarriage or medical pregnancy termination, two weeks of paid maternity leave are granted. For adopting or commissioning mothers, a four-week maternity leave is available. For more details on the benefits and eligibility, please refer to RSSI Policy Maternity Leave once you join.</p> -->
                                 <?php } ?>
 
                             </td>
