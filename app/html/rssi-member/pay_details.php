@@ -94,7 +94,7 @@ while ($row = pg_fetch_assoc($result)) {
     $deductions = $deductionsResult['sum'];
 
     // Calculate the net pay
-    $netPay = $earnings - $deductions;
+    $netPay = $earnings;
 
     // Add the net pay to the total net pay
     $totalNetPay += $netPay;
@@ -240,6 +240,7 @@ $resultArr = pg_fetch_all($result);
                             <?php echo '<th scope="col">Issuance Date</th>
                                 <th scope="col">Pay month</th>
                                 <th scope="col">Days paid</th>
+                                <th scope="col">Gross pay</th>
                                 <th scope="col">Netpay</th>
                                 <th scope="col">HR comments</th>
                                 <th scope="col">Payslip</th>
@@ -269,6 +270,7 @@ $resultArr = pg_fetch_all($result);
                                     <?php echo '<td>' . (($array['payslip_issued_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['payslip_issued_on'])) : '') . '</td>
                                 <td>' . date('F', mktime(0, 0, 0, $array['paymonth'], 1)) . '&nbsp;' . $array['payyear'] . '</td>
                                 <td>' . $array['dayspaid'] . '</td>
+                                <td>' . $total_earning . '</td>
                                 <td>' . $net_pay . '</td>
                                 <td>
                                 
