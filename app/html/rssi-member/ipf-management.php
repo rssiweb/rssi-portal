@@ -243,19 +243,25 @@ $resultArr = pg_fetch_all($result);
                                                 <td><?php echo $array['ipf']; ?></td>
                                                 <td>
                                                     <?php
-                                                    if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-                                                        echo '<span class="badge bg-danger text-start">Self-assessment</span>';
-                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-                                                        echo '<span class="badge bg-warning text-start">Manager assessment in progress</span>';
-                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") {
-                                                        echo '<span class="badge bg-primary text-start">Reviewer assessment in progress</span>';
+                                                    $status = '';
+
+                                                    if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                                        $status = 'Self-assessment';
+                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                                        $status = 'Manager assessment in progress';
+                                                    } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                                        $status = 'Reviewer assessment in progress';
                                                     } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
-                                                        echo '<span class="badge bg-success text-start">IPF released</span>';
+                                                        $status = 'IPF released';
                                                     } elseif ($array['ipf_response'] == 'accepted') {
-                                                        echo '<span class="badge bg-success text-start">IPF Accepted</span>';
+                                                        $status = 'IPF Accepted';
                                                     } elseif ($array['ipf_response'] == 'rejected') {
-                                                        echo '<span class="badge bg-danger text-start">IPF Rejected</span>';
+                                                        $status = 'IPF Rejected';
+                                                    } elseif (($array['appraisee_response_complete'] == "" || $array['appraisee_response_complete'] == "yes") && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] != null) {
+                                                        $status = 'incomplete';
                                                     }
+
+                                                    echo '<span class="badge bg-' . ($status == 'IPF Rejected' ? 'danger' : ($status == 'IPF Accepted' || $status == 'IPF released' ? 'success' : ($status == 'Self-assessment' ? 'danger' : 'secondary'))) . ' text-start">' . $status . '</span>';
                                                     ?>
                                                 </td>
                                                 <td><?php echo ($array['ipf_response_on'] == null ? "" : date('d/m/y h:i:s a', strtotime($array['ipf_response_on']))); ?></td>

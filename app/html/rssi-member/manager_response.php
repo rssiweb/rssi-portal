@@ -251,27 +251,29 @@ if (!$result) {
                 <?php if (($array['appraisee_response_complete'] == "yes" && $array['manager1_associatenumber'] == $associatenumber) || ($array['appraisee_response_complete'] == "yes" && $array['manager_associatenumber'] == $associatenumber && $array['manager1_evaluation_complete'] == 'yes') || $role == 'Admin') { ?>
                     <form method="post" name="m_response" id="m_response">
 
-                        <fieldset <?php echo ($array['manager_evaluation_complete'] == "yes" || ($array['manager1_associatenumber'] == $associatenumber && $array['manager1_evaluation_complete'] == "yes")) ? "disabled" : ""; ?>>
+                        <fieldset <?php echo ($array['manager_evaluation_complete'] == "yes" || ($array['manager1_associatenumber'] == $associatenumber && $array['manager1_evaluation_complete'] == "yes") || $array['ipf_process_closed_on'] != null) ? "disabled" : ""; ?>>
 
-                            <?php if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") { ?>
-                                <span class="badge bg-danger float-end">Self-assessment</span>
-                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") { ?>
-                                <span class="badge bg-warning float-end">Manager assessment in progress</span>
-                            <?php } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") { ?>
-                                <span class="badge bg-primary float-end">Reviewer assessment in progress</span>
-                                <?php } else {
+                            <?php
+                            $status = '';
 
-                                if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) { ?>
-                                    <span class="badge bg-success float-end">IPF released</span>
-                                <?php } ?>
-                                <?php if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == "accepted") { ?>
-                                    <span class="badge bg-success float-end">IPF Accepted</span>
-                                <?php } ?>
-                                <?php if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == "rejected") { ?>
-                                    <span class="badge bg-danger float-end">IPF Rejected</span>
-                                <?php } ?>
+                            if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                $status = 'Self-assessment';
+                            } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                $status = 'Manager assessment in progress';
+                            } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] == null) {
+                                $status = 'Reviewer assessment in progress';
+                            } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
+                                $status = 'IPF released';
+                            } elseif ($array['ipf_response'] == 'accepted') {
+                                $status = 'IPF Accepted';
+                            } elseif ($array['ipf_response'] == 'rejected') {
+                                $status = 'IPF Rejected';
+                            } elseif (($array['appraisee_response_complete'] == "" || $array['appraisee_response_complete'] == "yes") && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] != null) {
+                                $status = 'incomplete';
+                            }
 
-                            <?php } ?>
+                            echo '<span class="float-end badge bg-' . ($status == 'IPF Rejected' ? 'danger' : ($status == 'IPF Accepted' || $status == 'IPF released' ? 'success' : ($status == 'Self-assessment' ? 'danger' : 'secondary'))) . ' text-start">' . $status . '</span>';
+                            ?>
 
                             <input type="hidden" name="form-type" value="manager_remarks_update">
                             <input type="hidden" name="goalsheetid" Value="<?php echo $array['goalsheetid'] ?>" readonly>
