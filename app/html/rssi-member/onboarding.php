@@ -16,6 +16,12 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';
 }
+if ($filterstatus != 'Active') {
+    echo '<script type="text/javascript">';
+    echo 'alert("Access Denied. You are not authorized to access this web page.");';
+    echo 'window.location.href = "home.php";';
+    echo '</script>';
+}
 
 @$associate_number = @strtoupper($_GET['associate-number']);
 $result = pg_query($con, "SELECT fullname, associatenumber, doj, effectivedate, remarks, photo, engagement, position, depb, filterstatus, COALESCE(latest_certificate.certificate_url, certificate.certificate_url) AS certificate_url, COALESCE(latest_certificate.badge_name, certificate.badge_name) AS badge_name, onboard_initiated_by, onboarding_gen_otp_center_incharge, onboarding_gen_otp_associate, email, onboarding_flag, onboarding_photo, reporting_date_time, disclaimer, ip_address, onboarding_submitted_by, onboarding_submitted_on, onboard_initiated_on, onboard_initiated_by, COALESCE(latest_certificate.issuedon, certificate.issuedon) AS issuedon, COALESCE(latest_certificate.certificate_no, certificate.certificate_no) AS certificate_no

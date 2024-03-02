@@ -43,7 +43,7 @@ if (@$_POST['form-type'] == "gms") {
     ), $email);
 }
 ?>
-<?php if ($role == 'Admin') {
+<?php if ($role == 'Admin' && $filterstatus == 'Active') {
     @$redeem_id = strtoupper($_GET['redeem_id']);
     @$user_id = strtoupper($_GET['user_id']);
     @$is_user = $_GET['is_user'];
@@ -92,8 +92,7 @@ if (@$_POST['form-type'] == "gms") {
     $resultArrr_admin = pg_fetch_result($totalgemsredeem_admin, 0, 0);
     $resultArrrr_admin = pg_fetch_result($totalgemsreceived_admin, 0, 0);
     $gems_approved = pg_fetch_result($totalgemsredeem_approved, 0, 0);
-} ?>
-<?php if ($role != 'Admin') {
+} else {
 
     $result = pg_query($con, "SELECT * FROM gems where user_id='$associatenumber' order by requested_on desc");
     $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -113,15 +112,18 @@ if (@$_POST['form-type'] == "gms") {
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
@@ -196,7 +198,7 @@ if (@$_POST['form-type'] == "gms") {
 
                         <div class="card-body">
                             <br>
-                            <?php if ($role == 'Admin') { ?>
+                            <?php if ($role == 'Admin' && $filterstatus == 'Active') { ?>
                                 <div class="col" style="display: inline-block; width: 100%; text-align: right">
                                     <?php if ($resultArrrr_admin - $resultArrr_admin != null) { ?>
                                         <div style="display: inline-block; width: 100%; text-align: right;">
@@ -241,71 +243,70 @@ if (@$_POST['form-type'] == "gms") {
                                 </script>
                             <?php } ?>
                             <form autocomplete="off" name="gms" id="gms" action="redeem_gems.php" method="POST">
-                                <div class="form-group" style="display: inline-block;">
+                                <fieldset <?php echo ($filterstatus != 'Active') ? 'disabled' : ''; ?>>
+                                    <div class="form-group" style="display: inline-block;">
 
-                                    <input type="hidden" name="form-type" type="text" value="gms">
+                                        <input type="hidden" name="form-type" type="text" value="gms">
 
-                                    <?php if ($role == 'Admin') { ?>
+                                        <?php if ($role == 'Admin' && $filterstatus == 'Active') { ?>
+                                            <span class="input-help">
+                                                <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr_admin - $resultArrr_admin) ?>" min="1" required>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Redeem gems point</small>
+                                            </span>
+
+                                        <?php } else { ?>
+
+                                            <span class="input-help">
+                                                <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr - $resultArrr) ?>" min="1" required>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Redeem gems point</small>
+                                            </span>
+                                        <?php } ?>
+
+
                                         <span class="input-help">
-                                            <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr_admin - $resultArrr_admin) ?>" min="1" required>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">Redeem gems point</small>
+                                            <select name="redeem_type" class="form-select" style="width:max-content; display:inline-block" required>
+                                                <?php if ($redeem_type == null) { ?>
+                                                    <option value="" disabled selected hidden>Redeem type</option>
+                                                <?php
+                                                } else { ?>
+                                                    <option hidden selected><?php echo $redeem_type ?></option>
+                                                <?php }
+                                                ?>
+                                                <option>Voucher</option>
+                                                <option>Bank payment</option>
+
+                                            </select>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Redeem type*</small>
                                         </span>
 
-                                    <?php } ?>
+                                        <input type="hidden" name="issuedby" class="form-control" placeholder="Issued by" value="<?php echo $fullname ?>" required readonly>
 
-                                    <?php if ($role != 'Admin') { ?>
-
-                                        <span class="input-help">
-                                            <input type="number" name="redeem_gems_point" class="form-control" placeholder="Gems" max="<?php echo ($resultArrrr - $resultArrr) ?>" min="1" required>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">Redeem gems point</small>
-                                        </span>
-                                    <?php } ?>
-
-
-                                    <span class="input-help">
-                                        <select name="redeem_type" class="form-select" style="width:max-content; display:inline-block" required>
-                                            <?php if ($redeem_type == null) { ?>
-                                                <option value="" disabled selected hidden>Redeem type</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $redeem_type ?></option>
-                                            <?php }
-                                            ?>
-                                            <option>Voucher</option>
-                                            <option>Bank payment</option>
-
-                                        </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Redeem type*</small>
-                                    </span>
-
-                                    <input type="hidden" name="issuedby" class="form-control" placeholder="Issued by" value="<?php echo $fullname ?>" required readonly>
-
-                                    <?php if (($role == 'Admin') && ($resultArrrr_admin - $resultArrr_admin) == null) { ?>
-                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;" disabled>
-                                            <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
-                                    <?Php } ?>
-                                    <?php if (($role == 'Admin') && ($resultArrrr_admin - $resultArrr_admin) != null) { ?>
-                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
-                                            <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
-                                    <?Php } ?>
+                                        <?php if (($role == 'Admin' && $filterstatus == 'Active') && ($resultArrrr_admin - $resultArrr_admin) == null) { ?>
+                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;" disabled>
+                                                <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
+                                        <?Php } ?>
+                                        <?php if (($role == 'Admin' && $filterstatus == 'Active') && ($resultArrrr_admin - $resultArrr_admin) != null) { ?>
+                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
+                                                <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
+                                        <?Php } ?>
 
 
-                                    <?php if (($role != 'Admin') && ($resultArrrr - $resultArrr) == null) { ?>
-                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;" disabled>
-                                            <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
-                                    <?Php } ?>
-                                    <?php if (($role != 'Admin') && ($resultArrrr - $resultArrr) != null) { ?>
-                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
-                                            <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
-                                    <?Php } ?>
+                                        <?php if (($role != 'Admin' || $filterstatus != 'Active') && ($resultArrrr - $resultArrr) == null) { ?>
+                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;" disabled>
+                                                <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
+                                        <?Php } ?>
+                                        <?php if (($role != 'Admin' || $filterstatus != 'Active') && ($resultArrrr - $resultArrr) != null) { ?>
+                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
+                                                <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
+                                        <?Php } ?>
 
-                                </div>
-
+                                    </div>
+                                </fieldset>
                             </form>
 
                             <div style="display: inline-block; width:100%; text-align:right;">Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                             </div>
-                            <?php if ($role == 'Admin' && $user_id != null) { ?>
+                            <?php if ($role == 'Admin' && $filterstatus == 'Active' && $user_id != null) { ?>
                                 <div class="col" style="display: inline-block; width:100%; text-align:right">
                                     <div style="display: inline-block; width:100%; text-align:right;">Balance:&nbsp;
                                         <?php if ($resultArrrr - $gems_approved <= 0) { ?>
@@ -319,7 +320,7 @@ if (@$_POST['form-type'] == "gms") {
                             <?php } ?>
 
 
-                            <?php if ($role == 'Admin') { ?>
+                            <?php if ($role == 'Admin' && $filterstatus == 'Active') { ?>
 
                                 <form action="" method="GET">
                                     <div class="form-group" style="display: inline-block;">

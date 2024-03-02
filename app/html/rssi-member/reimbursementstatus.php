@@ -10,7 +10,7 @@ if (!isLoggedIn("aid")) {
   exit;
 }
 
-if ($role == 'Admin') {
+if ($role == 'Admin' && $filterstatus == 'Active') {
   $status = isset($_POST['get_id']) ? $_POST['get_id'] : null;
   $id = isset($_POST['get_aid']) ? strtoupper($_POST['get_aid']) : null;
 } else {
@@ -214,7 +214,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
               <form action="" method="POST">
                 <div class="form-group" style="display: inline-block;">
                   <div class="col2" style="display: inline-block;">
-                    <?php if ($role == 'Admin') { ?>
+                    <?php if ($role == 'Admin' && $filterstatus == 'Active') { ?>
                       <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
                     <?php } ?>
                     <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year" required>

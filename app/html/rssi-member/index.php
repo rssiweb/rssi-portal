@@ -64,20 +64,34 @@ function checkLogin($con, $date)
     $associatenumber = strtoupper($_POST['aid']);
     $colors = $_POST['pass'];
 
-    $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
+    $query = "select password, absconding from rssimyaccount_members WHERE associatenumber='$associatenumber'";
     $result = pg_query($con, $query);
     $user = pg_fetch_row($result);
     @$existingHashFromDb = $user[0];
+    $absconding = $user[1];
 
-    @$loginSuccess = password_verify($colors, $existingHashFromDb);
+    // @$loginSuccess = !$absconding && password_verify($colors, $existingHashFromDb);
 
-    // Do the login stuff...
+    // if ($loginSuccess) {
+    //     $_SESSION['aid'] = $associatenumber;
+    //     afterlogin($con, $date);
+    // } else {
+    //     $login_failed_dialog = true;
+    // }
 
-    if ($loginSuccess) {
-        $_SESSION['aid'] = $associatenumber;
-        afterlogin($con, $date);
+    if ($absconding !== "") {
+        // Absconding is not null, login failed due to absconding
+        $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
     } else {
-        $login_failed_dialog = true;
+        @$loginSuccess = password_verify($colors, $existingHashFromDb);
+
+        if ($loginSuccess) {
+            $_SESSION['aid'] = $associatenumber;
+            afterlogin($con, $date);
+        } else {
+            // Incorrect password
+            $login_failed_dialog = "Incorrect username or password.";
+        }
     }
 }
 
@@ -113,15 +127,18 @@ if ($_POST) {
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RSSI-My Account</title>
@@ -277,7 +294,8 @@ if ($_POST) {
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Please enter valid credentials.</p>
+                        <!-- <p>Please enter valid credentials.</p> -->
+                        <?php echo $login_failed_dialog ?>
                     </div>
                 </div>
             </div>

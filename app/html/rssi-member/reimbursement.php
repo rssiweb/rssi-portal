@@ -80,15 +80,18 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "reimbursementapply") 
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -206,69 +209,70 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "reimbursementapply") 
                                         <tr>
                                             <td>
                                                 <form autocomplete="off" name="reimbursement" id="reimbursement" action="reimbursement.php" method="POST" enctype="multipart/form-data">
-                                                    <div class="form-group" style="display: inline-block;">
+                                                    <fieldset <?php echo ($filterstatus != 'Active') ? 'disabled' : ''; ?>>
+                                                        <div class="form-group" style="display: inline-block;">
 
-                                                        <input type="hidden" name="form-type" value="reimbursementapply">
+                                                            <input type="hidden" name="form-type" value="reimbursementapply">
 
-                                                        <span class="input-help">
-                                                            <select name="claimhead" id="claimhead" class="form-select" required>
-                                                                <option disabled selected hidden value="">Select</option>
-                                                                <option value="Business Meeting Expenses">Business Meeting Expenses</option>
-                                                                <option value="Client Entertainment">Client Entertainment</option>
-                                                                <option value="Communication Expenses">Communication Expenses</option>
-                                                                <option value="Conference and Training Courses">Conference and Training Courses</option>
-                                                                <option value="IT Peripherals">IT Peripherals</option>
-                                                                <option value="Local Conveyance">Local Conveyance</option>
-                                                                <option value="Marketing Expenses">Marketing Expenses</option>
-                                                                <option value="Office Expense">Office Expense</option>
-                                                                <option value="Professional Membership">Professional Membership</option>
-                                                                <option value="Shift Working / Extended Hours">Shift Working / Extended Hours</option>
-                                                                <option value="Staff Welfare">Staff Welfare</option>
-                                                                <option value="Student Welfare">Student Welfare</option>
-                                                                <option value="Visa & Passport Expenses">Visa & Passport Expenses</option>
+                                                            <span class="input-help">
+                                                                <select name="claimhead" id="claimhead" class="form-select" required>
+                                                                    <option disabled selected hidden value="">Select</option>
+                                                                    <option value="Business Meeting Expenses">Business Meeting Expenses</option>
+                                                                    <option value="Client Entertainment">Client Entertainment</option>
+                                                                    <option value="Communication Expenses">Communication Expenses</option>
+                                                                    <option value="Conference and Training Courses">Conference and Training Courses</option>
+                                                                    <option value="IT Peripherals">IT Peripherals</option>
+                                                                    <option value="Local Conveyance">Local Conveyance</option>
+                                                                    <option value="Marketing Expenses">Marketing Expenses</option>
+                                                                    <option value="Office Expense">Office Expense</option>
+                                                                    <option value="Professional Membership">Professional Membership</option>
+                                                                    <option value="Shift Working / Extended Hours">Shift Working / Extended Hours</option>
+                                                                    <option value="Staff Welfare">Staff Welfare</option>
+                                                                    <option value="Student Welfare">Student Welfare</option>
+                                                                    <option value="Visa & Passport Expenses">Visa & Passport Expenses</option>
 
-                                                            </select>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Claim head<span style="color:red">*</span></small>
-                                                        </span>
+                                                                </select>
+                                                                <small id="passwordHelpBlock" class="form-text text-muted">Claim head<span style="color:red">*</span></small>
+                                                            </span>
 
-                                                        <span class="input-help">
-                                                            <textarea class="form-control" name="claimheaddetails" id="claimheaddetails" placeholder="Claim head details" required></textarea>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Claim head details<span style="color:red">*</span><br>(Please mention the purpose of the expenditure.)</small>
-                                                        </span>
+                                                            <span class="input-help">
+                                                                <textarea class="form-control" name="claimheaddetails" id="claimheaddetails" placeholder="Claim head details" required></textarea>
+                                                                <small id="passwordHelpBlock" class="form-text text-muted">Claim head details<span style="color:red">*</span><br>(Please mention the purpose of the expenditure.)</small>
+                                                            </span>
 
-                                                        <span class="input-help">
-                                                            <input type="text" class="form-control" name="billno" id="billno" placeholder="Bill no" required>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Bill no<span style="color:red">*</span><br>(In case of multiple values ​​write it with comma (,).)</small>
-                                                        </span>
+                                                            <span class="input-help">
+                                                                <input type="text" class="form-control" name="billno" id="billno" placeholder="Bill no" required>
+                                                                <small id="passwordHelpBlock" class="form-text text-muted">Bill no<span style="color:red">*</span><br>(In case of multiple values ​​write it with comma (,).)</small>
+                                                            </span>
 
-                                                        <span class="input-help">
-                                                            <select name="currency" id="currency" class="form-select" required>
-                                                                <option disabled selected hidden value="">Select</option>
-                                                                <option value="INR" selected>INR</option>
-                                                            </select>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Currency<span style="color:red">*</span></small>
-                                                        </span>
+                                                            <span class="input-help">
+                                                                <select name="currency" id="currency" class="form-select" required>
+                                                                    <option disabled selected hidden value="">Select</option>
+                                                                    <option value="INR" selected>INR</option>
+                                                                </select>
+                                                                <small id="passwordHelpBlock" class="form-text text-muted">Currency<span style="color:red">*</span></small>
+                                                            </span>
 
-                                                        <span class="input-help">
-                                                            <input type="number" class="form-control" name="amount" id="amount" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Amount<span style="color:red">*</span></small>
-                                                        </span>
+                                                            <span class="input-help">
+                                                                <input type="number" class="form-control" name="amount" id="amount" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
+                                                                <small id="passwordHelpBlock" class="form-text text-muted">Amount<span style="color:red">*</span></small>
+                                                            </span>
 
-                                                        <span class="input-help">
-                                                            <input type="file" name="billdoc" class="form-control" required />
-                                                            <small id="passwordHelpBlock" class="form-text text-muted">Documents<span style="color:red">*</span></small>
-                                                        </span>
+                                                            <span class="input-help">
+                                                                <input type="file" name="billdoc" class="form-control" required />
+                                                                <small id="passwordHelpBlock" class="form-text text-muted">Documents<span style="color:red">*</span></small>
+                                                            </span>
 
-                                                        <div id="filter-checksh">
-                                                            <input type="checkbox" name="ack" id="ack" value="1" required />
-                                                            <label for="ack" style="font-weight: 400;">I, hereby authorize Insurer/TPA to audit/investigate my claims also authorize to share the claim details with Government authorities/IRDA for audit requirements. I also agree and certify that all of the information pertaining to this claim is true and correct if it is found to be false and/or if it is proved that claim documents are manipulated then, I understand and agree that RSSI will initiate appropriate disciplinary proceedings which may also lead to termination of my employment with RSSI.</label>
+                                                            <div id="filter-checksh">
+                                                                <input type="checkbox" name="ack" id="ack" value="1" required />
+                                                                <label for="ack" style="font-weight: 400;">I, hereby authorize Insurer/TPA to audit/investigate my claims also authorize to share the claim details with Government authorities/IRDA for audit requirements. I also agree and certify that all of the information pertaining to this claim is true and correct if it is found to be false and/or if it is proved that claim documents are manipulated then, I understand and agree that RSSI will initiate appropriate disciplinary proceedings which may also lead to termination of my employment with RSSI.</label>
+                                                            </div>
+                                                            </span>
+                                                            <br>
+                                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Submit</button>
+
                                                         </div>
-                                                        </span>
-                                                        <br>
-                                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Submit</button>
-
-                                                    </div>
-
+                                                    </fieldset>
                                                 </form>
                                             </td>
                                         </tr>

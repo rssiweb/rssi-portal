@@ -69,7 +69,7 @@ if ($role == "Admin") {
 date_default_timezone_set('Asia/Kolkata');
 // $date = date('Y-d-m h:i:s');
 
-if ($role == "Admin") {
+if ($role == "Admin" && $filterstatus == 'Active') {
 
     if ($appid != null && $allo_academicyear != null) {
         $result = pg_query($con, "select * from leaveallocation left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveallocation.allo_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveallocation.allo_applicantid=student.student_id  WHERE allo_applicantid='$appid' AND allo_academicyear='$allo_academicyear' order by allo_date desc");
@@ -78,9 +78,7 @@ if ($role == "Admin") {
     } else {
         $result = pg_query($con, "select * from leaveallocation left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveallocation.allo_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveallocation.allo_applicantid=student.student_id order by allo_date desc");
     }
-}
-
-if ($role != "Admin") {
+} else {
 
     if ($allo_academicyear != null) {
         $result = pg_query($con, "select * from leaveallocation left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveallocation.allo_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveallocation.allo_applicantid=student.student_id  WHERE allo_applicantid='$associatenumber' AND allo_academicyear='$allo_academicyear' order by allo_date desc");
@@ -221,7 +219,7 @@ $resultArr = pg_fetch_all($result);
 
 
                                 <!-- <section style="padding: 2%;"> -->
-                                <?php if ($role == "Admin") { ?>
+                                <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                     <div class="col text-end">
                                         <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Import file</a>
                                     </div>
@@ -302,7 +300,7 @@ $resultArr = pg_fetch_all($result);
                                                     <div class="form-group" style="display: inline-block;">
                                                         <div class="col2" style="display: inline-block;">
                                                             <input name="leaveallocationid" id="leaveallocationid" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave Allocation ID" value="<?php echo $id ?>">
-                                                            <?php if ($role == "Admin") { ?>
+                                                            <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                                                 <input name="allo_applicantid" id="allo_applicantid" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>" required>
                                                             <?php } ?>
                                                             <select name="allo_academicyear_search" id="allo_academicyear_search" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
@@ -320,14 +318,14 @@ $resultArr = pg_fetch_all($result);
                                                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                                             <i class="bi bi-search"></i>&nbsp;Search</button>
                                                     </div>
-                                                    <?php if ($role == "Admin") { ?>
+                                                    <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                                         <div id="filter-checks">
                                                             <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
                                                             <label for="is_user" style="font-weight: 400;">Search by Leave Allocation ID</label>
                                                         </div>
                                                     <?php } ?>
                                                 </form>
-                                                <?php if ($role == "Admin") { ?>
+                                                <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                                     <script>
                                                         if ($('#is_user').not(':checked').length > 0) {
 
@@ -406,7 +404,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Allocated Leave Type</th>
                                 <th scope="col">Allocatd by</th>
                                 <th scope="col" width="15%">Remarks</th>' ?>
-                                <?php if ($role == "Admin") { ?>
+                                <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                     <?php echo '<th scope="col"></th>' ?>
                                 <?php } ?>
                                 </tr>
@@ -426,7 +424,7 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['allocatedbyid'] . '<br>' . $array['allocatedbyname'] . '</td>
                                 <td>' . $array['allo_remarks'] . '</td>' ?>
 
-                                        <?php if ($role == "Admin") { ?>
+                                        <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
 
                                             <?php echo '<td>
                                     

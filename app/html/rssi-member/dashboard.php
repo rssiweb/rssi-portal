@@ -15,6 +15,12 @@ if ($password_updated_by == null || $password_updated_on < $default_pass_updated
     echo 'window.location.href = "defaultpasswordreset.php";';
     echo '</script>';
 }
+if ($filterstatus != 'Active') {
+    echo '<script type="text/javascript">';
+    echo 'alert("Access Denied. You are not authorized to access this web page.");';
+    echo 'window.location.href = "home.php";';
+    echo '</script>';
+}
 $query = "SELECT
     (SELECT COUNT(serial_number) FROM onboarding WHERE onboarding_flag IS NULL) AS onboarding_left,
     NULL AS exit_left,
@@ -86,15 +92,18 @@ if ($resultArr_admission > 0) {
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 

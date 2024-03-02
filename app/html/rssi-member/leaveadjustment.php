@@ -27,7 +27,7 @@ if ($role == 'Member') {
 include("../../util/email.php");
 
 @$now = date('Y-m-d H:i:s');
-if ($role == "Admin") {
+if ($role == "Admin" && $filterstatus == 'Active') {
     if (@$_POST['form-type'] == "leaveadj") {
         @$leaveadjustmentid = 'RSD' . time();
         @$adj_applicantid = strtoupper($_POST['adj_applicantid']);
@@ -107,7 +107,7 @@ if ($role == "Admin") {
 date_default_timezone_set('Asia/Kolkata');
 // $date = date('Y-d-m h:i:s');
 
-if ($role == "Admin") {
+if ($role == "Admin" && $filterstatus == 'Active') {
 
     if ($appid != null && $adj_academicyear_search != null) {
         $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id WHERE adj_applicantid='$appid' AND adj_academicyear='$adj_academicyear_search' order by adj_regdate desc");
@@ -116,9 +116,7 @@ if ($role == "Admin") {
     } else {
         $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id order by adj_regdate desc");
     }
-}
-
-if ($role != "Admin") {
+} else {
 
     if ($id == null && $adj_academicyear_search == null) {
         $result = pg_query($con, "select * from leaveadjustment left join (SELECT associatenumber,fullname, email, phone FROM rssimyaccount_members) faculty ON leaveadjustment.adj_applicantid=faculty.associatenumber  left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON leaveadjustment.adj_applicantid=student.student_id where adj_applicantid='$associatenumber' order by adj_regdate desc");
@@ -251,7 +249,7 @@ $resultArr = pg_fetch_all($result);
                                     </script>
                                 <?php } ?>
 
-                                <?php if ($role == "Admin") { ?>
+                                <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                     <table class="table">
                                         <thead>
                                             <tr>
@@ -402,7 +400,7 @@ $resultArr = pg_fetch_all($result);
                                                     <div class="form-group" style="display: inline-block;">
                                                         <div class="col2" style="display: inline-block;">
                                                             <input name="leaveadjustmentid" id="leaveadjustmentid" class="form-control" style="width:max-content; display:inline-block" placeholder="Leave Adjustment ID" value="<?php echo $id ?>">
-                                                            <?php if ($role == "Admin") { ?>
+                                                            <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                                                 <input name="adj_applicantid_search" id="adj_applicantid_search" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $appid ?>">
                                                             <?php } ?>
                                                             <select name="adj_academicyear_search" id="adj_academicyear_search" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
@@ -420,14 +418,14 @@ $resultArr = pg_fetch_all($result);
                                                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                                             <i class="bi bi-search"></i>&nbsp;Search</button>
                                                     </div>
-                                                    <?php if ($role == "Admin") { ?>
+                                                    <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                                         <div id="filter-checks">
                                                             <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
                                                             <label for="is_user" style="font-weight: 400;">Search by Leave Adjustment ID</label>
                                                         </div>
                                                     <?php } ?>
                                                 </form>
-                                                <?php if ($role == "Admin") { ?>
+                                                <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                                     <script>
                                                         if ($('#is_user').not(':checked').length > 0) {
 
@@ -507,7 +505,7 @@ $resultArr = pg_fetch_all($result);
                                 <th scope="col">Adjusted Leave Type</th>
                                 <th scope="col">Reviewer</th>
                                 <th scope="col" width="15%">Remarks</th>' ?>
-                                <?php if ($role == "Admin") { ?>
+                                <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
                                     <?php echo '<th scope="col"></th>' ?>
                                 <?php } ?>
                                 </tr>
@@ -533,7 +531,7 @@ $resultArr = pg_fetch_all($result);
                                 <td>' . $array['adj_appliedby'] . '<br>' . $array['adj_appliedby_name'] . '</td>
                                 <td>' . $array['adj_reason'] . '</td>' ?>
 
-                                        <?php if ($role == "Admin") { ?>
+                                        <?php if ($role == "Admin" && $filterstatus == 'Active') { ?>
 
                                             <?php if (($array['phone'] != null || $array['contact'] != null)) { ?>
                                                 <?php echo '<td><a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['adj_applicantid'] . '),%0A%0AYour ' . $array['adj_day'] . ' day(s) ' . $array['adj_leavetype'] . ' has been adjusted in the system. Please check your registered email for more details.%0A%0AYou can always check your leave adjustment details from My Account>Leave>Leave adjustment. For further information, you may contact your HR.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS

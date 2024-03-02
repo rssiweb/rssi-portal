@@ -21,12 +21,10 @@ date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d H:i:s');
 
 
-if ($role == 'Admin') {
+if ($role == 'Admin' && $filterstatus == 'Active') {
     @$id = strtoupper($_GET['get_id']);
     $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'"); //select query for viewing users.
-}
-
-if ($role != 'Admin') {
+} else {
 
     $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$user_check'"); //select query for viewing users.
 }
@@ -46,15 +44,18 @@ if (!$result) {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -63,10 +64,10 @@ if (!$result) {
     <?php if ($role != 'Admin') { ?>
         <title><?php echo $user_check ?></title>
     <?php } ?>
-    <?php if ($role == 'Admin' && $id != null) { ?>
+    <?php if ($role == 'Admin' && @$id != null) { ?>
         <title><?php echo $id ?></title>
     <?php } ?>
-    <?php if ($role == 'Admin' && $id == null) { ?>
+    <?php if ($role == 'Admin' && @$id == null) { ?>
         <title>My Profile</title>
     <?php } ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -120,7 +121,7 @@ if (!$result) {
 <body>
     <br>
     <div class="col-md-12">
-        <?php if ($role == 'Admin') { ?>
+        <?php if ($role == 'Admin' && $filterstatus == 'Active') { ?>
             <form action="" method="GET" class="no-print">
                 <div class="form-group" style="display: inline-block;">
                     <div class="col2" style="display: inline-block;">
@@ -135,9 +136,8 @@ if (!$result) {
                     <button type="button" onclick="window.print()" name="print" class="btn btn-info btn-sm" style="outline: none;"><i class="bi bi-save"></i>&nbsp;Save</button>
                 </div>
             </form>
-        <?php } ?>
+        <?php } else { ?>
 
-        <?php if ($role != 'Admin') { ?>
             <div class="col no-print" style="width:99%;margin-left:1.5%;text-align:right;">
                 <button type="button" onclick="window.print()" name="print" class="btn btn-danger btn-sm" style="outline: none;"><i class="bi bi-save"></i>&nbsp;Save</button><br><br>
             </div>

@@ -368,66 +368,67 @@ $resultArr = pg_fetch_all($result);
 
 
                             <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave.php" method="POST" enctype="multipart/form-data">
-                                <div class="form-group" style="display: inline-block;">
+                                <fieldset <?php echo ($filterstatus != 'Active') ? 'disabled' : ''; ?>>
+                                    <div class="form-group" style="display: inline-block;">
 
-                                    <input type="hidden" name="form-type" value="leaveapply">
+                                        <input type="hidden" name="form-type" value="leaveapply">
 
-                                    <span class="input-help">
-                                        <input type="date" class="form-control" name="fromdate" id="fromdate" value="" max="" onchange="cal();" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">From<span style="color:red">*</span></small>
-                                    </span>
-                                    <span class="input-help">
-                                        <input type="date" class="form-control" name="todate" id="todate" value="" min="" onchange="cal();" required>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">To<span style="color:red">*</span></small>
-                                    </span>
-                                    <div id="filter-checksh">
-                                        <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal()" disabled />
-                                        <label for="is_userh" style="font-weight: 400;">Half day</label>
-                                    </div>
-                                    <span class="input-help">
-                                        <input type="text" class="form-control" name="numdays2" id="numdays2" value="" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" size="10" readonly>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Days count</small>
-                                    </span>
-
-                                    <span class="input-help">
-                                        <select name="typeofleave" id="typeofleave" class="typeofleave form-select" required>
-                                            <option disabled selected hidden value="">Select</option>
-                                            <option value="Sick Leave">Sick Leave</option>
-                                            <option value="Casual Leave">Casual Leave</option>
-                                            <option value="Leave Without Pay">Leave Without Pay</option>
-                                            <!-- <option value="uk">United Kingdom</option> -->
-                                        </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Types of Leave<span style="color:red">*</span></small>
-                                    </span>
-                                    <span name="hidden-panel_creason" id="hidden-panel_creason">
-                                        <span id="response"></span>
-                                    </span>
-
-                                    <span name="hidden-panel" id="hidden-panel">
                                         <span class="input-help">
-                                            <input type="file" name="medicalcertificate" class="form-control" />
-                                            <small id="passwordHelpBlock" class="form-text text-muted">Documents</small>
+                                            <input type="date" class="form-control" name="fromdate" id="fromdate" value="" max="" onchange="cal();" required>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">From<span style="color:red">*</span></small>
                                         </span>
-                                    </span>
-
-                                    <span class="input-help">
-                                        <textarea type="text" name="applicantcomment" class="form-control" placeholder="Remarks" value=""></textarea>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
-                                    </span>
-
-                                    <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by" value="<?php echo $associatenumber ?>" required readonly>
-
-                                    <span name="hidden-panel_ack" id="hidden-panel_ack">
+                                        <span class="input-help">
+                                            <input type="date" class="form-control" name="todate" id="todate" value="" min="" onchange="cal();" required>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">To<span style="color:red">*</span></small>
+                                        </span>
                                         <div id="filter-checksh">
-                                            <input type="checkbox" name="ack" id="ack" value="1" />
-                                            <label for="ack" style="font-weight: 400;"> I hereby confirm submitting the relevant supporting medical documents if the leave duration is more than 2 days.</label>
+                                            <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal()" disabled />
+                                            <label for="is_userh" style="font-weight: 400;">Half day</label>
                                         </div>
-                                    </span>
-                                    <br>
-                                    <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
+                                        <span class="input-help">
+                                            <input type="text" class="form-control" name="numdays2" id="numdays2" value="" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" size="10" readonly>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Days count</small>
+                                        </span>
 
-                                </div>
+                                        <span class="input-help">
+                                            <select name="typeofleave" id="typeofleave" class="typeofleave form-select" required>
+                                                <option disabled selected hidden value="">Select</option>
+                                                <option value="Sick Leave">Sick Leave</option>
+                                                <option value="Casual Leave">Casual Leave</option>
+                                                <option value="Leave Without Pay">Leave Without Pay</option>
+                                                <!-- <option value="uk">United Kingdom</option> -->
+                                            </select>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Types of Leave<span style="color:red">*</span></small>
+                                        </span>
+                                        <span name="hidden-panel_creason" id="hidden-panel_creason">
+                                            <span id="response"></span>
+                                        </span>
 
+                                        <span name="hidden-panel" id="hidden-panel">
+                                            <span class="input-help">
+                                                <input type="file" name="medicalcertificate" class="form-control" />
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Documents</small>
+                                            </span>
+                                        </span>
+
+                                        <span class="input-help">
+                                            <textarea type="text" name="applicantcomment" class="form-control" placeholder="Remarks" value=""></textarea>
+                                            <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
+                                        </span>
+
+                                        <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by" value="<?php echo $associatenumber ?>" required readonly>
+
+                                        <span name="hidden-panel_ack" id="hidden-panel_ack">
+                                            <div id="filter-checksh">
+                                                <input type="checkbox" name="ack" id="ack" value="1" />
+                                                <label for="ack" style="font-weight: 400;"> I hereby confirm submitting the relevant supporting medical documents if the leave duration is more than 2 days.</label>
+                                            </div>
+                                        </span>
+                                        <br>
+                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
+
+                                    </div>
+                                </fieldset>
                             </form><br>
 
                             <script>

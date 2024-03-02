@@ -236,10 +236,10 @@ if (!$result) {
                     </div>
                 </div>
                 <hr>
-                <?php if ($array['appraisee_associatenumber'] == $associatenumber || $role == 'Admin') { ?>
+                <?php if ($array['appraisee_associatenumber'] == $associatenumber || ($role == 'Admin' && $filterstatus == 'Active')) { ?>
                     <form method="post" name="a_response" id="a_response">
 
-                        <fieldset <?php echo ($array['appraisee_response_complete'] == "yes" || $array['ipf_process_closed_on'] != null) ? "disabled" : ""; ?>>
+                        <fieldset <?php echo (($array['appraisee_response_complete'] == "yes" || $array['ipf_process_closed_on'] != null) || $filterstatus != 'Active') ? "disabled" : ""; ?>>
 
                             <?php
                             $status = '';
@@ -770,7 +770,7 @@ if (!$result) {
                     </form>
                 <?php } ?>
             <?php } ?>
-            <?php if ($array['appraisee_associatenumber'] != $associatenumber && $role != 'Admin') { ?>
+            <?php if ($array['appraisee_associatenumber'] != $associatenumber && ($role != 'Admin' || $filterstatus != 'Active')) { ?>
                 <p>Oops! It looks like you're trying to access a goal sheet that doesn't belong to you.</p>
             <?php } ?>
         <?php
