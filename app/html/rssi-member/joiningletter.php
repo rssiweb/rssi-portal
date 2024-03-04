@@ -219,6 +219,26 @@ if (!$result) {
 
             <?php foreach ($resultArr as $array) { ?>
 
+                <?php
+                // Assuming $array['reporting_time'] holds the job type information
+
+                // Initialize the reporting time
+                $reporting_time = "";
+
+                // Check the job type
+                if ($array['job_type'] === "Part-time") {
+                    $reporting_time = "2:45 pm";
+                } elseif ($array['job_type'] === "Full-time") {
+                    $reporting_time = "10:45 am";
+                } else {
+                    // Handle the case where job type is neither Part-time nor Full-time
+                    // You may want to set a default reporting time here or handle it differently
+                    $reporting_time = "10:45 am"; // Defaulting to 10:45 am for other cases
+                }
+
+                // Now incorporate the $reporting_time into the statement
+                ?>
+
                 <table class="table" border="0">
                     <thead>
                         <tr>
@@ -344,7 +364,7 @@ if (!$result) {
                                         </div>
                                         <div class="date-time">
                                             <p>Reporting Date and Time:</p>
-                                            <p><?php echo date('d/M/Y', strtotime($array['doj'])); ?>&nbsp;&nbsp;<span class="time">2:45 pm</span></p>
+                                            <p><?php echo date('d/M/Y', strtotime($array['doj'])); ?>&nbsp;&nbsp;<span class="time"><?php echo $reporting_time ?></span></p>
                                         </div>
                                     </div>
                                     <div class="right-column">
