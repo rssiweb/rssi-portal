@@ -46,10 +46,13 @@ createApp({
           if (response.ok) {
             var res = await response.json();
             console.log(res);
-            this.$refs.fileInput.value = "";
+            //this.$refs.fileInput.value = "";
             this.message = res.message;
             this.rows = [];
             this.file = null;
+            // Trigger alert after successful submission
+            alert(`${res.message}`);
+            location.reload();
           } else {
             this.error = response.error;
           }
