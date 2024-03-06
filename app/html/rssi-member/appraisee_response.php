@@ -257,7 +257,7 @@ if (!$result) {
                             } elseif ($array['ipf_response'] == 'rejected') {
                                 $status = 'IPF Rejected';
                             } elseif (($array['appraisee_response_complete'] == "" || $array['appraisee_response_complete'] == "yes") && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "" && $array['ipf_process_closed_on'] != null) {
-                                $status = 'incomplete';
+                                $status = 'Incomplete';
                             }
 
                             echo '<span class="float-end badge bg-' . ($status == 'IPF Rejected' ? 'danger' : ($status == 'IPF Accepted' || $status == 'IPF released' ? 'success' : ($status == 'Self-assessment' ? 'danger' : 'secondary'))) . ' text-start">' . $status . '</span>';
@@ -760,6 +760,7 @@ if (!$result) {
                                             <div class="col-6">Process Closed On:</div>
                                             <div class="col-6">
                                                 <?php echo ($array['goalsheet_reviewed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['goalsheet_reviewed_on'])) . ' by ' . $array['goalsheet_reviewed_by'] : '' ?>
+                                                <?php echo ($array['ipf_process_closed_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['ipf_process_closed_on'])) . ' by ' . $array['ipf_process_closed_by'] : '' ?>
                                             </div>
                                         </div>
                                     </li>

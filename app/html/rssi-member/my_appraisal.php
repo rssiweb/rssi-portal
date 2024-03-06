@@ -29,11 +29,12 @@ if ($role == 'Member') {
 @$type = $_GET['get_id'];
 @$year = $_GET['get_year'];
 if (@$_GET['form-type'] == "appraisee") {
-    $result = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
+    $result = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager1.fullname m1name, manager1.email m1email, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
     LEFT JOIN (SELECT associatenumber,fullname,email,filterstatus FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
+    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager1 ON manager1.associatenumber = appraisee_response.manager1_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
-    WHERE appraisee_associatenumber='$associatenumber' AND filterstatus='Active' AND appraisaltype='$type' AND appraisalyear='$year' order by goalsheet_created_on desc");
+    WHERE appraisee_associatenumber='$associatenumber' AND appraisaltype='$type' AND appraisalyear='$year' order by goalsheet_created_on DESC");
 } else {
     $result = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
 }
@@ -47,11 +48,12 @@ if (!$result) {
 
 @$yearm = $_GET['get_yearm'];
 if (@$_GET['form-type'] == "manager") {
-    $resultm = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
+    $resultm = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager1.fullname m1name, manager1.email m1email, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
     LEFT JOIN (SELECT associatenumber,fullname,email,filterstatus FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
+    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager1 ON manager1.associatenumber = appraisee_response.manager1_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
-    WHERE (manager_associatenumber='$associatenumber' OR manager1_associatenumber='$associatenumber') AND filterstatus='Active' AND appraisalyear='$yearm' AND appraisee_response_complete='yes' AND manager_evaluation_complete IS NULL order by goalsheet_evaluated_on desc");
+    WHERE (manager_associatenumber='$associatenumber' OR manager1_associatenumber='$associatenumber') AND appraisalyear='$yearm' ORDER BY ipf_process_closed_on DESC, (ipf IS NULL) DESC, goalsheet_created_on DESC");
 } else {
     $resultm = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
 }
@@ -65,11 +67,12 @@ if (!$resultm) {
 
 @$yearr = $_GET['get_yearr'];
 if (@$_GET['form-type'] == "reviewer") {
-    $resultr = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
+    $resultr = pg_query($con, "select appraisee.fullname aname, appraisee.email aemail, manager1.fullname m1name, manager1.email m1email, manager.fullname mname, manager.email memail, reviewer.fullname rname, reviewer.email remail,*  from appraisee_response
     LEFT JOIN (SELECT associatenumber,fullname,email,filterstatus FROM rssimyaccount_members) appraisee ON appraisee.associatenumber = appraisee_response.appraisee_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager ON manager.associatenumber = appraisee_response.manager_associatenumber
+    LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) manager1 ON manager1.associatenumber = appraisee_response.manager1_associatenumber
     LEFT JOIN (SELECT associatenumber,fullname,email FROM rssimyaccount_members) reviewer ON reviewer.associatenumber = appraisee_response.reviewer_associatenumber
-    WHERE reviewer_associatenumber='$associatenumber' AND filterstatus='Active' AND appraisalyear='$yearr' AND appraisee_response_complete='yes' AND manager_evaluation_complete='yes' AND (reviewer_response_complete IS NULL OR ipf_response='rejected') order by goalsheet_evaluated_on desc");
+    WHERE reviewer_associatenumber='$associatenumber' AND appraisalyear='$yearr' ORDER BY ipf_process_closed_on DESC, (ipf IS NULL) DESC, goalsheet_created_on DESC");
 } else {
     $resultr = pg_query($con, "select * from appraisee_response WHERE goalsheetid is null");
 }
@@ -82,32 +85,44 @@ if (!$resultr) {
 <?php
 function getAssessmentStatus($array)
 {
-    if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-        return '<span class="badge bg-danger text-start">Self-assessment</span>';
-    } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
-        return '<span class="badge bg-warning text-start">Manager assessment in progress</span>';
-    } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") {
-        return '<span class="badge bg-primary text-start">Reviewer assessment in progress</span>';
-    } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
-        return '<span class="badge bg-success text-start">IPF released</span>';
-    } else if ($array['ipf_response'] == 'accepted') {
-        return '<span class="badge bg-success text-start">IPF Accepted</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
-    } else if ($array['ipf_response'] == 'rejected') {
-        return '<span class="badge bg-danger text-start">IPF Rejected</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
+
+    if ($array['ipf_process_closed_on'] != null && ($array['appraisee_response_complete'] == "" || $array['manager_evaluation_complete'] == "" || $array['reviewer_response_complete'] == "")) {
+        return '<span>Incomplete</span>';
+    } else {
+
+        if ($array['appraisee_response_complete'] == "" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
+            return '<span class="badge bg-danger text-start">Self-assessment</span>';
+        } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "" && $array['reviewer_response_complete'] == "") {
+            return '<span class="badge bg-warning text-start">Manager assessment in progress</span>';
+        } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "") {
+            return '<span class="badge bg-primary text-start">Reviewer assessment in progress</span>';
+        } else if ($array['appraisee_response_complete'] == "yes" && $array['manager_evaluation_complete'] == "yes" && $array['reviewer_response_complete'] == "yes" && $array['ipf_response'] == null) {
+            return '<span class="badge bg-success text-start">IPF released</span>';
+        } else if ($array['ipf_response'] == 'accepted') {
+            return '<span class="badge bg-success text-start">IPF Accepted</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
+        } else if ($array['ipf_response'] == 'rejected') {
+            return '<span class="badge bg-danger text-start">IPF Rejected</span><br><br>' . date('d/m/y h:i:s a', strtotime($array['ipf_response_on']));
+        }
     }
 }
 ?>
 
 
-<?php function displayTDs($array)
+<?php
+function displayTDs($array)
 {
-    $td1 = '<td>' . $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')<br>' . $array['aemail'] . '</td>';
-    $td2 = '<td>' . $array['mname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['memail'] . '</td>';
-    $td3 = '<td>' . $array['rname'] . ' (' . $array['reviewer_associatenumber'] . ')<br>' . $array['remail'] . '</td>';
-    $td4 = '<td>' . $array['appraisaltype'] . '<br>' . $array['appraisalyear'] . '</td>';
+    $td1 = '<td>' . $array['aname'] . ' (' . $array['appraisee_associatenumber'] . ')</td>';
+    $td2 = '<td>' . $array['m1name'] . ($array['manager1_associatenumber'] != null ? ' (' . $array['manager1_associatenumber'] . ')' : '') . '<br>' . $array['m1email'] . '</td>';
+    $td3 = '<td>' . $array['mname'] . ' (' . $array['manager_associatenumber'] . ')<br>' . $array['memail'] . '</td>';
+    $td4 = '<td>' . $array['rname'] . ' (' . $array['reviewer_associatenumber'] . ')<br>' . $array['remail'] . '</td>';
+    $td5 = '<td>' . (isset($array['effective_start_date']) ? date("d/m/Y", strtotime($array['effective_start_date'])) : null) . '</td>';
+    $td6 = '<td>' . (isset($array['effective_end_date']) ? date("d/m/Y", strtotime($array['effective_end_date'])) : null) . '</td>';
+    $td7 = '<td>' . $array['appraisaltype'] . '<br>' . $array['appraisalyear'] . '</td>';
+    // $td8 = '<td>' . (isset($array['ipf_process_closed_on']) ? date("d/m/Y", strtotime($array['ipf_process_closed_on'])) : null) . '</td>';
 
-    return $td1 . $td2 . $td3 . $td4;
-} ?>
+    return $td1 . $td2 . $td3 . $td4 . $td7 . $td5 . $td6;
+}
+?>
 
 
 <!DOCTYPE html>
@@ -353,11 +368,15 @@ function getAssessmentStatus($array)
                                                             <tr>
                                                                 <th scope="col">Goal sheet ID</th>
                                                                 <th scope="col">Appraisee</th>
+                                                                <th scope="col">Manager1</th>
                                                                 <th scope="col">Manager</th>
                                                                 <th scope="col">Reviewer</th>
-                                                                <th scope="col">Appraisal details</th>
+                                                                <th scope="col">Appraisal Type</th>
+                                                                <th scope="col">Effective Start Date</th>
+                                                                <th scope="col">Effective End Date</th>
                                                                 <th scope="col">Status</th>
                                                                 <th scope="col">IPF</th>
+                                                                <th scope="col">Closed on</th>
                                                                 <th scope="col">Goal Sheet</th>
                                                             </tr>
                                                         </thead>
@@ -373,6 +392,9 @@ function getAssessmentStatus($array)
                                                                         <?php echo getAssessmentStatus($array); ?>
                                                                     </td>
                                                                     <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
+                                                                    <td>
+                                                                        <?php echo (isset($array['ipf_process_closed_on']) ? date("d/m/Y", strtotime($array['ipf_process_closed_on'])) : null) ?>
+                                                                    </td>
                                                                     <td>
                                                                         <span class="noticea">
                                                                             <a href="appraisee_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
@@ -438,11 +460,15 @@ function getAssessmentStatus($array)
                                                             <tr>
                                                                 <th scope="col">Goal sheet ID</th>
                                                                 <th scope="col">Appraisee</th>
+                                                                <th scope="col">Manager1</th>
                                                                 <th scope="col">Manager</th>
                                                                 <th scope="col">Reviewer</th>
-                                                                <th scope="col">Appraisal details</th>
+                                                                <th scope="col">Appraisal Type</th>
+                                                                <th scope="col">Effective Start Date</th>
+                                                                <th scope="col">Effective End Date</th>
                                                                 <th scope="col">Status</th>
                                                                 <th scope="col">IPF</th>
+                                                                <th scope="col">Closed on</th>
                                                                 <th scope="col">Goal Sheet</th>
                                                             </tr>
                                                         </thead>
@@ -458,6 +484,9 @@ function getAssessmentStatus($array)
                                                                         <?php echo getAssessmentStatus($array); ?>
                                                                     </td>
                                                                     <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
+                                                                    <td>
+                                                                        <?php echo (isset($array['ipf_process_closed_on']) ? date("d/m/Y", strtotime($array['ipf_process_closed_on'])) : null) ?>
+                                                                    </td>
                                                                     <td>
                                                                         <span class="noticea">
                                                                             <a href="manager_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
@@ -525,11 +554,15 @@ function getAssessmentStatus($array)
                                                             <tr>
                                                                 <th scope="col">Goal sheet ID</th>
                                                                 <th scope="col">Appraisee</th>
+                                                                <th scope="col">Manager1</th>
                                                                 <th scope="col">Manager</th>
                                                                 <th scope="col">Reviewer</th>
-                                                                <th scope="col">Appraisal details</th>
+                                                                <th scope="col">Appraisal Type</th>
+                                                                <th scope="col">Effective Start Date</th>
+                                                                <th scope="col">Effective End Date</th>
                                                                 <th scope="col">Status</th>
                                                                 <th scope="col">IPF</th>
+                                                                <th scope="col">Closed on</th>
                                                                 <th scope="col">Goal Sheet</th>
                                                             </tr>
                                                         </thead>
@@ -544,6 +577,9 @@ function getAssessmentStatus($array)
                                                                         <?php echo getAssessmentStatus($array); ?>
                                                                     </td>
                                                                     <td><?php echo ($array['reviewer_response_complete'] == "yes") ? $array['ipf'] : "" ?></td>
+                                                                    <td>
+                                                                        <?php echo (isset($array['ipf_process_closed_on']) ? date("d/m/Y", strtotime($array['ipf_process_closed_on'])) : null) ?>
+                                                                    </td>
                                                                     <td>
                                                                         <span class="noticea">
                                                                             <a href="reviewer_response.php?goalsheetid=<?php echo $array['goalsheetid'] ?>" target="_blank" class="edit-link" title="Access Goal Sheet">Access Goal Sheet</a>
