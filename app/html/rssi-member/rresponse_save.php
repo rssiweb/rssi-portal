@@ -11,12 +11,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-if ($password_updated_by == NULL || $password_updated_on < $default_pass_updated_on) {
-
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
+validation();
 ?>
 <?php
 if (@$_POST['form-type'] == "reviewer_remarks_update") {

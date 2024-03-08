@@ -8,13 +8,7 @@ if (!isLoggedIn("aid")) {
   header("Location: index.php");
   exit;
 }
-if ($role=='Member') {
-
-  echo '<script type="text/javascript">';
-  echo 'alert("Access Denied. You are not authorized to access this web page.");';
-  echo 'window.location.href = "home.php";';
-  echo '</script>';
-}
+validation();
 
 @$status = $_POST['get_id'];
 

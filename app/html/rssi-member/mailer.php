@@ -9,12 +9,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-if ($role != 'Admin') {
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-} ?>
+validation();?>
 <?php
 
 include("../../util/email.php");

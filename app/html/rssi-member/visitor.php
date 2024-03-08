@@ -8,20 +8,7 @@ if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
 }
-if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
-$user_check = $_SESSION['aid'];
-
-if ($role != 'Admin' && $role != 'Offline Manager') {
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
+validation();
 
 date_default_timezone_set('Asia/Kolkata');
 $today = date("Y-m-d");

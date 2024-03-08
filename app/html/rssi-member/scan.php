@@ -8,19 +8,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
-
-if (($role != 'Admin' && $role != 'Offline Manager')||$filterstatus != 'Active') {
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
+validation();
 $formattedTodayDate = date('Y-m-d');
 $query = "
 SELECT p.sl_no, p.user_id, p.punch_in, p.ip_address, p.recorded_by, p.gps_location,

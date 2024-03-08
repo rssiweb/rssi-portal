@@ -9,45 +9,24 @@ if (!isLoggedIn("aid")) {
   exit;
 }
 
-if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-
-  echo '<script type="text/javascript">';
-  echo 'window.location.href = "defaultpasswordreset.php";';
-  echo '</script>';
-}
-
-
-$view_users_query = "select * from ipfsubmission WHERE memberid2='$user_check'"; //select query for viewing users.  
-$run = pg_query($con, $view_users_query); //here run the sql query.  
-
-while ($row = pg_fetch_array($run)) //while look to fetch the result and store in a array $row.  
-{
-
-  $timestamp = $row[0];
-  $memberid2 = $row[1];
-  $membername2 = $row[2];
-  $ipf = $row[3];
-  $ipfinitiate = $row[4];
-  $status2 = $row[5];
-  $respondedon = $row[6];
-  $ipfstatus = $row[7];
-  $closedon = $row[8];
-  $id = $row[9]
+validation();
 ?>
-<?php } ?>
 <!doctype html>
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+
+    gtag('config', 'AW-11316670180');
+  </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 

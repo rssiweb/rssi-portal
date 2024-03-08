@@ -9,18 +9,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
-if ($filterstatus != 'Active') {
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
+validation();
 $query = "SELECT
     (SELECT COUNT(serial_number) FROM onboarding WHERE onboarding_flag IS NULL) AS onboarding_left,
     NULL AS exit_left,

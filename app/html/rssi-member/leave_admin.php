@@ -10,21 +10,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-$passwordCheck = passwordCheck();
-if ($passwordCheck) {
-    echo '<script type="text/javascript">';
-    echo 'alert("' . $passwordCheck . '");';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
-
-$checkPageAccess = checkPageAccess();
-if ($checkPageAccess) {
-    echo '<script type="text/javascript">';
-    echo 'alert("' . $checkPageAccess . '");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
+validation();
 
 include("../../util/email.php");
 if (date('m') == 1 || date('m') == 2 || date('m') == 3) { //Upto March

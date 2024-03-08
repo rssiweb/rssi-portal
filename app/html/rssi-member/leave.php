@@ -11,20 +11,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
-
-if ($role == 'Member') {
-
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
+validation();
 
 if (date('m') == 1 || date('m') == 2 || date('m') == 3) { //Upto March
     $academic_year = (date('Y') - 1) . '-' . date('Y');

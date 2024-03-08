@@ -12,27 +12,19 @@ $login_failed_dialog = false;
 function afterlogin($con, $date)
 {
 
-    $associatenumber = $_SESSION['aid']; //here session is used and value of $user_email store in $_SESSION.
+    $associatenumber = $_SESSION['aid'];
 
-    $user_query = "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'";
-    $result = pg_query($con, $user_query);
+    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from rssimyaccount_members WHERE associatenumber='$associatenumber'");
 
-    $row = pg_fetch_row($result);
-    $password_updated_by = $row[80];
-    $password_updated_on = $row[81];
-    $default_pass_updated_by = $row[82];
-    $default_pass_updated_on = $row[83];
-    // $role = $row[62];
+    $row = pg_fetch_row($user_query);
+    $password_updated_by = $row[0];
+    $password_updated_on = $row[1];
+    $default_pass_updated_on = $row[2];
+
+    passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
 
     // instead of REMOTE_ADDR use REMOTE_ADDR to get real client IP
-    $query = "INSERT INTO userlog_member VALUES (DEFAULT,'$associatenumber','$_SERVER[REMOTE_ADDR]','$date')";
-    $result = pg_query($con, $query);
-
-    if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-        echo '<script type="text/javascript">';
-        echo 'window.location.href = "defaultpasswordreset.php";';
-        echo '</script>';
-    }
+    $result = pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$associatenumber','$_SERVER[REMOTE_ADDR]','$date')");
 
     if (isset($_SESSION["login_redirect"])) {
         $params = "";
@@ -45,12 +37,7 @@ function afterlogin($con, $date)
         header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
         unset($_SESSION["login_redirect"]);
     } else {
-        // Line 25 we have the role value
-        // if ($role !='Member') {
         header("Location: home.php");
-        // } else {
-        //     header("Location: myprofile.php");
-        // }
     }
 }
 if (isLoggedIn("aid")) {
@@ -64,33 +51,27 @@ function checkLogin($con, $date)
     $associatenumber = strtoupper($_POST['aid']);
     $colors = $_POST['pass'];
 
-    $query = "select password, absconding from rssimyaccount_members WHERE associatenumber='$associatenumber'";
+    $query = "SELECT password, absconding FROM rssimyaccount_members WHERE associatenumber='$associatenumber'";
     $result = pg_query($con, $query);
     $user = pg_fetch_row($result);
     @$existingHashFromDb = $user[0];
-    $absconding = $user[1];
+    @$absconding = $user[1];
 
-    // @$loginSuccess = !$absconding && password_verify($colors, $existingHashFromDb);
+    // Verify password
+    @$loginSuccess = password_verify($colors, $existingHashFromDb);
 
-    // if ($loginSuccess) {
-    //     $_SESSION['aid'] = $associatenumber;
-    //     afterlogin($con, $date);
-    // } else {
-    //     $login_failed_dialog = true;
-    // }
-
-    if ($absconding !== "") {
-        // Absconding is not null, login failed due to absconding
-        $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
+    if (!$loginSuccess) {
+        // Incorrect password
+        $login_failed_dialog = "Incorrect username or password.";
     } else {
-        @$loginSuccess = password_verify($colors, $existingHashFromDb);
-
-        if ($loginSuccess) {
+        // Password is correct
+        if ($absconding !== "") {
+            // Account is inactive
+            $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
+        } else {
+            // Password is correct and account is active
             $_SESSION['aid'] = $associatenumber;
             afterlogin($con, $date);
-        } else {
-            // Incorrect password
-            $login_failed_dialog = "Incorrect username or password.";
         }
     }
 }

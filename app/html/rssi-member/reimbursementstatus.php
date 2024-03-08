@@ -9,7 +9,7 @@ if (!isLoggedIn("aid")) {
   header("Location: index.php");
   exit;
 }
-
+validation();
 if ($role == 'Admin' && $filterstatus == 'Active') {
   $status = isset($_POST['get_id']) ? $_POST['get_id'] : null;
   $id = isset($_POST['get_aid']) ? strtoupper($_POST['get_aid']) : null;

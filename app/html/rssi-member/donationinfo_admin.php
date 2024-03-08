@@ -9,18 +9,7 @@ if (!isLoggedIn("aid")) {
   header("Location: index.php");
   exit;
 }
-if ($filterstatus != 'Active') {
-  echo '<script type="text/javascript">';
-  echo 'alert("Access Denied. You are not authorized to access this web page.");';
-  echo 'window.location.href = "home.php";';
-  echo '</script>';
-}
-if ($role != 'Admin') {
-  echo '<script type="text/javascript">';
-  echo 'alert("Access Denied. You are not authorized to access this web page.");';
-  echo 'window.location.href = "home.php";';
-  echo '</script>';
-}
+validation();
 
 function calculateFinancialYear($timestamp)
 {

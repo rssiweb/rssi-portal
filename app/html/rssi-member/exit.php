@@ -10,18 +10,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-
-    echo '<script type="text/javascript">';
-    echo 'window.location.href = "defaultpasswordreset.php";';
-    echo '</script>';
-}
-if ($filterstatus != 'Active') {
-    echo '<script type="text/javascript">';
-    echo 'alert("Access Denied. You are not authorized to access this web page.");';
-    echo 'window.location.href = "home.php";';
-    echo '</script>';
-}
+validation();
 
 @$associate_number = @strtoupper($_GET['associate-number']);
 $result = pg_query($con, "SELECT fullname, associatenumber, doj, effectivedate, rssimyaccount_members.remarks reason_remarks, photo, engagement, position, depb, filterstatus,exit_initiated_by, exit_gen_otp_center_incharge, exit_gen_otp_associate, email, exit_flag, exit_photo, exit_date_time, asset_clearance, financial_clearance, security_clearance, hr_clearance, work_clearance, legal_clearance, ip_address, exit_submitted_by, exit_submitted_on, exit_initiated_on, exit_initiated_by, associate_exit.remarks exit_remarks, exit_interview
