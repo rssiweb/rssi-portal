@@ -267,7 +267,28 @@ if (!$result) {
                                 $status = 'Incomplete';
                             }
 
-                            echo '<span class="float-end badge bg-' . ($status == 'IPF Rejected' ? 'danger' : ($status == 'IPF Accepted' || $status == 'IPF released' ? 'success' : ($status == 'Self-assessment' ? 'danger' : 'secondary'))) . ' text-start">' . $status . '</span>';
+                            $badge_color = '';
+                            switch ($status) {
+                                case 'IPF Rejected':
+                                case 'Self-assessment':
+                                    $badge_color = 'danger';
+                                    break;
+                                case 'IPF Accepted':
+                                case 'IPF released':
+                                    $badge_color = 'success';
+                                    break;
+                                case 'Manager assessment in progress':
+                                    $badge_color = 'warning';
+                                    break;
+                                case 'Reviewer assessment in progress':
+                                    $badge_color = 'primary';
+                                    break;
+                                default:
+                                    $badge_color = 'secondary';
+                                    break;
+                            }
+
+                            echo '<span class="float-end badge bg-' . $badge_color . ' text-start">' . $status . '</span>';
                             ?>
 
                             <input type="hidden" name="form-type" value="manager_remarks_update">

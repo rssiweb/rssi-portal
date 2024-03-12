@@ -12,7 +12,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-validation();?>
+validation(); ?>
 
 <?php
 // Retrieve student ID from form input
@@ -158,7 +158,7 @@ if (!$result) {
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <div class="container mt-5">
         <?php
         // Get the current hour of the day
@@ -245,7 +245,28 @@ if (!$result) {
                                 $status = 'Incomplete';
                             }
 
-                            echo '<span class="float-end badge bg-' . ($status == 'IPF Rejected' ? 'danger' : ($status == 'IPF Accepted' || $status == 'IPF released' ? 'success' : ($status == 'Self-assessment' ? 'danger' : 'secondary'))) . ' text-start">' . $status . '</span>';
+                            $badge_color = '';
+                            switch ($status) {
+                                case 'IPF Rejected':
+                                case 'Self-assessment':
+                                    $badge_color = 'danger';
+                                    break;
+                                case 'IPF Accepted':
+                                case 'IPF released':
+                                    $badge_color = 'success';
+                                    break;
+                                case 'Manager assessment in progress':
+                                    $badge_color = 'warning';
+                                    break;
+                                case 'Reviewer assessment in progress':
+                                    $badge_color = 'primary';
+                                    break;
+                                default:
+                                    $badge_color = 'secondary';
+                                    break;
+                            }
+
+                            echo '<span class="float-end badge bg-' . $badge_color . ' text-start">' . $status . '</span>';
                             ?>
 
                             <table class="table">
