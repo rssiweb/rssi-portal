@@ -100,6 +100,7 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
 </head>
 
 <body>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php $medimate_active = 'active'; ?>
     <?php include 'header.php'; ?>
 

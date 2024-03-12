@@ -147,6 +147,7 @@ if (!$result_component) {
 </head>
 
 <body>
+  <?php include 'inactive_session_expire_check.php'; ?>
   <div class="container-lg">
     <?php if ($role == 'Admin') { ?>
       <form action="" method="GET" class="d-print-none">

@@ -99,6 +99,7 @@ $resultArr1 = pg_fetch_all($result1);
 </head>
 
 <body>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">

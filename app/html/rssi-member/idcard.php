@@ -143,7 +143,7 @@ validation();
 </head>
 
 <body>
-
+<?php include 'inactive_session_expire_check.php'; ?>
     <div class="col2 left noprint" style="display: inline;">
         <div class="col-md-12">
             <div class="row">

@@ -126,6 +126,7 @@ if (@$cmdtuples == 1) {
 </head>
 
 <body>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <div class="container">
         <form method="get" name="a_lookup" id="a_lookup">
             <div style="display: flex; justify-content: space-between; align-items: center;">

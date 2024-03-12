@@ -146,7 +146,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "reimbursementapply") 
 </head>
 
 <body>
-
+<?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">

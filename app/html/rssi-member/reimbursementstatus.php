@@ -164,7 +164,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 ============================== -->
 
 <body>
-
+<?php include 'inactive_session_expire_check.php'; ?>
   <?php include 'header.php'; ?>
 
   <main id="main" class="main">

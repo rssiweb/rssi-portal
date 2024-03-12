@@ -55,6 +55,7 @@ validation();
 <body>
 
   <?php include 'header.php'; ?>
+  <?php include 'inactive_session_expire_check.php'; ?>
 
   <main id="main" class="main">
 

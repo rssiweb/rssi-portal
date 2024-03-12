@@ -156,6 +156,7 @@ if (!$result) {
 </head>
 
 <body>
+<?php include 'inactive_session_expire_check.php'; ?>
     <div class="container mt-5">
         <?php
         // Get the current hour of the day

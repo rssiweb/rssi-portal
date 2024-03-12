@@ -121,7 +121,7 @@ validation(); ?>
 ============================== -->
 
 <body>
-
+<?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">

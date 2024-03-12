@@ -158,6 +158,7 @@ if (@$_POST['form-type'] == "admission_admin") {
 </head>
 
 <body>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php if (@$type_of_admission != null && @$cmdtuples == 0) { ?>
         <div class="alert alert-danger alert-dismissible text-center" role="alert">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>

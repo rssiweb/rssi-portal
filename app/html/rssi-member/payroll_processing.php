@@ -161,6 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 </head>
 
 <body>
+<?php include 'inactive_session_expire_check.php'; ?>
   <?php if (@$employeeId != null && @$cmdtuples == 0) { ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: center;">
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>

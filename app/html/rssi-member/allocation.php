@@ -146,6 +146,7 @@ $resultArrc = pg_fetch_all($resultc);
 </head>
 
 <body>
+    <?php include 'inactive_session_expire_check.php'; ?>
 
     <?php include 'header.php'; ?>
 

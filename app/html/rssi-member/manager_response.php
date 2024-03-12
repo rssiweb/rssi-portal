@@ -12,7 +12,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-validation();?>
+validation(); ?>
 
 <?php
 // Retrieve student ID from form input
@@ -158,7 +158,7 @@ if (!$result) {
 </head>
 
 <body>
-
+    <?php include 'inactive_session_expire_check.php'; ?>
     <div class="container mt-5">
         <?php
         // Get the current hour of the day

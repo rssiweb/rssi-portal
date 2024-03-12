@@ -92,6 +92,7 @@ $resultArr = pg_fetch_all($result);
 ============================== -->
 
 <body>
+  <?php include 'inactive_session_expire_check.php'; ?>
   <?php include 'header.php'; ?>
   <section id="main-content">
     <section class="wrapper main-wrapper row">

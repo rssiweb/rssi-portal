@@ -313,7 +313,7 @@
 
   </aside><!-- End Sidebar-->
 
-  <script>
+  <!-- <script>
     var inactivityTime = function() {
       var time;
       document.onload = resetTimer;
@@ -339,7 +339,7 @@
     window.addEventListener("load", function() {
       inactivityTime();
     }, false);
-  </script>
+  </script> -->
 
   <script>
     // Get the current page URL

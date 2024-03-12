@@ -137,7 +137,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
 </head>
 
 <body>
-
+<?php include 'inactive_session_expire_check.php'; ?>
     <?php if (@$goalsheetid != null && @$cmdtuples == 0) { ?>
 
         <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
