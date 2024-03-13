@@ -10,136 +10,124 @@
 </head>
 
 <body>
-  <!-- <p>Time spent inactive: <span id="inactiveTime">0 seconds</span></p> -->
 
   <!-- Bootstrap Modal -->
-  <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal fade" id="myModal_session" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="exampleModalLabel">Uh-oh! It's been a moment since your last move</h5>
-          <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
         </div>
         <div class="modal-body">
           <p>Your session will expire in <span id="remainingTime"></span>. Are you still working? If you want to continue, click Yes.</p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="redirectToLogout()">Sign out</button>
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="resetTimer()">Yes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="signOutButton">Sign out</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="continueButton">Yes</button>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    let inactiveTime = 0;
-    let timerInterval;
-    let lastInteractionTime = Date.now();
-    let modalShown = false;
-
-    function startTimer() {
-      timerInterval = setInterval(() => {
-        const currentTime = Date.now();
-        inactiveTime += Math.floor((currentTime - lastInteractionTime) / 1000);
-        // document.getElementById('inactiveTime').innerText = inactiveTime + " seconds";
-        lastInteractionTime = currentTime;
-        checkInactiveTime();
-      }, 1000);
-    }
-
-    function stopTimer() {
-      clearInterval(timerInterval);
-    }
-
-    function resetTimer() {
-      inactiveTime = 0;
-      // document.getElementById('inactiveTime').innerText = inactiveTime + " seconds";
-      lastInteractionTime = Date.now();
-      modalShown = false; // Reset modalShown flag
-    }
-
-    function checkInactiveTime() {
+    (function() {
+      let inactiveTime = 0;
+      let timerTimeout;
+      let lastInteractionTime = Date.now();
+      let modalShown = false;
       const sessionDuration = 1800; // Duration of the session in seconds
-      const remainingTime = sessionDuration - inactiveTime;
+      const remainingTimeElement = document.getElementById('remainingTime');
 
-      if (remainingTime <= 0) {
-        // Display an alert for session expiration
-        alert("Your session has expired, please login again.");
-        // Redirect to logout.php
-        window.location.href = "logout.php";
-      } else if (remainingTime > 0 && remainingTime <= 600 && !modalShown) {
-        // Remove any existing backdrop
+      function startTimer() {
+        timerTimeout = setTimeout(checkInactiveTime, 1000);
+      }
+
+      function stopTimer() {
+        clearTimeout(timerTimeout);
+      }
+
+      function resetTimer() {
+        inactiveTime = 0;
+        lastInteractionTime = Date.now();
+        modalShown = false;
+        stopTimer();
+        startTimer();
+      }
+
+      function checkInactiveTime() {
+        const currentTime = Date.now();
+        const elapsedTime = (currentTime - lastInteractionTime) / 1000;
+        inactiveTime += elapsedTime;
+        lastInteractionTime = currentTime;
+
+        const remainingTime = Math.max(sessionDuration - inactiveTime, 0);
+        remainingTimeElement.textContent = formatTime(remainingTime);
+
+        if (remainingTime === 0) {
+          alert("Your session has expired, please login again.");
+          window.location.href = "logout.php";
+        } else if (remainingTime > 0 && remainingTime <= 300 && !modalShown) {
+          showModal();
+        }
+
+        timerTimeout = setTimeout(checkInactiveTime, 1000);
+      }
+
+      function showModal() {
         const existingBackdrop = document.querySelector('.modal-backdrop');
         if (existingBackdrop) {
           existingBackdrop.remove();
         }
 
-        // Display the modal if remaining time is less than or equal to 25 seconds
-        var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
-          backdrop: 'static'
-        });
-
-        // Update modal body dynamically with countdown timer
-        document.getElementById('remainingTime').innerText = remainingTime;
-
-        // Update remainingTime every second until the modal is shown
-        let countdownInterval = setInterval(() => {
-          const updatedRemainingTime = sessionDuration - inactiveTime;
-
-          // Calculate minutes and seconds
-          const minutes = Math.floor(updatedRemainingTime / 60);
-          const seconds = updatedRemainingTime % 60;
-
-          // Format the remaining time
-          let formattedTime = '';
-          if (minutes > 0) {
-            formattedTime += `${minutes} minute${minutes !== 1 ? 's' : ''}`;
-            if (seconds > 0) {
-              formattedTime += ` ${seconds} second${seconds !== 1 ? 's' : ''}`;
-            }
-          } else {
-            formattedTime = `${seconds} second${seconds !== 1 ? 's' : ''}`;
-          }
-
-          document.getElementById('remainingTime').innerText = formattedTime;
-
-          if (updatedRemainingTime <= 0) {
-            clearInterval(countdownInterval);
-          }
-        }, 1000);
-
-
-        myModal.show();
         modalShown = true;
+        var myModal = new bootstrap.Modal(document.getElementById('myModal_session'), {
+          backdrop: 'static',
+          keyboard: false // Prevent modal from closing with keyboard
+        });
+        myModal.show();
       }
-    }
 
-    // Redirect to logout.php
-    function redirectToLogout() {
-      window.location.href = "logout.php";
-    }
+      function formatTime(timeInSeconds) {
+        const minutes = Math.floor(timeInSeconds / 60);
+        const seconds = Math.floor(timeInSeconds % 60);
+        return `${minutes} minute${minutes !== 1 ? 's' : ''} ${seconds} second${seconds !== 1 ? 's' : ''}`;
+      }
 
-    // Event listeners for page visibility change
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'visible') {
-        stopTimer();
+      function redirectToLogout() {
+        window.location.href = "logout.php";
+      }
+
+      function resetTimerOnInteraction() {
         resetTimer();
-      } else {
-        startTimer();
       }
-    });
 
-    // Event listeners for various user interactions to reset the timer
-    document.onload = resetTimer;
-    document.onmousemove = resetTimer;
-    document.onmousedown = resetTimer; // touchscreen presses
-    document.ontouchstart = resetTimer;
-    document.onclick = resetTimer; // touchpad clicks
-    document.onkeydown = resetTimer; // onkeypress is deprecated
-    document.addEventListener('scroll', resetTimer, true); // improved; see comments
+      const debouncedResetTimerOnInteraction = debounce(resetTimerOnInteraction, 100);
 
-    // Start the timer when the page is loaded
-    startTimer();
+      ['mousemove', 'mousedown', 'touchstart', 'click', 'keydown', 'scroll'].forEach(eventType => {
+        document.addEventListener(eventType, debouncedResetTimerOnInteraction);
+      });
+
+      document.getElementById('signOutButton').addEventListener('click', redirectToLogout);
+      document.getElementById('continueButton').addEventListener('click', resetTimer);
+
+      startTimer();
+
+      function debounce(func, wait, immediate) {
+        let timeout;
+        return function executedFunction() {
+          const context = this;
+          const args = arguments;
+          const later = function() {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+          };
+          const callNow = immediate && !timeout;
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+          if (callNow) func.apply(context, args);
+        };
+      }
+    })();
   </script>
 
   <!-- Bootstrap JS (optional) -->
