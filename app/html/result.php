@@ -78,15 +78,18 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -104,7 +107,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
         body {
             background: #ffffff;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
-            /* font-style: normal;
+                /* font-style: normal;
             font-weight: 400;
             overflow-x: hidden;
             margin: 0;
@@ -232,7 +235,8 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
 
                                     <p><b>Rina Shiksha Sahayak Foundation (RSSI NGO)</b></p>
                                     <p style="font-size: small;">624V/195/01, Vijayipur, Vijaipur Village, Vishesh Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>
-                                    <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
+                                    <p style="font-size: small;">NGO-DARPAN Id: WB/2021/0282726, CIN: U80101WB2020NPL237900</p>
+                                    <p style="font-size: small;">Email: info@rssi.in, Website: www.rssi.in</p>
                                 </div>
                                 <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
                                     <p style="font-size: small;">Scan QR code to check authenticity</p>
