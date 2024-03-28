@@ -48,11 +48,11 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
     $acc = $row[27];
     $pt_o = $row[28];
     $pt = $row[29];
-    $total = $row[30];
+    // $total = $row[30];
     $mm = $row[31];
-    $op = $row[32];
-    $grade = $row[33];
-    $result = $row[34];
+    // $op = $row[32];
+    // $grade = $row[33];
+    // $result = $row[34];
     $position = $row[35];
     $fullmarks_o = $row[36];
     $fullmarks = $row[37];
@@ -298,50 +298,25 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$hnd != null && @$hnd != "-") || (@$hnd_o != null && @$hnd_o != "-")) { ?>
                         <tr>
                             <td style="text-align:left"> Language I </td>
-                            <td style="text-align:left"><?php if (@$hnd_o != null && @$hnd_o != "-") {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$hnd != null && @$hnd != "-") {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$hnd_o != null && @$hnd_o != "-") {
-                                                                echo $hnd_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$hnd != null && @$hnd != "-") {
-                                                                echo $hnd;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$hnd_o != null && @$hnd_o != "-" ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$hnd != null && @$hnd != "-" ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($hnd_o) ? round($hnd_o) : ($hnd_o == '-' ? null : $hnd_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($hnd) ? round($hnd) : ($hnd == '-' ? null : $hnd); ?></th>
                             <th style="text-align:left">
                                 <?php
-                                if ($hnd_o == "-" && $hnd == "-") {
+                                if (($hnd_o == "A" && $hnd == "A") || ($hnd_o == "-" && $hnd == "A") || ($hnd_o == "A" && $hnd == "-")) {
+                                    echo "A";
+                                } elseif ($hnd_o == "-" && $hnd == "-") {
                                     echo null;
+                                } elseif ($hnd_o == "A" && is_numeric($hnd)) {
+                                    echo round($hnd);
+                                } elseif ($hnd == "A" && is_numeric($hnd_o)) {
+                                    echo round($hnd_o);
+                                } else {
+                                    $total = is_numeric($hnd_o) ? $hnd_o : 0;
+                                    $total += is_numeric($hnd) ? $hnd : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($hnd_o == "-" && $hnd == "A") {
-                                    echo "A";
-                                }
-                                if ($hnd_o == "A" && $hnd == "-") {
-                                    echo "A";
-                                }
-                                if ($hnd_o == "A" && $hnd == "A") {
-                                    echo "A";
-                                }
-
-                                if ($hnd_o == "-" && ($hnd != "A" && $hnd != "-")) {
-                                    echo $hnd;
-                                }
-                                if ($hnd == "-" && ($hnd_o != "A" && $hnd_o != "-")) {
-                                    echo $hnd_o;
-                                }
-
-                                if (($hnd_o == "A" || $hnd_o == null) && ($hnd != "A" && $hnd != "-")) {
-                                    echo $hnd;
-                                }
-                                if ($hnd == "A" && ($hnd_o != "A" && $hnd_o != "-")) {
-                                    echo $hnd_o;
-                                }
-                                if (($hnd != "A" && $hnd != "-") && ($hnd_o != "A" && $hnd_o != "-" && $hnd_o != null)) {
-                                    echo $hnd_o + $hnd;
-                                }
-
                                 ?>
                             </th>
                             <td style="text-align:left"></td>
@@ -351,48 +326,26 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$eng != null && @$eng != '-') || (@$eng_o != null && @$eng_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> English </td>
-                            <td style="text-align:left"><?php if (@$eng_o != null && @$eng_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$eng != null && @$eng != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$eng_o != null && @$eng_o != '-') {
-                                                                echo $eng_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$eng != null && @$eng != '-') {
-                                                                echo $eng;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$eng_o != null && @$eng_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$eng != null && @$eng != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($eng_o) ? round($eng_o) : ($eng_o == '-' ? null : $eng_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($eng) ? round($eng) : ($eng == '-' ? null : $eng); ?></th>
                             <th style="text-align:left">
-                                <?php if ($eng_o == "-" && $eng == "-") {
+                                <?php
+                                if (($eng_o == "A" && $eng == "A") || ($eng_o == "-" && $eng == "A") || ($eng_o == "A" && $eng == "-")) {
+                                    echo "A";
+                                } elseif ($eng_o == "-" && $eng == "-") {
                                     echo null;
+                                } elseif ($eng_o == "A" && is_numeric($eng)) {
+                                    echo round($eng);
+                                } elseif ($eng == "A" && is_numeric($eng_o)) {
+                                    echo round($eng_o);
+                                } else {
+                                    $total = is_numeric($eng_o) ? $eng_o : 0;
+                                    $total += is_numeric($eng) ? $eng : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($eng_o == "-" && $eng == "A") {
-                                    echo "A";
-                                }
-                                if ($eng_o == "A" && $eng == "-") {
-                                    echo "A";
-                                }
-                                if ($eng_o == "A" && $eng == "A") {
-                                    echo "A";
-                                }
-
-                                if ($eng_o == "-" && ($eng != "A" && $eng != "-")) {
-                                    echo $eng;
-                                }
-                                if ($eng == "-" && ($eng_o != "A" && $eng_o != "-")) {
-                                    echo $eng_o;
-                                }
-
-                                if (($eng_o == "A" || $eng_o == null) && ($eng != "A" && $eng != "-")) {
-                                    echo $eng;
-                                }
-                                if ($eng == "A" && ($eng_o != "A" && $eng_o != "-")) {
-                                    echo $eng_o;
-                                }
-                                if (($eng != "A" && $eng != "-") && ($eng_o != "A" && $eng_o != "-" && $eng_o != null)) {
-                                    echo $eng_o + $eng;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -401,48 +354,26 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$mth != null && @$mth != '-') || (@$mth_o != null && @$mth_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> Mathematics </td>
-                            <td style="text-align:left"><?php if (@$mth_o != null && @$mth_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$mth != null && @$mth != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$mth_o != null && @$mth_o != '-') {
-                                                                echo $mth_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$mth != null && @$mth != '-') {
-                                                                echo $mth;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$mth_o != null && @$mth_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$mth != null && @$mth != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($mth_o) ? round($mth_o) : ($mth_o == '-' ? null : $mth_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($mth) ? round($mth) : ($mth == '-' ? null : $mth); ?></th>
                             <th style="text-align:left">
-                                <?php if ($mth_o == "-" && $mth == "-") {
+                                <?php
+                                if (($mth_o == "A" && $mth == "A") || ($mth_o == "-" && $mth == "A") || ($mth_o == "A" && $mth == "-")) {
+                                    echo "A";
+                                } elseif ($mth_o == "-" && $mth == "-") {
                                     echo null;
+                                } elseif ($mth_o == "A" && is_numeric($mth)) {
+                                    echo round($mth);
+                                } elseif ($mth == "A" && is_numeric($mth_o)) {
+                                    echo round($mth_o);
+                                } else {
+                                    $total = is_numeric($mth_o) ? $mth_o : 0;
+                                    $total += is_numeric($mth) ? $mth : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($mth_o == "-" && $mth == "A") {
-                                    echo "A";
-                                }
-                                if ($mth_o == "A" && $mth == "-") {
-                                    echo "A";
-                                }
-                                if ($mth_o == "A" && $mth == "A") {
-                                    echo "A";
-                                }
-
-                                if ($mth_o == "-" && ($mth != "A" && $mth != "-")) {
-                                    echo $mth;
-                                }
-                                if ($mth == "-" && ($mth_o != "A" && $mth_o != "-")) {
-                                    echo $mth_o;
-                                }
-
-                                if (($mth_o == "A" || $mth_o == null) && ($mth != "A" && $mth != "-")) {
-                                    echo $mth;
-                                }
-                                if ($mth == "A" && ($mth_o != "A" && $mth_o != "-")) {
-                                    echo $mth_o;
-                                }
-                                if (($mth != "A" && $mth != "-") && ($mth_o != "A" && $mth_o != "-" && $mth_o != null)) {
-                                    echo $mth_o + $mth;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -451,48 +382,27 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$sce != null && @$sce != '-') || (@$sce_o != null && @$sce_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> Science </td>
-                            <td style="text-align:left"><?php if (@$sce_o != null && @$sce_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$sce != null && @$sce != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$sce_o != null && @$sce_o != '-') {
-                                                                echo $sce_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$sce != null && @$sce != '-') {
-                                                                echo $sce;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$sce_o != null && @$sce_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$sce != null && @$sce != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($sce_o) ? round($sce_o) : ($sce_o == '-' ? null : $sce_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($sce) ? round($sce) : ($sce == '-' ? null : $sce); ?></th>
                             <th style="text-align:left">
-                                <?php if ($sce_o == "-" && $sce == "-") {
+                                <?php
+                                if (($sce_o == "A" && $sce == "A") || ($sce_o == "-" && $sce == "A") || ($sce_o == "A" && $sce == "-")) {
+                                    echo "A";
+                                } elseif ($sce_o == "-" && $sce == "-") {
                                     echo null;
+                                } elseif ($sce_o == "A" && is_numeric($sce)) {
+                                    echo round($sce);
+                                } elseif ($sce == "A" && is_numeric($sce_o)) {
+                                    echo round($sce_o);
+                                } else {
+                                    $total = is_numeric($sce_o) ? $sce_o : 0;
+                                    $total += is_numeric($sce) ? $sce : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($sce_o == "-" && $sce == "A") {
-                                    echo "A";
-                                }
-                                if ($sce_o == "A" && $sce == "-") {
-                                    echo "A";
-                                }
-                                if ($sce_o == "A" && $sce == "A") {
-                                    echo "A";
-                                }
-
-                                if ($sce_o == "-" && ($sce != "A" && $sce != "-")) {
-                                    echo $sce;
-                                }
-                                if ($sce == "-" && ($sce_o != "A" && $sce_o != "-")) {
-                                    echo $sce_o;
-                                }
-
-                                if (($sce_o == "A" || $sce_o == null) && ($sce != "A" && $sce != "-")) {
-                                    echo $sce;
-                                }
-                                if ($sce == "A" && ($sce_o != "A" && $sce_o != "-")) {
-                                    echo $sce_o;
-                                }
-                                if (($sce != "A" && $sce != "-") && ($sce_o != "A" && $sce_o != "-" && $sce_o != null)) {
-                                    echo $sce_o + $sce;
-                                } ?></th>
+                                ?>
+                            </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
@@ -500,48 +410,26 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$ssc != null && @$ssc != '-') || (@$ssc_o != null && @$ssc_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> Social Science </td>
-                            <td style="text-align:left"><?php if (@$ssc_o != null && @$ssc_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$ssc != null && @$ssc != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$ssc_o != null && @$ssc_o != '-') {
-                                                                echo $ssc_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$ssc != null && @$ssc != '-') {
-                                                                echo $ssc;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$ssc_o != null && @$ssc_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$ssc != null && @$ssc != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($ssc_o) ? round($ssc_o) : ($ssc_o == '-' ? null : $ssc_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($ssc) ? round($ssc) : ($ssc == '-' ? null : $ssc); ?></th>
                             <th style="text-align:left">
-                                <?php if ($ssc_o == "-" && $ssc == "-") {
+                                <?php
+                                if (($ssc_o == "A" && $ssc == "A") || ($ssc_o == "-" && $ssc == "A") || ($ssc_o == "A" && $ssc == "-")) {
+                                    echo "A";
+                                } elseif ($ssc_o == "-" && $ssc == "-") {
                                     echo null;
+                                } elseif ($ssc_o == "A" && is_numeric($ssc)) {
+                                    echo round($ssc);
+                                } elseif ($ssc == "A" && is_numeric($ssc_o)) {
+                                    echo round($ssc_o);
+                                } else {
+                                    $total = is_numeric($ssc_o) ? $ssc_o : 0;
+                                    $total += is_numeric($ssc) ? $ssc : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($ssc_o == "-" && $ssc == "A") {
-                                    echo "A";
-                                }
-                                if ($ssc_o == "A" && $ssc == "-") {
-                                    echo "A";
-                                }
-                                if ($ssc_o == "A" && $ssc == "A") {
-                                    echo "A";
-                                }
-
-                                if ($ssc_o == "-" && ($ssc != "A" && $ssc != "-")) {
-                                    echo $ssc;
-                                }
-                                if ($ssc == "-" && ($ssc_o != "A" && $ssc_o != "-")) {
-                                    echo $ssc_o;
-                                }
-
-                                if (($ssc_o == "A" || $ssc_o == null) && ($ssc != "A" && $ssc != "-")) {
-                                    echo $ssc;
-                                }
-                                if ($ssc == "A" && ($ssc_o != "A" && $ssc_o != "-")) {
-                                    echo $ssc_o;
-                                }
-                                if (($ssc != "A" && $ssc != "-") && ($ssc_o != "A" && $ssc_o != "-" && $ssc_o != null)) {
-                                    echo $ssc_o + $ssc;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -557,48 +445,26 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 }
                                 ?>
                             </td>
-                            <td style="text-align:left"> <?php if (@$gka_o != null && @$gka_o != '-') {
-                                                                echo $fullmarks_o;
-                                                            } ?> </td>
-                            <td style="text-align:left"> <?php if (@$gka != null && @$gka != '-') {
-                                                                echo $fullmarks;
-                                                            } ?> </td>
-                            <th style="text-align:left"> <?php if (@$gka_o != null && @$gka_o != '-') {
-                                                                echo $gka_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$gka != null && @$gka != '-') {
-                                                                echo $gka;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$gka_o != null && @$gka_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$gka != null && @$gka != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($gka_o) ? round($gka_o) : ($gka_o == '-' ? null : $gka_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($gka) ? round($gka) : ($gka == '-' ? null : $gka); ?></th>
                             <th style="text-align:left">
-                                <?php if ($gka_o == "-" && $gka == "-") {
+                                <?php
+                                if (($gka_o == "A" && $gka == "A") || ($gka_o == "-" && $gka == "A") || ($gka_o == "A" && $gka == "-")) {
+                                    echo "A";
+                                } elseif ($gka_o == "-" && $gka == "-") {
                                     echo null;
+                                } elseif ($gka_o == "A" && is_numeric($gka)) {
+                                    echo round($gka);
+                                } elseif ($gka == "A" && is_numeric($gka_o)) {
+                                    echo round($gka_o);
+                                } else {
+                                    $total = is_numeric($gka_o) ? $gka_o : 0;
+                                    $total += is_numeric($gka) ? $gka : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($gka_o == "-" && $gka == "A") {
-                                    echo "A";
-                                }
-                                if ($gka_o == "A" && $gka == "-") {
-                                    echo "A";
-                                }
-                                if ($gka_o == "A" && $gka == "A") {
-                                    echo "A";
-                                }
-
-                                if ($gka_o == "-" && ($gka != "A" && $gka != "-")) {
-                                    echo $gka;
-                                }
-                                if ($gka == "-" && ($gka_o != "A" && $gka_o != "-")) {
-                                    echo $gka_o;
-                                }
-
-                                if (($gka_o == "A" || $gka_o == null) && ($gka != "A" && $gka != "-")) {
-                                    echo $gka;
-                                }
-                                if ($gka == "A" && ($gka_o != "A" && $gka_o != "-")) {
-                                    echo $gka_o;
-                                }
-                                if (($gka != "A" && $gka != "-") && ($gka_o != "A" && $gka_o != "-" && $gka_o != null)) {
-                                    echo $gka_o + $gka;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -607,48 +473,26 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$com != null && @$com != '-') || (@$com_o != null && @$com_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> Computer </td>
-                            <td style="text-align:left"><?php if (@$com_o != null && @$com_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$com != null && @$com != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$com_o != null && @$com_o != '-') {
-                                                                echo $com_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$com != null && @$com != '-') {
-                                                                echo $com;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$com_o != null && @$com_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$com != null && @$com != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($com_o) ? round($com_o) : ($com_o == '-' ? null : $com_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($com) ? round($com) : ($com == '-' ? null : $com); ?></th>
                             <th style="text-align:left">
-                                <?php if ($com_o == "-" && $com == "-") {
+                                <?php
+                                if (($com_o == "A" && $com == "A") || ($com_o == "-" && $com == "A") || ($com_o == "A" && $com == "-")) {
+                                    echo "A";
+                                } elseif ($com_o == "-" && $com == "-") {
                                     echo null;
+                                } elseif ($com_o == "A" && is_numeric($com)) {
+                                    echo round($com);
+                                } elseif ($com == "A" && is_numeric($com_o)) {
+                                    echo round($com_o);
+                                } else {
+                                    $total = is_numeric($com_o) ? $com_o : 0;
+                                    $total += is_numeric($com) ? $com : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($com_o == "-" && $com == "A") {
-                                    echo "A";
-                                }
-                                if ($com_o == "A" && $com == "-") {
-                                    echo "A";
-                                }
-                                if ($com_o == "A" && $com == "A") {
-                                    echo "A";
-                                }
-
-                                if ($com_o == "-" && ($com != "A" && $com != "-")) {
-                                    echo $com;
-                                }
-                                if ($com == "-" && ($com_o != "A" && $com_o != "-")) {
-                                    echo $com_o;
-                                }
-
-                                if (($com_o == "A" || $com_o == null) && ($com != "A" && $com != "-")) {
-                                    echo $com;
-                                }
-                                if ($com == "A" && ($com_o != "A" && $com_o != "-")) {
-                                    echo $com_o;
-                                }
-                                if (($com != "A" && $com != "-") && ($com_o != "A" && $com_o != "-" && $com_o != null)) {
-                                    echo $com_o + $com;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -657,48 +501,26 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$bio != null && @$bio != '-') || (@$bio_o != null && @$bio_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> Biology/Life science </td>
-                            <td style="text-align:left"><?php if (@$bio_o != null && @$bio_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$bio != null && @$bio != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$bio_o != null && @$bio_o != '-') {
-                                                                echo $bio_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$bio != null && @$bio != '-') {
-                                                                echo $bio;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$bio_o != null && @$bio_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$bio != null && @$bio != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($bio_o) ? round($bio_o) : ($bio_o == '-' ? null : $bio_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($bio) ? round($bio) : ($bio == '-' ? null : $bio); ?></th>
                             <th style="text-align:left">
-                                <?php if ($bio_o == "-" && $bio == "-") {
+                                <?php
+                                if (($bio_o == "A" && $bio == "A") || ($bio_o == "-" && $bio == "A") || ($bio_o == "A" && $bio == "-")) {
+                                    echo "A";
+                                } elseif ($bio_o == "-" && $bio == "-") {
                                     echo null;
+                                } elseif ($bio_o == "A" && is_numeric($bio)) {
+                                    echo round($bio);
+                                } elseif ($bio == "A" && is_numeric($bio_o)) {
+                                    echo round($bio_o);
+                                } else {
+                                    $total = is_numeric($bio_o) ? $bio_o : 0;
+                                    $total += is_numeric($bio) ? $bio : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($bio_o == "-" && $bio == "A") {
-                                    echo "A";
-                                }
-                                if ($bio_o == "A" && $bio == "-") {
-                                    echo "A";
-                                }
-                                if ($bio_o == "A" && $bio == "A") {
-                                    echo "A";
-                                }
-
-                                if ($bio_o == "-" && ($bio != "A" && $bio != "-")) {
-                                    echo $bio;
-                                }
-                                if ($bio == "-" && ($bio_o != "A" && $bio_o != "-")) {
-                                    echo $bio_o;
-                                }
-
-                                if (($bio_o == "A" || $bio_o == null) && ($bio != "A" && $bio != "-")) {
-                                    echo $bio;
-                                }
-                                if ($bio == "A" && ($bio_o != "A" && $bio_o != "-")) {
-                                    echo $bio_o;
-                                }
-                                if (($bio != "A" && $bio != "-") && ($bio_o != "A" && $bio_o != "-" && $bio_o != null)) {
-                                    echo $bio_o + $bio;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -707,48 +529,26 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$phy != null && @$phy != '-') || (@$phy_o != null && @$phy_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> Physics/Physical science </td>
-                            <td style="text-align:left"><?php if (@$phy_o != null && @$phy_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$phy != null && @$phy != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$phy_o != null && @$phy_o != '-') {
-                                                                echo $phy_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$phy != null && @$phy != '-') {
-                                                                echo $phy;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$phy_o != null && @$phy_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$phy != null && @$phy != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($phy_o) ? round($phy_o) : ($phy_o == '-' ? null : $phy_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($phy) ? round($phy) : ($phy == '-' ? null : $phy); ?></th>
                             <th style="text-align:left">
-                                <?php if ($phy_o == "-" && $phy == "-") {
+                                <?php
+                                if (($phy_o == "A" && $phy == "A") || ($phy_o == "-" && $phy == "A") || ($phy_o == "A" && $phy == "-")) {
+                                    echo "A";
+                                } elseif ($phy_o == "-" && $phy == "-") {
                                     echo null;
+                                } elseif ($phy_o == "A" && is_numeric($phy)) {
+                                    echo round($phy);
+                                } elseif ($phy == "A" && is_numeric($phy_o)) {
+                                    echo round($phy_o);
+                                } else {
+                                    $total = is_numeric($phy_o) ? $phy_o : 0;
+                                    $total += is_numeric($phy) ? $phy : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($phy_o == "-" && $phy == "A") {
-                                    echo "A";
-                                }
-                                if ($phy_o == "A" && $phy == "-") {
-                                    echo "A";
-                                }
-                                if ($phy_o == "A" && $phy == "A") {
-                                    echo "A";
-                                }
-
-                                if ($phy_o == "-" && ($phy != "A" && $phy != "-")) {
-                                    echo $phy;
-                                }
-                                if ($phy == "-" && ($phy_o != "A" && $phy_o != "-")) {
-                                    echo $phy_o;
-                                }
-
-                                if (($phy_o == "A" || $phy_o == null) && ($phy != "A" && $phy != "-")) {
-                                    echo $phy;
-                                }
-                                if ($phy == "A" && ($phy_o != "A" && $phy_o != "-")) {
-                                    echo $phy_o;
-                                }
-                                if (($phy != "A" && $phy != "-") && ($phy_o != "A" && $phy_o != "-" && $phy_o != null)) {
-                                    echo $phy_o + $phy;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -757,48 +557,26 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$chm != null && @$chm != '-') || (@$chm_o != null && @$chm_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> Chemistry </td>
-                            <td style="text-align:left"><?php if (@$chm_o != null && @$chm_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$chm != null && @$chm != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$chm_o != null && @$chm_o != '-') {
-                                                                echo $chm_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$chm != null && @$chm != '-') {
-                                                                echo $chm;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$chm_o != null && @$chm_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$chm != null && @$chm != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($chm_o) ? round($chm_o) : ($chm_o == '-' ? null : $chm_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($chm) ? round($chm) : ($chm == '-' ? null : $chm); ?></th>
                             <th style="text-align:left">
-                                <?php if ($chm_o == "-" && $chm == "-") {
+                                <?php
+                                if (($chm_o == "A" && $chm == "A") || ($chm_o == "-" && $chm == "A") || ($chm_o == "A" && $chm == "-")) {
+                                    echo "A";
+                                } elseif ($chm_o == "-" && $chm == "-") {
                                     echo null;
+                                } elseif ($chm_o == "A" && is_numeric($chm)) {
+                                    echo round($chm);
+                                } elseif ($chm == "A" && is_numeric($chm_o)) {
+                                    echo round($chm_o);
+                                } else {
+                                    $total = is_numeric($chm_o) ? $chm_o : 0;
+                                    $total += is_numeric($chm) ? $chm : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($chm_o == "-" && $chm == "A") {
-                                    echo "A";
-                                }
-                                if ($chm_o == "A" && $chm == "-") {
-                                    echo "A";
-                                }
-                                if ($chm_o == "A" && $chm == "A") {
-                                    echo "A";
-                                }
-
-                                if ($chm_o == "-" && ($chm != "A" && $chm != "-")) {
-                                    echo $chm;
-                                }
-                                if ($chm == "-" && ($chm_o != "A" && $chm_o != "-")) {
-                                    echo $chm_o;
-                                }
-
-                                if (($chm_o == "A" || $chm_o == null) && ($chm != "A" && $chm != "-")) {
-                                    echo $chm;
-                                }
-                                if ($chm == "A" && ($chm_o != "A" && $chm_o != "-")) {
-                                    echo $chm_o;
-                                }
-                                if (($chm != "A" && $chm != "-") && ($chm_o != "A" && $chm_o != "-" && $chm_o != null)) {
-                                    echo $chm_o + $chm;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -807,48 +585,26 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$acc != null && @$acc != '-') || (@$acc_o != null && @$acc_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> Accountancy </td>
-                            <td style="text-align:left"><?php if (@$acc_o != null && @$acc_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$acc != null && @$acc != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$acc_o != null && @$acc_o != '-') {
-                                                                echo $acc_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$acc != null && @$acc != '-') {
-                                                                echo $acc;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$acc_o != null && @$acc_o != '-' ? $fullmarks_o : ''; ?></td>
+                            <td style="text-align:left"><?php echo @$acc != null && @$acc != '-' ? $fullmarks : ''; ?></td>
+                            <th style="text-align:left"><?php echo is_numeric($acc_o) ? round($acc_o) : ($acc_o == '-' ? null : $acc_o); ?></th>
+                            <th style="text-align:left"><?php echo is_numeric($acc) ? round($acc) : ($acc == '-' ? null : $acc); ?></th>
                             <th style="text-align:left">
-                                <?php if ($acc_o == "-" && $acc == "-") {
+                                <?php
+                                if (($acc_o == "A" && $acc == "A") || ($acc_o == "-" && $acc == "A") || ($acc_o == "A" && $acc == "-")) {
+                                    echo "A";
+                                } elseif ($acc_o == "-" && $acc == "-") {
                                     echo null;
+                                } elseif ($acc_o == "A" && is_numeric($acc)) {
+                                    echo round($acc);
+                                } elseif ($acc == "A" && is_numeric($acc_o)) {
+                                    echo round($acc_o);
+                                } else {
+                                    $total = is_numeric($acc_o) ? $acc_o : 0;
+                                    $total += is_numeric($acc) ? $acc : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($acc_o == "-" && $acc == "A") {
-                                    echo "A";
-                                }
-                                if ($acc_o == "A" && $acc == "-") {
-                                    echo "A";
-                                }
-                                if ($acc_o == "A" && $acc == "A") {
-                                    echo "A";
-                                }
-
-                                if ($acc_o == "-" && ($acc != "A" && $acc != "-")) {
-                                    echo $acc;
-                                }
-                                if ($acc == "-" && ($acc_o != "A" && $acc_o != "-")) {
-                                    echo $acc_o;
-                                }
-
-                                if (($acc_o == "A" || $acc_o == null) && ($acc != "A" && $acc != "-")) {
-                                    echo $acc;
-                                }
-                                if ($acc == "A" && ($acc_o != "A" && $acc_o != "-")) {
-                                    echo $acc_o;
-                                }
-                                if (($acc != "A" && $acc != "-") && ($acc_o != "A" && $acc_o != "-" && $acc_o != null)) {
-                                    echo $acc_o + $acc;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -858,81 +614,55 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                         <tr>
                             <td style="text-align:left"> Sulekh, Imla, Arts & Crafts </td>
                             <td style="text-align:left"> </td>
-                            <td style="text-align:left"> <?php
-                                                            $sum = 0;
+                            <td style="text-align:left">
+                                <?php
+                                $sum = 0;
 
-                                                            if (is_numeric($fullmarks)) {
-                                                                $sum += $fullmarks;
-                                                            }
+                                if (is_numeric($fullmarks)) {
+                                    $sum += $fullmarks;
+                                }
 
-                                                            if (is_numeric($fullmarks_o)) {
-                                                                $sum += $fullmarks_o;
-                                                            }
+                                if (is_numeric($fullmarks_o)) {
+                                    $sum += $fullmarks_o;
+                                }
 
-                                                            echo $sum;
-                                                            ?></td>
+                                echo $sum;
+                                ?>
+                            </td>
                             <th style="text-align:left"> </th>
                             <th style="text-align:left">
-                                <?php if ($hd_o == "-" && $hd == "-") {
+                                <?php
+                                if (($hd_o == "A" && $hd == "A") || ($hd_o == "-" && $hd == "A") || ($hd_o == "A" && $hd == "-")) {
+                                    echo "A";
+                                } elseif ($hd_o == "-" && $hd == "-") {
                                     echo null;
+                                } elseif ($hd_o == "A" && is_numeric($hd)) {
+                                    echo round($hd);
+                                } elseif ($hd == "A" && is_numeric($hd_o)) {
+                                    echo round($hd_o);
+                                } else {
+                                    $total = is_numeric($hd_o) ? $hd_o : 0;
+                                    $total += is_numeric($hd) ? $hd : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($hd_o == "-" && $hd == "A") {
-                                    echo "A";
-                                }
-                                if ($hd_o == "A" && $hd == "-") {
-                                    echo "A";
-                                }
-                                if ($hd_o == "A" && $hd == "A") {
-                                    echo "A";
-                                }
-
-                                if ($hd_o == "-" && ($hd != "A" && $hd != "-")) {
-                                    echo $hd;
-                                }
-                                if ($hd == "-" && ($hd_o != "A" && $hd_o != "-")) {
-                                    echo $hd_o;
-                                }
-
-                                if (($hd_o == "A" || $hd_o == null) && ($hd != "A" && $hd != "-")) {
-                                    echo $hd;
-                                }
-                                if ($hd == "A" && ($hd_o != "A" && $hd_o != "-")) {
-                                    echo $hd_o;
-                                }
-                                if (($hd != "A" && $hd != "-") && ($hd_o != "A" && $hd_o != "-" && $hd_o != null)) {
-                                    echo $hd_o + $hd;
-                                } ?>
+                                ?>
                             </th>
                             <th style="text-align:left">
-                                <?php if ($hd_o == "-" && $hd == "-") {
+                                <?php
+                                if (($hd_o == "A" && $hd == "A") || ($hd_o == "-" && $hd == "A") || ($hd_o == "A" && $hd == "-")) {
+                                    echo "A";
+                                } elseif ($hd_o == "-" && $hd == "-") {
                                     echo null;
+                                } elseif ($hd_o == "A" && is_numeric($hd)) {
+                                    echo round($hd);
+                                } elseif ($hd == "A" && is_numeric($hd_o)) {
+                                    echo round($hd_o);
+                                } else {
+                                    $total = is_numeric($hd_o) ? $hd_o : 0;
+                                    $total += is_numeric($hd) ? $hd : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($hd_o == "-" && $hd == "A") {
-                                    echo "A";
-                                }
-                                if ($hd_o == "A" && $hd == "-") {
-                                    echo "A";
-                                }
-                                if ($hd_o == "A" && $hd == "A") {
-                                    echo "A";
-                                }
-
-                                if ($hd_o == "-" && ($hd != "A" && $hd != "-")) {
-                                    echo $hd;
-                                }
-                                if ($hd == "-" && ($hd_o != "A" && $hd_o != "-")) {
-                                    echo $hd_o;
-                                }
-
-                                if (($hd_o == "A" || $hd_o == null) && ($hd != "A" && $hd != "-")) {
-                                    echo $hd;
-                                }
-                                if ($hd == "A" && ($hd_o != "A" && $hd_o != "-")) {
-                                    echo $hd_o;
-                                }
-                                if (($hd != "A" && $hd != "-") && ($hd_o != "A" && $hd_o != "-" && $hd_o != null)) {
-                                    echo $hd_o + $hd;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
@@ -941,59 +671,148 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <?php if ((@$pt != null && @$pt != '-') || (@$pt_o != null && @$pt_o != '-')) { ?>
                         <tr>
                             <td style="text-align:left"> Physical Fitness </td>
-                            <td style="text-align:left"><?php if (@$pt_o != null && @$pt_o != '-') {
-                                                            echo $fullmarks_o;
-                                                        } ?> </td>
-                            <td style="text-align:left"><?php if (@$pt != null && @$pt != '-') {
-                                                            echo $fullmarks;
-                                                        } ?> </td>
-                            <th style="text-align:left"> <?php if (@$pt_o != null && @$pt_o != '-') {
-                                                                echo $pt_o;
-                                                            } ?> </th>
-                            <th style="text-align:left"> <?php if (@$pt != null && @$pt != '-') {
-                                                                echo $pt;
-                                                            } ?> </th>
+                            <td style="text-align:left"><?php echo @$pt_o != null && @$pt_o != '-' ? $fullmarks_o : ''; ?> </td>
+                            <td style="text-align:left"><?php echo @$pt != null && @$pt != '-' ? $fullmarks : ''; ?> </td>
+                            <th style="text-align:left"> <?php echo is_numeric($pt_o) ? round($pt_o) : ($pt_o == '-' ? null : $pt_o); ?> </th>
+                            <th style="text-align:left"> <?php echo is_numeric($pt) ? round($pt) : ($pt == '-' ? null : $pt); ?> </th>
                             <th style="text-align:left">
-                                <?php if ($pt_o == "-" && $pt == "-") {
+                                <?php
+                                if (($pt_o == 'A' && $pt == 'A') || ($pt_o == "-" && $pt == "A") || ($pt_o == "A" && $pt == "-")) {
+                                    echo 'A';
+                                } elseif ($pt_o == '-' && $pt == '-') {
                                     echo null;
+                                } elseif ($pt_o == 'A' && is_numeric($pt)) {
+                                    echo 'A';
+                                } elseif ($pt == 'A' && is_numeric($pt_o)) {
+                                    echo 'A';
+                                } else {
+                                    $total = is_numeric($pt_o) ? $pt_o : 0;
+                                    $total += is_numeric($pt) ? $pt : 0;
+                                    echo is_numeric($total) ? round($total) : $total;
                                 }
-                                if ($pt_o == "-" && $pt == "A") {
-                                    echo "A";
-                                }
-                                if ($pt_o == "A" && $pt == "-") {
-                                    echo "A";
-                                }
-                                if ($pt_o == "A" && $pt == "A") {
-                                    echo "A";
-                                }
-
-                                if ($pt_o == "-" && ($pt != "A" && $pt != "-")) {
-                                    echo $pt;
-                                }
-                                if ($pt == "-" && ($pt_o != "A" && $pt_o != "-")) {
-                                    echo $pt_o;
-                                }
-
-                                if (($pt_o == "A" || $pt_o == null) && ($pt != "A" && $pt != "-")) {
-                                    echo $pt;
-                                }
-                                if ($pt == "A" && ($pt_o != "A" && $pt_o != "-")) {
-                                    echo $pt_o;
-                                }
-                                if (($pt != "A" && $pt != "-") && ($pt_o != "A" && $pt_o != "-" && $pt_o != null)) {
-                                    echo $pt_o + $pt;
-                                } ?>
+                                ?>
                             </th>
                             <td style="text-align:left"></td>
                         </tr>
                     <?php } else {
                     } ?>
+                    <?php
+                    $totalMarks = 0; // Initialize total marks
+
+                    // Language I
+                    if ((@$hnd != null && @$hnd != "-") || (@$hnd_o != null && @$hnd_o != "-")) {
+                        $totalMarks += is_numeric($hnd_o) ? round($hnd_o) : 0;
+                        $totalMarks += is_numeric($hnd) ? round($hnd) : 0;
+                    }
+
+                    // English
+                    if ((@$eng != null && @$eng != '-') || (@$eng_o != null && @$eng_o != '-')) {
+                        $totalMarks += is_numeric($eng_o) ? round($eng_o) : 0;
+                        $totalMarks += is_numeric($eng) ? round($eng) : 0;
+                    }
+
+                    // Mathematics
+                    if ((@$mth != null && @$mth != '-') || (@$mth_o != null && @$mth_o != '-')) {
+                        $totalMarks += is_numeric($mth_o) ? round($mth_o) : 0;
+                        $totalMarks += is_numeric($mth) ? round($mth) : 0;
+                    }
+
+                    // Science
+                    if ((@$sce != null && @$sce != '-') || (@$sce_o != null && @$sce_o != '-')) {
+                        $totalMarks += is_numeric($sce_o) ? round($sce_o) : 0;
+                        $totalMarks += is_numeric($sce) ? round($sce) : 0;
+                    }
+
+                    // Social Science
+                    if ((@$ssc != null && @$ssc != '-') || (@$ssc_o != null && @$ssc_o != '-')) {
+                        $totalMarks += is_numeric($ssc_o) ? round($ssc_o) : 0;
+                        $totalMarks += is_numeric($ssc) ? round($ssc) : 0;
+                    }
+
+                    // General Knowledge
+                    if ((@$gka != null && @$gka != '-') || (@$gka_o != null && @$gka_o != '-')) {
+                        $totalMarks += is_numeric($gka_o) ? round($gka_o) : 0;
+                        $totalMarks += is_numeric($gka) ? round($gka) : 0;
+                    }
+
+                    // Computer
+                    if ((@$com != null && @$com != '-') || (@$com_o != null && @$com_o != '-')) {
+                        $totalMarks += is_numeric($com_o) ? round($com_o) : 0;
+                        $totalMarks += is_numeric($com) ? round($com) : 0;
+                    }
+
+                    // Biology/Life science
+                    if ((@$bio != null && @$bio != '-') || (@$bio_o != null && @$bio_o != '-')) {
+                        $totalMarks += is_numeric($bio_o) ? round($bio_o) : 0;
+                        $totalMarks += is_numeric($bio) ? round($bio) : 0;
+                    }
+
+                    // Physics/Physical science
+                    if ((@$phy != null && @$phy != '-') || (@$phy_o != null && @$phy_o != '-')) {
+                        $totalMarks += is_numeric($phy_o) ? round($phy_o) : 0;
+                        $totalMarks += is_numeric($phy) ? round($phy) : 0;
+                    }
+
+                    // Chemistry
+                    if ((@$chm != null && @$chm != '-') || (@$chm_o != null && @$chm_o != '-')) {
+                        $totalMarks += is_numeric($chm_o) ? round($chm_o) : 0;
+                        $totalMarks += is_numeric($chm) ? round($chm) : 0;
+                    }
+
+                    // Accountancy
+                    if ((@$acc != null && @$acc != '-') || (@$acc_o != null && @$acc_o != '-')) {
+                        $totalMarks += is_numeric($acc_o) ? round($acc_o) : 0;
+                        $totalMarks += is_numeric($acc) ? round($acc) : 0;
+                    }
+
+                    // Sulekh, Imla, Arts & Crafts
+                    if ((@$hd != null && @$hd != '-') || (@$hd_o != null && @$hd_o != '-')) {
+                        $totalMarks += is_numeric($hd_o) ? round($hd_o) : 0;
+                        $totalMarks += is_numeric($hd) ? round($hd) : 0;
+                    }
+
+                    // Physical Fitness
+                    if ((@$pt != null && @$pt != '-') || (@$pt_o != null && @$pt_o != '-')) {
+                        $totalMarks += is_numeric($pt_o) ? round($pt_o) : 0;
+                        $totalMarks += is_numeric($pt) ? round($pt) : 0;
+                    }
+                    ?>
+                    <?php
+                    function calculateGrade($percentage)
+                    {
+                        if ($percentage >= 90) {
+                            return ["A1", "Excellent"];
+                        } elseif ($percentage >= 80) {
+                            return ["A2", "Very Good"];
+                        } elseif ($percentage >= 70) {
+                            return ["B1", "Good"];
+                        } elseif ($percentage >= 60) {
+                            return ["B2", "Above Average"];
+                        } elseif ($percentage >= 50) {
+                            return ["C1", "Fair / Average"];
+                        } elseif ($percentage >= 40) {
+                            return ["C2", "Below Average"];
+                        } elseif ($percentage >= 20) {
+                            return ["D", "Poor"];
+                        } else {
+                            return ["E", "Fail"];
+                        }
+                    }
+                    ?>
+
                     <tr bgcolor="#428BCA" style="color: #fff;">
                         <th style="text-align:left"></th>
                         <th style="text-align:left" colspan="2"> <?php echo $mm ?> </th>
                         <th style="text-align:left" colspan="2"></th>
-                        <th style="text-align:left"> <?php echo $total ?> (<?php echo $op ?>%) </th>
-                        <th style="text-align:left"> <?php echo $grade ?> </th>
+                        <?php
+                        $percentage = (round($totalMarks) / $mm) * 100;
+                        $formattedPercentage = number_format($percentage, 2);
+                        $gradeAndDesc = calculateGrade($percentage);
+                        // Determine pass or fail based on the formatted percentage
+                        $passOrFail = ($formattedPercentage < 20) ? 'Fail' : 'Pass';
+                        ?>
+                        <th style="text-align:left"> <?php echo round($totalMarks) ?> (<?php echo $formattedPercentage; ?>%) </th>
+                        <th style="text-align:left"> <?php echo $gradeAndDesc[0] . ' - ' . $gradeAndDesc[1]; ?> </th>
                     </tr>
                 </tbody>
             </table>
@@ -1014,7 +833,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                 <tbody>
                     <tr>
                         <td style="text-align:left"> Result </td>
-                        <th style="text-align:left"><?php echo strtoupper($result) ?></th>
+                        <th style="text-align:left"><?php echo strtoupper($passOrFail) ?></th>
                     </tr>
                     <tr>
                         <td style="text-align:left"> Overall ranking </th>

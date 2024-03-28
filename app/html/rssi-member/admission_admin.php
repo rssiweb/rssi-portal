@@ -187,7 +187,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                 <input type="text" class="form-control" id="student_id" name="student_id" Value="<?php echo @$_GET['student_id'] ?>" placeholder="Enter student id" required>
                 <div class="form-text">Enter the student id to search for their information.</div>
             </div>
-            <input type="submit" name="submit" value="Search" class="btn btn-primary mb-3"> <button type='button' class="btn btn-primary mb-3" <?php if (empty($_GET['student_id']) || sizeof($resultArr) == 0) echo 'disabled'; ?>>Lock / Unlock Form</button>
+            <input type="submit" name="submit" value="Search" class="btn btn-primary mb-3"> <button type='button' id="lockButton" class="btn btn-primary mb-3" <?php if (empty($_GET['student_id']) || sizeof($resultArr) == 0) echo 'disabled'; ?>>Lock / Unlock Form</button>
         </form>
         <br>
         <?php if (sizeof($resultArr) > 0) { ?>
@@ -746,29 +746,32 @@ if (@$_POST['form-type'] == "admission_admin") {
         });
     </script>
     <script>
-        var form = document.getElementById('admission_admin'), // select form by ID
-            btn1 = document.querySelectorAll('button')[0];
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('admission_admin'); // select form by ID
+            var btn1 = document.getElementById('lockButton');
 
-        btn1.addEventListener('click', lockForm);
+            btn1.addEventListener('click', lockForm);
 
-        function lockForm() {
-            if (form.classList.toggle('locked')) {
-                // Form is now locked
-                btn1.textContent = 'Unlock Form';
-                [].slice.call(form.elements).forEach(function(item) {
-                    item.disabled = true;
-                });
-            } else {
-                // Form is now unlocked
-                btn1.textContent = 'Form Unlocked';
-                [].slice.call(form.elements).forEach(function(item) {
-                    item.disabled = false;
-                    btn1.disabled = true; // Disable the button
-                });
+            function lockForm() {
+                if (form.classList.toggle('locked')) {
+                    // Form is now locked
+                    btn1.textContent = 'Unlock Form';
+                    [].slice.call(form.elements).forEach(function(item) {
+                        item.disabled = true;
+                    });
+                } else {
+                    // Form is now unlocked
+                    btn1.textContent = 'Form Unlocked';
+                    [].slice.call(form.elements).forEach(function(item) {
+                        item.disabled = false;
+                        btn1.disabled = true; // Disable the button
+                    });
+                }
             }
-        }
-        // Lock the form when the page is loaded
-        lockForm();
+
+            // Lock the form when the page is loaded
+            lockForm();
+        });
     </script>
     <script>
         window.onload = function() {
