@@ -329,7 +329,8 @@ if (!$result) {
 
                                 <p>Sincerely,</p>
                                 <p><b>For Rina Shiksha Sahayak Foundation</b></p>
-                                <img src="../img/<?php echo $associatenumber ?>.png" width="65px" style="margin-bottom:-5px"><br>
+                                <!-- <img src="../img/<?php echo $associatenumber ?>.png" width="65px" style="margin-bottom:-5px">-->
+                                <br>
                                 <p><?php echo $fullname ?><br>
                                     <?php if (str_contains($position, "Talent")) { ?>
                                         <?php echo 'Talent Acquisition & Academic Interface Program (AIP)' ?>

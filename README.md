@@ -109,6 +109,10 @@ git pull --rebase origin master
 ALTER TABLE fees
 ADD COLUMN id SERIAL PRIMARY KEY;
 
+update leavedb_leavedb
+set lyear='2023-2024'
+where leaveid='RSL1712286415'
+
 ALTER TABLE fees ALTER COLUMN fees TYPE numeric USING (fees::numeric);
 
 set datestyle to DMY;
