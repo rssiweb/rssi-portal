@@ -440,6 +440,7 @@ function exportAttendanceToCSV($attendanceData, $startDate, $endDate)
     'Student Name',
     'Category',
     'Class',
+     'Contact',
   ];
 
   // Add date headers to CSV
@@ -471,6 +472,7 @@ function exportAttendanceToCSV($attendanceData, $startDate, $endDate)
         'Student Name' => $array['studentname'],
         'Category' => $array['category'],
         'Class' => $array['class'],
+        'Contact' => $array['contact'],
       ];
 
       // Initialize date columns
@@ -550,6 +552,7 @@ function monthly_attd_export()
                 s.class,
                 s.effectivefrom,
                 s.doa,
+                s.contact,
                 d.attendance_date,
                 COALESCE(
                     CASE
@@ -581,6 +584,7 @@ function monthly_attd_export()
             studentname,
             category,
             class,
+            contact,
             attendance_date,
             attendance_status,
             " . generate_date_columns($startDate, $endDate) . ",
@@ -603,12 +607,14 @@ function monthly_attd_export()
             studentname,
             category,
             class,
+            contact,
             attendance_date,
             attendance_status
         ORDER BY
             CASE WHEN class = 'Pre-school' THEN 0 ELSE 1 END,
             category,
             class,
+            contact,
             student_id,
             attendance_date;
     ";

@@ -87,9 +87,13 @@ $date_count = $date ? $date : date('Y-m-d');
 $querycount = "SELECT
     s.category AS category,
     COUNT(DISTINCT a.user_id) AS category_count,
-    COUNT(DISTINCT CASE WHEN s.class = 'Pre-school' THEN a.user_id END) AS preschool_count,
+    COUNT(DISTINCT CASE WHEN s.class = 'Nursery' THEN a.user_id END) AS nursery_count,
+    COUNT(DISTINCT CASE WHEN s.class = 'LKG' THEN a.user_id END) AS lkg_count,
+    COUNT(DISTINCT CASE WHEN s.class = 'UKG' THEN a.user_id END) AS ukg_count,
     COUNT(DISTINCT CASE WHEN s.class = '1' THEN a.user_id END) AS class_1_count,
-    COUNT(DISTINCT CASE WHEN s.class = '2' THEN a.user_id END) AS class_2_count
+    COUNT(DISTINCT CASE WHEN s.class = '2' THEN a.user_id END) AS class_2_count,
+    COUNT(DISTINCT CASE WHEN s.class = '3' THEN a.user_id END) AS class_3_count,
+    COUNT(DISTINCT CASE WHEN s.class IN ('4','5','6') THEN a.user_id END) AS class_4_5_6_count
 FROM attendance a
 LEFT JOIN rssimyprofile_student s ON a.user_id = s.student_id
 WHERE DATE(a.punch_in) = COALESCE($1, DATE(a.punch_in))
@@ -189,7 +193,7 @@ if ($resultcount) {
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -225,22 +229,36 @@ if ($resultcount) {
                                 <div class="col-md-4" id="categoryCountSection" style="margin-left: auto;">
                                     <table class="table table-bordered table-sm" style="width: 20%; float: right;" id="summaryTable">
                                         <tbody>
+                                            <tr>
+                                                <td>Category</td>
+                                                <td>Total</td>
+                                                <td colspan="3">Class wise</td>
+                                            </tr>
                                             <tr v-for="row in summaryRows">
                                                 <td>{{ row.category || "Associate" }}</td>
                                                 <td>{{ row.category_count }}</td>
-                                                <template v-if="row.category == 'LG2-A'">
-                                                    <td>{{ row.preschool_count }}</td>
+                                                <template v-if="row.category == 'LG1'">
+                                                    <td>{{ row.nursery_count }}</td>
+                                                    <td>{{ row.lkg_count }}</td>
+                                                    <td>{{ row.ukg_count }}</td>
+                                                </template>
+                                                <template v-else-if="row.category == 'LG2-A'">
                                                     <td>{{ row.class_1_count }}</td>
                                                     <td>{{ row.class_2_count }}</td>
+                                                    <td></td>
+                                                </template>
+                                                <template v-else-if="row.category == 'LG2-B'">
+                                                    <td>{{ row.class_3_count }}</td>
+                                                    <td>{{ row.class_4_5_6_count }}</td>
+                                                    <td></td>
                                                 </template>
                                                 <template v-else>
-                                                    <td colspan="4"></td>
+                                                    <td colspan="3"></td>
                                                 </template>
                                             </tr>
                                             <tr>
                                                 <td><b>Total:</b></td>
-                                                <td id="totalCount">{{totalCount}}</td>
-                                                <td colspan="4"></td>
+                                                <td colspan="4" id="totalCount">{{totalCount}}</td>
                                             </tr>
                                         </tbody>
                                     </table>
