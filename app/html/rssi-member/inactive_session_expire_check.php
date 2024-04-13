@@ -19,7 +19,8 @@
           <h5 class="modal-title" id="exampleModalLabel">Uh-oh! It's been a moment since your last move</h5>
         </div>
         <div class="modal-body">
-          <p>Your session will expire in <span id="remainingTime"></span>. Are you still working? If you want to continue, click Yes.</p>
+          <p>Your session will expire in <span id="remainingTime"></span>. Are you still working? If you want to
+            continue, click Yes.</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="signOutButton">Sign out</button>
@@ -30,10 +31,9 @@
   </div>
 
   <script>
-    (function() {
+    (function () {
       let inactiveTime = 0;
       let timerTimeout;
-      let lastInteractionTime = Date.now();
       let modalShown = false;
       const sessionDuration = 1800; // Duration of the session in seconds
       const remainingTimeElement = document.getElementById('remainingTime');
@@ -48,7 +48,7 @@
 
       function resetTimer() {
         inactiveTime = 0;
-        lastInteractionTime = Date.now();
+        localStorage.setItem('lastInteractionTime', Date.now());
         modalShown = false;
         stopTimer();
         startTimer();
@@ -56,14 +56,14 @@
 
       function checkInactiveTime() {
         const currentTime = Date.now();
+        const lastInteractionTime = parseInt(localStorage.getItem('lastInteractionTime')) || currentTime;
         const elapsedTime = (currentTime - lastInteractionTime) / 1000;
         inactiveTime += elapsedTime;
-        lastInteractionTime = currentTime;
 
         const remainingTime = Math.max(sessionDuration - inactiveTime, 0);
         remainingTimeElement.textContent = formatTime(remainingTime);
 
-        if (remainingTime === 0) {
+        if (remainingTime <= 0) {
           alert("Your session has expired, please login again.");
           window.location.href = "logout.php";
         } else if (remainingTime > 0 && remainingTime <= 300 && !modalShown) {
@@ -110,6 +110,13 @@
       document.getElementById('signOutButton').addEventListener('click', redirectToLogout);
       document.getElementById('continueButton').addEventListener('click', resetTimer);
 
+      // Listen for changes in localStorage from other tabs
+      window.addEventListener('storage', function (event) {
+        if (event.key === 'lastInteractionTime') {
+          resetTimer();
+        }
+      });
+
       startTimer();
 
       function debounce(func, wait, immediate) {
@@ -117,7 +124,7 @@
         return function executedFunction() {
           const context = this;
           const args = arguments;
-          const later = function() {
+          const later = function () {
             timeout = null;
             if (!immediate) func.apply(context, args);
           };
