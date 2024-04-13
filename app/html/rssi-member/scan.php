@@ -104,7 +104,7 @@ if (!$result) {
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -407,9 +407,9 @@ if (!$result) {
                 latitude: 26.8659136,
                 longitude: 81.0158809
 
-                //  Vadodara location
-                // latitude: 22.2867883,
-                // longitude: 73.1564496
+                //  Gurgaon location
+                // latitude: 28.4229632,
+                // longitude: 77.053952
 
                 // zee home
                 // latitude: 19.3173098 ,

@@ -405,9 +405,9 @@ if ($resultcount) {
                         } else if (attendanceRow.class == "UKG") {
                             summaryRow.ukg_count += 1
                         } else if (attendanceRow.class == "3") {
-                            summaryRow.class3_count += 1
+                            summaryRow.class_3_count += 1
                         } else if (attendanceRow.class == "4" || attendanceRow.class == "5" || attendanceRow.class == "6") {
-                            summaryRow.class4_5_6_count += 1
+                            summaryRow.class_4_5_6_count += 1
                         }
                     } else {
                         summaryRows.value.push({
@@ -417,10 +417,10 @@ if ($resultcount) {
                             nursery_count: attendanceRow.class == "Nursery" ? 1 : 0,
                             lkg_count: attendanceRow.class == "LKG" ? 1 : 0,
                             ukg_count: attendanceRow.class == "UKG" ? 1 : 0,
-                            class3_count: attendanceRow.class == "3" ? 1 : 0,
-                            class4_5_6_count: attendanceRow.class == "4" ? 1 : 0,
-                            class4_5_6_count: attendanceRow.class == "5" ? 1 : 0,
-                            class4_5_6_count: attendanceRow.class == "6" ? 1 : 0,
+                            class_3_count: attendanceRow.class == "3" ? 1 : 0,
+                            class_4_5_6_count: attendanceRow.class == "4" ? 1 : 0,
+                            class_4_5_6_count: attendanceRow.class == "5" ? 1 : 0,
+                            class_4_5_6_count: attendanceRow.class == "6" ? 1 : 0,
                             class_1_count: attendanceRow.class == "1" ? 1 : 0,
                             class_2_count: attendanceRow.class == "2" ? 1 : 0
                         })
@@ -434,20 +434,6 @@ if ($resultcount) {
                 }
             }
         }).mount('#summaryTable')
-
-        // function addDummyRecord(){
-        //     summaryApp.addRow({
-        //         userId: "VTHN20008" , 
-        //         userName: "Somnath Saha",
-        //         category: "LG3", 
-        //         class: "1", 
-        //         status: "Active",
-        //         punchIn: "10/09/2023 12:17:42 am",
-        //         punchOut: "10/09/2023 12:17:43 am"
-        //     })
-        // }
-        // call addDummyRecord after every 2 sec
-        // setInterval(addDummyRecord, 2000)
     </script>
 
     <script src="https://unpkg.com/mqtt@5.0.1/dist/mqtt.min.js"></script>
