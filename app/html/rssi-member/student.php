@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 
-include ("../../util/login_util.php");
+include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -75,7 +75,7 @@ $classlist = [
   "Vocational training",
   "x"
 ]
-  ?>
+?>
 
 <!doctype html>
 <html lang="en">
@@ -101,8 +101,7 @@ $classlist = [
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
   <!-- Vendor CSS Files -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
   <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
@@ -219,8 +218,7 @@ $classlist = [
 
                       <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
-                        border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel"
-                          style="font-size:large;"></i></button>
+                        border: none;" title="Export CSV"><i class="bi bi-file-earmark-excel" style="font-size:large;"></i></button>
                     </form>
                   </div>
                 <?php } else { ?>
@@ -237,11 +235,10 @@ $classlist = [
                   <div class="col2" style="display: inline-block;">
                     <input type="hidden" name="form-type" type="text" value="search">
                     <span class="input-help">
-                      <select name="get_module" id="get_module" class="form-select"
-                        style="width:max-content; display:inline-block" required>
+                      <select name="get_module" id="get_module" class="form-select" style="width:max-content; display:inline-block" required>
                         <?php if ($module == null) { ?>
                           <option value="" disabled selected hidden>Select Module</option>
-                          <?php
+                        <?php
                         } else { ?>
                           <option hidden selected><?php echo $module ?></option>
                         <?php }
@@ -249,15 +246,13 @@ $classlist = [
                         <option>National</option>
                         <option>State</option>
                       </select>
-                      <small id="passwordHelpBlock" class="form-text text-muted">Module<span
-                          style="color:red">*</span></small>
+                      <small id="passwordHelpBlock" class="form-text text-muted">Module<span style="color:red">*</span></small>
                     </span>
                     <span class="input-help">
-                      <select name="get_id" id="get_id" class="form-select"
-                        style="width:max-content; display:inline-block" required>
+                      <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" required>
                         <?php if ($id == null) { ?>
                           <option value="" disabled selected hidden>Select Status</option>
-                          <?php
+                        <?php
                         } else { ?>
                           <option hidden selected><?php echo $id ?></option>
                         <?php }
@@ -265,15 +260,13 @@ $classlist = [
                         <option>Active</option>
                         <option>Inactive</option>
                       </select>
-                      <small id="passwordHelpBlock" class="form-text text-muted">Status<span
-                          style="color:red">*</span></small>
+                      <small id="passwordHelpBlock" class="form-text text-muted">Status<span style="color:red">*</span></small>
                     </span>
                     <span class="input-help">
-                      <select name="get_category" id="get_category" class="form-select"
-                        style="width:max-content;display:inline-block">
+                      <select name="get_category" id="get_category" class="form-select" style="width:max-content;display:inline-block">
                         <?php if ($category == null) { ?>
                           <option value="" disabled selected hidden>Select Category</option>
-                          <?php
+                        <?php
                         } else { ?>
                           <option hidden selected><?php echo $category ?></option>
                         <?php }
@@ -292,8 +285,7 @@ $classlist = [
                       <small id="passwordHelpBlock" class="form-text text-muted">Category</small>
                     </span>
                     <span class="input-help">
-                      <select name="get_class[]" id="get_class" class="form-control"
-                        style="width:max-content; display:inline-block" multiple>
+                      <select name="get_class[]" id="get_class" class="form-control" style="width:max-content; display:inline-block" multiple>
                         <?php if ($class == null) { ?>
                           <option value="" disabled selected hidden>Select Class</option>
 
@@ -306,20 +298,17 @@ $classlist = [
 
                           foreach ($classlist as $cls) { ?>
                             <option <?php if (in_array($cls, $class)) {
-                              echo "selected";
-                            } ?>><?php echo $cls ?></option>
-                          <?php }
+                                      echo "selected";
+                                    } ?>><?php echo $cls ?></option>
+                        <?php }
                         }
                         ?>
                       </select>
                       <small id="passwordHelpBlock" class="form-text text-muted">Class</small>
                     </span>
                     <span class="input-help">
-                      <input name="get_stid" id="get_stid" class="form-control"
-                        style="width:max-content; display:inline-block" placeholder="Student ID"
-                        value="<?php echo $stid ?>" required>
-                      <small id="passwordHelpBlock" class="form-text text-muted">Student Id<span
-                          style="color:red">*</span></small>
+                      <input name="get_stid" id="get_stid" class="form-control" style="width:max-content; display:inline-block" placeholder="Student ID" value="<?php echo $stid ?>" required>
+                      <small id="passwordHelpBlock" class="form-text text-muted">Student Id<span style="color:red">*</span></small>
                     </span>
                   </div>
                 </div>
@@ -329,7 +318,7 @@ $classlist = [
                 </div>
                 <div id="filter-checks">
                   <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user']))
-                    echo "checked='checked'"; ?> />
+                                                                                  echo "checked='checked'"; ?> />
                   <label for="is_user" style="font-weight: 400;">Search by Student ID</label>
                 </div>
               </form>
@@ -382,72 +371,81 @@ $classlist = [
                 return ($maxmonth != null && ($role == 'Admin' || $role == 'Offline Manager')) ? '<p style="display: inline !important;">' . $maxmonth . '</p>&nbsp;<a href="fees.php?get_stid=' . $student_id . '" target=_blank"><i class="bi bi-clock-history" style="font-size: 16px ;color:#777777" title="View Payment History"></i></a>' : '';
               }
 
-              echo '<div class="table-responsive">
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col" id="cw">Photo</th>
-                <th scope="col">Student ID</th>
-                <th scope="col">Student Name</th>
-                <th scope="col">Gender</th>
-                <th scope="col">Age</th>
-                <th scope="col">DOA</th>
-                <th scope="col">DOT</th>
-                <th scope="col">Class</th>
-                <th scope="col">Contact</th>
-                <th scope="col">Status</th>
-                <th scope="col">Pay type</th>
-                <th scope="col">Access</th>
-                <th scope="col">Misc (Pay & Others)</th>
-                <th scope="col">Due</th>
-                <th scope="col"></th>
-            </tr>
-        </thead>
-        <tbody>';
-
-              if (sizeof($resultArr) > 0) {
-                foreach ($resultArr as $array) {
-                  $paidBadge = formatPaidBadge($array['maxmonth'], $role, $array['student_id']);
-                  $contact = formatContact($role, $array['contact']);
-
-                  echo '<tr>
-                  <td><img src="' . (($array['photourl'] !== null && $array['photourl'] !== '') ? $array['photourl'] : 'https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg') . '" width="50"></td>
-                  <td style="white-space: unset;">' . $array['student_id'] . '</td>
-                  <td style="white-space: unset;">' . $array['studentname'] . '</td>
-                  <td style="white-space: unset;">' . $array['gender'] . '</td>
-                  <td style="white-space: unset;">' . $array['age'] . '</td>
-                  <td style="white-space: unset;">' . date('d/m/Y', strtotime($array['doa'])) . '</td>
-                  <td style="white-space: unset;">' . (empty($array['effectivefrom']) ? NULL : date('d/m/Y', strtotime($array['effectivefrom']))) . '</td>
-                  <td style="white-space: unset;">' . $array['class'] . '/' . $array['category'] . '</td>' ?>
-                  <td style="white-space: unset;">
-                    <?php echo $contact . (isset($array['emailaddress']) ? '<br>' . $array['emailaddress'] : ''); ?>
-                  </td>
-                  <?php echo '<td style="white-space: unset">' . $array['filterstatus'] . '</td>
-              <td style="white-space: unset">' . @substr($array['payment_type'], 0, 3) . '</td>
-              <td style="white-space: unset">' . @substr($array['access_category'], 0, 3) . '</td>
-            <td style="white-space: unset;">' . $paidBadge . '&nbsp;<i class="bi bi-bag" style="font-size: 17px ;color:#777777" title="Distribution History"></i></td>
-            <td style="white-space: unset;"></td>
-            <td style="white-space: unset"><a href="admission_admin.php?student_id=' . $array['student_id'] . ' "target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails(\'' . $array['student_id'] . '\')">misc.</a></td>
-        </tr>';
-                }
-              } elseif ($module == "" && $stid == "") {
-                echo '<tr>
-        <td colspan="13">Please select a Module and Status from the dropdown menus to view the results.</td>
-    </tr>';
-              } elseif (sizeof($resultArr) == 0 && $stid == "") {
-                echo '<tr>
-        <td colspan="13">No record found for ' . $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", $classs) . '</td>
-    </tr>';
-              } elseif (sizeof($resultArr) == 0 && $stid != "") {
-                echo '<tr>
-        <td colspan="13">No record found for ' . $stid . '</td>
-    </tr>';
-              }
-
-              echo '</tbody>
-    </table>
-</div>';
               ?>
+
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col" id="cw">Photo</th>
+                      <th scope="col">Student ID</th>
+                      <th scope="col">Student Name</th>
+                      <th scope="col">Gender</th>
+                      <th scope="col">Age</th>
+                      <th scope="col">DOA</th>
+                      <th scope="col">DOT</th>
+                      <th scope="col">Aadhar</th>
+                      <th scope="col">Class</th>
+                      <th scope="col">School</th>
+                      <th scope="col">Contact</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Pay type</th>
+                      <th scope="col">Access</th>
+                      <th scope="col">Misc (Pay & Others)</th>
+                      <th scope="col">Due</th>
+                      <th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php if (sizeof($resultArr) > 0) :
+                      foreach ($resultArr as $array) :
+                        $paidBadge = formatPaidBadge($array['maxmonth'], $role, $array['student_id']);
+                        $contact = formatContact($role, $array['contact']);
+                    ?>
+                        <tr>
+                          <td><img src="<?php echo (($array['photourl'] !== null && $array['photourl'] !== '') ? $array['photourl'] : 'https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg'); ?>" width="50"></td>
+                          <td style="white-space: unset;"><?php echo $array['student_id']; ?></td>
+                          <td style="white-space: unset;"><?php echo $array['studentname']; ?></td>
+                          <td style="white-space: unset;"><?php echo $array['gender']; ?></td>
+                          <td style="white-space: unset;"><?php echo $array['age']; ?></td>
+                          <td style="white-space: unset;"><?php echo date('d/m/Y', strtotime($array['doa'])); ?></td>
+                          <td style="white-space: unset;"><?php echo (empty($array['effectivefrom']) ? NULL : date('d/m/Y', strtotime($array['effectivefrom']))); ?></td>
+                          <td style="white-space: unset;"><?php echo $array['aadhar_available']; ?></td>
+                          <td style="white-space: unset;"><?php echo $array['class'] . '/' . $array['category']; ?></td>
+                          <td style="white-space: unset;"><?php echo $array['nameoftheschool']; ?></td>
+                          <td style="white-space: unset;">
+                            <?php echo $contact . (isset($array['emailaddress']) ? '<br>' . $array['emailaddress'] : ''); ?>
+                          </td>
+                          <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
+                          <td style="white-space: unset"><?php echo @substr($array['payment_type'], 0, 3); ?></td>
+                          <td style="white-space: unset"><?php echo (($array['access_category'] == 'Premium') ? 'Prem' : (($array['access_category'] == 'Regular') ? 'Reg' : '')); ?></td>
+                          <td style="white-space: unset;"><?php echo $paidBadge . '&nbsp;<i class="bi bi-bag" style="font-size: 17px ;color:#777777" title="Distribution History"></i>'; ?></td>
+                          <td style="white-space: unset;"></td>
+                          <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> " target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails('<?php echo $array['student_id']; ?>')">misc.</a></td>
+                        </tr>
+                      <?php
+                      endforeach;
+                    elseif ($module == "" && $stid == "") :
+                      ?>
+                      <tr>
+                        <td colspan="13">Please select a Module and Status from the dropdown menus to view the results.</td>
+                      </tr>
+                    <?php
+                    elseif (sizeof($resultArr) == 0 && $stid == "") :
+                    ?>
+                      <tr>
+                        <td colspan="13">No record found for <?php echo $module . ', ' . $id . ' and ' . $category . ' ' . str_replace("'", "", $classs); ?></td>
+                      </tr>
+                    <?php
+                    elseif (sizeof($resultArr) == 0 && $stid != "") :
+                    ?>
+                      <tr>
+                        <td colspan="13">No record found for <?php echo $stid; ?></td>
+                      </tr>
+                    <?php endif; ?>
+                  </tbody>
+                </table>
+              </div>
               <!--------------- POP-UP BOX ------------
 -------------------------------------->
               <style>
@@ -461,8 +459,7 @@ $classlist = [
                   <div class="modal-content">
                     <div class="modal-header">
                       <h1 class="modal-title fs-5" id="exampleModalLabel">Student Details</h1>
-                      <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                      <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
 
@@ -487,16 +484,13 @@ $classlist = [
                         <form name="payment" action="#" method="POST">
                           <input type="hidden" name="form-type" type="text" value="payment">
                           <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
-                          <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text"
-                            value="">
+                          <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
 
-                          <select name="year" id="year" class="form-select"
-                            style="display: -webkit-inline-box; width:20vh;" required>
+                          <select name="year" id="year" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
                             <!-- <option value="" disabled selected hidden>Select Year</option> -->
                           </select>
 
-                          <select name="ptype" id="ptype" class="form-select"
-                            style="display: -webkit-inline-box; width:20vh;" required>
+                          <select name="ptype" id="ptype" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
                             <option value="" disabled selected hidden>Select Type</option>
                             <option value="Fees" selected>Fees</option>
                             <option value="Admission Fee">Admission Fee</option>
@@ -505,8 +499,7 @@ $classlist = [
                             <option value="ID Card">ID Card</option>
                           </select>
 
-                          <select name="month" id="month" class="form-select"
-                            style="display: -webkit-inline-box; width:20vh;" required>
+                          <select name="month" id="month" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
                             <option value="" disabled selected hidden>Select Month</option>
                             <option value="1">January</option>
                             <option value="2">February</option>
@@ -522,10 +515,8 @@ $classlist = [
                             <option value="12">December</option>
                           </select>
 
-                          <input type="number" name="fees" id="fees" class="form-control"
-                            style="display: -webkit-inline-box; width:15vh;" placeholder="Amount" required>
-                          <button type="submit" id="yes" class="btn btn-danger btn-sm "
-                            style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
+                          <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;" placeholder="Amount" required>
+                          <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
                         </form>
                         <hr>
                         <p><strong>Distributed items and supplies</strong></p>
@@ -534,8 +525,7 @@ $classlist = [
                           <input type="hidden" class="form-control" name="distributedto" id="distributedto" value="">
                           <input type="hidden" class="form-control" name="distributedby" id="distributedby" value="">
                           <div style="display: flex; flex-direction: row; align-items: center;">
-                            <select name="items" id="items" class="form-select"
-                              style="display: -webkit-inline-box; width:20vh;  margin-right: 10px;" required>
+                            <select name="items" id="items" class="form-select" style="display: -webkit-inline-box; width:20vh;  margin-right: 10px;" required>
                               <option value="" disabled selected hidden>Select Item</option>
                               <option value="Uniform">Uniform</option>
                               <option value="ID Card">ID Card</option>
@@ -544,12 +534,9 @@ $classlist = [
                               <option value="Pencil">Pencil</option>
                               <option value="Sanitary Pads">Sanitary Pads</option>
                             </select>
-                            <input type="number" name="quantity" id="quantity" class="form-control"
-                              style="width: 15vh; margin-right: 10px;" placeholder="Quantity" required>
-                            <input type="date" name="issuance_date" id="issuance_date" class="form-control"
-                              style="width: 15vh; margin-right: 10px;" placeholder="Issuance Date" required>
-                            <button type="submit" id="submit_distribution" class="btn btn-danger btn-sm"
-                              style="outline: none;">Update</button>
+                            <input type="number" name="quantity" id="quantity" class="form-control" style="width: 15vh; margin-right: 10px;" placeholder="Quantity" required>
+                            <input type="date" name="issuance_date" id="issuance_date" class="form-control" style="width: 15vh; margin-right: 10px;" placeholder="Issuance Date" required>
+                            <button type="submit" id="submit_distribution" class="btn btn-danger btn-sm" style="outline: none;">Update</button>
                           </div>
                         </form>
                         <br>
@@ -563,151 +550,150 @@ $classlist = [
                           }
                         </script>
                         <div class="modal-footer">
-                          <button type="button" id="closedetails-footer" class="btn btn-secondary"
-                            data-bs-dismiss="modal">Close</button>
+                          <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
-                      </div>
                     </div>
                   </div>
                 </div>
-              <?php } ?>
-              <script>
-                const scriptURL = 'payment-api.php';
-                const paymentForm = document.forms['payment'];
-                const distributionForm = document.forms['distribution'];
+              </div>
+            <?php } ?>
+            <script>
+              const scriptURL = 'payment-api.php';
+              const paymentForm = document.forms['payment'];
+              const distributionForm = document.forms['distribution'];
 
-                // Automatically show the modal when the form is submitted
-                const showModal = () => {
-                  $('#myModal_p').modal({
-                    backdrop: 'static',
-                    keyboard: false
-                  });
-                  $('#myModal_p').modal('show');
-                };
+              // Automatically show the modal when the form is submitted
+              const showModal = () => {
+                $('#myModal_p').modal({
+                  backdrop: 'static',
+                  keyboard: false
+                });
+                $('#myModal_p').modal('show');
+              };
 
-                // Automatically hide the modal when the submission is complete
-                const hideModal = () => {
-                  $('#myModal_p').modal('hide');
-                };
+              // Automatically hide the modal when the submission is complete
+              const hideModal = () => {
+                $('#myModal_p').modal('hide');
+              };
 
-                paymentForm.addEventListener('submit', e => {
-                  e.preventDefault();
+              paymentForm.addEventListener('submit', e => {
+                e.preventDefault();
 
-                  showModal(); // Show the modal when the form is submitted
+                showModal(); // Show the modal when the form is submitted
 
-                  fetch(scriptURL, {
+                fetch(scriptURL, {
                     method: 'POST',
                     body: new FormData(paymentForm)
                   })
-                    .then(response => response.text())
-                    .then(result => {
-                      hideModal(); // Hide the modal when the submission is complete
+                  .then(response => response.text())
+                  .then(result => {
+                    hideModal(); // Hide the modal when the submission is complete
 
-                      if (result === 'success') {
-                        alert("Fee has been deposited successfully.");
-                        location.reload();
-                      } else {
-                        alert("Failed to deposit fee. Please try again later or contact our support team for assistance.");
-                      }
-                    })
-                    .catch(error => {
-                      hideModal(); // Hide the modal in case of an error
-                      console.error('Error!', error.message);
-                    });
-                });
+                    if (result === 'success') {
+                      alert("Fee has been deposited successfully.");
+                      location.reload();
+                    } else {
+                      alert("Failed to deposit fee. Please try again later or contact our support team for assistance.");
+                    }
+                  })
+                  .catch(error => {
+                    hideModal(); // Hide the modal in case of an error
+                    console.error('Error!', error.message);
+                  });
+              });
 
-                distributionForm.addEventListener('submit', e => {
-                  e.preventDefault();
+              distributionForm.addEventListener('submit', e => {
+                e.preventDefault();
 
-                  showModal(); // Show the modal when the form is submitted
+                showModal(); // Show the modal when the form is submitted
 
-                  fetch(scriptURL, {
+                fetch(scriptURL, {
                     method: 'POST',
                     body: new FormData(distributionForm)
                   })
-                    .then(response => response.text())
-                    .then(result => {
-                      hideModal(); // Hide the modal when the submission is complete
+                  .then(response => response.text())
+                  .then(result => {
+                    hideModal(); // Hide the modal when the submission is complete
 
-                      if (result === 'success') {
-                        alert("Record has been updated.");
-                        location.reload();
-                      } else {
-                        alert("Error updating record. Please try again later or contact support.");
-                      }
-                    })
-                    .catch(error => {
-                      hideModal(); // Hide the modal in case of an error
-                      console.error('Error!', error.message);
-                    });
-                });
-              </script>
-
-              <script>
-                var data = <?php echo json_encode($resultArr) ?>;
-                var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
-
-                // Get the modal
-                var modal = document.getElementById("myModal");
-                // Get the <span> element that closes the modal
-                var closedetails = [
-                  document.getElementById("closedetails-header"),
-                  document.getElementById("closedetails-footer")
-                ];
-
-                function showDetails(id) {
-                  var mydata = undefined
-                  data.forEach(item => {
-                    if (item["student_id"] == id) {
-                      mydata = item;
+                    if (result === 'success') {
+                      alert("Record has been updated.");
+                      location.reload();
+                    } else {
+                      alert("Error updating record. Please try again later or contact support.");
                     }
                   })
+                  .catch(error => {
+                    hideModal(); // Hide the modal in case of an error
+                    console.error('Error!', error.message);
+                  });
+              });
+            </script>
 
-                  var keys = Object.keys(mydata)
-                  keys.forEach(key => {
-                    var span = modal.getElementsByClassName(key)
-                    if (span.length > 0)
-                      span[0].innerHTML = mydata[key];
-                  })
-                  modal.style.display = "block";
+            <script>
+              var data = <?php echo json_encode($resultArr) ?>;
+              var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
 
-                  //Print something start
+              // Get the modal
+              var modal = document.getElementById("myModal");
+              // Get the <span> element that closes the modal
+              var closedetails = [
+                document.getElementById("closedetails-header"),
+                document.getElementById("closedetails-footer")
+              ];
 
-                  var status = document.getElementById("status")
-                  status.innerHTML = mydata["filterstatus"]
-                  if (mydata["filterstatus"] === "Active") {
-                    status.classList.add("bg-success")
-                    status.classList.remove("bg-danger")
-                  } else {
-                    status.classList.remove("bg-success")
-                    status.classList.add("bg-danger")
+              function showDetails(id) {
+                var mydata = undefined
+                data.forEach(item => {
+                  if (item["student_id"] == id) {
+                    mydata = item;
                   }
-                  // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
-                  //Print something END
-                  var profileimage = document.getElementById("profileimage")
-                  profileimage.src = mydata["photourl"]
+                })
 
-                  var studentid = document.getElementById("studentid")
-                  studentid.value = mydata["student_id"]
+                var keys = Object.keys(mydata)
+                keys.forEach(key => {
+                  var span = modal.getElementsByClassName(key)
+                  if (span.length > 0)
+                    span[0].innerHTML = mydata[key];
+                })
+                modal.style.display = "block";
 
-                  var collectedby = document.getElementById("collectedby")
-                  collectedby.value = aid
+                //Print something start
 
-                  var distributedto = document.getElementById("distributedto")
-                  distributedto.value = mydata["student_id"]
-                  var distributedby = document.getElementById("distributedby")
-                  distributedby.value = aid
+                var status = document.getElementById("status")
+                status.innerHTML = mydata["filterstatus"]
+                if (mydata["filterstatus"] === "Active") {
+                  status.classList.add("bg-success")
+                  status.classList.remove("bg-danger")
+                } else {
+                  status.classList.remove("bg-success")
+                  status.classList.add("bg-danger")
                 }
+                // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
+                //Print something END
+                var profileimage = document.getElementById("profileimage")
+                profileimage.src = mydata["photourl"]
 
-                closedetails.forEach(function (element) {
-                  element.addEventListener("click", closeModal);
-                });
+                var studentid = document.getElementById("studentid")
+                studentid.value = mydata["student_id"]
 
-                function closeModal() {
-                  var modal1 = document.getElementById("myModal");
-                  modal1.style.display = "none";
-                }
-              </script>
+                var collectedby = document.getElementById("collectedby")
+                collectedby.value = aid
+
+                var distributedto = document.getElementById("distributedto")
+                distributedto.value = mydata["student_id"]
+                var distributedby = document.getElementById("distributedby")
+                distributedby.value = aid
+              }
+
+              closedetails.forEach(function(element) {
+                element.addEventListener("click", closeModal);
+              });
+
+              function closeModal() {
+                var modal1 = document.getElementById("myModal");
+                modal1.style.display = "none";
+              }
+            </script>
 
             </div>
           </div>
@@ -732,13 +718,10 @@ $classlist = [
 
   </main><!-- End #main -->
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-      class="bi bi-arrow-up-short"></i></a>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <!-- Vendor JS Files -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
