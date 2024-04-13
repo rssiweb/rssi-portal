@@ -398,12 +398,29 @@ if ($resultcount) {
                             summaryRow.class_1_count += 1
                         } else if (attendanceRow.class == "Pre-school") {
                             summaryRow.preschool_count += 1
+                        } else if (attendanceRow.class == "Nursery") {
+                            summaryRow.nursery_count += 1
+                        } else if (attendanceRow.class == "LKG") {
+                            summaryRow.lkg_count += 1
+                        } else if (attendanceRow.class == "UKG") {
+                            summaryRow.ukg_count += 1
+                        } else if (attendanceRow.class == "3") {
+                            summaryRow.class3_count += 1
+                        } else if (attendanceRow.class == "4" || attendanceRow.class == "5" || attendanceRow.class == "6") {
+                            summaryRow.class4_5_6_count += 1
                         }
                     } else {
                         summaryRows.value.push({
                             category: attendanceRow.category,
                             category_count: 1,
                             preschool_count: attendanceRow.class == "Pre-school" ? 1 : 0,
+                            nursery_count: attendanceRow.class == "Nursery" ? 1 : 0,
+                            lkg_count: attendanceRow.class == "LKG" ? 1 : 0,
+                            ukg_count: attendanceRow.class == "UKG" ? 1 : 0,
+                            class3_count: attendanceRow.class == "3" ? 1 : 0,
+                            class4_5_6_count: attendanceRow.class == "4" ? 1 : 0,
+                            class4_5_6_count: attendanceRow.class == "5" ? 1 : 0,
+                            class4_5_6_count: attendanceRow.class == "6" ? 1 : 0,
                             class_1_count: attendanceRow.class == "1" ? 1 : 0,
                             class_2_count: attendanceRow.class == "2" ? 1 : 0
                         })

@@ -201,6 +201,7 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                                 <option hidden selected><?php echo $category ?></option>
                                             <?php }
                                             ?>
+                                            <option>LG1</option>
                                             <option>LG2A</option>
                                             <option>LG2B</option>
                                             <option>LG3</option>

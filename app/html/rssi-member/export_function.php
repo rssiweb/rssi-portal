@@ -141,7 +141,7 @@ function fees_export()
 
   foreach ($resultArr as $array) {
 
-    echo substr($array['date'], 0, 10) . ',' . $array['studentid'] . ',' . strtok($array['studentname'], ' ') . ',' . $array['category'] . ',' . @strftime('%B', mktime(0, 0, 0,  $array['month'])) . ',' . $array['fees'] . ',' . $array['fullname'] . ',' . $array['pstatus'] . "\n";
+    echo substr($array['date'], 0, 10) . ',' . $array['studentid'] . ',' . strtok($array['studentname'], ' ') . ',' . $array['category'] . ',' . @strftime('%B', mktime(0, 0, 0, $array['month'])) . ',' . $array['fees'] . ',' . $array['fullname'] . ',' . $array['pstatus'] . "\n";
   }
 }
 
@@ -329,7 +329,7 @@ function reimb_export()
 
   foreach ($resultArr as $array) {
 
-    echo $array['reimbid'] . ',"' . substr($array['timestamp'], 0, 10) . '",' .  $array['registrationid'] . '/' . strtok($array['fullname'], ' ') . ',' . $array['selectclaimheadfromthelistbelow'] . ',"' . $array['claimheaddetails'] . '",' . $array['totalbillamount'] . ',' . $array['approvedamount'] . ',' . $array['claimstatus'] . ',' . $array['transfereddate'] . ',' . $array['uploadeddocuments'] . ',"' . $array['mediremarks'] . '"' . "\n";
+    echo $array['reimbid'] . ',"' . substr($array['timestamp'], 0, 10) . '",' . $array['registrationid'] . '/' . strtok($array['fullname'], ' ') . ',' . $array['selectclaimheadfromthelistbelow'] . ',"' . $array['claimheaddetails'] . '",' . $array['totalbillamount'] . ',' . $array['approvedamount'] . ',' . $array['claimstatus'] . ',' . $array['transfereddate'] . ',' . $array['uploadeddocuments'] . ',"' . $array['mediremarks'] . '"' . "\n";
   }
 }
 
@@ -375,11 +375,11 @@ function student_export()
 
   $resultArr = pg_fetch_all($result);
 
-  echo 'Student Id,Name,Category,Class,DOA,Paid month,Special Service' . "\n";
+  echo 'Student Id,Name,Category,Class,Age,Gender,Contact,Access,Pay type,Status,DOA,DOT,Remarks' . "\n";
 
   foreach ($resultArr as $array) {
 
-    echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['doa'] . ',' . $array['maxmonth'] . ',' . $array['special_service'] . "\n";
+    echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['age'] . ',' . $array['gender'] . ',' . $array['contact'] . ',' . $array['access_category'] . ',' . $array['payment_type'] . ',' . $array['filterstatus'] . ',' . $array['doa'] . ',' . $array['effectivefrom'] . ',"' . $array['remarks'] .'"'. "\n";
   }
 }
 function donation_old_export()
@@ -440,7 +440,7 @@ function exportAttendanceToCSV($attendanceData, $startDate, $endDate)
     'Student Name',
     'Category',
     'Class',
-     'Contact',
+    'Contact',
   ];
 
   // Add date headers to CSV

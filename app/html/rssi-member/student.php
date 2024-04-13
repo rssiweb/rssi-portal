@@ -271,6 +271,7 @@ $classlist = [
                           <option hidden selected><?php echo $category ?></option>
                         <?php }
                         ?>
+                        <option>LG1</option>
                         <option>LG2-A</option>
                         <option>LG2-B</option>
                         <option>LG2-C</option>
