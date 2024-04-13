@@ -29,8 +29,6 @@
     </div>
   </div>
 
-  <!-- Your HTML code remains unchanged -->
-
   <script>
     (function() {
       let inactiveTime = 0;
@@ -111,13 +109,6 @@
 
       document.getElementById('signOutButton').addEventListener('click', redirectToLogout);
       document.getElementById('continueButton').addEventListener('click', resetTimer);
-
-      // Listen for changes in localStorage from other tabs
-      window.addEventListener('storage', function(event) {
-        if (event.key === 'lastInteractionTime') {
-          resetTimer();
-        }
-      });
 
       startTimer();
 
