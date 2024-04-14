@@ -161,7 +161,7 @@ if (!$result) {
                                 <div class="col" style="display: inline-block; width:65%;">
 
                                     <p><b>Rina Shiksha Sahayak Foundation</b></p>
-                                    <p style="font-size: small;">(RSSI NGO and Kalpana Buds)</p>
+                                    <p style="font-size: small;">(Comprising RSSI NGO and Kalpana Buds School)</p>
                                     <!-- <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p> -->
                                     <p style="font-size: small;">NGO-DARPAN Id: WB/2021/0282726, CIN: U80101WB2020NPL237900</p>
                                     <p style="font-size: small;">Email: info@rssi.in, Website: www.rssi.in</p>
