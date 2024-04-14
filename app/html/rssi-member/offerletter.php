@@ -160,8 +160,11 @@ if (!$result) {
                             <td>
                                 <div class="col" style="display: inline-block; width:65%;">
 
-                                    <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
-                                    <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
+                                    <p><b>Rina Shiksha Sahayak Foundation</b></p>
+                                    <p style="font-size: small;">(RSSI NGO and Kalpana Buds)</p>
+                                    <!-- <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p> -->
+                                    <p style="font-size: small;">NGO-DARPAN Id: WB/2021/0282726, CIN: U80101WB2020NPL237900</p>
+                                    <p style="font-size: small;">Email: info@rssi.in, Website: www.rssi.in</p>
                                 </div>
                                 <div class="col" style="display: inline-block; width:32%; vertical-align: top; text-align:right;">
                                     <!-- Scan QR code to check authenticity -->
@@ -173,7 +176,7 @@ if (!$result) {
 
                                     $url = $a . $b;
                                     $url = urlencode($url); ?>
-                                    <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url ?>" width="75px" />
+                                    <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url ?>" width="100px" />
                                     <!-- <img src=<?php echo $c ?> width=80px height=80px /> -->
                                 </div>
                             </td>
@@ -212,26 +215,18 @@ if (!$result) {
                                 <p><b><u>TERMS AND CONDITIONS</u></b></p>
                                 <ol start="3">
                                     <?php
-                                    // Assuming $array['job_type'] holds the job type information
-
                                     // Initialize the notice period
                                     $notice_period = "";
 
                                     // Check the job type
                                     if ($array['job_type'] === "Part-time") {
                                         $notice_period = "thirty (30) days";
-                                        $mintenure = "8 months";
-                                        $workinghours = "3-hour";
+                                        $mintenure = "8 months"; // This is NOT impacting Internship
+                                        $workinghours = "4-hour";
                                     } elseif ($array['job_type'] === "Full-time") {
                                         $notice_period = "ninety (90) days";
                                         $mintenure = "12 months";
                                         $workinghours = "7.5-hour";
-                                    } else {
-                                        // Handle the case where job type is neither Part-time nor Full-time
-                                        // You may want to set a default notice period here or handle it differently
-                                        $notice_period = "thirty (30) days"; // Defaulting to 30 days for other cases
-                                        $mintenure = "8 months";
-                                        $workinghours = "3-hour";
                                     }
 
                                     // Now incorporate the $notice_period into the statement
