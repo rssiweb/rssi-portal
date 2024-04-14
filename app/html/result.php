@@ -244,7 +244,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                     $exam = str_replace(" ", "%20", $id);
                                     $url = "https://login.rssi.in/result.php?get_stid=$stid&get_id=$exam&get_year=$year";
                                     $url_u = urlencode($url); ?>
-                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=<?php echo $url_u ?>" />
+                                    <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url_u ?>"  width="80px" />&nbsp;
                                     <img src=<?php echo $photourl ?> width=80px height=80px />
                                 </div>
                             </div>

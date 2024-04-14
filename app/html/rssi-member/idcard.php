@@ -166,7 +166,7 @@ validation();
                     <p class="first-txt"><?php echo $fullname ?></p>
                     <p class="second-txt"><?php echo $associatenumber ?></p>
                     <p class="third-txt"><?php echo explode('-', $position)[1]?></p>
-                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>" width="100" />
+                    <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>" width="100" />
                 </div>
             </div>
         </div>

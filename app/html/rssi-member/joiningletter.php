@@ -247,7 +247,7 @@ if (!$result) {
 
                                     $url = $a . $b;
                                     $url = urlencode($url); ?>
-                                    <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="75px" />
+                                    <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url ?>" width="75px" />
                                     <!-- <img src=<?php echo $c ?> width=80px height=80px /> -->
                                 </div>
                             </td>
@@ -358,7 +358,7 @@ if (!$result) {
                                     </div>
                                     <div class="right-column">
                                         <div class="qr-code">
-                                            <img class="qr-image" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://maps.app.goo.gl/BNq37UdBq4bUcM7a8" alt="QR Code">
+                                            <img class="qr-image" src="https://qrcode.tec-it.com/API/QRCode?data=https://maps.app.goo.gl/BNq37UdBq4bUcM7a8" alt="QR Code">
                                             <p class="qr-message">Scan the QR code to view location in Google Maps</p>
                                         </div>
                                     </div>

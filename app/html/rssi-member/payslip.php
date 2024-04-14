@@ -187,7 +187,7 @@ if (!$result_component) {
             $url = $a . $b;
             $url = urlencode($url);
             ?>
-            <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=<?php echo $url ?>" width="100px" />
+            <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url ?>" width="100px" />
           </div>
         </div>
         <h3>Payslip</h3>

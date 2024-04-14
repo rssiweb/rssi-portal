@@ -154,12 +154,12 @@ if (!$result) {
                             </div>' ?>
                 <?php if ($role != 'Admin') {
                     echo '<div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
-                                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=' . $array['associatenumber'] . '" width="74px" />
+                                <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=https://login.rssi.in/rssi-member/verification.php?get_id=' . $array['associatenumber'] . '" width="74px" />
                             </div>' ?><?php } ?>
 
                 <?php if ($role == 'Admin') {
                     echo '<div class="col" style="display: inline-block; width:42%;margin-left:1.5%;text-align:right;">
-                                <img class="qrimage" src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=https://login.rssi.in/rssi-member/verification.php?get_id=' ?><?php echo $id ?><?php echo '" width="74px" />
+                                <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=https://login.rssi.in/rssi-member/verification.php?get_id=' ?><?php echo $id ?><?php echo '" width="74px" />
                             </div>' ?><?php } ?>
 
                 <?php echo
