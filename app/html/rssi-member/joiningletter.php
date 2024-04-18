@@ -158,7 +158,7 @@ if (!$result) {
         }
 
         .qr-image {
-            width: 200px;
+            width: 180px;
         }
     </style>
     </style>
@@ -234,8 +234,11 @@ if (!$result) {
                             <td>
                                 <div class="col" style="display: inline-block; width:65%;">
 
-                                    <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
-                                    <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
+                                    <p><b>Rina Shiksha Sahayak Foundation</b></p>
+                                    <p style="font-size: small;">(Comprising RSSI NGO and Kalpana Buds School)</p>
+                                    <!-- <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p> -->
+                                    <p style="font-size: small;">NGO-DARPAN Id: WB/2021/0282726, CIN: U80101WB2020NPL237900</p>
+                                    <p style="font-size: small;">Email: info@rssi.in, Website: www.rssi.in</p>
                                 </div>
                                 <div class="col" style="display: inline-block; width:32%; vertical-align: top; text-align:right;">
                                     <!-- Scan QR code to check authenticity -->
@@ -247,7 +250,7 @@ if (!$result) {
 
                                     $url = $a . $b;
                                     $url = urlencode($url); ?>
-                                    <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url ?>" width="75px" />
+                                    <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url ?>" width="100px" />
                                     <!-- <img src=<?php echo $c ?> width=80px height=80px /> -->
                                 </div>
                             </td>
@@ -347,26 +350,28 @@ if (!$result) {
                                     <div class="left-column">
                                         <div class="info-title">Address</div>
                                         <div class="address">
-                                            Rina Shiksha Sahayak Foundation (RSSI NGO)<br> 624V/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
+                                            Rina Shiksha Sahayak Foundation<br> 624V/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
                                             <!-- <a href="https://maps.app.goo.gl/BNq37UdBq4bUcM7a8">Google Map</a> -->
                                             Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
                                         </div>
                                         <div class="date-time">
                                             <p>Reporting Date and Time:</p>
-                                            <p><?php echo date('d/M/Y', strtotime($array['doj'])); ?>&nbsp;&nbsp;<span class="time"><?php echo $reporting_time ?></span></p>
+                                            <p><?php echo date('d/F/Y', strtotime($array['doj'])); ?>&nbsp;&nbsp;<span class="time"><?php echo $reporting_time ?></span></p>
                                         </div>
                                     </div>
                                     <div class="right-column">
+                                    <p class="qr-message">Scan the QR code to view location in Google Maps</p>
                                         <div class="qr-code">
                                             <img class="qr-image" src="https://qrcode.tec-it.com/API/QRCode?data=https://maps.app.goo.gl/BNq37UdBq4bUcM7a8" alt="QR Code">
-                                            <p class="qr-message">Scan the QR code to view location in Google Maps</p>
+                                            
                                         </div>
                                     </div>
                                 </div>
                                 <br>
                                 <p>Warm regards,</p>
                                 <p><b>For Rina Shiksha Sahayak Foundation</b></p>
-                                <img src="../img/<?php echo $associatenumber ?>.png" width="65px" style="margin-bottom:-5px"><br>
+                                <!-- <img src="../img/<?php echo $associatenumber ?>.png" width="65px" style="margin-bottom:-5px"> -->
+                                <br><br>
                                 <p style="line-height: 2;"><?php echo $fullname ?><br>
 
                                     <?php if (str_contains($position, "Talent")) { ?>

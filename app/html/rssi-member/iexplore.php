@@ -14,40 +14,50 @@ validation();
 
 date_default_timezone_set('Asia/Kolkata');
 
-if ($role == 'Admin') {
+// Retrieve student ID from form input
+@$courseid_search = $_GET['courseid_search'];
 
-    if ($_POST) {
-        @$courseid = $_POST['courseid'];
-        @$coursename = $_POST['coursename'];
-        @$language = $_POST['language'];
-        @$passingmarks = $_POST['passingmarks'];
-        @$url = $_POST['url'];
-        @$validity = $_POST['validity'];
-        @$issuedby = $_POST['issuedby'];
-        @$now = date('Y-m-d H:i:s');
-        if ($courseid != "") {
-            $wbt = "INSERT INTO wbt (date, courseid, coursename, language, passingmarks, url, issuedby,validity) VALUES ('$now','$courseid','$coursename','$language','$passingmarks','$url','$issuedby','$validity')";
-            $result = pg_query($con, $wbt);
-            $cmdtuples = pg_affected_rows($result);
-        }
+// Query database for student information based on ID
+$result = pg_query($con, "SELECT * FROM wbt WHERE courseid = '$courseid_search'");
+
+// Check if the query was executed successfully
+if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+}
+
+// Fetch all rows as an associative array
+$resultArr = pg_fetch_all($result);
+
+// Check if any rows were found
+if ($resultArr) {
+    // Loop through each row in the result array
+    foreach ($resultArr as $row) {
     }
 }
 
+$courseid1 = isset($_GET['courseid1']) ? trim($_GET['courseid1']) : null;
+$language1 = isset($_GET['language1']) ? $_GET['language1'] : 'ALL';
+$type1 = isset($_GET['type1']) ? $_GET['type1'] : 'ALL';
 
-@$courseid1 = trim($_GET['courseid1']);
-@$language1 = $_GET['language1'];
+$query = "SELECT * FROM wbt WHERE 1=1";
 
-if (($courseid1 == null && $language1 == 'ALL')) {
-    $result1 = pg_query($con, "select * from wbt order by language desc");
-} else if (($courseid1 == null && ($language1 != 'ALL' && $language1 != null))) {
-    $result1 = pg_query($con, "select * from wbt where language='$language1' order by language desc");
-} else if (($courseid1 != null && ($language1 == null || $language1 == 'ALL'))) {
-    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' order by language desc");
-} else if (($courseid1 != null && ($language1 != 'ALL' && $language1 != null))) {
-    $result1 = pg_query($con, "select * from wbt where courseid='$courseid1' AND language='$language1' order by language desc");
-} else {
-    $result1 = pg_query($con, "select * from wbt order by language desc");
+if ($courseid1 != null) {
+    $query .= " AND courseid = '$courseid1'";
 }
+
+if ($language1 != 'ALL') {
+    $query .= " AND language = '$language1'";
+}
+
+if ($type1 != 'ALL') {
+    $query .= " AND type = '$type1'";
+}
+
+$query .= " ORDER BY courseid";
+
+$result1 = pg_query($con, $query);
+
 if (!$result1) {
     echo "An error occurred.\n";
     exit;
@@ -60,15 +70,18 @@ $resultArr1 = pg_fetch_all($result1);
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
@@ -119,8 +132,8 @@ $resultArr1 = pg_fetch_all($result1);
                             Home / iExplore Web-based training (WBT)
                         <?php } ?>
                     </div>
-                    <div class="col" style="display: inline-block; width:48%; text-align:right">
-                        <a href="my_learning.php" target="_self" class="btn btn-danger btn-sm" role="button">My Learnings</a>
+                    <div class="col" style="text-align: right;">
+                        <a href="my_learning.php" target="_self" class="btn btn-sm btn-warning" role="button">My Learning</a>
                     </div>
                 </div>
 
@@ -151,105 +164,149 @@ $resultArr1 = pg_fetch_all($result1);
                                         <span>Database has been updated successfully for course id <?php echo @$courseid ?>.</span>
                                     </div>
                                 <?php } ?>
-                                <form autocomplete="off" name="wbt" id="wbt" action="iexplore.php" method="POST">
+                                <div class="container">
                                     <div class="row">
                                         <div class="col">
-                                            <div class="form-group">
-                                                <input type="text" name="courseid" class="form-control" placeholder="Course ID" required>
-                                                <small class="form-text text-muted">Course ID</small>
-                                            </div>
+                                            <h3>Search Course</h3>
+                                            <form action="" method="GET">
+                                                <div class="input-group mb-3">
+                                                    <input type="text" name="courseid_search" class="form-control" placeholder="Enter Course ID" value="<?php echo @$courseid_search ?>">
+                                                    <button type="submit" name="courseid_search_button" class="btn btn-primary">Search</button>
+                                                </div>
+                                            </form>
                                         </div>
                                         <div class="col">
-                                            <div class="form-group">
-                                                <input type="text" name="coursename" class="form-control" placeholder="Course Name" required>
-                                                <small class="form-text text-muted">Course Name</small>
-                                            </div>
+                                            <h3>Modify Course</h3>
+                                            <form autocomplete="off" name="wbt" id="wbt" method="POST">
+                                                <input type="hidden" name="form-type" value="wbt">
+                                                <div class="form-check mb-3">
+                                                    <input type="checkbox" class="form-check-input" id="disableFieldsCheckbox">
+                                                    <label class="form-check-label" for="disableFieldsCheckbox">Modify course</label>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <input type="text" name="courseid" class="form-control" placeholder="Course ID" value="<?php echo @$row['courseid']; ?>" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <input type="text" name="coursename" class="form-control" placeholder="Course Name" value="<?php echo @$row['coursename']; ?>" required>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col">
+                                                        <select name="language" class="form-select" required>
+                                                            <option value="" disabled selected>Select Language</option>
+                                                            <?php
+                                                            $languages = array("English", "Hindi", "Bengali");
+                                                            foreach ($languages as $language) {
+                                                                $selected = ($language == @$row['language']) ? "selected" : "";
+                                                                echo "<option $selected>$language</option>";
+                                                            }
+                                                            ?>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col">
+                                                        <select name="type" class="form-select" required>
+                                                            <option value="" disabled selected>Select Type</option>
+                                                            <?php
+                                                            $types = array("Internal", "External");
+                                                            foreach ($types as $type) {
+                                                                $selected = ($type == @$row['type']) ? "selected" : "";
+                                                                echo "<option $selected>$type</option>";
+                                                            }
+                                                            ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <input type="number" name="passingmarks" max="100" min="0" class="form-control" placeholder="Mastery Score" value="<?php echo @$row['passingmarks']; ?>">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <input type="url" name="url" class="form-control" placeholder="URL" value="<?php echo @$row['url']; ?>" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <select name="validity" class="form-select" required>
+                                                        <option value="" disabled selected>Select Validity</option>
+                                                        <?php
+                                                        $validities = array("0.5", "1", "2", "3", "5","Lifetime");
+                                                        foreach ($validities as $validity) {
+                                                            $selected = ($validity == @$row['validity']) ? "selected" : "";
+                                                            echo "<option $selected>$validity</option>";
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                </div>
+                                                <input type="hidden" name="issuedby" class="form-control" value="<?php echo $fullname ?>" required readonly>
+                                                <div class="mb-3">
+                                                    <button type="submit" id="submit2" class="btn btn-warning">Update</button>
+                                                    <button type="submit" id="submit3" class="btn btn-danger">Add New</button>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col">
-                                            <div class="form-group">
-                                                <select name="language" class="form-select" required>
-                                                    <option value="" disabled selected hidden>Language</option>
-                                                    <option>English</option>
-                                                    <option>Hindi</option>
-                                                    <option>Bengali</option>
-                                                </select>
-                                                <small class="form-text text-muted">Language</small>
-                                            </div>
-                                        </div>
-                                        <div class="col">
-                                            <div class="form-group">
-                                                <input type="number" name="passingmarks" max="100" accuracy="2" min="0" class="form-control" placeholder="Mastery Score" required>
-                                                <small class="form-text text-muted">Mastery Score (%)</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col">
-                                            <div class="form-group">
-                                                <input type="url" name="url" class="form-control" placeholder="URL" required>
-                                                <small class="form-text text-muted">URL</small>
-                                            </div>
-                                        </div>
-                                        <div class="col">
-                                            <div class="form-group">
-                                                <select name="validity" class="form-select" required>
-                                                    <option value="" disabled selected hidden>Validity</option>
-                                                    <option>0.5</option>
-                                                    <option>1</option>
-                                                    <option>2</option>
-                                                    <option>3</option>
-                                                    <option>5</option>
-                                                </select>
-                                                <small class="form-text text-muted">Validity (Year)</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="issuedby" class="form-control" value="<?php echo $fullname ?>" required readonly>
-                                    <button type="submit" name="search_by_id" class="btn btn-danger btn-sm">
-                                        <i class="bi bi-plus-lg"></i>&nbsp;Add
-                                    </button>
-                                </form>
-
+                                </div>
+                                <hr>
                                 <br>
                             <?php } ?>
                             <?php if ($role != 'Admin') { ?>
                             <?php } ?>
+                            <?php
+                            // Initialize filter variables
+                            $courseid1 = isset($_GET['courseid1']) ? trim($_GET['courseid1']) : '';
+                            $language1 = isset($_GET['language1']) ? $_GET['language1'] : '';
+                            $type1 = isset($_GET['type1']) ? $_GET['type1'] : '';
+
+                            // Define filter options
+                            $languageOptions = array("English", "Hindi", "Bengali");
+                            $typeOptions = array("Internal", "External");
+
+                            // Function to generate options for dropdown fields
+                            function generateOptions($options, $selectedValue)
+                            {
+                                $html = '';
+                                foreach ($options as $option) {
+                                    $selected = ($option == $selectedValue) ? 'selected' : '';
+                                    $html .= "<option value=\"$option\" $selected>$option</option>";
+                                }
+                                return $html;
+                            }
+                            ?>
+
                             <form action="" method="GET">
-                                <div class="row">
-                                    <div class="col">
-                                        <div class="form-group">
-                                            <input type="text" name="courseid1" class="form-control" placeholder="Course ID" value="<?php echo @$courseid1 ?>">
-                                            <small class="form-text text-muted">Course ID</small>
+                                <div class="container">
+                                    Customize your search by selecting any combination of filters to retrieve the data.<br><br>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="courseid1" class="form-label">Course ID</label>
+                                                <input type="text" name="courseid1" class="form-control" id="courseid1" placeholder="Enter Course ID" value="<?php echo htmlspecialchars($courseid1); ?>">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="language1" class="form-label">Language</label>
+                                                <select name="language1" class="form-select" id="language1">
+                                                    <option value="" <?php if ($language1 === '') echo 'selected'; ?> disabled>Select Language</option>
+                                                    <?php echo generateOptions($languageOptions, $language1); ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="type1" class="form-label">Type</label>
+                                                <select name="type1" class="form-select" id="type1">
+                                                    <option value="" <?php if ($type1 === '') echo 'selected'; ?> disabled>Select Type</option>
+                                                    <?php echo generateOptions($typeOptions, $type1); ?>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col">
-                                        <div class="form-group">
-                                            <select name="language1" class="form-select">
-                                                <option value="" disabled selected hidden>Language</option>
-                                                <?php if ($language1 == null) { ?>
-                                                    <option>ALL</option>
-                                                <?php } else { ?>
-                                                    <option hidden selected><?php echo $language1 ?></option>
-                                                <?php } ?>
-                                                <option>English</option>
-                                                <option>Hindi</option>
-                                                <option>Bengali</option>
-                                            </select>
-                                            <small class="form-text text-muted">Language</small>
+                                    <div class="row">
+                                        <div class="col">
+                                            <button type="submit" name="search_by_id" class="btn btn-primary">
+                                                <i class="bi bi-search"></i> Search
+                                            </button>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col">
-                                        <button type="submit" name="search_by_id" class="btn btn-primary btn-sm">
-                                            <i class="bi bi-search"></i>&nbsp;Search
-                                        </button>
                                     </div>
                                 </div>
                             </form>
-
 
                             <div class="col" style="display: inline-block; width:99%; text-align:right">
                                 Record count:&nbsp;<?php echo sizeof($resultArr1) ?>
@@ -262,42 +319,49 @@ $resultArr1 = pg_fetch_all($result1);
                                 <th scope="col">Course id</th>
                                 <th scope="col">Course name</th>
                                 <th scope="col">Language</th>
+                                <th scope="col">Type</th>
                                 <th scope="col">Mastery Score</th>
                                 <th scope="col">Validity (Year)</th>
                                 <th scope="col">Assesment</th>
                             </tr>
                         </thead>' ?>
-                            <?php if ($resultArr1 != null) {
+                            <?php
+                            if ($resultArr1 != null) {
                                 echo '<tbody>';
                                 foreach ($resultArr1 as $array) {
-                                    echo '
-                            <tr>
-                                <td>' . $array['courseid'] . '</td>
-                                <td>' . $array['coursename'] . '</td>
-                                <td>' . $array['language'] . '</td>
-                                <td>' . $array['passingmarks'] . '%</td>
-                                <td>' . $array['validity'] . '</td>
-                                <td><a href="' . $array['url'] ?><?php echo $associatenumber ?><?php echo '" target="_blank" title="' . $array['coursename'] . '-' . $array['language'] . '"><button type="button" id="btn" class="btn btn-warning btn-sm" style="outline: none; color:#fff"></span>Launch&nbsp;' . $array['courseid'] . '</button></a></td>
-                            </tr>';
-                                                                                            }
-                                                                                        } else if ($courseid1 == null && $language1 == null) {
-                                                                                            echo '<tr>
-                                          <td colspan="5">Please enter at least one value to get the WBT details.</td>
-                                      </tr>';
-                                                                                        } else {
-                                                                                            echo '<tr>
-                                      <td colspan="5">No record found for' ?>&nbsp;<?php echo $courseid1 ?>&nbsp;<?php echo $language1 ?>
-                        <?php echo '</td>
-                                  </tr>';
-                                                                                        }
-                                                                                        echo '</tbody>
-                        </table>
-                        </div>';
-                        ?>
+                            ?>
+                                    <tr>
+                                        <td><?php echo $array['courseid']; ?></td>
+                                        <td><?php echo $array['coursename']; ?></td>
+                                        <td><?php echo $array['language']; ?></td>
+                                        <td><?php echo $array['type']; ?></td>
+                                        <td><?php echo $array['passingmarks']; ?>%</td>
+                                        <td><?php echo $array['validity']; ?></td>
+                                        <td><a href="<?php echo $array['url'] . $associatenumber; ?>" target="_blank" title="<?php echo $array['coursename'] . '-' . $array['language']; ?>"><button type="button" id="btn" class="btn btn-danger btn-sm" style="outline: none; color:#fff">Launch&nbsp;<?php echo $array['courseid']; ?></button></a></td>
+                                    </tr>
+                                <?php
+                                }
+                                echo '</tbody>';
+                            } else if ($courseid1 == null && $language1 == null) {
+                                ?>
+                                <tr>
+                                    <td colspan="7">Please enter at least one value to get the WBT details.</td>
+                                </tr>
+                            <?php
+                            } else {
+                            ?>
+                                <tr>
+                                    <td colspan="7">No record found for <?php echo $courseid1 . ' ' . $language1; ?></td>
+                                </tr>
+                            <?php
+                            }
+                            ?>
+                            </table>
                         </div>
                     </div>
-
                 </div>
+
+            </div>
             </div><!-- End Reports -->
             </div>
         </section>
@@ -311,7 +375,39 @@ $resultArr1 = pg_fetch_all($result1);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        var form = document.getElementById('wbt');
+        var submit2Button = document.getElementById('submit2');
+        var submit3Button = document.getElementById('submit3');
+        var disableCheckbox = document.getElementById('disableFieldsCheckbox');
 
+        // Initial check on page load
+        updateButtonVisibility();
+        // Add event listeners to the submit buttons
+        submit2Button.addEventListener('click', function() {
+            form.action = 'wbt_update.php';
+        });
+
+        submit3Button.addEventListener('click', function() {
+            form.action = 'wbt_add.php';
+        });
+        // Add an event listener to the checkbox
+        disableCheckbox.addEventListener('change', function() {
+            updateButtonVisibility();
+        });
+
+        function updateButtonVisibility() {
+            // If the checkbox is checked, show Update and Add New buttons, and hide Submit button
+            if (disableCheckbox.checked) {
+                submit2Button.style.display = 'inline-block';
+                submit3Button.style.display = 'none';
+            } else {
+                // If the checkbox is unchecked, show Submit button, and hide Update and Add New buttons
+                submit2Button.style.display = 'none';
+                submit3Button.style.display = 'inline-block';
+            }
+        }
+    </script>
 </body>
 
 </html>

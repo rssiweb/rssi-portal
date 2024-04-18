@@ -858,6 +858,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                     <option hidden selected><?php echo $array['category'] ?></option>
                                                 <?php }
                                                 ?>
+                                                <option value="LG1">LG1</option>
                                                 <option value="LG2-A">LG2-A</option>
                                                 <option value="LG2-B">LG2-B</option>
                                                 <option value="LG2-C">LG2-C</option>

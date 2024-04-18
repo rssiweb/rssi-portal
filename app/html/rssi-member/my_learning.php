@@ -82,7 +82,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>iExplore</title>
+    <title>iExplore-My Learning</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -113,7 +113,7 @@ $resultArr = pg_fetch_all($result);
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -144,6 +144,41 @@ $resultArr = pg_fetch_all($result);
                                     Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                                 </div>
                             </div>
+                            <!--<form action="process_assignment.php" method="POST" class="row g-3 align-items-center">
+                                <div class="col-md-2">
+                                    <label for="associate_id" class="form-label">Associate ID</label>
+                                    <input type="text" class="form-control" id="associate_id" name="associate_id" required>
+                                    <div class="form-text">Enter the ID of the associate</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="course_id" class="form-label">Course ID</label>
+                                    <input type="text" class="form-control" id="course_id" name="course_id" required>
+                                    <div class="form-text">Enter the ID of the course completed</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="" disabled selected>Select Status</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Incomplete">Incomplete</option>
+                                    </select>
+                                    <div class="form-text">Select the completion status</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="score" class="form-label">Score</label>
+                                    <input type="number" class="form-control" id="score" name="score" min="0" max="100">
+                                    <div class="form-text">Enter the score (if applicable)</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="completion_date" class="form-label">Completion Date</label>
+                                    <input type="date" class="form-control" id="completion_date" name="completion_date">
+                                    <div class="form-text">Select the completion date</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </form>
+                            <br>-->
 
                             <form action="" method="GET">
                                 <div class="form-group" style="display: inline-block;">

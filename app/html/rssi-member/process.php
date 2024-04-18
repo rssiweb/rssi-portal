@@ -454,33 +454,6 @@ if (@$_POST['form-type'] == "appraisee_response") {
                             </tr>
                         </tbody>
                     </table>
-                    <!--<button type="submit" id="submit2" class="btn btn-warning">Update</button>
-                    <script>
-                        var form = document.getElementById('process');
-                        var submit2Button = document.getElementById('submit2');
-                        // Add event listeners to the submit buttons
-                        submit2Button.addEventListener('click', function() {
-                            form.action = 'goal_db_update.php'; // Set the form action to submit1.php
-                        });
-                    </script>
-                    <button type="submit" id="submit3" class="btn btn-danger">Add New</button>
-                    <script>
-                        var form = document.getElementById('process');
-                        var submit3Button = document.getElementById('submit3');
-                        // Add event listeners to the submit buttons
-                        submit3Button.addEventListener('click', function() {
-                            form.action = 'goal_db_add.php'; // Set the form action to submit1.php
-                        });
-                    </script>
-                    <button type="submit" id="submit" class="btn btn-success">Submit</button>
-                    <script>
-                        var form = document.getElementById('process');
-                        var submit1Button = document.getElementById('submit');
-                        // Add event listeners to the submit buttons
-                        submit1Button.addEventListener('click', function() {
-                            form.action = 'process.php'; // Set the form action to submit1.php
-                        });
-                    </script>-->
                     <button type="submit" id="submit2" class="btn btn-warning">Update</button>
                     <button type="submit" id="submit3" class="btn btn-danger">Add New</button>
                     <button type="submit" id="submit" class="btn btn-success">Submit</button>

@@ -16,15 +16,18 @@ validation();
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -34,6 +37,7 @@ validation();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu&family=Ubuntu+Condensed&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap" rel="stylesheet">
 
     <style>
         @media (min-width:767px) {
@@ -53,7 +57,7 @@ validation();
 
         .first-txt {
             position: absolute;
-            top: 63%;
+            top: 49%;
             width: 235px !important;
             text-align: center;
             font-family: "Ubuntu";
@@ -65,11 +69,11 @@ validation();
 
         .second-txt {
             position: absolute;
-            top: 68%;
+            top: 56%;
             width: 235px !important;
             text-align: center;
             font-family: "Ubuntu";
-            font-size: 13.5px;
+            font-size: 13px;
             font-weight: bold;
             color: black;
             z-index: 2;
@@ -77,11 +81,11 @@ validation();
 
         .third-txt {
             position: absolute;
-            top: 73%;
+            top: 61%;
             width: 235px !important;
             text-align: center;
             font-family: "Ubuntu";
-            font-size: 13.5px;
+            font-size: 13px;
             font-weight: bold;
             color: black;
             z-index: 2;
@@ -96,15 +100,15 @@ validation();
         .cornerimage {
             border: 0;
             position: absolute;
-            top: 35%;
-            right: 37%;
+            top: 6%;
+            right: 28%;
         }
 
         .qrimage {
             border: 0;
             position: absolute;
-            top: 77%;
-            right: 1%;
+            top: 69%;
+            right: 30%;
             z-index: 1;
         }
 
@@ -122,6 +126,23 @@ validation();
 
         .prebanner {
             display: none;
+        }
+
+        .vertical-text {
+            writing-mode: vertical-rl;
+            /* Vertical text from right to left */
+            transform: rotate(180deg);
+            /* Rotate the text 180 degrees to make it upright */
+            position: absolute;
+            top: 10%;
+            left: 3%;
+            width: 235px !important;
+            text-align: center;
+            font-family: Comfortaa;
+            font-size: 30px;
+            font-weight: bold;
+            color: black;
+            z-index: 2;
         }
     </style>
 
@@ -143,7 +164,7 @@ validation();
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <div class="col2 left noprint" style="display: inline;">
         <div class="col-md-12">
             <div class="row">
@@ -161,13 +182,21 @@ validation();
             <div class="row">
                 <div class="col containerdiv" style="display: inline-block; width:246px;margin-left:10%; margin-top:2%">
 
-                    <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1690876629/ID%20Card/ID_Card_FINAL_php_V3.jpg" width="100%" />
-                    <img class="cornerimage" src=<?php echo $photo ?> width="75px" />
+                    <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1711773170/ID%20Card/id_card_front_v1.jpg" width="100%" />
+                    <img class="cornerimage" src=<?php echo $photo ?> width="110px" />
                     <p class="first-txt"><?php echo $fullname ?></p>
                     <p class="second-txt"><?php echo $associatenumber ?></p>
-                    <p class="third-txt"><?php echo explode('-', $position)[1]?></p>
+                    <p class="third-txt"><?php echo explode('-', $position)[1] ?></p>
                     <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>" width="100" />
+                    <div class="vertical-text">
+                        rssi.in
+                    </div>
+
                 </div>
+                <div class="col containerdiv" style="display: inline-block; width:246px;margin-left:10%; margin-top:2%">
+                    <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1713469925/ID%20Card/id_card_back.jpg" width="100%" />
+                </div>
+
             </div>
         </div>
     </div>
