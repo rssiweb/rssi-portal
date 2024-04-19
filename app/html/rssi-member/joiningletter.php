@@ -83,17 +83,7 @@ if (!$result) {
         }
 
         @media print {
-
-            /* .report-footer {
-                position: fixed;
-                bottom: 0px;
-                height: 20px;
-                display: block;
-                width: 90%;
-                border-top: solid 1px #ccc;
-                overflow: visible;
-            } */
-            .report-footer {
+            .print-footer {
                 position: fixed;
                 bottom: 0;
                 left: 0;
@@ -178,7 +168,7 @@ if (!$result) {
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <div class="col-md-12">
         <?php if ($role == 'Admin') { ?>
             <form action="" method="GET" class="no-print">
@@ -271,33 +261,50 @@ if (!$result) {
 
                                 Dear <?php echo strtok($array['fullname'], ' ')  ?>,<br><br>
 
-                                <p>We would like to take this opportunity to extend a very warm welcome to Rina Shiksha Sahayak Foundation (RSSI) family.</p>
-                                <?php echo '<p>We are pleased to offer you the position of <b>' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ')</b> in the division of <b>' . $array['depb'] . '</b>. This appointment will be effective from <b>' . date('d/M/Y', strtotime($array['doj'])) . '</b>' ?>.</p>
-                                <p>The joining letter does not serve as proof of employment or a work experience letter. Its purpose is to inform associates about the onboarding process. Successful completion of the prerequisites below makes the associate eligible for onboarding in the system. The mentioned joining date is the expected reporting date; however, non-completion of prerequisites may result in a change of the joining date.</p>
+                                <p>We would like to take this opportunity to extend a very warm welcome to Rina Shiksha Sahayak Foundation family.</p>
+                                <!-- <?php
+                                        echo '<p>We are pleased to offer you the position of <b>'
+                                            . substr($array['position'], 0, strrpos($array['position'], "-"))
+                                            . ' (' . $array['job_type'] . ')</b> in the <b>'
+                                            . $array['depb']
+                                            . '</b> division. This appointment will be effective from <b>'
+                                            . date('d/F/Y', strtotime($array['doj']))
+                                            . '</b>.</p>';
+                                        ?> -->
+                                <?php
+                                echo '<p>Please find the details below:</p>';
+                                echo '<table style="border-collapse: collapse; width: 100%; border: 2px solid #ddd;">';
+                                echo '<tr style="background-color: #f2f2f2;"><th style="padding: 6px; border: 2px solid #ddd;">Detail</th><th style="padding: 6px; border: 2px solid #ddd;">Value</th></tr>';
+                                echo '<tr><td style="padding: 6px; border: 2px solid #ddd;">Position</td><td style="padding: 6px; border: 2px solid #ddd;">' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ')</td></tr>';
+                                echo '<tr><td style="padding: 6px; border: 2px solid #ddd;">Division</td><td style="padding: 6px; border: 2px solid #ddd;">' . $array['depb'] . '</td></tr>';
+                                echo '<tr><td style="padding: 6px; border: 2px solid #ddd;">Appointment Date</td><td style="padding: 6px; border: 2px solid #ddd;">' . date('d/F/Y', strtotime($array['doj'])) . '</td></tr>';
+                                echo '</table>';
+                                ?>
 
+                                <br>
                                 <p><b>Onboarding Checklist</b></p>
                                 <ol>
                                     <li>
-                                        <p>Please send the scanned copies of all documents for verification to info@rssi.in. (This should include any documents that were not previously provided to RSSI during the interview.)</p>
+                                        <p>To ensure a complete verification process, please send scanned copies of all documents, including those not previously submitted during the interview, to info@rssi.in.</p>
                                         <ol type="A">
                                             <li>Highschool Marksheet</li>
                                             <li>Intermediate Marksheet</li>
-                                            <li>Graduation Marksheet /Certificate OR Any supporting document with college ID.</li>
-                                            <li>Post-Graduation or equivalent Marksheet /Certificate (If applicable)</li>
-                                            <li>Additional training or course Certificate (If the certificate is not available or issued, please share the admit card or any supporting document)</li>
+                                            <li>Graduation Marksheet / Certificate OR Any supporting document with college ID.</li>
+                                            <li>Post-Graduation or equivalent Marksheet / Certificate (If applicable)</li>
+                                            <li>Additional training or course Certificate</li>
                                             <li>PAN Card</li>
                                             <li>
-                                                <p>If you are joining as an employee, kindly forward the following bank account details via email.</p>
+                                                <p>If you are joining as an employee, please update the following bank account details.</p>
                                                 <ol type="i">
-                                                    <li>Bank Account Number
+                                                    <li>Bank Account Number</li>
                                                     <li>Name of the Bank</li>
                                                     <li>Bank IFSC Code</li>
                                                     <li>Name of the account holder - This should be your account.</li>
-
                                                 </ol>
                                             </li>
                                         </ol>
-
+                                    </li>
+                                </ol>
                             </td>
                         </tr>
                         <tr>
@@ -360,10 +367,10 @@ if (!$result) {
                                         </div>
                                     </div>
                                     <div class="right-column">
-                                    <p class="qr-message">Scan the QR code to view location in Google Maps</p>
+                                        <p class="qr-message">Scan the QR code to view location in Google Maps</p>
                                         <div class="qr-code">
                                             <img class="qr-image" src="https://qrcode.tec-it.com/API/QRCode?data=https://maps.app.goo.gl/BNq37UdBq4bUcM7a8" alt="QR Code">
-                                            
+
                                         </div>
                                     </div>
                                 </div>
@@ -394,12 +401,13 @@ if (!$result) {
                             </td>
                         </tr>
                     </tfoot>
+                </table>
 
 
-                <?php }
+            <?php }
         } else { ?>
-                <p class="no-print">Please enter Associate ID.</p> <?php } ?>
-            </section>
+            <p class="no-print">Please enter Associate ID.</p> <?php } ?>
+        </section>
     </div>
 </body>
 

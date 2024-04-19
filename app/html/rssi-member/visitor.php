@@ -17,6 +17,7 @@ $today = date("Y-m-d");
 @$visitid = $_GET['visitid'];
 @$contact = $_GET['contact'];
 @$visitdatefrom = $_GET['visitdatefrom'];
+@$ayear = $_GET['ayear'];
 
 // Initialize the WHERE clause of the query
 $whereClause = " WHERE 1=1"; // Always true condition to start with
@@ -34,11 +35,20 @@ if (!empty($visitdatefrom)) {
     $whereClause .= " AND DATE(vd.visitstartdatetime) = '$visitdatefrom'";
 }
 
+// If academic year filter is provided, add condition to WHERE clause
+if (!empty($ayear)) {
+    $whereClause .= " AND CONCAT(EXTRACT(YEAR FROM vd.visitstartdatetime) - CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) < 4 THEN 1 ELSE 0 END, '-', 
+                EXTRACT(YEAR FROM vd.visitstartdatetime) + CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) >= 4 THEN 1 ELSE 0 END) = '$ayear'";
+}
+
 // Check if any filter parameters are not empty
-if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom)) {
+if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ayear)) {
     // Finalize the query with the WHERE clause
-    $query = "SELECT * FROM visitor_userdata AS ud
-    JOIN visitor_visitdata AS vd ON ud.tel = vd.tel $whereClause";
+    $query = "SELECT *, 
+                CONCAT(EXTRACT(YEAR FROM vd.visitstartdatetime) - CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) < 4 THEN 1 ELSE 0 END, '-', 
+                EXTRACT(YEAR FROM vd.visitstartdatetime) + CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) >= 4 THEN 1 ELSE 0 END) AS academic_year
+              FROM visitor_userdata AS ud
+              JOIN visitor_visitdata AS vd ON ud.tel = vd.tel $whereClause";
 
     // Execute the query
     $result = pg_query($con, $query);
@@ -140,6 +150,7 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom)) {
                                 Record count: <?php echo sizeof($resultArr) ?>
                             </div>
                             <form id="myform" action="" method="GET">
+                                Customize your search by selecting any combination of filters to retrieve the data.<br><br>
                                 <div class="form-group" style="display: inline-block;">
                                     <div class="col2">
                                         <input name="visitid" class="form-control" style="width: max-content; display: inline-block;" placeholder="Visit ID" value="<?php echo $visitid ?>">
@@ -153,6 +164,18 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom)) {
                                         <input type="date" name="visitdatefrom" class="form-control" style="width: max-content; display: inline-block;" placeholder="Select visit date" value="<?php echo $visitdatefrom ?>">
                                         <small id="passwordHelpBlock" class="form-text text-muted">Visit date<span style="color:red"></span></small>
                                     </div>
+                                    <div class="col2">
+                                        <select name="ayear" id="ayear" class="form-select" style="width:max-content; display:inline-block" placeholder="Academic Year">
+                                            <?php if ($ayear == null) { ?>
+                                                <option value="" disabled selected hidden>Academic Year</option>
+                                            <?php
+                                            } else { ?>
+                                                <option hidden selected><?php echo $ayear ?></option>
+                                            <?php }
+                                            ?>
+                                        </select>
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Academic Year<span style="color:red"></span></small>
+                                    </div>
                                 </div>
                                 <div class="col2 left" style="display: inline-block;">
                                     <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
@@ -163,7 +186,7 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom)) {
                                     </a>
                                 </div>
                             </form>
-
+                            <br>
                             <?php echo '
                        <table class="table">
                         <thead>
@@ -279,7 +302,7 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom)) {
                             <?php } else if ($visitid == null && $contact == null && $visitdatefrom == null) {
                             ?>
                                 <tr>
-                                    <td colspan="5">Please enter either the Visit ID, Contact or the Visit Date.</td>
+                                    <td colspan="5">Please provide either the Visit ID, Contact, Visit Date, or Academic Year.</td>
                                 </tr>
                             <?php
                             } else {
@@ -516,6 +539,20 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom)) {
                     .catch(error => console.error('Error!', error.message))
             })
         })
+    </script>
+    <script>
+        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+            var currentYear = new Date().getFullYear() - 1;
+        <?php } else { ?>
+            var currentYear = new Date().getFullYear();
+        <?php } ?>
+        for (var i = 0; i < 5; i++) {
+            var next = currentYear + 1;
+            var year = currentYear + '-' + next;
+            //next.toString().slice(-2)
+            $('#ayear').append(new Option(year, year));
+            currentYear--;
+        }
     </script>
 
 </body>
