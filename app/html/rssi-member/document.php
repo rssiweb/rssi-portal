@@ -96,6 +96,7 @@ validation();
                                             <p><a href="<?php echo $profile ?>" target="_blank" title="<?php echo $filename ?>">Letter of Offer</a></p>
                                         <?php } ?>
                                         <p><a href="my_certificate.php">My Certificate</a></p>
+                                        <p><a href="archive.php">Document Archive</a></p>
                                     </div>
 
                                     <div class="tab-pane fade" id="payslip-tab">

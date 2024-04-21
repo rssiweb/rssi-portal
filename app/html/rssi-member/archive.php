@@ -11,6 +11,15 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
+
+if ($role == 'Admin') {
+
+    $id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : '';
+}
+
+$uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
+
+
 if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
     // Sanitize and validate user inputs
 
@@ -28,7 +37,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
     ];
 
     // Get other form data
-    $uploadedfor = $_POST['uploadedfor'] ?? '';
+    $uploadedfor = isset($id) ? $id : $associatenumber ?? '';
     $uploadedby = $associatenumber ?? ''; // Make sure you have the $associatenumber variable defined somewhere
     $now = date('Y-m-d H:i:s');
     $transaction_id = time();
@@ -80,7 +89,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
 // Retrieve latest submissions from the archive table
 $selectLatestQuery = "SELECT DISTINCT ON (file_name) file_name, file_path, uploaded_by, uploaded_on
 FROM archive 
-WHERE uploaded_for = '$associatenumber' 
+WHERE uploaded_for = '$uploadedfor' 
 ORDER BY file_name, uploaded_on DESC;
 ";
 $result = pg_query($con, $selectLatestQuery);
@@ -100,8 +109,8 @@ $latestSubmission_bank = null;
 // Retrieve latest submissions from the bankdetails table
 $selectLatestQuery_bank = "SELECT bank_account_number, bank_name, ifsc_code, account_holder_name, updated_for, updated_by, updated_on, passbook_page
                       FROM bankdetails 
-                      WHERE updated_for = '$associatenumber' 
-                      AND updated_on = (SELECT MAX(updated_on) FROM bankdetails WHERE updated_for = '$associatenumber')";
+                      WHERE updated_for = '$uploadedfor' 
+                      AND updated_on = (SELECT MAX(updated_on) FROM bankdetails WHERE updated_for = '$uploadedfor')";
 $result = pg_query($con, $selectLatestQuery_bank);
 
 if ($result) {
@@ -180,7 +189,7 @@ if ($result) {
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item">My Document</li>
+                    <li class="breadcrumb-item"><a href="document.php">My Document</a></li>
                     <li class="breadcrumb-item active">Document Archive</li>
                 </ol>
             </nav>
@@ -193,6 +202,22 @@ if ($result) {
 
                         <div class="card-body">
                             <br>
+                            <?php if ($role == 'Admin') { ?>
+                                <form action="" method="GET">
+                                    <div class="form-group" style="display: inline-block;">
+                                        <div class="col2" style="display: inline-block;">
+                                            <?php if ($role == 'Admin') { ?>
+                                                <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $id ?>">
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                    <div class="col2 left" style="display: inline-block;">
+                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                    </div>
+                                </form>
+                                <br>
+                            <?php } ?>
                             <?php if (@$transaction_id != null && @$cmdtuples == 0) { ?>
                                 <div class="alert alert-danger alert-dismissible text-center" role="alert">
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -214,7 +239,6 @@ if ($result) {
                             <div class="container">
                                 <form action="#" method="post" enctype="multipart/form-data">
                                     <input type="hidden" name="form-type" value="archive">
-                                    <input type="hidden" name="uploadedfor" value="<?php echo $associatenumber ?>">
                                     <h3 class="mt-4">Upload Documents</h3>
                                     <div class="mb-3 colored-area">
                                         <p>To save your changes, please submit the form. Once submitted, the updated information will be displayed here for your reference.</p>
@@ -488,6 +512,22 @@ if ($result) {
         </section>
 
     </main><!-- End #main -->
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
@@ -593,6 +633,31 @@ if ($result) {
         // Loop through each required field and append a red asterisk to its label
         document.querySelectorAll('[required]').forEach(field => {
             document.querySelector(`label[for="${field.id}"]`).innerHTML += '<span style="color: red;"> *</span>';
+        });
+    </script>
+    <!-- Add this script in your HTML file -->
+    <!------ Include the above in your HEAD tag ---------->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        // Attach the showModal function to the form's submit event
+        $(document).ready(function() {
+            $('#submit_button').click(function() {
+                // Show the modal when the form is submitted
+                myModal.show();
+                // Add event listener to intercept Escape key press
+                document.body.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape') {
+                        // Prevent default behavior of Escape key
+                        event.preventDefault();
+                    }
+                });
+            });
         });
     </script>
 </body>

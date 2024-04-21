@@ -308,7 +308,6 @@
           <span>Contact</span>
         </a>
       </li><!-- End Contact Page Nav -->
-
     </ul>
 
   </aside><!-- End Sidebar-->
@@ -533,6 +532,10 @@
         id: 'work',
         linkId: 'onexitLink',
         url: 'onexit.php'
+      }, {
+        id: 'myservices',
+        linkId: 'documentLink',
+        url: 'archive.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
