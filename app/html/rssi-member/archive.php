@@ -37,7 +37,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
     ];
 
     // Get other form data
-    $uploadedfor = isset($id) ? $id : $associatenumber ?? '';
+    $uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
     $uploadedby = $associatenumber ?? ''; // Make sure you have the $associatenumber variable defined somewhere
     $now = date('Y-m-d H:i:s');
     $transaction_id = time();
