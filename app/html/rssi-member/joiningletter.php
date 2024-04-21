@@ -262,36 +262,26 @@ if (!$result) {
                                 Dear <?php echo strtok($array['fullname'], ' ')  ?>,<br><br>
 
                                 <p>We would like to take this opportunity to extend a very warm welcome to Rina Shiksha Sahayak Foundation family.</p>
-                                <!-- <?php
-                                        echo '<p>We are pleased to offer you the position of <b>'
-                                            . substr($array['position'], 0, strrpos($array['position'], "-"))
-                                            . ' (' . $array['job_type'] . ')</b> in the <b>'
-                                            . $array['depb']
-                                            . '</b> division. This appointment will be effective from <b>'
-                                            . date('d/F/Y', strtotime($array['doj']))
-                                            . '</b>.</p>';
-                                        ?> -->
                                 <?php
-                                echo '<p>Please find the details below:</p>';
-                                echo '<table style="border-collapse: collapse; width: 100%; border: 2px solid #ddd;">';
-                                echo '<tr style="background-color: #f2f2f2;"><th style="padding: 6px; border: 2px solid #ddd;">Detail</th><th style="padding: 6px; border: 2px solid #ddd;">Value</th></tr>';
-                                echo '<tr><td style="padding: 6px; border: 2px solid #ddd;">Position</td><td style="padding: 6px; border: 2px solid #ddd;">' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ')</td></tr>';
-                                echo '<tr><td style="padding: 6px; border: 2px solid #ddd;">Division</td><td style="padding: 6px; border: 2px solid #ddd;">' . $array['depb'] . '</td></tr>';
-                                echo '<tr><td style="padding: 6px; border: 2px solid #ddd;">Appointment Date</td><td style="padding: 6px; border: 2px solid #ddd;">' . date('d/F/Y', strtotime($array['doj'])) . '</td></tr>';
-                                echo '</table>';
+                                echo '<p>Please find the details below:</p><br>';
+                                echo '<ul style="list-style-type: none; padding: 0;">';
+                                echo '<li><strong>Position:</strong> ' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ')</li>';
+                                echo '<li><strong>Division:</strong> ' . $array['depb'] . '</li>';
+                                echo '<li><strong>Appointment Date:</strong> ' . date('d/F/Y', strtotime($array['doj'])) . '</li>';
+                                echo '</ul>';
                                 ?>
-
                                 <br>
                                 <p><b>Onboarding Checklist</b></p>
                                 <ol>
                                     <li>
-                                        <p>To ensure a complete verification process, please send scanned copies of all documents, including those not previously submitted during the interview, to info@rssi.in.</p>
+                                        <p>Please upload scanned copies of all documents at the following URL:
+                                            https://login.rssi.in/rssi-member/archive.php</p>
                                         <ol type="A">
                                             <li>Highschool Marksheet</li>
                                             <li>Intermediate Marksheet</li>
                                             <li>Graduation Marksheet / Certificate OR Any supporting document with college ID.</li>
                                             <li>Post-Graduation or equivalent Marksheet / Certificate (If applicable)</li>
-                                            <li>Additional training or course Certificate</li>
+                                            <li>Additional training or course Certificate (If any)</li>
                                             <li>PAN Card</li>
                                             <li>
                                                 <p>If you are joining as an employee, please update the following bank account details.</p>
@@ -311,7 +301,7 @@ if (!$result) {
                             <td>
                                 <ol start=2>
                                     <li>
-                                        <p>Please complete the mandatory web-based training within one month of your joining date. To complete the web-based training, you are permitted multiple attempts to reach a passing score or higher. Once you do, you may take a screenshot for your reference. To access the training, please use the following iExplore URL: https://login.rssi.in/rssi-member/iexplore.php</p>
+                                        <p>Please complete the mandatory web-based training within one month of your joining date. You can take multiple attempts to achieve a passing score or higher. Once you pass, you can take a screenshot for your reference. To access the training, visit the following URL: https://login.rssi.in/rssi-member/iexplore.php</p>
                                         <div class="container">
                                             <table class="table">
                                                 <thead>
