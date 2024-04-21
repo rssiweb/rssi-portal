@@ -95,6 +95,8 @@ if ($result) {
     }
 }
 
+// Initialize $latestSubmission_bank variable to null
+$latestSubmission_bank = null;
 // Retrieve latest submissions from the bankdetails table
 $selectLatestQuery_bank = "SELECT bank_account_number, bank_name, ifsc_code, account_holder_name, updated_for, updated_by, updated_on, passbook_page
                       FROM bankdetails 
@@ -306,10 +308,14 @@ if ($result) {
                                         <div class="col-md-4">
                                             <input class="form-control" type="file" id="additional_certificate" name="additional_certificate">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-2">
                                             <?php if (isset($latestSubmission['additional_certificate'])) : ?>
                                                 <a href="<?php echo $latestSubmission['additional_certificate']['file_path']; ?>" target="_blank">Document</a>
-                                                <small>(Last updated by <?php echo $latestSubmission['additional_certificate']['uploaded_by']; ?> on <?php echo $latestSubmission['additional_certificate']['uploaded_on']; ?>)</small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <?php if (isset($latestSubmission['additional_certificate'])) : ?>
+                                                <small>Last updated by <?php echo $latestSubmission['additional_certificate']['uploaded_by']; ?> on <?php echo $latestSubmission['additional_certificate']['uploaded_on']; ?></small>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -322,10 +328,14 @@ if ($result) {
                                         <div class="col-md-4">
                                             <input class="form-control" type="file" id="previous_employment_information" name="previous_employment_information">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-2">
                                             <?php if (isset($latestSubmission['previous_employment_information'])) : ?>
                                                 <a href="<?php echo $latestSubmission['previous_employment_information']['file_path']; ?>" target="_blank">Document</a>
-                                                <small>(Last updated by <?php echo $latestSubmission['previous_employment_information']['uploaded_by']; ?> on <?php echo $latestSubmission['previous_employment_information']['uploaded_on']; ?>)</small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <?php if (isset($latestSubmission['previous_employment_information'])) : ?>
+                                                <small>Last updated by <?php echo $latestSubmission['previous_employment_information']['uploaded_by']; ?> on <?php echo $latestSubmission['previous_employment_information']['uploaded_on']; ?></small>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -338,10 +348,14 @@ if ($result) {
                                         <div class="col-md-4">
                                             <input class="form-control" type="file" id="pan_card" name="pan_card">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-2">
                                             <?php if (isset($latestSubmission['pan_card'])) : ?>
                                                 <a href="<?php echo $latestSubmission['pan_card']['file_path']; ?>" target="_blank">Document</a>
-                                                <small>(Last updated by <?php echo $latestSubmission['pan_card']['uploaded_by']; ?> on <?php echo $latestSubmission['pan_card']['uploaded_on']; ?>)</small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <?php if (isset($latestSubmission['pan_card'])) : ?>
+                                                <small>Last updated by <?php echo $latestSubmission['pan_card']['uploaded_by']; ?> on <?php echo $latestSubmission['pan_card']['uploaded_on']; ?></small>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -354,10 +368,14 @@ if ($result) {
                                         <div class="col-md-4">
                                             <input class="form-control" type="file" id="aadhar_card" name="aadhar_card">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-2">
                                             <?php if (isset($latestSubmission['aadhar_card'])) : ?>
                                                 <a href="<?php echo $latestSubmission['aadhar_card']['file_path']; ?>" target="_blank">Document</a>
-                                                <small>(Last updated by <?php echo $latestSubmission['aadhar_card']['uploaded_by']; ?> on <?php echo $latestSubmission['aadhar_card']['uploaded_on']; ?>)</small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <?php if (isset($latestSubmission['aadhar_card'])) : ?>
+                                                <small>Last updated by <?php echo $latestSubmission['aadhar_card']['uploaded_by']; ?> on <?php echo $latestSubmission['aadhar_card']['uploaded_on']; ?></small>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -370,10 +388,14 @@ if ($result) {
                                         <div class="col-md-4">
                                             <input class="form-control" type="file" id="offer_letter" name="offer_letter">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-2">
                                             <?php if (isset($latestSubmission['offer_letter'])) : ?>
                                                 <a href="<?php echo $latestSubmission['offer_letter']['file_path']; ?>" target="_blank">Document</a>
-                                                <small>(Last updated by <?php echo $latestSubmission['offer_letter']['uploaded_by']; ?> on <?php echo $latestSubmission['offer_letter']['uploaded_on']; ?>)</small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <?php if (isset($latestSubmission['offer_letter'])) : ?>
+                                                <small>Last updated by <?php echo $latestSubmission['offer_letter']['uploaded_by']; ?> on <?php echo $latestSubmission['offer_letter']['uploaded_on']; ?></small>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -437,14 +459,20 @@ if ($result) {
                                         <div class="col-md-5">
                                             <div>
                                                 <h3 class="mt-4">Your Current Bank Account Details</h3>
-                                                <p class="mb-1">Bank Account Number: <?php echo $latestSubmission_bank['bank_account_number']; ?></p>
-                                                <p class="mb-1">Name of the Bank: <?php echo $latestSubmission_bank['bank_name']; ?></p>
-                                                <p class="mb-1">IFSC Code: <?php echo $latestSubmission_bank['ifsc_code']; ?></p>
-                                                <p class="mb-1">Account Holder Name: <?php echo $latestSubmission_bank['account_holder_name']; ?></p>
-                                                <p class="mb-1"><a href="<?php echo $latestSubmission_bank['passbook_page']; ?>" target="_blank">First Page of Bank Account Passbook</a></p>
-
-                                                <br>
-                                                <p>(Last updated by <?php echo $latestSubmission_bank['updated_by']; ?> on <?php echo $latestSubmission_bank['updated_on']; ?>)</p>
+                                                <?php if ($latestSubmission_bank !== null) : ?>
+                                                    <p class="mb-1">Bank Account Number: <?php echo isset($latestSubmission_bank['bank_account_number']) ? $latestSubmission_bank['bank_account_number'] : 'N/A'; ?></p>
+                                                    <p class="mb-1">Name of the Bank: <?php echo isset($latestSubmission_bank['bank_name']) ? $latestSubmission_bank['bank_name'] : 'N/A'; ?></p>
+                                                    <p class="mb-1">IFSC Code: <?php echo isset($latestSubmission_bank['ifsc_code']) ? $latestSubmission_bank['ifsc_code'] : 'N/A'; ?></p>
+                                                    <p class="mb-1">Account Holder Name: <?php echo isset($latestSubmission_bank['account_holder_name']) ? $latestSubmission_bank['account_holder_name'] : 'N/A'; ?></p>
+                                                    <?php if (isset($latestSubmission_bank['passbook_page'])) : ?>
+                                                        <p class="mb-1"><a href="<?php echo $latestSubmission_bank['passbook_page']; ?>" target="_blank">First Page of Bank Account Passbook</a></p>
+                                                    <?php endif; ?>
+                                                    <br>
+                                                    <p>(Last updated by <?php echo isset($latestSubmission_bank['updated_by']) ? $latestSubmission_bank['updated_by'] : 'N/A'; ?> on <?php echo isset($latestSubmission_bank['updated_on']) ? $latestSubmission_bank['updated_on'] : 'N/A'; ?>)</p>
+                                                <?php else : ?>
+                                                    <!-- Handle case when bank details are not available -->
+                                                    <p>No bank details available.</p>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
