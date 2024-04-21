@@ -87,7 +87,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
     }
 }
 // Retrieve latest submissions from the archive table
-$selectLatestQuery = "SELECT DISTINCT ON (file_name) file_name, file_path, uploaded_by, uploaded_on
+$selectLatestQuery = "SELECT DISTINCT ON (file_name) file_name, file_path, uploaded_by, uploaded_on,transaction_id,file_name
 FROM archive 
 WHERE uploaded_for = '$uploadedfor' 
 ORDER BY file_name, uploaded_on DESC;
@@ -99,7 +99,9 @@ if ($result) {
         $latestSubmission[$row['file_name']] = [
             'file_path' => $row['file_path'],
             'uploaded_by' => $row['uploaded_by'],
-            'uploaded_on' => $row['uploaded_on']
+            'uploaded_on' => $row['uploaded_on'],
+            'transaction_id' => $row['transaction_id'],
+            'file_name' => $row['file_name']
         ];
     }
 }
@@ -254,7 +256,7 @@ if ($result) {
                                         </div>
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['highschool'])) : ?>
-                                                <a href="<?php echo $latestSubmission['highschool']['file_path']; ?>" target="_blank">Document</a>
+                                                <a href="<?php echo $latestSubmission['highschool']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['highschool']['file_name']; ?>_<?php echo $latestSubmission['highschool']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-2">
@@ -274,7 +276,7 @@ if ($result) {
                                         </div>
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['intermediate'])) : ?>
-                                                <a href="<?php echo $latestSubmission['intermediate']['file_path']; ?>" target="_blank">Document</a>
+                                                <a href="<?php echo $latestSubmission['intermediate']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['intermediate']['file_name']; ?>_<?php echo $latestSubmission['intermediate']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-2">
@@ -294,7 +296,7 @@ if ($result) {
                                         </div>
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['graduation'])) : ?>
-                                                <a href="<?php echo $latestSubmission['graduation']['file_path']; ?>" target="_blank">Document</a>
+                                                <a href="<?php echo $latestSubmission['graduation']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['graduation']['file_name']; ?>_<?php echo $latestSubmission['graduation']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-2">
@@ -314,7 +316,7 @@ if ($result) {
                                         </div>
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['post_graduation'])) : ?>
-                                                <a href="<?php echo $latestSubmission['post_graduation']['file_path']; ?>" target="_blank">Document</a>
+                                                <a href="<?php echo $latestSubmission['post_graduation']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['post_graduation']['file_name']; ?>_<?php echo $latestSubmission['post_graduation']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-2">
@@ -334,7 +336,7 @@ if ($result) {
                                         </div>
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['additional_certificate'])) : ?>
-                                                <a href="<?php echo $latestSubmission['additional_certificate']['file_path']; ?>" target="_blank">Document</a>
+                                                <a href="<?php echo $latestSubmission['additional_certificate']['file_path']; ?>" target="_blank" target="_blank" title="<?php echo $latestSubmission['additional_certificate']['file_name']; ?>_<?php echo $latestSubmission['additional_certificate']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-2">
@@ -354,7 +356,7 @@ if ($result) {
                                         </div>
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['previous_employment_information'])) : ?>
-                                                <a href="<?php echo $latestSubmission['previous_employment_information']['file_path']; ?>" target="_blank">Document</a>
+                                                <a href="<?php echo $latestSubmission['previous_employment_information']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['previous_employment_information']['file_name']; ?>_<?php echo $latestSubmission['previous_employment_information']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-2">
@@ -374,7 +376,7 @@ if ($result) {
                                         </div>
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['pan_card'])) : ?>
-                                                <a href="<?php echo $latestSubmission['pan_card']['file_path']; ?>" target="_blank">Document</a>
+                                                <a href="<?php echo $latestSubmission['pan_card']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['pan_card']['file_name']; ?>_<?php echo $latestSubmission['pan_card']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-2">
@@ -394,7 +396,7 @@ if ($result) {
                                         </div>
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['aadhar_card'])) : ?>
-                                                <a href="<?php echo $latestSubmission['aadhar_card']['file_path']; ?>" target="_blank">Document</a>
+                                                <a href="<?php echo $latestSubmission['aadhar_card']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['aadhar_card']['file_name']; ?>_<?php echo $latestSubmission['aadhar_card']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-2">
@@ -414,7 +416,7 @@ if ($result) {
                                         </div>
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['offer_letter'])) : ?>
-                                                <a href="<?php echo $latestSubmission['offer_letter']['file_path']; ?>" target="_blank">Document</a>
+                                                <a href="<?php echo $latestSubmission['offer_letter']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['offer_letter']['file_name']; ?>_<?php echo $latestSubmission['offer_letter']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-2">
