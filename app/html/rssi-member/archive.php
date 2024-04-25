@@ -86,8 +86,9 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
         }
     }
 }
+
 // Retrieve latest submissions from the archive table
-$selectLatestQuery = "SELECT DISTINCT ON (file_name) file_name, file_path, uploaded_by, uploaded_on,transaction_id,file_name
+$selectLatestQuery = "SELECT DISTINCT ON (file_name) file_name, file_path, uploaded_by, uploaded_on,transaction_id,file_name,verification_status,field_status
 FROM archive 
 WHERE uploaded_for = '$uploadedfor' 
 ORDER BY file_name, uploaded_on DESC;
@@ -101,7 +102,9 @@ if ($result) {
             'uploaded_by' => $row['uploaded_by'],
             'uploaded_on' => $row['uploaded_on'],
             'transaction_id' => $row['transaction_id'],
-            'file_name' => $row['file_name']
+            'file_name' => $row['file_name'],
+            'verification_status' => $row['verification_status'],
+            'field_status' => $row['field_status']
         ];
     }
 }
@@ -252,9 +255,9 @@ if ($result) {
                                             <label for="highschool" class="form-label">Highschool Marksheet:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="highschool" name="highschool">
+                                            <input class="form-control" type="file" id="highschool" name="highschool" <?php echo isset($latestSubmission['highschool']) ? $latestSubmission['highschool']['field_status'] : ''; ?>>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <?php if (isset($latestSubmission['highschool'])) : ?>
                                                 <a href="<?php echo $latestSubmission['highschool']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['highschool']['file_name']; ?>_<?php echo $latestSubmission['highschool']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
@@ -262,6 +265,11 @@ if ($result) {
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['highschool'])) : ?>
                                                 <small>Last updated by <?php echo $latestSubmission['highschool']['uploaded_by']; ?> on <?php echo $latestSubmission['highschool']['uploaded_on']; ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <?php if (isset($latestSubmission['highschool'])) : ?>
+                                                <?php echo is_null($latestSubmission['highschool']['verification_status']) ? "Pending" : $latestSubmission['highschool']['verification_status']; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -272,9 +280,9 @@ if ($result) {
                                             <label for="intermediate" class="form-label">Intermediate Marksheet:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="intermediate" name="intermediate">
+                                            <input class="form-control" type="file" id="intermediate" name="intermediate" <?php echo isset($latestSubmission['intermediate']) ? $latestSubmission['intermediate']['field_status'] : ''; ?>>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <?php if (isset($latestSubmission['intermediate'])) : ?>
                                                 <a href="<?php echo $latestSubmission['intermediate']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['intermediate']['file_name']; ?>_<?php echo $latestSubmission['intermediate']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
@@ -282,6 +290,11 @@ if ($result) {
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['intermediate'])) : ?>
                                                 <small>Last updated by <?php echo $latestSubmission['intermediate']['uploaded_by']; ?> on <?php echo $latestSubmission['intermediate']['uploaded_on']; ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <?php if (isset($latestSubmission['intermediate'])) : ?>
+                                                <?php echo is_null($latestSubmission['intermediate']['verification_status']) ? "Pending" : $latestSubmission['intermediate']['verification_status']; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -292,9 +305,9 @@ if ($result) {
                                             <label for="graduation" class="form-label">Graduation Marksheet:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="graduation" name="graduation">
+                                            <input class="form-control" type="file" id="graduation" name="graduation" <?php echo isset($latestSubmission['graduation']) ? $latestSubmission['graduation']['field_status'] : ''; ?>>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <?php if (isset($latestSubmission['graduation'])) : ?>
                                                 <a href="<?php echo $latestSubmission['graduation']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['graduation']['file_name']; ?>_<?php echo $latestSubmission['graduation']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
@@ -302,6 +315,11 @@ if ($result) {
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['graduation'])) : ?>
                                                 <small>Last updated by <?php echo $latestSubmission['graduation']['uploaded_by']; ?> on <?php echo $latestSubmission['graduation']['uploaded_on']; ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <?php if (isset($latestSubmission['graduation'])) : ?>
+                                                <?php echo is_null($latestSubmission['graduation']['verification_status']) ? "Pending" : $latestSubmission['graduation']['verification_status']; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -312,9 +330,9 @@ if ($result) {
                                             <label for="post_graduation" class="form-label">Post-Graduation Marksheet:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="post_graduation" name="post_graduation">
+                                            <input class="form-control" type="file" id="post_graduation" name="post_graduation" <?php echo isset($latestSubmission['post_graduation']) ? $latestSubmission['post_graduation']['field_status'] : ''; ?>>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <?php if (isset($latestSubmission['post_graduation'])) : ?>
                                                 <a href="<?php echo $latestSubmission['post_graduation']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['post_graduation']['file_name']; ?>_<?php echo $latestSubmission['post_graduation']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
@@ -322,6 +340,11 @@ if ($result) {
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['post_graduation'])) : ?>
                                                 <small>Last updated by <?php echo $latestSubmission['post_graduation']['uploaded_by']; ?> on <?php echo $latestSubmission['post_graduation']['uploaded_on']; ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <?php if (isset($latestSubmission['post_graduation'])) : ?>
+                                                <?php echo is_null($latestSubmission['post_graduation']['verification_status']) ? "Pending" : $latestSubmission['post_graduation']['verification_status']; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -332,9 +355,9 @@ if ($result) {
                                             <label for="additional_certificate" class="form-label">Additional training or course Certificate:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="additional_certificate" name="additional_certificate">
+                                            <input class="form-control" type="file" id="additional_certificate" name="additional_certificate" <?php echo isset($latestSubmission['additional_certificate']) ? $latestSubmission['additional_certificate']['field_status'] : ''; ?>>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <?php if (isset($latestSubmission['additional_certificate'])) : ?>
                                                 <a href="<?php echo $latestSubmission['additional_certificate']['file_path']; ?>" target="_blank" target="_blank" title="<?php echo $latestSubmission['additional_certificate']['file_name']; ?>_<?php echo $latestSubmission['additional_certificate']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
@@ -342,6 +365,11 @@ if ($result) {
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['additional_certificate'])) : ?>
                                                 <small>Last updated by <?php echo $latestSubmission['additional_certificate']['uploaded_by']; ?> on <?php echo $latestSubmission['additional_certificate']['uploaded_on']; ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <?php if (isset($latestSubmission['additional_certificate'])) : ?>
+                                                <?php echo is_null($latestSubmission['additional_certificate']['verification_status']) ? "Pending" : $latestSubmission['additional_certificate']['verification_status']; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -352,9 +380,9 @@ if ($result) {
                                             <label for="previous_employment_information" class="form-label">Previous employment information:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="previous_employment_information" name="previous_employment_information">
+                                            <input class="form-control" type="file" id="previous_employment_information" name="previous_employment_information" <?php echo isset($latestSubmission['previous_employment_information']) ? $latestSubmission['previous_employment_information']['field_status'] : ''; ?>>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <?php if (isset($latestSubmission['previous_employment_information'])) : ?>
                                                 <a href="<?php echo $latestSubmission['previous_employment_information']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['previous_employment_information']['file_name']; ?>_<?php echo $latestSubmission['previous_employment_information']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
@@ -362,6 +390,11 @@ if ($result) {
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['previous_employment_information'])) : ?>
                                                 <small>Last updated by <?php echo $latestSubmission['previous_employment_information']['uploaded_by']; ?> on <?php echo $latestSubmission['previous_employment_information']['uploaded_on']; ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <?php if (isset($latestSubmission['previous_employment_information'])) : ?>
+                                                <?php echo is_null($latestSubmission['previous_employment_information']['verification_status']) ? "Pending" : $latestSubmission['previous_employment_information']['verification_status']; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -372,16 +405,22 @@ if ($result) {
                                             <label for="pan_card" class="form-label">PAN Card:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="pan_card" name="pan_card">
+                                            <input class="form-control" type="file" id="pan_card" name="pan_card" <?php echo isset($latestSubmission['pan_card']) ? $latestSubmission['pan_card']['field_status'] : ''; ?>>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <?php if (isset($latestSubmission['pan_card'])) : ?>
                                                 <a href="<?php echo $latestSubmission['pan_card']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['pan_card']['file_name']; ?>_<?php echo $latestSubmission['pan_card']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
+
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['pan_card'])) : ?>
                                                 <small>Last updated by <?php echo $latestSubmission['pan_card']['uploaded_by']; ?> on <?php echo $latestSubmission['pan_card']['uploaded_on']; ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <?php if (isset($latestSubmission['pan_card'])) : ?>
+                                                <?php echo is_null($latestSubmission['pan_card']['verification_status']) ? "Pending" : $latestSubmission['pan_card']['verification_status']; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -392,16 +431,22 @@ if ($result) {
                                             <label for="aadhar_card" class="form-label">Aadhar Card:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="aadhar_card" name="aadhar_card">
+                                            <input class="form-control" type="file" id="aadhar_card" name="aadhar_card" <?php echo isset($latestSubmission['aadhar_card']) ? $latestSubmission['aadhar_card']['field_status'] : ''; ?>>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <?php if (isset($latestSubmission['aadhar_card'])) : ?>
                                                 <a href="<?php echo $latestSubmission['aadhar_card']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['aadhar_card']['file_name']; ?>_<?php echo $latestSubmission['aadhar_card']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
                                         </div>
+
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['aadhar_card'])) : ?>
                                                 <small>Last updated by <?php echo $latestSubmission['aadhar_card']['uploaded_by']; ?> on <?php echo $latestSubmission['aadhar_card']['uploaded_on']; ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <?php if (isset($latestSubmission['aadhar_card'])) : ?>
+                                                <?php echo is_null($latestSubmission['aadhar_card']['verification_status']) ? "Pending" : $latestSubmission['aadhar_card']['verification_status']; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -412,9 +457,9 @@ if ($result) {
                                             <label for="offer_letter" class="form-label">Offer letter:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="offer_letter" name="offer_letter">
+                                            <input class="form-control" type="file" id="offer_letter" name="offer_letter" <?php echo isset($latestSubmission['offer_letter']) ? $latestSubmission['offer_letter']['field_status'] : ''; ?>>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <?php if (isset($latestSubmission['offer_letter'])) : ?>
                                                 <a href="<?php echo $latestSubmission['offer_letter']['file_path']; ?>" target="_blank" title="<?php echo $latestSubmission['offer_letter']['file_name']; ?>_<?php echo $latestSubmission['offer_letter']['transaction_id']; ?>">Document</a>
                                             <?php endif; ?>
@@ -422,6 +467,11 @@ if ($result) {
                                         <div class="col-md-2">
                                             <?php if (isset($latestSubmission['offer_letter'])) : ?>
                                                 <small>Last updated by <?php echo $latestSubmission['offer_letter']['uploaded_by']; ?> on <?php echo $latestSubmission['offer_letter']['uploaded_on']; ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <?php if (isset($latestSubmission['offer_letter'])) : ?>
+                                                <?php echo is_null($latestSubmission['offer_letter']['verification_status']) ? "Pending" : $latestSubmission['offer_letter']['verification_status']; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
