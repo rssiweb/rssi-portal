@@ -12,9 +12,9 @@ validation();
 ?>
 <?php
 // SQL query
-$sql = "SELECT s.family_id, s.contact, s.parent_name, sd.student_name, sd.age, sd.gender, sd.grade, s.timestamp, s.surveyor_id, s.address, rm.fullname, s.earning_source,s.other_earning_source_input,sd.already_going_school,sd.school_type,sd.already_coaching,sd.coaching_name
+$sql = "SELECT s.family_id, s.contact, s.parent_name, sd.student_name, sd.age, sd.gender, sd.grade, s.timestamp, s.surveyor_id, s.address, rm.fullname, s.earning_source, s.other_earning_source_input, sd.already_going_school, sd.school_type, sd.already_coaching, sd.coaching_name
         FROM survey_data s 
-        JOIN student_data sd ON s.family_id = sd.family_id
+        LEFT JOIN student_data sd ON s.family_id = sd.family_id
         JOIN rssimyaccount_members rm ON s.surveyor_id = rm.associatenumber";
 
 $result = pg_query($con, $sql);
