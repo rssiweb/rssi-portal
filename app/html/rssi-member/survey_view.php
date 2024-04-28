@@ -77,7 +77,7 @@ $result = pg_query($con, $sql);
                         echo '<td>' . $row["age"] . '</td>';
                         echo '<td>' . $row["gender"] . '</td>';
                         echo '<td>' . $row["grade"] . '</td>';
-                        echo '<td>' . $row["timestamp"] . '</td>';
+                        echo '<td>' . date('d/m/Y h:i A', strtotime($row["timestamp"])) . '</td>';
                         // Button to trigger modal for "Misc" data
                         echo '<td><a href="#" class="misc-link" data-bs-toggle="modal" data-bs-target="#miscModal' . $row["family_id"] . '">View Details</a></td>';
                         echo '<td>' . $row["fullname"] . '</td>';
