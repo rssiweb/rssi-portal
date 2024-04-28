@@ -8,6 +8,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
+validation();
 ?>
 <?php
 // Check if the form is submitted

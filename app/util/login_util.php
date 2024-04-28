@@ -37,7 +37,7 @@ function checkPageAccess()
         "Inactive" => array("home", "leave", "document", "my_certificate", "pay_details", "allocation", "my_appraisal", "appraisee_response", "redeem_gems", "reimbursement", "reimbursementstatus", "myprofile") // Add pages for inactive users if needed
     );
 
-    // Define access control rules based on roles
+    // Access control is role-based, where pages created under the "Admin" role are only accessible by "Admin" users, and pages created under the "Offline Manager" role are only accessible by "Offline Manager" users. Pages not explicitly assigned to a specific role are accessible by all users.
     $roleAccessControl = array(
         "Admin" => array("attendx", "dashboard", "student", "fees", "process", "ipf-management", "faculty", "facultyexp", "leave_admin", "payroll_processing", "donationinfo_admin", "pms", "onexit", "userlog", "onboarding", "exit", "visitor", "admission_admin", "expletter", "offerletter"),
         "Offline Manager" => array("attendx", "dashboard", "student", "admission_admin", "onboarding", "exit", "visitor"),
