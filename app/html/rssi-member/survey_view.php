@@ -129,6 +129,27 @@ $result = pg_query($con, $sql);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Toggle full address visibility on "more" link click
+            $('.more-link').click(function(e) {
+                e.preventDefault();
+                var shortAddress = $(this).siblings('.short-address');
+                var fullAddress = $(this).siblings('.full-address');
+                if (fullAddress.is(':visible')) {
+                    // If full address is visible, toggle to show short address
+                    shortAddress.show();
+                    fullAddress.hide();
+                    $(this).text('more');
+                } else {
+                    // If short address is visible, toggle to show full address
+                    shortAddress.hide();
+                    fullAddress.show();
+                    $(this).text('less');
+                }
+            });
+        });
+    </script>
 
 </body>
 
