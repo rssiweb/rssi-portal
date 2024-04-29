@@ -496,6 +496,17 @@ if ($formtype == "gemsredeem") {
   $result = pg_query($con, $gemsredeem);
 }
 
+if ($formtype == "archiveapproval") {
+  @$reviewer_id = $_POST['reviewer_id'];
+  @$doc_idd = $_POST['doc_idd'];
+  @$reviewer_status = $_POST['reviewer_status'];
+  @$field_status = $_POST['field_status'];
+  @$reviewer_remarks = $_POST['reviewer_remarks'];
+  $now = date('Y-m-d H:i:s');
+  $archive = "UPDATE archive SET  reviewed_by = '$reviewer_id',  verification_status = '$reviewer_status', field_status = '$field_status',remarks = '$reviewer_remarks', reviewed_on = '$now' WHERE doc_id = '$doc_idd'";
+  $result = pg_query($con, $archive);
+}
+
 if ($formtype == "donation_review") {
   @$reviewer_id = $_POST['reviewer_id'];
   @$donationid = $_POST['donationid'];

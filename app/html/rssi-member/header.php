@@ -219,6 +219,11 @@
             </a>
           </li>
           <li>
+            <a id="archive_approval" href="archive_approval.php">
+              <span>Document Approval</span>
+            </a>
+          </li>
+          <li>
             <a id="dashboardLink" href="dashboard.php">
               <span>Process Hub</span>
             </a>
@@ -535,7 +540,15 @@
       }, {
         id: 'myservices',
         linkId: 'documentLink',
-        url: 'archive.php'
+        url: 'digital_archive.php'
+      }, {
+        id: 'myservices',
+        linkId: 'documentLink',
+        url: 'bankdetails.php'
+      }, {
+        id: 'work',
+        linkId: 'archive_approval',
+        url: 'archive_approval.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
