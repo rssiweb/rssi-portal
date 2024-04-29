@@ -275,7 +275,7 @@ if (!$result) {
                                 <ol>
                                     <li>
                                         <p>Please upload scanned copies of all documents at the following URL:
-                                            https://login.rssi.in/rssi-member/archive.php</p>
+                                            https://login.rssi.in/rssi-member/document.php (Digital Archive and My Bank details)</p>
                                         <ol type="A">
                                             <li>Highschool Marksheet</li>
                                             <li>Intermediate Marksheet</li>

@@ -51,7 +51,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>DocFlow</title>
+    <title>Document Approval</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -104,12 +104,12 @@ $resultArr = pg_fetch_all($result);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>DocFlow</h1>
+            <h1>Document Approval</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">DocFlow</li>
+                    <li class="breadcrumb-item active">Document Approval</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
