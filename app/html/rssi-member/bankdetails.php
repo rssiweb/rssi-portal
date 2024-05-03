@@ -144,6 +144,23 @@ foreach ($accountNatures as $accountNature) {
             background-color: #f2f2f2;
             padding: 10px;
         }
+
+        .blink-text {
+            color: red;
+            animation: blinkAnimation 1s infinite;
+        }
+
+        @keyframes blinkAnimation {
+
+            0%,
+            50% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 
@@ -186,6 +203,14 @@ foreach ($accountNatures as $accountNature) {
                                     </div>
                                 </form>
                                 <br>
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <?php if ($uploadedfor !== null) : ?>
+                                            You are viewing data for
+                                            <span class="blink-text"><?= $uploadedfor ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             <?php } ?>
                             <?php if (@$transaction_id != null && @$cmdtuples == 0) { ?>
                                 <div class="alert alert-danger alert-dismissible text-center" role="alert">

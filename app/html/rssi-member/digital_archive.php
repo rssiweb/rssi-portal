@@ -381,7 +381,7 @@ foreach ($latestSubmission as $submission) {
                                 </form>
 
 
-                                <h3 class="mt-4">Document List</h3>
+                                <h2 class="mt-4">Document List</h2>
                                 <hr>
                                 <!-- Display the data in a tabular format using Bootstrap -->
                                 <div class="table-responsive">
