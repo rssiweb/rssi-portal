@@ -120,10 +120,6 @@ $resultArr1 = pg_fetch_all($result1);
         <div class="pagetitle">
             <h1>iExplore</h1>
             <nav>
-                <!-- <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item active">iExplore</li>
-                </ol> -->
                 <div class="row">
                     <div class="col" style="display: inline-block; width:50%;">
                         <?php if ($role == 'Admin') { ?>
@@ -132,11 +128,7 @@ $resultArr1 = pg_fetch_all($result1);
                             Home / iExplore Web-based training (WBT)
                         <?php } ?>
                     </div>
-                    <div class="col" style="text-align: right;">
-                        <a href="my_learning.php" target="_self" class="btn btn-sm btn-warning" role="button">My Learning</a>
-                    </div>
                 </div>
-
             </nav>
         </div><!-- End Page Title -->
 
@@ -225,7 +217,7 @@ $resultArr1 = pg_fetch_all($result1);
                                                     <select name="validity" class="form-select" required>
                                                         <option value="" disabled selected>Select Validity</option>
                                                         <?php
-                                                        $validities = array("0.5", "1", "2", "3", "5","Lifetime");
+                                                        $validities = array("0.5", "1", "2", "3", "5", "Lifetime");
                                                         foreach ($validities as $validity) {
                                                             $selected = ($validity == @$row['validity']) ? "selected" : "";
                                                             echo "<option $selected>$validity</option>";
@@ -245,6 +237,11 @@ $resultArr1 = pg_fetch_all($result1);
                                 <hr>
                                 <br>
                             <?php } ?>
+                            <div class="row">
+                                <div class="col" style="text-align: right;">
+                                    <a href="my_learning.php" target="_self" class="btn btn-sm btn-link" role="button">My Learning History</a>
+                                </div>
+                            </div>
                             <?php if ($role != 'Admin') { ?>
                             <?php } ?>
                             <?php
@@ -337,7 +334,11 @@ $resultArr1 = pg_fetch_all($result1);
                                         <td><?php echo $array['type']; ?></td>
                                         <td><?php echo $array['passingmarks']; ?>%</td>
                                         <td><?php echo $array['validity']; ?></td>
-                                        <td><a href="<?php echo $array['url'] . $associatenumber; ?>" target="_blank" title="<?php echo $array['coursename'] . '-' . $array['language']; ?>"><button type="button" id="btn" class="btn btn-danger btn-sm" style="outline: none; color:#fff">Launch&nbsp;<?php echo $array['courseid']; ?></button></a></td>
+                                        <td>
+                                            <div class="col">
+                                                <a href="<?php echo $array['url'] . $associatenumber; ?>" target="_blank" title="<?php echo $array['coursename'] . '-' . $array['language']; ?>" class="btn btn-sm btn-link" role="button">Launch</a>
+                                            </div>
+                                        </td>
                                     </tr>
                                 <?php
                                 }

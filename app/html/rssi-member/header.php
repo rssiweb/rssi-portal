@@ -224,6 +224,11 @@
             </a>
           </li>
           <li>
+            <a id="bankdetails_admin" href="bankdetails_admin.php">
+              <span>HR Banking Records</span>
+            </a>
+          </li>
+          <li>
             <a id="dashboardLink" href="dashboard.php">
               <span>Process Hub</span>
             </a>
@@ -549,6 +554,10 @@
         id: 'work',
         linkId: 'archive_approval',
         url: 'archive_approval.php'
+      }, {
+        id: 'work',
+        linkId: 'bankdetails_admin',
+        url: 'bankdetails_admin.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },

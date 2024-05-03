@@ -70,6 +70,48 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "reimbursementapply") 
         ), $email);
     }
 }
+
+// Initialize array to store latest submissions for both account natures
+$latestSubmissions = [];
+
+// Array to hold account natures
+$accountNatures = ['reimbursement'];
+
+// Loop through each account nature
+foreach ($accountNatures as $accountNature) {
+    // Initialize $latestSubmission_bank variable to null for each account nature
+    $latestSubmission_bank = null;
+    // Retrieve latest submissions from the bankdetails table for the current account nature
+    $selectLatestQuery_bank = "SELECT bank_account_number, bank_name, ifsc_code, account_holder_name, updated_for, updated_by, updated_on, passbook_page
+                          FROM bankdetails
+                          WHERE updated_for = '$associatenumber' 
+                          AND account_nature = '$accountNature'
+                          AND updated_on = (SELECT MAX(updated_on) FROM bankdetails WHERE updated_for = '$associatenumber' AND account_nature = '$accountNature')";
+    $result = pg_query($con, $selectLatestQuery_bank);
+
+    if ($result) {
+        while ($row = pg_fetch_assoc($result)) {
+            // Store the latest submission for the current account nature
+            $latestSubmission_bank = [
+                'bank_account_number' => $row['bank_account_number'],
+                'bank_name' => $row['bank_name'],
+                'ifsc_code' => $row['ifsc_code'],
+                'account_holder_name' => $row['account_holder_name'],
+                'updated_for' => $row['updated_for'],
+                'updated_by' => $row['updated_by'],
+                'updated_on' => $row['updated_on'],
+                'passbook_page' => $row['passbook_page']
+            ];
+        }
+    }
+
+    // Store the latest submission for the current account nature in the array
+    $latestSubmissions[$accountNature] = $latestSubmission_bank;
+}
+
+// Now $latestSubmissions array will contain the latest submission data for both account natures
+// You can access the data using $latestSubmissions['reimbursement'] and $latestSubmissions['savings']
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -283,15 +325,23 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "reimbursementapply") 
                                     <tbody>
                                         <tr>
                                             <td style="line-height: 2;">
-                                                <?php if ($resultArr != null) { ?>
-                                                    <?php foreach ($resultArr as $array) { ?>
-
-                                                        <?php echo $array['bankname'] ?><br>
-                                                        Account Number:&nbsp;<b><?php echo $array['accountnumber'] ?></b><br>
-                                                        IFSC Code:&nbsp;<?php echo $array['ifsccode'] ?><br>
-                                                        PAN:&nbsp;<?php echo $array['panno'] ?>
-                                                <?php }
-                                                } ?>
+                                               <?php foreach ($latestSubmissions as $accountNature => $latestSubmission) : ?>
+                                                <?php if ($latestSubmission !== null) : ?>
+                                                    <h4 class="mt-3"><?php echo ucfirst($accountNature); ?> Account Details</h4>
+                                                    <p class="mb-1">Bank Account Number: <?php echo isset($latestSubmission['bank_account_number']) ? $latestSubmission['bank_account_number'] : 'N/A'; ?></p>
+                                                    <p class="mb-1">Name of the Bank: <?php echo isset($latestSubmission['bank_name']) ? $latestSubmission['bank_name'] : 'N/A'; ?></p>
+                                                    <p class="mb-1">IFSC Code: <?php echo isset($latestSubmission['ifsc_code']) ? $latestSubmission['ifsc_code'] : 'N/A'; ?></p>
+                                                    <p class="mb-1">Account Holder Name: <?php echo isset($latestSubmission['account_holder_name']) ? $latestSubmission['account_holder_name'] : 'N/A'; ?></p>
+                                                    <?php if (isset($latestSubmission['passbook_page'])) : ?>
+                                                        <p class="mb-1"><a href="<?php echo $latestSubmission['passbook_page']; ?>" target="_blank">First Page of Bank Account Passbook</a></p>
+                                                    <?php endif; ?>
+                                                    <br>
+                                                    <p>(Last updated by <?php echo isset($latestSubmission['updated_by']) ? $latestSubmission['updated_by'] : 'N/A'; ?> on <?php echo isset($latestSubmission['updated_on']) ? $latestSubmission['updated_on'] : 'N/A'; ?>)</p>
+                                                <?php else : ?>
+                                                    <!-- Handle case when bank details are not available for the current account nature -->
+                                                    <p>No <?php echo ucfirst($accountNature); ?> account details available.</p>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
                                             </td>
                                         </tr>
                                     </tbody>
