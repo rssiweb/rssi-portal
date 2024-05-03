@@ -10,11 +10,17 @@ if (!isLoggedIn("aid")) {
   exit;
 }
 validation();
+if (date('m') == 1 || date('m') == 2 || date('m') == 3) { //Upto March
+  $academic_year = (date('Y') - 1) . '-' . date('Y');
+} else { //After MARCH
+  $academic_year = date('Y') . '-' . (date('Y') + 1);
+}
+@$currentAcademicYear = $academic_year;
 if ($role == 'Admin' && $filterstatus == 'Active') {
-  $status = isset($_POST['get_id']) ? $_POST['get_id'] : null;
+  $status = isset($_POST['get_id']) ? $_POST['get_id'] : $currentAcademicYear;
   $id = isset($_POST['get_aid']) ? strtoupper($_POST['get_aid']) : null;
 } else {
-  $status = isset($_POST['get_id']) ? $_POST['get_id'] : null;
+  $status = isset($_POST['get_id']) ? $_POST['get_id'] : $currentAcademicYear;
   $id = $user_check;
 }
 
@@ -164,7 +170,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+  <?php include 'inactive_session_expire_check.php'; ?>
   <?php include 'header.php'; ?>
 
   <main id="main" class="main">

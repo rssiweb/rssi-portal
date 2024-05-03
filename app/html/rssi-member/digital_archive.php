@@ -15,6 +15,16 @@ validation();
 if ($role == 'Admin') {
 
     $id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : '';
+    $datafor = $fullname;
+    // Try to fetch $datafor from rssimyaccount_members table
+    $selectMemberQuery = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = '$id'";
+    $memberResult = pg_query($con, $selectMemberQuery);
+
+    if ($memberResult && pg_num_rows($memberResult) > 0) {
+        // Fetch $datafor from rssimyaccount_members table
+        $memberData = pg_fetch_assoc($memberResult);
+        $datafor = $memberData['fullname'];
+    }
 }
 
 $uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
@@ -247,7 +257,7 @@ foreach ($latestSubmission as $submission) {
                                     <div class="col-6">
                                         <?php if ($uploadedfor !== null) : ?>
                                             You are viewing data for
-                                            <span class="blink-text"><?= $uploadedfor ?></span>
+                                            <span class="blink-text"><?= $datafor ?></span>
                                         <?php endif; ?>
                                     </div>
                                 </div>

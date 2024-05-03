@@ -90,7 +90,7 @@ if (@$_POST['form-type'] == "leaveapply") {
 
 @$id = $_POST['get_id'];
 @$appid = strtoupper($_POST['get_appid']);
-@$lyear = $_POST['lyear'];
+@$lyear = $_POST['lyear'] ? $_POST['lyear'] : $year;
 @$is_user = $_POST['is_user'];
 
 date_default_timezone_set('Asia/Kolkata');
@@ -194,7 +194,7 @@ if (!$result) {
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">

@@ -66,10 +66,20 @@ $accountNatures = ['reimbursement', 'savings'];
 foreach ($accountNatures as $accountNature) {
     // Initialize $latestSubmission_bank variable to null for each account nature
     $latestSubmission_bank = null;
+    $datafor = $fullname;
+    // Try to fetch $datafor from rssimyaccount_members table
+    $selectMemberQuery = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = '$uploadedfor'";
+    $memberResult = pg_query($con, $selectMemberQuery);
 
+    if ($memberResult && pg_num_rows($memberResult) > 0) {
+        // Fetch $datafor from rssimyaccount_members table
+        $memberData = pg_fetch_assoc($memberResult);
+        $datafor = $memberData['fullname'];
+    }
     // Retrieve latest submissions from the bankdetails table for the current account nature
     $selectLatestQuery_bank = "SELECT bank_account_number, bank_name, ifsc_code, account_holder_name, updated_for, updated_by, updated_on, passbook_page
-                          FROM bankdetails 
+                          FROM bankdetails
+                          JOIN rssimyaccount_members ON bankdetails.updated_for = rssimyaccount_members.associatenumber
                           WHERE updated_for = '$uploadedfor' 
                           AND account_nature = '$accountNature'
                           AND updated_on = (SELECT MAX(updated_on) FROM bankdetails WHERE updated_for = '$uploadedfor' AND account_nature = '$accountNature')";
@@ -207,7 +217,7 @@ foreach ($accountNatures as $accountNature) {
                                     <div class="col-6">
                                         <?php if ($uploadedfor !== null) : ?>
                                             You are viewing data for
-                                            <span class="blink-text"><?= $uploadedfor ?></span>
+                                            <span class="blink-text"><?= $datafor ?></span>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -295,7 +305,7 @@ foreach ($accountNatures as $accountNature) {
                                     <!-- Second Column - Bank Account Details -->
                                     <div class="col-md-6" style="padding: 5%" ;>
                                         <div>
-                                            <h3 class="mt-4">Your Current Bank Account Details</h3>
+                                            <h3 class="mt-4">My current banking information</h3>
 
                                             <?php foreach ($latestSubmissions as $accountNature => $latestSubmission) : ?>
                                                 <?php if ($latestSubmission !== null) : ?>
