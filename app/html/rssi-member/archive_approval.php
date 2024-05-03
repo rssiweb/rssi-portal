@@ -207,7 +207,7 @@ $resultArr = pg_fetch_all($result);
                                 <div class="modal-dialog modal-lg">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Gems Redeem Details</h1>
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Document Approval</h1>
                                             <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">

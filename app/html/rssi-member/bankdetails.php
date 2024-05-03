@@ -34,6 +34,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "bank_details") {
     $bank_name = $_POST['bank_name'] ?? '';
     $ifsc_code = $_POST['ifsc_code'] ?? '';
     $account_holder_name = $_POST['account_holder_name'] ?? '';
+    $account_nature = $_POST['account_nature'] ?? '';
 
     // Upload and insert passbook page if provided
     if (!empty($_FILES['passbook_page']['name'])) {
@@ -44,9 +45,9 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "bank_details") {
 
         if ($doclink !== null) {
             // Insert passbook page into bankdetails table
-            $insertQuery = "INSERT INTO bankdetails (bank_account_number, bank_name, ifsc_code, account_holder_name, passbook_page, updated_for, updated_by, updated_on, transaction_id)
-                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)";
-            $result = pg_query_params($con, $insertQuery, array($bank_account_number, $bank_name, $ifsc_code, $account_holder_name, $doclink, $uploadedfor, $uploadedby, $now, $transaction_id));
+            $insertQuery = "INSERT INTO bankdetails (bank_account_number, bank_name, ifsc_code, account_holder_name, passbook_page, updated_for, updated_by, updated_on, transaction_id,account_nature)
+                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10)";
+            $result = pg_query_params($con, $insertQuery, array($bank_account_number, $bank_name, $ifsc_code, $account_holder_name, $doclink, $uploadedfor, $uploadedby, $now, $transaction_id, $account_nature));
             $cmdtuples = pg_affected_rows($result);
             if (!$result) {
                 // Handle insert error
@@ -55,29 +56,47 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "bank_details") {
     }
 }
 
-// Initialize $latestSubmission_bank variable to null
-$latestSubmission_bank = null;
-// Retrieve latest submissions from the bankdetails table
-$selectLatestQuery_bank = "SELECT bank_account_number, bank_name, ifsc_code, account_holder_name, updated_for, updated_by, updated_on, passbook_page
-                      FROM bankdetails 
-                      WHERE updated_for = '$uploadedfor' 
-                      AND updated_on = (SELECT MAX(updated_on) FROM bankdetails WHERE updated_for = '$uploadedfor')";
-$result = pg_query($con, $selectLatestQuery_bank);
+// Initialize array to store latest submissions for both account natures
+$latestSubmissions = [];
 
-if ($result) {
-    while ($row = pg_fetch_assoc($result)) {
-        $latestSubmission_bank = [
-            'bank_account_number' => $row['bank_account_number'],
-            'bank_name' => $row['bank_name'],
-            'ifsc_code' => $row['ifsc_code'],
-            'account_holder_name' => $row['account_holder_name'],
-            'updated_for' => $row['updated_for'],
-            'updated_by' => $row['updated_by'],
-            'updated_on' => $row['updated_on'],
-            'passbook_page' => $row['passbook_page']
-        ];
+// Array to hold account natures
+$accountNatures = ['reimbursement', 'savings'];
+
+// Loop through each account nature
+foreach ($accountNatures as $accountNature) {
+    // Initialize $latestSubmission_bank variable to null for each account nature
+    $latestSubmission_bank = null;
+
+    // Retrieve latest submissions from the bankdetails table for the current account nature
+    $selectLatestQuery_bank = "SELECT bank_account_number, bank_name, ifsc_code, account_holder_name, updated_for, updated_by, updated_on, passbook_page
+                          FROM bankdetails 
+                          WHERE updated_for = '$uploadedfor' 
+                          AND account_nature = '$accountNature'
+                          AND updated_on = (SELECT MAX(updated_on) FROM bankdetails WHERE updated_for = '$uploadedfor' AND account_nature = '$accountNature')";
+    $result = pg_query($con, $selectLatestQuery_bank);
+
+    if ($result) {
+        while ($row = pg_fetch_assoc($result)) {
+            // Store the latest submission for the current account nature
+            $latestSubmission_bank = [
+                'bank_account_number' => $row['bank_account_number'],
+                'bank_name' => $row['bank_name'],
+                'ifsc_code' => $row['ifsc_code'],
+                'account_holder_name' => $row['account_holder_name'],
+                'updated_for' => $row['updated_for'],
+                'updated_by' => $row['updated_by'],
+                'updated_on' => $row['updated_on'],
+                'passbook_page' => $row['passbook_page']
+            ];
+        }
     }
+
+    // Store the latest submission for the current account nature in the array
+    $latestSubmissions[$accountNature] = $latestSubmission_bank;
 }
+
+// Now $latestSubmissions array will contain the latest submission data for both account natures
+// You can access the data using $latestSubmissions['reimbursement'] and $latestSubmissions['savings']
 
 ?>
 <!doctype html>
@@ -192,10 +211,21 @@ if ($result) {
                                     <div class="col-md-6">
                                         <form action="#" method="post" enctype="multipart/form-data" id="bank_details">
                                             <input type="hidden" name="form-type" value="bank_details">
-                                            <h3 class="mt-4">Bank Account Details</h3>
+                                            <h2 class="mt-4">Bank Details</h2>
+                                            <hr>
                                             <div class="mb-3 colored-area">
-                                                <p>To save your changes, please submit the form. Once submitted, the updated information will be displayed here for your reference.</p>
+                                                <p>Enter valid account number. You may include zero in the beginning of the account number (if required)</p>
                                             </div>
+                                            <div class="mb-3">
+                                                <label for="account_nature" class="form-label">Account Nature:</label>
+                                                <select class="form-select" id="account_nature" name="account_nature" required>
+                                                    <option value="" selected disabled>Select your account nature</option>
+                                                    <option value="reimbursement">Reimbursement Account</option>
+                                                    <option value="savings">Savings Account</option>
+                                                </select>
+                                                <div class="form-text">Please select the nature of your account.</div>
+                                            </div>
+
                                             <div class="mb-3">
                                                 <label for="bank_account_number" class="form-label">Bank Account Number:</label>
                                                 <input class="form-control" type="text" id="bank_account_number" name="bank_account_number" placeholder="Enter your bank account number" required>
@@ -241,20 +271,24 @@ if ($result) {
                                     <div class="col-md-6" style="padding: 5%" ;>
                                         <div>
                                             <h3 class="mt-4">Your Current Bank Account Details</h3>
-                                            <?php if ($latestSubmission_bank !== null) : ?>
-                                                <p class="mb-1">Bank Account Number: <?php echo isset($latestSubmission_bank['bank_account_number']) ? $latestSubmission_bank['bank_account_number'] : 'N/A'; ?></p>
-                                                <p class="mb-1">Name of the Bank: <?php echo isset($latestSubmission_bank['bank_name']) ? $latestSubmission_bank['bank_name'] : 'N/A'; ?></p>
-                                                <p class="mb-1">IFSC Code: <?php echo isset($latestSubmission_bank['ifsc_code']) ? $latestSubmission_bank['ifsc_code'] : 'N/A'; ?></p>
-                                                <p class="mb-1">Account Holder Name: <?php echo isset($latestSubmission_bank['account_holder_name']) ? $latestSubmission_bank['account_holder_name'] : 'N/A'; ?></p>
-                                                <?php if (isset($latestSubmission_bank['passbook_page'])) : ?>
-                                                    <p class="mb-1"><a href="<?php echo $latestSubmission_bank['passbook_page']; ?>" target="_blank">First Page of Bank Account Passbook</a></p>
+
+                                            <?php foreach ($latestSubmissions as $accountNature => $latestSubmission) : ?>
+                                                <?php if ($latestSubmission !== null) : ?>
+                                                    <h4 class="mt-3"><?php echo ucfirst($accountNature); ?> Account Details</h4>
+                                                    <p class="mb-1">Bank Account Number: <?php echo isset($latestSubmission['bank_account_number']) ? $latestSubmission['bank_account_number'] : 'N/A'; ?></p>
+                                                    <p class="mb-1">Name of the Bank: <?php echo isset($latestSubmission['bank_name']) ? $latestSubmission['bank_name'] : 'N/A'; ?></p>
+                                                    <p class="mb-1">IFSC Code: <?php echo isset($latestSubmission['ifsc_code']) ? $latestSubmission['ifsc_code'] : 'N/A'; ?></p>
+                                                    <p class="mb-1">Account Holder Name: <?php echo isset($latestSubmission['account_holder_name']) ? $latestSubmission['account_holder_name'] : 'N/A'; ?></p>
+                                                    <?php if (isset($latestSubmission['passbook_page'])) : ?>
+                                                        <p class="mb-1"><a href="<?php echo $latestSubmission['passbook_page']; ?>" target="_blank">First Page of Bank Account Passbook</a></p>
+                                                    <?php endif; ?>
+                                                    <br>
+                                                    <p>(Last updated by <?php echo isset($latestSubmission['updated_by']) ? $latestSubmission['updated_by'] : 'N/A'; ?> on <?php echo isset($latestSubmission['updated_on']) ? $latestSubmission['updated_on'] : 'N/A'; ?>)</p>
+                                                <?php else : ?>
+                                                    <!-- Handle case when bank details are not available for the current account nature -->
+                                                    <p>No <?php echo ucfirst($accountNature); ?> account details available.</p>
                                                 <?php endif; ?>
-                                                <br>
-                                                <p>(Last updated by <?php echo isset($latestSubmission_bank['updated_by']) ? $latestSubmission_bank['updated_by'] : 'N/A'; ?> on <?php echo isset($latestSubmission_bank['updated_on']) ? $latestSubmission_bank['updated_on'] : 'N/A'; ?>)</p>
-                                            <?php else : ?>
-                                                <!-- Handle case when bank details are not available -->
-                                                <p>No bank details available.</p>
-                                            <?php endif; ?>
+                                            <?php endforeach; ?>
                                         </div>
                                     </div>
                                 </div>
