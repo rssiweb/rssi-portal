@@ -97,15 +97,18 @@ $resultArr = pg_fetch_all($result);
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -165,6 +168,11 @@ $resultArr = pg_fetch_all($result);
             width: 20%;
         }
     </style>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 </head>
 
 <!-- =========================
@@ -172,7 +180,7 @@ $resultArr = pg_fetch_all($result);
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -382,19 +390,6 @@ $resultArr = pg_fetch_all($result);
                             </div>
 
                             <?php echo '
-                        <p>Select Number Of Rows</p>
-                        <div class="form-group">
-                            <select class="form-select" name="state" id="maxRows">
-                                <option value="5000">Show ALL Rows</option>
-                                <option value="5">5</option>
-                                <option value="10">10</option>
-                                <option value="15">15</option>
-                                <option value="20">20</option>
-                                <option value="50">50</option>
-                                <option value="70">70</option>
-                                <option value="100">100</option>
-                            </select>
-                        </div>
                         <div class="table-responsive">
                         <table class="table" id="table-id">
                         <thead>
@@ -536,129 +531,6 @@ $resultArr = pg_fetch_all($result);
                             </table>
                             </div>';
                             ?>
-
-                            <!-- Start Pagination -->
-                            <div class="pagination-container">
-                                <nav>
-                                    <ul class="pagination">
-                                        <li class="page-item" data-page="prev">
-                                            <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
-                                        </li>
-                                        <!-- Here the JS Function Will Add the Rows -->
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">1</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">2</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">3</button>
-                                        </li>
-                                        <li class="page-item" data-page="next" id="prev">
-                                            <button class="page-link pagination-button" aria-label="Next">&gt;</button>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-
-                            <script>
-                                getPagination('#table-id');
-
-                                function getPagination(table) {
-                                    var lastPage = 1;
-
-                                    $('#maxRows').on('change', function(evt) {
-                                        lastPage = 1;
-                                        $('.pagination').find('li').slice(1, -1).remove();
-                                        var trnum = 0;
-                                        var maxRows = parseInt($(this).val());
-
-                                        if (maxRows == 5000) {
-                                            $('.pagination').hide();
-                                        } else {
-                                            $('.pagination').show();
-                                        }
-
-                                        var totalRows = $(table + ' tbody tr').length;
-                                        $(table + ' tr:gt(0)').each(function() {
-                                            trnum++;
-                                            if (trnum > maxRows) {
-                                                $(this).hide();
-                                            }
-                                            if (trnum <= maxRows) {
-                                                $(this).show();
-                                            }
-                                        });
-
-                                        if (totalRows > maxRows) {
-                                            var pagenum = Math.ceil(totalRows / maxRows);
-                                            for (var i = 1; i <= pagenum; i++) {
-                                                $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
-                                                <button class="page-link pagination-button">' + i + '</button>\
-                                                </li>').show();
-                                            }
-                                        }
-
-                                        $('.pagination [data-page="1"]').addClass('active');
-                                        $('.pagination li').on('click', function(evt) {
-                                            evt.stopImmediatePropagation();
-                                            evt.preventDefault();
-                                            var pageNum = $(this).attr('data-page');
-
-                                            var maxRows = parseInt($('#maxRows').val());
-
-                                            if (pageNum == 'prev') {
-                                                if (lastPage == 1) {
-                                                    return;
-                                                }
-                                                pageNum = --lastPage;
-                                            }
-                                            if (pageNum == 'next') {
-                                                if (lastPage == $('.pagination li').length - 2) {
-                                                    return;
-                                                }
-                                                pageNum = ++lastPage;
-                                            }
-
-                                            lastPage = pageNum;
-                                            var trIndex = 0;
-                                            $('.pagination li').removeClass('active');
-                                            $('.pagination [data-page="' + lastPage + '"]').addClass('active');
-                                            limitPagging();
-                                            $(table + ' tr:gt(0)').each(function() {
-                                                trIndex++;
-                                                if (
-                                                    trIndex > maxRows * pageNum ||
-                                                    trIndex <= maxRows * pageNum - maxRows
-                                                ) {
-                                                    $(this).hide();
-                                                } else {
-                                                    $(this).show();
-                                                }
-                                            });
-                                        });
-                                        limitPagging();
-                                    }).val(5).change();
-                                }
-
-                                function limitPagging() {
-                                    if ($('.pagination li').length > 7) {
-                                        if ($('.pagination li.active').attr('data-page') <= 3) {
-                                            $('.pagination li.page-item:gt(5)').hide();
-                                            $('.pagination li.page-item:lt(5)').show();
-                                            $('.pagination [data-page="next"]').show();
-                                        }
-                                        if ($('.pagination li.active').attr('data-page') > 3) {
-                                            $('.pagination li.page-item').hide();
-                                            $('.pagination [data-page="next"]').show();
-                                            var currentPage = parseInt($('.pagination li.active').attr('data-page'));
-                                            for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-                                                $('.pagination [data-page="' + i + '"]').show();
-                                            }
-                                        }
-                                    }
-                                }
-                            </script>
 
                             <!--------------- POP-UP BOX ------------
 -------------------------------------->
@@ -1020,6 +892,14 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#table-id').DataTable({
+                // paging: false,
+                // other options...
+            });
+        });
+    </script>
 
 </body>
 

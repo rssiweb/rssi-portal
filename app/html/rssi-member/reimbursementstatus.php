@@ -162,7 +162,11 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
       width: 20%;
     }
   </style>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
 
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 </head>
 
 <!-- =========================
@@ -257,7 +261,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
               </script>
               <?php echo '
                 <div class="table-responsive">
-                        <table class="table">
+                        <table class="table" id="table-id">
                             <thead>
                                 <tr>
                                 <th scope="col">Claim Number</th>
@@ -745,6 +749,14 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
+  <script>
+        $(document).ready(function() {
+            $('#table-id').DataTable({
+                paging: false,
+                // other options...
+            });
+        });
+    </script>
 
 </body>
 

@@ -20,9 +20,13 @@ if ($role == 'Admin') {
     @$user_id = strtoupper($_GET['user_id']);
 
     if ($user_id > 0) {
-        $result = pg_query($con, "select * from archive WHERE uploaded_for='$user_id'");
+        $result = pg_query($con, "SELECT *
+        FROM archive
+        JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber WHERE uploaded_for='$user_id'");
     } else {
-        $result = pg_query($con, "select * from archive"); //select query for viewing users.
+        $result = pg_query($con, "SELECT *
+        FROM archive
+        JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber"); //select query for viewing users.
     }
 }
 if (!$result) {
@@ -78,6 +82,12 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 
     <style>
         .x-btn:focus,
@@ -164,7 +174,7 @@ $resultArr = pg_fetch_all($result);
                                             <?php foreach ($resultArr as $array) : ?>
                                                 <tr>
                                                     <td><?= $array['doc_id'] ?></td>
-                                                    <td><?= $array['uploaded_for'] ?></td>
+                                                    <td><?= $array['fullname'] . '&nbsp;(' . $array['uploaded_for'] . ')' ?></td>
                                                     <td><?= $array['file_name'] ?></td>
                                                     <td><a href="<?= $array['file_path'] ?>" target="_blank">Document</a></td>
                                                     <td><?= $array['uploaded_by'] ?></td>
@@ -405,6 +415,15 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#table-id').DataTable({
+                paging: false,
+                // other options...
+            });
+        });
+    </script>
+
 
 </body>
 
