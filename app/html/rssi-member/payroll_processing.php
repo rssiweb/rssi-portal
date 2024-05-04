@@ -161,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+  <?php include 'inactive_session_expire_check.php'; ?>
   <?php if (@$employeeId != null && @$cmdtuples == 0) { ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: center;">
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -242,9 +242,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
                     <p><strong>Associate number:</strong> <?php echo $array['associatenumber'] ?></p>
                     <p><strong>Name:</strong> <?php echo $array['fullname'] ?></p>
                     <p><strong>Association type:</strong> <?php echo $array['engagement'] ?></p>
-                    <p><strong>Category:</strong> <?php echo $array['job_type'] ?></p>
-                    <p><strong>Responsibility:</strong> <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?></p>
-                    <p><strong>Date of Joining:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
                   </div>
                   <div class="col-md-4">
                     <p><strong>Base Branch:</strong> <?php echo $array['basebranch'] ?></p>
@@ -253,10 +250,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
                     <p><strong>Leave Balance:</strong> <?php echo 'LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?></p>
                   </div>
                   <div class="col-md-4">
-                    <p><strong>Account Number:</strong> <?php echo @$array['accountnumber'] ?></p>
+                    <!-- <p><strong>Account Number:</strong> <?php echo @$array['accountnumber'] ?></p>
                     <p><strong>Bank Name:</strong> <?php echo @$array['bankname'] ?></p>
                     <p><strong>IFSC Code:</strong> <?php echo @$array['ifsccode'] ?></p>
-                    <p><strong>PAN Card Number:</strong> <?php echo @$array['panno'] ?></p>
+                    <p><strong>PAN Card Number:</strong> <?php echo @$array['panno'] ?></p> -->
+                    <p><strong>Category:</strong> <?php echo $array['job_type'] ?></p>
+                    <p><strong>Responsibility:</strong> <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?></p>
+                    <p><strong>Date of Joining:</strong> <?php echo date('M d, Y', strtotime($array['doj'])) ?></p>
                   </div>
                 </div>
               </div>
@@ -627,9 +627,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
           var subCategoryOptions = [];
 
           if (selectedComponent === "Earning") {
-            subCategoryOptions = ["Basic Salary", "Bonus"];
+            subCategoryOptions = ["Basic Salary", "Bonus", "Monthly Bonus","Bonus Payout"];
           } else if (selectedComponent === "Deduction") {
-            subCategoryOptions = ["Payment adjustment", "LWP deduction", "Service Charge", "Salary Advance Recovery"];
+            subCategoryOptions = ["Payment adjustment", "LWP deduction", "Service Charge", "Salary Advance Recovery","Deferred Bonus Deduction"];
           } else {
             subCategoryOptions = [];
           }
