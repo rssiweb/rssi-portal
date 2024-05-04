@@ -29,7 +29,7 @@ $check_employeeid = null;
 // Check user role
 if ($role == 'Admin') {
   // Query to retrieve payslip entry data
-  $result = pg_query_params($con, "SELECT paymonth, payyear, employeeid, * 
+  $result = pg_query_params($con, "SELECT paymonth, payyear, employeeid,payslip_issued_on, * 
                                      FROM payslip_entry 
                                      LEFT JOIN rssimyaccount_members 
                                      ON rssimyaccount_members.associatenumber = payslip_entry.employeeid 
@@ -40,6 +40,7 @@ if ($role == 'Admin') {
     $paymonth_comp = $row['paymonth'];
     $payyear_comp = $row['payyear'];
     $employeeid_comp = $row['employeeid'];
+    $payslip_issued_on = $row['payslip_issued_on'];
 
     // Query to retrieve payslip component data
     $result_component = pg_query_params($con, "SELECT * 
@@ -82,7 +83,7 @@ if ($role == 'Admin') {
   }
 } else {
   // Query to retrieve payslip entry data for non-admin users
-  $result = pg_query_params($con, "SELECT paymonth, payyear, employeeid, * 
+  $result = pg_query_params($con, "SELECT paymonth, payyear, employeeid,payslip_issued_on, * 
                                      FROM payslip_entry 
                                      LEFT JOIN rssimyaccount_members 
                                      ON rssimyaccount_members.associatenumber = payslip_entry.employeeid 
@@ -94,6 +95,7 @@ if ($role == 'Admin') {
     $paymonth_comp = $row['paymonth'];
     $payyear_comp = $row['payyear'];
     $employeeid_comp = $row['employeeid'];
+    $payslip_issued_on = $row['payslip_issued_on'];
 
     // Query to retrieve payslip component data for non-admin users
     $result_component = pg_query_params($con, "SELECT * 
@@ -299,7 +301,10 @@ foreach ($accountNatures as $accountNature) {
     .report-footer {
       background-color: #f8f9fa;
       padding: 10px;
-      font-size: 12px;
+    }
+
+    .page-break {
+      page-break-before: always;
     }
   </style>
 </head>
@@ -462,12 +467,20 @@ foreach ($accountNatures as $accountNature) {
                   </div>
               </td>
             </tr>
+            <!-- <tr>
+              <td class="page-break" style="border: none;"></td>
+            </tr> -->
             <tr>
               <td style="border: none;">
                 <?php if (pg_num_rows($result_accrued_bonus) > 0) : ?>
-                  <h4>Bonus Information</h4>
                   <table>
                     <thead>
+                      <tr>
+                        <td colspan=4>
+                          <h4>Bonus Information</h4>
+                          <p>(The payout is subject to the organization's policy.)</p>
+                        </td>
+                      </tr>
                       <tr>
                         <th>Pay Month/Year</th>
                         <th>Monthly Bonus</th>
@@ -527,7 +540,7 @@ foreach ($accountNatures as $accountNature) {
               <table style="width: 100%;">
                 <tr>
                   <td style="width: 50%;">
-                    <strong>Rina Shiksha Sahayak Foundation (RSSI)</strong><br>
+                    <strong>Rina Shiksha Sahayak Foundation</strong><br>
                     1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301
                   </td>
                   <td style="text-align: right; width: 50%;">
@@ -537,7 +550,7 @@ foreach ($accountNatures as $accountNature) {
                 </tr>
                 <tr>
                   <td colspan="2" style="text-align: right; border: none;">
-                    Payslip generated on <?php echo date('Y-m-d H:i:s'); ?>
+                    Payslip generated on <?php echo date('d/m/Y h:i:s a', strtotime($payslip_issued_on)) ?>
                   </td>
                 </tr>
               </table>
