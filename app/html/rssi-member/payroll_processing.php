@@ -627,7 +627,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
           var subCategoryOptions = [];
 
           if (selectedComponent === "Earning") {
-            subCategoryOptions = ["Basic Salary", "Bonus", "Monthly Bonus","Bonus Payout"];
+            subCategoryOptions = ["Basic Salary", "Bonus", "Monthly Bonus","Bonus Payout","Overtime Pay"];
           } else if (selectedComponent === "Deduction") {
             subCategoryOptions = ["Payment adjustment", "LWP deduction", "Service Charge", "Salary Advance Recovery","Deferred Bonus Deduction"];
           } else {
