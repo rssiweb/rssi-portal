@@ -11,23 +11,20 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-
 if ($role == 'Admin') {
-
     $id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : '';
-    $datafor = $fullname;
-    // Try to fetch $datafor from rssimyaccount_members table
-    $selectMemberQuery = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = '$id'";
-    $memberResult = pg_query($con, $selectMemberQuery);
-
-    if ($memberResult && pg_num_rows($memberResult) > 0) {
-        // Fetch $datafor from rssimyaccount_members table
-        $memberData = pg_fetch_assoc($memberResult);
-        $datafor = $memberData['fullname'];
-    }
 }
-
 $uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
+
+$selectMemberQuery = "SELECT fullname,eduq FROM rssimyaccount_members WHERE associatenumber = '$uploadedfor'";
+$memberResult = pg_query($con, $selectMemberQuery);
+
+if ($memberResult && pg_num_rows($memberResult) > 0) {
+    // Fetch $datafor from rssimyaccount_members table
+    $memberData = pg_fetch_assoc($memberResult);
+    $datafor = $memberData['fullname'];
+    $eduq = $memberData['eduq'];
+}
 
 
 if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
@@ -146,6 +143,31 @@ foreach ($latestSubmission as $submission) {
 
 // Now $fieldStatusValues array contains field_status values for each file
 
+?>
+<?php
+
+// Initialize an array to hold the mapping of education qualifications to required fields
+$requiredFields = [
+    "11" => ["highschool"],
+    "12" => ["highschool", "intermediate"],
+    "Bachelor" => ["highschool", "intermediate", "graduation"],
+    "Master" => ["highschool", "intermediate", "graduation", "post_graduation"],
+    "Doctorate" => ["highschool", "intermediate", "graduation", "post_graduation"]
+];
+
+// Get the corresponding required fields based on the value of $eduq
+$required = [];
+foreach ($requiredFields as $qualification => $fields) {
+    if (strpos($eduq, $qualification) !== false) {
+        $required = array_merge($required, $fields);
+    }
+}
+
+// Function to generate the required attribute for input fields
+function generateRequiredAttribute($field)
+{
+    return in_array($field, $GLOBALS['required']) ? 'required' : '';
+}
 ?>
 
 <!doctype html>
@@ -296,7 +318,7 @@ foreach ($latestSubmission as $submission) {
                                             <label for="highschool" class="form-label">Highschool Marksheet:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="highschool" name="highschool" <?php echo isset($fieldStatusValues['High School']) ? $fieldStatusValues['High School'] : ''; ?>>
+                                            <input class="form-control" type="file" id="highschool" name="highschool" <?= generateRequiredAttribute("highschool") ?> <?php echo isset($fieldStatusValues['High School']) ? $fieldStatusValues['High School'] : ''; ?>>
                                         </div>
                                     </div>
 
@@ -306,7 +328,7 @@ foreach ($latestSubmission as $submission) {
                                             <label for="intermediate" class="form-label">Intermediate Marksheet:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="intermediate" name="intermediate" <?php echo isset($fieldStatusValues['Intermediate']) ? $fieldStatusValues['Intermediate'] : ''; ?>>
+                                            <input class="form-control" type="file" id="intermediate" name="intermediate" <?= generateRequiredAttribute("intermediate") ?> <?php echo isset($fieldStatusValues['Intermediate']) ? $fieldStatusValues['Intermediate'] : ''; ?>>
                                         </div>
                                     </div>
 
@@ -316,21 +338,19 @@ foreach ($latestSubmission as $submission) {
                                             <label for="graduation" class="form-label">Graduation Marksheet:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="graduation" name="graduation" <?php echo isset($fieldStatusValues['Graduation']) ? $fieldStatusValues['Graduation'] : ''; ?>>
+                                            <input class="form-control" type="file" id="graduation" name="graduation" <?= generateRequiredAttribute("graduation") ?> <?php echo isset($fieldStatusValues['Graduation']) ? $fieldStatusValues['Graduation'] : ''; ?>>
                                         </div>
                                     </div>
 
                                     <!-- Post-Graduation Marksheet -->
                                     <div class="row mt-2">
                                         <div class="col-md-4">
-                                            <label for="post_graduation" class="form-label">Post-Graduation
-                                                Marksheet:</label>
+                                            <label for="post_graduation" class="form-label">Post-Graduation Marksheet:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="post_graduation" name="post_graduation" <?php echo isset($fieldStatusValues['Post Graduation']) ? $fieldStatusValues['Post Graduation'] : ''; ?>>
+                                            <input class="form-control" type="file" id="post_graduation" name="post_graduation" <?= generateRequiredAttribute("post_graduation") ?> <?php echo isset($fieldStatusValues['Post Graduation']) ? $fieldStatusValues['Post Graduation'] : ''; ?>>
                                         </div>
                                     </div>
-
                                     <div class="row mt-2">
                                         <!-- Additional training or course Certificate -->
                                         <div class="col-md-4">
@@ -363,7 +383,7 @@ foreach ($latestSubmission as $submission) {
                                             <label for="pan_card" class="form-label">PAN Card:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="pan_card" name="pan_card" <?php echo isset($fieldStatusValues['PAN Card']) ? $fieldStatusValues['PAN Card'] : ''; ?>>
+                                            <input class="form-control" type="file" id="pan_card" name="pan_card" <?php echo isset($fieldStatusValues['PAN Card']) ? $fieldStatusValues['PAN Card'] : ''; ?> required>
                                         </div>
                                     </div>
 
@@ -373,17 +393,17 @@ foreach ($latestSubmission as $submission) {
                                             <label for="aadhar_card" class="form-label">Aadhar Card:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="aadhar_card" name="aadhar_card" <?php echo isset($fieldStatusValues['Aadhar Card']) ? $fieldStatusValues['Aadhar Card'] : ''; ?>>
+                                            <input class="form-control" type="file" id="aadhar_card" name="aadhar_card" <?php echo isset($fieldStatusValues['Aadhar Card']) ? $fieldStatusValues['Aadhar Card'] : ''; ?> required>
                                         </div>
                                     </div>
 
                                     <div class="row mt-2">
                                         <!-- Offer letter -->
                                         <div class="col-md-4">
-                                            <label for="offer_letter" class="form-label">Offer letter:</label>
+                                            <label for="offer_letter" class="form-label">Offer Letter (Signed Copy):</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="offer_letter" name="offer_letter" <?php echo isset($fieldStatusValues['Offer Letter']) ? $fieldStatusValues['Offer Letter'] : ''; ?>>
+                                            <input class="form-control" type="file" id="offer_letter" name="offer_letter" <?php echo isset($fieldStatusValues['Offer Letter']) ? $fieldStatusValues['Offer Letter'] : ''; ?> required>
                                         </div>
                                     </div>
                                     <hr>
@@ -527,6 +547,12 @@ foreach ($latestSubmission as $submission) {
         window.addEventListener('load', function() {
             // Hide loading modal
             hideLoadingModal();
+        });
+    </script>
+    <script>
+        // Loop through each required field and append a red asterisk to its label
+        document.querySelectorAll('[required]').forEach(field => {
+            document.querySelector(`label[for="${field.id}"]`).innerHTML += '<span style="color: red;"> *</span>';
         });
     </script>
 
