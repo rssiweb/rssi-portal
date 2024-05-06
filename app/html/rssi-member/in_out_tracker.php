@@ -161,8 +161,7 @@ if ($resultcount) {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-KyZXEAg3QhqLMpG8r+K/Sc6sWYS1/Jp6jz0c2i+cbS5J+d2G4n3ddN7jW5tM2Elk" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-KyZXEAg3QhqLMpG8r+K/Sc6sWYS1/Jp6jz0c2i+cbS5J+d2G4n3ddN7jW5tM2Elk" crossorigin="anonymous"> -->
 
     <style>
         .blink-text {
@@ -186,6 +185,12 @@ if ($resultcount) {
             background-color: #198754 !important;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 </head>
 
 <!-- =========================
@@ -220,8 +225,6 @@ if ($resultcount) {
                         <div class="card-body">
                             <br>
                             <div class="alert alert-warning" id="status" role="alert">Connecting...</div>
-                            <script src="your-script.js"></script>
-                            <script src="your-script.js"></script>
                             <div class="row" style="display: flex; align-items: center;">
                                 <div class="col-md-8 mb-3">
                                     <p>To customize the view result, please select a filter value.</p>
@@ -335,30 +338,34 @@ if ($resultcount) {
                                             <th scope="col">Punch Out</th>
                                         </tr>
                                     </thead>
-                                    <?php
-                                    echo '<tbody>';
-                                    if ($resultArr != null) {
-                                        foreach ($resultArr as $array) {
-                                            echo '<tr id="' . $array['user_id'] . '">';
-                                            echo '<td>' . $array['user_id'] . '</td>';
-                                            echo '<td>' . $array['user_name'] . '</td>';
-                                            // echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '-' . $array['class'] : '') . '</td>';
-                                            echo '<td>' . $array['category'] . $array['engagement'] . '</td>';
-                                            echo '<td>' . $array['class'] . '</td>';
-                                            echo '<td>' . $array['status'] . '</td>';
-                                            echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
-                                            echo '<td>' . ($array['punch_out'] ? date('d/m/Y h:i:s a', strtotime($array['punch_out'])) : 'Not Available') . '</td>';
-                                            echo '</tr>';
+                                    <tbody>
+                                        <?php
+                                        if ($resultArr != null) {
+                                            foreach ($resultArr as $array) {
+                                                echo '<tr id="' . $array['user_id'] . '">';
+                                                echo '<td>' . $array['user_id'] . '</td>';
+                                                echo '<td>' . $array['user_name'] . '</td>';
+                                                // echo '<td>' . $array['category'] . $array['engagement'] . (isset($array['class']) ? '-' . $array['class'] : '') . '</td>';
+                                                echo '<td>' . $array['category'] . $array['engagement'] . '</td>';
+                                                echo '<td>' . $array['class'] . '</td>';
+                                                echo '<td>' . $array['status'] . '</td>';
+                                                echo '<td>' . ($array['punch_in'] ? date('d/m/Y h:i:s a', strtotime($array['punch_in'])) : 'Not Available') . '</td>';
+                                                echo '<td>' . ($array['punch_out'] ? date('d/m/Y h:i:s a', strtotime($array['punch_out'])) : 'Not Available') . '</td>';
+                                                echo '</tr>';
+                                            }
+                                        } else {
+                                            echo '<tr id="no-record"><td colspan="7">No records found.</td></tr>';
                                         }
-                                    } else {
-                                        echo '<tr id="no-record" ><td colspan="8">No records found.</td></tr>';
-                                    }
-
-                                    echo '<tr style="display:none" id="last-row"></tr>';
-                                    echo '</tbody>';
-                                    ?>
+                                        ?>
+                                        <!-- <tr style="display:none" id="last-row"></tr> -->
+                                    </tbody>
+                                    <tfoot>
+                                        <!-- Define last row with display:none -->
+                                        <tr id="last-row" style="display:none"></tr>
+                                    </tfoot>
                                 </table>
                             </div>
+
                         </div>
                     </div>
                 </div><!-- End Reports -->
@@ -374,6 +381,19 @@ if ($resultcount) {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    paging: false,
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
+
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 
     <script>
