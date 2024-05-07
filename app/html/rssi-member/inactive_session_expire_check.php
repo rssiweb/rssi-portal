@@ -35,7 +35,7 @@
       let timerTimeout;
       let lastInteractionTime = Date.now();
       let modalShown = false;
-      const sessionDuration = 1800; // Duration of the session in seconds
+      const sessionDuration = 3600; // Duration of the session in seconds
       const remainingTimeElement = document.getElementById('remainingTime');
 
       function startTimer() {
