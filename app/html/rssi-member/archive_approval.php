@@ -20,7 +20,7 @@ if ($role == 'Admin') {
     @$user_id = strtoupper($_GET['user_id']);
 
     if ($user_id > 0) {
-        $result = pg_query($con, "SELECT *
+        $result = pg_query($con, "SELECT archive.remarks aremarks,*
         FROM archive
         JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber WHERE uploaded_for='$user_id'");
     } else {
@@ -221,8 +221,8 @@ $resultArr = pg_fetch_all($result);
                                             <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <div style="width: 100%; text-align: right;">
-                                                <p id="status" class="badge" style="display: inline;"><span class="doc_id"></span></p>
+                                            <div style="width:100%; text-align:right">
+                                                <p id="status_details" class="badge" style="display: inline;"></p>
                                             </div>
 
                                             <form id="archiveform" action="#" method="POST">
@@ -242,8 +242,8 @@ $resultArr = pg_fetch_all($result);
                                                     <label for="field_status" class="form-label">Status</label>
                                                     <select name="field_status" id="field_status" class="form-select" required>
                                                         <option value="" disabled selected hidden>Field Status</option>
-                                                        <option value="disabled">Lock</option>
-                                                        <option value="null">Unlocked</option>
+                                                        <option value="disabled">disabled</option>
+                                                        <option value="null">null</option>
                                                     </select>
                                                 </div>
 
@@ -264,8 +264,7 @@ $resultArr = pg_fetch_all($result);
                                 </div>
                             </div>
                             <script>
-                                var data = <?php echo json_encode($resultArr) ?>
-
+                                var data = <?php echo json_encode($resultArr) ?>;
                                 // Get the modal
                                 var modal = document.getElementById("myModal");
                                 // Get the <span> element that closes the modal
@@ -275,51 +274,62 @@ $resultArr = pg_fetch_all($result);
                                 ];
 
                                 function showDetails(id) {
-                                    // console.log(modal)
-                                    // console.log(modal.getElementsByClassName("data"))
-                                    var mydata = undefined
+                                    var mydata = undefined;
                                     data.forEach(item => {
                                         if (item["doc_id"] == id) {
                                             mydata = item;
                                         }
-                                    })
+                                    });
 
-                                    var keys = Object.keys(mydata)
+                                    var keys = Object.keys(mydata);
                                     keys.forEach(key => {
-                                        var span = modal.getElementsByClassName(key)
+                                        var span = modal.getElementsByClassName(key);
                                         if (span.length > 0)
                                             span[0].innerHTML = mydata[key];
-                                    })
+                                    });
                                     modal.style.display = "block";
-
+                                    // Update status_details content with the doc_id value
+                                    var statusDetailsElement = document.getElementById("status_details");
+                                    if (statusDetailsElement) {
+                                        statusDetailsElement.textContent = mydata["doc_id"];
+                                    }
                                     //class add 
-                                    var status = document.getElementById("status")
+                                    var status = document.getElementById("status_details");
                                     if (mydata["verification_status"] === "Verified") {
-                                        status.classList.add("bg-success")
-                                        status.classList.remove("bg-danger")
+                                        status.classList.add("bg-success");
+                                        status.classList.remove("bg-danger");
                                     } else {
-                                        status.classList.remove("bg-success")
-                                        status.classList.add("bg-danger")
+                                        status.classList.remove("bg-success");
+                                        status.classList.add("bg-danger");
                                     }
                                     //class add end
 
-                                    var profile = document.getElementById("doc_idd")
-                                    profile.value = mydata["doc_id"]
+                                    var profile = document.getElementById("doc_idd");
+                                    profile.value = mydata["doc_id"];
+
                                     if (mydata["verification_status"] !== null) {
-                                        profile = document.getElementById("reviewer_status")
-                                        profile.value = mydata["verification_status"]
+                                        profile = document.getElementById("reviewer_status");
+                                        profile.value = mydata["verification_status"];
                                     }
-                                    if (mydata["remarks"] !== null) {
-                                        profile = document.getElementById("reviewer_remarks")
-                                        profile.value = mydata["remarks"]
+                                    if (mydata["field_status"] !== null) {
+                                        profile = document.getElementById("field_status");
+                                        profile.value = mydata["field_status"];
+                                    }
+
+                                    var textarea = document.getElementById("reviewer_remarks");
+                                    if (mydata["aremarks"] !== null) {
+                                        textarea.value = mydata["aremarks"];
+                                    } else {
+                                        textarea.value = ""; // or any default value you want to set when remarks is null
                                     }
 
                                     if (mydata["verification_status"] == 'Rejected') {
-                                        document.getElementById("redeemupdate").disabled = true;
+                                        document.getElementById("archiveupdate").disabled = true;
                                     } else {
-                                        document.getElementById("redeemupdate").disabled = false;
+                                        document.getElementById("archiveupdate").disabled = false;
                                     }
                                 }
+
                                 // When the user clicks the button, open the modal 
                                 // When the user clicks on <span> (x), close the modal
                                 closedetails.forEach(function(element) {
@@ -337,6 +347,7 @@ $resultArr = pg_fetch_all($result);
                                 //     }
                                 // }
                             </script>
+
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
                                 //For form submission - to update Remarks
