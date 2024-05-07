@@ -176,11 +176,16 @@ $resultArr = pg_fetch_all($result);
             /* Black w/ opacity */
         }
     </style>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -291,17 +296,17 @@ $resultArr = pg_fetch_all($result);
                             <?php
                             echo '
                             <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="table-id">
                             <thead>
                             <tr>
-                            <th scope="col" id="cw">Photo</th>
-                            <th scope="col" id="cw1">Volunteer Details</th>
-                            <th scope="col" id="cw2">Contact</th>
-                            <th scope="col">Designation</th>
-                            <th scope="col">Class URL</th>
-                            <th scope="col" id="cw2">Association Status</th>
-                            <th scope="col">Productivity</th>
-                            <th scope="col">Worklist</th>
+                            <th id="cw">Photo</th>
+                            <th id="cw1">Volunteer Details</th>
+                            <th>Contact</th>
+                            <th>Designation</th>
+                            <!--<th>Class URL</th>-->
+                            <th id="cw2">Association Status</th>
+                            <th>Productivity</th>
+                            <th>Worklist</th>
                             </tr>
                             </thead>' ?>
                             <?php if (sizeof($resultArr) > 0) { ?>
@@ -340,11 +345,11 @@ $resultArr = pg_fetch_all($result);
                                     <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>';
                                     ?>
 
-                                    <?php if ($id == "Active") { ?>
+                                    <!-- <?php if ($id == "Active") { ?>
                                         <?php echo '<td><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>'; ?>
                                     <?php } else { ?>
                                         <?php echo '<td></td>'; ?>
-                                    <?php } ?>
+                                    <?php } ?> -->
 
                                     <?php echo '<td style="white-space:unset">' . $array['filterstatus'] . '<br>';
 
@@ -594,7 +599,18 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    paging: false,
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
 </body>
 
 </html>

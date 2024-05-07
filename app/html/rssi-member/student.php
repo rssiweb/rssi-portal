@@ -168,7 +168,11 @@ $classlist = [
       display: inline-block;
     }
   </style>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
 
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 </head>
 
 <body>
@@ -375,7 +379,7 @@ $classlist = [
               ?>
 
               <div class="table-responsive">
-                <table class="table">
+                <table class="table" id="table-id">
                   <thead>
                     <tr>
                       <th scope="col" id="cw">Photo</th>
@@ -726,7 +730,18 @@ $classlist = [
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
-
+<script>
+    $(document).ready(function() {
+      // Check if resultArr is empty
+      <?php if (!empty($resultArr)) : ?>
+        // Initialize DataTables only if resultArr is not empty
+        $('#table-id').DataTable({
+          paging: false,
+          // other options...
+        });
+      <?php endif; ?>
+    });
+  </script>
 </body>
 
 </html>

@@ -427,13 +427,17 @@ $resultArr = pg_fetch_all($result);
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
-        $(document).ready(function() {
-            $('#table-id').DataTable({
-                paging: false,
-                // other options...
-            });
+    $(document).ready(function() {
+      // Check if resultArr is empty
+      <?php if (!empty($resultArr)) : ?>
+        // Initialize DataTables only if resultArr is not empty
+        $('#table-id').DataTable({
+          paging: false,
+          // other options...
         });
-    </script>
+      <?php endif; ?>
+    });
+  </script>
 
 
 </body>
