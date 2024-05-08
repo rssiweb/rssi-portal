@@ -99,7 +99,7 @@ validation();
                             <div class="container mt-5">
                                 <div class="row">
                                     <div class="col-md-4">
-                                        <a href="scan.php" target="_blank" class="card-link">
+                                        <a href="scan.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
                                                     <i class="bi bi-qr-code-scan icon"></i>
@@ -109,7 +109,7 @@ validation();
                                         </a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a href="in_out_tracker.php" target="_blank" class="card-link">
+                                        <a href="in_out_tracker.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
                                                     <i class="bi bi-speedometer2 icon"></i>
@@ -119,7 +119,7 @@ validation();
                                         </a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a href="monthly_attd_report.php" target="_blank" class="card-link">
+                                        <a href="monthly_attd_report.php" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
                                                     <i class="bi bi-calendar-check icon"></i>
