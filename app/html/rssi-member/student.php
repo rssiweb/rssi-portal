@@ -20,34 +20,101 @@ validation();
 
 
 if ($category == null && $class == null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-  left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE filterstatus='$id' AND module='$module' order by category asc, class asc, studentname asc");
+  $result = pg_query($con, "SELECT 
+        s.*, 
+        COALESCE(SUM(f.fees), 0) AS total_admission_fee,
+        CASE 
+            WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
+            ELSE null 
+        END AS admission_fee_status
+    FROM rssimyprofile_student AS s
+    LEFT JOIN fees AS f ON f.studentid = s.student_id AND f.ptype = 'Admission Fee'
+    WHERE s.filterstatus = '$id' AND s.module = '$module' 
+    GROUP BY s.student_id, s.studentname, s.class
+    ORDER BY s.category ASC, s.class ASC, s.studentname ASC");
 }
 
 if ($category != null && $class == null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE filterstatus='$id' AND module='$module' AND category='$category' order by category asc, class asc, studentname asc");
+  $result = pg_query($con, "SELECT rssimyprofile_student.*, COALESCE(fees.total_admission_fee, 0) AS total_admission_fee, fees.admission_fee_status
+    FROM rssimyprofile_student
+    LEFT JOIN (
+        SELECT f.studentid, 
+               COALESCE(SUM(f.fees), 0) AS total_admission_fee,
+               CASE 
+                   WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
+                   ELSE null 
+               END AS admission_fee_status
+        FROM fees AS f
+        WHERE f.ptype = 'Admission Fee'
+        GROUP BY f.studentid
+    ) AS fees ON fees.studentid = rssimyprofile_student.student_id
+    WHERE rssimyprofile_student.filterstatus = '$id' 
+        AND rssimyprofile_student.module = '$module' 
+        AND rssimyprofile_student.category = '$category' 
+    ORDER BY rssimyprofile_student.category ASC, rssimyprofile_student.class ASC, rssimyprofile_student.studentname ASC");
 }
 
 if ($category == null && $class != null) {
   @$classs = implode("','", $class);
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE filterstatus='$id' AND module='$module' AND class IN ('$classs') order by category asc, class asc, studentname asc");
+  $result = pg_query($con, "SELECT rssimyprofile_student.*, COALESCE(fees.total_admission_fee, 0) AS total_admission_fee, fees.admission_fee_status
+    FROM rssimyprofile_student
+    LEFT JOIN (
+        SELECT f.studentid, 
+               COALESCE(SUM(f.fees), 0) AS total_admission_fee,
+               CASE 
+                   WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
+                   ELSE null 
+               END AS admission_fee_status
+        FROM fees AS f
+        WHERE f.ptype = 'Admission Fee'
+        GROUP BY f.studentid
+    ) AS fees ON fees.studentid = rssimyprofile_student.student_id
+    WHERE rssimyprofile_student.filterstatus = '$id' 
+        AND rssimyprofile_student.module = '$module' 
+        AND rssimyprofile_student.class IN ('$classs') 
+    ORDER BY rssimyprofile_student.category ASC, rssimyprofile_student.class ASC, rssimyprofile_student.studentname ASC");
 }
+
 
 if ($category != null && $class != null) {
   @$classs = implode("','", $class);
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE filterstatus='$id' AND module='$module' AND class IN ('$classs') AND category='$category' order by category asc, class asc, studentname asc");
+  $result = pg_query($con, "SELECT rssimyprofile_student.*, COALESCE(fees.total_admission_fee, 0) AS total_admission_fee, fees.admission_fee_status
+    FROM rssimyprofile_student
+    LEFT JOIN (
+        SELECT f.studentid, 
+               COALESCE(SUM(f.fees), 0) AS total_admission_fee,
+               CASE 
+                   WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
+                   ELSE null 
+               END AS admission_fee_status
+        FROM fees AS f
+        WHERE f.ptype = 'Admission Fee'
+        GROUP BY f.studentid
+    ) AS fees ON fees.studentid = rssimyprofile_student.student_id
+    WHERE rssimyprofile_student.filterstatus = '$id' 
+        AND rssimyprofile_student.module = '$module' 
+        AND rssimyprofile_student.class IN ('$classs') 
+        AND rssimyprofile_student.category = '$category' 
+    ORDER BY rssimyprofile_student.category ASC, rssimyprofile_student.class ASC, rssimyprofile_student.studentname ASC");
 }
+
 
 if ($stid != null) {
-  $result = pg_query($con, "SELECT * FROM rssimyprofile_student 
-  left join (SELECT studentid, to_char(max(make_date(feeyear,month,1)), 'Mon-YY') as maxmonth FROM fees group by studentid) fees ON fees.studentid=rssimyprofile_student.student_id
-  WHERE student_id='$stid'");
+  $result = pg_query($con, "SELECT rssimyprofile_student.*, COALESCE(fees.total_admission_fee, 0) AS total_admission_fee, fees.admission_fee_status
+    FROM rssimyprofile_student
+    LEFT JOIN (
+        SELECT f.studentid, 
+               COALESCE(SUM(f.fees), 0) AS total_admission_fee,
+               CASE 
+                   WHEN COUNT(f.studentid) > 0 THEN 'Paid' 
+                   ELSE null 
+               END AS admission_fee_status
+        FROM fees AS f
+        WHERE f.ptype = 'Admission Fee'
+        GROUP BY f.studentid
+    ) AS fees ON fees.studentid = rssimyprofile_student.student_id
+    WHERE rssimyprofile_student.student_id = '$stid'");
 }
-
 
 if (!$result) {
   echo "An error occurred.\n";
@@ -168,11 +235,11 @@ $classlist = [
       display: inline-block;
     }
   </style>
-    <!-- Add DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+  <!-- Add DataTables CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
 
-    <!-- Add DataTables JS -->
-    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
+  <!-- Add DataTables JS -->
+  <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 </head>
 
 <body>
@@ -382,29 +449,31 @@ $classlist = [
                 <table class="table" id="table-id">
                   <thead>
                     <tr>
-                      <th scope="col" id="cw">Photo</th>
-                      <th scope="col">Student ID</th>
-                      <th scope="col">Student Name</th>
-                      <th scope="col">Gender</th>
-                      <th scope="col">Age</th>
-                      <th scope="col">DOA</th>
-                      <th scope="col">DOT</th>
-                      <th scope="col">Aadhar</th>
-                      <th scope="col">Class</th>
-                      <th scope="col">School</th>
-                      <th scope="col">Contact</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Pay type</th>
-                      <th scope="col">Access</th>
-                      <th scope="col">Misc (Pay & Others)</th>
-                      <th scope="col">Due</th>
-                      <th scope="col"></th>
+                      <th id="cw">Photo</th>
+                      <th>Student ID</th>
+                      <th>Student Name</th>
+                      <th>Gender</th>
+                      <th>Age</th>
+                      <th>DOA</th>
+                      <th>DOT</th>
+                      <th>Aadhar</th>
+                      <th>Class</th>
+                      <th>School</th>
+                      <th>Contact</th>
+                      <th>Status</th>
+                      <th>Pay type</th>
+                      <!-- <th>Access</th> -->
+                      <th>Admission fee</th>
+                      <th>Month paid</th>
+                      <!-- <th >Misc (Pay & Others)</th> -->
+                      <th>Due</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     <?php if (sizeof($resultArr) > 0) :
                       foreach ($resultArr as $array) :
-                        $paidBadge = formatPaidBadge($array['maxmonth'], $role, $array['student_id']);
+                        // $paidBadge = formatPaidBadge($array['maxmonth'], $role, $array['student_id']);
                         $contact = formatContact($role, $array['contact']);
                     ?>
                         <tr>
@@ -423,8 +492,10 @@ $classlist = [
                           </td>
                           <td style="white-space: unset"><?php echo $array['filterstatus']; ?></td>
                           <td style="white-space: unset"><?php echo @substr($array['payment_type'], 0, 3); ?></td>
-                          <td style="white-space: unset"><?php echo (($array['access_category'] == 'Premium') ? 'Prem' : (($array['access_category'] == 'Regular') ? 'Reg' : '')); ?></td>
-                          <td style="white-space: unset;"><?php echo $paidBadge . '&nbsp;<i class="bi bi-bag" style="font-size: 17px ;color:#777777" title="Distribution History"></i>'; ?></td>
+                          <!-- <td style="white-space: unset"><?php echo (($array['access_category'] == 'Premium') ? 'Prem' : (($array['access_category'] == 'Regular') ? 'Reg' : '')); ?></td> -->
+                          <!-- <td style="white-space: unset;"><?php echo $paidBadge . '&nbsp;<i class="bi bi-bag" style="font-size: 17px ;color:#777777" title="Distribution History"></i>'; ?></td> -->
+                          <td style="white-space: unset;"><?php echo ($array['admission_fee_status'] == "Paid") ? $array['admission_fee_status'] . '-' . $array['total_admission_fee'] : $array['admission_fee_status']; ?></td>
+                          <td style="white-space: unset;"></td>
                           <td style="white-space: unset;"></td>
                           <td style="white-space: unset"><a href="admission_admin.php?student_id=<?php echo $array['student_id']; ?> " target="_blank">Edit Profile</a>&nbsp;|&nbsp;<a href="javascript:void(0)" onclick="showDetails('<?php echo $array['student_id']; ?>')">misc.</a></td>
                         </tr>
@@ -730,7 +801,7 @@ $classlist = [
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
-<script>
+  <script>
     $(document).ready(function() {
       // Check if resultArr is empty
       <?php if (!empty($resultArr)) : ?>
