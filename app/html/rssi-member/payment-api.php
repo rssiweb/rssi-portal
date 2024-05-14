@@ -1064,3 +1064,98 @@ if ($_POST['form-type'] == "contact_Form") {
     ), $email, true);
   }
 }
+
+if (@$_POST['form-type'] == "signup") {
+  $applicant_name = $_POST['applicant-name'];
+  $date_of_birth = $_POST['date-of-birth'];
+  $gender = $_POST['gender'];
+  $telephone = $_POST['telephone'];
+  $email = $_POST['email'];
+  $branch = $_POST['branch'];
+  $association = $_POST['association'];
+  $job_select = $_POST['job-select'];
+  $purpose = $_POST['purpose'];
+  $interests = $_POST['interests'];
+  $post_select = $_POST['post-select'];
+  $medium = $_POST['medium'];
+  $membership_purpose = $_POST['membershipPurpose'];
+  $subject1 = $_POST['subject1'];
+  $subject2 = $_POST['subject2'];
+  $subject3 = $_POST['subject3'];
+  $heard_about = $_POST['heard_about'];
+  $consent = !empty($_POST['consent']) ? 1 : 0;
+  $application_number = uniqid();
+  $timestamp = date('Y-m-d H:i:s');
+  $uploadedFile_payment = $_FILES['payment-photo'];
+  $uploadedFile_photo = $_FILES['applicant-photo'];
+  $uploadedFile_resume = $_FILES['resume-upload'];
+  $duration = $_POST['duration'] ?? null;
+  $availability = !empty($_POST['availability']) ? implode(",", $_POST['availability']) : null;
+
+  if (empty($_FILES['payment-photo']['name'])) {
+    $doclink_payment_photo = null;
+  } else {
+    $filename_payment_photo = "payment_" . "$application_number" . "_" . time();
+    $parent_payment_photo = '1dEIPRCM8PQZkCg1rezT6Eggqm_H-a_S4kWNKvfcPCuYMYJp6r8EoD0p_NHcijrqPks7C0KNq';
+    $doclink_payment_photo = uploadeToDrive($uploadedFile_payment, $parent_payment_photo, $filename_payment_photo);
+  }
+
+  if (empty($_FILES['applicant-photo']['name'])) {
+    $doclink_applicant_photo = null;
+  } else {
+    $filename_applicant_photo = "photo_" . "$application_number" . "_" . time();
+    $parent_applicant_photo = '1CgXW0M1ClTLRFrJjOCh490GVAq0IVAlM5OmAcfTtXVWxmnR9cx_I_Io7uD_iYE7-5rWDND82';
+    $doclink_applicant_photo = uploadeToDrive($uploadedFile_photo, $parent_applicant_photo, $filename_applicant_photo);
+  }
+
+  if (empty($_FILES['resume-upload']['name'])) {
+    $doclink_resume_photo = null;
+  } else {
+    $filename_resume_photo = "resume_" . "$application_number" . "_" . time();
+    $parent_resume_photo = '1YyJLwbXQqNJeESSfPINjTW2OVFOh5IGD53Aaf1ZNqsnDeWAFdh6ECr3TnbNXM95yWdS5si-z';
+    $doclink_resume_photo = uploadeToDrive($uploadedFile_resume, $parent_resume_photo, $filename_resume_photo);
+  }
+
+
+  // Build the SQL query
+  $columns = "applicant_name, date_of_birth, gender, telephone, email, branch, association, job_select, purpose, interests, post_select, medium, membership_purpose, payment_photo, applicant_photo, resume_upload, heard_about, consent, timestamp, application_number, subject1, subject2, subject3";
+  $values = "'$applicant_name', '$date_of_birth', '$gender', '$telephone', '$email', '$branch', '$association', '$job_select', '$purpose', '$interests', '$post_select', '$medium', '$membership_purpose', '$doclink_payment_photo', '$doclink_applicant_photo','$doclink_resume_photo','$heard_about', '$consent','$timestamp','$application_number','$subject1','$subject2','$subject3'";
+
+  // Conditionally add duration to columns and values
+  if ($duration != null) {
+    $columns .= ", duration";
+    $values .= ", $duration";
+  }
+  if ($availability != null) {
+    $columns .= ", availability";
+    $values .= ", '$availability'";
+  }
+
+
+  // Build the full query
+  $signup = "INSERT INTO signup ($columns) VALUES ($values)";
+
+  // Execute the query
+  $result = pg_query($con, $signup);
+  $cmdtuples = pg_affected_rows($result);
+
+  // Check if the query was successful
+  if ($result) {
+    if ($cmdtuples == 1) {
+      echo json_encode(array("error" => false, "application_number" => $application_number));
+      if ($email != "") {
+        // Adjust the parameters for your sendEmail function accordingly
+        sendEmail("signup_success", array(
+          "applicant_name" => $applicant_name,
+          "branch" => $branch,
+          "association" => $association,
+          "application_number" => $application_number,
+          "timestamp" => date("d/m/Y g:i a", strtotime($timestamp))
+        ), $email);
+      }
+    }
+  } else {
+    // Query failed
+    echo json_encode(array("error" => true, "errorMessage" => "Error occurred during form submission."));
+  }
+}
