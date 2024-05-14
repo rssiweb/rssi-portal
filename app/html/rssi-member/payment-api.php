@@ -1077,7 +1077,6 @@ if (@$_POST['form-type'] == "signup") {
   $purpose = $_POST['purpose'];
   $interests = $_POST['interests'];
   $post_select = $_POST['post-select'];
-  $medium = $_POST['medium'];
   $membership_purpose = $_POST['membershipPurpose'];
   $subject1 = $_POST['subject1'];
   $subject2 = $_POST['subject2'];
@@ -1091,6 +1090,21 @@ if (@$_POST['form-type'] == "signup") {
   $uploadedFile_resume = $_FILES['resume-upload'];
   $duration = $_POST['duration'] ?? null;
   $availability = !empty($_POST['availability']) ? implode(",", $_POST['availability']) : null;
+  $medium = !empty($_POST['medium']) ? implode(",",  $_POST['medium']) : null;
+  function generateRandomPassword()
+  {
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+    $password = '';
+    $length = strlen($chars);
+
+    for ($i = 0; $i < 6; $i++) {
+      $password .= $chars[rand(0, $length - 1)];
+    }
+
+    return $password;
+  }
+
+  $randomPassword = generateRandomPassword();
 
   if (empty($_FILES['payment-photo']['name'])) {
     $doclink_payment_photo = null;
@@ -1118,8 +1132,8 @@ if (@$_POST['form-type'] == "signup") {
 
 
   // Build the SQL query
-  $columns = "applicant_name, date_of_birth, gender, telephone, email, branch, association, job_select, purpose, interests, post_select, medium, membership_purpose, payment_photo, applicant_photo, resume_upload, heard_about, consent, timestamp, application_number, subject1, subject2, subject3";
-  $values = "'$applicant_name', '$date_of_birth', '$gender', '$telephone', '$email', '$branch', '$association', '$job_select', '$purpose', '$interests', '$post_select', '$medium', '$membership_purpose', '$doclink_payment_photo', '$doclink_applicant_photo','$doclink_resume_photo','$heard_about', '$consent','$timestamp','$application_number','$subject1','$subject2','$subject3'";
+  $columns = "applicant_name, date_of_birth, gender, telephone, email, branch, association, job_select, purpose, interests, post_select, membership_purpose, payment_photo, applicant_photo, resume_upload, heard_about, consent, timestamp, application_number, subject1, subject2, subject3, random_password";
+  $values = "'$applicant_name', '$date_of_birth', '$gender', '$telephone', '$email', '$branch', '$association', '$job_select', '$purpose', '$interests', '$post_select', '$membership_purpose', '$doclink_payment_photo', '$doclink_applicant_photo','$doclink_resume_photo','$heard_about', '$consent','$timestamp','$application_number','$subject1','$subject2','$subject3','$randomPassword'";
 
   // Conditionally add duration to columns and values
   if ($duration != null) {
@@ -1129,6 +1143,10 @@ if (@$_POST['form-type'] == "signup") {
   if ($availability != null) {
     $columns .= ", availability";
     $values .= ", '$availability'";
+  }
+  if ($medium != null) {
+    $columns .= ", medium";
+    $values .= ", '$medium'";
   }
 
 
@@ -1150,6 +1168,8 @@ if (@$_POST['form-type'] == "signup") {
           "branch" => $branch,
           "association" => $association,
           "application_number" => $application_number,
+          "email" => $email,
+          "randomPassword" => $randomPassword,
           "timestamp" => date("d/m/Y g:i a", strtotime($timestamp))
         ), $email);
       }
