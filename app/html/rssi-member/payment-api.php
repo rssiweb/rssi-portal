@@ -1105,6 +1105,7 @@ if (@$_POST['form-type'] == "signup") {
   }
 
   $randomPassword = generateRandomPassword();
+  $newpass_hash = password_hash($randomPassword, PASSWORD_DEFAULT);
 
   if (empty($_FILES['payment-photo']['name'])) {
     $doclink_payment_photo = null;
@@ -1132,8 +1133,8 @@ if (@$_POST['form-type'] == "signup") {
 
 
   // Build the SQL query
-  $columns = "applicant_name, date_of_birth, gender, telephone, email, branch, association, job_select, purpose, interests, post_select, membership_purpose, payment_photo, applicant_photo, resume_upload, heard_about, consent, timestamp, application_number, subject1, subject2, subject3, random_password";
-  $values = "'$applicant_name', '$date_of_birth', '$gender', '$telephone', '$email', '$branch', '$association', '$job_select', '$purpose', '$interests', '$post_select', '$membership_purpose', '$doclink_payment_photo', '$doclink_applicant_photo','$doclink_resume_photo','$heard_about', '$consent','$timestamp','$application_number','$subject1','$subject2','$subject3','$randomPassword'";
+  $columns = "applicant_name, date_of_birth, gender, telephone, email, branch, association, job_select, purpose, interests, post_select, membership_purpose, payment_photo, applicant_photo, resume_upload, heard_about, consent, timestamp, application_number, subject1, subject2, subject3, password,default_pass_updated_on";
+  $values = "'$applicant_name', '$date_of_birth', '$gender', '$telephone', '$email', '$branch', '$association', '$job_select', '$purpose', '$interests', '$post_select', '$membership_purpose', '$doclink_payment_photo', '$doclink_applicant_photo','$doclink_resume_photo','$heard_about', '$consent','$timestamp','$application_number','$subject1','$subject2','$subject3','$newpass_hash','$timestamp'";
 
   // Conditionally add duration to columns and values
   if ($duration != null) {
