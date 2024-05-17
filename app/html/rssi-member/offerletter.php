@@ -255,6 +255,11 @@ if (!$result) {
                                         <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
                                             The work schedule comprises 3 days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
                                         <?php } ?>
+                                        <?php if (str_contains($array['position'], "Intern") && $array['filename'] == "upes") { ?>
+                                            For the two-month internship program,
+                                            you will be assigned to one month in the morning shift and one month in the afternoon shift,
+                                            based on business requirements.
+                                        <?php } ?>
                                         <br>The regular working hours may be subject to an extension of up to a maximum of 30 minutes, contingent upon real-time demands pertaining to non-academic activities and similar operational necessities. You should be flexible in terms of working hours.
                                     </li>
                                     <li>

@@ -100,22 +100,22 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link collapsed" id="homeLink" href="home.php">
+        <a class="nav-link collapsed" id="applicationForm" href="application_form.php">
           <span>Application Form</span>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link collapsed" id="homeLink" href="home.php">
+        <a class="nav-link collapsed" id="indentityVerification" href="identity_verification.php">
           <span>Identity Verification</span>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link collapsed" id="homeLink" href="home.php">
+        <a class="nav-link collapsed" id="documentVerification" href="document_verification.php">
           <span>Document Verification</span>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link collapsed" id="homeLink" href="home.php">
+        <a class="nav-link collapsed" id="OfficialLetter" href="official_letter.php">
           <span>Official Letter</span>
         </a>
       </li>

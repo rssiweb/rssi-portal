@@ -137,9 +137,6 @@ validation();
                   <div class="step-label">Interview Scheduling</div>
                 </div>
                 <div class="milestone">
-                  <div class="step-label">Initiate Interview</div>
-                </div>
-                <div class="milestone">
                   <div class="step-label">Document Verification</div>
                 </div>
                 <div class="milestone">
