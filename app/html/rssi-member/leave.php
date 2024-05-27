@@ -243,7 +243,7 @@ $resultArr = pg_fetch_all($result);
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -601,14 +601,34 @@ $resultArr = pg_fetch_all($result);
                                         <?php } else { ?><?php
                                                             echo '<td>' . $array['leaveid'] . '</td>' ?>
                                     <?php } ?>
-                                <?php
+                                    <?php
                                     echo '
                                 <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
                                 <td>' . @date("d/m/Y", strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])) . '</td>
                                 <td>' . $array['days'] . '</td>
                                 <td>' . $array['typeofleave'] . '<br>
-                                ' . $array['creason'] . '<br>
-                                ' . $array['applicantcomment'] . '</td>
+                                ' . $array['creason'] . '<br>' ?>
+
+                                    <?php
+
+                                    // Ensure the comment is a string and handle null values
+                                    $applicantComment = isset($array['applicantcomment']) ? $array['applicantcomment'] : '';
+
+                                    // Shorten the applicant comment
+                                    $shortComment = strlen($applicantComment) > 30 ? substr($applicantComment, 0, 30) . "..." : $applicantComment;
+
+                                    // Display the shortened comment with "more" link
+                                    echo '<span class="short-comment">' . htmlspecialchars($shortComment) . '</span>';
+
+                                    // Display the full comment (hidden by default)
+                                    echo '<span class="full-comment" style="display: none;">' . htmlspecialchars($applicantComment) . '</span>';
+
+                                    // Display the "more" link only if the comment is shortened
+                                    if (strlen($applicantComment) > 30) {
+                                        echo ' <a href="#" class="more-link">more</a>';
+                                    }
+                                    ?>
+                                <?php echo '</td>
                                 <td>' . $array['status'] . '</td>
                                 <td>' . $array['comment'] . '<br>' . $array['reviewer_id'] . '<br>' . $array['reviewer_name'] . '</td>
                             </tr>';
@@ -875,7 +895,28 @@ $resultArr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Toggle full comment visibility on "more" link click
+            $('.more-link').click(function(e) {
+                e.preventDefault();
+                var shortComment = $(this).siblings('.short-comment');
+                var fullComment = $(this).siblings('.full-comment');
+                if (fullComment.is(':visible')) {
+                    // If full comment is visible, toggle to show short comment
+                    shortComment.show();
+                    fullComment.hide();
+                    $(this).text('more');
+                } else {
+                    // If short comment is visible, toggle to show full comment
+                    shortComment.hide();
+                    fullComment.show();
+                    $(this).text('less');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
