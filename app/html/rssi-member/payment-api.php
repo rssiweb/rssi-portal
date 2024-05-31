@@ -631,7 +631,24 @@ if ($formtype === "attendance") {
   $user_id = @$_POST['userId'];
   $punch_time = date('Y-m-d H:i:s');
   $date = date('Y-m-d');
-  $ip_address = $_SERVER['REMOTE_ADDR'] ?? $_SERVER['REMOTE_ADDR']; // Fallback to REMOTE_ADDR if REMOTE_ADDR is not set
+  function getUserIpAddr()
+  {
+    if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
+      $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+      // HTTP_X_FORWARDED_FOR can contain a comma-separated list of IPs. The first one is the client's real IP.
+      $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+      $ip = trim($ipList[0]);
+      if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+        $ip = $_SERVER['REMOTE_ADDR'];
+      }
+    } else {
+      $ip = $_SERVER['REMOTE_ADDR'];
+    }
+    return $ip;
+  }
+
+  $ip_address = getUserIpAddr();
   $recorded_by = $_SESSION['aid'];
 
   // Assuming the GPS location is sent from the frontend in the following format
