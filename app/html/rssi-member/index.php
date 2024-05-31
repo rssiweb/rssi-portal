@@ -9,31 +9,6 @@ define('SECRET_KEY', '6LfJRc0aAAAAAFuZLLd3_7KFmxQ7KPCZmLIiYLDH');
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = false;
 
-function getUserIpAddr() {
-    // Print all relevant values for debugging
-    echo 'HTTP_CLIENT_IP: ' . (isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : 'Not set') . '<br>';
-    echo 'HTTP_X_FORWARDED_FOR: ' . (isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : 'Not set') . '<br>';
-    echo 'REMOTE_ADDR: ' . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'Not set') . '<br>';
-    
-    if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
-        $ip = $_SERVER['HTTP_CLIENT_IP'];
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        // HTTP_X_FORWARDED_FOR can contain a comma-separated list of IPs. The first one is the client's real IP.
-        $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-        $ip = trim($ipList[0]);
-        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-            $ip = $_SERVER['REMOTE_ADDR'];
-        }
-    } else {
-        $ip = $_SERVER['REMOTE_ADDR'];
-    }
-    return $ip;
-}
-
-$user_ip = getUserIpAddr();
-echo 'User IP: ' . $user_ip;
-
-
 function afterlogin($con, $date)
 {
 
@@ -48,8 +23,27 @@ function afterlogin($con, $date)
 
     passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
 
+    function getUserIpAddr()
+    {
+        if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            // HTTP_X_FORWARDED_FOR can contain a comma-separated list of IPs. The first one is the client's real IP.
+            $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+            $ip = trim($ipList[0]);
+            if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+                $ip = $_SERVER['REMOTE_ADDR'];
+            }
+        } else {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+        return $ip;
+    }
+
+    $user_ip = getUserIpAddr();
+
     // instead of REMOTE_ADDR use REMOTE_ADDR to get real client IP
-    $result = pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$associatenumber','$_SERVER[REMOTE_ADDR]','$date')");
+    $result = pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$associatenumber','$user_ip','$date')");
 
     if (isset($_SESSION["login_redirect"])) {
         $params = "";
