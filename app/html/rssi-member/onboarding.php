@@ -55,7 +55,24 @@ if (@$_POST['form-type'] == "onboarding") {
         $reporting_date_time = $_POST['reporting-date-time'];
         $disclaimer = $_POST['onboarding_complete'];
         $now = date('Y-m-d H:i:s');
-        $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user
+        function getUserIpAddr()
+        {
+            if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
+                $ip = $_SERVER['HTTP_CLIENT_IP'];
+            } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                // HTTP_X_FORWARDED_FOR can contain a comma-separated list of IPs. The first one is the client's real IP.
+                $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+                $ip = trim($ipList[0]);
+                if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                }
+            } else {
+                $ip = $_SERVER['REMOTE_ADDR'];
+            }
+            return $ip;
+        }
+
+        $ip_address = getUserIpAddr();
         $onboarded = "UPDATE onboarding SET onboarding_photo='$onboarding_photo', reporting_date_time='$reporting_date_time', onboarding_otp_associate='$otp_associate', onboarding_otp_center_incharge='$otp_centreincharge', onboarding_submitted_by='$associatenumber', onboarding_submitted_on='$now', onboarding_flag='yes', disclaimer='$disclaimer', ip_address='$ip_address' where onboarding_associate_id='$otp_initiatedfor_main'";
         $result = pg_query($con, $onboarded);
         $cmdtuples = pg_affected_rows($result);
@@ -104,15 +121,18 @@ if (@$cmdtuples == 1) {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
