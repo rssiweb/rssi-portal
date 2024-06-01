@@ -107,6 +107,21 @@
               <span>Examination</span>
             </a>
           </li>
+          <li>
+            <a id="createExam" href="exam_create.php">
+              <span>Create Exam</span>
+            </a>
+          </li>
+          <li>
+            <a id="examAllotment" href="exam_allotment.php">
+              <span>Exam Allotment</span>
+            </a>
+          </li>
+          <li>
+            <a id="uploadMarks" href="exam_marks_upload.php">
+              <span>Upload Marks</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -359,6 +374,21 @@
         id: 'acadamis',
         linkId: 'examLink',
         url: 'exam.php'
+      },
+      {
+        id: 'acadamis',
+        linkId: 'createExam',
+        url: 'exam_create.php'
+      },
+      {
+        id: 'acadamis',
+        linkId: 'examAllotment',
+        url: 'exam_allotment.php'
+      },
+      {
+        id: 'acadamis',
+        linkId: 'uploadMarks',
+        url: 'exam_marks_upload.php'
       },
       {
         id: 'myservices',
