@@ -10,87 +10,21 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-// Fetching the data and populating the $teachers array
-$query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active'";
-$result = pg_query($con, $query);
-
-if (!$result) {
-    die("Error in SQL query: " . pg_last_error());
-}
-
-$teachers = array();
-while ($row = pg_fetch_assoc($result)) {
-    $teachers[] = $row;
-}
-
-// Free resultset
-pg_free_result($result);
-
 $results = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Check if exam type, subject are selected, and if either class or category is selected
-    if (isset($_GET['exam_type']) && !empty($_GET['exam_type']) && isset($_GET['subject']) && !empty($_GET['subject']) && (isset($_GET['class']) || isset($_GET['category']))) {
+    // Check if exam_id is provided
+    if (isset($_GET['exam_id']) && !empty($_GET['exam_id'])) {
         // Initialize query with base SELECT statement
-        $query = "SELECT e.exam_id, e.exam_type, e.academic_year, e.subject, e.full_marks_written, e.full_marks_viva, emd.student_id, emd.viva_marks, emd.written_marks, s.studentname as studentname, s.category as category, s.class as class
+        $query = "SELECT e.exam_id, e.exam_type, e.exam_mode,e.academic_year, e.subject, e.full_marks_written, e.full_marks_viva, emd.id, emd.student_id, emd.viva_marks, emd.written_marks, s.studentname as studentname, s.category as category, s.class as class
                   FROM exams e
                   JOIN exam_marks_data emd ON e.exam_id = emd.exam_id
-                  JOIN rssimyprofile_student s ON emd.student_id = s.student_id";
+                  JOIN rssimyprofile_student s ON emd.student_id = s.student_id
+                  WHERE e.exam_id = $1
+                  ORDER BY emd.id"; // Change this column if needed
 
-        // Initialize parameters array
-        $params = [];
-
-        // Initialize conditions array
-        $conditions = [];
-
-        // Check if exam_id is available
-        if (isset($_GET['exam_id']) && !empty($_GET['exam_id'])) {
-            $exam_id = $_GET['exam_id'];
-            $conditions[] = "e.exam_id = $1";
-            $params[] = $exam_id;
-        }
-
-        // Dynamically add filters based on the other GET parameters
-        if (isset($_GET['exam_type']) && !empty($_GET['exam_type'])) {
-            $exam_type = $_GET['exam_type'];
-            $conditions[] = "e.exam_type = $" . (count($params) + 1);
-            $params[] = $exam_type;
-        }
-
-        if (isset($_GET['academic_year']) && !empty($_GET['academic_year'])) {
-            $academic_year = $_GET['academic_year'];
-            $conditions[] = "e.academic_year = $" . (count($params) + 1);
-            $params[] = $academic_year;
-        }
-
-        if (isset($_GET['subject']) && !empty($_GET['subject'])) {
-            $subject = $_GET['subject'];
-            $conditions[] = "e.subject = $" . (count($params) + 1);
-            $params[] = $subject;
-        }
-
-        // Check if class is selected
-        if (isset($_GET['class']) && !empty($_GET['class'])) {
-            $class = $_GET['class'];
-            // Add condition for class
-            $conditions[] = "s.class IN (" . implode(',', array_fill(0, count($class), '$' . (count($params) + 1))) . ")";
-            // Add parameters for class
-            $params = array_merge($params, $class);
-        }
-
-        // Check if category is selected
-        if (isset($_GET['category']) && !empty($_GET['category'])) {
-            $category = $_GET['category'];
-            // Add condition for category
-            $conditions[] = "s.category IN (" . implode(',', array_fill(0, count($category), '$' . (count($params) + 1))) . ")";
-            // Add parameters for category
-            $params = array_merge($params, $category);
-        }
-
-        // Add WHERE clause if conditions are available
-        if (!empty($conditions)) {
-            $query .= " WHERE " . implode(" AND ", $conditions);
-        }
+        // Initialize parameters array with exam_id
+        $params = [$_GET['exam_id']];
 
         // Execute the query
         $result = pg_query_params($con, $query, $params);
@@ -99,19 +33,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             die("Error in SQL query: " . pg_last_error());
         }
 
+        // Fetch and store results
+        $results = [];
         while ($row = pg_fetch_assoc($result)) {
             $results[] = $row;
         }
 
         pg_free_result($result);
-    } else {
-        // If any of the required parameters are missing, don't fetch data
-        echo "Please select exam type, subject, and at least one of class or category to fetch data.";
+    }
+}
+?>
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Arrays to hold SQL cases and parameters
+    $written_marks_cases = [];
+    $viva_marks_cases = [];
+    $written_params = [];
+    $viva_params = [];
+    $written_param_index = 1;
+    $viva_param_index = 1;
+
+    // Prepare the update cases for written marks
+    if (isset($_POST['written_marks']) && !empty($_POST['written_marks'])) {
+        foreach ($_POST['written_marks'] as $key => $written_mark) {
+            if (is_numeric($written_mark)) {
+                list($exam_id, $student_id) = explode('_', $key);
+                $written_marks_cases[] = "WHEN exam_id = $" . $written_param_index . " AND student_id = $" . ($written_param_index + 1) . " THEN $" . ($written_param_index + 2);
+                $written_params[] = $exam_id;
+                $written_params[] = $student_id;
+                $written_params[] = $written_mark;
+                $written_param_index += 3;
+            }
+        }
     }
 
-    pg_close($con);
-}
+    // Prepare the update cases for viva marks
+    if (isset($_POST['viva_marks']) && !empty($_POST['viva_marks'])) {
+        foreach ($_POST['viva_marks'] as $key => $viva_mark) {
+            if (is_numeric($viva_mark)) {
+                list($exam_id, $student_id) = explode('_', $key);
+                $viva_marks_cases[] = "WHEN exam_id = $" . $viva_param_index . " AND student_id = $" . ($viva_param_index + 1) . " THEN $" . ($viva_param_index + 2);
+                $viva_params[] = $exam_id;
+                $viva_params[] = $student_id;
+                $viva_params[] = $viva_mark;
+                $viva_param_index += 3;
+            }
+        }
+    }
 
+    // Build and execute the written marks update query
+    if (!empty($written_marks_cases)) {
+        $written_marks_query = "UPDATE exam_marks_data SET written_marks = CASE " . implode(' ', $written_marks_cases) . " ELSE written_marks END WHERE (exam_id, student_id) IN (";
+        for ($i = 0; $i < count($written_params); $i += 3) {
+            $written_marks_query .= "($" . ($i + 1) . ", $" . ($i + 2) . "),";
+        }
+        $written_marks_query = rtrim($written_marks_query, ',') . ")";
+
+        $result = pg_query_params($con, $written_marks_query, $written_params);
+        if (!$result) {
+            die("Error in SQL query (Written Marks): " . pg_last_error($con));
+        }
+    }
+
+    // Build and execute the viva marks update query
+    if (!empty($viva_marks_cases)) {
+        $viva_marks_query = "UPDATE exam_marks_data SET viva_marks = CASE " . implode(' ', $viva_marks_cases) . " ELSE viva_marks END WHERE (exam_id, student_id) IN (";
+        for ($i = 0; $i < count($viva_params); $i += 3) {
+            $viva_marks_query .= "($" . ($i + 1) . ", $" . ($i + 2) . "),";
+        }
+        $viva_marks_query = rtrim($viva_marks_query, ',') . ")";
+
+        $result = pg_query_params($con, $viva_marks_query, $viva_params);
+        if (!$result) {
+            die("Error in SQL query (Viva Marks): " . pg_last_error($con));
+        }
+    }
+
+    // Close the database connection
+    pg_close($con);
+
+    // Output JavaScript to show alert and redirect
+    echo "<script>
+        alert('Data has been successfully updated.');
+        window.location.href = 'exam_marks_upload.php?exam_id=" . urlencode($exam_id) . "';
+    </script>";
+    exit();
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -188,71 +195,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                             <label for="exam_id" class="form-label">Exam ID</label>
                                             <input type="text" class="form-control" id="exam_id" name="exam_id" value="<?php echo isset($_GET['exam_id']) ? htmlspecialchars($_GET['exam_id']) : ''; ?>">
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="class" class="form-label">Class</label>
-                                            <select class="form-select" id="class" name="class[]" multiple="multiple" required>
-                                                <option value="Nursery" <?php if (isset($_GET['class']) && in_array('Nursery', $_GET['class'])) echo 'selected'; ?>>Nursery</option>
-                                                <option value="LKG" <?php if (isset($_GET['class']) && in_array('LKG', $_GET['class'])) echo 'selected'; ?>>LKG</option>
-                                                <option value="1" <?php if (isset($_GET['class']) && in_array('1', $_GET['class'])) echo 'selected'; ?>>1</option>
-                                                <option value="2" <?php if (isset($_GET['class']) && in_array('2', $_GET['class'])) echo 'selected'; ?>>2</option>
-                                                <option value="3" <?php if (isset($_GET['class']) && in_array('3', $_GET['class'])) echo 'selected'; ?>>3</option>
-                                                <option value="4" <?php if (isset($_GET['class']) && in_array('4', $_GET['class'])) echo 'selected'; ?>>4</option>
-                                                <option value="5" <?php if (isset($_GET['class']) && in_array('5', $_GET['class'])) echo 'selected'; ?>>5</option>
-                                                <option value="6" <?php if (isset($_GET['class']) && in_array('6', $_GET['class'])) echo 'selected'; ?>>6</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="category" class="form-label">Category</label>
-                                            <select class="form-select" id="category" name="category[]" multiple="multiple">
-                                                <option value="LG1" <?php if (isset($_GET['category']) && in_array('LG1', $_GET['category'])) echo 'selected'; ?>>LG1</option>
-                                                <option value="LG2-A" <?php if (isset($_GET['category']) && in_array('LG2-A', $_GET['category'])) echo 'selected'; ?>>LG2-A</option>
-                                                <option value="LG2-B" <?php if (isset($_GET['category']) && in_array('LG2-B', $_GET['category'])) echo 'selected'; ?>>LG2-B</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-md-3">
-                                            <label for="exam_type" class="form-label">Exam Type</label>
-                                            <select class="form-select" id="exam_type" name="exam_type" required>
-                                                <option value="" disabled <?php echo !isset($_GET['exam_type']) ? 'selected' : ''; ?>>Select Exam Type</option>
-                                                <option value="First Term" <?php echo (isset($_GET['exam_type']) && $_GET['exam_type'] == 'First Term') ? 'selected' : ''; ?>>First Term</option>
-                                                <option value="Half Yearly" <?php echo (isset($_GET['exam_type']) && $_GET['exam_type'] == 'Half Yearly') ? 'selected' : ''; ?>>Half Yearly</option>
-                                                <option value="Annual" <?php echo (isset($_GET['exam_type']) && $_GET['exam_type'] == 'Annual') ? 'selected' : ''; ?>>Annual</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="academic_year" class="form-label">Academic Year</label>
-                                            <select class="form-select" id="academic_year" name="academic_year">
-                                                <!-- Populate academic years dynamically if needed -->
-                                                <option value="" disabled>Select Academic Year</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="subject" class="form-label">Subject</label>
-                                            <select class="form-select" id="subject" name="subject" required>
-                                                <option value="" disabled <?php echo !isset($_GET['subject']) ? 'selected' : ''; ?>>Select a subject</option>
-                                                <option value="Hindi" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Hindi') ? 'selected' : ''; ?>>Hindi</option>
-                                                <option value="English" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'English') ? 'selected' : ''; ?>>English</option>
-                                                <option value="Mathematics" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Mathematics') ? 'selected' : ''; ?>>Mathematics</option>
-                                                <option value="GK" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'GK') ? 'selected' : ''; ?>>GK</option>
-                                                <option value="Humara Parivesh" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Humara Parivesh') ? 'selected' : ''; ?>>Humara Parivesh</option>
-                                                <option value="Arts & Craft" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Arts & Craft') ? 'selected' : ''; ?>>Arts & Craft</option>
-                                                <option value="Sulekh+Imla" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Sulekh+Imla') ? 'selected' : ''; ?>>Sulekh+Imla</option>
-                                                <option value="Project" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Project') ? 'selected' : ''; ?>>Project</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="teacher_id" class="form-label">Teacher ID</label>
-                                            <select class="form-select" id="teacher_id" name="teacher_id">
-                                                <option value="" disabled selected hidden>Select Teacher's ID</option>
-                                                <?php foreach ($teachers as $teacher) { ?>
-                                                    <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id']) && $_GET['teacher_id'] == $teacher['associatenumber']) ? 'selected' : ''; ?>>
-                                                        <?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?>
-                                                    </option>
-                                                <?php } ?>
-                                                <option value="" disabled>---</option>
-                                                <option value="clear">Clear Selection</option>
-                                            </select>
-                                        </div>
                                         <div class="col-md-3 align-self-end">
                                             <button type="submit" name="search_by_id" class="btn btn-primary btn-sm">
                                                 <i class="bi bi-search"></i>&nbsp;Search
@@ -262,9 +204,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                 </form>
 
 
-                                <?php if (!empty($results)) : ?>
+                                <?php if (!empty($results)) :
+                                    $exam_mode = $results[0]['exam_mode']; // Assuming exam_type is the same for all rows
+                                ?>
                                     <h2 class="mt-4">Search Results</h2>
-                                    <form method="POST" action="save_marks.php">
+                                    <form method="POST" action="exam_marks_upload.php">
+                                        <input type="hidden" name="exam_id" value="<?php echo htmlspecialchars($_GET['exam_id']); ?>">
                                         <table class="table table-bordered">
                                             <thead>
                                                 <tr>
@@ -272,8 +217,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                     <th>Student Name</th>
                                                     <th>Category</th>
                                                     <th>Class</th>
-                                                    <th>Written Marks</th>
-                                                    <th>Viva Marks</th>
+                                                    <?php if ($exam_mode === '{Written}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
+                                                        <th>Written Marks</th>
+                                                    <?php endif; ?>
+                                                    <?php if ($exam_mode === '{Viva}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
+                                                        <th>Viva Marks</th>
+                                                    <?php endif; ?>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -283,17 +232,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                         <td><?php echo htmlspecialchars($row['studentname']); ?></td>
                                                         <td><?php echo htmlspecialchars($row['category']); ?></td>
                                                         <td><?php echo htmlspecialchars($row['class']); ?></td>
-                                                        <td><input type="number" name="written_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['written_marks']); ?>" class="form-control"></td>
-                                                        <td><input type="number" name="viva_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['viva_marks']); ?>" class="form-control"></td>
+                                                        <?php if ($exam_mode === '{Written}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
+                                                            <td>
+                                                                <input type="number" step="0.01" name="written_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['written_marks']); ?>" class="form-control">
+                                                            </td>
+                                                        <?php endif; ?>
+                                                        <?php if ($exam_mode === '{Viva}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
+                                                            <td>
+                                                                <input type="number" step="0.01" name="viva_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['viva_marks']); ?>" class="form-control">
+                                                            </td>
+                                                        <?php endif; ?>
                                                     </tr>
                                                 <?php endforeach; ?>
                                             </tbody>
                                         </table>
-                                        <button type="submit" id="save" class="btn btn-success">Save</button>
+                                        <!-- <button type="submit" id="save" class="btn btn-success">Save</button> -->
                                         <button type="submit" id="submit" class="btn btn-primary">Submit</button>
                                     </form>
-                                <?php elseif (empty($_GET['exam_type']) && empty($_GET['subject'])) : ?>
-                                    <p class="mt-4">Please select both exam type and subject to fetch data.</p>
+                                <?php elseif (empty($_GET['exam_id'])) : ?>
+                                    <p class="mt-4">Please provide an exam ID to fetch data.</p>
                                 <?php else : ?>
                                     <p class="mt-4">No records found for the selected filter criteria.</p>
                                 <?php endif; ?>
@@ -315,43 +272,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     <script src="../assets_new/js/main.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // PHP logic to determine the current year
-            <?php
-            if (date('m') == 1 || date('m') == 2 || date('m') == 3) {
-                $currentYear = date('Y') - 1;
-            } else {
-                $currentYear = date('Y');
-            }
-            ?>
-            var currentYear = <?php echo $currentYear; ?>;
-            var selectedYear = currentYear + '-' + (currentYear + 1);
-
-            // Function to get URL parameter
-            function getParameterByName(name) {
-                name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-                var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-                    results = regex.exec(location.search);
-                return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-            }
-
-            // Get the academic year from the URL if it exists
-            var academicYearFromUrl = getParameterByName('academic_year');
-            if (academicYearFromUrl) {
-                selectedYear = academicYearFromUrl;
-            }
-
-            // JavaScript to populate the academic years
-            for (var i = 0; i < 5; i++) {
-                var next = currentYear + 1;
-                var year = currentYear + '-' + next;
-                var option = new Option(year, year, false, year === selectedYear);
-                document.getElementById('academic_year').appendChild(option);
-                currentYear--;
-            }
-        });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
             const form = document.getElementById("filter_form"); // Assuming the form has id="exam"
             const fields = form.querySelectorAll("[required], input[type='number'][name^='full_marks']");
 
@@ -364,16 +284,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     asterisk.style.marginLeft = '5px';
                     label.appendChild(asterisk);
                 }
-            });
-
-            // Handle clear selection option
-            var selects = document.querySelectorAll('select');
-            selects.forEach(function(select) {
-                select.addEventListener('change', function() {
-                    if (this.value === 'clear') {
-                        this.selectedIndex = 0;
-                    }
-                });
             });
         });
     </script>
