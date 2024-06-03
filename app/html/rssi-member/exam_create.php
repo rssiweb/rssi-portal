@@ -261,32 +261,34 @@ pg_free_result($result);
                                     </div>
                                 </form>
                                 <h1 class="mb-4">Creating Exams for</h1>
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Student ID</th>
-                                            <th scope="col">Student Name</th>
-                                            <th scope="col">Category</th>
-                                            <th scope="col">Class</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php if (isset($resultArr) && !empty($resultArr)) : ?>
-                                            <?php foreach ($resultArr as $student) : ?>
-                                                <tr>
-                                                    <td><?php echo htmlspecialchars($student['student_id']); ?></td>
-                                                    <td><?php echo htmlspecialchars($student['studentname']); ?></td>
-                                                    <td><?php echo htmlspecialchars($student['category']); ?></td>
-                                                    <td><?php echo htmlspecialchars($student['class']); ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php else : ?>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
                                             <tr>
-                                                <td class="text-center" colspan="4">No active students found.</td>
+                                                <th scope="col">Student ID</th>
+                                                <th scope="col">Student Name</th>
+                                                <th scope="col">Category</th>
+                                                <th scope="col">Class</th>
                                             </tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (isset($resultArr) && !empty($resultArr)) : ?>
+                                                <?php foreach ($resultArr as $student) : ?>
+                                                    <tr>
+                                                        <td><?php echo htmlspecialchars($student['student_id']); ?></td>
+                                                        <td><?php echo htmlspecialchars($student['studentname']); ?></td>
+                                                        <td><?php echo htmlspecialchars($student['category']); ?></td>
+                                                        <td><?php echo htmlspecialchars($student['class']); ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            <?php else : ?>
+                                                <tr>
+                                                    <td class="text-center" colspan="4">No active students found.</td>
+                                                </tr>
+                                            <?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                                 <?php if (isset($resultArr) && !empty($resultArr)) : ?>
                                     <h1 class="mb-4">Exam Parameters</h1>
                                     <form action="exam_create.php" name="exam" id="exam" method="post">

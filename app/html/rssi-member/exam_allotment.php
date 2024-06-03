@@ -251,44 +251,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 
                                 <?php if (!empty($results)) : ?>
+                                    <?php $serialNumber = 1; // Initialize serial number 
+                                    ?>
                                     <h2 class="mt-4">Search Results</h2>
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Exam ID</th>
-                                                <th>Exam type</th>
-                                                <th>Academic year</th>
-                                                <th>Exam mode</th>
-                                                <th>Subject</th>
-                                                <th>Full Marks</th>
-                                                <th>Assigned to</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($results as $row) : ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
                                                 <tr>
-                                                    <td><?php echo htmlspecialchars($row['exam_id']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['exam_type']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['exam_mode']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['subject']); ?></td>
-                                                    <td>
-                                                        <?php
-                                                        if ($row['full_marks_written'] !== null) {
-                                                            echo 'W-' . htmlspecialchars($row['full_marks_written']);
-                                                        }
-                                                        if ($row['full_marks_viva'] !== null) {
-                                                            echo ' V-' . htmlspecialchars($row['full_marks_viva']);
-                                                        }
-                                                        ?>
-                                                    </td>
-
-                                                    <td><?php echo htmlspecialchars($row['teacher_id']); ?></td>
-
+                                                    <th>#</th>
+                                                    <th>Exam ID</th>
+                                                    <th>Exam type</th>
+                                                    <th>Academic year</th>
+                                                    <th>Exam mode</th>
+                                                    <th>Subject</th>
+                                                    <th>Full Marks</th>
+                                                    <th>Assigned to</th>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($results as $row) : ?>
+                                                    <tr>
+                                                        <td><?= $serialNumber++ ?></td> <!-- Display and increment serial number -->
+                                                        <td><a href="http://localhost:8082/rssi-member/exam_marks_upload.php?exam_id=<?php echo htmlspecialchars($row['exam_id']); ?>"><?php echo htmlspecialchars($row['exam_id']); ?></a></td>
+                                                        <td><?php echo htmlspecialchars($row['exam_type']); ?></td>
+                                                        <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
+                                                        <td><?php echo htmlspecialchars($row['exam_mode']); ?></td>
+                                                        <td><?php echo htmlspecialchars($row['subject']); ?></td>
+                                                        <td>
+                                                            <?php
+                                                            if ($row['full_marks_written'] !== null) {
+                                                                echo 'W-' . htmlspecialchars($row['full_marks_written']);
+                                                            }
+                                                            if ($row['full_marks_viva'] !== null) {
+                                                                echo ' V-' . htmlspecialchars($row['full_marks_viva']);
+                                                            }
+                                                            ?>
+                                                        </td>
+
+                                                        <td><?php echo htmlspecialchars($row['teacher_id']); ?></td>
+
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 <?php elseif (empty($_GET['exam_type']) && !isset($_GET['is_user'])) : ?>
                                     <p class="mt-4">Please select exam type to fetch data.</p>
                                 <?php else : ?>
