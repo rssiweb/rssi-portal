@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php
                                         $unique_exams = [];
                                         foreach ($results as $row) {
-                                            $key = $row['exam_id'] . $row['exam_type'] . $row['academic_year'] . $row['subject'] . $row['teacher_id'] . $row['fullname'];
+                                            $key = $row['exam_id'] . $row['exam_type'] . $row['academic_year'] . $row['subject'] . $row['teacher_id'] . $row['fullname'] . $row['full_marks_written'] . $row['full_marks_viva'] . $row['exam_mode'];
                                             $unique_exams[$key] = $row;
                                         }
                                         ?>
@@ -252,10 +252,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <div class="row exam-info">
                                                     <div class="col-md-6"><strong>Academic Year: </strong><?php echo $unique_exam['academic_year']; ?></div>
                                                     <div class="col-md-6"><strong>Subject:</strong> <?php echo $unique_exam['subject']; ?></div>
+
                                                 </div>
 
                                                 <div class="row exam-info">
                                                     <div class="col-md-6"><strong>Teacher ID:</strong> <?php echo $unique_exam['teacher_id']; ?>-<?php echo $unique_exam['fullname']; ?></div>
+                                                    <div class="col-md-6"><strong>Exam mode:</strong>
+                                                        <?php
+                                                        if ($row['full_marks_written'] !== null) {
+                                                            echo 'W-' . htmlspecialchars($row['full_marks_written']);
+                                                        }
+                                                        if ($row['full_marks_viva'] !== null) {
+                                                            echo ' V-' . htmlspecialchars($row['full_marks_viva']);
+                                                        }
+                                                        ?>
+                                                    </div>
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
@@ -293,12 +304,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                 <td><?php echo htmlspecialchars($row['class']); ?></td>
                                                                 <?php if ($exam_mode === '{Written}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
                                                                     <td>
-                                                                        <input type="number" step="0.01" name="written_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['written_marks']); ?>" class="form-control">
+                                                                        <input type="number" step="0.01" max="<?php echo $row['full_marks_written'] ?>" name="written_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['written_marks']); ?>" class="form-control">
                                                                     </td>
                                                                 <?php endif; ?>
                                                                 <?php if ($exam_mode === '{Viva}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
                                                                     <td>
-                                                                        <input type="number" step="0.01" name="viva_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['viva_marks']); ?>" class="form-control">
+                                                                        <input type="number" step="0.01" max="<?php echo $row['full_marks_viva'] ?>" name="viva_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['viva_marks']); ?>" class="form-control">
                                                                     </td>
                                                                 <?php endif; ?>
                                                             </tr>
