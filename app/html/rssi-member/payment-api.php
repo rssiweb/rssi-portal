@@ -57,6 +57,20 @@ if ($formtype == "transfer") {
   $result = pg_query($con, $pstatus);
 }
 
+if ($formtype == "eclose") {
+  @$refid = $_POST['eid'];
+  $estatus = "UPDATE exams SET  estatus = 'disabled' WHERE exam_id = '$refid'";
+  $result = pg_query($con, $estatus);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+    else
+      echo "failed";
+  } else
+    echo "bad request";
+}
+
 if ($formtype == "noticebodyedit") {
   @$noticeid = $_POST['noticeid'];
   @$noticebody = $_POST['noticebody'];

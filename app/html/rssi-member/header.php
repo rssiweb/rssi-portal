@@ -117,11 +117,11 @@
               <span>Exam Allotment</span>
             </a>
           </li>
-          <li>
+          <!-- <li>
             <a id="uploadMarks" href="exam_marks_upload.php">
               <span>Upload Marks</span>
             </a>
-          </li>
+          </li> -->
         </ul>
       </li><!-- End Components Nav -->
 
@@ -387,7 +387,7 @@
       },
       {
         id: 'acadamis',
-        linkId: 'uploadMarks',
+        linkId: 'examAllotment',
         url: 'exam_marks_upload.php'
       },
       {

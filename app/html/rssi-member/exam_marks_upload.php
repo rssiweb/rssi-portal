@@ -15,17 +15,26 @@ $results = [];
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Check if exam_id is provided
     if (isset($_GET['exam_id']) && !empty($_GET['exam_id'])) {
-        // Initialize query with base SELECT statement
-        $query = "SELECT e.exam_id, e.exam_type, e.exam_mode,e.academic_year, e.subject, e.teacher_id,e.full_marks_written, e.full_marks_viva, emd.id, emd.student_id, emd.viva_marks, emd.written_marks, s.studentname, s.category, s.class, m.fullname
+        // Initialize the base query
+        $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, e.teacher_id, e.full_marks_written, e.full_marks_viva, e.estatus,emd.id, emd.student_id, emd.viva_marks, emd.written_marks, s.studentname, s.category, s.class, m.fullname
                   FROM exams e
                   JOIN exam_marks_data emd ON e.exam_id = emd.exam_id
                   JOIN rssimyprofile_student s ON emd.student_id = s.student_id
                   JOIN rssimyaccount_members m ON e.teacher_id = m.associatenumber
-                  WHERE e.exam_id = $1
-                  ORDER BY emd.id"; // Change this column if needed
+                  WHERE e.exam_id = $1";
 
         // Initialize parameters array with exam_id
         $params = [$_GET['exam_id']];
+
+        // Check if the user role is not Admin
+        if ($role !== 'Admin') {
+            // Add condition to limit data to the teacher's records
+            $query .= " AND e.teacher_id = $2";
+            $params[] = $associatenumber;
+        }
+
+        // Add ORDER BY clause
+        $query .= " ORDER BY emd.id"; // Change this column if needed
 
         // Execute the query
         $result = pg_query_params($con, $query, $params);
@@ -37,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Fetch and store results
         $results = [];
         while ($row = pg_fetch_assoc($result)) {
+            // Get the value of etstaus from each row
+            $estatus = $row['estatus'];
             $results[] = $row;
         }
 
@@ -185,6 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item">Academic</li>
+                    <li class="breadcrumb-item"><a href="exam_allotment.php">Exam Allotment</a></li>
                     <li class="breadcrumb-item active">Upload Marks</li>
                 </ol>
             </nav>
@@ -225,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php
                                         $unique_exams = [];
                                         foreach ($results as $row) {
-                                            $key = $row['exam_id'] . $row['exam_type'] . $row['academic_year'] . $row['subject'] . $row['teacher_id']. $row['fullname'];
+                                            $key = $row['exam_id'] . $row['exam_type'] . $row['academic_year'] . $row['subject'] . $row['teacher_id'] . $row['fullname'];
                                             $unique_exams[$key] = $row;
                                         }
                                         ?>
@@ -252,54 +264,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <?php endif; ?>
                                     <div class="divider"></div>
                                     <form method="POST" action="exam_marks_upload.php">
-                                        <input type="hidden" name="exam_id" value="<?php echo htmlspecialchars($_GET['exam_id']); ?>">
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered">
-                                                <thead>
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>Student ID</th>
-                                                        <th>Student Name</th>
-                                                        <th>Category</th>
-                                                        <th>Class</th>
-                                                        <?php if ($exam_mode === '{Written}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
-                                                            <th>Written Marks</th>
-                                                        <?php endif; ?>
-                                                        <?php if ($exam_mode === '{Viva}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
-                                                            <th>Viva Marks</th>
-                                                        <?php endif; ?>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php foreach ($results as $row) : ?>
+                                        <fieldset <?php echo $estatus; ?>>
+                                            <input type="hidden" name="exam_id" value="<?php echo htmlspecialchars($_GET['exam_id']); ?>">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered">
+                                                    <thead>
                                                         <tr>
-                                                            <td><?= $serialNumber++ ?></td> <!-- Display and increment serial number -->
-                                                            <td><?php echo htmlspecialchars($row['student_id']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['studentname']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['category']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['class']); ?></td>
+                                                            <th>#</th>
+                                                            <th>Student ID</th>
+                                                            <th>Student Name</th>
+                                                            <th>Category</th>
+                                                            <th>Class</th>
                                                             <?php if ($exam_mode === '{Written}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
-                                                                <td>
-                                                                    <input type="number" step="0.01" name="written_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['written_marks']); ?>" class="form-control">
-                                                                </td>
+                                                                <th>Written Marks</th>
                                                             <?php endif; ?>
                                                             <?php if ($exam_mode === '{Viva}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
-                                                                <td>
-                                                                    <input type="number" step="0.01" name="viva_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['viva_marks']); ?>" class="form-control">
-                                                                </td>
+                                                                <th>Viva Marks</th>
                                                             <?php endif; ?>
                                                         </tr>
-                                                    <?php endforeach; ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <!-- <button type="submit" id="save" class="btn btn-success">Save</button> -->
-                                        <button type="submit" id="submit" class="btn btn-primary">Submit</button>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($results as $row) : ?>
+                                                            <tr>
+                                                                <td><?= $serialNumber++ ?></td> <!-- Display and increment serial number -->
+                                                                <td><?php echo htmlspecialchars($row['student_id']); ?></td>
+                                                                <td><?php echo htmlspecialchars($row['studentname']); ?></td>
+                                                                <td><?php echo htmlspecialchars($row['category']); ?></td>
+                                                                <td><?php echo htmlspecialchars($row['class']); ?></td>
+                                                                <?php if ($exam_mode === '{Written}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
+                                                                    <td>
+                                                                        <input type="number" step="0.01" name="written_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['written_marks']); ?>" class="form-control">
+                                                                    </td>
+                                                                <?php endif; ?>
+                                                                <?php if ($exam_mode === '{Viva}' || $exam_mode === '{Written,Viva}' || $exam_mode === '{Viva,Written}') : ?>
+                                                                    <td>
+                                                                        <input type="number" step="0.01" name="viva_marks[<?php echo htmlspecialchars($row['exam_id'] . '_' . $row['student_id']); ?>]" value="<?php echo htmlspecialchars($row['viva_marks']); ?>" class="form-control">
+                                                                    </td>
+                                                                <?php endif; ?>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <!-- <button type="submit" id="save" class="btn btn-success">Save</button> -->
+                                            <button type="submit" id="submit" class="btn btn-primary">Submit</button>
+                                        </fieldset>
                                     </form>
                                 <?php elseif (empty($_GET['exam_id'])) : ?>
                                     <p class="mt-4">Please provide an exam ID to fetch data.</p>
                                 <?php else : ?>
-                                    <p class="mt-4">No records found for the selected filter criteria.</p>
+                                    <p class="mt-4">No records match your selected filters or you are not authorized to access this exam ID. Please try adjusting your filters or contact your instructor or administrator.</p>
                                 <?php endif; ?>
                             </div>
                         </div>

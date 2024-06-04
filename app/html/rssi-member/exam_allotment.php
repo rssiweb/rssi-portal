@@ -33,7 +33,7 @@ $results = [];
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // Initialize query with base SELECT statement
-    $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, e.full_marks_written, e.full_marks_viva, e.teacher_id, a.fullname
+    $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, e.full_marks_written, e.full_marks_viva, e.teacher_id, e.estatus,a.fullname
               FROM exams e
               JOIN rssimyaccount_members a ON e.teacher_id = a.associatenumber";
 
@@ -266,6 +266,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                     <th>Subject</th>
                                                     <th>Full Marks</th>
                                                     <th>Assigned to</th>
+                                                    <?php if ($role == 'Admin') : ?>
+                                                        <th>Unlink</th>
+                                                    <?php endif; ?>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -290,6 +293,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                                                         <td><?php echo htmlspecialchars($row['teacher_id']); ?></td>
 
+                                                        <?php if ($role == 'Admin') : ?>
+                                                            <td>
+                                                                <?php if ($row['estatus'] != 'disabled') : ?>
+                                                                    <form name="close_<?= htmlspecialchars($row['exam_id']) ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                                        <input type="hidden" name="form-type" value="eclose">
+                                                                        <input type="hidden" name="eid" value="<?= htmlspecialchars($row['exam_id']) ?>">
+                                                                        <button type="submit" style="display: -webkit-inline-box; width: fit-content; word-wrap: break-word; outline: none; background: none; padding: 0px; border: none;" title="close">
+                                                                            <i class="bi bi-cloud-slash"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                <?php else : ?>
+                                                                    <?php echo htmlspecialchars($row['estatus']); ?>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                        <?php endif; ?>
                                                     </tr>
                                                 <?php endforeach; ?>
                                             </tbody>
@@ -298,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                 <?php elseif (empty($_GET['exam_type']) && !isset($_GET['is_user'])) : ?>
                                     <p class="mt-4">Please select exam type to fetch data.</p>
                                 <?php else : ?>
-                                    <p class="mt-4">No records found for the selected filter criteria.</p>
+                                    <p class="mt-4">No records match your selected filters or you are not authorized to access this exam ID. Please try adjusting your filters or contact your instructor or administrator.</p>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -418,7 +436,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             }
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const specificForms = document.querySelectorAll('form[name^="close_"]');
 
+            specificForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(form);
+                    fetch('payment-api.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.text())
+                        .then(data => {
+                            if (data.trim() === 'success') {
+                                alert("Exam has been closed.");
+                                // Optionally, you can remove or disable the form/button to indicate it's closed
+                                form.querySelector('button[type="submit"]').disabled = true;
+                            } else {
+                                alert("Failed to close the exam. Please try again.");
+                            }
+                        })
+                        .catch(error => console.error('Error!', error.message));
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
