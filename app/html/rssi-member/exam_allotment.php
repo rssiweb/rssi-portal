@@ -283,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                 <?php foreach ($results as $row) : ?>
                                                     <tr>
                                                         <td><?= $serialNumber++ ?></td> <!-- Display and increment serial number -->
-                                                        <td><a href="http://localhost:8082/rssi-member/exam_marks_upload.php?exam_id=<?php echo htmlspecialchars($row['exam_id']); ?>"><?php echo htmlspecialchars($row['exam_id']); ?></a></td>
+                                                        <td><a href="exam_marks_upload.php?exam_id=<?php echo htmlspecialchars($row['exam_id']); ?>"><?php echo htmlspecialchars($row['exam_id']); ?></a></td>
                                                         <td><?php echo htmlspecialchars($row['exam_type']); ?></td>
                                                         <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
                                                         <td><?php echo htmlspecialchars($row['subject']); ?></td>
