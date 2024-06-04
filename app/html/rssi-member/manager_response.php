@@ -975,7 +975,7 @@ if (!$result) {
                 echo "<p>Oops! It looks like you're trying to access a goal sheet that doesn't belong to you.</p>";
             } elseif ($array['appraisee_response_complete'] == "yes" && $array['manager_associatenumber'] == $associatenumber && $array['manager1_associatenumber'] != null && $array['manager1_evaluation_complete'] != 'yes') {
                 echo "<p>The goal sheet you are trying to access is currently under review by the immediate manager. Access will be granted once the immediate manager completes their assessment.</p>";
-            } elseif ($array['appraisee_response_complete'] != "yes" && $array['manager_associatenumber'] == $associatenumber && $role != 'Admin') {
+            } elseif ($array['appraisee_response_complete'] != "yes" && ($array['manager_associatenumber'] == $associatenumber || $array['manager1_associatenumber'] == $associatenumber) && $role != 'Admin') {
                 echo "<p>The goal sheet you are attempting to access is currently in the self-assessment phase. You will be able to access the goal sheet once the self-assessment has been completed.</p>";
             } elseif ($goalsheetid == null) {
                 echo "<p>Please enter the Goal sheet ID.</p>";
