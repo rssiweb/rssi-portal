@@ -33,9 +33,12 @@ $results = [];
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // Initialize query with base SELECT statement
-    $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, e.full_marks_written, e.full_marks_viva, e.teacher_id, e.estatus,a.fullname
+    $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, 
+                     e.full_marks_written, e.full_marks_viva, e.teacher_id, e.estatus, 
+                     STRING_AGG(DISTINCT emd.class::text, ',') AS classes, a.fullname
               FROM exams e
-              JOIN rssimyaccount_members a ON e.teacher_id = a.associatenumber";
+              JOIN rssimyaccount_members a ON e.teacher_id = a.associatenumber
+              JOIN exam_marks_data emd ON e.exam_id = emd.exam_id";
 
     // Initialize parameters array
     $params = [];
@@ -96,6 +99,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if (!empty($conditions)) {
             $query .= " WHERE " . implode(" AND ", $conditions);
         }
+
+        // Add GROUP BY clause
+        $query .= " GROUP BY e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, 
+                            e.full_marks_written, e.full_marks_viva, e.teacher_id, e.estatus, a.fullname";
 
         // Execute the query
         $result = pg_query_params($con, $query, $params);
@@ -262,8 +269,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                     <th>Exam ID</th>
                                                     <th>Exam type</th>
                                                     <th>Academic year</th>
-                                                    <th>Exam mode</th>
                                                     <th>Subject</th>
+                                                    <th>Class</th>
+                                                    <th>Exam mode</th>
                                                     <th>Full Marks</th>
                                                     <th>Assigned to</th>
                                                     <?php if ($role == 'Admin') : ?>
@@ -278,8 +286,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                         <td><a href="http://localhost:8082/rssi-member/exam_marks_upload.php?exam_id=<?php echo htmlspecialchars($row['exam_id']); ?>"><?php echo htmlspecialchars($row['exam_id']); ?></a></td>
                                                         <td><?php echo htmlspecialchars($row['exam_type']); ?></td>
                                                         <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
-                                                        <td><?php echo htmlspecialchars($row['exam_mode']); ?></td>
                                                         <td><?php echo htmlspecialchars($row['subject']); ?></td>
+                                                        <td><?php echo htmlspecialchars($row['classes']); ?></td>
+                                                        <td><?php echo htmlspecialchars($row['exam_mode']); ?></td>
                                                         <td>
                                                             <?php
                                                             if ($row['full_marks_written'] !== null) {
