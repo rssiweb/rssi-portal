@@ -25,6 +25,8 @@ if ($export_type == "fees") {
   donation_old_export();
 } else if ($export_type == "monthly_attd") {
   monthly_attd_export();
+} else if ($export_type == "monthly_attd_associate") {
+  monthly_attd_associate_export();
 }
 
 function fees_export()
@@ -379,7 +381,7 @@ function student_export()
 
   foreach ($resultArr as $array) {
 
-    echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['age'] . ',' . $array['gender'] . ',' . $array['contact'] . ',' . $array['access_category'] . ',' . $array['payment_type'] . ',' . $array['filterstatus'] . ',' . $array['doa'] . ',' . $array['effectivefrom'] . ',"' . $array['remarks'] .'"'. "\n";
+    echo $array['student_id'] . ',' . $array['studentname'] . ',' . $array['category'] . ',' . $array['class'] . ',' . $array['age'] . ',' . $array['gender'] . ',' . $array['contact'] . ',' . $array['access_category'] . ',' . $array['payment_type'] . ',' . $array['filterstatus'] . ',' . $array['doa'] . ',' . $array['effectivefrom'] . ',"' . $array['remarks'] . '"' . "\n";
   }
 }
 function donation_old_export()
@@ -663,6 +665,253 @@ function generate_date_values($array, $startDate, $endDate)
   while ($currentDate <= $endDate) {
     $columnAlias = "day_" . date("j", strtotime($currentDate));
     $values[] = $array[$columnAlias];
+    $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
+  }
+  return implode(',', $values);
+}
+
+
+
+
+
+function exportAttendanceToCSVAssociate($attendanceData, $startDate, $endDate)
+{
+  // Set headers for CSV export
+  header('Content-Type: text/csv');
+  $today = date("YmdHis");
+  $startMonthYear = date('M-Y', strtotime($startDate));
+  header("Content-Disposition: attachment; filename={$startMonthYear}_attendance_report_$today.csv");
+
+  // Create output stream
+  $output = fopen('php://output', 'w');
+
+  // Create CSV header row
+  $csvHeaders = [
+    'Sl. No.',
+    'Associate number',
+    'Name',
+    'Category',
+  ];
+
+  // Add date headers to CSV
+  $currentDate = $startDate;
+  while ($currentDate <= $endDate) {
+    $formattedDate = date("j", strtotime($currentDate));
+    $csvHeaders[] = "{$formattedDate}(In)";
+    $csvHeaders[] = "{$formattedDate}(Out)";
+    $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
+  }
+
+  $csvHeaders[] = 'Status';
+  $csvHeaders[] = 'Present';
+
+  fputcsv($output, $csvHeaders);
+
+  // Create a data array to hold associate-level data
+  $associateData = [];
+
+  foreach ($attendanceData as $array) {
+    $associateNumber = $array['associatenumber'];
+
+    if (!isset($associateData[$associateNumber])) {
+      // Initialize associate data
+      $associateData[$associateNumber] = [
+        'Sl. No.' => null,
+        'Associate number' => $array['associatenumber'],
+        'Name' => $array['fullname'],
+        'Category' => $array['engagement'],
+      ];
+
+      // Initialize date columns
+      $currentDate = $startDate;
+      while ($currentDate <= $endDate) {
+        $inColumnAlias = "day_" . date("j", strtotime($currentDate)) . "_in";
+        $outColumnAlias = "day_" . date("j", strtotime($currentDate)) . "_out";
+        $associateData[$associateNumber][$inColumnAlias] = '';
+        $associateData[$associateNumber][$outColumnAlias] = '';
+        $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
+      }
+
+      // Initialize other columns
+      $associateData[$associateNumber]['Status'] = $array['filterstatus'];
+      $associateData[$associateNumber]['Present'] = $array['attended_classes'];
+    }
+
+    // Assign punch in and out times to the respective date columns
+    $attendance_date = substr($array['attendance_date'] ?? '', 0, 10);
+    $punch_in = substr($array['punch_in'] ?? '', 11, 8);
+    $punch_out = substr($array['punch_out'] ?? '', 11, 8);
+    if ($attendance_date && $punch_in && $punch_out) {
+      $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_in"] = $punch_in;
+      $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_out"] = $punch_out;
+    }
+  }
+
+  // Export student-level data to CSV
+  $counter = 1;
+  foreach ($associateData as $studentRow) {
+    $studentRow['Sl. No.'] = $counter;
+    fputcsv($output, $studentRow);
+    $counter++;
+  }
+
+  // Close the output stream
+  fclose($output);
+  exit();
+}
+function monthly_attd_associate_export()
+{
+  global $con;
+  @$id = $_POST['id'];
+  @$month = $_POST['month'];
+  @$selectedTeachers = isset($_POST['selectedTeachers']) ? explode(',', $_POST['selectedTeachers']) : [];
+
+  // Calculate the start and end dates of the month
+  $startDate = date("Y-m-01", strtotime($month));
+  $endDate = date("Y-m-t", strtotime($month));
+
+  // Construct the ID condition
+  $idCondition = isset($_POST['id']) ? "AND m.filterstatus = '" . pg_escape_string($con, $_POST['id']) . "'" : '';
+
+  // Construct the teacher condition
+  $teacherCondition = '';
+  if (isset($_POST['selectedTeachers']) && !empty($_POST['selectedTeachers'])) {
+    $escapedTeachers = array_map(function ($teacher) use ($con) {
+      return pg_escape_string($con, $teacher);
+    }, explode(',', $_POST['selectedTeachers']));
+    $teacherList = implode("','", $escapedTeachers);
+    $teacherCondition = "AND m.associatenumber IN ('$teacherList')";
+  }
+
+  // Construct the SQL query
+  $query = "
+    WITH date_range AS (
+        SELECT generate_series(
+            '$startDate'::date,
+            '$endDate'::date,
+            '1 day'::interval
+        ) AS attendance_date
+    ),
+    PunchInOut AS (
+        SELECT
+            a.user_id,
+            a.status,
+            DATE_TRUNC('day', a.punch_in) AS punch_date,
+            MIN(a.punch_in) AS punch_in,
+            CASE
+                WHEN COUNT(*) = 1 THEN NULL
+                ELSE MAX(a.punch_in)
+            END AS punch_out
+        FROM attendance a
+        GROUP BY a.user_id, a.status, DATE_TRUNC('day', a.punch_in)
+    ),
+    attendance_data AS (
+        SELECT
+            m.associatenumber,
+            m.filterstatus,
+            m.fullname,
+            m.engagement,
+            m.effectivedate,
+            m.doj,
+            d.attendance_date,
+            p.punch_in,
+            p.punch_out,
+           CASE
+                WHEN p.punch_in IS NOT NULL AND p.punch_out IS NOT NULL THEN 'P'
+                WHEN p.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
+                WHEN TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
+                ELSE 'A'
+            END AS attendance_status
+        FROM
+            date_range d
+        CROSS JOIN
+            rssimyaccount_members m
+        LEFT JOIN
+            PunchInOut p
+            ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
+        WHERE
+            (
+                (m.effectivedate IS NULL OR m.effectivedate = '')
+                OR DATE_TRUNC('month', TO_DATE(m.effectivedate, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+            )
+            AND DATE_TRUNC('month', TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+            AND m.engagement IN ('Employee', 'Intern', 'Volunteer')
+            $idCondition
+            $teacherCondition
+    )
+    SELECT
+        associatenumber,
+        filterstatus,
+        fullname,
+        engagement,
+        attendance_date,
+        attendance_status,
+        punch_in,
+        punch_out,
+        COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
+    FROM attendance_data
+    GROUP BY
+        associatenumber,
+        filterstatus,
+        fullname,
+        engagement,
+        attendance_date,
+        attendance_status,
+        punch_in,
+        punch_out
+    ORDER BY
+        associatenumber,
+        attendance_date;";
+
+  $result = pg_query($con, $query);
+
+  if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+  }
+
+  $resultArr = pg_fetch_all($result);
+
+  // Call the export function to generate and download the CSV
+  exportAttendanceToCSVAssociate($resultArr, $startDate, $endDate);
+}
+
+// Function to generate date columns
+function generate_date_columns_associate($startDate, $endDate)
+{
+  $dates = [];
+  $currentDate = $startDate;
+  while ($currentDate <= $endDate) {
+    $columnAliasIn = "day_" . date("j", strtotime($currentDate)) . "_in";
+    $columnAliasOut = "day_" . date("j", strtotime($currentDate)) . "_out";
+    $dates[] = "MAX(CASE WHEN attendance_date = '$currentDate' THEN punch_in END) AS \"$columnAliasIn\"";
+    $dates[] = "MAX(CASE WHEN attendance_date = '$currentDate' THEN punch_out END) AS \"$columnAliasOut\"";
+    $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
+  }
+  return implode(', ', $dates);
+}
+
+function generate_date_headers_associate($startDate, $endDate)
+{
+  $dates = [];
+  $currentDate = $startDate;
+  while ($currentDate <= $endDate) {
+    $dates[] = date("j", strtotime($currentDate)) . '(In)';
+    $dates[] = date("j", strtotime($currentDate)) . '(Out)';
+    $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
+  }
+  return implode(',', $dates);
+}
+
+function generate_date_values_associate($array, $startDate, $endDate)
+{
+  $values = [];
+  $currentDate = $startDate;
+  while ($currentDate <= $endDate) {
+    $inColumnAlias = "day_" . date("j", strtotime($currentDate)) . "_in";
+    $outColumnAlias = "day_" . date("j", strtotime($currentDate)) . "_out";
+    $values[] = $array[$inColumnAlias];
+    $values[] = $array[$outColumnAlias];
     $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
   }
   return implode(',', $values);

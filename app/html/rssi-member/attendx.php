@@ -70,7 +70,7 @@ validation();
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -119,7 +119,7 @@ validation();
                                         </a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a href="monthly_attd_report.php" class="card-link">
+                                        <a href="#" class="card-link" data-bs-toggle="modal" data-bs-target="#attendanceOptionsModal" class="card-link">
                                             <div class="card text-center">
                                                 <div class="card-body">
                                                     <i class="bi bi-calendar-check icon"></i>
@@ -137,6 +137,28 @@ validation();
             </div><!-- End Reports -->
         </section>
     </main><!-- End #main -->
+
+    <!-- Modal -->
+    <div class="modal fade" id="attendanceOptionsModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Monthly Attendance Report</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-body">
+                        <a href="monthly_attd_report.php" class="btn btn-primary btn-block mb-2">Student's Monthly Attendance</a>
+                        <a href="monthly_attd_report_associate.php" class="btn btn-primary btn-block">Teacher's Monthly Attendance</a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

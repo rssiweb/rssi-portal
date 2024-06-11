@@ -9,87 +9,127 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
+
+if ($role == 'Admin') {
+    // Fetching the data and populating the $teachers array
+    $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active'";
+    $result = pg_query($con, $query);
+
+    if (!$result) {
+        die("Error in SQL query: " . pg_last_error());
+    }
+
+    $teachers = array();
+    while ($row = pg_fetch_assoc($result)) {
+        $teachers[] = $row;
+    }
+
+    // Free resultset
+    pg_free_result($result);
+}
 ?>
 <?php
+// Get filter values from GET parameters
 $id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
 $month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
+$selectedTeachers = isset($_GET['teacher_id']) ? $_GET['teacher_id'] : [];
 
 // Calculate the start and end dates of the month
 $startDate = date("Y-m-01", strtotime($month));
 $endDate = date("Y-m-t", strtotime($month));
 
-$idCondition = "";
-if ($id != null) {
-    $idCondition = "AND m.filterstatus = '$id'";
+// Construct the ID condition
+$idCondition = $id != null ? "AND m.filterstatus = '" . pg_escape_string($con, $id) . "'" : '';
+
+// Construct the teacher condition
+$teacherCondition = '';
+if (!empty($selectedTeachers)) {
+    $escapedTeachers = array_map(function ($teacher) use ($con) {
+        return pg_escape_string($con, $teacher);
+    }, $selectedTeachers);
+    $teacherList = implode("','", $escapedTeachers);
+    $teacherCondition = "AND m.associatenumber IN ('$teacherList')";
 }
 
-$query = "WITH date_range AS (
-    SELECT generate_series(
-        '$startDate'::date, '$endDate'::date, '1 day'::interval
-    )::date AS attendance_date
-),
-attendance_data AS (
-    SELECT
-        m.associatenumber,
-        m.filterstatus,
-        m.fullname,
-        m.engagement,
-        m.effectivedate,
-        m.doj,
-        d.attendance_date,
-        COALESCE(
+// Query to fetch the attendance data
+$query = "
+    WITH date_range AS (
+        SELECT generate_series(
+            '$startDate'::date,
+            '$endDate'::date,
+            '1 day'::interval
+        ) AS attendance_date
+    ),
+    PunchInOut AS (
+        SELECT
+            a.user_id,
+            a.status,
+            DATE_TRUNC('day', a.punch_in) AS punch_date,
+            MIN(a.punch_in) AS punch_in,
             CASE
-                WHEN a.user_id IS NOT NULL THEN 'P'
-                WHEN a.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
+                WHEN COUNT(*) = 1 THEN NULL
+                ELSE MAX(a.punch_in)
+            END AS punch_out
+        FROM attendance a
+        GROUP BY a.user_id, a.status, DATE_TRUNC('day', a.punch_in)
+    ),
+    attendance_data AS (
+        SELECT
+            m.associatenumber,
+            m.filterstatus,
+            m.fullname,
+            m.engagement,
+            m.effectivedate,
+            m.doj,
+            d.attendance_date,
+            p.punch_in,
+            p.punch_out,
+           CASE
+                WHEN p.punch_in IS NOT NULL AND p.punch_out IS NOT NULL THEN 'P'
+                WHEN p.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
                 WHEN TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
                 ELSE 'A'
-            END
-        ) AS attendance_status
-    FROM
-        date_range d
-    CROSS JOIN
-    rssimyaccount_members m
-    LEFT JOIN
-        attendance a
-        ON m.associatenumber = a.user_id AND a.date = d.attendance_date
-    WHERE
-        (
-        (m.effectivedate IS NULL OR m.effectivedate='') OR
-        DATE_TRUNC('month', TO_DATE(m.effectivedate, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-        )
-        AND DATE_TRUNC('month', TO_DATE( m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-        AND 
-        (m.engagement ='Employee' OR m.engagement ='Intern' OR m.engagement ='Volunteer')
-        $idCondition
-)
-SELECT
-    associatenumber,
-    filterstatus,
-    fullname,
-    engagement,
-    attendance_date,
-    attendance_status,
-    COUNT(*) FILTER (WHERE attendance_status != '') OVER (PARTITION BY associatenumber) AS total_classes,
-    COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes,
-    CASE
-        WHEN COUNT(*) FILTER (WHERE attendance_status != '') OVER (PARTITION BY associatenumber) = 0 THEN NULL
-        ELSE CONCAT(
-            ROUND(
-                (COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) * 100.0) /
-                COUNT(*) FILTER (WHERE attendance_status != '') OVER (PARTITION BY associatenumber), 2
-            ),
-            '%'
-        )
-    END AS attendance_percentage
-FROM attendance_data
-GROUP BY
-    associatenumber,
-    filterstatus,
-    fullname,
-    engagement,
-    attendance_date,
-    attendance_status
-;";
+            END AS attendance_status
+        FROM
+            date_range d
+        CROSS JOIN
+            rssimyaccount_members m
+        LEFT JOIN
+            PunchInOut p
+            ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
+        WHERE
+            (
+                (m.effectivedate IS NULL OR m.effectivedate = '')
+                OR DATE_TRUNC('month', TO_DATE(m.effectivedate, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+            )
+            AND DATE_TRUNC('month', TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+            AND m.engagement IN ('Employee', 'Intern', 'Volunteer')
+            $idCondition
+            $teacherCondition
+    )
+    SELECT
+        associatenumber,
+        filterstatus,
+        fullname,
+        engagement,
+        attendance_date,
+        attendance_status,
+        punch_in,
+        punch_out,
+        COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
+    FROM attendance_data
+    GROUP BY
+        associatenumber,
+        filterstatus,
+        fullname,
+        engagement,
+        attendance_date,
+        attendance_status,
+        punch_in,
+        punch_out
+    ORDER BY
+        associatenumber,
+        attendance_date;";
 
 $result = pg_query($con, $query);
 
@@ -104,7 +144,10 @@ $uniqueAssociateNumbers = array_unique(array_column($attendanceData, 'associaten
 $associateNumberCount = count($uniqueAssociateNumbers);
 
 // Close the connection
-pg_close($con); ?>
+pg_close($con);
+?>
+
+
 
 <!doctype html>
 <html lang="en">
@@ -199,9 +242,10 @@ pg_close($con); ?>
                             <br>
                             <div class="d-flex justify-content-between align-items-center position-absolute top-5 end-0 p-3">
                                 <form method="POST" action="export_function.php">
-                                    <input type="hidden" value="monthly_attd" name="export_type" />
+                                    <input type="hidden" value="monthly_attd_associate" name="export_type" />
                                     <input type="hidden" value="<?php echo $id ?>" name="id" />
                                     <input type="hidden" value="<?php echo $month ?>" name="month" />
+                                    <input type="hidden" value="<?php echo implode(',', $selectedTeachers) ?>" name="selectedTeachers" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
@@ -234,6 +278,19 @@ pg_close($con); ?>
                                                 <small class="form-text text-muted">Select Status</small>
                                             </div>
                                         </div>
+                                        <?php if ($role == 'Admin') { ?>
+                                            <div class="col-md-3">
+                                                <select class="form-select" id="teacher_id" name="teacher_id[]" multiple>
+                                                    <option value="" disabled hidden>Select Teacher's ID</option>
+                                                    <?php foreach ($teachers as $teacher) { ?>
+                                                        <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id']) && in_array($teacher['associatenumber'], $_GET['teacher_id'])) ? 'selected' : ''; ?>>
+                                                            <?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?>
+                                                        </option>
+                                                    <?php } ?>
+                                                </select>
+                                                <small class="form-text text-muted">Teacher ID</small>
+                                            </div>
+                                        <?php } ?>
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
@@ -304,15 +361,15 @@ pg_close($con); ?>
                                                 <th>Category</th>
                                                 <th>Status</th>
                                                 <th>Present</th>
-                                                <th>Total Class</th>
-                                                <th>Percentage</th>
+                                                <!--<th>Total Class</th>
+                                                <th>Percentage</th> -->
 
                                                 <?php
                                                 // Generate header row with attendance dates
                                                 $dates = array_unique(array_column($attendanceData, 'attendance_date'));
                                                 foreach ($dates as $date) {
                                                     $formattedDate = date("j", strtotime($date)); // Format the date
-                                                    echo "<th>$formattedDate</th>";
+                                                    echo "<th>$formattedDate (In)</th><th>$formattedDate (Out)</th>";
                                                 }
                                                 ?>
                                             </tr>
@@ -327,21 +384,24 @@ pg_close($con); ?>
                                                         echo "</tr>";
                                                     }
                                                     echo "<tr>
-                                                        <td>{$row['associatenumber']}</td>
-                                                        <td>{$row['fullname']}</td>
-                                                        <td>{$row['engagement']}</td>
-                                                        <td>{$row['filterstatus']}</td>
-                                                        <td>{$row['attended_classes']}</td>
-                                                        <td>{$row['total_classes']}</td>
-                                                        <td>{$row['attendance_percentage']}</td>";
+                                                            <td>{$row['associatenumber']}</td>
+                                                            <td>{$row['fullname']}</td>
+                                                            <td>{$row['engagement']}</td>
+                                                            <td>{$row['filterstatus']}</td>
+                                                            <td>{$row['attended_classes']}</td>";
                                                     $currentStudent = $row['associatenumber'];
                                                 }
-                                                echo "<td>{$row['attendance_status']}</td>";
+                                                // Convert punch in and punch out to time format
+                                                $punchIn = $row['punch_in'] ? date("h:i A", strtotime($row['punch_in'])) : '';
+                                                $punchOut = $row['punch_out'] && $row['punch_out'] ? date("h:i A", strtotime($row['punch_out'])) : '';
+
+                                                echo "<td>$punchIn</td><td>$punchOut</td>";
                                             }
                                             ?>
                                         </tbody>
                                     </table>
                                 </div>
+
                             </div>
                         </div>
                     </div>
