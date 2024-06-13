@@ -38,6 +38,7 @@ function checkPageAccess()
     $roleAccessControl = array(
         "Admin" => array("scan","dashboard", "student", "fees", "process", "ipf-management", "faculty", "facultyexp", "leave_admin", "payroll_processing", "donationinfo_admin", "pms", "onexit", "userlog", "onboarding", "exit", "visitor", "admission_admin", "expletter", "offerletter", "archive_approval", "bankdetails_admin","exam_create"),
         "Offline Manager" => array("scan","dashboard", "student", "admission_admin", "onboarding", "exit", "visitor"),
+        "Advanced User" => array("scan"),
         "User" => array("")
     );
 
