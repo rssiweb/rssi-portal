@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $params = [$_GET['exam_id']];
 
         // Check if the user role is not Admin
-        if ($role !== 'Admin') {
+        if ($role !== 'Admin' && $role !== 'Offline Manager') {
             // Add condition to limit data to the teacher's records
             $query .= " AND e.teacher_id = $2";
             $params[] = $associatenumber;
@@ -58,128 +58,128 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-        // Arrays to hold SQL cases and parameters
-        $written_marks_cases = [];
-        $viva_marks_cases = [];
-        $written_params = [];
-        $viva_params = [];
-        $written_param_index = 1;
-        $viva_param_index = 1;
-        $history_entries = [];
-    
-        // Prepare the update cases for written marks
-        if (isset($_POST['written_marks']) && !empty($_POST['written_marks'])) {
-            foreach ($_POST['written_marks'] as $key => $written_mark) {
-                if (is_numeric($written_mark)) {
-                    list($exam_id, $student_id) = explode('_', $key);
-    
-                    // Fetch current written marks
-                    $current_written_marks_query = "SELECT written_marks FROM exam_marks_data WHERE exam_id = $1 AND student_id = $2";
-                    $current_written_marks_result = pg_query_params($con, $current_written_marks_query, [$exam_id, $student_id]);
-                    $current_written_mark = pg_fetch_result($current_written_marks_result, 0, 0);
-    
-                    if ($current_written_mark != $written_mark) {
-                        $written_marks_cases[] = "WHEN exam_id = $" . $written_param_index . " AND student_id = $" . ($written_param_index + 1) . " THEN $" . ($written_param_index + 2);
-                        $written_params[] = $exam_id;
-                        $written_params[] = $student_id;
-                        $written_params[] = $written_mark;
-                        $written_param_index += 3;
-    
-                        // Prepare history entry
-                        $history_entries[] = [$exam_id, $student_id, 'written', $written_mark, $associatenumber];
-                    }
+    // Arrays to hold SQL cases and parameters
+    $written_marks_cases = [];
+    $viva_marks_cases = [];
+    $written_params = [];
+    $viva_params = [];
+    $written_param_index = 1;
+    $viva_param_index = 1;
+    $history_entries = [];
+
+    // Prepare the update cases for written marks
+    if (isset($_POST['written_marks']) && !empty($_POST['written_marks'])) {
+        foreach ($_POST['written_marks'] as $key => $written_mark) {
+            if (is_numeric($written_mark)) {
+                list($exam_id, $student_id) = explode('_', $key);
+
+                // Fetch current written marks
+                $current_written_marks_query = "SELECT written_marks FROM exam_marks_data WHERE exam_id = $1 AND student_id = $2";
+                $current_written_marks_result = pg_query_params($con, $current_written_marks_query, [$exam_id, $student_id]);
+                $current_written_mark = pg_fetch_result($current_written_marks_result, 0, 0);
+
+                if ($current_written_mark != $written_mark) {
+                    $written_marks_cases[] = "WHEN exam_id = $" . $written_param_index . " AND student_id = $" . ($written_param_index + 1) . " THEN $" . ($written_param_index + 2);
+                    $written_params[] = $exam_id;
+                    $written_params[] = $student_id;
+                    $written_params[] = $written_mark;
+                    $written_param_index += 3;
+
+                    // Prepare history entry
+                    $history_entries[] = [$exam_id, $student_id, 'written', $written_mark, $associatenumber];
                 }
             }
         }
-    
-        // Prepare the update cases for viva marks
-        if (isset($_POST['viva_marks']) && !empty($_POST['viva_marks'])) {
-            foreach ($_POST['viva_marks'] as $key => $viva_mark) {
-                if (is_numeric($viva_mark)) {
-                    list($exam_id, $student_id) = explode('_', $key);
-    
-                    // Fetch current viva marks
-                    $current_viva_marks_query = "SELECT viva_marks FROM exam_marks_data WHERE exam_id = $1 AND student_id = $2";
-                    $current_viva_marks_result = pg_query_params($con, $current_viva_marks_query, [$exam_id, $student_id]);
-                    $current_viva_mark = pg_fetch_result($current_viva_marks_result, 0, 0);
-    
-                    if ($current_viva_mark != $viva_mark) {
-                        $viva_marks_cases[] = "WHEN exam_id = $" . $viva_param_index . " AND student_id = $" . ($viva_param_index + 1) . " THEN $" . ($viva_param_index + 2);
-                        $viva_params[] = $exam_id;
-                        $viva_params[] = $student_id;
-                        $viva_params[] = $viva_mark;
-                        $viva_param_index += 3;
-    
-                        // Prepare history entry
-                        $history_entries[] = [$exam_id, $student_id, 'viva', $viva_mark, $associatenumber];
-                    }
+    }
+
+    // Prepare the update cases for viva marks
+    if (isset($_POST['viva_marks']) && !empty($_POST['viva_marks'])) {
+        foreach ($_POST['viva_marks'] as $key => $viva_mark) {
+            if (is_numeric($viva_mark)) {
+                list($exam_id, $student_id) = explode('_', $key);
+
+                // Fetch current viva marks
+                $current_viva_marks_query = "SELECT viva_marks FROM exam_marks_data WHERE exam_id = $1 AND student_id = $2";
+                $current_viva_marks_result = pg_query_params($con, $current_viva_marks_query, [$exam_id, $student_id]);
+                $current_viva_mark = pg_fetch_result($current_viva_marks_result, 0, 0);
+
+                if ($current_viva_mark != $viva_mark) {
+                    $viva_marks_cases[] = "WHEN exam_id = $" . $viva_param_index . " AND student_id = $" . ($viva_param_index + 1) . " THEN $" . ($viva_param_index + 2);
+                    $viva_params[] = $exam_id;
+                    $viva_params[] = $student_id;
+                    $viva_params[] = $viva_mark;
+                    $viva_param_index += 3;
+
+                    // Prepare history entry
+                    $history_entries[] = [$exam_id, $student_id, 'viva', $viva_mark, $associatenumber];
                 }
             }
         }
-    
-        // Build and execute the written marks update query
-        if (!empty($written_marks_cases)) {
-            $written_marks_query = "UPDATE exam_marks_data SET written_marks = CASE " . implode(' ', $written_marks_cases) . " ELSE written_marks END WHERE (exam_id, student_id) IN (";
-            for ($i = 0; $i < count($written_params); $i += 3) {
-                $written_marks_query .= "($" . ($i + 1) . ", $" . ($i + 2) . "),";
-            }
-            $written_marks_query = rtrim($written_marks_query, ',') . ")";
-    
-            $result = pg_query_params($con, $written_marks_query, $written_params);
-            if (!$result) {
-                die("Error in SQL query (Written Marks): " . pg_last_error($con));
-            }
+    }
+
+    // Build and execute the written marks update query
+    if (!empty($written_marks_cases)) {
+        $written_marks_query = "UPDATE exam_marks_data SET written_marks = CASE " . implode(' ', $written_marks_cases) . " ELSE written_marks END WHERE (exam_id, student_id) IN (";
+        for ($i = 0; $i < count($written_params); $i += 3) {
+            $written_marks_query .= "($" . ($i + 1) . ", $" . ($i + 2) . "),";
         }
-    
-        // Build and execute the viva marks update query
-        if (!empty($viva_marks_cases)) {
-            $viva_marks_query = "UPDATE exam_marks_data SET viva_marks = CASE " . implode(' ', $viva_marks_cases) . " ELSE viva_marks END WHERE (exam_id, student_id) IN (";
-            for ($i = 0; $i < count($viva_params); $i += 3) {
-                $viva_marks_query .= "($" . ($i + 1) . ", $" . ($i + 2) . "),";
-            }
-            $viva_marks_query = rtrim($viva_marks_query, ',') . ")";
-    
-            $result = pg_query_params($con, $viva_marks_query, $viva_params);
-            if (!$result) {
-                die("Error in SQL query (Viva Marks): " . pg_last_error($con));
-            }
+        $written_marks_query = rtrim($written_marks_query, ',') . ")";
+
+        $result = pg_query_params($con, $written_marks_query, $written_params);
+        if (!$result) {
+            die("Error in SQL query (Written Marks): " . pg_last_error($con));
         }
-    
-        // Insert update history
-        if (!empty($history_entries)) {
-            $update_history_query = "INSERT INTO exam_update_history (exam_id, student_id, mode_of_exam, marks, updated_by) VALUES ";
-            $history_params = [];
-            $history_index = 1;
-    
-            foreach ($history_entries as $entry) {
-                list($exam_id, $student_id, $mode_of_exam, $marks, $updated_by) = $entry;
-                $update_history_query .= "($" . $history_index . ", $" . ($history_index + 1) . ", $" . ($history_index + 2) . ", $" . ($history_index + 3) . ", $" . ($history_index + 4) . "),";
-                $history_params[] = $exam_id;
-                $history_params[] = $student_id;
-                $history_params[] = $mode_of_exam;
-                $history_params[] = $marks;
-                $history_params[] = $updated_by;
-                $history_index += 5;
-            }
-    
-            // Remove trailing comma and execute the query
-            $update_history_query = rtrim($update_history_query, ',');
-            $result = pg_query_params($con, $update_history_query, $history_params);
-            if (!$result) {
-                die("Error in SQL query (Update History): " . pg_last_error($con));
-            }
+    }
+
+    // Build and execute the viva marks update query
+    if (!empty($viva_marks_cases)) {
+        $viva_marks_query = "UPDATE exam_marks_data SET viva_marks = CASE " . implode(' ', $viva_marks_cases) . " ELSE viva_marks END WHERE (exam_id, student_id) IN (";
+        for ($i = 0; $i < count($viva_params); $i += 3) {
+            $viva_marks_query .= "($" . ($i + 1) . ", $" . ($i + 2) . "),";
         }
-    
-        // Close the database connection
-        pg_close($con);
-    
-        // Output JavaScript to show alert and redirect
-        echo "<script>
+        $viva_marks_query = rtrim($viva_marks_query, ',') . ")";
+
+        $result = pg_query_params($con, $viva_marks_query, $viva_params);
+        if (!$result) {
+            die("Error in SQL query (Viva Marks): " . pg_last_error($con));
+        }
+    }
+
+    // Insert update history
+    if (!empty($history_entries)) {
+        $update_history_query = "INSERT INTO exam_update_history (exam_id, student_id, mode_of_exam, marks, updated_by) VALUES ";
+        $history_params = [];
+        $history_index = 1;
+
+        foreach ($history_entries as $entry) {
+            list($exam_id, $student_id, $mode_of_exam, $marks, $updated_by) = $entry;
+            $update_history_query .= "($" . $history_index . ", $" . ($history_index + 1) . ", $" . ($history_index + 2) . ", $" . ($history_index + 3) . ", $" . ($history_index + 4) . "),";
+            $history_params[] = $exam_id;
+            $history_params[] = $student_id;
+            $history_params[] = $mode_of_exam;
+            $history_params[] = $marks;
+            $history_params[] = $updated_by;
+            $history_index += 5;
+        }
+
+        // Remove trailing comma and execute the query
+        $update_history_query = rtrim($update_history_query, ',');
+        $result = pg_query_params($con, $update_history_query, $history_params);
+        if (!$result) {
+            die("Error in SQL query (Update History): " . pg_last_error($con));
+        }
+    }
+
+    // Close the database connection
+    pg_close($con);
+
+    // Output JavaScript to show alert and redirect
+    echo "<script>
             alert('Data has been successfully updated.');
             window.location.href = 'exam_marks_upload.php?exam_id=" . urlencode($exam_id) . "';
         </script>";
-        exit();
-    }
+    exit();
+}
 ?>
 <!doctype html>
 <html lang="en">

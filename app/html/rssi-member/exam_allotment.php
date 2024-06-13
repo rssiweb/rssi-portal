@@ -10,7 +10,7 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-if ($role == 'Admin') {
+if ($role == 'Admin' || $role == 'Offline Manager') {
     // Fetching the data and populating the $teachers array
     $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active'";
     $result = pg_query($con, $query);
@@ -79,14 +79,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     // Check if the user is not an admin
-    if ($role !== 'Admin') {
+    if ($role !== 'Admin' && $role !== 'Offline Manager') {
         // For non-Admin, filter by teacher_id
         $conditions[] = "e.teacher_id = $" . (count($params) + 1);
         $params[] = $associatenumber;
     }
 
     // Check if the user is an admin and a teacher_id filter is provided
-    if ($role === 'Admin' && isset($_GET['teacher_id']) && !empty($_GET['teacher_id'])) {
+    if (($role === 'Admin' || $role === 'Offline Manager') && isset($_GET['teacher_id']) && !empty($_GET['teacher_id'])) {
         $teacher_id = $_GET['teacher_id'];
         $conditions[] = "e.teacher_id = $" . (count($params) + 1);
         $params[] = $teacher_id;
@@ -229,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                 <option value="Project" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Project') ? 'selected' : ''; ?>>Project</option>
                                             </select>
                                         </div>
-                                        <?php if ($role == 'Admin') { ?>
+                                        <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
                                             <div class="col-md-3">
                                                 <label for="teacher_id" class="form-label">Teacher ID</label>
                                                 <select class="form-select" id="teacher_id" name="teacher_id">
