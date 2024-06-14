@@ -741,9 +741,14 @@ function exportAttendanceToCSVAssociate($attendanceData, $startDate, $endDate)
     $attendance_date = substr($array['attendance_date'] ?? '', 0, 10);
     $punch_in = substr($array['punch_in'] ?? '', 11, 8);
     $punch_out = substr($array['punch_out'] ?? '', 11, 8);
-    if ($attendance_date && $punch_in && $punch_out) {
-      $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_in"] = $punch_in;
-      $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_out"] = $punch_out;
+
+    if ($attendance_date) {
+      if ($punch_in) {
+        $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_in"] = $punch_in;
+      }
+      if ($punch_out) {
+        $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_out"] = $punch_out;
+      }
     }
   }
 
