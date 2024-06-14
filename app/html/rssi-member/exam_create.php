@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
+include("../../util/email.php");
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
@@ -118,6 +118,7 @@ if (@$_POST['form-type'] == "exam") {
         // Assuming exam_marks_data table has columns student_id, studentname, category, class
         $insertQuery = "INSERT INTO exam_marks_data (exam_id,student_id, category, class) VALUES ('$exam_id','$student_id',  '$category', '$class')";
         $insertResult = pg_query($con, $insertQuery);
+        $cmdtuples = pg_affected_rows($insertResult);
 
         if ($exam_result && $insertResult) {
             $successMessages[] = "Data for $studentname inserted successfully"; // Store success message
@@ -125,6 +126,22 @@ if (@$_POST['form-type'] == "exam") {
             echo "Error inserting data into exam_marks_data.\n";
             exit;
         }
+    }
+    $examiner_data = pg_query($con, "Select phone,email,fullname from rssimyaccount_members where associatenumber='$teacher_id'");
+    @$examiner_contact = pg_fetch_result($examiner_data, 0, 0);
+    @$examiner_email = pg_fetch_result($examiner_data, 0, 1);
+    @$examiner_name = pg_fetch_result($examiner_data, 0, 2);
+    if (@$cmdtuples == 1 && $email != "") {
+        sendEmail("exam_create", array(
+            "exam_id" => $exam_id,
+            "exam_type" => $exam_type,
+            "academic_year" => $academic_year,
+            "subject" => $subject,
+            "exam_mode" => $exam_mode_pg_array,
+            "full_marks_written" => $full_marks_written,
+            "full_marks_viva" => $full_marks_viva,
+            "examiner_name" => $examiner_name,
+        ), $examiner_email);
     }
 
     // Output JavaScript alert message after all insertions are completed
@@ -153,6 +170,7 @@ while ($row = pg_fetch_assoc($result)) {
 
 // Free resultset
 pg_free_result($result);
+
 ?>
 <!doctype html>
 <html lang="en">

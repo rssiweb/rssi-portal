@@ -52,6 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
 
         pg_free_result($result);
+
+        $exam_id = $_GET['exam_id'];
+        $lastupdatedon = pg_query($con, "SELECT DISTINCT ON (exam_id, update_timestamp) exam_id, update_timestamp, updated_by FROM exam_update_history WHERE exam_id = '$exam_id' ORDER BY exam_id, update_timestamp DESC, updated_by;");
+
+        @$update_timestamp = pg_fetch_result($lastupdatedon, 0, 1);
+        @$updated_by = pg_fetch_result($lastupdatedon, 0, 2);
     }
 }
 ?>
@@ -367,7 +373,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </table>
                                             </div>
                                             <!-- <button type="submit" id="save" class="btn btn-success">Save</button> -->
-                                            <button type="submit" id="submit" class="btn btn-primary">Submit</button>
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <button type="submit" id="submit" class="btn btn-primary">Submit</button>
+                                                <div>Last Updated by: <?php echo $updated_by ?> on <?php echo date('d/m/Y h:i:s A', strtotime($update_timestamp)) ?></div>
+                                            </div>
+
                                         </fieldset>
                                     </form>
                                 <?php elseif (empty($_GET['exam_id'])) : ?>
