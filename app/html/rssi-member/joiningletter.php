@@ -359,7 +359,7 @@ if (!$result) {
                                     <div class="right-column">
                                         <p class="qr-message">Scan the QR code to view location in Google Maps</p>
                                         <div class="qr-code">
-                                            <img class="qr-image" src="https://qrcode.tec-it.com/API/QRCode?data=https://maps.app.goo.gl/BNq37UdBq4bUcM7a8" alt="QR Code">
+                                            <img class="qr-image" src="https://qrcode.tec-it.com/API/QRCode?data=https://maps.app.goo.gl/E5VhwfWBbh61gDrz9" alt="QR Code">
 
                                         </div>
                                     </div>
