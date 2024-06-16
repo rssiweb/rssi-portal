@@ -234,7 +234,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                                 <div class="col" style="display: inline-block; width:65%;">
 
                                     <p><b>Rina Shiksha Sahayak Foundation (RSSI NGO)</b></p>
-                                    <p style="font-size: small;">1/122, Vinamra Khand, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>
+                                    <p style="font-size: small;">D/1/122, Vinamra Khand, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>
                                     <p style="font-size: small;">NGO-DARPAN Id: WB/2021/0282726, CIN: U80101WB2020NPL237900</p>
                                     <p style="font-size: small;">Email: info@rssi.in, Website: www.rssi.in</p>
                                 </div>

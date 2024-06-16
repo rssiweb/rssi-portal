@@ -347,7 +347,7 @@ if (!$result) {
                                     <div class="left-column">
                                         <div class="info-title">Address</div>
                                         <div class="address">
-                                            Rina Shiksha Sahayak Foundation<br> 624V/195/01, Vijayipur, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
+                                            Rina Shiksha Sahayak Foundation<br> D/1/122, Vinamra Khand, Gomti Nagar, Lucknow, Uttar Pradesh 226010<br>
                                             <!-- <a href="https://maps.app.goo.gl/BNq37UdBq4bUcM7a8">Google Map</a> -->
                                             Email – info@rssi.in , Contact – +91 7980168159, +91 9717445551
                                         </div>
