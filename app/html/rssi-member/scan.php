@@ -404,8 +404,8 @@ if (!$result) {
             // restrict the location to the office location (50m radius) of a set point 
             var officeLocation = {
                 //  RSSI LKO office
-                latitude: 26.8644266,
-                longitude: 81.0229822
+                latitude: 26.864342,
+                longitude: 81.025571
 
                 //  Gurgaon location
                 // latitude: 28.4229632,
