@@ -45,7 +45,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
     for ($i = 1; $i <= 20; $i++) {
         $parameter = htmlspecialchars($_POST["parameter_$i"], ENT_QUOTES, 'UTF-8');
         $expectation = htmlspecialchars($_POST["expectation_$i"], ENT_QUOTES, 'UTF-8');
-        $maxRating = isset($_POST["max_rating_$i"]) && !empty($_POST["max_rating_$i"]) ? $_POST["max_rating_$i"] : 'NULL';
+        $maxRating = isset($_POST["max_rating_$i"]) && !empty($_POST["max_rating_$i"]) ? $_POST["max_rating_$i"] : null;
 
         $parameters[] = compact("parameter", "expectation", "maxRating");
     }
@@ -64,12 +64,19 @@ if (@$_POST['form-type'] == "appraisee_response") {
         $columns[] = "expectation_$index";
         $values[] = $paramData['expectation'];
 
-        $columns[] = "max_rating_$index";
-        $values[] = $paramData['maxRating'];
+        // $columns[] = "max_rating_$index";
+        // $values[] = $paramData['maxRating'];
+        if ($paramData['maxRating'] !== null) {
+            $columns[] = "max_rating_$index";
+            $values[] = $paramData['maxRating'];
+        }
     }
 
     $columnsStr = implode(', ', $columns);
-    $valuesStr = "'" . implode("', '", $values) . "'";
+    // $valuesStr = "'" . implode("', '", $values) . "'";
+    $valuesStr = implode(", ", array_map(function ($value) {
+        return is_null($value) ? 'NULL' : "'$value'";
+    }, $values));
 
     $appraisee_response = "INSERT INTO appraisee_response ($columnsStr) VALUES ($valuesStr)";
 
@@ -137,7 +144,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php if (@$goalsheetid != null && @$cmdtuples == 0) { ?>
 
         <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
