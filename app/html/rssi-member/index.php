@@ -185,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <label for="show-password" class="form-label">Show password</label>
                                             </div>
                                         </div>
-                                        <input type="text" id="g-recaptcha-response" name="g-recaptcha-response" />
+                                        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <div class="col-12">
                                             <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
                                         </div>
