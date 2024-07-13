@@ -104,6 +104,9 @@ git stash
 http://web.local/generate-hash-for/2311 -> D:\services\.env
 http://rssi.in/generate-hash-for/2311 -> digital ocean
 
+UPDATE rssimyprofile_student
+SET studentname = TRIM(studentname);
+
 git pull --rebase origin master
 
 ALTER TABLE fees

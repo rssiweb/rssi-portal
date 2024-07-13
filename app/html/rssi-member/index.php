@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } else {
         $Return = getCaptcha($_POST['g-recaptcha-response']);
-        if ($Return->success && $Return->score > 0.5) {
+        if ($Return->success && $Return->score > 0.5) { // Adjust the score threshold if needed
             if (isset($_POST['login'])) {
                 checkLogin($con, $date);
             }
@@ -113,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -129,10 +130,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 flex-direction: column;
                 align-items: center;
             }
+
             .logo span {
                 margin: 5px 0;
             }
         }
+
         .by-line {
             background-color: #CE1212;
             padding: 1px 5px;
@@ -143,6 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
+
 <body>
     <main>
         <div class="container">
@@ -172,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </div>
                                         <div class="col-12">
                                             <label for="pass" class="form-label">Password</label>
-                                            <input type="password" name="pass" class="form-control" required>
+                                            <input type="password" name="pass" class="form-control" id="pass" required>
                                             <div class="invalid-feedback">Please enter your password!</div>
                                         </div>
                                         <div class="col-12">
@@ -181,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <label for="show-password" class="form-label">Show password</label>
                                             </div>
                                         </div>
-                                        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
+                                        <input type="text" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <div class="col-12">
                                             <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
                                         </div>
@@ -190,6 +194,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </div>
                                     </form>
                                 </div>
+                                <script>
+                                    if (window.history.replaceState) {
+                                        window.history.replaceState(null, null, window.location.href);
+                                    }
+                                    document.addEventListener("DOMContentLoaded", function() {
+                                        var password = document.querySelector("#pass");
+                                        var toggle = document.querySelector("#show-password");
+                                        toggle.addEventListener("click", function() {
+                                            password.type = this.checked ? "text" : "password";
+                                        });
+                                    });
+                                </script>
                             </div>
                             <div class="credits">
                                 Designed by <a href="https://www.rssi.in/">rssi.in</a>
@@ -200,16 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </section>
         </div>
     </main>
-    <script>
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
-        var password = document.querySelector("#pass");
-        var toggle = document.querySelector("#show-password");
-        toggle.addEventListener("click", function () {
-            password.type = this.checked ? "text" : "password";
-        });
-    </script>
+
     <?php if (!empty($login_failed_dialog)) { ?>
         <div class="modal" tabindex="-1" role="dialog" id="errorModal">
             <div class="modal-dialog modal-dialog-centered" role="document">
@@ -233,7 +240,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php } ?>
     <script>
         grecaptcha.ready(function() {
-            grecaptcha.execute('<?php echo SITE_KEY; ?>', { action: 'homepage' }).then(function(token) {
+            grecaptcha.execute('<?php echo SITE_KEY; ?>', {
+                action: 'homepage'
+            }).then(function(token) {
                 document.getElementById('g-recaptcha-response').value = token;
             });
         });
@@ -258,4 +267,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
 </body>
+
 </html>
