@@ -426,6 +426,9 @@ $resultArr = pg_fetch_all($result);
                                     var todate = new Date(document.getElementById("todate").value);
                                     var today = new Date();
 
+                                    // Reset typeofleave if fromdate or todate changes
+                                    document.getElementById("typeofleave").value = ""; // Reset the selected value
+
                                     // Disable Casual Leave if fromdate or todate is today or in the past
                                     if (fromdate <= today || todate <= today) {
                                         document.getElementById("typeofleave").options[2].disabled = true; // Disable Casual Leave
@@ -488,7 +491,6 @@ $resultArr = pg_fetch_all($result);
                                         document.getElementById("fromdate").max = document.getElementById("todate").value;
                                     }
                                 }
-
 
                                 //Showing document upload for sick leave only 
                                 $(document).ready(function() {
