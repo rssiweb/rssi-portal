@@ -184,7 +184,6 @@ if (@$login_failed_dialog) { ?>
                                             <div id="password_message_conf"></div>
                                             <div id="password-message-success"></div>
                                         </div>
-                                        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
                                         <br><br><br>
                                         <p style="text-align: right;"><a href="#" data-toggle="modal" data-target="#myModal">Password Fields User Guide</a></p>

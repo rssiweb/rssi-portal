@@ -183,7 +183,6 @@ if (isset($_POST['login'])) {
                                                         <div id="password_message_conf"></div>
                                                         <div id="password-message-success"></div>
                                                     </div>
-                                                    <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response">
                                                     <div class="d-flex justify-content-between">
                                                         <input class="btn btn-primary" type="submit" value="Update" name="login">
                                                         <p><a href="#" data-bs-toggle="modal" data-bs-target="#myModal">Password Fields User Guide</a></p>

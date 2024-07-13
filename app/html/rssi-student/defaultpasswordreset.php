@@ -164,7 +164,6 @@ if (isset($_POST['login'])) {
                                         <div class="form-group">
                                             <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
                                         </div>
-                                        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
 
                                     </fieldset>
