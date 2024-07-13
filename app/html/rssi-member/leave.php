@@ -315,6 +315,8 @@ $resultArr = pg_fetch_all($result);
                                             Please take a makeup class to increase SL balance.</span>
                                     </div>
                                 <?php } ?>
+                                <!-- Warning message for leave eligibility -->
+                                <span id="leaveWarning" style="color: red;"></span>
                                 <div class="text-end">
                                     <span class="link-secondary"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span>
                                     <span class="separator"> | </span>
@@ -361,11 +363,11 @@ $resultArr = pg_fetch_all($result);
                                         <input type="hidden" name="form-type" value="leaveapply">
 
                                         <span class="input-help">
-                                            <input type="date" class="form-control" name="fromdate" id="fromdate" value="" max="" onchange="cal();" required>
+                                            <input type="date" class="form-control" name="fromdate" id="fromdate" value="" max="" onchange="cal(); checkLeaveType();" required>
                                             <small id="passwordHelpBlock" class="form-text text-muted">From<span style="color:red">*</span></small>
                                         </span>
                                         <span class="input-help">
-                                            <input type="date" class="form-control" name="todate" id="todate" value="" min="" onchange="cal();" required>
+                                            <input type="date" class="form-control" name="todate" id="todate" value="" min="" onchange="cal(); checkLeaveType();" required>
                                             <small id="passwordHelpBlock" class="form-text text-muted">To<span style="color:red">*</span></small>
                                         </span>
                                         <div id="filter-checksh">
@@ -417,6 +419,23 @@ $resultArr = pg_fetch_all($result);
                                     </div>
                                 </fieldset>
                             </form><br>
+
+                            <script>
+                                function checkLeaveType() {
+                                    var fromdate = new Date(document.getElementById("fromdate").value);
+                                    var todate = new Date(document.getElementById("todate").value);
+                                    var today = new Date();
+
+                                    // Disable Casual Leave if fromdate or todate is today or in the past
+                                    if (fromdate <= today || todate <= today) {
+                                        document.getElementById("typeofleave").options[2].disabled = true; // Disable Casual Leave
+                                        document.getElementById("leaveWarning").innerText = "You have selected current or past date. You are not eligible to apply for Casual Leave.";
+                                    } else {
+                                        document.getElementById("typeofleave").options[2].disabled = false; // Enable Casual Leave
+                                        document.getElementById("leaveWarning").innerText = ""; // Clear warning message
+                                    }
+                                }
+                            </script>
 
                             <script>
                                 if (<?php echo $slbalance ?> <= 0) {
