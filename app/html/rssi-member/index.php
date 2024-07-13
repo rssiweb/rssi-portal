@@ -2,9 +2,6 @@
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 
-define('SITE_KEY', '6LcsNQ8qAAAAAJccqG8cAmwpJrGfoVsyI9MzycwI'); // Replace with your site key
-define('SECRET_KEY', '6LcsNQ8qAAAAAGY9JD4p28zgYF9WdkJpAqnusaSi'); // Replace with your secret key
-
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = "";
 
@@ -86,20 +83,9 @@ function checkLogin($con, $date)
     }
 }
 
-function getCaptcha($SecretKey)
-{
-    $Response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" . SECRET_KEY . "&response={$SecretKey}");
-    return json_decode($Response);
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $Return = getCaptcha($_POST['g-recaptcha-response']);
-    if ($Return->success && $Return->score > 0.5) { // Adjust the score threshold if needed
-        if (isset($_POST['login'])) {
-            checkLogin($con, $date);
-        }
-    } else {
-        $login_failed_dialog = "Captcha validation failed.";
+    if (isset($_POST['login'])) {
+        checkLogin($con, $date);
     }
 }
 ?>
@@ -115,7 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="../assets_new/css/style.css" rel="stylesheet">
-    <script src='https://www.google.com/recaptcha/api.js?render=<?php echo SITE_KEY; ?>'></script>
     <style>
         @media (max-width: 767px) {
             .logo {
@@ -178,7 +163,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <label for="show-password" class="form-label">Show password</label>
                                             </div>
                                         </div>
-                                        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
                                         <div class="col-12">
                                             <button class="btn btn-primary w-100" type="submit" name="login">Login</button>
                                         </div>
@@ -231,15 +215,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         </script>
     <?php } ?>
-    <script>
-        grecaptcha.ready(function() {
-            grecaptcha.execute('<?php echo SITE_KEY; ?>', {
-                action: 'login'
-            }).then(function(token) {
-                document.getElementById('g-recaptcha-response').value = token;
-            });
-        });
-    </script>
     <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
