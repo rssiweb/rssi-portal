@@ -346,9 +346,9 @@ pg_free_result($result);
                                                     <option value="English">English</option>
                                                     <option value="Mathematics">Mathematics</option>
                                                     <option value="GK">GK</option>
-                                                    <option value="Humara Parivesh">Humara Parivesh</option>
+                                                    <option value="Hamara Parivesh">Hamara Parivesh</option>
                                                     <option value="Computer">Computer</option>
-                                                    <option value="Arts & Craft">Arts & Craft</option>
+                                                    <option value="Art & Craft">Art & Craft</option>
                                                     <option value="Sulekh+Imla">Sulekh+Imla</option>
                                                     <option value="Project">Project</option>
                                                 </select>
