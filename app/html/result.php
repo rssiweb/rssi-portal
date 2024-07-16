@@ -8,26 +8,28 @@ $exam_type = $_GET['exam_type'] ?? '';
 $academic_year = $_GET['academic_year'] ?? '';
 $print = (isset($_GET["print"]) ? $_GET["print"] : "False") == "True";
 
-// Extract the start year from the academic year
-list($start_year, $end_year) = explode('-', $academic_year);
-$start_year = intval($start_year);  // Ensure it's an integer
-
-// Determine the start and end dates based on the exam type and academic year
-$today_date = date('Y-m-d');
-if ($exam_type == 'First Term') {
-    $start_date = "$start_year-04-01";
-    $end_date = "$start_year-07-31";
-} elseif ($exam_type == 'Second Term') {
-    $start_date = "$start_year-08-01";
-    $end_date = "$start_year-11-30";
-} else {  // annual
-    $start_date = "$start_year-12-01";
-    $end_date = ($start_year + 1) . "-03-31";
-}
-$end_date = min($end_date, $today_date); // Consider the current date if before the term end date
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset($_GET['exam_type']) && isset($_GET['academic_year'])) {
+
+    // Extract the start year from the academic year
+    list($start_year, $end_year) = explode('-', $academic_year);
+    $start_year = intval($start_year);  // Ensure it's an integer
+
+    // Determine the start and end dates based on the exam type and academic year
+    $today_date = date('Y-m-d');
+    if ($exam_type == 'First Term') {
+        $start_date = "$start_year-04-01";
+        $end_date = "$start_year-07-31";
+    } elseif ($exam_type == 'Second Term') {
+        $start_date = "$start_year-08-01";
+        $end_date = "$start_year-11-30";
+    } else {  // annual
+        $start_date = "$start_year-12-01";
+        $end_date = ($start_year + 1) . "-03-31";
+    }
+    $end_date = min($end_date, $today_date); // Consider the current date if before the term end date
+
     // Get the filter data from the form
     $student_id = $_GET['student_id'];
     $exam_type = $_GET['exam_type'];
@@ -192,7 +194,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title><?php echo $student_id ?>_<?php echo $exam_type ?>_<?php echo $academic_year ?></title>
+    <title>
+        <?php
+        if (
+            !isset($student_id) || !isset($exam_type) || !isset($academic_year) ||
+            $student_id === "" || $exam_type === "" || $academic_year === ""
+        ) {
+            echo 'Result Portal';
+        } else {
+            echo htmlspecialchars("$student_id" . "_" . "$exam_type" . "_" . "$academic_year");
+        }
+        ?>
+    </title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <style>
@@ -409,11 +422,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                         <th></th>
                     </tr>
 
-                <?php foreach ($ordered_marks_data as $row) {
-                    $written_marks = ($row['written_attendance_status'] == 'A') ? 'A' : $row['written_marks'];
-                    $viva_marks = ($row['viva_attendance_status'] == 'A') ? 'A' : $row['viva_marks'];
-                    $total_marks = ($row['written_attendance_status'] == 'A' || $row['viva_attendance_status'] == 'A') ? 'A' : ($row['written_marks'] + $row['viva_marks']); // Calculate total marks
-                    echo "<tr>
+                    <?php foreach ($ordered_marks_data as $row) {
+                        $written_marks = ($row['written_attendance_status'] == 'A') ? 'A' : $row['written_marks'];
+                        $viva_marks = ($row['viva_attendance_status'] == 'A') ? 'A' : $row['viva_marks'];
+                        $total_marks = ($row['written_attendance_status'] == 'A' || $row['viva_attendance_status'] == 'A') ? 'A' : ($row['written_marks'] + $row['viva_marks']); // Calculate total marks
+                        echo "<tr>
                 <td>" . $row['subject'] . "</td>
                 <td>" . $row['full_marks_viva'] . "</td>
                 <td>" . $row['full_marks_written'] . "</td>
@@ -423,18 +436,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                 <!--<td>" . $row['written_attendance_status'] . "</td>-->
                 <!--<td>" . $row['viva_attendance_status'] . "</td>-->
             </tr>";
-                }
+                    }
 
-                // Add total row
-                echo "<tr>
+                    // Add total row
+                    echo "<tr>
             <td><strong>Total</strong></td>
             <td colspan='2'><strong>$total_full_marks</strong></td>
             <td colspan='2'></td>
             <td><strong>$total_obtained_marks ($formattedPercentage%)</strong></td>
             <th>$gradeAndDesc[0]-$gradeAndDesc[1]</th>
                 </tr>";
-                echo "</table>";
-            } else {
+                    echo "</table>"; ?>
+
+                    <table class="table" border="0" align="right" style="width: 50%;">
+                        <tbody>
+                            <tr>
+                                <td> Result </td>
+                                <th><?php echo strtoupper($passOrFail) ?></th>
+                            </tr>
+                            <tr>
+                                <td> Overall ranking </th>
+                                <th></th>
+                            </tr>
+                            <tr>
+                                <td> Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>) </th>
+                                <td><?php echo $average_attendance_percentage ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                <?php } else {
                 echo "Error fetching exam details and marks.";
             }
         } elseif ($exam_type == "" && $student_id == "") {
@@ -472,22 +503,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
             <?php
         }
             ?>
-            <table class="table" border="0" align="right" style="width: 50%;">
-                <tbody>
-                    <tr>
-                        <td> Result </td>
-                        <th><?php echo strtoupper($passOrFail) ?></th>
-                    </tr>
-                    <tr>
-                        <td> Overall ranking </th>
-                        <th></th>
-                    </tr>
-                    <tr>
-                        <td> Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>) </th>
-                        <td><?php echo $average_attendance_percentage ?></td>
-                    </tr>
-                </tbody>
-            </table>
             <table class="table visible-xs" border="0" align="left" style="width: 40%; margin-left:0%; margin-top:20%;">
                 <tbody>
                     <tr>
