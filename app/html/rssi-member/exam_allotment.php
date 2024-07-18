@@ -321,7 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                             ?>
                                                         </td>
 
-                                                        <td><?php echo htmlspecialchars($row['teacher_id']); ?></td>
+                                                        <td><?php echo htmlspecialchars($row['teacher_id'].'-'.$row['fullname']); ?></td>
 
                                                         <?php if ($role == 'Admin') : ?>
                                                             <td>
