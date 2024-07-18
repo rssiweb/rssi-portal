@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // Initialize query with base SELECT statement
     $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, 
-                     e.full_marks_written, e.full_marks_viva, e.teacher_id, e.estatus, 
+                     e.full_marks_written, e.full_marks_viva, e.exam_date_written, e.exam_date_viva, e.teacher_id, e.estatus, 
                      STRING_AGG(DISTINCT emd.class::text, ',') AS classes, a.fullname
               FROM exams e
               JOIN rssimyaccount_members a ON e.teacher_id = a.associatenumber
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         // Add GROUP BY clause
         $query .= " GROUP BY e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, 
-                            e.full_marks_written, e.full_marks_viva, e.teacher_id, e.estatus, a.fullname";
+                            e.full_marks_written, e.full_marks_viva, e.exam_date_written, e.exam_date_viva, e.teacher_id, e.estatus, a.fullname";
 
         // Execute the query
         $result = pg_query_params($con, $query, $params);
@@ -140,9 +140,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         gtag('config', 'AW-11316670180');
     </script>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
     <title>Exam Allotment</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -162,6 +165,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 </head>
 
 <body>
@@ -263,7 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                     ?>
                                     <h2 class="mt-4">Search Results</h2>
                                     <div class="table-responsive">
-                                        <table class="table table-bordered">
+                                        <table class="table table-bordered" id="table-id">
                                             <thead>
                                                 <tr>
                                                     <th>#</th>
@@ -274,6 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                     <th>Class</th>
                                                     <th>Exam mode</th>
                                                     <th>Full Marks</th>
+                                                    <th>Date of exam</th>
                                                     <th>Assigned to</th>
                                                     <?php if ($role == 'Admin') : ?>
                                                         <th>Unlink</th>
@@ -297,6 +307,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                             }
                                                             if ($row['full_marks_viva'] !== null) {
                                                                 echo ' V-' . htmlspecialchars($row['full_marks_viva']);
+                                                            }
+                                                            ?>
+                                                        </td>
+                                                        <td>
+                                                            <?php
+                                                            if (!empty($row['exam_date_written'])) {
+                                                                echo date('d/m/Y', strtotime($row['exam_date_written']));
+                                                            }
+                                                            if (!empty($row['exam_date_viva'])) {
+                                                                echo ' | ' . date('d/m/Y', strtotime($row['exam_date_viva']));
                                                             }
                                                             ?>
                                                         </td>
@@ -344,6 +364,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#table-id').DataTable({
+                paging: false,
+                // other options...
+            });
+        });
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // PHP logic to determine the current year
@@ -408,7 +436,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             });
         });
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Check initial state on page load
         if (!$('#is_user').is(':checked')) {
