@@ -75,14 +75,16 @@ if (@$_POST['form-type'] == "exam") {
     $subject = $_POST['subject'];
     $exam_mode = $_POST['exam_mode'];
     $full_marks_written = $_POST['full_marks_written'];
+    $exam_date_written = $_POST['exam_date_written'];
     $full_marks_viva = $_POST['full_marks_viva'];
+    $exam_date_viva = $_POST['exam_date_viva'];
     $exam_id = uniqid();
 
     $exam_mode_pg_array = '{' . implode(',', $exam_mode) . '}';
 
     // Prepare the SQL query
-    $exam_sql = "INSERT INTO exams (exam_type, academic_year, teacher_id, subject, exam_mode, full_marks_written, full_marks_viva, exam_id)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)";
+    $exam_sql = "INSERT INTO exams (exam_type, academic_year, teacher_id, subject, exam_mode, full_marks_written, full_marks_viva, exam_id, exam_date_written, exam_date_viva)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
 
     // Bind parameters for the prepared statement
     $params = array($exam_type, $academic_year, $teacher_id, $subject, $exam_mode_pg_array);
@@ -103,6 +105,19 @@ if (@$_POST['form-type'] == "exam") {
 
     // Add the exam_id parameter
     $params[] = $exam_id;
+    // Add the exam_date_written parameter
+    if ($exam_date_written !== null && $exam_date_written !== "") {
+        $params[] = $exam_date_written;
+    } else {
+        $params[] = null; // Add null placeholder
+    }
+
+    // Add the exam_date_viva parameter
+    if ($exam_date_viva !== null && $exam_date_viva !== "") {
+        $params[] = $exam_date_viva;
+    } else {
+        $params[] = null; // Add null placeholder
+    }
 
     // Execute the query with parameters
     $exam_result = pg_query_params($con, $exam_sql, $params);
@@ -363,10 +378,14 @@ pg_free_result($result);
                                             <div class="col-md-4 mb-3" id="written_marks_wrapper" style="display: none;">
                                                 <label for="full_marks_written" class="form-label">Full Marks Written</label>
                                                 <input type="number" class="form-control" id="full_marks_written" name="full_marks_written">
+                                                <label for="exam_date_written" class="form-label">Written Exam Date</label>
+                                                <input type="date" class="form-control" id="exam_date_written" name="exam_date_written">
                                             </div>
                                             <div class="col-md-4 mb-3" id="viva_marks_wrapper" style="display: none;">
                                                 <label for="full_marks_viva" class="form-label">Full Marks Viva</label>
                                                 <input type="number" class="form-control" id="full_marks_viva" name="full_marks_viva">
+                                                <label for="exam_date_viva" class="form-label">Viva Exam Date</label>
+                                                <input type="date" class="form-control" id="exam_date_viva" name="exam_date_viva">
                                             </div>
                                         </div>
                                         <div class="text-end mt-3 mb-3">
@@ -438,16 +457,20 @@ pg_free_result($result);
             const examModeSelect = document.getElementById("exam_mode");
             const writtenMarksWrapper = document.getElementById("written_marks_wrapper");
             const writtenMarksInput = document.getElementById("full_marks_written");
+            const writtenDateInput = document.getElementById("exam_date_written");
             const vivaMarksWrapper = document.getElementById("viva_marks_wrapper");
             const vivaMarksInput = document.getElementById("full_marks_viva");
+            const vivaDateInput = document.getElementById("exam_date_viva");
 
             // Function to show/hide marks inputs based on selected exam mode
             function updateMarksInputs() {
                 const selectedOptions = Array.from(examModeSelect.selectedOptions).map(option => option.value);
                 writtenMarksWrapper.style.display = selectedOptions.includes("Written") ? "block" : "none";
                 writtenMarksInput.required = selectedOptions.includes("Written");
+                writtenDateInput.required = selectedOptions.includes("Written");
                 vivaMarksWrapper.style.display = selectedOptions.includes("Viva") ? "block" : "none";
                 vivaMarksInput.required = selectedOptions.includes("Viva");
+                vivaDateInput.required = selectedOptions.includes("Viva");
             }
 
             // Call updateMarksInputs on page load
