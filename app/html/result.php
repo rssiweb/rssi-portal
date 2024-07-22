@@ -44,7 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
         $student_details = pg_fetch_assoc($student_result);
 
         // Fetch exam details and marks
-        $marks_query = "SELECT exam_marks_data.exam_id, exam_marks_data.viva_marks, exam_marks_data.written_marks, 
+        $marks_query = "SELECT exam_marks_data.exam_id, ROUND(exam_marks_data.viva_marks) AS viva_marks, 
+                ROUND(exam_marks_data.written_marks) AS written_marks, 
                 exams.subject, exams.full_marks_written, exams.full_marks_viva, 
                 exams.exam_date_written, exams.exam_date_viva, student.doa, student.dateofbirth, student.photourl,
                 CASE
@@ -56,7 +57,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                     WHEN attendance_viva.attendance_status IS NULL 
                          AND TO_DATE(student.doa, 'YYYY-MM-DD hh24:mi:ss') <= exams.exam_date_viva THEN 'A'
                     ELSE attendance_viva.attendance_status
-                END AS viva_attendance_status
+                END AS viva_attendance_status,
+                -- Calculate total marks based on attendance status
+                CASE
+                    WHEN (attendance_written.attendance_status = 'A' AND attendance_viva.attendance_status = 'A') THEN 0
+                    WHEN attendance_written.attendance_status = 'A' THEN exam_marks_data.viva_marks
+                    WHEN attendance_viva.attendance_status = 'A' THEN exam_marks_data.written_marks
+                    ELSE exam_marks_data.written_marks + exam_marks_data.viva_marks
+                END AS total_marks,
+                -- Rank students within the same class based on total marks
+                RANK() OVER (PARTITION BY student.class ORDER BY 
+                    CASE
+                        WHEN (attendance_written.attendance_status = 'A' AND attendance_viva.attendance_status = 'A') THEN 0
+                        WHEN attendance_written.attendance_status = 'A' THEN exam_marks_data.viva_marks
+                        WHEN attendance_viva.attendance_status = 'A' THEN exam_marks_data.written_marks
+                        ELSE exam_marks_data.written_marks + exam_marks_data.viva_marks
+                    END DESC
+                ) AS rank
                 FROM exam_marks_data
                 JOIN exams ON exam_marks_data.exam_id = exams.exam_id
                 LEFT JOIN (
@@ -361,10 +378,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                                 <div class="row">
                                     <div class="col" style="display: inline-block; width:65%;">
 
-                                        <p><b>Rina Shiksha Sahayak Foundation (RSSI NGO)</b></p>
-                                        <p style="font-size: small;">D/1/122, Vinamra Khand, Gomti Nagar, Lucknow, Uttar Pradesh 226010</p>
-                                        <p style="font-size: small;">NGO-DARPAN Id: WB/2021/0282726, CIN: U80101WB2020NPL237900</p>
-                                        <p style="font-size: small;">Email: info@rssi.in, Website: www.rssi.in</p>
+                                        <?php
+                                        if ($student_details['category'] == 'LG1') {
+                                            echo '<p><b>KALPANA BUDS SCHOOL</b></p>';
+                                        } else {
+                                            echo '<p><b>RSSI NGO</b></p>';
+                                        }
+                                        ?>
+                                        <p>(A division of Rina Shiksha Sahayak Foundation)</p>
+                                        <p>NGO-DARPAN Id: WB/2021/0282726, CIN: U80101WB2020NPL237900</p>
+                                        <p>Email: info@rssi.in, Website: www.rssi.in</p>
                                     </div>
                                     <div class="col" style="display: inline-block; width:32%; vertical-align: top;">
                                         <p style="font-size: small;">Scan QR code to check authenticity</p>
@@ -425,7 +448,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                     <?php foreach ($ordered_marks_data as $row) {
                         $written_marks = ($row['written_attendance_status'] == 'A') ? 'A' : $row['written_marks'];
                         $viva_marks = ($row['viva_attendance_status'] == 'A') ? 'A' : $row['viva_marks'];
-                        $total_marks = ($row['written_attendance_status'] == 'A' || $row['viva_attendance_status'] == 'A') ? 'A' : ($row['written_marks'] + $row['viva_marks']); // Calculate total marks
+                        $total_marks = 0;
+
+                        if ($row['written_attendance_status'] == 'A' && $row['viva_attendance_status'] != 'A') {
+                            $total_marks = $row['viva_marks'];
+                        } elseif ($row['viva_attendance_status'] == 'A' && $row['written_attendance_status'] != 'A') {
+                            $total_marks = $row['written_marks'];
+                        } elseif ($row['written_attendance_status'] != 'A' && $row['viva_attendance_status'] != 'A') {
+                            $total_marks = $row['written_marks'] + $row['viva_marks'];
+                        } else {
+                            $total_marks = 0;
+                        } // Calculate total marks
                         echo "<tr>
                 <td>" . $row['subject'] . "</td>
                 <td>" . $row['full_marks_viva'] . "</td>
@@ -456,7 +489,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                             </tr>
                             <tr>
                                 <td> Overall ranking </th>
-                                <th></th>
+                                <th><?php echo $row['rank'] ?></th>
                             </tr>
                             <tr>
                                 <td> Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>) </th>
