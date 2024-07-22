@@ -125,7 +125,7 @@ while ($row = pg_fetch_assoc($students_result)) {
     <!-- Include necessary meta tags and stylesheets -->
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Exam Allotment</title>
+    <title>Exam summary report</title>
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -164,12 +164,12 @@ while ($row = pg_fetch_assoc($students_result)) {
     <?php include 'inactive_session_expire_check.php'; ?>
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Exam Allotment</h1>
+            <h1>Exam summary report</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item">Academic</li>
-                    <li class="breadcrumb-item active">Exam Allotment</li>
+                    <li class="breadcrumb-item active">Exam summary report</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -244,14 +244,20 @@ while ($row = pg_fetch_assoc($students_result)) {
     </main><!-- End #main -->
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-Qz4v4VXpE57jznP2TknxkX6KbX1n0E4kI1MfhV9Y8kpAp8GHFfSB2I0qQ13cGbE3" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/2.0.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             $('#student-data-table').DataTable();
         });
     </script>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 </body>
 
 </html>
