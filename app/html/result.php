@@ -44,36 +44,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
         $student_details = pg_fetch_assoc($student_result);
 
         // Fetch exam details and marks
-        $marks_query = "SELECT exam_marks_data.exam_id, ROUND(exam_marks_data.viva_marks) AS viva_marks, 
+        $marks_query = "
+            SELECT 
+                exam_marks_data.exam_id, 
+                ROUND(exam_marks_data.viva_marks) AS viva_marks, 
                 ROUND(exam_marks_data.written_marks) AS written_marks, 
-                exams.subject, exams.full_marks_written, exams.full_marks_viva, 
-                exams.exam_date_written, exams.exam_date_viva, student.doa, student.dateofbirth, student.photourl,
+                exams.subject, 
+                exams.full_marks_written, 
+                exams.full_marks_viva, 
+                exams.exam_date_written, 
+                exams.exam_date_viva, 
+                student.doa, 
+                student.dateofbirth, 
+                student.photourl,
                 CASE
                     WHEN attendance_written.attendance_status IS NULL 
-                         AND TO_DATE(student.doa, 'YYYY-MM-DD hh24:mi:ss') <= exams.exam_date_written THEN 'A'
+                        AND TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') <= exams.exam_date_written THEN 'A'
                     ELSE attendance_written.attendance_status
                 END AS written_attendance_status,
                 CASE
                     WHEN attendance_viva.attendance_status IS NULL 
-                         AND TO_DATE(student.doa, 'YYYY-MM-DD hh24:mi:ss') <= exams.exam_date_viva THEN 'A'
+                        AND TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') <= exams.exam_date_viva THEN 'A'
                     ELSE attendance_viva.attendance_status
-                END AS viva_attendance_status,
-                -- Calculate total marks based on attendance status
-                CASE
-                    WHEN (attendance_written.attendance_status = 'A' AND attendance_viva.attendance_status = 'A') THEN 0
-                    WHEN attendance_written.attendance_status = 'A' THEN exam_marks_data.viva_marks
-                    WHEN attendance_viva.attendance_status = 'A' THEN exam_marks_data.written_marks
-                    ELSE exam_marks_data.written_marks + exam_marks_data.viva_marks
-                END AS total_marks,
-                -- Rank students within the same class based on total marks
-                RANK() OVER (PARTITION BY student.class ORDER BY 
-                    CASE
-                        WHEN (attendance_written.attendance_status = 'A' AND attendance_viva.attendance_status = 'A') THEN 0
-                        WHEN attendance_written.attendance_status = 'A' THEN exam_marks_data.viva_marks
-                        WHEN attendance_viva.attendance_status = 'A' THEN exam_marks_data.written_marks
-                        ELSE exam_marks_data.written_marks + exam_marks_data.viva_marks
-                    END DESC
-                ) AS rank
+                END AS viva_attendance_status
                 FROM exam_marks_data
                 JOIN exams ON exam_marks_data.exam_id = exams.exam_id
                 LEFT JOIN (
@@ -81,15 +74,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                     FROM attendance
                     GROUP BY user_id, date
                 ) AS attendance_written
-                ON exam_marks_data.student_id = attendance_written.user_id AND exams.exam_date_written = attendance_written.date
+                ON exam_marks_data.student_id = attendance_written.user_id 
+                AND exams.exam_date_written = attendance_written.date
                 LEFT JOIN (
                     SELECT user_id, date, 'P' AS attendance_status
                     FROM attendance
                     GROUP BY user_id, date
                 ) AS attendance_viva
-                ON exam_marks_data.student_id = attendance_viva.user_id AND exams.exam_date_viva = attendance_viva.date
+                ON exam_marks_data.student_id = attendance_viva.user_id 
+                AND exams.exam_date_viva = attendance_viva.date
                 JOIN rssimyprofile_student student ON exam_marks_data.student_id = student.student_id
-                WHERE exam_marks_data.student_id = $1 AND exams.exam_type = $2 AND exams.academic_year = $3";
+                WHERE exam_marks_data.student_id = $1 
+                AND exams.exam_type = $2 
+                AND exams.academic_year = $3";
         $marks_result = pg_query_params($con, $marks_query, [$student_id, $exam_type, $academic_year]);
 
         // Process and arrange marks data according to subject sequence
@@ -489,7 +486,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                             </tr>
                             <tr>
                                 <td> Overall ranking </th>
-                                <th><?php echo $row['rank'] ?></th>
+                                <th></th>
                             </tr>
                             <tr>
                                 <td> Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>) </th>
