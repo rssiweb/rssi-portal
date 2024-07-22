@@ -232,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                 <option value="English" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'English') ? 'selected' : ''; ?>>English</option>
                                                 <option value="Mathematics" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Mathematics') ? 'selected' : ''; ?>>Mathematics</option>
                                                 <option value="GK" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'GK') ? 'selected' : ''; ?>>GK</option>
-                                                <option value="Humara Parivesh" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Humara Parivesh') ? 'selected' : ''; ?>>Humara Parivesh</option>
+                                                <option value="Hamara Parivesh" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Hamara Parivesh') ? 'selected' : ''; ?>>Hamara Parivesh</option>
                                                 <option value="Computer" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Computer') ? 'selected' : ''; ?>>Computer</option>
                                                 <option value="Arts & Craft" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Arts & Craft') ? 'selected' : ''; ?>>Arts & Craft</option>
                                                 <option value="Sulekh+Imla" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Sulekh+Imla') ? 'selected' : ''; ?>>Sulekh+Imla</option>
