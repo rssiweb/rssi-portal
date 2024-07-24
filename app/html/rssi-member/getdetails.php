@@ -118,7 +118,7 @@ echo '
 
         <?php echo  '<br>' . $array['yos'] . '</td>
             <td>' . $array['ipf'] . '</td>
-            <td>' . $array['astatus'] . '</td>' ?>
+            <td>' . $array['filterstatus'] . '</td>' ?>
 
         <?php if ($array['associationstatus'] != null) { ?>
             <?php echo '<td>' . $array['effectivedate'] . '</td>' ?>

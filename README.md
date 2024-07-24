@@ -107,6 +107,12 @@ http://rssi.in/generate-hash-for/2311 -> digital ocean
 UPDATE rssimyprofile_student
 SET studentname = TRIM(studentname);
 
+SELECT column_name, ordinal_position
+FROM information_schema.columns
+WHERE table_name = 'rssimyaccount_members'
+ORDER BY ordinal_position;
+
+
 git pull --rebase origin master
 
 ALTER TABLE fees
