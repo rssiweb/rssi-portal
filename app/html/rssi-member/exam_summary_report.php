@@ -18,6 +18,7 @@ $students_query = "
         student.student_id, 
         student.studentname AS student_name, 
         student.class,
+        student.category,
         exam_marks_data.exam_id, 
         ROUND(exam_marks_data.viva_marks) AS viva_marks, 
         ROUND(exam_marks_data.written_marks) AS written_marks, 
@@ -81,9 +82,16 @@ $students_result = pg_query_params($con, $students_query, [$exam_type, $academic
 // Prepare the data
 $students_data = [];
 $subject_sequence = ['Hindi', 'English', 'Mathematics', 'GK', 'Hamara Parivesh', 'Computer', 'Sulekh+Imla', 'Art & Craft', 'Project'];
+$subjects_with_exams = [];
+
+// Fetch all data into an array
+$rows = [];
+while ($row = pg_fetch_assoc($students_result)) {
+    $rows[] = $row;
+}
 
 // Arrange data
-while ($row = pg_fetch_assoc($students_result)) {
+foreach ($rows as $row) {
     $student_id = $row['student_id'];
     $subject = $row['subject'];
 
@@ -92,11 +100,10 @@ while ($row = pg_fetch_assoc($students_result)) {
         $students_data[$student_id] = [
             'student_name' => $row['student_name'],
             'class' => $row['class'],
+            'category' => $row['category'],
             'subjects' => [],
-            'total_full_marks_written' => 0,
-            'total_full_marks_viva' => 0,
-            'total_marks_obtained_written' => 0,
-            'total_marks_obtained_viva' => 0,
+            'total_full_marks' => 0,
+            'total_marks_obtained' => 0,
         ];
     }
 
@@ -111,11 +118,18 @@ while ($row = pg_fetch_assoc($students_result)) {
     ];
 
     // Update totals
-    $students_data[$student_id]['total_full_marks_written'] += $row['full_marks_written'];
-    $students_data[$student_id]['total_full_marks_viva'] += $row['full_marks_viva'];
-    $students_data[$student_id]['total_marks_obtained_written'] += $row['written_marks'];
-    $students_data[$student_id]['total_marks_obtained_viva'] += $row['viva_marks'];
+    $students_data[$student_id]['total_full_marks'] += $row['full_marks_written'] + $row['full_marks_viva'];
+    $students_data[$student_id]['total_marks_obtained'] += $row['written_marks'] + $row['viva_marks'];
+
+    // Track subjects with exams
+    if (!isset($subjects_with_exams[$subject])) {
+        $subjects_with_exams[$subject] = [
+            'viva' => !is_null($row['exam_date_viva']),
+            'written' => !is_null($row['exam_date_written'])
+        ];
+    }
 }
+
 ?>
 
 <!doctype html>
@@ -184,60 +198,97 @@ while ($row = pg_fetch_assoc($students_result)) {
                         <div class="card-body">
                             <br>
                             <div class="container">
-                                <form method="GET" action="">
-                                    <label for="exam_type">Exam Type:</label>
-                                    <select id="exam_type" name="exam_type">
-                                        <option value="First Term" <?= $exam_type === 'First Term' ? 'selected' : '' ?>>First Term</option>
-                                        <option value="Second Term" <?= $exam_type === 'Second Term' ? 'selected' : '' ?>>Second Term</option>
-                                        <option value="Annual" <?= $exam_type === 'Annual' ? 'selected' : '' ?>>Annual</option>
+                                <form method="GET" action="" class="d-flex align-items-center">
+                                    <label for="exam_type" class="me-2">Exam Type:</label>
+                                    <select name="exam_type" class="form-select me-2" style="width: max-content; display: inline-block;" required>
+                                        <?php if ($exam_type == null) { ?>
+                                            <option value="" disabled selected hidden>Select Exam Name</option>
+                                        <?php } else { ?>
+                                            <option hidden selected><?php echo $exam_type ?></option>
+                                        <?php } ?>
+                                        <option>First Term</option>
+                                        <option>Half Yearly</option>
+                                        <option>Annual</option>
                                     </select>
 
-                                    <label for="academic_year">Academic Year:</label>
-                                    <input type="text" id="academic_year" name="academic_year" value="<?= htmlspecialchars($academic_year) ?>" placeholder="e.g., 2024-2025">
+                                    <label for="academic_year" class="me-2">Academic Year:</label>
+                                    <select id="academic_year" name="academic_year" class="form-select me-2" style="width: max-content; display: inline-block;">
+                                        <?php if ($academic_year == null) { ?>
+                                            <option value="" disabled selected hidden>Select Year</option>
+                                        <?php } else { ?>
+                                            <option hidden selected><?php echo $academic_year ?></option>
+                                        <?php } ?>
+                                    </select>
 
-                                    <input type="submit" value="Fetch Data">
+                                    <button type="submit" class="btn btn-primary btn-sm" style="outline: none;">Apply Filters</button>
                                 </form>
+                                <script>
+                                    <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
+                                        var currentYear = new Date().getFullYear() - 1;
+                                    <?php } else { ?>
+                                        var currentYear = new Date().getFullYear();
+                                    <?php } ?>
 
-                                <?php if ($exam_type && $academic_year) : ?>
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered" id="student-data-table">
-                                            <thead>
+                                    for (var i = 0; i < 5; i++) {
+                                        var next = currentYear + 1;
+                                        var year = currentYear + '-' + next;
+                                        //next.toString().slice(-2) 
+                                        $('#academic_year').append(new Option(year, year));
+                                        currentYear--;
+                                    }
+                                </script>
+                            </div>
+                            <br>
+
+                            <div class="container">
+                                <h4>Exam Summary Report</h4>
+                                <div class="table-responsive" style="font-size:small">
+                                    <table id="table-id" class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Student ID</th>
+                                                <th>Student Name</th>
+                                                <th>Class</th>
+                                                <th>Category</th>
+                                                <?php foreach ($subject_sequence as $subject) {
+                                                    if (isset($subjects_with_exams[$subject])) {
+                                                        if ($subjects_with_exams[$subject]['viva']) {
+                                                            echo "<th>" . substr($subject, 0, 4) . " _V</th>";
+                                                        }
+                                                        if ($subjects_with_exams[$subject]['written']) {
+                                                            echo "<th>" . substr($subject, 0, 4) . " _W</th>";
+                                                        }
+                                                    }
+                                                } ?>
+                                                <th>Total Full Marks</th>
+                                                <th>Total Marks Obtained</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($students_data as $student_id => $student) : ?>
                                                 <tr>
-                                                    <th>Student ID</th>
-                                                    <th>Student Name</th>
-                                                    <th>Class</th>
-                                                    <?php foreach ($subject_sequence as $subject) : ?>
-                                                        <th><?= htmlspecialchars(substr($subject, 0, 4) ?? '') ?> _V</th>
-                                                        <th><?= htmlspecialchars(substr($subject, 0, 4) ?? '') ?> _W</th>
-                                                    <?php endforeach; ?>
-                                                    <th>Total Full Marks</th>
-                                                    <th>Total Marks Obtained</th>
+                                                    <td><?= $student_id ?></td>
+                                                    <td><?= $student['student_name'] ?></td>
+                                                    <td><?= $student['class'] ?></td>
+                                                    <td><?= $student['category'] ?></td>
+                                                    <?php foreach ($subject_sequence as $subject) {
+                                                        if (isset($subjects_with_exams[$subject])) {
+
+                                                            if ($subjects_with_exams[$subject]['viva']) {
+                                                                echo "<td>" . ($student['subjects'][$subject]['viva_marks'] ?? $student['subjects'][$subject]['viva_attendance_status'] ?? '') . "</td>";
+                                                            }
+                                                            if ($subjects_with_exams[$subject]['written']) {
+                                                                echo "<td>" . ($student['subjects'][$subject]['written_marks'] ?? $student['subjects'][$subject]['written_attendance_status'] ?? '') . "</td>";
+                                                            }
+                                                        }
+                                                    } ?>
+                                                    <td><?= $student['total_full_marks'] ?></td>
+                                                    <td><?= $student['total_marks_obtained'] ?></td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($students_data as $student_id => $student_info) : ?>
-                                                    <tr>
-                                                        <td><?= htmlspecialchars($student_id ?? '') ?></td>
-                                                        <td><?= htmlspecialchars($student_info['student_name'] ?? '') ?></td>
-                                                        <td><?= htmlspecialchars($student_info['class'] ?? '') ?></td>
-                                                        <?php foreach ($subject_sequence as $subject) : ?>
-                                                            <?php if (isset($student_info['subjects'][$subject])) : ?>
-                                                                <?php $marks = $student_info['subjects'][$subject]; ?>
-                                                                <td><?= htmlspecialchars($marks['viva_marks'] ?? $marks['viva_attendance_status'] ?? '') ?></td>
-                                                                <td><?= htmlspecialchars($marks['written_marks'] ?? $marks['written_attendance_status'] ?? '') ?></td>
-                                                            <?php else : ?>
-                                                                <td></td>
-                                                                <td></td>
-                                                            <?php endif; ?>
-                                                        <?php endforeach; ?>
-                                                        <td><?= htmlspecialchars($student_info['total_full_marks_written'] + $student_info['total_full_marks_viva']) ?></td>
-                                                        <td><?= htmlspecialchars($student_info['total_marks_obtained_written'] + $student_info['total_marks_obtained_viva']) ?></td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -250,7 +301,7 @@ while ($row = pg_fetch_assoc($students_result)) {
     <script src="https://cdn.datatables.net/2.0.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#student-data-table').DataTable({
+            $('#table-id').DataTable({
                 "order": [] // Disable initial sorting
             });
         });
