@@ -155,7 +155,10 @@ while ($row = pg_fetch_assoc($students_result)) {
         });
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Add DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Add DataTables JS -->
     <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 </head>
 
@@ -244,11 +247,12 @@ while ($row = pg_fetch_assoc($students_result)) {
     </main><!-- End #main -->
 
     <!-- Scripts -->
-    <script src="https://cdn.datatables.net/2.0.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#student-data-table').DataTable();
+            $('#student-data-table').DataTable({
+                "order": [] // Disable initial sorting
+            });
         });
     </script>
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>

@@ -26,7 +26,7 @@ if ($role == 'Admin') {
     } else {
         $result = pg_query($con, "SELECT *
         FROM archive
-        JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber"); //select query for viewing users.
+        JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber order by doc_id desc"); //select query for viewing users.
     }
 }
 if (!$result) {
@@ -433,6 +433,7 @@ $resultArr = pg_fetch_all($result);
         // Initialize DataTables only if resultArr is not empty
         $('#table-id').DataTable({
           paging: false,
+          "order": [] // Disable initial sorting
           // other options...
         });
       <?php endif; ?>

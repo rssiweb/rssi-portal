@@ -368,6 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $(document).ready(function() {
             $('#table-id').DataTable({
                 paging: false,
+                "order": [] // Disable initial sorting
                 // other options...
             });
         });

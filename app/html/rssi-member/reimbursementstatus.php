@@ -756,6 +756,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
         // Initialize DataTables only if resultArr is not empty
         $('#table-id').DataTable({
           paging: false,
+          "order": [] // Disable initial sorting
           // other options...
         });
       <?php endif; ?>
