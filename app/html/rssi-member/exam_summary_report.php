@@ -32,13 +32,13 @@ $students_query = "
         student.photourl,
         CASE
             WHEN exams.exam_date_written IS NULL THEN NULL
-            WHEN TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') > exams.exam_date_written THEN 'NA'
+            WHEN TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') > exams.exam_date_written THEN 'BA'
             WHEN attendance_written.attendance_status IS NULL THEN 'A'
             ELSE COALESCE(attendance_written.attendance_status, 'A')
         END AS written_attendance_status,
         CASE
             WHEN exams.exam_date_viva IS NULL THEN NULL
-            WHEN TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') > exams.exam_date_viva THEN 'NA'
+            WHEN TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') > exams.exam_date_viva THEN 'BA'
             WHEN attendance_viva.attendance_status IS NULL THEN 'A'
             ELSE COALESCE(attendance_viva.attendance_status, 'A')
         END AS viva_attendance_status,
@@ -212,7 +212,7 @@ foreach ($rows as $row) {
                                     </select>
 
                                     <label for="academic_year" class="me-2">Academic Year:</label>
-                                    <select id="academic_year" name="academic_year" class="form-select me-2" style="width: max-content; display: inline-block;">
+                                    <select id="academic_year" name="academic_year" class="form-select me-2" style="width: max-content; display: inline-block;" required>
                                         <?php if ($academic_year == null) { ?>
                                             <option value="" disabled selected hidden>Select Year</option>
                                         <?php } else { ?>
@@ -242,7 +242,7 @@ foreach ($rows as $row) {
 
                             <div class="container">
                                 <h4>Exam Summary Report</h4>
-                                <div class="table-responsive" style="font-size:small">
+                                <div class="table-responsive">
                                     <table id="table-id" class="table">
                                         <thead>
                                             <tr>

@@ -117,6 +117,11 @@
               <span>Exam Allotment</span>
             </a>
           </li>
+          <li>
+            <a id="examSummary" href="exam_summary_report.php">
+              <span>Exam Summary Report</span>
+            </a>
+          </li>
           <!-- <li>
             <a id="uploadMarks" href="exam_marks_upload.php">
               <span>Upload Marks</span>
@@ -389,6 +394,10 @@
         id: 'acadamis',
         linkId: 'examAllotment',
         url: 'exam_marks_upload.php'
+      },{
+        id: 'acadamis',
+        linkId: 'examSummary',
+        url: 'exam_summary_report.php'
       },
       {
         id: 'myservices',
