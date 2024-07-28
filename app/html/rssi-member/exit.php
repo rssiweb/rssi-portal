@@ -13,7 +13,7 @@ if (!isLoggedIn("aid")) {
 validation();
 
 @$associate_number = @strtoupper($_GET['associate-number']);
-$result = pg_query($con, "SELECT fullname, associatenumber, doj, effectivedate, rssimyaccount_members.remarks reason_remarks, photo, engagement, position, depb, filterstatus,exit_initiated_by, exit_gen_otp_center_incharge, exit_gen_otp_associate, email, exit_flag, exit_photo, exit_date_time, asset_clearance, financial_clearance, security_clearance, hr_clearance, work_clearance, legal_clearance, ip_address, exit_submitted_by, exit_submitted_on, exit_initiated_on, exit_initiated_by, associate_exit.remarks exit_remarks, exit_interview
+$result = pg_query($con, "SELECT fullname, associatenumber, doj, effectivedate, security_deposit, rssimyaccount_members.remarks reason_remarks, photo, engagement, position, depb, filterstatus,exit_initiated_by, exit_gen_otp_center_incharge, exit_gen_otp_associate, email, exit_flag, exit_photo, exit_date_time, asset_clearance, financial_clearance, security_clearance, hr_clearance, work_clearance, legal_clearance, security_refund, ip_address, exit_submitted_by, exit_submitted_on, exit_initiated_on, exit_initiated_by, associate_exit.remarks exit_remarks, exit_interview
     FROM rssimyaccount_members
     LEFT JOIN associate_exit ON associate_exit.exit_associate_id = rssimyaccount_members.associatenumber
     WHERE rssimyaccount_members.associatenumber = '$associate_number'");
@@ -51,11 +51,28 @@ if (@$_POST['form-type'] == "exit") {
         $work_clearance = isset($_POST['clearance']) && in_array('work-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
         $legal_clearance = isset($_POST['clearance']) && in_array('legal-clearance', $_POST['clearance']) ? "TRUE" : "FALSE";
 
+        // Retrieve and sanitize the security deposit refund decision
+        $security_refund = isset($_POST['security_refund']) ? $_POST['security_refund'] : 'no';
+        $security_refund = htmlspecialchars($security_refund, ENT_QUOTES, 'UTF-8');
+
         $exit_interview = htmlspecialchars($_POST['exit-interview'], ENT_QUOTES, 'UTF-8');
         $exit_date_time = $_POST['exit-date-time'];
         $now = date('Y-m-d H:i:s');
-        $ip_address = $_SERVER['REMOTE_ADDR']; // Get the IP address of the user
-        $exit = "UPDATE associate_exit SET exit_photo='$exit_photo', exit_date_time='$exit_date_time', otp_associate='$otp_associate', otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', ip_address='$ip_address', remarks='$exit_remarks', asset_clearance=$asset_clearance, financial_clearance=$financial_clearance, security_clearance=$security_clearance, hr_clearance=$hr_clearance, work_clearance=$work_clearance,legal_clearance=$legal_clearance, exit_interview='$exit_interview' where exit_associate_id='$otp_initiatedfor_main'";
+        function getUserIpAddr()
+        {
+            if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
+                return $_SERVER['HTTP_CLIENT_IP'];
+            } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+                $ip = trim($ipList[0]);
+                return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : $_SERVER['REMOTE_ADDR'];
+            } else {
+                return $_SERVER['REMOTE_ADDR'];
+            }
+        }
+
+        $ip_address = getUserIpAddr();
+        $exit = "UPDATE associate_exit SET exit_photo='$exit_photo', exit_date_time='$exit_date_time', otp_associate='$otp_associate', otp_center_incharge='$otp_centreincharge', exit_submitted_by='$associatenumber', exit_submitted_on='$now', exit_flag='yes', ip_address='$ip_address', remarks='$exit_remarks', asset_clearance=$asset_clearance, financial_clearance=$financial_clearance, security_clearance=$security_clearance, hr_clearance=$hr_clearance, work_clearance=$work_clearance,legal_clearance=$legal_clearance, exit_interview='$exit_interview',security_refund='$security_refund' where exit_associate_id='$otp_initiatedfor_main'";
         $result = pg_query($con, $exit);
         $cmdtuples = pg_affected_rows($result);
     } else {
@@ -102,15 +119,18 @@ if (@$cmdtuples == 1) {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -230,7 +250,19 @@ if (@$cmdtuples == 1) {
                                     <label class="form-check-label" for="legal-clearance">Legal Clearance</label>
                                 </div>
                             </div>
-
+                            <?php if (!empty($array['security_deposit'])) : ?>
+                                <div class="mb-3">
+                                    <label for="security_deposit">Would you like to make a difference in students' lives by donating your security deposit?</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="refund-yes" name="security_refund" value="yes" <?php if ($array['security_refund'] === 'yes') echo 'checked'; ?> required>
+                                        <label class="form-check-label" for="refund-yes">Yes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="refund-no" name="security_refund" value="no" <?php if ($array['security_refund'] === 'no') echo 'checked'; ?> required>
+                                        <label class="form-check-label" for="refund-no">No</label>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
 
                             <div class="mb-3">
                                 <label for="exit-interview" class="form-label">Exit Interview:</label>
@@ -527,6 +559,33 @@ if (@$cmdtuples == 1) {
         // Attach the form validation to the form's submit event
         document.getElementById('a_exit').onsubmit = validateForm;
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const noOption = document.getElementById('refund-no');
+            const form = document.querySelector('form'); // Assuming your form is the closest form element
+
+            noOption.addEventListener('change', function(event) {
+                if (noOption.checked) {
+                    event.preventDefault();
+                    if (confirm('With your security deposit, a child can get 4 notebooks which will help them to continue 6 months of study. Are you sure you want to select "No"?')) {
+                        // Allow the form to be submitted
+                        noOption.checked = true;
+                    } else {
+                        // Revert the selection
+                        noOption.checked = false;
+                    }
+                }
+            });
+
+            // Ensure form submission is captured and confirmation check is done
+            form.addEventListener('submit', function(event) {
+                if (noOption.checked && !confirm('With your security deposit, a child can get 4 notebooks which will help them to continue 6 months of study. Are you sure you want to select "No"?')) {
+                    event.preventDefault(); // Prevent form submission if confirmation is not given
+                }
+            });
+        });
+    </script>
+
 
 </body>
 
