@@ -66,8 +66,6 @@ while ($row = pg_fetch_array($run)) //while look to fetch the result and store i
         $job_type = $row[54];
         $salary = $row[55];
         $panno = $row[56];
-        $bankname = $row[57];
-        $accountnumber = $row[58];
-        $ifsccode = $row[59];
-        $grade = $row[60];
+        $security_deposit = $row[57];
+        $grade = $row[58];
 }
