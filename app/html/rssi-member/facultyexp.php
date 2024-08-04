@@ -15,7 +15,7 @@ validation();
 <?php
 
 @$id = $_POST['get_id'];
-$result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' and position LIKE '%-Faculty%' order by filterstatus asc,today desc");
+$result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' order by filterstatus asc,today desc");
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -28,15 +28,18 @@ $resultArr = pg_fetch_all($result);
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -93,7 +96,7 @@ $resultArr = pg_fetch_all($result);
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -163,17 +166,8 @@ $resultArr = pg_fetch_all($result);
                                 echo '<tbody>';
                                 foreach ($resultArr as $array) {
                                     echo '<tr>' ?>
-                                    <?php if ($array['disc'] == null) { ?>
-                                        <?php echo '<td><img src="' . $array['photo'] . '" width=50px/></td>' ?>
-                                    <?php } else { ?> <?php echo '<td><img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" width=50px/></td>' ?>
-                                    <?php } ?>
+                                    <?php echo '<td><img src="' . $array['photo'] . '" width=50px/></td>' ?>
                                     <?php echo '<td>' . $array['fullname']  ?>
-
-                                    <?php if ($array['on_leave'] != null) { ?>
-                                        <?php echo '<br><span class="badge label-danger">on leave</span>'
-                                        ?>
-                                    <?php    } else {
-                                    } ?>
                                 <?php
                                     echo '
                                     </td><td>' . $array['eduq'] . '</td>

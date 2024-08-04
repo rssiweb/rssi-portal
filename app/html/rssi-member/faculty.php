@@ -293,121 +293,124 @@ $resultArr = pg_fetch_all($result);
                                     }
                                 })
                             </script>
-                            <?php
-                            echo '
+
                             <div class="table-responsive">
-                            <table class="table" id="table-id">
-                            <thead>
-                            <tr>
-                            <th id="cw">Photo</th>
-                            <th id="cw1">Volunteer Details</th>
-                            <th>Contact</th>
-                            <th>Designation</th>
-                            <!--<th>Class URL</th>-->
-                            <th id="cw2">Association Status</th>
-                            <th>Productivity</th>
-                            <th>Worklist</th>
-                            </tr>
-                            </thead>' ?>
-                            <?php if (sizeof($resultArr) > 0) { ?>
-                                <?php
-                                echo '<tbody>';
-                                foreach ($resultArr as $array) {
-                                    echo '<tr>
-                                    <td>';
-                                ?>
-                                    <?php if ($array['photo'] != null) { ?>
-                                        <div class="icon-container">
-                                            <img src="<?php echo $array['photo']; ?>" class="rounded-circle me-2" alt="User Photo" width="50" height="50" />
-                                        </div>
-                                    <?php } else { ?>
-                                        <div class="icon-container">
-                                            <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="rounded-circle me-2" alt="Blank User Photo" width="50" height="50" />
-                                        </div>
-                                    <?php } ?>
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th id="cw">Photo</th>
+                                            <th id="cw1">Volunteer Details</th>
+                                            <th>Contact</th>
+                                            <th>Designation</th>
+                                            <!--<th>Class URL</th>-->
+                                            <th id="cw2">Association Status</th>
+                                            <th>Productivity</th>
+                                            <th>Worklist</th>
+                                        </tr>
+                                    </thead>
+                                    <?php if (sizeof($resultArr) > 0) { ?>
+                                        <tbody>
+                                            <?php foreach ($resultArr as $array) { ?>
+                                                <tr>
+                                                    <td>
+                                                        <?php if ($array['photo'] != null) { ?>
+                                                            <div class="icon-container">
+                                                                <img src="<?php echo $array['photo']; ?>" class="rounded-circle me-2" alt="User Photo" width="50" height="50" />
+                                                            </div>
+                                                        <?php } else { ?>
+                                                            <div class="icon-container">
+                                                                <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="rounded-circle me-2" alt="Blank User Photo" width="50" height="50" />
+                                                            </div>
+                                                        <?php } ?>
 
-                                    <div class="status-container">
-                                        <?php if ($array['logintime'] != null) {
-                                            if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
-                                                <div class="status-circle" title="Online"></div>
-                                            <?php } else { ?>
-                                                <div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>
-                                            <?php }
-                                        } else { ?>
-                                            <div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>
-                                        <?php } ?>
-                                    </div>
+                                                        <div class="status-container">
+                                                            <?php if ($array['logintime'] != null) {
+                                                                if (date('Y-m-d H:i:s', strtotime($array['logintime'] . ' + 24 minute')) > $date) { ?>
+                                                                    <div class="status-circle" title="Online"></div>
+                                                                <?php } else { ?>
+                                                                    <div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>
+                                                                <?php }
+                                                            } else { ?>
+                                                                <div class="status-circle" style="background-color: #E5E5E5;" title="Offline"></div>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo 'Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
+                                                        <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['doj'])) . '<br>' . $array['yos'] . '</td>
+                                                        <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
+                                                        <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) ?>
+                                                    </td>
+                                                    <td style="white-space:unset">
 
-                                    <?php echo '</div></td>
-                                    <td>Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
-                                    <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['doj'])) . '<br>' . $array['yos'] . '</td>
-                                    <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
-                                    <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) . '</td>';
-                                    ?>
+                                                        <?php echo $array['filterstatus'] . '<br>';
 
-                                    <!-- <?php if ($id == "Active") { ?>
-                                        <?php echo '<td><a href="' . $array['gm'] . '" target="_blank">' . substr($array['gm'], -12) . '</span></td>'; ?>
-                                    <?php } else { ?>
-                                        <?php echo '<td></td>'; ?>
-                                    <?php } ?> -->
+                                                        if ($array['onleave'] != null) {
+                                                            echo '<br><p class="badge bg-danger">on leave</p>';
+                                                        }
 
-                                    <?php echo '<td style="white-space:unset">' . $array['filterstatus'] . '<br>';
+                                                        if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') {
+                                                            echo '<br><p class="badge bg-warning">Attd. pending</p>';
+                                                        }
 
-                                    if ($array['onleave'] != null) {
-                                        echo '<br><p class="badge bg-danger">on leave</p>';
-                                    }
+                                                        if ($array['userid'] != null && $array['status'] != 'Closed') {
+                                                            echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="badge bg-warning">agreement</p></a>';
+                                                        }
 
-                                    if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') {
-                                        echo '<br><p class="badge bg-warning">Attd. pending</p>';
-                                    }
+                                                        if ($array['taggedto'] != null) {
+                                                            echo '<br><a href="gps.php?taggedto=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="badge bg-danger">asset</p></a>';
+                                                        }
 
-                                    if ($array['userid'] != null && $array['status'] != 'Closed') {
-                                        echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="badge bg-warning">agreement</p></a>';
-                                    }
+                                                        echo '<br><br>' . (($array['effectivedate'] !== '') ? $array['effectivedate'] . '&nbsp;' : '') . $array['remarks'] ?>
+                                                    </td>
 
-                                    if ($array['taggedto'] != null) {
-                                        echo '<br><a href="gps.php?taggedto=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="badge bg-danger">asset</p></a>';
-                                    }
+                                                    <td>
+                                                        <?php echo $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?>
+                                                    </td>
+                                                    <td style="white-space: unset;">
 
-                                    echo '<br><br>' . (($array['effectivedate'] !== '') ? $array['effectivedate'] . '&nbsp;' : '') . $array['remarks'] . '</td>
 
-                                    <td>' . $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')</td><td style="white-space: unset;">
-                                    
-                                    
-                                    <button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                    <i class="bi bi-box-arrow-up-right"></i></button>
-                                    &nbsp;&nbsp;
-                                    <form name="initiatingonboarding' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
-                                        <input type="hidden" name="form-type" type="text" value="initiatingonboarding">
+                                                        <?php echo '<button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['associatenumber'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
+                                                            <i class="bi bi-box-arrow-up-right"></i></button>
+                                                        &nbsp;&nbsp;
+                                                        <form name="initiatingonboarding' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
+                                                            <input type="hidden" name="form-type" type="text" value="initiatingonboarding">
+                                                            <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
+                                                            <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
+                                                        ?>
+                                                        <!-- Initiate onboarding system -->
+                                                        <?php if ($role == 'Admin' && $array['onboard_initiated_by'] == null) { ?>
+                                                            <?php echo '<button type="submit" id="yes" onclick="validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Onboarding"><i class="bi bi-person-plus"></i></button>'; ?>
+                                                        <?php } else {
+                                                            echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'];
+                                                        }
+                                                        echo '</form>&nbsp;&nbsp;
+
+                                        <form name="initiatingexit' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
+                                        <input type="hidden" name="form-type" type="text" value="initiatingexit">
                                         <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
                                         <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
-                                    ?>
-                                    <!-- Initiate onboarding system -->
-                                    <?php if ($role == 'Admin' && $array['onboard_initiated_by'] == null) { ?>
-                                        <?php echo '<button type="submit" id="yes" onclick="validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Onboarding"><i class="bi bi-person-plus"></i></button>'; ?>
-                                    <?php } else {
-                                        echo date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'];
-                                    }
-                                    echo '</form>&nbsp;&nbsp;
-
-                                <form name="initiatingexit' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
-                                    <input type="hidden" name="form-type" type="text" value="initiatingexit">
-                                    <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
-                                    <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
-                                    ?>
-                                    <!-- Initiate Exit system -->
-                                    <?php if ($role == 'Admin' && $array['exit_initiated_by'] == null) { ?>
-                                        <?php echo '<button type="submit" id="yes" onclick="exit_validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Exit"><i class="bi bi-box-arrow-in-right"></i></button>'; ?>
-                                <?php } else {
-                                        echo date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'];
-                                    }
-                                    echo '</form></td></tr>';
-                                }
-                                echo '</tbody>';
-                                ?>
-                            <?php } else { ?>
-                                <?php echo '<tbody><tr><td colspan="9">No Data Found</td></tr></tbody></div>'; ?>
-                            <?php } ?>
+                                                        ?>
+                                                        <!-- Initiate Exit system -->
+                                                        <?php if ($role == 'Admin' && $array['exit_initiated_by'] == null) { ?>
+                                                            <?php echo '<button type="submit" id="yes" onclick="exit_validateForm()" style=" outline: none;background: none; padding: 0px; border: none;" title="Initiating Exit"><i class="bi bi-box-arrow-in-right"></i></button>'; ?>
+                                                        <?php } else {
+                                                            echo date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'];
+                                                        }
+                                                        echo '</form>' ?>
+                                                    </td>
+                                                </tr>
+                                        </tbody>
+                                    <?php }
+                                        } else { ?>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="9">No Data Found</td>
+                                        </tr>
+                                    </tbody>
+                                <?php } ?>
+                                </table>
+                            </div>
 
                             <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog modal-lg">
@@ -606,6 +609,7 @@ $resultArr = pg_fetch_all($result);
                 // Initialize DataTables only if resultArr is not empty
                 $('#table-id').DataTable({
                     paging: false,
+                    "order": [] // Disable initial sorting
                     // other options...
                 });
             <?php endif; ?>

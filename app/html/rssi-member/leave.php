@@ -53,6 +53,7 @@ if (@$_POST['form-type'] == "leaveapply") {
     @$creason = $_POST['creason'];
     @$comment = $_POST['comment'];
     @$appliedby = $_POST['appliedby'];
+    @$shift = $_POST['shift'];
     @$applicantcomment = htmlspecialchars($_POST['applicantcomment'], ENT_QUOTES, 'UTF-8');
     @$ack = $_POST['ack'] ?? 0;
     @$halfday = $_POST['is_userh'] ?? 0;
@@ -78,7 +79,7 @@ if (@$_POST['form-type'] == "leaveapply") {
             $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
             $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
         }
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc,ack) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink','$ack')";
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc,ack,shift) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink','$ack','$shift')";
 
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
@@ -100,7 +101,7 @@ if (@$_POST['form-type'] == "leaveapply") {
             $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
             $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
         }
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc,ack) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink','$ack')";
+        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc,ack,shift) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink','$ack','$shift')";
 
         $result = pg_query($con, $leave);
         $cmdtuples = pg_affected_rows($result);
@@ -161,30 +162,14 @@ $resultArr = pg_fetch_all($result);
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-
-        gtag('config', 'AW-11316670180');
-    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Apply for Leave</title>
 
-    <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
-    <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
-    <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
@@ -194,26 +179,6 @@ $resultArr = pg_fetch_all($result);
             analytics: 'G-S25QWTFJ2S',
             //facebookPixel: '',
             policyLink: 'https://www.rssi.in/disclaimer'
-        });
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-
-    <script type="text/javascript" src="http://code.jquery.com/jquery.js"> </script>
-    <!--Here .typeofleave is a class and has been assigned to the input filed id=typeofleave-->
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("select.typeofleave").change(function() {
-                var selectedtypeofleave = $(".typeofleave option:selected").val();
-                $.ajax({
-                    type: "POST",
-                    url: "process-request.php",
-                    data: {
-                        typeofleave: selectedtypeofleave
-                    }
-                }).done(function(data) {
-                    $("#response").html(data);
-                });
-            });
         });
     </script>
 
@@ -239,7 +204,12 @@ $resultArr = pg_fetch_all($result);
             display: none;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
 
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 </head>
 
 <body>
@@ -354,8 +324,6 @@ $resultArr = pg_fetch_all($result);
                                 </tbody>
                             </table>
 
-
-
                             <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave.php" method="POST" enctype="multipart/form-data">
                                 <fieldset <?php echo ($filterstatus != 'Active') ? 'disabled' : ''; ?>>
                                     <div class="form-group" style="display: inline-block;">
@@ -371,14 +339,34 @@ $resultArr = pg_fetch_all($result);
                                             <small id="passwordHelpBlock" class="form-text text-muted">To<span style="color:red">*</span></small>
                                         </span>
                                         <div id="filter-checksh">
-                                            <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal()" disabled />
+                                            <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal(); toggleShiftField()" disabled />
                                             <label for="is_userh" style="font-weight: 400;">Half day</label>
                                         </div>
                                         <span class="input-help">
                                             <input type="text" class="form-control" name="numdays2" id="numdays2" value="" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" size="10" readonly>
                                             <small id="passwordHelpBlock" class="form-text text-muted">Days count</small>
                                         </span>
-
+                                        <?php if ($job_type != 'Full-time') { ?>
+                                            <span id="shiftField" class="input-help" style="display: none;">
+                                                <select name="shift" id="shift" class="form-select">
+                                                    <option disabled selected hidden value="">Select</option>
+                                                    <option value="MFH">Morning First Half</option>
+                                                    <option value="MSH">Morning Second Half</option>
+                                                    <option value="AFH">Afternoon First Half</option>
+                                                    <option value="ASH">Afternoon Second Half</option>
+                                                </select>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Shift<span style="color:red">*</span></small>
+                                            </span>
+                                        <?php } else { ?>
+                                            <span id="shiftField" class="input-help" style="display: none;">
+                                                <select name="shift" id="shift" class="form-select">
+                                                    <option disabled selected hidden value="">Select</option>
+                                                    <option value="MOR">Morning</option>
+                                                    <option value="AFN">Afternoon</option>
+                                                </select>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Shift<span style="color:red">*</span></small>
+                                            </span>
+                                        <?php } ?>
                                         <span class="input-help">
                                             <select name="typeofleave" id="typeofleave" class="typeofleave form-select" required>
                                                 <option disabled selected hidden value="">Select</option>
@@ -454,6 +442,21 @@ $resultArr = pg_fetch_all($result);
                                 }
                             </script>
                             <script>
+                                function toggleShiftField() {
+                                    var isHalfDay = document.getElementById('is_userh').checked;
+                                    var shiftField = document.getElementById('shiftField');
+                                    var shiftSelect = document.getElementById('shift');
+
+                                    if (isHalfDay && !document.getElementById('is_userh').disabled) {
+                                        shiftField.style.display = 'inline-block';
+                                        shiftSelect.setAttribute('required', 'required');
+                                    } else {
+                                        shiftField.style.display = 'none';
+                                        shiftSelect.removeAttribute('required');
+                                        shiftSelect.value = '';
+                                    }
+                                }
+
                                 function cal() {
                                     if (document.getElementById("todate") || document.getElementById("fromdate")) {
                                         function GetDays() {
@@ -467,6 +470,7 @@ $resultArr = pg_fetch_all($result);
                                             if ((todatecheck == null || fromdatecheck == null) || diffDays !== 1) {
                                                 document.getElementById("is_userh").disabled = true;
                                                 document.getElementById("is_userh").checked = false;
+                                                toggleShiftField(); // Call to hide shift field if needed
                                             } else {
                                                 document.getElementById("is_userh").disabled = false;
                                             }
@@ -579,221 +583,82 @@ $resultArr = pg_fetch_all($result);
                                 Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                             </div>
 
-                            <?php echo '
-                            <p>Select Number Of Rows</p>
-                            <div class="form-group">
-                           <select class="form-select" name="state" id="maxRows">
-                               <option value="5000">Show ALL Rows</option>
-                               <option value="5">5</option>
-                               <option value="10">10</option>
-                               <option value="15">15</option>
-                               <option value="20">20</option>
-                               <option value="50">50</option>
-                               <option value="70">70</option>
-                               <option value="100">100</option>
-                           </select>
-                            </div>
                             <div class="table-responsive">
-                            <table class="table" id="table-id">
-                                <thead>
-                            <tr>
-                                <th scope="col">Leave ID</th>
-                                <th scope="col">Applied on</th>
-                                <th scope="col">From-To</th>
-                                <th scope="col">Day(s) count</th>
-                                <th scope="col">Type of Leave</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">HR remarks</th>
-                            </tr>
-                            </thead>' ?>
-                            <?php if (sizeof($resultArr) > 0) { ?>
-                                <?php
-                                echo '<tbody>';
-                                foreach ($resultArr as $array) {
-                                    echo '<tr>'
-                                ?>
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Leave ID</th>
+                                            <th scope="col">Applied on</th>
+                                            <th scope="col">From-To</th>
+                                            <th scope="col">Day(s) count</th>
+                                            <th scope="col">Type of Leave</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">HR remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (sizeof($resultArr) > 0) : ?>
+                                            <?php foreach ($resultArr as $array) : ?>
+                                                <tr>
+                                                    <?php if ($array['doc'] != null) : ?>
+                                                        <td>
+                                                            <a href="javascript:void(0)" onclick="showpdf('<?php echo htmlspecialchars($array['leaveid'] ?? ''); ?>')">
+                                                                <?php echo htmlspecialchars($array['leaveid'] ?? ''); ?>
+                                                            </a>
+                                                        </td>
+                                                    <?php else : ?>
+                                                        <td><?php echo htmlspecialchars($array['leaveid'] ?? ''); ?></td>
+                                                    <?php endif; ?>
 
-                                    <?php if ($array['doc'] != null) { ?>
-                                        <?php
-                                        echo '<td>
-                                <span class="noticea"><a href="javascript:void(0)" onclick="showpdf(\'' . $array['leaveid'] . '\')">' . $array['leaveid'] . '</a></span>  
-                                </td>'
-                                        ?>
-                                        <?php } else { ?><?php
-                                                            echo '<td>' . $array['leaveid'] . '</td>' ?>
-                                    <?php } ?>
-                                    <?php
-                                    echo '
-                                <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
-                                <td>' . @date("d/m/Y", strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])) . '</td>
-                                <td>' . $array['days'] . '</td>
-                                <td>' . $array['typeofleave'] . '<br>
-                                ' . $array['creason'] . '<br>' ?>
+                                                    <td><?php echo date("d/m/Y g:i a", strtotime($array['timestamp'] ?? '')); ?></td>
+                                                    <td><?php echo date("d/m/Y", strtotime($array['fromdate'] ?? '')) . ' — ' . date("d/m/Y", strtotime($array['todate'] ?? '')); ?></td>
+                                                    <td><?php echo htmlspecialchars($array['days'] ?? ''); ?></td>
+                                                    <td>
+                                                        <?php
+                                                        // Prepare type of leave with optional shift value
+                                                        $typeofLeave = htmlspecialchars($array['typeofleave'] ?? '');
+                                                        $shift = htmlspecialchars($array['shift'] ?? '');
+                                                        echo $typeofLeave . ($shift ? '-' . $shift : '');
+                                                        ?><br>
+                                                        <?php echo htmlspecialchars($array['creason'] ?? ''); ?><br>
 
-                                    <?php
+                                                        <?php
+                                                        // Ensure the comment is a string and handle null values
+                                                        $applicantComment = $array['applicantcomment'] ?? '';
+                                                        // Shorten the applicant comment
+                                                        $shortComment = strlen($applicantComment) > 30 ? substr($applicantComment, 0, 30) . "..." : $applicantComment;
+                                                        ?>
 
-                                    // Ensure the comment is a string and handle null values
-                                    $applicantComment = isset($array['applicantcomment']) ? $array['applicantcomment'] : '';
+                                                        <span class="short-comment"><?php echo htmlspecialchars($shortComment); ?></span>
+                                                        <span class="full-comment" style="display: none;"><?php echo htmlspecialchars($applicantComment); ?></span>
 
-                                    // Shorten the applicant comment
-                                    $shortComment = strlen($applicantComment) > 30 ? substr($applicantComment, 0, 30) . "..." : $applicantComment;
-
-                                    // Display the shortened comment with "more" link
-                                    echo '<span class="short-comment">' . htmlspecialchars($shortComment) . '</span>';
-
-                                    // Display the full comment (hidden by default)
-                                    echo '<span class="full-comment" style="display: none;">' . htmlspecialchars($applicantComment) . '</span>';
-
-                                    // Display the "more" link only if the comment is shortened
-                                    if (strlen($applicantComment) > 30) {
-                                        echo ' <a href="#" class="more-link">more</a>';
-                                    }
-                                    ?>
-                                <?php echo '</td>
-                                <td>' . $array['status'] . '</td>
-                                <td>' . $array['comment'] . '<br>' . $array['reviewer_id'] . '<br>' . $array['reviewer_name'] . '</td>
-                            </tr>';
-                                } ?>
-                            <?php
-                            } else if ($lyear == null && $status == null) {
-                            ?>
-                                <tr>
-                                    <td colspan="5">Please select Filter value.</td>
-                                </tr>
-                            <?php
-                            } else {
-                            ?>
-                                <tr>
-                                    <td colspan="5">No record was found for the selected filter value.</td>
-                                </tr>
-                            <?php }
-
-                            echo '</tbody>
-                                    </table>
-                                    </div>';
-                            ?>
-                            <!-- Start Pagination -->
-                            <div class="pagination-container">
-                                <nav>
-                                    <ul class="pagination">
-                                        <li class="page-item" data-page="prev">
-                                            <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
-                                        </li>
-                                        <!-- Here the JS Function Will Add the Rows -->
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">1</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">2</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">3</button>
-                                        </li>
-                                        <li class="page-item" data-page="next" id="prev">
-                                            <button class="page-link pagination-button" aria-label="Next">&gt;</button>
-                                        </li>
-                                    </ul>
-                                </nav>
+                                                        <?php if (strlen($applicantComment) > 30) : ?>
+                                                            <a href="#" class="more-link">more</a>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td><?php echo htmlspecialchars($array['status'] ?? ''); ?></td>
+                                                    <td>
+                                                        <?php echo htmlspecialchars($array['comment'] ?? ''); ?><br>
+                                                        <?php echo htmlspecialchars($array['reviewer_id'] ?? ''); ?><br>
+                                                        <?php echo htmlspecialchars($array['reviewer_name'] ?? ''); ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else : ?>
+                                            <tr>
+                                                <td colspan="7">
+                                                    <?php if ($lyear == null && $status == null) : ?>
+                                                        Please select Filter value.
+                                                    <?php else : ?>
+                                                        No record was found for the selected filter value.
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
                             </div>
 
-                            <script>
-                                getPagination('#table-id');
-
-                                function getPagination(table) {
-                                    var lastPage = 1;
-
-                                    $('#maxRows').on('change', function(evt) {
-                                        lastPage = 1;
-                                        $('.pagination').find('li').slice(1, -1).remove();
-                                        var trnum = 0;
-                                        var maxRows = parseInt($(this).val());
-
-                                        if (maxRows == 5000) {
-                                            $('.pagination').hide();
-                                        } else {
-                                            $('.pagination').show();
-                                        }
-
-                                        var totalRows = $(table + ' tbody tr').length;
-                                        $(table + ' tr:gt(0)').each(function() {
-                                            trnum++;
-                                            if (trnum > maxRows) {
-                                                $(this).hide();
-                                            }
-                                            if (trnum <= maxRows) {
-                                                $(this).show();
-                                            }
-                                        });
-
-                                        if (totalRows > maxRows) {
-                                            var pagenum = Math.ceil(totalRows / maxRows);
-                                            for (var i = 1; i <= pagenum; i++) {
-                                                $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
-                                                <button class="page-link pagination-button">' + i + '</button>\
-                                                </li>').show();
-                                            }
-                                        }
-
-                                        $('.pagination [data-page="1"]').addClass('active');
-                                        $('.pagination li').on('click', function(evt) {
-                                            evt.stopImmediatePropagation();
-                                            evt.preventDefault();
-                                            var pageNum = $(this).attr('data-page');
-
-                                            var maxRows = parseInt($('#maxRows').val());
-
-                                            if (pageNum == 'prev') {
-                                                if (lastPage == 1) {
-                                                    return;
-                                                }
-                                                pageNum = --lastPage;
-                                            }
-                                            if (pageNum == 'next') {
-                                                if (lastPage == $('.pagination li').length - 2) {
-                                                    return;
-                                                }
-                                                pageNum = ++lastPage;
-                                            }
-
-                                            lastPage = pageNum;
-                                            var trIndex = 0;
-                                            $('.pagination li').removeClass('active');
-                                            $('.pagination [data-page="' + lastPage + '"]').addClass('active');
-                                            limitPagging();
-                                            $(table + ' tr:gt(0)').each(function() {
-                                                trIndex++;
-                                                if (
-                                                    trIndex > maxRows * pageNum ||
-                                                    trIndex <= maxRows * pageNum - maxRows
-                                                ) {
-                                                    $(this).hide();
-                                                } else {
-                                                    $(this).show();
-                                                }
-                                            });
-                                        });
-                                        limitPagging();
-                                    }).val(5).change();
-                                }
-
-                                function limitPagging() {
-                                    if ($('.pagination li').length > 7) {
-                                        if ($('.pagination li.active').attr('data-page') <= 3) {
-                                            $('.pagination li.page-item:gt(5)').hide();
-                                            $('.pagination li.page-item:lt(5)').show();
-                                            $('.pagination [data-page="next"]').show();
-                                        }
-                                        if ($('.pagination li.active').attr('data-page') > 3) {
-                                            $('.pagination li.page-item').hide();
-                                            $('.pagination [data-page="next"]').show();
-                                            var currentPage = parseInt($('.pagination li.active').attr('data-page'));
-                                            for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-                                                $('.pagination [data-page="' + i + '"]').show();
-                                            }
-                                        }
-                                    }
-                                }
-                            </script>
                             <!--------------- POP-UP BOX ------------
                             -------------------------------------->
                             <style>
@@ -876,12 +741,6 @@ $resultArr = pg_fetch_all($result);
                                         modal1.style.display = "none";
                                     }
                                 }
-                                // When the user clicks anywhere outside of the modal, close it
-                                // window.onclick = function(event) {
-                                //     if (event.target == modal1) {
-                                //         modal1.style.display = "none";
-                                //     }
-                                // }
                             </script>
 
                             <script>
@@ -906,17 +765,9 @@ $resultArr = pg_fetch_all($result);
                 </div><!-- End Reports -->
             </div>
         </section>
-
     </main><!-- End #main -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
-    <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-
-    <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
             // Toggle full comment visibility on "more" link click
@@ -936,6 +787,42 @@ $resultArr = pg_fetch_all($result);
                     $(this).text('less');
                 }
             });
+        });
+    </script>
+    <!--Here .typeofleave is a class and has been assigned to the input filed id=typeofleave-->
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("select.typeofleave").change(function() {
+                var selectedtypeofleave = $(".typeofleave option:selected").val();
+                $.ajax({
+                    type: "POST",
+                    url: "process-request.php",
+                    data: {
+                        typeofleave: selectedtypeofleave
+                    }
+                }).done(function(data) {
+                    $("#response").html(data);
+                });
+            });
+        });
+    </script>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
         });
     </script>
 </body>
