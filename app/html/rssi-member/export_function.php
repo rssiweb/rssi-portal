@@ -27,6 +27,8 @@ if ($export_type == "fees") {
   monthly_attd_export();
 } else if ($export_type == "monthly_attd_associate") {
   monthly_attd_associate_export();
+} else if ($export_type == "paydetails") {
+  paydetails_export();
 }
 
 function fees_export()
@@ -920,4 +922,65 @@ function generate_date_values_associate($array, $startDate, $endDate)
     $currentDate = date("Y-m-d", strtotime($currentDate . ' + 1 day'));
   }
   return implode(',', $values);
+}
+
+function paydetails_export()
+{
+  global $con;
+  $year = isset($_POST['year']) ? $_POST['year'] : '';
+  $months = isset($_POST['months']) ? $_POST['months'] : [];
+  $id = isset($_POST['id']) ? strtoupper($_POST['id']) : '';
+
+  $currentDate = date('d-m-Y');
+
+  // Construct the WHERE clause for filtering by year
+  $yearFilter = !empty($year) ? "AND payyear = $year" : '';
+
+  // Construct the WHERE clause for filtering by month
+  $monthFilter = '';
+  if (!empty($months)) {
+    // Ensure $months is always an array
+    if (!is_array($months)) {
+      $months = [$months];
+    }
+    $monthFilter = "AND paymonth::integer IN (" . implode(',', $months) . ")";
+  }
+
+  // Construct the SQL query with proper handling of empty $id
+  $idFilter = !empty($id) ? "AND employeeid = '$id'" : '';
+
+  // Construct the full SQL query
+  $query = "SELECT * FROM payslip_entry 
+              LEFT JOIN (
+                  SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members
+              ) AS associate ON payslip_entry.employeeid = associate.associatenumber
+              LEFT JOIN (
+                  SELECT bank_account_number, ifsc_code,updated_for FROM bankdetails where account_nature='savings'
+              ) AS bankdetails ON payslip_entry.employeeid = bankdetails.updated_for
+              WHERE 1=1 $idFilter $yearFilter $monthFilter
+              ORDER BY payslip_issued_on DESC";
+
+  $result = pg_query($con, $query);
+  $resultArr = pg_fetch_all($result);
+
+  // Output CSV headers
+  echo 'PYMT_PROD_TYPE_CODE, PYMT_MODE, DEBIT_ACC_NO, BNF_NAME, BENE_ACC_NO, BENE_IFSC, AMOUNT, DEBIT_NARR, CREDIT_NARR, MOBILE_NUM, EMAIL_ID, REMARK, PYMT_DATE, REF_NO, ADDL_INFO1, ADDL_INFO2, ADDL_INFO3, ADDL_INFO4, ADDL_INFO5' . "\n";
+
+  foreach ($resultArr as $array) {
+    $payslip_entry_id = $array['payslip_entry_id'];
+
+    // Get total earning for the payslip entry
+    $result_component_earning_total = pg_query($con, "SELECT SUM(amount) FROM payslip_component WHERE payslip_entry_id = '$payslip_entry_id' AND components = 'Earning'");
+    $total_earning = pg_fetch_result($result_component_earning_total, 0, 0);
+
+    // Get total deduction for the payslip entry
+    $result_component_deduction_total = pg_query($con, "SELECT SUM(amount) FROM payslip_component WHERE payslip_entry_id = '$payslip_entry_id' AND components = 'Deduction'");
+    $total_deduction = pg_fetch_result($result_component_deduction_total, 0, 0);
+
+    // Calculate net pay
+    $net_pay = $total_earning - $total_deduction;
+
+    // Output CSV row
+    echo 'PAB_VENDOR,NEFT,\'004201033772,' . $array['fullname'] . ',\'' . $array['bank_account_number'] . ',' . $array['ifsc_code'] . ',' . $net_pay . ',,,' . $array['phone'] . ',' . $array['email'] . ',' . 'RSSI Salary ' . date('F', mktime(0, 0, 0, $array['paymonth'], 1)) . $array['payyear'] . ',' . $currentDate . ',' . $array['payslip_entry_id'] . "\n";
+  }
 }

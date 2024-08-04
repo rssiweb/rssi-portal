@@ -215,47 +215,56 @@ if (!$result) {
                                 <p><b><u>TERMS AND CONDITIONS</u></b></p>
                                 <ol start="3">
                                     <?php
-                                    // Initialize the notice period
+                                    // Initialize the notice period, minimum tenure, and working hours
                                     $notice_period = "";
+                                    $mintenure = "";
+                                    $workinghours = "";
 
-                                    // Check the job type
-                                    if ($array['job_type'] === "Part-time") {
-                                        $notice_period = "thirty (30) days";
-                                        $mintenure = "8 months"; // This is NOT impacting Internship
-                                        $workinghours = "4-hour";
-                                    } elseif ($array['job_type'] === "Full-time") {
-                                        $notice_period = "ninety (90) days";
-                                        $mintenure = "12 months";
-                                        $workinghours = "7.5-hour";
+                                    // Define the settings based on engagement type and job type
+                                    $settings = [
+                                        'Employee' => [
+                                            'Part-time' => ["thirty (30) days", "8 months", "4-hour", "6"],
+                                            'Full-time' => ["ninety (90) days", "12 months", "7.5-hour", "6"],
+                                            'Contractual' => ["", "1 month", "3-hour", "6"], // Notice period not specified for Contractual
+                                        ],
+                                        'Intern' => ["thirty (30) days", "1 month", "4-hour", "4"],
+                                        'Volunteer' => ["thirty (30) days", "4 months", "4-hour", "3"], // Notice period not specified for Volunteer
+                                    ];
+
+                                    // Check the engagement and job type, and set the values accordingly
+                                    if (isset($settings[$array['engagement']])) {
+                                        if ($array['engagement'] === 'Employee' && isset($settings['Employee'][$array['job_type']])) {
+                                            list($notice_period, $mintenure, $workinghours, $workday) = $settings['Employee'][$array['job_type']];
+                                        } else {
+                                            list($notice_period, $mintenure, $workinghours, $workday) = $settings[$array['engagement']];
+                                        }
                                     }
 
                                     // Now incorporate the $notice_period into the statement
                                     ?>
-                                    <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a <?php echo $notice_period; ?>' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
-                                    <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
+
+                                    <?php if ($array['job_type'] === "Contractual") { ?>
+                                        <li>This contract is prepared for a tenure of <?php echo $mintenure; ?> starting from the date of joining as mentioned in the joining letter.</li>
+                                        <li>If you fail to serve the contract period as mentioned above, you shall be liable to pay RSSI ₹5000/- as a penalty.</li>
+                                    <?php } ?>
+                                    <?php if ($array['job_type'] != "Contractual") { ?>
+                                        <li>We hope your association with us will be long-lasting. However, your affiliation with the Organization can be terminated with a <?php echo $notice_period; ?>' written notice from either party, or you can opt to buy out the notice period set by the Organization. In case of any discrepancies or false information found in your application or resume, willful neglect of your duties, breach of trust, gross indiscipline, engagement in criminal activities, or any other serious breach of duty that may be detrimental to the Organization's interests, the Organization reserves the right to terminate your services immediately or with appropriate notice as deemed necessary.</li>
+                                        <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
+                                    <?php } ?>
+
                                     <li>You are not eligible to take more than 1 leave without notice during your tenure, in case of more than 1 leave without notice, the organization may decide for dismissal.</li>
-                                    <li>
-                                        <?php if ($array['engagement'] == 'Intern') { ?>
-                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 1 month from the original joining date in accordance with the Service Agreement clause.
-                                        <?php } else if ($array['engagement'] == 'Employee' && (substr($array['position'], 0, strrpos($array['position'], "-")) == 'Employee-Centre Incharge') || substr($array['position'], 0, strrpos($array['position'], "-")) == 'Employee-Senior Centre Incharge') { ?>
+
+                                    <?php if ($array['job_type'] != "Contractual") { ?>
+                                        <li>
                                             You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least <?php echo $mintenure; ?> from the original joining date in accordance with the Service Agreement clause.
-                                        <?php } else if ($array['engagement'] == 'Employee' && substr($array['position'], 0, strrpos($array['position'], "-")) == 'Employee-Faculty') { ?>
-                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least <?php echo $mintenure; ?> from the original joining date in accordance with the Service Agreement clause.
-                                        <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
-                                            You will be liable to pay RSSI ₹5000/- in case you fail to serve RSSI for at least 4 months from the original joining date in accordance with the Service Agreement clause.
-                                        <?php } ?>
+                                        </li>
+                                    <?php } ?>
 
                                     <li>You are expected to be active and responsive throughout your service period.</li>
                                     <li>
                                         <p>Working Hours:</p>
-                                        <?php if (str_contains($array['position'], "Intern")) { ?>
-                                            The work schedule comprises 4 days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
-                                        <?php } else if (str_contains($array['position'], "Employee")) { ?>
-                                            The work schedule comprises 6 days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
-                                        <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
-                                            The work schedule comprises 3 days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
-                                        <?php } ?>
-                                        <?php if (str_contains($array['position'], "Intern") && $array['filename'] == "upes") { ?>
+                                        The work schedule comprises <?php echo $workday; ?> days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
+                                        <?php if ($array['filename'] == "upes") { ?>
                                             For the two-month internship program,
                                             you will be assigned to one month in the morning shift and one month in the afternoon shift,
                                             based on business requirements.
@@ -264,29 +273,38 @@ if (!$result) {
                                     </li>
                                     <li>
                                         <p>Primary responsibility:</p>
-                                        Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills. For a comprehensive understanding of your duties and obligations, please refer to the documents listed here.
+                                        Responsible for teaching students, conducting tests and meetings, solving problems, evaluating students, and helping them improve their skills. For a comprehensive understanding of your duties and obligations, please refer to the documents listed here.<br><br>
                                         <ol type="A">
-                                            <?php if (str_contains($array['position'], "Intern")) { ?>
-                                                <li>
-                                                    <a href="https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view" target="_blank">Responsibilities of the Teaching Intern</a>
-                                                </li>
-                                            <?php } else if (str_contains($array['position'], "Centre Incharge")) { ?>
-                                                <li>
-                                                    <a href="https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view" target="_blank">Responsibilities of the Teaching staff</a>
-                                                </li>
-                                                <li>
-                                                    <a href="https://drive.google.com/file/d/1VOuqKRhyy3hycuiIMi022qKAzvPVd4dw/view" target="_blank">Responsibilities of Centre In charge / Asst. centre in-charge</a>
-                                                </li>
-                                            <?php } else if (str_contains($array['position'], "Employee")) { ?>
-                                                <li>
-                                                    <a href="https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view" target="_blank">Responsibilities of the Teaching staff</a>
-                                                </li>
-                                            <?php } else if (str_contains($array['position'], "Volunteer")) { ?>
-                                                <li>
-                                                    <a href="https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view" target="_blank">Responsibilities of the Teaching staff</a>
-                                                </li>
-                                            <?php } ?>
+                                            <?php
+                                            $links = [
+                                                "Intern" => [
+                                                    "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view",
+                                                    "Internship Program Orientation" => "https://drive.google.com/file/d/19Z7jzwOtmHgSIvQ4ceWi4VFjkVStgx2d/view"
+                                                ],
+                                                "Centre Incharge" => [
+                                                    "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view",
+                                                    "Key Responsibilities of Centre In-Charge" => "https://drive.google.com/file/d/1VOuqKRhyy3hycuiIMi022qKAzvPVd4dw/view"
+                                                ],
+                                                "Employee" => [
+                                                    "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
+                                                ],
+                                                "Volunteer" => [
+                                                    "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view"
+                                                ]
+                                            ];
+
+                                            $position = $array['position'];
+                                            foreach ($links as $key => $items) {
+                                                if (str_contains($position, $key)) {
+                                                    foreach ($items as $text => $url) {
+                                                        echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
+                                                    }
+                                                    break; // Exit the loop once the matching position is found
+                                                }
+                                            }
+                                            ?>
                                         </ol>
+
                                     </li>
                                     <li>It is strictly prohibited to discuss any confidential information i.e. salary, increment percentage, appraisal rating (IPF) etc. with any other colleague or on social networking platforms like Facebook, Instagram, LinkedIn etc. HR can take legal action in case of any non-compliance.</li>
 

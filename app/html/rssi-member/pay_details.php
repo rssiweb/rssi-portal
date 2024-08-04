@@ -174,6 +174,24 @@ $resultArr = pg_fetch_all($result);
                                     <a href="old_payslip.php">Payslip till May 23 >></a>
                                 </div>
                             </div>
+                            <?php if ($role == 'Admin') { ?>
+                                <div class="col" style="display: inline-block; width:100%; text-align:right">
+                                    <form method="POST" action="export_function.php">
+                                        <input type="hidden" value="paydetails" name="export_type" />
+
+                                        <input type="hidden" value="<?php echo $id ?>" name="id" />
+
+                                        <input type="hidden" value="<?php echo $year ?>" name="year" />
+                                        <?php foreach ($months as $month) { ?>
+                                            <input type="hidden" value="<?php echo $month ?>" name="months[]" />
+                                        <?php } ?>
+
+                                        <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Export CSV">
+                                            <i class="bi bi-file-earmark-excel" style="font-size:large;"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            <?php } ?>
 
                             <form action="" method="POST">
                                 <div class="form-group" style="display: inline-block; margin-top:1%">
