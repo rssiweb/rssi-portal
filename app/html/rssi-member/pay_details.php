@@ -15,8 +15,10 @@ setlocale(LC_TIME, 'fr_FR.UTF-8');
 
 $year = isset($_POST['get_year']) ? $_POST['get_year'] : '';
 $months = isset($_POST['get_month']) ? $_POST['get_month'] : [];
+
 if ($role == 'Admin') {
     $id = isset($_POST['get_aid']) ? strtoupper($_POST['get_aid']) : '';
+
     // Construct the WHERE clause for filtering by year
     $yearFilter = !empty($year) ? "AND payyear = $year" : '';
 
@@ -30,16 +32,19 @@ if ($role == 'Admin') {
         $monthFilter = "AND paymonth::integer IN (" . implode(',', $months) . ")";
     }
 
-    // Construct the SQL query with proper handling of empty $id
-    $idFilter = !empty($id) ? "AND employeeid = '$id'" : '';
-
-    // Construct the full SQL query
-    $query = "SELECT * FROM payslip_entry 
-        LEFT JOIN (
-            SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members
-        ) AS associate ON payslip_entry.employeeid=associate.associatenumber
-        WHERE 1=1 $idFilter $yearFilter $monthFilter
-        ORDER BY payslip_issued_on DESC";
+    // Check if both filters are empty; if so, set a default condition to return no data
+    if (empty($year) && empty($months)) {
+        $query = "SELECT * FROM payslip_entry WHERE 1=0"; // This will return no data
+    } else {
+        // Construct the SQL query with proper handling of empty $id
+        $idFilter = !empty($id) ? "AND employeeid = '$id'" : '';
+        $query = "SELECT * FROM payslip_entry 
+            LEFT JOIN (
+                SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members
+            ) AS associate ON payslip_entry.employeeid=associate.associatenumber
+            WHERE 1=1 $idFilter $yearFilter $monthFilter
+            ORDER BY payslip_issued_on DESC";
+    }
 
     $result = pg_query($con, $query);
 } elseif ($role != 'Admin') {
@@ -56,10 +61,15 @@ if ($role == 'Admin') {
         $monthFilter = "AND paymonth::integer IN (" . implode(',', $months) . ")";
     }
 
-    // Construct the SQL query for non-Admin role with month and year filters
-    $query = "SELECT * FROM payslip_entry 
-        WHERE employeeid = '$user_check' $yearFilter $monthFilter
-        ORDER BY payslip_issued_on DESC";
+    // Check if both filters are empty; if so, set a default condition to return no data
+    if (empty($year) && empty($months)) {
+        $query = "SELECT * FROM payslip_entry WHERE 1=0"; // This will return no data
+    } else {
+        // Construct the SQL query for non-Admin role with month and year filters
+        $query = "SELECT * FROM payslip_entry 
+            WHERE employeeid = '$user_check' $yearFilter $monthFilter
+            ORDER BY payslip_issued_on DESC";
+    }
 
     $result = pg_query($con, $query);
 }
