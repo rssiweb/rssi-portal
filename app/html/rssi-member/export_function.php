@@ -673,9 +673,7 @@ function generate_date_values($array, $startDate, $endDate)
 }
 
 
-
-
-
+//Associate monthly attendance export START
 function exportAttendanceToCSVAssociate($attendanceData, $startDate, $endDate)
 {
   // Set headers for CSV export
@@ -741,12 +739,17 @@ function exportAttendanceToCSVAssociate($attendanceData, $startDate, $endDate)
 
     // Assign punch in and out times to the respective date columns
     $attendance_date = substr($array['attendance_date'] ?? '', 0, 10);
-    $punch_in = substr($array['punch_in'] ?? '', 11, 8);
-    $punch_out = substr($array['punch_out'] ?? '', 11, 8);
+    $punch_in = $array['punch_in'] ? date('h:i:s A', strtotime($array['punch_in'])) : '';
+    $punch_out = $array['punch_out'] ? date('h:i:s A', strtotime($array['punch_out'])) : '';
+    $late_status = $array['late_status'] ?? '';
 
     if ($attendance_date) {
       if ($punch_in) {
-        $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_in"] = $punch_in;
+        $punchInWithStatus = $punch_in;
+        if ($late_status) {
+          $punchInWithStatus .= " ($late_status)";
+        }
+        $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_in"] = $punchInWithStatus;
       }
       if ($punch_out) {
         $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_out"] = $punch_out;
@@ -766,6 +769,7 @@ function exportAttendanceToCSVAssociate($attendanceData, $startDate, $endDate)
   fclose($output);
   exit();
 }
+
 function monthly_attd_associate_export()
 {
   global $con;
@@ -823,12 +827,19 @@ function monthly_attd_associate_export()
             d.attendance_date,
             p.punch_in,
             p.punch_out,
-           CASE
+            CASE
                 WHEN p.punch_in IS NOT NULL AND p.punch_out IS NOT NULL THEN 'P'
                 WHEN p.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
                 WHEN TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
                 ELSE 'A'
-            END AS attendance_status
+            END AS attendance_status,
+            s.reporting_time,
+            CASE
+                WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
+                     AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
+                WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
+                ELSE NULL
+            END AS late_status
         FROM
             date_range d
         CROSS JOIN
@@ -836,6 +847,10 @@ function monthly_attd_associate_export()
         LEFT JOIN
             PunchInOut p
             ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
+        LEFT JOIN
+            associate_schedule s
+            ON m.associatenumber = s.associate_number
+            AND d.attendance_date BETWEEN s.start_date AND s.end_date
         WHERE
             (
                 (m.effectivedate IS NULL OR m.effectivedate = '')
@@ -855,6 +870,8 @@ function monthly_attd_associate_export()
         attendance_status,
         punch_in,
         punch_out,
+        reporting_time,
+        late_status,
         COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
     FROM attendance_data
     GROUP BY
@@ -865,7 +882,9 @@ function monthly_attd_associate_export()
         attendance_date,
         attendance_status,
         punch_in,
-        punch_out
+        punch_out,
+        reporting_time,
+        late_status
     ORDER BY
         associatenumber,
         attendance_date;";
@@ -923,7 +942,7 @@ function generate_date_values_associate($array, $startDate, $endDate)
   }
   return implode(',', $values);
 }
-
+//Associate monthly attendance export END
 function paydetails_export()
 {
   global $con;

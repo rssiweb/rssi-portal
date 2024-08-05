@@ -28,6 +28,7 @@ if ($role == 'Admin') {
     pg_free_result($result);
 }
 ?>
+
 <?php
 // Get filter values from GET parameters
 $id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
@@ -84,12 +85,19 @@ $query = "
             d.attendance_date,
             p.punch_in,
             p.punch_out,
-           CASE
+            CASE
                 WHEN p.punch_in IS NOT NULL AND p.punch_out IS NOT NULL THEN 'P'
                 WHEN p.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
                 WHEN TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
                 ELSE 'A'
-            END AS attendance_status
+            END AS attendance_status,
+            s.reporting_time,
+            CASE
+                WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
+                     AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
+                WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
+                ELSE NULL
+            END AS late_status
         FROM
             date_range d
         CROSS JOIN
@@ -97,6 +105,10 @@ $query = "
         LEFT JOIN
             PunchInOut p
             ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
+        LEFT JOIN
+            associate_schedule s
+            ON m.associatenumber = s.associate_number
+            AND d.attendance_date BETWEEN s.start_date AND s.end_date
         WHERE
             (
                 (m.effectivedate IS NULL OR m.effectivedate = '')
@@ -116,6 +128,8 @@ $query = "
         attendance_status,
         punch_in,
         punch_out,
+        reporting_time,
+        late_status,
         COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
     FROM attendance_data
     GROUP BY
@@ -126,7 +140,9 @@ $query = "
         attendance_date,
         attendance_status,
         punch_in,
-        punch_out
+        punch_out,
+        reporting_time,
+        late_status
     ORDER BY
         associatenumber,
         attendance_date;";
@@ -395,7 +411,7 @@ pg_close($con);
                                                 $punchIn = $row['punch_in'] ? date("h:i A", strtotime($row['punch_in'])) : '';
                                                 $punchOut = $row['punch_out'] && $row['punch_out'] ? date("h:i A", strtotime($row['punch_out'])) : '';
 
-                                                echo "<td>$punchIn</td><td>$punchOut</td>";
+                                                echo "<td>" . $punchIn . ($row['late_status'] ? " (" . $row['late_status'] . ")" : "") . "</td><td>$punchOut</td>";
                                             }
                                             ?>
                                         </tbody>
