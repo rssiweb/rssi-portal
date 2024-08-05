@@ -210,7 +210,6 @@ $resultArrc = pg_fetch_all($resultc);
                             <th scope="col">Allocation Date</th>
                             <th scope="col">Max. Class<br>(Allocation start date to today)</th>
                             <th scope="col">Class Taken<br>(Inc. Extra class)</th>
-                            <th scope="col">Off Class</th>
                             <th scope="col">Allocation Index</th>
                             </tr>
                         </thead>
@@ -221,7 +220,6 @@ $resultArrc = pg_fetch_all($resultc);
                             <td style="line-height: 2;">' . $array['allocationdate'] . '</td>
                             <td style="line-height: 2;">' . $array['maxclass'] . '</td>
                             <td style="line-height: 2;">' . $array['classtaken'] . '</td>
-                            <td style="line-height: 2;">' . $array['leave'] . '</td>
                             <td style="line-height: 2;">' ?>
                                             <?php if (@$array['allocationdate'] != null) {
                                                 echo $array['ctp'] . '&nbsp;<meter id="disk_c" value="' . strtok($array['ctp'], '%') . '" min="0" max="100"></meter>' ?>
