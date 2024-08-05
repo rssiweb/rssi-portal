@@ -293,9 +293,9 @@ if (!$result) {
                                                 ]
                                             ];
 
-                                            $position = $array['position'];
+                                            $position_associate = $array['position'];
                                             foreach ($links as $key => $items) {
-                                                if (str_contains($position, $key)) {
+                                                if (str_contains($position_associate, $key)) {
                                                     foreach ($items as $text => $url) {
                                                         echo "<li><a href=\"$url\" target=\"_blank\">$text</a></li>";
                                                     }
