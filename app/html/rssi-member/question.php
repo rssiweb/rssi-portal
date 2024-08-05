@@ -81,18 +81,21 @@ if ($category === null && $subject === null && $year === null && $exam === null)
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Question paper</title>
+    <title>Question Portal</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -101,7 +104,6 @@ if ($category === null && $subject === null && $year === null && $exam === null)
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -160,6 +162,12 @@ if ($category === null && $subject === null && $year === null && $exam === null)
             cursor: default;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 
 </head>
 
@@ -170,37 +178,32 @@ if ($category === null && $subject === null && $year === null && $exam === null)
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>My Allocation</h1>
+            <h1>Question Portal</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">My Services</a></li>
-                    <li class="breadcrumb-item active">My Allocation</li>
+                    <li class="breadcrumb-item"><a href="#">Academic</a></li>
+                    <li class="breadcrumb-item active">Examination</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
 
         <section class="section dashboard">
             <div class="row">
-
                 <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
-
                         <div class="card-body">
                             <br>
-
                             <form action="" method="GET">
                                 <div class="form-group" style="display: inline-block;">
                                     <div class="col2" style="display: inline-block;">
                                         <select name="get_category" class="form-select" style="width:max-content; display:inline-block">
                                             <?php if ($category == null) { ?>
                                                 <option value="" disabled selected hidden>Select Category</option>
-                                            <?php
-                                            } else { ?>
+                                            <?php } else { ?>
                                                 <option hidden selected><?php echo $category ?></option>
-                                            <?php }
-                                            ?>
+                                            <?php } ?>
                                             <option>LG1</option>
                                             <option>LG2A</option>
                                             <option>LG2B</option>
@@ -215,11 +218,9 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                         <select name="get_subject" class="form-select" style="width:max-content; display:inline-block">
                                             <?php if ($subject == null) { ?>
                                                 <option value="" disabled selected hidden>Select Subject</option>
-                                            <?php
-                                            } else { ?>
+                                            <?php } else { ?>
                                                 <option hidden selected><?php echo $subject ?></option>
-                                            <?php }
-                                            ?>
+                                            <?php } ?>
                                             <option> Hindi </option>
                                             <option> English </option>
                                             <option> Science </option>
@@ -238,20 +239,16 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                         <select name="get_year" id="get_year" class="form-select" style="width:max-content;display:inline-block">
                                             <?php if ($year == null) { ?>
                                                 <option value="" disabled selected hidden>Select Year</option>
-                                            <?php
-                                            } else { ?>
+                                            <?php } else { ?>
                                                 <option hidden selected><?php echo $year ?></option>
-                                            <?php }
-                                            ?>
+                                            <?php } ?>
                                         </select>
                                         <select name="get_exam" class="form-select" style="width:max-content;display:inline-block">
                                             <?php if ($exam == null) { ?>
                                                 <option value="" disabled selected hidden>Select Exam</option>
-                                            <?php
-                                            } else { ?>
+                                            <?php } else { ?>
                                                 <option hidden selected><?php echo $exam ?></option>
-                                            <?php }
-                                            ?>
+                                            <?php } ?>
                                             <option>First Term Exam</option>
                                             <option>Half Yearly Exam</option>
                                             <option>Annual Exam</option>
@@ -261,7 +258,8 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                 </div>
                                 <div class="col2 left" style="display: inline-block;">
                                     <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                        <i class="bi bi-search"></i>&nbsp;Search</button>
+                                        <i class="bi bi-search"></i>&nbsp;Search
+                                    </button>
                                 </div>
                             </form>
                             <script>
@@ -270,45 +268,46 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                 <?php } else { ?>
                                     var currentYear = new Date().getFullYear();
                                 <?php } ?>
-
                                 for (var i = 0; i < 5; i++) {
                                     var next = currentYear + 1;
                                     var year = currentYear + '-' + next;
-                                    //next.toString().slice(-2) 
                                     $('#get_year').append(new Option(year, year));
                                     currentYear--;
                                 }
                             </script>
                             <?php
-                            echo '<table class="table">
-                                <thead>
-                                <tr>
-                                <th scope="col">Category</th>
-                                <th scope="col">Subject</th>
-                                <th scope="col">Test ID</th>
-                                <th scope="col">Full marks</th>
-                                <th scope="col">Exam name</th>
-                                <th scope="col">Password</th>
-                                <th scope="col">Question paper</th>
-                                </tr>
-                                </thead>' ?>
+                            echo '<table class="table" id="table-id">
+                        <thead>
+                        <tr>
+                        <th scope="col">Category</th>
+                        <th scope="col">Subject</th>
+                        <th scope="col">Test ID</th>
+                        <th scope="col">Full marks</th>
+                        <th scope="col">Exam name</th>
+                        <th scope="col">Password</th>
+                        <th scope="col">Question paper</th>
+                        </tr>
+                        </thead>';
+                            ?>
                             <?php if (is_array($resultArr) && sizeof($resultArr) > 0) { ?>
                                 <?php
                                 echo '<tbody>';
                                 foreach ($resultArr as $array) {
                                     echo '<tr>
-                                <td>' . $array['category'] . '</td>
-                                <td>' . $array['subject'] . '</td>
-                                <td>' . $array['testcode'] . '&nbsp; <p class="badge bg-secondary">' . $array['class'] . '</p></td>
-                                <td>' . $array['fullmarks'] . '</td>
-                                <td>' . $array['examname'] . '-' . $array['year'] . '</td>
-                                <td>' . $array['topic'] . '</td>
-                                <td><a href="' . $array['url'] . '" target="_blank"><button type="button" id="btn" class="btn btn-sm" style="outline: none; color:#fff"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Question</button></a></td>
-                                </tr>';
-                                } ?>
-                            <?php
-                            } else if ($resultArr = null) {
-                            ?>
+                            <td>' . $array['category'] . '</td>
+                            <td>' . $array['subject'] . '</td>
+                            <td>' . $array['testcode'] . '&nbsp; <p class="badge bg-secondary">' . $array['class'] . '</p></td>
+                            <td>' . $array['fullmarks'] . '</td>
+                            <td>' . $array['examname'] . '-' . $array['year'] . '</td>
+                            <td>' . $array['topic'] . '</td>
+                            <td>
+                                <a href="' . $array['url'] . '" target="_blank">View</a>
+                            </td>
+                            </tr>';
+                                }
+                                echo '</tbody>';
+                            } else if ($resultArr == null) {
+                                ?>
                                 <tr>
                                     <td colspan="7">Please select Filter value.</td>
                                 </tr>
@@ -318,16 +317,16 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                 <tr>
                                     <td colspan="5">No record found for <?php echo $category ?> <?php echo $subject ?> <?php echo $year ?> <?php echo $exam ?></td>
                                 </tr>
-                            <?php }
-
-                            echo '</tbody>
-                        </table>';
+                            <?php
+                            }
+                            echo '</table>';
                             ?>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+
     </main>
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
@@ -336,6 +335,19 @@ if ($category === null && $subject === null && $year === null && $exam === null)
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
 </body>
 
 </html>
