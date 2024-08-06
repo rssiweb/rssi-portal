@@ -370,7 +370,7 @@ $categories = [
                                                         <label class="form-check-label" for="myCheckbox<?= $array['id'] ?>"><?= $array['id'] ?></label>
                                                     </td>
                                                     <td><?= @date("d/m/Y", strtotime($array['date'])) ?></td>
-                                                    <td><?= $array['studentid'] . '/' . strtok($array['studentname'], ' ') ?>
+                                                    <td><?= $array['studentid'] . '/' . @strtok($array['studentname'], ' ') ?>
                                                     </td>
                                                     <td><?= $array['category'] ?></td>
                                                     <td><?= date('F', mktime(0, 0, 0, $array['month'], 10)) . '-' . $array['feeyear'] ?>
