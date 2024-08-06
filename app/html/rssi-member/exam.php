@@ -180,8 +180,8 @@ validation();
                                                         <thead>
                                                             <tr>
                                                                 <th>Question Portal</th>
-                                                                <th>Evaluation Path</th>
-                                                                <th>Marks Upload</th>
+                                                                <!-- <th>Evaluation Path</th>
+                                                                <th>Marks Upload</th> -->
                                                                 <th>Examination Results</th>
                                                             </tr>
                                                         </thead>
@@ -190,12 +190,12 @@ validation();
                                                                 <td>
                                                                     <a href="question.php">Question Papers</a>
                                                                 </td>
-                                                                <td>
+                                                                <!-- <td>
                                                                     <a href="https://docs.google.com/spreadsheets/d/1d1dfSWWh_aM7Eq2rZc3ZxXJ2uMpqKfchy0ciNSF4KxU/edit?usp=sharing" target="_blank">Homework, QT Exam</a>
                                                                 </td>
                                                                 <td>
                                                                     <a href="https://docs.google.com/spreadsheets/d/1mjVN9VET3_ToFGDWRSSl7dAZO1sH1kNXgI66qPWfco8/edit?usp=sharing" target="_blank">Grade Summary Sheet</a>
-                                                                </td>
+                                                                </td> -->
                                                                 <td>
                                                                     <a href="../result.php" target="_blank">Results</a>
                                                                 </td>

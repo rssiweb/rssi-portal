@@ -275,11 +275,13 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                     currentYear--;
                                 }
                             </script>
+
                             <?php
                             echo '<table class="table" id="table-id">
                         <thead>
                         <tr>
                         <th scope="col">Category</th>
+                        <th scope="col">Class</th>
                         <th scope="col">Subject</th>
                         <th scope="col">Test ID</th>
                         <th scope="col">Full marks</th>
@@ -295,15 +297,37 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                 foreach ($resultArr as $array) {
                                     echo '<tr>
                             <td>' . $array['category'] . '</td>
+                            <td>' . $array['class'] . '</td>
                             <td>' . $array['subject'] . '</td>
-                            <td>' . $array['testcode'] . '&nbsp; <p class="badge bg-secondary">' . $array['class'] . '</p></td>
+                            <td>' . $array['testcode'] . '</td>
                             <td>' . $array['fullmarks'] . '</td>
                             <td>' . $array['examname'] . '-' . $array['year'] . '</td>
-                            <td>' . $array['topic'] . '</td>
-                            <td>
-                                <a href="' . $array['url'] . '" target="_blank">View</a>
-                            </td>
-                            </tr>';
+                            <td>' . $array['topic'] . '</td>' ?>
+                                    <?php
+                                    // Ensure the flag is set and is a valid date string
+                                    $flag = isset($array['flag']) ? $array['flag'] : null;
+
+                                    if ($flag) {
+                                        try {
+                                            $flag_time = new DateTime($flag);
+                                            $current_time = new DateTime();
+
+                                            $is_future = $flag_time > $current_time;
+                                        } catch (Exception $e) {
+                                            $is_future = false; // In case of an invalid date, treat as not future
+                                        }
+                                    } else {
+                                        $is_future = false; // Handle cases where flag is null or empty
+                                    }
+                                    ?>
+                                    <td>
+                                        <?php if ($is_future) : ?>
+                                            <a href="#" onclick="alert('This exam will be enabled after <?php echo $array['flag']; ?>'); return false;">View</a>
+                                        <?php else : ?>
+                                            <a href="<?php echo $array['url']; ?>" target="_blank">View</a>
+                                        <?php endif; ?>
+                                    </td>
+                                <?php echo '</tr>';
                                 }
                                 echo '</tbody>';
                             } else if ($resultArr == null) {
