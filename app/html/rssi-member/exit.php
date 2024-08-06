@@ -222,7 +222,7 @@ if (@$cmdtuples == 1) {
                             </div>
 
                             <div class="mb-3">
-                                <label for="clearance">Clearance</label>
+                                <label for="clearance">Clearance<span class="required-asterisk">*</span></label>
                                 <div class="form-text">Prior to release, the associate must obtain the following clearances. <p>To know more details <a href="#" data-bs-toggle="modal" data-bs-target="#popup">click here</a>.</p>
                                 </div>
                                 <div class="form-check">
@@ -585,6 +585,25 @@ if (@$cmdtuples == 1) {
             });
         });
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const style = document.createElement('style');
+        style.textContent = '.required-asterisk { color: red; font-size: 1.2em; margin-left: 0.2em; }';
+        document.head.appendChild(style);
+
+        document.querySelectorAll('input[required], textarea[required], select[required]').forEach(function (input) {
+            if (!input.closest('.form-check')) {
+                const label = input.closest('.mb-3').querySelector('label[for="' + input.id + '"]');
+                if (label) {
+                    const asterisk = document.createElement('span');
+                    asterisk.className = 'required-asterisk';
+                    asterisk.textContent = '*';
+                    label.appendChild(asterisk);
+                }
+            }
+        });
+    });
+</script>
 
 
 </body>

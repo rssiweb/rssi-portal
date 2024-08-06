@@ -156,7 +156,7 @@ if (@$cmdtuples == 1) {
             <hr>
             <div class="mb-3">
                 <label for="associate-number" class="form-label">Associate Number:</label>
-                <input type="text" class="form-control" id="associate-number" name="associate-number" Value="<?php echo $associate_number ?>" placeholder="Enter associate number" required>
+                <input type="text" class="form-control" id="associate-number" name="associate-number" Value="<?php echo $associate_number ?>" placeholder="Enter associate number">
                 <div class="form-text">Enter the associate number to search for their information.</div>
             </div>
             <button type="submit" class="btn btn-primary mb-3">Search</button>
@@ -552,6 +552,25 @@ if (@$cmdtuples == 1) {
         }
         // Attach the form validation to the form's submit event
         document.getElementById('a_onboard').onsubmit = validateForm;
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const style = document.createElement('style');
+            style.textContent = '.required-asterisk { color: red; font-size: 1.2em; margin-left: 0.2em; }';
+            document.head.appendChild(style);
+
+            // Select all required input, textarea, select, and checkbox elements
+            document.querySelectorAll('input[required], textarea[required], select[required]').forEach(input => {
+                const label = input.closest('.mb-3').querySelector('label' + (input.type === 'checkbox' ? '' : '[for="' + input.id + '"]'));
+                if (label) {
+                    const asterisk = document.createElement('span');
+                    asterisk.className = 'required-asterisk';
+                    asterisk.textContent = '*';
+                    label.appendChild(asterisk);
+                }
+            });
+        });
     </script>
 
 </body>
