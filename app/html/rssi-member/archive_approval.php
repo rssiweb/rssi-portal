@@ -16,19 +16,23 @@ validation();
 date_default_timezone_set('Asia/Kolkata');
 include("../../util/email.php");
 if ($role == 'Admin') {
-
+    $id = isset($_GET['get_status']) ? $_GET['get_status'] : 'Active';
     @$user_id = strtoupper($_GET['user_id']);
 
     if ($user_id > 0) {
-        $result = pg_query($con, "SELECT archive.remarks aremarks,*
-        FROM archive
-        JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber WHERE uploaded_for='$user_id'");
+        $result = pg_query($con, "SELECT archive.remarks as aremarks, archive.*, rssimyaccount_members.*
+            FROM archive
+            JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber
+            WHERE archive.uploaded_for='$user_id' AND rssimyaccount_members.filterstatus='$id'");
     } else {
-        $result = pg_query($con, "SELECT *
-        FROM archive
-        JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber order by doc_id desc"); //select query for viewing users.
+        $result = pg_query($con, "SELECT archive.remarks as aremarks, archive.*, rssimyaccount_members.*
+            FROM archive
+            JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber
+            WHERE rssimyaccount_members.filterstatus='$id'
+            ORDER BY archive.doc_id DESC"); // Select query for viewing users.
     }
 }
+
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -137,15 +141,28 @@ $resultArr = pg_fetch_all($result);
                             </div>
                             <?php if ($role == 'Admin' && $filterstatus == 'Active') { ?>
 
-                                <form action="" method="GET">
-                                    <div class="form-group" style="display: inline-block;">
-                                        <div class="col2" style="display: inline-block;">
-                                            <input name="user_id" id="user_id" class="form-control" style="width:max-content; display:inline-block" placeholder="User id" value="<?php echo $user_id ?>">
-                                        </div>
+                                <form action="" method="GET" style="display: flex; align-items: center;">
+                                    <div class="form-group" style="margin-right: 10px;">
+                                        <select name="get_status" id="get_status" class="form-select">
+                                            <?php if ($id == null) { ?>
+                                                <option value="" disabled selected hidden>Select Status</option>
+                                            <?php
+                                            } else { ?>
+                                                <option hidden selected><?php echo $id ?></option>
+                                            <?php }
+                                            ?>
+                                            <option>Active</option>
+                                            <option>Inactive</option>
+                                        </select>
+                                        <!-- <small class="form-text text-muted">Select Status</small> -->
                                     </div>
-                                    <div class="col2 left" style="display: inline-block;">
+                                    <div class="form-group" style="margin-right: 10px;">
+                                        <input name="user_id" id="user_id" class="form-control" style="width: auto;" placeholder="User id" value="<?php echo $user_id ?>">
+                                    </div>
+                                    <div class="form-group">
                                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                            <i class="bi bi-search"></i>&nbsp;Search
+                                        </button>
                                     </div>
                                 </form>
                             <?php } ?>

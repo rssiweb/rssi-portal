@@ -969,15 +969,24 @@ function paydetails_export()
   $idFilter = !empty($id) ? "AND employeeid = '$id'" : '';
 
   // Construct the full SQL query
-  $query = "SELECT * FROM payslip_entry 
-              LEFT JOIN (
-                  SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members
-              ) AS associate ON payslip_entry.employeeid = associate.associatenumber
-              LEFT JOIN (
-                  SELECT bank_account_number, ifsc_code,updated_for FROM bankdetails where account_nature='savings'
-              ) AS bankdetails ON payslip_entry.employeeid = bankdetails.updated_for
-              WHERE 1=1 $idFilter $yearFilter $monthFilter
-              ORDER BY payslip_issued_on DESC";
+  $query = "SELECT * 
+          FROM payslip_entry 
+          LEFT JOIN (
+              SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members
+          ) AS associate ON payslip_entry.employeeid = associate.associatenumber
+          LEFT JOIN (
+              SELECT bd.bank_account_number, bd.ifsc_code, bd.updated_for
+              FROM bankdetails bd
+              JOIN (
+                  SELECT updated_for, MAX(updated_on) AS latest_update
+                  FROM bankdetails
+                  WHERE account_nature = 'savings'
+                  GROUP BY updated_for
+              ) latest_bd ON bd.updated_for = latest_bd.updated_for AND bd.updated_on = latest_bd.latest_update
+              WHERE bd.account_nature = 'savings'
+          ) AS bankdetails ON payslip_entry.employeeid = bankdetails.updated_for
+          WHERE 1=1 $idFilter $yearFilter $monthFilter
+          ORDER BY payslip_issued_on DESC";
 
   $result = pg_query($con, $query);
   $resultArr = pg_fetch_all($result);
