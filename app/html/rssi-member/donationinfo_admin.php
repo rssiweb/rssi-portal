@@ -102,15 +102,18 @@ if ($searchField !== '' || $fyear !== '') {
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+
+    gtag('config', 'AW-11316670180');
+  </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -135,6 +138,12 @@ if ($searchField !== '' || $fyear !== '') {
     });
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+  <!-- Add DataTables CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+
+  <!-- Add DataTables JS -->
+  <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
+
 </head>
 
 <!-- =========================
@@ -142,7 +151,7 @@ if ($searchField !== '' || $fyear !== '') {
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+  <?php include 'inactive_session_expire_check.php'; ?>
   <?php include 'header.php'; ?>
 
   <main id="main" class="main">
@@ -212,7 +221,7 @@ if ($searchField !== '' || $fyear !== '') {
               </form>
               <?php echo '
           <div class="table-responsive">
-                    <table class="table">
+                    <table class="table" id="table-id">
                         <thead>
                             <tr>
                             <th scope="col">Date</th>
@@ -336,12 +345,6 @@ if ($searchField !== '' || $fyear !== '') {
   </main><!-- End #main -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
-  <!-- Vendor JS Files -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-
-  <!-- Template Main JS File -->
-  <script src="../assets_new/js/main.js"></script>
 
   <!--------------- POP-UP BOX --------------->
   <style>
@@ -509,6 +512,24 @@ if ($searchField !== '' || $fyear !== '') {
           .catch(error => console.error('Error!', error.message))
       })
     })
+  </script>
+  <!-- Vendor JS Files -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+  <!-- Template Main JS File -->
+  <script src="../assets_new/js/main.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Check if resultArr is empty
+      <?php if (!empty($resultArr)) : ?>
+        // Initialize DataTables only if resultArr is not empty
+        $('#table-id').DataTable({
+          // paging: false,
+          "order": [] // Disable initial sorting
+          // other options...
+        });
+      <?php endif; ?>
+    });
   </script>
 
 </body>

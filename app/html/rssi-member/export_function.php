@@ -21,6 +21,8 @@ if ($export_type == "fees") {
   gps_export();
 } else if ($export_type == "reimb") {
   reimb_export();
+} else if ($export_type == "reimb_payment") {
+  reimb_payment_export();
 } else if ($export_type == "donation_old") {
   donation_old_export();
 } else if ($export_type == "monthly_attd") {
@@ -268,59 +270,80 @@ function gps_export()
 
 function reimb_export()
 {
-
-
   global $con;
   @$status = $_POST['status'];
-  @$role = $_POST['role'];
-  @$user_check = $_POST['user_check'];
+  @$id = $_POST['id'];
+  @$reimbid = $_POST['reimbid'];
 
-  if ($role == 'Admin') {
+  // Initialize query conditions
+  $queryConditions = [];
 
-    @$id = strtoupper($_POST['id']);
-
-    if ($id == null && ($status == 'ALL' || $status == null)) {
-      $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-      left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
-      left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
-      order by timestamp desc");
-    } else if ($id == null && ($status != 'ALL' && $status != null)) {
-      $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-      left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
-      left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
-      WHERE year='$status' order by timestamp desc");
-    } else if ($id > 0 && ($status != 'ALL' && $status != null)) {
-      $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-      left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
-      left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
-      WHERE registrationid='$id' AND year='$status' order by timestamp desc");
-    } else if ($id != null && ($status == 'ALL' || $status == null)) {
-      $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-      left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON claim.registrationid=faculty.associatenumber
-      left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON claim.registrationid=student.student_id
-      WHERE registrationid='$id' order by timestamp desc");
-    }
+  // Split the comma-separated claim numbers into an array
+  if ($reimbid !== null && $reimbid !== "") {
+    $reimbidArray = explode(',', $reimbid);
+    $reimbidConditions = array_map(function ($item) {
+      return "'" . trim($item) . "'";
+    }, $reimbidArray);
+    $queryConditions[] = "claim.reimbid IN (" . implode(',', $reimbidConditions) . ")";
   }
 
-  if ($role != 'Admin' && $status != 'ALL') {
-
-    $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-    left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members WHERE associatenumber='$user_check') faculty ON claim.registrationid=faculty.associatenumber
-    left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student WHERE student_id='$user_check') student ON claim.registrationid=student.student_id
-    WHERE registrationid='$user_check' AND year='$status' order by timestamp desc");
-    $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check' AND year='$status'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check' AND year='$status' AND claimstatus!='rejected'");
+  if ($id !== null && $id !== "") {
+    $queryConditions[] = "claim.registrationid = '$id'";
   }
 
-  if ($role != 'Admin' && $status == 'ALL') {
-
-    $result = pg_query($con, "SELECT *, REPLACE (uploadeddocuments, 'view', 'preview') docp FROM claim 
-    left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members WHERE associatenumber='$user_check') faculty ON claim.registrationid=faculty.associatenumber
-    left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student WHERE student_id='$user_check') student ON claim.registrationid=student.student_id
-    WHERE registrationid='$user_check' order by timestamp desc");
-    $totalapprovedamount = pg_query($con, "SELECT SUM(approvedamount) FROM claim WHERE registrationid='$user_check'");
-    $totalclaimedamount = pg_query($con, "SELECT SUM(totalbillamount) FROM claim WHERE registrationid='$user_check'AND claimstatus!='rejected'");
+  if ($status !== null && $status !== "" && $status !== 'ALL') {
+    $queryConditions[] = "claim.year = '$status'";
   }
+
+  // Build the condition string
+  $conditionString = implode(' AND ', $queryConditions);
+
+  // Main query to fetch claim data
+  $query = "SELECT claim.*, 
+               REPLACE(claim.uploadeddocuments, 'view', 'preview') AS docp,
+               faculty.fullname AS fullname, 
+               faculty.phone AS phone,
+               faculty.email AS email,
+               student.studentname AS studentname, 
+               student.contact AS contact,
+               student.emailaddress AS emailaddress,
+               COALESCE(bd.bank_account_number, savings_bd.bank_account_number) AS bank_account_number
+        FROM claim
+        LEFT JOIN rssimyaccount_members AS faculty ON claim.registrationid = faculty.associatenumber
+        LEFT JOIN rssimyprofile_student AS student ON claim.registrationid = student.student_id
+        LEFT JOIN (
+            SELECT updated_for, bank_account_number 
+            FROM bankdetails 
+            WHERE account_nature = 'reimbursement'
+            AND updated_for = '$id'
+            AND updated_on = (
+                SELECT MAX(updated_on) 
+                FROM bankdetails 
+                WHERE account_nature = 'reimbursement' 
+                AND updated_for = '$id'
+            )
+        ) AS bd ON bd.updated_for = claim.registrationid
+        LEFT JOIN (
+            SELECT updated_for, bank_account_number 
+            FROM bankdetails 
+            WHERE account_nature = 'savings' 
+            AND updated_for = '$id'
+            AND updated_on = (
+                SELECT MAX(updated_on) 
+                FROM bankdetails 
+                WHERE account_nature = 'savings' 
+                AND updated_for = '$id'
+            )
+        ) AS savings_bd ON savings_bd.updated_for = claim.registrationid 
+        AND bd.bank_account_number IS NULL";
+
+  // Append the conditions and order by timestamp
+  if (!empty($conditionString)) {
+    $query .= " WHERE $conditionString";
+  }
+
+  $query .= " ORDER BY claim.timestamp DESC";
+  $result = pg_query($con, $query);
 
   if (!$result) {
     echo "An error occurred.\n";
@@ -334,6 +357,104 @@ function reimb_export()
   foreach ($resultArr as $array) {
 
     echo $array['reimbid'] . ',"' . substr($array['timestamp'], 0, 10) . '",' . $array['registrationid'] . '/' . strtok($array['fullname'], ' ') . ',' . $array['selectclaimheadfromthelistbelow'] . ',"' . $array['claimheaddetails'] . '",' . $array['totalbillamount'] . ',' . $array['approvedamount'] . ',' . $array['claimstatus'] . ',' . $array['transfereddate'] . ',' . $array['uploadeddocuments'] . ',"' . $array['mediremarks'] . '"' . "\n";
+  }
+}
+
+function reimb_payment_export()
+{
+  global $con;
+  @$status = $_POST['status'];
+  @$id = $_POST['id'];
+  @$reimbid = $_POST['reimbid'];
+  $currentDate = date('Y-m-d');
+
+  // Initialize query conditions
+  $queryConditions = [];
+
+  // Split the comma-separated claim numbers into an array
+  if (!empty($reimbid)) {
+    $reimbidArray = array_map('trim', explode(',', $reimbid));
+    $reimbidConditions = implode(',', array_map(function ($item) use ($con) {
+      return "'" . pg_escape_string($con, $item) . "'";
+    }, $reimbidArray));
+    $queryConditions[] = "claim.reimbid IN ($reimbidConditions)";
+  }
+
+  if (!empty($id)) {
+    $queryConditions[] = "claim.registrationid = '" . pg_escape_string($con, $id) . "'";
+  }
+
+  if (!empty($status) && $status !== 'ALL') {
+    $queryConditions[] = "claim.year = '" . pg_escape_string($con, $status) . "'";
+  }
+
+  // Build the condition string
+  $conditionString = !empty($queryConditions) ? implode(' AND ', $queryConditions) : '';
+
+  // Main query to fetch claim data
+  $query = "SELECT claim.*, 
+                REPLACE(claim.uploadeddocuments, 'view', 'preview') AS docp,
+                faculty.fullname AS fullname, 
+                faculty.phone AS phone,
+                faculty.email AS email,
+                student.studentname AS studentname, 
+                student.contact AS contact,
+                student.emailaddress AS emailaddress,
+                COALESCE(bd.bank_account_number, savings_bd.bank_account_number) AS bank_account_number,
+                COALESCE(bd.ifsc_code, savings_bd.ifsc_code) AS ifsc_code
+            FROM claim
+            LEFT JOIN rssimyaccount_members AS faculty ON claim.registrationid = faculty.associatenumber
+            LEFT JOIN rssimyprofile_student AS student ON claim.registrationid = student.student_id
+            LEFT JOIN (
+    SELECT 
+        b1.updated_for, 
+        b1.bank_account_number, 
+        b1.ifsc_code 
+    FROM bankdetails b1
+    INNER JOIN (
+        SELECT updated_for, MAX(updated_on) AS max_updated_on 
+        FROM bankdetails 
+        WHERE account_nature = 'reimbursement'
+        GROUP BY updated_for
+    ) b2 ON b1.updated_for = b2.updated_for AND b1.updated_on = b2.max_updated_on
+) AS bd ON bd.updated_for = claim.registrationid
+
+LEFT JOIN (
+    SELECT 
+        b1.updated_for, 
+        b1.bank_account_number, 
+        b1.ifsc_code 
+    FROM bankdetails b1
+    INNER JOIN (
+        SELECT updated_for, MAX(updated_on) AS max_updated_on 
+        FROM bankdetails 
+        WHERE account_nature = 'savings'
+        GROUP BY updated_for
+    ) b2 ON b1.updated_for = b2.updated_for AND b1.updated_on = b2.max_updated_on
+) AS savings_bd ON savings_bd.updated_for = claim.registrationid 
+AND bd.bank_account_number IS NULL";
+
+  // Append the conditions and order by timestamp
+  if (!empty($conditionString)) {
+    $query .= " WHERE $conditionString";
+  }
+
+  $query .= " ORDER BY claim.timestamp DESC";
+
+  $result = pg_query($con, $query);
+
+  if (!$result) {
+    echo "An error occurred.\n";
+    exit;
+  }
+
+  $resultArr = pg_fetch_all($result);
+
+  // Output CSV headers
+  echo 'PYMT_PROD_TYPE_CODE, PYMT_MODE, DEBIT_ACC_NO, BNF_NAME, BENE_ACC_NO, BENE_IFSC, AMOUNT, DEBIT_NARR, CREDIT_NARR, MOBILE_NUM, EMAIL_ID, REMARK, PYMT_DATE, REF_NO, ADDL_INFO1, ADDL_INFO2, ADDL_INFO3, ADDL_INFO4, ADDL_INFO5' . "\n";
+
+  foreach ($resultArr as $array) {
+    echo 'PAB_VENDOR,NEFT,\'004201033772,' . $array['fullname'] . ',\'' . $array['bank_account_number'] . ',' . $array['ifsc_code'] . ',' . $array['approvedamount'] . ',,,' . $array['phone'] . ',' . $array['email'] . ',' . 'RSSI Reimbursement' . ',' . $currentDate . ',' . $array['reimbid'] . "\n";
   }
 }
 
