@@ -306,36 +306,10 @@ function reimb_export()
                faculty.email AS email,
                student.studentname AS studentname, 
                student.contact AS contact,
-               student.emailaddress AS emailaddress,
-               COALESCE(bd.bank_account_number, savings_bd.bank_account_number) AS bank_account_number
+               student.emailaddress AS emailaddress
         FROM claim
         LEFT JOIN rssimyaccount_members AS faculty ON claim.registrationid = faculty.associatenumber
-        LEFT JOIN rssimyprofile_student AS student ON claim.registrationid = student.student_id
-        LEFT JOIN (
-            SELECT updated_for, bank_account_number 
-            FROM bankdetails 
-            WHERE account_nature = 'reimbursement'
-            AND updated_for = '$id'
-            AND updated_on = (
-                SELECT MAX(updated_on) 
-                FROM bankdetails 
-                WHERE account_nature = 'reimbursement' 
-                AND updated_for = '$id'
-            )
-        ) AS bd ON bd.updated_for = claim.registrationid
-        LEFT JOIN (
-            SELECT updated_for, bank_account_number 
-            FROM bankdetails 
-            WHERE account_nature = 'savings' 
-            AND updated_for = '$id'
-            AND updated_on = (
-                SELECT MAX(updated_on) 
-                FROM bankdetails 
-                WHERE account_nature = 'savings' 
-                AND updated_for = '$id'
-            )
-        ) AS savings_bd ON savings_bd.updated_for = claim.registrationid 
-        AND bd.bank_account_number IS NULL";
+        LEFT JOIN rssimyprofile_student AS student ON claim.registrationid = student.student_id";
 
   // Append the conditions and order by timestamp
   if (!empty($conditionString)) {
