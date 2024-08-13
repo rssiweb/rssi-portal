@@ -599,30 +599,31 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                         }
 
 
-                        if (document.getElementById('claimstatus').value == "" || document.getElementById('claimstatus').value == "Rejected" || document.getElementById('claimstatus').value == "Under review") {
+                        // Initial check when the page loads
+function updateFieldStatus() {
+  const claimStatus = document.getElementById('claimstatus').value;
 
-                          document.getElementById("approvedamount").disabled = true;
-                          document.getElementById("transactionid").disabled = true;
-                          document.getElementById("transfereddate").disabled = true;
-                        } else {
+  if (claimStatus === "" || claimStatus === "Rejected" || claimStatus === "Under review") {
+    document.getElementById("approvedamount").disabled = true;
+    document.getElementById("transactionid").disabled = true;
+    document.getElementById("transfereddate").disabled = true;
+  } else if (claimStatus === "Approved") {
+    document.getElementById("approvedamount").disabled = false;
+    document.getElementById("transactionid").disabled = true;
+    document.getElementById("transfereddate").disabled = true;
+  } else if (claimStatus === "Claim settled") {
+    document.getElementById("approvedamount").disabled = false;
+    document.getElementById("transactionid").disabled = false;
+    document.getElementById("transfereddate").disabled = false;
+  }
+}
 
-                          document.getElementById("approvedamount").disabled = false;
-                          document.getElementById("transactionid").disabled = false;
-                          document.getElementById("transfereddate").disabled = false;
-                        }
-                        const randvar = document.getElementById('claimstatus');
+// Attach event listener to handle changes in claim status
+document.getElementById('claimstatus').addEventListener('change', updateFieldStatus);
 
-                        randvar.addEventListener('change', (event) => {
-                          if (document.getElementById('claimstatus').value == "Approved" || document.getElementById('claimstatus').value == "Claim settled") {
-                            document.getElementById("approvedamount").disabled = false;
-                            document.getElementById("transactionid").disabled = false;
-                            document.getElementById("transfereddate").disabled = false;
-                          } else {
-                            document.getElementById("approvedamount").disabled = true;
-                            document.getElementById("transactionid").disabled = true;
-                            document.getElementById("transfereddate").disabled = true;
-                          }
-                        })
+// Call the function initially to set the correct state when the page loads
+updateFieldStatus();
+
 
                         if (mydata["claimstatus"] == 'Claim settled' || mydata["claimstatus"] == 'Rejected') {
                           document.getElementById("claimupdate").disabled = true;
@@ -743,19 +744,20 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                         }
                       }
 
-                      const form = document.getElementById('claimreviewform')
-                      form.addEventListener('submit', e => {
-                        e.preventDefault()
+                      document.getElementById('claimreviewform').addEventListener('submit', e => {
+                        e.preventDefault();
+
                         fetch(scriptURL, {
                             method: 'POST',
-                            body: new FormData(document.getElementById('claimreviewform'))
+                            body: new FormData(e.target)
                           })
-                          .then(response =>
-                            alert("Record has been updated.") +
-                            location.reload()
-                          )
-                          .catch(error => console.error('Error!', error.message))
-                      })
+                          .then(response => response.text())
+                          .then(data => {
+                            alert(data.trim() === 'success' ? "Record has been successfully updated." : "Update failed. Please try again.");
+                            location.reload();
+                          })
+                          .catch(error => console.error('Error!', error.message));
+                      });
 
                       document.querySelectorAll('form[id^="email-form-"]').forEach(form => {
                         form.addEventListener('submit', e => {

@@ -571,13 +571,22 @@ if ($formtype == "claimreviewform") {
   @$mediremarks = $_POST['mediremarks'];
   $now = date('Y-m-d H:i:s');
 
-  if ($claimstatus != "Rejected" && $claimstatus != "Under review") {
+  $baseQuery = "UPDATE claim SET reviewer_id = '$reviewer_id', reviewer_name = '$reviewer_name', updatedon = '$now', claimstatus = '$claimstatus', mediremarks = '$mediremarks'";
 
-    $claimapproval = "UPDATE claim SET  reviewer_id = '$reviewer_id', reviewer_name = '$reviewer_name',  updatedon = '$now', claimstatus = '$claimstatus',approvedamount = $approvedamount,  transactionid = '$transactionid', transfereddate = '$transfereddate', closedon = '$closedon', mediremarks = '$mediremarks' WHERE reimbid = '$reimbidd'";
+  if ($claimstatus == "Claim settled") {
+    $claimapproval = "$baseQuery, approvedamount = $approvedamount, transactionid = '$transactionid', transfereddate = '$transfereddate', closedon = '$closedon' WHERE reimbid = '$reimbidd'";
+  } elseif ($claimstatus == "Approved") {
+    $claimapproval = "$baseQuery, approvedamount = $approvedamount WHERE reimbid = '$reimbidd'";
   } else {
-    $claimapproval = "UPDATE claim SET  reviewer_id = '$reviewer_id', reviewer_name = '$reviewer_name',  updatedon = '$now', claimstatus = '$claimstatus', mediremarks = '$mediremarks', approvedamount = null,  transactionid = null, transfereddate = null WHERE reimbid = '$reimbidd'";
+    $claimapproval = "$baseQuery WHERE reimbid = '$reimbidd'";
   }
   $result = pg_query($con, $claimapproval);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+  } else
+    echo "failed";
 }
 
 if ($formtype == "ipfclose") {
