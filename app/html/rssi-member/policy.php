@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/drive.php");
 
 
 if (!isLoggedIn("aid")) {
@@ -15,34 +16,43 @@ validation(); ?>
 <?php if ($role == 'Admin') { ?>
 
 <?php if ($_POST) {
-        @$policyid = "POL" . time();
-        @$policytype = $_POST['policytype'];
-        @$policyname = $_POST['policyname'];
-        @$remarks = $_POST['remarks'];
-        @$policydoc = $_POST['policydoc'];
-        @$issuedby = $associatenumber;
-        @$issuedon = date('Y-m-d H:i:s');
-        if ($policyid != "") {
-            $policy = "INSERT INTO policy (policyid, policytype, policyname, remarks, policydoc, issuedby, issuedon) VALUES ('$policyid', '$policytype', '$policyname', '$remarks', '$policydoc', '$issuedby', '$issuedon')";
-            $result = pg_query($con, $policy);
-            $cmdtuples = pg_affected_rows($result);
+        $policyid = uniqid();
+        $policytype = $_POST['policytype'];
+        $policyname = $_POST['policyname'];
+        $remarks = $_POST['remarks'];
+        $issuedon = date('Y-m-d H:i:s');
+        // Upload and insert passbook page if provided
+        if (!empty($_FILES['policydoc']['name'])) {
+            $policydoc = $_FILES['policydoc'];
+            $filename = $policyid . "_" . $policyname . "_" . time();
+            $parent = '1KlYwKIuAHkWdYJkT3SdhW1nx_T6tZqXA';
+            $doclink = uploadeToDrive($policydoc, $parent, $filename);
         }
+        if ($doclink !== null) {
+            $policy = "INSERT INTO policy (policyid, policytype, policyname, remarks, policydoc, issuedby, issuedon) VALUES ('$policyid', '$policytype', '$policyname', '$remarks', '$doclink', '$associatenumber', '$issuedon')";
+        }
+        $result = pg_query($con, $policy);
+        $cmdtuples = pg_affected_rows($result);
     }
-} ?>
+}
+?>
 
 <!doctype html>
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -66,8 +76,6 @@ validation(); ?>
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-
     <style>
         .x-btn:focus,
         .button:focus,
@@ -84,10 +92,16 @@ validation(); ?>
             display: inline-block;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -135,7 +149,7 @@ validation(); ?>
                             <?php } ?>
 
                             <?php if ($role == 'Admin') { ?>
-                                <form autocomplete="off" name="pms" id="pms" action="policy.php" method="POST">
+                                <form autocomplete="off" name="policy" id="policy" action="policy.php" method="POST" enctype="multipart/form-data">
                                     <div class="form-group" style="display: inline-block;">
                                         <div class="col2" style="display: inline-block;">
 
@@ -156,7 +170,7 @@ validation(); ?>
                                             </span>
 
                                             <span class="input-help">
-                                                <input type="text" name="policyname" class="form-control" style="width:max-content; display:inline-block" placeholder="Policy name" value=""></input>
+                                                <input type="text" name="policyname" class="form-control" style="width:max-content; display:inline-block" placeholder="Policy name" value="" required></input>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Policy name</small>
                                             </span>
 
@@ -166,8 +180,8 @@ validation(); ?>
                                             </span>
 
                                             <span class="input-help">
-                                                <input type="policydoc" name="policydoc" class="form-control" style="width:max-content; display:inline-block" placeholder="URL" value="">
-                                                <small id="passwordHelpBlock" class="form-text text-muted">URL</small>
+                                                <input class="form-control" type="file" id="policydoc" name="policydoc" required>
+                                                <div class="form-text">Upload File</div>
                                             </span>
 
                                         </div>
@@ -192,29 +206,16 @@ validation(); ?>
                             ?>
 
                             <?php echo '
-                    <p>Select Number Of Rows</p>
-                    <div class="form-group">
-                        <!--		Show Numbers Of Rows 		-->
-                        <select class="form-select" name="state" id="maxRows">
-                            <option value="5000">Show ALL Rows</option>
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                            <option value="70">70</option>
-                            <option value="100">100</option>
-                        </select>
-            
-                    </div>
                     <div class="table-responsive">
                     <table class="table" id="table-id">
                         <thead>
                             <tr>
-                            <th scope="col">Policy Id</th>
-                            <th scope="col">Policy name</th>
-                            <th scope="col">Details</th>
-                            <th scope="col">Policy document</th>' ?>
+                            <th>Policy Id</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Policy name</th>
+                            <th>Details</th>
+                            <th>Policy document</th>' ?>
                             <?php if ($role == 'Admin') { ?>
                                 <?php echo '<th></th>' ?>
                             <?php } ?>
@@ -225,6 +226,8 @@ validation(); ?>
                                 echo '
                             <tr>
                                 <td>' . $array['policyid'] . '</td>
+                                <td>' . $array['category'] . '</td>
+                                <td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>
                                 <td>' . $array['policyname'] . '&nbsp;<p class="badge bg-secondary">' . $array['policytype'] . '</p></td>
                                 <td>
                                 
@@ -257,7 +260,7 @@ validation(); ?>
 
                                 <?php if ($role == 'Admin') { ?>
                                     <?php echo '<td><form name="policydelete_' . $array['policyid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                                    <input type="hidden" name="form-type1" type="text" value="policydelete">
+                                    <input type="hidden" name="form-type" type="text" value="policydelete">
                                     <input type="hidden" name="policydeleteid" id="policydeleteid" type="text" value="' . $array['policyid'] . '">
 
                                     <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['policyid'] . '"><i class="bi bi-x-lg"></i></button>
@@ -268,128 +271,6 @@ validation(); ?>
                         </table>
                         </div>';
                             ?>
-                            <!-- Start Pagination -->
-                            <div class="pagination-container">
-                                <nav>
-                                    <ul class="pagination">
-                                        <li class="page-item" data-page="prev">
-                                            <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
-                                        </li>
-                                        <!-- Here the JS Function Will Add the Rows -->
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">1</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">2</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">3</button>
-                                        </li>
-                                        <li class="page-item" data-page="next" id="prev">
-                                            <button class="page-link pagination-button" aria-label="Next">&gt;</button>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-
-                            <script>
-                                getPagination('#table-id');
-
-                                function getPagination(table) {
-                                    var lastPage = 1;
-
-                                    $('#maxRows').on('change', function(evt) {
-                                        lastPage = 1;
-                                        $('.pagination').find('li').slice(1, -1).remove();
-                                        var trnum = 0;
-                                        var maxRows = parseInt($(this).val());
-
-                                        if (maxRows == 5000) {
-                                            $('.pagination').hide();
-                                        } else {
-                                            $('.pagination').show();
-                                        }
-
-                                        var totalRows = $(table + ' tbody tr').length;
-                                        $(table + ' tr:gt(0)').each(function() {
-                                            trnum++;
-                                            if (trnum > maxRows) {
-                                                $(this).hide();
-                                            }
-                                            if (trnum <= maxRows) {
-                                                $(this).show();
-                                            }
-                                        });
-
-                                        if (totalRows > maxRows) {
-                                            var pagenum = Math.ceil(totalRows / maxRows);
-                                            for (var i = 1; i <= pagenum; i++) {
-                                                $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
-                                                <button class="page-link pagination-button">' + i + '</button>\
-                                                </li>').show();
-                                            }
-                                        }
-
-                                        $('.pagination [data-page="1"]').addClass('active');
-                                        $('.pagination li').on('click', function(evt) {
-                                            evt.stopImmediatePropagation();
-                                            evt.preventDefault();
-                                            var pageNum = $(this).attr('data-page');
-
-                                            var maxRows = parseInt($('#maxRows').val());
-
-                                            if (pageNum == 'prev') {
-                                                if (lastPage == 1) {
-                                                    return;
-                                                }
-                                                pageNum = --lastPage;
-                                            }
-                                            if (pageNum == 'next') {
-                                                if (lastPage == $('.pagination li').length - 2) {
-                                                    return;
-                                                }
-                                                pageNum = ++lastPage;
-                                            }
-
-                                            lastPage = pageNum;
-                                            var trIndex = 0;
-                                            $('.pagination li').removeClass('active');
-                                            $('.pagination [data-page="' + lastPage + '"]').addClass('active');
-                                            limitPagging();
-                                            $(table + ' tr:gt(0)').each(function() {
-                                                trIndex++;
-                                                if (
-                                                    trIndex > maxRows * pageNum ||
-                                                    trIndex <= maxRows * pageNum - maxRows
-                                                ) {
-                                                    $(this).hide();
-                                                } else {
-                                                    $(this).show();
-                                                }
-                                            });
-                                        });
-                                        limitPagging();
-                                    }).val(5).change();
-                                }
-
-                                function limitPagging() {
-                                    if ($('.pagination li').length > 7) {
-                                        if ($('.pagination li.active').attr('data-page') <= 3) {
-                                            $('.pagination li.page-item:gt(5)').hide();
-                                            $('.pagination li.page-item:lt(5)').show();
-                                            $('.pagination [data-page="next"]').show();
-                                        }
-                                        if ($('.pagination li.active').attr('data-page') > 3) {
-                                            $('.pagination li.page-item').hide();
-                                            $('.pagination [data-page="next"]').show();
-                                            var currentPage = parseInt($('.pagination li.active').attr('data-page'));
-                                            for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-                                                $('.pagination [data-page="' + i + '"]').show();
-                                            }
-                                        }
-                                    }
-                                }
-                            </script>
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
 
@@ -463,6 +344,19 @@ validation(); ?>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
 
 </body>
 

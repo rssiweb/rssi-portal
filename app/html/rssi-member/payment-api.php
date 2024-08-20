@@ -100,7 +100,7 @@ if ($formtype == "paydelete") {
 }
 
 if ($formtype == "policydelete") {
-  @$policydid = $_POST['policydeleteid'];
+  $policydid = $_POST['policydeleteid'];
   $deletepolicy = "DELETE from policy WHERE policyid = '$policydid'";
   $result = pg_query($con, $deletepolicy);
 }
