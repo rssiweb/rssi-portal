@@ -234,8 +234,8 @@
             </a>
           </li>
           <li>
-            <a id="policyLink" href="policy.php">
-              <span>HR Policy</span>
+            <a id="policyLink" href="infohub.php">
+              <span>Info Hub</span>
             </a>
           </li>
           <li>
@@ -486,7 +486,7 @@
       {
         id: 'work',
         linkId: 'policyLink',
-        url: 'policy.php'
+        url: 'infohub.php'
       },
       {
         id: 'work',
