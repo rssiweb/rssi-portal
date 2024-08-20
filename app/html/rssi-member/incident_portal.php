@@ -2,101 +2,43 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/drive.php");
+
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
 
-validation();
+validation(); ?>
 
-?>
-<?php
+<?php if ($role == 'Admin') { ?>
 
-if (@$_POST['form-type'] == "onboarding") {
-
-    $otp_associate = $_POST['otp-associate'];
-    $otp_centreincharge = $_POST['otp-center-incharge'];
-    $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
-
-    $query = "select onboarding_gen_otp_associate, onboarding_gen_otp_center_incharge from onboarding WHERE onboarding_associate_id='$otp_initiatedfor_main'";
-    $result = pg_query($con, $query);
-    $db_otp_associate = pg_fetch_result($result, 0, 0);
-    $db_otp_centreincharge = pg_fetch_result($result, 0, 1);
-
-    @$authSuccess = password_verify($otp_associate, $db_otp_associate) && password_verify($otp_centreincharge, $db_otp_centreincharge);
-    if ($authSuccess) {
-        $otp_initiatedfor_main = $_POST['otp_initiatedfor_main'];
-        $onboarding_photo = $_POST['photo'];
-        $reporting_date_time = $_POST['reporting-date-time'];
-        $disclaimer = $_POST['onboarding_complete'];
-        $now = date('Y-m-d H:i:s');
-        function getUserIpAddr()
-        {
-            if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
-                $ip = $_SERVER['HTTP_CLIENT_IP'];
-            } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-                // HTTP_X_FORWARDED_FOR can contain a comma-separated list of IPs. The first one is the client's real IP.
-                $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-                $ip = trim($ipList[0]);
-                if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-                    $ip = $_SERVER['REMOTE_ADDR'];
-                }
-            } else {
-                $ip = $_SERVER['REMOTE_ADDR'];
-            }
-            return $ip;
+<?php if ($_POST) {
+        $policyid = uniqid();
+        $policytype = $_POST['policytype'];
+        $policyname = $_POST['policyname'];
+        $remarks = $_POST['remarks'];
+        $issuedon = date('Y-m-d H:i:s');
+        // Upload and insert passbook page if provided
+        if (!empty($_FILES['policydoc']['name'])) {
+            $policydoc = $_FILES['policydoc'];
+            $filename = $policyid . "_" . $policyname . "_" . time();
+            $parent = '1KlYwKIuAHkWdYJkT3SdhW1nx_T6tZqXA';
+            $doclink = uploadeToDrive($policydoc, $parent, $filename);
         }
-
-        $ip_address = getUserIpAddr();
-        $onboarded = "UPDATE onboarding SET onboarding_photo='$onboarding_photo', reporting_date_time='$reporting_date_time', onboarding_otp_associate='$otp_associate', onboarding_otp_center_incharge='$otp_centreincharge', onboarding_submitted_by='$associatenumber', onboarding_submitted_on='$now', onboarding_flag='yes', disclaimer='$disclaimer', ip_address='$ip_address' where onboarding_associate_id='$otp_initiatedfor_main'";
-        $result = pg_query($con, $onboarded);
+        if ($doclink !== null) {
+            $policy = "INSERT INTO policy (policyid, policytype, policyname, remarks, policydoc, issuedby, issuedon) VALUES ('$policyid', '$policytype', '$policyname', '$remarks', '$doclink', '$associatenumber', '$issuedon')";
+        }
+        $result = pg_query($con, $policy);
         $cmdtuples = pg_affected_rows($result);
-    } else {
-        $auth_failed_dialog = true;
     }
-} else {
-}
-
-if (@$auth_failed_dialog) { ?>
-    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-        <i class="bi bi-x-lg"></i>&nbsp;&nbsp;<span>ERROR: The OTP you entered is incorrect.</span>
-    </div>
-    <script>
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
-    </script>
-<?php } ?>
-<?php
-if (@$cmdtuples == 1) {
-    echo '<div class="alert alert-success" role="alert" style="text-align: -webkit-center;">';
-    echo '<h4 class="alert-heading" style="font-size: 1.5rem;">The associate has been onboarded successfully!</h4>
-';
-
-    // Redirect the user after a delay
-    $redirect_url = 'onboarding.php?associate-number=' . $otp_initiatedfor_main;
-    echo '<p style="font-size: 1.2rem;">Redirecting to the onboarding page in <span id="countdown">3</span> seconds.</p>';
-    echo '</div>';
-    echo '<script>
-            var timeleft = 3;
-            var countdown = setInterval(function(){
-                document.getElementById("countdown").innerHTML = timeleft;
-                timeleft -= 1;
-                if(timeleft <= 0){
-                    clearInterval(countdown);
-                    window.location.href = "' . $redirect_url . '";
-                }
-            }, 1000);
-          </script>';
-    //   exit; 
 }
 ?>
 
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
     <!-- Google tag (gtag.js) -->
@@ -111,284 +53,311 @@ if (@$cmdtuples == 1) {
 
         gtag('config', 'AW-11316670180');
     </script>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Onboarding form</title>
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Info Hub</title>
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://www.rssi.in/disclaimer'
+        });
+    </script>
+    <style>
+        .x-btn:focus,
+        .button:focus,
+        [type="submit"]:focus {
+            outline: none;
+        }
+
+        #passwordHelpBlock {
+            display: block;
+        }
+
+        .input-help {
+            vertical-align: top;
+            display: inline-block;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- Add DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Add DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
 </head>
 
 <body>
     <?php include 'inactive_session_expire_check.php'; ?>
-    <div class="container">
-        <fieldset <?php echo ($array['onboarding_flag'] == "yes") ? "disabled" : ""; ?>>
+    <?php include 'header.php'; ?>
 
-            <input type="hidden" name="form-type" type="text" value="onboarding">
-            <input type="hidden" name="otp_initiatedfor_main" type="text" value="<?php echo $array['associatenumber'] ?>" readonly>
+    <main id="main" class="main">
 
-            <div class="mb-3">
-                <label for="photo" class="form-label">Current Photo</label>
-                <input type="hidden" class="form-control" id="photo" name="photo" value="<?php echo $array['onboarding_photo'] ?>">
-                <div class="mt-2">
-                    <button type="button" class="btn btn-primary" onclick="startCamera()">Start Camera</button>
-                    <button type="button" class="btn btn-primary d-none" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
-                </div>
-            </div>
-            <div class="mt-3">
-                <video id="video-preview" class="img-thumbnail d-none" alt="Preview" width="320" height="240"></video>
-                <canvas id="canvas-preview" class="d-none" width="640" height="480"></canvas>
-                <img id="photo-preview" class="d-none img-thumbnail" alt="Captured Photo" width="320" height="240" src="">
-            </div>
-            <?php if ($array['onboarding_photo'] != null) { ?>
-                <div class="row mb-3">
-                    <img id="photo-preview" class="img-thumbnail" alt="Captured Photo" style="width:500px;" src="<?php echo $array['onboarding_photo'] ?>">
-                </div>
-            <?php } ?>
+        <div class="pagetitle">
+            <h1>Info Hub</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Work</a></li>
+                    <li class="breadcrumb-item active">Info Hub</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="reporting-date-time" class="form-label">Reporting Date &amp; Time</label>
-                    <input type="datetime-local" class="form-control" id="reporting-date-time" name="reporting-date-time" value="<?php echo $array['reporting_date_time'] ?>" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="otp-associate" class="form-label">OTP from Associate</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="otp-associate" name="otp-associate" placeholder="Enter OTP" required>
-                        <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_associate">Generate OTP</button>
-                    </div>
-                    <div class="form-text">OTP will be sent to the registered email address.</div>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label for="otp-center-incharge" class="form-label">OTP from Center Incharge</label>
-                <div class="input-group">
-                    <input type="password" class="form-control" id="otp-center-incharge" name="otp-center-incharge" placeholder="Enter OTP" required>
-                    <button class="btn btn-outline-secondary" type="submit" id="submit_gen_otp_centr">Generate OTP</button>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label>
-                    <input type="checkbox" name="onboarding_complete" value="yes" required <?php if ($array['disclaimer'] == 'yes') {
-                                                                                                echo "checked";
-                                                                                            } ?>>
-                    I confirm that I have completed all the onboarding tasks for this associate, including:
-                    <ol>
-                        <li>Reviewing the associate's job description and responsibilities</li>
-                        <li>Providing the associate with access to the required tools and resources</li>
-                        <li>Conducting a briefing on the NGO's policies and procedures</li>
-                        <li>Introducing the associate to their team and colleagues</li>
-                    </ol>
-                </label>
-            </div>
+        <section class="section dashboard">
+            <div class="row">
 
-            <div class="mb-3">
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </div>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-            <div class="card">
-                <div class="card-header">
-                    Onboarding Status
-                </div>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">
-                        <div class="row">
-                            <div class="col-6">Initiated On:</div>
-                            <div class="col-6">
-                                <?php echo ($array['onboard_initiated_on'] !== null) ? date('d/m/y h:i:s a', strtotime($array['onboard_initiated_on'])) . ' by ' . $array['onboard_initiated_by'] : '<span class="text-muted">Not initiated yet</span>' ?>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="list-group-item">
-                        <div class="row">
-                            <div class="col-6">Submitted On:</div>
-                            <div class="col-6">
+                        <div class="card-body">
+                            <br>
+                            <?php if ($role == 'Admin') { ?>
+                                <?php if (@$policyid != null && @$cmdtuples == 0) { ?>
+
+                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <span>ERROR: Oops, something wasn't right.</span>
+                                    </div>
                                 <?php
-                                if ($array['onboarding_submitted_on'] !== null) {
-                                    echo date('d/m/y h:i:s a', strtotime($array['onboarding_submitted_on'])) . ' by ' . $array['onboarding_submitted_by'] . '<br>';
-                                    echo 'IP Address: ' . $array['ip_address'];
-                                } else {
-                                    echo '<span class="text-muted">Not submitted yet</span>';
+                                } else if (@$cmdtuples == 1) { ?>
+
+                                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <i class="bi bi-check2-circle"></i>
+                                        <span>Database has been updated successfully for policy id <?php echo @$policyid ?>.</span>
+                                    </div>
+                                    <script>
+                                        if (window.history.replaceState) {
+                                            window.history.replaceState(null, null, window.location.href);
+                                        }
+                                    </script>
+                                <?php } ?>
+                            <?php } ?>
+
+                            <?php if ($role == 'Admin') { ?>
+                                <form autocomplete="off" name="policy" id="policy" action="infohub.php" method="POST" enctype="multipart/form-data">
+                                    <div class="form-group" style="display: inline-block;">
+                                        <div class="col2" style="display: inline-block;">
+
+                                            <span class="input-help">
+                                                <select name="policytype" class="form-select" style="width:max-content; display:inline-block" required>
+                                                    <?php if ($category == null) { ?>
+                                                        <option value="" disabled selected hidden>Category</option>
+                                                    <?php
+                                                    } else { ?>
+                                                        <option hidden selected><?php echo $category ?></option>
+                                                    <?php }
+                                                    ?>
+                                                    <option>Internal</option>
+                                                    <option>Confidential</option>
+                                                    <option>Public</option>
+                                                    <option>HR Policy</option>
+                                                </select>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Category</small>
+                                            </span>
+
+                                            <span class="input-help">
+                                                <input type="text" name="policyname" class="form-control" style="width:max-content; display:inline-block" placeholder="Policy name" value="" required></input>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Policy name</small>
+                                            </span>
+
+                                            <span class="input-help">
+                                                <textarea type="text" name="remarks" class="form-control" style="width:max-content; display:inline-block" placeholder="Remarks" value=""></textarea>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
+                                            </span>
+
+                                            <span class="input-help">
+                                                <input class="form-control" type="file" id="policydoc" name="policydoc" required>
+                                                <div class="form-text">Upload File</div>
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col2 left" style="display: inline-block;">
+                                        <button type="submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
+                                            <i class="bi bi-plus-lg"></i>&nbsp;&nbsp;Add</button>
+                                    </div>
+                                </form>
+                            <?php } ?>
+                            <?php
+
+                            $result = pg_query($con, "SELECT * FROM policy order by issuedon desc");
+                            if (!$result) {
+                                echo "An error occurred.\n";
+                                exit;
+                            }
+
+                            $resultArr = pg_fetch_all($result);
+                            ?>
+
+                            <?php echo '
+                    <div class="table-responsive">
+                    <table class="table" id="table-id">
+                        <thead>
+                            <tr>
+                            <th>Policy Id</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Policy name</th>
+                            <th>Details</th>
+                            <th>Policy document</th>' ?>
+                            <?php if ($role == 'Admin') { ?>
+                                <?php echo '<th></th>' ?>
+                            <?php } ?>
+                            <?php echo '</tr>
+                        </thead>
+                        <tbody>';
+                            foreach ($resultArr as $array) {
+                                echo '
+                            <tr>
+                                <td>' . $array['policyid'] . '</td>
+                                <td>' . $array['policytype'] . '</td>
+                                <td>' . @date("d/m/Y g:i a", strtotime($array['issuedon'])) . '</td>
+                                <td>' . $array['policyname'] . '</td>
+                                <td>
+                                
+                                <form name="policybody_' . $array['policyid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                <input type="hidden" name="form-type" type="text" value="policybodyedit">
+                                <input type="hidden" name="policyid" id="policyid" type="text" value="' . $array['policyid'] . '">
+                                <textarea id="inp_' . $array['policyid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>' ?>
+
+                                <?php if ($role == 'Admin') { ?>
+
+                                    <?php echo '&nbsp;
+
+                                <button type="button" id="edit_' . $array['policyid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="bi bi-pencil-square"></i></button>&nbsp;
+
+                                <button type="submit" id="save_' . $array['policyid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="bi bi-save"></i></button>
+                                
+                                ' ?>
+
+                                <?php } ?>
+
+                                <?php echo '</form></td>' ?>
+
+                                <?php if ($array['policydoc'] == null) { ?>
+                                    <?php echo '<td></td>' ?>
+
+                                <?php } else { ?>
+
+                                    <?php echo '<td><a href="' . $array['policydoc'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="color:#777777" title="' . $array['policyid'] . '" display:inline;></i></a></td>'; ?>
+                                <?php } ?>
+
+                                <?php if ($role == 'Admin') { ?>
+                                    <?php echo '<td><form name="policydelete_' . $array['policyid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
+                                    <input type="hidden" name="form-type" type="text" value="policydelete">
+                                    <input type="hidden" name="policydeleteid" id="policydeleteid" type="text" value="' . $array['policyid'] . '">
+
+                                    <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['policyid'] . '"><i class="bi bi-x-lg"></i></button>
+                                    </td>' ?>
+                                <?php } ?>
+                            <?php }
+                            echo '</form></tr></tbody>
+                        </table>
+                        </div>';
+                            ?>
+                            <script>
+                                var data = <?php echo json_encode($resultArr) ?>;
+
+                                data.forEach(item => {
+
+                                    const form = document.getElementById('edit_' + item.policyid);
+
+                                    form.addEventListener('click', function() {
+                                        document.getElementById('inp_' + item.policyid).disabled = false;
+                                    });
+                                })
+
+                                //For form submission - to update Remarks
+                                const scriptURL = 'payment-api.php'
+
+                                data.forEach(item => {
+                                    const form = document.forms['policybody_' + item.policyid]
+                                    form.addEventListener('submit', e => {
+                                        e.preventDefault()
+                                        fetch(scriptURL, {
+                                                method: 'POST',
+                                                body: new FormData(document.forms['policybody_' + item.policyid])
+                                            })
+                                            .then(response => alert("Record has been updated.") +
+                                                location.reload())
+                                            .catch(error => console.error('Error!', error.message))
+                                    })
+
+                                    console.log(item)
+                                })
+
+                                function validateForm() {
+                                    if (confirm('Are you sure you want to delete this record? Once you click OK the record cannot be reverted.')) {
+
+                                        data.forEach(item => {
+                                            const form = document.forms['policydelete_' + item.policyid]
+                                            form.addEventListener('submit', e => {
+                                                e.preventDefault()
+                                                fetch(scriptURL, {
+                                                        method: 'POST',
+                                                        body: new FormData(document.forms['policydelete_' + item.policyid])
+                                                    })
+                                                    .then(response =>
+                                                        alert("Record has been deleted.") +
+                                                        location.reload()
+                                                    )
+                                                    .catch(error => console.error('Error!', error.message))
+                                            })
+
+                                            console.log(item)
+                                        })
+                                    } else {
+                                        alert("Record has NOT been deleted.");
+                                        return false;
+                                    }
                                 }
-                                ?>
-                            </div>
+                            </script>
+
                         </div>
-                    </li>
-                </ul>
+                    </div>
+                </div><!-- End Reports -->
             </div>
-            <br><br>
-        </fieldset>
-        </form>
+        </section>
 
-        <!-- Form gen_otp_associate -->
-        <form name="gen_otp_associate" id="gen_otp_associate" action="#" method="POST" style="display:inline;">
-            <input type="hidden" name="form-type" value="gen_otp_associate">
-            <input type="hidden" name="otp_initiatedfor" value="<?php echo $array['associatenumber'] ?>" readonly>
-            <input type="hidden" name="associate_name" value="<?php echo $array['fullname'] ?>" readonly>
-            <input type="hidden" name="associate_email" value="<?php echo $array['email'] ?>" readonly>
-        </form>
+    </main><!-- End #main -->
 
-        <!-- Form gen_otp_centr -->
-        <form name="gen_otp_centr" id="gen_otp_centr" action="#" method="POST" style="display:inline;">
-            <input type="hidden" name="form-type" value="gen_otp_centr">
-            <input type="hidden" name="otp_initiatedfor" value="<?php echo $array['associatenumber'] ?>" readonly>
-            <input type="hidden" name="centre_incharge_name" value="<?php echo $fullname ?>" readonly>
-            <input type="hidden" name="centre_incharge_email" value="<?php echo $email ?>" readonly>
-        </form>
-    </div>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-    <!-- Bootstrap JS -->
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
-    <!-- jQuery Library -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper"></script> -->
-    <!-- Bootstrap 5 JavaScript Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <script>
-        window.onload = function() {
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
-                backdrop: 'static',
-                keyboard: false
-            });
-            myModal.show();
-        };
-    </script>
-
-    <script>
-        const scriptURL = 'payment-api.php';
-
-        // Add an event listener to the submit button with id "submit_gen_otp_associate"
-        document.getElementById("submit_gen_otp_associate").addEventListener("click", function(event) {
-            event.preventDefault(); // prevent default form submission
-
-            if (confirm('Are you sure you want to generate OTP?')) {
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['gen_otp_associate'])
-                    })
-                    .then(response => response.text())
-                    .then(result => {
-                        if (result == 'success') {
-                            alert("OTP generated successfully!")
-                        } else {
-                            alert("Error generating OTP. Please try again later or contact support.")
-                        }
-                    })
-            } else {
-                alert("OTP generation cancelled.");
-                return false;
-            }
-        })
-
-        // Add an event listener to the submit button with id "submit_gen_otp_centr"
-        document.getElementById("submit_gen_otp_centr").addEventListener("click", function(event) {
-            event.preventDefault(); // prevent default form submission
-
-            if (confirm('Are you sure you want to generate OTP?')) {
-                fetch(scriptURL, {
-                        method: 'POST',
-                        body: new FormData(document.forms['gen_otp_centr'])
-                    })
-                    .then(response => response.text())
-                    .then(result => {
-                        if (result == 'success') {
-                            alert("OTP generated successfully!")
-                        } else {
-                            alert("Error generating OTP. Please try again later or contact support.")
-                        }
-                    })
-            } else {
-                alert("OTP generation cancelled.");
-                return false;
-            }
-        })
-    </script>
-
-
-    <script>
-        let videoPreview, canvasPreview, photoInput, captureBtn;
-
-        function startCamera() {
-            const constraints = {
-                video: true,
-                audio: false
-            };
-
-            videoPreview = document.getElementById('video-preview');
-            canvasPreview = document.getElementById('canvas-preview');
-            photoInput = document.getElementById('photo');
-            captureBtn = document.getElementById('capture-btn');
-
-            navigator.mediaDevices.getUserMedia(constraints)
-                .then(stream => {
-                    videoPreview.srcObject = stream;
-                    videoPreview.play();
-                    captureBtn.classList.remove('d-none');
-                    // canvasPreview.classList.remove('d-none');
-                    videoPreview.classList.remove('d-none');
-                    document.getElementById('photo-preview').classList.add('d-none');
-                })
-                .catch(error => {
-                    console.error('Error accessing camera: ', error);
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
                 });
-
-            videoPreview.addEventListener('canplay', () => {
-                canvasPreview.width = videoPreview.videoWidth;
-                canvasPreview.height = videoPreview.videoHeight;
-                canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
-            });
-        }
-    </script>
-    <script>
-        let photoCaptured = false;
-
-        function capturePhoto() {
-            canvasPreview.getContext('2d').drawImage(videoPreview, 0, 0, canvasPreview.width, canvasPreview.height);
-            const photoURL = canvasPreview.toDataURL('image/png');
-            photoInput.value = photoURL;
-            videoPreview.srcObject.getTracks().forEach(track => track.stop());
-            canvasPreview.classList.add('d-none');
-            videoPreview.classList.add('d-none');
-            captureBtn.classList.add('d-none');
-            document.getElementById('photo-preview').setAttribute('src', photoURL);
-            document.getElementById('photo-preview').classList.remove('d-none');
-            document.getElementById('video-preview').classList.add('d-none');
-            // Set the flag to indicate that the photo has been captured
-            photoCaptured = true;
-        }
-        // Validate the form before submission
-        function validateForm(event) {
-            if (!photoCaptured) {
-                alert('Please capture the photo before submitting the form.');
-                return false; // Prevent form submission
-            }
-            return true; // Allow form submission
-        }
-        // Attach the form validation to the form's submit event
-        document.getElementById('a_onboard').onsubmit = validateForm;
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const style = document.createElement('style');
-            style.textContent = '.required-asterisk { color: red; font-size: 1.2em; margin-left: 0.2em; }';
-            document.head.appendChild(style);
-
-            // Select all required input, textarea, select, and checkbox elements
-            document.querySelectorAll('input[required], textarea[required], select[required]').forEach(input => {
-                const label = input.closest('.mb-3').querySelector('label' + (input.type === 'checkbox' ? '' : '[for="' + input.id + '"]'));
-                if (label) {
-                    const asterisk = document.createElement('span');
-                    asterisk.className = 'required-asterisk';
-                    asterisk.textContent = '*';
-                    label.appendChild(asterisk);
-                }
-            });
+            <?php endif; ?>
         });
     </script>
 
