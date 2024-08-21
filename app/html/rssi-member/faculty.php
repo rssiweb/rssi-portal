@@ -308,8 +308,9 @@ $resultArr = pg_fetch_all($result);
                                             <th>Worklist</th>
                                         </tr>
                                     </thead>
-                                    <?php if (sizeof($resultArr) > 0) { ?>
-                                        <tbody>
+
+                                    <tbody>
+                                        <?php if (sizeof($resultArr) > 0) { ?>
                                             <?php foreach ($resultArr as $array) { ?>
                                                 <tr>
                                                     <td>
@@ -386,10 +387,10 @@ $resultArr = pg_fetch_all($result);
                                                         }
                                                         echo '</form>&nbsp;&nbsp;
 
-                                        <form name="initiatingexit' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
-                                        <input type="hidden" name="form-type" type="text" value="initiatingexit">
-                                        <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
-                                        <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
+                                                            <form name="initiatingexit' . $array['associatenumber'] . '" action="#" method="POST" style="display:inline;">
+                                                            <input type="hidden" name="form-type" type="text" value="initiatingexit">
+                                                            <input type="hidden" name="initiatedfor" type="text" value="' . $array['associatenumber'] . '" readonly>
+                                                            <input type="hidden" name="initiatedby" type="text" value="' . $associatenumber . '" readonly>';
                                                         ?>
                                                         <!-- Initiate Exit system -->
                                                         <?php if ($role == 'Admin' && $array['exit_initiated_by'] == null) { ?>
@@ -400,15 +401,14 @@ $resultArr = pg_fetch_all($result);
                                                         echo '</form>' ?>
                                                     </td>
                                                 </tr>
-                                        </tbody>
-                                    <?php }
+                                            <?php }
                                         } else { ?>
-                                    <tbody>
-                                        <tr>
-                                            <td colspan="9">No Data Found</td>
-                                        </tr>
+                                            <tr>
+                                                <td colspan="9">No Data Found</td>
+                                            </tr>
+
+                                        <?php } ?>
                                     </tbody>
-                                <?php } ?>
                                 </table>
                             </div>
 
