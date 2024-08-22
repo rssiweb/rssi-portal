@@ -80,7 +80,6 @@ if ($role == 'Admin') {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 
     <style>
         .x-btn:focus,
@@ -211,63 +210,57 @@ if ($role == 'Admin') {
 
                             $resultArr = pg_fetch_all($result);
                             ?>
-                            <?php echo '
-                    <div class="table-responsive">
-                    <table class="table" id="table-id">
-                        <thead>
-                            <tr>
-                            <th>Notice Id</th>
-                            <th>Ref. Number</th>
-                            <th>Category</th>
-                            <th>Date</th>
-                            <th>Subject</th>
-                            <th>Details</th>
-                            <th>Document</th>
-                            </tr>
-                        </thead>
-                        <tbody>';
-                            foreach ($resultArr as $array) {
-                                echo '
-                            <tr>
-                                <td>' . $array['noticeid'] . '</td>
-                                <td>' . $array['refnumber'] . '</td>
-                                <td>' . $array['category'] . '</td>
-                                <td>' . @date("d/m/Y g:i a", strtotime($array['date'])) . '</td>
-                                <td>' . $array['subject'] . '&nbsp;<p class="badge label-default">' . $array['category'] . '</p></td>
-                                <td>
-                                
-                                <form name="noticebody_' . $array['noticeid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="noticebodyedit">
-                                <input type="hidden" name="noticeid" id="noticeid" type="text" value="' . $array['noticeid'] . '">
-                                <textarea id="inp_' . $array['noticeid'] . '" name="noticebody" type="text" disabled>' . $array['noticebody'] . '</textarea>' ?>
 
-                                <?php if ($role == 'Admin') { ?>
+                            <div class="table-responsive">
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th>Notice Id</th>
+                                            <th>Ref. Number</th>
+                                            <th>Category</th>
+                                            <th>Date</th>
+                                            <th>Subject</th>
+                                            <th>Details</th>
+                                            <th>Document</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($resultArr as $array) { ?>
+                                            <tr>
+                                                <td><?php echo $array['noticeid']; ?></td>
+                                                <td><?php echo $array['refnumber']; ?></td>
+                                                <td><?php echo $array['category']; ?></td>
+                                                <td><?php echo @date("d/m/Y g:i a", strtotime($array['date'])); ?></td>
+                                                <td><?php echo $array['subject']; ?></td>
+                                                <td>
+                                                    <form name="noticebody_<?php echo $array['noticeid']; ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                        <input type="hidden" name="form-type" value="noticebodyedit">
+                                                        <input type="hidden" name="noticeid" value="<?php echo $array['noticeid']; ?>">
+                                                        <textarea id="inp_<?php echo $array['noticeid']; ?>" name="noticebody" disabled><?php echo $array['noticebody']; ?></textarea>
 
-                                    <?php echo '&nbsp;
+                                                        <?php if ($role == 'Admin') { ?>
+                                                            &nbsp;
+                                                            <button type="button" id="edit_<?php echo $array['noticeid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit">
+                                                                <i class="bi bi-pencil-square"></i>
+                                                            </button>&nbsp;
+                                                            <button type="submit" id="save_<?php echo $array['noticeid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save">
+                                                                <i class="bi bi-save"></i>
+                                                            </button>
+                                                        <?php } ?>
+                                                    </form>
+                                                </td>
+                                                <?php if ($array['url'] == null) { ?>
+                                                    <td></td>
+                                                <?php } else { ?>
+                                                    <td><a href="<?php echo $array['url']; ?>" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px; color:#777777" title="<?php echo $array['noticeid']; ?>"></i></a></td>
+                                                <?php } ?>
+                                                </td>
+                                            </tr>
+                                        <?php } ?>
+                                    </tbody>
+                                </table>
+                            </div>
 
-                                <button type="button" id="edit_' . $array['noticeid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="bi bi-pencil-square"></i></button>&nbsp;
-
-                                <button type="submit" id="save_' . $array['noticeid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="bi bi-save"></i></button>
-                                
-                                ' ?>
-
-                                <?php } ?>
-
-                                <?php echo '</form></td>' ?>
-
-                                <?php if ($array['url'] == null) { ?>
-                                    <?php echo '<td></td>' ?>
-
-                                <?php } else { ?>
-
-                                    <?php echo '<td><a href="' . $array['url'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px ;color:#777777" title="' . $array['noticeid'] . '" display:inline;></i></a></td>
-                            </tr>'; ?>
-                                <?php } ?>
-                            <?php }
-                            echo '</tbody>
-                        </table>
-                        </div>';
-                            ?>
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
 

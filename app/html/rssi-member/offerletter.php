@@ -279,7 +279,7 @@ if (!$result) {
                                             $links = [
                                                 "Intern" => [
                                                     "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1UV1Y9d0w1dFh4YYV2Cj4pPpLTEUoCT7_/view",
-                                                    "Internship Program Orientation" => "https://drive.google.com/file/d/19Z7jzwOtmHgSIvQ4ceWi4VFjkVStgx2d/view"
+                                                    "Internship Program Orientation" => "https://drive.google.com/file/d/1BXJZmZItU9-U0E2ebIY54BcAtBtxPCVm/view"
                                                 ],
                                                 "Centre Incharge" => [
                                                     "Role and Responsibilities Overview" => "https://drive.google.com/file/d/1dhzOnSjyI4CgmY5AnLprJRCcGvBUvRuj/view",

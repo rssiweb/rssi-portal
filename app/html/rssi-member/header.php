@@ -221,6 +221,23 @@
           </li>
         </ul>
       </li><!-- End Components Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#support360" data-bs-toggle="collapse" href="#">
+          <span>Support 360</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="support360" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="create_ticketLink" href="create_ticket.php">
+              <span>Create Ticket</span>
+            </a>
+          </li>
+          <li>
+            <a id="ticket_statusLink" href="ticket_status.php">
+              <span>Track Status</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
 
 
       <li class="nav-item">
@@ -597,6 +614,15 @@
         id: 'work',
         linkId: 'bankdetails_admin',
         url: 'bankdetails_admin.php'
+      }
+      , {
+        id: 'support360',
+        linkId: 'create_ticketLink',
+        url: 'create_ticket.php'
+      }, {
+        id: 'support360',
+        linkId: 'ticket_statusLink',
+        url: 'ticket_status.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },

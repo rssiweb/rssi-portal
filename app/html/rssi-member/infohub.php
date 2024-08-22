@@ -207,72 +207,68 @@ validation(); ?>
 
                             $resultArr = pg_fetch_all($result);
                             ?>
+                            <div class="table-responsive">
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th>Policy Id</th>
+                                            <th>Category</th>
+                                            <th>Date</th>
+                                            <th>Policy name</th>
+                                            <th>Details</th>
+                                            <th>Policy document</th>
+                                            <?php if ($role == 'Admin') { ?>
+                                                <th></th>
+                                            <?php } ?>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($resultArr as $array) { ?>
+                                            <tr>
+                                                <td><?php echo $array['policyid']; ?></td>
+                                                <td><?php echo $array['policytype']; ?></td>
+                                                <td><?php echo @date("d/m/Y g:i a", strtotime($array['issuedon'])); ?></td>
+                                                <td><?php echo $array['policyname']; ?></td>
+                                                <td>
+                                                    <form name="policybody_<?php echo $array['policyid']; ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                        <input type="hidden" name="form-type" value="policybodyedit">
+                                                        <input type="hidden" name="policyid" value="<?php echo $array['policyid']; ?>">
+                                                        <textarea id="inp_<?php echo $array['policyid']; ?>" name="remarks" disabled><?php echo $array['remarks']; ?></textarea>
 
-                            <?php echo '
-                    <div class="table-responsive">
-                    <table class="table" id="table-id">
-                        <thead>
-                            <tr>
-                            <th>Policy Id</th>
-                            <th>Category</th>
-                            <th>Date</th>
-                            <th>Policy name</th>
-                            <th>Details</th>
-                            <th>Policy document</th>' ?>
-                            <?php if ($role == 'Admin') { ?>
-                                <?php echo '<th></th>' ?>
-                            <?php } ?>
-                            <?php echo '</tr>
-                        </thead>
-                        <tbody>';
-                            foreach ($resultArr as $array) {
-                                echo '
-                            <tr>
-                                <td>' . $array['policyid'] . '</td>
-                                <td>' . $array['policytype'] . '</td>
-                                <td>' . @date("d/m/Y g:i a", strtotime($array['issuedon'])) . '</td>
-                                <td>' . $array['policyname'] . '</td>
-                                <td>
-                                
-                                <form name="policybody_' . $array['policyid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                                <input type="hidden" name="form-type" type="text" value="policybodyedit">
-                                <input type="hidden" name="policyid" id="policyid" type="text" value="' . $array['policyid'] . '">
-                                <textarea id="inp_' . $array['policyid'] . '" name="remarks" type="text" disabled>' . $array['remarks'] . '</textarea>' ?>
+                                                        <?php if ($role == 'Admin') { ?>
+                                                            &nbsp;
+                                                            <button type="button" id="edit_<?php echo $array['policyid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit">
+                                                                <i class="bi bi-pencil-square"></i>
+                                                            </button>&nbsp;
+                                                            <button type="submit" id="save_<?php echo $array['policyid']; ?>" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save">
+                                                                <i class="bi bi-save"></i>
+                                                            </button>
+                                                        <?php } ?>
+                                                    </form>
+                                                </td>
 
-                                <?php if ($role == 'Admin') { ?>
+                                                <?php if ($array['policydoc'] == null) { ?>
+                                                    <td></td>
+                                                <?php } else { ?>
+                                                    <td><a href="<?php echo $array['policydoc']; ?>" target="_blank"><i class="bi bi-file-earmark-pdf" style="color:#777777" title="<?php echo $array['policyid']; ?>"></i></a></td>
+                                                <?php } ?>
 
-                                    <?php echo '&nbsp;
-
-                                <button type="button" id="edit_' . $array['policyid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Edit"><i class="bi bi-pencil-square"></i></button>&nbsp;
-
-                                <button type="submit" id="save_' . $array['policyid'] . '" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Save"><i class="bi bi-save"></i></button>
-                                
-                                ' ?>
-
-                                <?php } ?>
-
-                                <?php echo '</form></td>' ?>
-
-                                <?php if ($array['policydoc'] == null) { ?>
-                                    <?php echo '<td></td>' ?>
-
-                                <?php } else { ?>
-
-                                    <?php echo '<td><a href="' . $array['policydoc'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="color:#777777" title="' . $array['policyid'] . '" display:inline;></i></a></td>'; ?>
-                                <?php } ?>
-
-                                <?php if ($role == 'Admin') { ?>
-                                    <?php echo '<td><form name="policydelete_' . $array['policyid'] . '" action="#" method="POST" style="display: -webkit-inline-box;">
-                                    <input type="hidden" name="form-type" type="text" value="policydelete">
-                                    <input type="hidden" name="policydeleteid" id="policydeleteid" type="text" value="' . $array['policyid'] . '">
-
-                                    <button type="submit" onclick=validateForm() style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete ' . $array['policyid'] . '"><i class="bi bi-x-lg"></i></button>
-                                    </td>' ?>
-                                <?php } ?>
-                            <?php }
-                            echo '</form></tr></tbody>
-                        </table>
-                        </div>';
+                                                <?php if ($role == 'Admin') { ?>
+                                                    <td>
+                                                        <form name="policydelete_<?php echo $array['policyid']; ?>" action="#" method="POST" style="display: -webkit-inline-box;">
+                                                            <input type="hidden" name="form-type" value="policydelete">
+                                                            <input type="hidden" name="policydeleteid" value="<?php echo $array['policyid']; ?>">
+                                                            <button type="submit" onclick="validateForm()" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Delete <?php echo $array['policyid']; ?>">
+                                                                <i class="bi bi-x-lg"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                <?php } ?>
+                                            </tr>
+                                        <?php } ?>
+                                    </tbody>
+                                </table>
+                            </div>';
                             ?>
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;

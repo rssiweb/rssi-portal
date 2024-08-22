@@ -29,7 +29,7 @@ if ($_POST) {
         $doclink = uploadeToDrive($upload_file, $parent, $filename);
     }
 
-    $query = "INSERT INTO support (ticket_id, short_description, long_description, upload_file, severity, raised_by, raised_for, timestamp)
+    $query = "INSERT INTO support_ticket (ticket_id, short_description, long_description, upload_file, severity, raised_by, raised_for, timestamp)
               VALUES ('$ticket_id', '$short_description', '$long_description', '$doclink', '$severity', '$associatenumber', '$raised_for', '$timestamp')";
 
     $result = pg_query($con, $query);
@@ -67,7 +67,7 @@ while ($row = pg_fetch_assoc($result)) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Support360</title>
+    <title>Create Ticket</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -110,12 +110,12 @@ while ($row = pg_fetch_assoc($result)) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Support360</h1>
+            <h1>Create Ticket</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">Support360</li>
+                    <li class="breadcrumb-item"><a href="#">Support 360</a></li>
+                    <li class="breadcrumb-item active">Create Ticket</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -143,7 +143,7 @@ while ($row = pg_fetch_assoc($result)) {
                                     <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                         <i class="bi bi-check2-circle"></i>
-                                        <span>Database has been updated successfully for policy id <?php echo @$ticket_id ?>.</span>
+                                        <span>Ticket successfully created. Your Ticket ID is <?php echo @$ticket_id ?>.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {
