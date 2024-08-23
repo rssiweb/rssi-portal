@@ -14,11 +14,12 @@ validation();
 
 if ($_POST) {
     $ticket_id = uniqid();
-    $short_description = $_POST['short_description'];
-    $long_description = $_POST['long_description'];
+    $short_description = htmlspecialchars($_POST['short_description'], ENT_QUOTES, 'UTF-8');
+    $long_description = htmlspecialchars($_POST['long_description'], ENT_QUOTES, 'UTF-8');
     $severity = $_POST['severity'];
     $raised_for = isset($_POST['associates']) ? json_encode($_POST['associates']) : '[]'; // Serialize the array to JSON
     $timestamp = date('Y-m-d H:i:s');
+    $action_selection = $_POST['action_selection'];
 
     // Upload and insert passbook page if provided
     $doclink = null;
@@ -29,8 +30,8 @@ if ($_POST) {
         $doclink = uploadeToDrive($upload_file, $parent, $filename);
     }
 
-    $query = "INSERT INTO support_ticket (ticket_id, short_description, long_description, upload_file, severity, raised_by, raised_for, timestamp)
-              VALUES ('$ticket_id', '$short_description', '$long_description', '$doclink', '$severity', '$associatenumber', '$raised_for', '$timestamp')";
+    $query = "INSERT INTO support_ticket (ticket_id, short_description, long_description, upload_file, severity, raised_by, raised_for, timestamp,action)
+              VALUES ('$ticket_id', '$short_description', '$long_description', '$doclink', '$severity', '$associatenumber', '$raised_for', '$timestamp','$action_selection')";
 
     $result = pg_query($con, $query);
     $cmdtuples = pg_affected_rows($result);
@@ -129,35 +130,43 @@ while ($row = pg_fetch_assoc($result)) {
 
                         <div class="card-body">
                             <br>
-                            <?php if ($role == 'Admin') { ?>
-                                <?php if (@$policyid != null && @$cmdtuples == 0) { ?>
+                            <?php if (@$ticket_id != null && @$cmdtuples == 0) { ?>
 
-                                    <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                        <span>ERROR: Oops, something wasn't right.</span>
-                                    </div>
-                                <?php
-                                } else if (@$cmdtuples == 1) { ?>
+                                <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>ERROR: Oops, something wasn't right.</span>
+                                </div>
+                            <?php
+                            } else if (@$cmdtuples == 1) { ?>
 
-                                    <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-check2-circle"></i>
-                                        <span>Ticket successfully created. Your Ticket ID is <?php echo @$ticket_id ?>.</span>
-                                    </div>
-                                    <script>
-                                        if (window.history.replaceState) {
-                                            window.history.replaceState(null, null, window.location.href);
-                                        }
-                                    </script>
-                                <?php } ?>
+                                <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <i class="bi bi-check2-circle"></i>
+                                    <span>Ticket successfully created. Your Ticket ID is <?php echo @$ticket_id ?>.</span>
+                                </div>
+                                <script>
+                                    if (window.history.replaceState) {
+                                        window.history.replaceState(null, null, window.location.href);
+                                    }
+                                </script>
                             <?php } ?>
 
-                            <?php if ($role == 'Admin') { ?>
-                                <div class="container my-5">
-                                    <div class="row justify-content-center">
-                                        <div class="col-lg-8">
-                                            <form method="POST" enctype="multipart/form-data">
+
+                            <div class="container my-5">
+                                <div class="row justify-content-center">
+                                    <div class="col-lg-8">
+                                        <form method="POST" enctype="multipart/form-data">
+                                            <div class="mb-3">
+                                                <label for="action_selection" class="form-label">Select Action</label>
+                                                <select class="form-select" id="action_selection" name="action_selection" required>
+                                                    <option value="">Select an Action</option>
+                                                    <option value="support_ticket">Create Support Ticket</option>
+                                                    <option value="incident">Raise Incident</option>
+                                                    <option value="escalation">Escalation</option>
+                                                </select>
+                                            </div>
+                                            <div id="form_container">
                                                 <!-- Short Description -->
                                                 <div class="mb-3">
                                                     <label for="short_description" class="form-label">Short Description</label>
@@ -182,43 +191,32 @@ while ($row = pg_fetch_assoc($result)) {
                                                     </select>
                                                 </div>
 
-                                                <!-- Raised For -->
-                                                <div class="mb-3">
-                                                    <label for="associates" class="form-label required">Select Associates/Students</label>
-                                                    <select id="associates" name="associates[]" class="form-control" multiple="multiple" required>
+                                                <!-- Raised For (Associates/Students) -->
+                                                <div class="mb-3" id="associates_container">
+                                                    <label for="associates" class="form-label">Select Associates/Students</label>
+                                                    <select id="associates" name="associates[]" class="form-control" multiple="multiple">
                                                         <!-- Options will be populated dynamically via PHP -->
                                                     </select>
                                                 </div>
+
                                                 <!-- Upload File -->
                                                 <div class="mb-3">
                                                     <label for="upload_file" class="form-label">Upload File</label>
                                                     <input class="form-control" type="file" id="upload_file" name="upload_file" accept=".jpg,.jpeg,.png,.pdf">
                                                 </div>
 
-                                                <!-- Status -->
-                                                <!-- <div class="mb-3">
-                                                    <label for="status" class="form-label">Status</label>
-                                                    <select class="form-select" id="status" name="status" required>
-                                                        <option value="">Select Status</option>
-                                                        <option value="Open">Open</option>
-                                                        <option value="In Progress">In Progress</option>
-                                                        <option value="Closed">Closed</option>
-                                                    </select>
-                                                </div> -->
-
                                                 <div class="text-center">
                                                     <button type="submit" class="btn btn-primary">Submit</button>
                                                 </div>
-                                            </form>
-                                        </div>
+                                            </div>
+                                        </form>
+
                                     </div>
                                 </div>
-                            <?php } ?>
-
+                            </div>
                         </div>
                     </div>
-                </div><!-- End Reports -->
-
+                </div>
             </div>
         </section>
 
@@ -240,6 +238,28 @@ while ($row = pg_fetch_assoc($result)) {
                 allowClear: true,
                 tags: false
             });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for the associates input field
+            $('#associates').select2({
+                data: <?php echo json_encode($results); ?>,
+                tags: true,
+                placeholder: "Type and select associates/students",
+                allowClear: true,
+                tags: false
+            });
+
+            // Toggle associates field based on action selection
+            $('#action_selection').change(function() {
+                const action = $(this).val();
+                if (action === '' || action === 'support_ticket') {
+                    $('#associates').prop('disabled', true);
+                } else {
+                    $('#associates').prop('disabled', false);
+                }
+            }).trigger('change'); // Trigger change event to set initial state
         });
     </script>
 </body>
