@@ -233,19 +233,6 @@ while ($row = pg_fetch_assoc($result)) {
             // Initialize Select2 for the associates input field
             $('#associates').select2({
                 data: <?php echo json_encode($results); ?>,
-                tags: true,
-                placeholder: "Type and select associates/students",
-                allowClear: true,
-                tags: false
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            // Initialize Select2 for the associates input field
-            $('#associates').select2({
-                data: <?php echo json_encode($results); ?>,
-                tags: true,
                 placeholder: "Type and select associates/students",
                 allowClear: true,
                 tags: false

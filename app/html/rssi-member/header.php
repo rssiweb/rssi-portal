@@ -232,8 +232,8 @@
             </a>
           </li>
           <li>
-            <a id="ticket_statusLink" href="ticket_status.php">
-              <span>Track Status</span>
+            <a id="ticket_logLink" href="ticket_log.php">
+              <span>Ticket Log</span>
             </a>
           </li>
         </ul>
@@ -621,8 +621,8 @@
         url: 'create_ticket.php'
       }, {
         id: 'support360',
-        linkId: 'ticket_statusLink',
-        url: 'ticket_status.php'
+        linkId: 'ticket_logLink',
+        url: 'ticket_log.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
