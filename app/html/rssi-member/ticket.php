@@ -37,7 +37,7 @@ function handleInsertion($con, $query, $params)
 // Fetch ticket details with raised_by information
 if ($ticket_id) {
     $result = pg_query_params($con, "
-        SELECT st.*, rm.fullname AS raised_by_name, rm.phone AS raised_by_contact, rm.email AS raised_by_email 
+        SELECT st.*, rm.fullname AS raised_by_name, rm.phone AS raised_by_contact, rm.email AS raised_by_email, rm.photo AS raised_by_photo 
         FROM support_ticket st
         LEFT JOIN rssimyaccount_members rm ON st.raised_by = rm.associatenumber
         WHERE st.ticket_id = $1
@@ -52,7 +52,7 @@ if ($ticket_id) {
     } else {
         // Fetch comments for the ticket with commented_by information
         $result = pg_query_params($con, "
-            SELECT sc.*, rm.fullname AS commenter_name, rm.phone AS commenter_contact, rm.email AS commenter_email 
+            SELECT sc.*, rm.fullname AS commenter_name, rm.phone AS commenter_contact, rm.email AS commenter_email, rm.photo AS commenter_photo 
             FROM support_comment sc
             LEFT JOIN rssimyaccount_members rm ON sc.commented_by = rm.associatenumber
             WHERE sc.ticket_id = $1
@@ -131,9 +131,9 @@ if ($ticket_id) {
     }
 }
 
-// Fetch data for Select2 dropdown (associates/students)
-$select2_result = pg_query($con, "SELECT associatenumber AS id, fullname AS text FROM rssimyaccount_members WHERE filterstatus='Active'");
-$results = pg_fetch_all($select2_result);
+// Fetch data for dropdown
+$dropdown_result = pg_query($con, "SELECT associatenumber AS id, fullname FROM rssimyaccount_members WHERE filterstatus='Active'");
+$results = pg_fetch_all($dropdown_result);
 ?>
 
 
@@ -161,55 +161,10 @@ $results = pg_fetch_all($select2_result);
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
-
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Include Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Fetch the assigned_to value from PHP
-            const selectedValue = '<?php echo htmlspecialchars($ticket['assigned_to'] ?? ''); ?>';
-            const hasResults = <?php echo json_encode(!empty($results)); ?>;
-
-            // Define Select2 options
-            const select2Options = {
-                data: <?php echo json_encode($results); ?>,
-                placeholder: "Assign to",
-                allowClear: true,
-                tags: false,
-                templateResult: function(option) {
-                    if (!option.id) {
-                        return option.text;
-                    }
-                    return $('<span>').text(`${option.text} (${option.id})`);
-                },
-                templateSelection: function(option) {
-                    return option.text;
-                }
-            };
-
-            // Initialize Select2 for the Assigned To input field
-            const $select = $('#assigned_to').select2(select2Options);
-
-            // Set the selected value if there are results
-            if (hasResults) {
-                if (selectedValue) {
-                    $select.val(selectedValue).trigger('change'); // Set the value and trigger change event
-                } else {
-                    $select.val(null).trigger('change'); // Set null if no value
-                }
-            } else {
-                // No results, so just show the placeholder
-                $select.val(null).trigger('change'); // Ensure placeholder is shown
-            }
-        });
-    </script>
-
 </head>
 
 <body>
@@ -256,18 +211,13 @@ $results = pg_fetch_all($select2_result);
                                             <form method="POST" class="d-flex">
                                                 <!-- Assigned To -->
                                                 <div class="me-2">
-                                                    <select id="assigned_to" name="assigned_to" class="form-select" style="width:max-content">
-                                                        <!-- Options will be populated dynamically via PHP using Select2 -->
-                                                        <?php if (empty($results)): ?>
-                                                            <!-- Show a placeholder if there are no results -->
-                                                            <option value="" selected disabled>Assign to</option>
-                                                        <?php else: ?>
-                                                            <?php foreach ($results as $result): ?>
-                                                                <option value="<?php echo htmlspecialchars($result['id']); ?>" <?php echo $result['id'] === $ticket['assigned_to'] ? 'selected' : ''; ?>>
-                                                                    <?php echo htmlspecialchars($result['text']); ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        <?php endif; ?>
+                                                    <select id="assigned_to" name="assigned_to" class="form-select">
+                                                        <option value="" <?php echo empty($ticket['assigned_to']) ? 'selected' : ''; ?>>Clear Selection</option>
+                                                        <?php foreach ($results as $result): ?>
+                                                            <option value="<?php echo htmlspecialchars($result['id']); ?>" <?php echo $result['id'] === $ticket['assigned_to'] ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($result['fullname']); ?> (<?php echo htmlspecialchars($result['id']); ?>)
+                                                            </option>
+                                                        <?php endforeach; ?>
                                                     </select>
                                                 </div>
 
@@ -285,49 +235,129 @@ $results = pg_fetch_all($select2_result);
                                                 <button type="submit" class="btn btn-primary">Update</button>
                                             </form>
                                         </div>
-                                        <div class="card-body">
-                                            <p><strong>Ticket ID:</strong> <?php echo htmlspecialchars($ticket['ticket_id']); ?></p>
-                                            <p><strong>Subject:</strong> <?php echo htmlspecialchars($ticket['short_description']); ?></p>
-                                            <p><strong>Description:</strong> <?php echo htmlspecialchars($ticket['long_description']); ?></p>
-                                            <p><strong>Raised By:</strong> <?php echo htmlspecialchars($ticket['raised_by_name']); ?></p>
-                                            <p><strong>Contact:</strong> <?php echo htmlspecialchars($ticket['raised_by_contact']); ?></p>
-                                            <p><strong>Email:</strong> <?php echo htmlspecialchars($ticket['raised_by_email']); ?></p>
-                                        </div>
-                                    </div>
 
-                                    <!-- Comments Section -->
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Comments</h5>
-
-                                            <ul class="list-group">
-                                                <?php foreach ($comments as $comment): ?>
-                                                    <li class="list-group-item">
-                                                        <p><strong><?php echo htmlspecialchars($comment['commenter_name']); ?>:</strong></p>
-                                                        <p><?php echo htmlspecialchars($comment['comment']); ?></p>
-                                                        <p><small><em><?php echo htmlspecialchars((new DateTime($comment['timestamp']))->format('d/m/Y h:i A')); ?></em></small></p>
-                                                    </li>
-                                                <?php endforeach; ?>
-                                            </ul>
-
-                                            <!-- Add Comment -->
-                                            <form method="POST" class="mt-4">
-                                                <div class="mb-3">
-                                                    <label for="comment" class="form-label">Add Comment</label>
-                                                    <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                                        <div class="card-body mt-2">
+                                            <div class="row mb-4">
+                                                <!-- Ticket Raiser Information -->
+                                                <div class="col-md-12">
+                                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <!-- Profile Image -->
+                                                            <div class="me-3">
+                                                                <img src="<?php echo htmlspecialchars($ticket['raised_by_photo']); ?>" alt="Profile Image" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                                                            </div>
+                                                            <!-- Name and Timestamp -->
+                                                            <div>
+                                                                <h6 class="mb-1"><?php echo htmlspecialchars($ticket['raised_by_name']); ?></h6>
+                                                                <p class="text-muted mb-0"><?php echo htmlspecialchars((new DateTime($ticket['timestamp']))->format('d/m/Y h:i A')); ?></p>
+                                                            </div>
+                                                        </div>
+                                                        <!-- Tags -->
+                                                        <div class="d-flex align-items-center flex-wrap">
+                                                            <span class="badge bg-light text-dark border me-2">
+                                                                <?php echo htmlspecialchars($ticket['action']); ?>
+                                                            </span>
+                                                            <span class="badge bg-light text-dark border">
+                                                                <?php echo htmlspecialchars($ticket['severity']); ?>
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <button type="submit" class="btn btn-primary">Submit Comment</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
+                                            </div>
 
+                                            <!-- Subject -->
+                                            <div class="mb-3">
+                                                <h4 class="fw-bold"><?php echo htmlspecialchars($ticket['short_description']); ?></h4>
+                                            </div>
+
+                                            <!-- Description -->
+                                            <div class="mb-3">
+                                                <!-- <h5 class="mb-2">Description</h5> -->
+                                                <p class="mb-0"><?php echo nl2br(htmlspecialchars($ticket['long_description'])); ?></p>
+                                            </div>
+
+                                            <!-- Supporting Documents -->
+                                            <?php if (!empty($ticket['upload_file'])): ?>
+                                                <?php
+                                                $url = $ticket['upload_file'];
+                                                $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
+                                                if (preg_match($pattern, $url, $matches)) {
+                                                    $file_id = $matches[1];
+                                                    $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+                                                    $view_url = "https://drive.google.com/file/d/$file_id/view";
+                                                } else {
+                                                    $file_id = $url; // If pattern doesn't match, use the full URL
+                                                    $preview_url = $url; // Fallback for non-Google Drive URLs
+                                                    $view_url = $url; // Same for viewing the document
+                                                }
+                                                ?>
+                                                <div class="mb-3">
+                                                    <!-- <h5 class="mb-2">Supporting Documents</h5> -->
+
+                                                    <!-- File Preview -->
+                                                    <div class="mb-2">
+                                                        <iframe src="<?php echo htmlspecialchars($preview_url); ?>" width="400px" height="300px" frameborder="0" allowfullscreen></iframe>
+                                                    </div>
+
+                                                </div>
+                                            <?php endif; ?>
+
+                                        </div>
+
+                                        <!-- Comments Section -->
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Comments</h5>
+
+                                                <ul class="list-group p-0">
+    <?php foreach ($comments as $comment): ?>
+        <li class="list-group-item d-flex align-items-start mb-3 p-0 border-0">
+            <img src="<?php echo htmlspecialchars($comment['commenter_photo']); ?>" alt="Commenter Image" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+            <div class="w-100">
+                <div class="d-flex align-items-center">
+                    <strong class="me-2"><?php echo htmlspecialchars($comment['commenter_name']); ?></strong>
+                    <small class="text-muted" style="white-space: nowrap;">
+                        <?php
+                        $commentTime = new DateTime($comment['timestamp']);
+                        $now = new DateTime();
+                        $interval = $now->diff($commentTime);
+
+                        if ($interval->days > 0) {
+                            echo htmlspecialchars($commentTime->format('d/m/Y h:i A'));
+                        } elseif ($interval->h > 0) {
+                            echo htmlspecialchars($interval->h . ' hours ago');
+                        } elseif ($interval->i > 0) {
+                            echo htmlspecialchars($interval->i . ' minutes ago');
+                        } else {
+                            echo htmlspecialchars($interval->s . ' seconds ago');
+                        }
+                        ?>
+                    </small>
+                </div>
+                <p class="mt-2 mb-0"><?php echo htmlspecialchars($comment['comment']); ?></p>
+            </div>
+        </li>
+    <?php endforeach; ?>
+</ul>
+
+                                                <!-- Add Comment -->
+                                                <form method="POST" class="mt-4">
+                                                    <div class="mb-3">
+                                                        <label for="comment" class="form-label">Add Comment</label>
+                                                        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary">Submit Comment</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                    </div>
+
+                            </div>
                         </div>
                     </div>
-                </div>
 
-            </div>
+                </div>
         </section>
 
     </main><!-- End #main -->
