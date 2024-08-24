@@ -48,7 +48,7 @@ if ($ticket_id) {
 
     // Check if ticket was fetched successfully
     if ($ticket === false) {
-        echo '<p class="text-danger">Error fetching ticket details.</p>';
+        // echo '<p class="text-danger">Error fetching ticket details.</p>';
     } else {
         // Fetch comments for the ticket with commented_by information
         $result = pg_query_params($con, "
@@ -90,7 +90,7 @@ if ($ticket_id) {
 
             // Refresh comments after inserting the new one
             $result = pg_query_params($con, "
-                SELECT sc.*, rm.fullname AS commenter_name, rm.phone AS commenter_contact, rm.email AS commenter_email 
+                SELECT sc.*, rm.fullname AS commenter_name, rm.phone AS commenter_contact, rm.email AS commenter_email,rm.photo AS commenter_photo 
                 FROM support_comment sc
                 LEFT JOIN rssimyaccount_members rm ON sc.commented_by = rm.associatenumber
                 WHERE sc.ticket_id = $1
@@ -134,9 +134,21 @@ if ($ticket_id) {
 // Fetch data for dropdown
 $dropdown_result = pg_query($con, "SELECT associatenumber AS id, fullname FROM rssimyaccount_members WHERE filterstatus='Active'");
 $results = pg_fetch_all($dropdown_result);
+
+// Fetch all assignment history from the support_ticket_assignment table
+$assignment_results = pg_query_params($con, "
+    SELECT sc.assigned_to, rm.fullname AS assigned_name, sc.assigned_by, sc.timestamp
+    FROM support_ticket_assignment sc
+    LEFT JOIN rssimyaccount_members rm ON sc.assigned_to = rm.associatenumber
+    WHERE sc.ticket_id = $1 
+    ORDER BY sc.timestamp DESC
+", array($ticket_id));
+
+$assignments = [];
+if ($assignment_results) {
+    $assignments = pg_fetch_all($assignment_results);
+}
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -165,6 +177,11 @@ $results = pg_fetch_all($dropdown_result);
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .hidden-record {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
@@ -237,72 +254,101 @@ $results = pg_fetch_all($dropdown_result);
                                         </div>
 
                                         <div class="card-body mt-2">
-                                            <div class="row mb-4">
-                                                <!-- Ticket Raiser Information -->
-                                                <div class="col-md-12">
-                                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                                        <div class="d-flex align-items-center">
-                                                            <!-- Profile Image -->
-                                                            <div class="me-3">
-                                                                <img src="<?php echo htmlspecialchars($ticket['raised_by_photo']); ?>" alt="Profile Image" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
-                                                            </div>
-                                                            <!-- Name and Timestamp -->
-                                                            <div>
-                                                                <h6 class="mb-1"><?php echo htmlspecialchars($ticket['raised_by_name']); ?></h6>
-                                                                <p class="text-muted mb-0"><?php echo htmlspecialchars((new DateTime($ticket['timestamp']))->format('d/m/Y h:i A')); ?></p>
+                                            <div class="card-body mt-2">
+                                                <div class="row">
+                                                    <!-- Main Content (Left) -->
+                                                    <div class="col-md-8">
+                                                        <div class="row mb-4">
+                                                            <!-- Ticket Raiser Information -->
+                                                            <div class="col-md-12">
+                                                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <!-- Profile Image -->
+                                                                        <div class="me-3">
+                                                                            <img src="<?php echo htmlspecialchars($ticket['raised_by_photo']); ?>" alt="Profile Image" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                                                                        </div>
+                                                                        <!-- Name and Timestamp -->
+                                                                        <div>
+                                                                            <h6 class="mb-1"><?php echo htmlspecialchars($ticket['raised_by_name']); ?></h6>
+                                                                            <p class="text-muted mb-0"><?php echo htmlspecialchars((new DateTime($ticket['timestamp']))->format('d/m/Y h:i A')); ?></p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <!-- Tags -->
+                                                                    <div class="d-flex align-items-center flex-wrap">
+                                                                        <span class="badge bg-light text-dark border me-2">
+                                                                            <?php echo htmlspecialchars($ticket['action']); ?>
+                                                                        </span>
+                                                                        <span class="badge bg-light text-dark border">
+                                                                            <?php echo htmlspecialchars($ticket['severity']); ?>
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <!-- Tags -->
-                                                        <div class="d-flex align-items-center flex-wrap">
-                                                            <span class="badge bg-light text-dark border me-2">
-                                                                <?php echo htmlspecialchars($ticket['action']); ?>
-                                                            </span>
-                                                            <span class="badge bg-light text-dark border">
-                                                                <?php echo htmlspecialchars($ticket['severity']); ?>
-                                                            </span>
+                                                        <div class="row mb-4">
+                                                            <!-- Subject -->
+                                                            <div class="mb-3">
+                                                                <h4 class="fw-bold"><?php echo htmlspecialchars($ticket['short_description']); ?></h4>
+                                                            </div>
+
+                                                            <!-- Description -->
+                                                            <div class="mb-3">
+                                                                <p class="mb-0"><?php echo nl2br(htmlspecialchars($ticket['long_description'])); ?></p>
+                                                            </div>
+
+                                                            <!-- Supporting Documents -->
+                                                            <?php if (!empty($ticket['upload_file'])): ?>
+                                                                <div class="mb-3">
+                                                                    <a href="<?php echo htmlspecialchars($ticket['upload_file']); ?>" target="_blank" class="btn btn-link ps-0">View Attachment</a>
+                                                                </div>
+                                                            <?php endif; ?>
                                                         </div>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <h6 class="fw-bold">Workflow</h6>
+                                                        <ul class="list-unstyled" id="workflow-list">
+                                                            <!-- Ticket Raised -->
+                                                            <li class="mb-2">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <span><?php echo htmlspecialchars($ticket['raised_by_name']); ?> (Raised)</span>
+                                                                    <span class="text-muted"><?php echo htmlspecialchars((new DateTime($ticket['timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                </div>
+                                                            </li>
+
+                                                            <!-- Assigned To -->
+                                                            <?php foreach ($assignments as $index => $assignment): ?>
+                                                                <?php if ($index < 5): // Show only the first 5 assignments 
+                                                                ?>
+                                                                    <li class="mb-2">
+                                                                        <div class="d-flex justify-content-between">
+                                                                            <span><?php echo htmlspecialchars($assignment['assigned_name']); ?></span>
+                                                                            <span class="text-muted"><?php echo htmlspecialchars((new DateTime($assignment['timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                        </div>
+                                                                    </li>
+                                                                <?php else: // Hide remaining assignments initially 
+                                                                ?>
+                                                                    <li class="mb-2 hidden-record">
+                                                                        <div class="d-flex justify-content-between">
+                                                                            <span><?php echo htmlspecialchars($assignment['assigned_name']); ?></span>
+                                                                            <span class="text-muted"><?php echo htmlspecialchars((new DateTime($assignment['timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                        </div>
+                                                                    </li>
+                                                                <?php endif; ?>
+                                                            <?php endforeach; ?>
+
+                                                            <!-- Show More/Show Less Option -->
+                                                            <?php if (count($assignments) > 5): ?>
+                                                                <li class="mb-2">
+                                                                    <a href="#" id="toggle-more" class="text-decoration-none">Show More...</a>
+                                                                </li>
+                                                            <?php endif; ?>
+                                                        </ul>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <!-- Subject -->
-                                            <div class="mb-3">
-                                                <h4 class="fw-bold"><?php echo htmlspecialchars($ticket['short_description']); ?></h4>
-                                            </div>
-
-                                            <!-- Description -->
-                                            <div class="mb-3">
-                                                <!-- <h5 class="mb-2">Description</h5> -->
-                                                <p class="mb-0"><?php echo nl2br(htmlspecialchars($ticket['long_description'])); ?></p>
-                                            </div>
-
-                                            <!-- Supporting Documents -->
-                                            <?php if (!empty($ticket['upload_file'])): ?>
-                                                <?php
-                                                $url = $ticket['upload_file'];
-                                                $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
-                                                if (preg_match($pattern, $url, $matches)) {
-                                                    $file_id = $matches[1];
-                                                    $preview_url = "https://drive.google.com/file/d/$file_id/preview";
-                                                    $view_url = "https://drive.google.com/file/d/$file_id/view";
-                                                } else {
-                                                    $file_id = $url; // If pattern doesn't match, use the full URL
-                                                    $preview_url = $url; // Fallback for non-Google Drive URLs
-                                                    $view_url = $url; // Same for viewing the document
-                                                }
-                                                ?>
-                                                <div class="mb-3">
-                                                    <!-- <h5 class="mb-2">Supporting Documents</h5> -->
-
-                                                    <!-- File Preview -->
-                                                    <div class="mb-2">
-                                                        <iframe src="<?php echo htmlspecialchars($preview_url); ?>" width="400px" height="300px" frameborder="0" allowfullscreen></iframe>
-                                                    </div>
-
-                                                </div>
-                                            <?php endif; ?>
-
                                         </div>
+
 
                                         <!-- Comments Section -->
                                         <div class="card">
@@ -310,35 +356,36 @@ $results = pg_fetch_all($dropdown_result);
                                                 <h5 class="card-title">Comments</h5>
 
                                                 <ul class="list-group p-0">
-    <?php foreach ($comments as $comment): ?>
-        <li class="list-group-item d-flex align-items-start mb-3 p-0 border-0">
-            <img src="<?php echo htmlspecialchars($comment['commenter_photo']); ?>" alt="Commenter Image" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
-            <div class="w-100">
-                <div class="d-flex align-items-center">
-                    <strong class="me-2"><?php echo htmlspecialchars($comment['commenter_name']); ?></strong>
-                    <small class="text-muted" style="white-space: nowrap;">
-                        <?php
-                        $commentTime = new DateTime($comment['timestamp']);
-                        $now = new DateTime();
-                        $interval = $now->diff($commentTime);
+                                                    <?php foreach ($comments as $comment): ?>
+                                                        <li class="list-group-item d-flex align-items-start mb-3 p-0 border-0">
+                                                            <img src="<?php echo isset($comment['commenter_photo']) ? $comment['commenter_photo'] : 'https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg'; ?>" alt="Commenter Image" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
 
-                        if ($interval->days > 0) {
-                            echo htmlspecialchars($commentTime->format('d/m/Y h:i A'));
-                        } elseif ($interval->h > 0) {
-                            echo htmlspecialchars($interval->h . ' hours ago');
-                        } elseif ($interval->i > 0) {
-                            echo htmlspecialchars($interval->i . ' minutes ago');
-                        } else {
-                            echo htmlspecialchars($interval->s . ' seconds ago');
-                        }
-                        ?>
-                    </small>
-                </div>
-                <p class="mt-2 mb-0"><?php echo htmlspecialchars($comment['comment']); ?></p>
-            </div>
-        </li>
-    <?php endforeach; ?>
-</ul>
+                                                            <div class="w-100">
+                                                                <div class="d-flex align-items-center">
+                                                                    <strong class="me-2"><?php echo htmlspecialchars($comment['commenter_name']); ?></strong>
+                                                                    <small class="text-muted" style="white-space: nowrap;">
+                                                                        <?php
+                                                                        $commentTime = new DateTime($comment['timestamp']);
+                                                                        $now = new DateTime();
+                                                                        $interval = $now->diff($commentTime);
+
+                                                                        if ($interval->days > 0) {
+                                                                            echo htmlspecialchars($commentTime->format('d/m/Y h:i A'));
+                                                                        } elseif ($interval->h > 0) {
+                                                                            echo htmlspecialchars($interval->h . ' hours ago');
+                                                                        } elseif ($interval->i > 0) {
+                                                                            echo htmlspecialchars($interval->i . ' minutes ago');
+                                                                        } else {
+                                                                            echo htmlspecialchars($interval->s . ' seconds ago');
+                                                                        }
+                                                                        ?>
+                                                                    </small>
+                                                                </div>
+                                                                <p class="mt-2 mb-0"><?php echo htmlspecialchars($comment['comment']); ?></p>
+                                                            </div>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
 
                                                 <!-- Add Comment -->
                                                 <form method="POST" class="mt-4">
@@ -350,9 +397,10 @@ $results = pg_fetch_all($dropdown_result);
                                                 </form>
                                             </div>
                                         </div>
-                                    <?php endif; ?>
                                     </div>
-
+                                <?php else: ?>
+                                    <p class="text-danger">We could not locate the ticket with ID <?php echo htmlspecialchars($ticket_id); ?>. Please verify the details and try again.</p>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -367,6 +415,34 @@ $results = pg_fetch_all($dropdown_result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var toggleLink = document.getElementById('toggle-more');
+            var hiddenRecords = document.querySelectorAll('.hidden-record');
+
+            // Initially set the link text to "Show More"
+            var isShowingMore = false;
+
+            // Toggle Show More/Show Less functionality
+            toggleLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                if (isShowingMore) {
+                    // Hide additional records and update the link text
+                    hiddenRecords.forEach(function(record) {
+                        record.style.display = 'none';
+                    });
+                    toggleLink.textContent = 'Show More...';
+                } else {
+                    // Show additional records and update the link text
+                    hiddenRecords.forEach(function(record) {
+                        record.style.display = 'list-item';
+                    });
+                    toggleLink.textContent = 'Show Less...';
+                }
+                isShowingMore = !isShowingMore; // Toggle the state
+            });
+        });
+    </script>
 
 </body>
 
