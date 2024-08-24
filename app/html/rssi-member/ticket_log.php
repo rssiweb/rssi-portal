@@ -20,6 +20,7 @@ $query = "
         t.severity,
         t.raised_by,
         t.raised_for,
+        t.action,
         t.timestamp AS ticket_timestamp,
         COALESCE(a.assigned_to, '') AS assigned_to,
         COALESCE(a.timestamp, NULL) AS latest_assignment_timestamp,
@@ -47,15 +48,19 @@ $query = "
     WHERE 1=1
 ";
 
-// Apply filters
+// Apply role-based filtering
+if ($role !== 'Admin') {
+    $query .= " AND (t.raised_by = '" . pg_escape_string($con, $associatenumber) . "' 
+                    OR a.assigned_to = '" . pg_escape_string($con, $associatenumber) . "')";
+}
+
+// Apply other filters
 if ($filter_ticket_id) {
     $query .= " AND t.ticket_id = '" . pg_escape_string($con, $filter_ticket_id) . "'";
 }
 if ($filter_status) {
     $query .= " AND s.status = '" . pg_escape_string($con, $filter_status) . "'";
 }
-
-$query .= " ORDER BY t.timestamp DESC";
 
 $result = pg_query($con, $query);
 if (!$result) {
@@ -64,8 +69,8 @@ if (!$result) {
 }
 
 $resultArr = pg_fetch_all($result);
-
 ?>
+
 
 <!doctype html>
 <html lang="en">
@@ -152,6 +157,7 @@ $resultArr = pg_fetch_all($result);
                                             <tr>
                                                 <th>Ticket Id</th>
                                                 <th>Description</th>
+                                                <th>Type</th>
                                                 <th>Severity</th>
                                                 <th>Raised by</th>
                                                 <th>Tagged to</th>
@@ -166,6 +172,7 @@ $resultArr = pg_fetch_all($result);
                                                 <tr>
                                                     <td><a href="ticket-dashboard.php?ticket_id=<?php echo urlencode($array['ticket_id']); ?>"><?php echo htmlspecialchars($array['ticket_id']); ?></a></td>
                                                 <?php echo '<td>' . htmlspecialchars($array['short_description']) . '</td>
+                                                    <td>' . htmlspecialchars($array['action']) . '</td>
                                                     <td>' . htmlspecialchars($array['severity']) . '</td>
                                                     <td>' . htmlspecialchars($array['raised_by']) . '</td>
                                                     <td>' . htmlspecialchars($array['assigned_to']) . '</td>
