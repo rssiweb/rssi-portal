@@ -296,6 +296,44 @@ if ($assignment_results) {
                                                                 <p class="mb-0"><?php echo nl2br(htmlspecialchars($ticket['long_description'])); ?></p>
                                                             </div>
 
+                                                            <!-- Raised for -->
+                                                            <?php
+                                                            // Check if 'raised_for' is not empty and decode the JSON string to an array
+                                                            if (!empty($ticket['raised_for'])):
+                                                                $raisedForArray = json_decode($ticket['raised_for'], true);
+
+                                                                if (is_array($raisedForArray) && count($raisedForArray) > 0):
+                                                                    // Generate placeholders for the SQL query
+                                                                    $placeholders = implode(',', array_map(function ($index) {
+                                                                        return '$' . ($index + 1);
+                                                                    }, array_keys($raisedForArray)));
+
+                                                                    // Prepare the SQL query
+                                                                    $sql = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE associatenumber IN ($placeholders)";
+
+                                                                    // Prepare the query
+                                                                    $query = pg_prepare($con, "fetch_members", $sql);
+
+                                                                    // Execute the query with the array of IDs
+                                                                    $result = pg_execute($con, "fetch_members", $raisedForArray);
+
+                                                                    // Fetch all results
+                                                                    $members = pg_fetch_all($result);
+
+                                                            ?>
+                                                                    <div class="mb-3">
+                                                                        Concerned Individual:
+                                                                        <?php if ($members): ?>
+                                                                            <?php foreach ($members as $member): ?>
+                                                                                <p class="mb-0"><?php echo htmlspecialchars($member['fullname']) . ' (' . htmlspecialchars($member['associatenumber']) . ')'; ?></p>
+                                                                            <?php endforeach; ?>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                            <?php
+                                                                endif;
+                                                            endif;
+                                                            ?>
+
                                                             <!-- Supporting Documents -->
                                                             <?php if (!empty($ticket['upload_file'])): ?>
                                                                 <div class="mb-3">
