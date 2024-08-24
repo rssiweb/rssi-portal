@@ -427,7 +427,6 @@ if ($formtype == "initiatingonboarding") {
     echo "bad request";
 }
 
-
 if ($formtype == "initiatingexit") {
   @$initiatedfor = $_POST['initiatedfor'];
   @$initiatedby = $_POST['initiatedby'];

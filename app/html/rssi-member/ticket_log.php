@@ -21,6 +21,7 @@ $query = "
         t.raised_by,
         t.raised_for,
         t.action,
+        t.category,
         t.timestamp AS ticket_timestamp,
         COALESCE(a.assigned_to, '') AS assigned_to,
         COALESCE(a.timestamp, NULL) AS latest_assignment_timestamp,
@@ -174,13 +175,13 @@ $resultArr = pg_fetch_all($result);
                                                 <th>Ticket Id</th>
                                                 <th>Description</th>
                                                 <th>Type</th>
+                                                <th>Category</th>
                                                 <th>Severity</th>
                                                 <th>Raised by</th>
                                                 <th>Tagged to</th>
                                                 <th>Ticket Timestamp</th>
                                                 <th>Latest Assignment Timestamp</th>
                                                 <th>Latest Status</th>
-                                                <th>Latest Status Timestamp</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -189,13 +190,14 @@ $resultArr = pg_fetch_all($result);
                                                     <td><a href="ticket-dashboard.php?ticket_id=<?php echo urlencode($array['ticket_id']); ?>"><?php echo htmlspecialchars($array['ticket_id']); ?></a></td>
                                                 <?php echo '<td>' . htmlspecialchars($array['short_description']) . '</td>
                                                     <td>' . htmlspecialchars($array['action']) . '</td>
+                                                    <td>' . @htmlspecialchars($array['category']) . '</td>
                                                     <td>' . htmlspecialchars($array['severity']) . '</td>
                                                     <td>' . htmlspecialchars($array['raised_by']) . '</td>
                                                     <td>' . htmlspecialchars($array['assigned_to']) . '</td>
                                                     <td>' . htmlspecialchars(@date("d/m/Y g:i a", strtotime($array['ticket_timestamp']))) . '</td>
                                                     <td>' . htmlspecialchars(@date("d/m/Y g:i a", strtotime($array['latest_assignment_timestamp']))) . '</td>
                                                     <td>' . htmlspecialchars($array['latest_status_description']) . '</td>
-                                                    <td>' . htmlspecialchars(@date("d/m/Y g:i a", strtotime($array['latest_status_timestamp']))) . '</td>
+                                                    <!--<td>' . htmlspecialchars(@date("d/m/Y g:i a", strtotime($array['latest_status_timestamp']))) . '</td>-->
                                                 </tr>';
                                             } ?>
                                         </tbody>

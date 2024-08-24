@@ -18,6 +18,7 @@ if ($_POST) {
     $long_description = htmlspecialchars($_POST['long_description'], ENT_QUOTES, 'UTF-8');
     $severity = $_POST['severity'];
     $raised_for = isset($_POST['associates']) ? json_encode($_POST['associates']) : '[]'; // Serialize the array to JSON
+    $category = isset($_POST['category']) ? json_encode($_POST['category']) : '[]'; // Serialize the array to JSON
     $timestamp = date('Y-m-d H:i:s');
     $action_selection = $_POST['action_selection'];
 
@@ -30,8 +31,8 @@ if ($_POST) {
         $doclink = uploadeToDrive($upload_file, $parent, $filename);
     }
 
-    $query = "INSERT INTO support_ticket (ticket_id, short_description, long_description, upload_file, severity, raised_by, raised_for, timestamp,action)
-              VALUES ('$ticket_id', '$short_description', '$long_description', '$doclink', '$severity', '$associatenumber', '$raised_for', '$timestamp','$action_selection')";
+    $query = "INSERT INTO support_ticket (ticket_id, short_description, long_description, upload_file, severity, raised_by, raised_for, timestamp,action,category)
+              VALUES ('$ticket_id', '$short_description', '$long_description', '$doclink', '$severity', '$associatenumber', '$raised_for', '$timestamp','$action_selection','$category')";
 
     $result = pg_query($con, $query);
     $cmdtuples = pg_affected_rows($result);
@@ -47,6 +48,17 @@ $result = pg_query($con, $query);
 $results = [];
 while ($row = pg_fetch_assoc($result)) {
     $results[] = ['id' => htmlspecialchars($row['id']), 'text' => htmlspecialchars($row['name']) . " (" . htmlspecialchars($row['id']) . ")"];
+}
+
+// Query to fetch categories from the database
+$query = "SELECT category_type, category_name FROM ticket_categories ORDER BY category_type, category_name";
+$result = pg_query($con, $query);
+
+// Initialize an array to store categories
+$categories = [];
+
+while ($row = pg_fetch_assoc($result)) {
+    $categories[$row['category_type']][] = $row['category_name'];
 }
 ?>
 
@@ -190,11 +202,20 @@ while ($row = pg_fetch_assoc($result)) {
                                                         <option value="Critical">Critical</option>
                                                     </select>
                                                 </div>
-                                                <!-- Raised For (Associates/Students) -->
-                                                <div class="mb-3" id="associates_container">
+                                                <!-- Category -->
+                                                <div class="mb-3">
                                                     <label for="category" class="form-label">Category</label>
                                                     <select id="category" name="category[]" class="form-control" multiple="multiple">
-                                                        <!-- Options will be populated dynamically via PHP -->
+                                                        <option value="">Select a category...</option>
+                                                        <?php foreach ($categories as $type => $category_list): ?>
+                                                            <optgroup label="<?php echo htmlspecialchars($type); ?>">
+                                                                <?php foreach ($category_list as $category): ?>
+                                                                    <option value="<?php echo htmlspecialchars($category); ?>">
+                                                                        <?php echo htmlspecialchars($category); ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </optgroup>
+                                                        <?php endforeach; ?>
                                                     </select>
                                                 </div>
 
@@ -254,6 +275,15 @@ while ($row = pg_fetch_assoc($result)) {
                     $('#associates').prop('disabled', false);
                 }
             }).trigger('change'); // Trigger change event to set initial state
+        });
+    </script>
+    <!-- Include the select2 script -->
+    <script>
+        $(document).ready(function() {
+            $('#category').select2({
+                placeholder: "Select a category...",
+                allowClear: true
+            });
         });
     </script>
 </body>

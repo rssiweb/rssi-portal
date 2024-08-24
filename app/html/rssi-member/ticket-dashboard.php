@@ -15,6 +15,7 @@ $ticket_id = $_GET['ticket_id'] ?? '';
 $comment = $_POST['comment'] ?? '';
 $status = $_POST['status'] ?? '';
 $assigned_to = $_POST['assigned_to'] ?? '';
+$category = isset($_POST['category']) ? json_encode($_POST['category']) : '[]'; // Serialize the array to JSON
 $ticket = null;
 $comments = [];
 
@@ -148,6 +149,40 @@ $assignments = [];
 if ($assignment_results) {
     $assignments = pg_fetch_all($assignment_results);
 }
+// Query to fetch categories from the database
+$query = "SELECT category_type, category_name FROM ticket_categories ORDER BY category_type, category_name";
+$result = pg_query($con, $query);
+
+// Initialize an array to store categories
+$categories = [];
+
+while ($row = pg_fetch_assoc($result)) {
+    $categories[$row['category_type']][] = $row['category_name'];
+}
+
+// Handle category update
+if ($category) {
+    // Update the category in the database
+    pg_query_params($con, "
+        UPDATE support_ticket 
+        SET category = $1 
+        WHERE ticket_id = $2
+    ", array($category, $ticket_id));
+
+    // Fetch the updated category data
+    $result = pg_query_params($con, "
+    SELECT category 
+    FROM support_ticket 
+    WHERE ticket_id = $1
+", array($ticket_id));
+
+    if ($result) {
+        $updated_category = pg_fetch_assoc($result);
+        // Decode the category JSON to an array
+        $current_categories = !empty($updated_category['category']) ? json_decode($updated_category['category'], true) : [];
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -173,10 +208,13 @@ if ($assignment_results) {
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <style>
         .hidden-record {
             display: none;
@@ -225,7 +263,7 @@ if ($assignment_results) {
                                         <div class="card-header d-flex justify-content-between align-items-center">
                                             <span>Ticket Details</span>
                                             <!-- Form to update Assigned To and Status -->
-                                            <form method="POST" class="d-flex">
+                                            <form method="POST" class="d-flex mt-3">
                                                 <!-- Assigned To -->
                                                 <div class="me-2">
                                                     <select id="assigned_to" name="assigned_to" class="form-select">
@@ -249,7 +287,7 @@ if ($assignment_results) {
                                                 </div>
 
                                                 <!-- Update Button -->
-                                                <button type="submit" class="btn btn-primary">Update</button>
+                                                <button type="submit" class="btn btn-primary" name="update_assigned_status">Update</button>
                                             </form>
                                         </div>
 
@@ -337,9 +375,55 @@ if ($assignment_results) {
                                                             <!-- Supporting Documents -->
                                                             <?php if (!empty($ticket['upload_file'])): ?>
                                                                 <div class="mb-3">
-                                                                    <a href="<?php echo htmlspecialchars($ticket['upload_file']); ?>" target="_blank" class="btn btn-link ps-0">View Attachment</a>
+                                                                    <a href="<?php echo htmlspecialchars($ticket['upload_file']); ?>" target="_blank">View Attachment</a>
                                                                 </div>
                                                             <?php endif; ?>
+
+                                                            <!-- Link to open the category form modal -->
+                                                            <a href="#" data-bs-toggle="modal" data-bs-target="#categoryModal">Update Category</a>
+
+                                                            <!-- Modal for updating category -->
+                                                            <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+                                                                <div class="modal-dialog">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header">
+                                                                            <h5 class="modal-title" id="categoryModalLabel">Update Category</h5>
+                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                        </div>
+                                                                        <div class="modal-body">
+                                                                            <form method="POST" id="categoryForm">
+                                                                                <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($ticket_id); ?>">
+
+                                                                                <!-- Category -->
+                                                                                <div class="mb-3">
+                                                                                    <select id="category" name="category[]" class="form-control" multiple="multiple" style="width:100%">
+                                                                                        <!-- <option value="">Select a category...</option> -->
+                                                                                        <?php
+                                                                                        // Decode the current category from JSON to an array
+                                                                                        $current_categories = !empty($ticket['category']) ? json_decode($ticket['category'], true) : [];
+
+                                                                                        // Generate the options
+                                                                                        foreach ($categories as $type => $category_list): ?>
+                                                                                            <optgroup label="<?php echo htmlspecialchars($type); ?>">
+                                                                                                <?php foreach ($category_list as $category): ?>
+                                                                                                    <option value="<?php echo htmlspecialchars($category); ?>"
+                                                                                                        <?php echo in_array($category, $current_categories) ? 'selected' : ''; ?>>
+                                                                                                        <?php echo htmlspecialchars($category); ?>
+                                                                                                    </option>
+                                                                                                <?php endforeach; ?>
+                                                                                            </optgroup>
+                                                                                        <?php endforeach; ?>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </form>
+                                                                        </div>
+                                                                        <div class="modal-footer">
+                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                            <button type="submit" form="categoryForm" class="btn btn-primary">Update</button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
 
@@ -386,7 +470,6 @@ if ($assignment_results) {
                                                 </div>
                                             </div>
                                         </div>
-
 
                                         <!-- Comments Section -->
                                         <div class="card">
@@ -481,6 +564,18 @@ if ($assignment_results) {
             });
         });
     </script>
+    <!-- Include the select2 script -->
+    <script>
+        $(document).ready(function() {
+            $('#category').select2({
+                dropdownParent: $('#categoryModal'),
+                placeholder: "Select a category...",
+                allowClear: true,
+                // Other select2 options if needed
+            });
+        });
+    </script>
+
 
 </body>
 
