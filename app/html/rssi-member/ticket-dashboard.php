@@ -207,7 +207,7 @@ while ($row = pg_fetch_assoc($result)) {
 }
 
 // Handle category update
-if ($category) {
+if (isset($_POST['category_update'])) {
     // Update the category in the database
     pg_query_params($con, "
         UPDATE support_ticket 
@@ -410,6 +410,7 @@ if ($category) {
                                                                         </div>
                                                                         <div class="modal-body">
                                                                             <form method="POST" id="categoryForm">
+                                                                                <input type="hidden" name="category_update" value="1">
                                                                                 <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($ticket_id, ENT_QUOTES, 'UTF-8'); ?>">
 
                                                                                 <!-- Category -->
