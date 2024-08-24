@@ -137,12 +137,12 @@ if ($searchField !== '' || $fyear !== '') {
       policyLink: 'https://www.rssi.in/disclaimer'
     });
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-  <!-- Add DataTables CSS -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
-
-  <!-- Add DataTables JS -->
-  <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
+  <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 
 </head>
 

@@ -75,8 +75,6 @@ $resultArr = pg_fetch_all($result);
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
     <script>
@@ -87,11 +85,12 @@ $resultArr = pg_fetch_all($result);
         });
     </script>
 
-    <!-- Add DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.6/css/dataTables.bootstrap5.min.css">
-
-    <!-- Add DataTables JS -->
-    <script type="text/javascript" src="https://cdn.datatables.net/2.0.6/js/dataTables.min.js"></script>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 
     <style>
         .x-btn:focus,
@@ -444,18 +443,18 @@ $resultArr = pg_fetch_all($result);
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
-    $(document).ready(function() {
-      // Check if resultArr is empty
-      <?php if (!empty($resultArr)) : ?>
-        // Initialize DataTables only if resultArr is not empty
-        $('#table-id').DataTable({
-          paging: false,
-          "order": [] // Disable initial sorting
-          // other options...
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
         });
-      <?php endif; ?>
-    });
-  </script>
+    </script>
 
 
 </body>
