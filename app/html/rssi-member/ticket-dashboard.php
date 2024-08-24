@@ -15,7 +15,7 @@ $ticket_id = $_GET['ticket_id'] ?? '';
 $comment = $_POST['comment'] ?? '';
 $status = $_POST['status'] ?? '';
 $assigned_to = $_POST['assigned_to'] ?? '';
-$category = isset($_POST['category']) ? json_encode($_POST['category']) : '[]'; // Serialize the array to JSON
+$category = isset($_POST['category']) ? json_encode($_POST['category']) : '[]';
 $ticket = null;
 $comments = [];
 
@@ -149,6 +149,52 @@ $assignments = [];
 if ($assignment_results) {
     $assignments = pg_fetch_all($assignment_results);
 }
+
+// Assuming $con is your PostgreSQL connection resource
+// and $ticket['raised_for'] contains the JSON-encoded IDs
+
+$members = [];
+if (!empty($ticket['raised_for'])) {
+    // Decode the JSON string to an array of IDs
+    $raisedForArray = json_decode($ticket['raised_for'], true);
+
+    if (is_array($raisedForArray) && count($raisedForArray) > 0) {
+        // Sanitize and format IDs for use in SQL query
+        $escapedIds = array_map(function ($id) use ($con) {
+            return "'" . pg_escape_string($con, $id) . "'";
+        }, $raisedForArray);
+
+        $idList = implode(',', $escapedIds);
+
+        // Query to fetch data from both tables separately
+        $sqlMembers = "
+            SELECT fullname AS name, associatenumber AS id
+            FROM rssimyaccount_members
+            WHERE associatenumber IN ($idList);
+        ";
+
+        $sqlStudents = "
+            SELECT studentname AS name, student_id AS id
+            FROM rssimyprofile_student
+            WHERE student_id IN ($idList);
+        ";
+
+        // Execute the queries
+        $resultMembers = pg_query($con, $sqlMembers);
+        $resultStudents = pg_query($con, $sqlStudents);
+
+        if ($resultMembers) {
+            $members = pg_fetch_all($resultMembers);
+        }
+
+        if ($resultStudents) {
+            $students = pg_fetch_all($resultStudents);
+            // Merge student results into members array
+            $members = array_merge($members, $students);
+        }
+    }
+}
+
 // Query to fetch categories from the database
 $query = "SELECT category_type, category_name FROM ticket_categories ORDER BY category_type, category_name";
 $result = pg_query($con, $query);
@@ -169,20 +215,17 @@ if ($category) {
         WHERE ticket_id = $2
     ", array($category, $ticket_id));
 
-    // Fetch the updated category data
+    // Refresh the category after updating it
     $result = pg_query_params($con, "
-    SELECT category 
-    FROM support_ticket 
-    WHERE ticket_id = $1
-", array($ticket_id));
+        SELECT category 
+        FROM support_ticket 
+        WHERE ticket_id = $1
+    ", array($ticket_id));
 
     if ($result) {
-        $updated_category = pg_fetch_assoc($result);
-        // Decode the category JSON to an array
-        $current_categories = !empty($updated_category['category']) ? json_decode($updated_category['category'], true) : [];
+        $ticket['category'] = pg_fetch_result($result, 0, 'category');
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -208,18 +251,18 @@ if ($category) {
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Include Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <style>
         .hidden-record {
             display: none;
         }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 </head>
 
 <body>
@@ -263,7 +306,7 @@ if ($category) {
                                         <div class="card-header d-flex justify-content-between align-items-center">
                                             <span>Ticket Details</span>
                                             <!-- Form to update Assigned To and Status -->
-                                            <form method="POST" class="d-flex mt-3">
+                                            <form method="POST" class="d-flex">
                                                 <!-- Assigned To -->
                                                 <div class="me-2">
                                                     <select id="assigned_to" name="assigned_to" class="form-select">
@@ -287,7 +330,7 @@ if ($category) {
                                                 </div>
 
                                                 <!-- Update Button -->
-                                                <button type="submit" class="btn btn-primary" name="update_assigned_status">Update</button>
+                                                <button type="submit" class="btn btn-primary">Update</button>
                                             </form>
                                         </div>
 
@@ -335,42 +378,17 @@ if ($category) {
                                                             </div>
 
                                                             <!-- Raised for -->
-                                                            <?php
-                                                            // Check if 'raised_for' is not empty and decode the JSON string to an array
-                                                            if (!empty($ticket['raised_for'])):
-                                                                $raisedForArray = json_decode($ticket['raised_for'], true);
+                                                            <div class="mb-3">
+                                                                Concerned Individual:
+                                                                <?php if ($members): ?>
+                                                                    <?php foreach ($members as $member): ?>
+                                                                        <p class="mb-0"><?php echo htmlspecialchars($member['name']) . ' (' . htmlspecialchars($member['id']) . ')'; ?></p>
+                                                                    <?php endforeach; ?>
+                                                                <?php else: ?>
+                                                                    <p class="text-muted">No members found.</p>
+                                                                <?php endif; ?>
+                                                            </div>
 
-                                                                if (is_array($raisedForArray) && count($raisedForArray) > 0):
-                                                                    // Generate placeholders for the SQL query
-                                                                    $placeholders = implode(',', array_map(function ($index) {
-                                                                        return '$' . ($index + 1);
-                                                                    }, array_keys($raisedForArray)));
-
-                                                                    // Prepare the SQL query
-                                                                    $sql = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE associatenumber IN ($placeholders)";
-
-                                                                    // Prepare the query
-                                                                    $query = pg_prepare($con, "fetch_members", $sql);
-
-                                                                    // Execute the query with the array of IDs
-                                                                    $result = pg_execute($con, "fetch_members", $raisedForArray);
-
-                                                                    // Fetch all results
-                                                                    $members = pg_fetch_all($result);
-
-                                                            ?>
-                                                                    <div class="mb-3">
-                                                                        Concerned Individual:
-                                                                        <?php if ($members): ?>
-                                                                            <?php foreach ($members as $member): ?>
-                                                                                <p class="mb-0"><?php echo htmlspecialchars($member['fullname']) . ' (' . htmlspecialchars($member['associatenumber']) . ')'; ?></p>
-                                                                            <?php endforeach; ?>
-                                                                        <?php endif; ?>
-                                                                    </div>
-                                                            <?php
-                                                                endif;
-                                                            endif;
-                                                            ?>
 
                                                             <!-- Supporting Documents -->
                                                             <?php if (!empty($ticket['upload_file'])): ?>
@@ -392,30 +410,30 @@ if ($category) {
                                                                         </div>
                                                                         <div class="modal-body">
                                                                             <form method="POST" id="categoryForm">
-                                                                                <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($ticket_id); ?>">
+                                                                                <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($ticket_id, ENT_QUOTES, 'UTF-8'); ?>">
 
                                                                                 <!-- Category -->
                                                                                 <div class="mb-3">
                                                                                     <select id="category" name="category[]" class="form-control" multiple="multiple" style="width:100%">
-                                                                                        <!-- <option value="">Select a category...</option> -->
                                                                                         <?php
-                                                                                        // Decode the current category from JSON to an array
+                                                                                        // Decode current categories
                                                                                         $current_categories = !empty($ticket['category']) ? json_decode($ticket['category'], true) : [];
 
-                                                                                        // Generate the options
-                                                                                        foreach ($categories as $type => $category_list): ?>
-                                                                                            <optgroup label="<?php echo htmlspecialchars($type); ?>">
-                                                                                                <?php foreach ($category_list as $category): ?>
-                                                                                                    <option value="<?php echo htmlspecialchars($category); ?>"
-                                                                                                        <?php echo in_array($category, $current_categories) ? 'selected' : ''; ?>>
-                                                                                                        <?php echo htmlspecialchars($category); ?>
-                                                                                                    </option>
-                                                                                                <?php endforeach; ?>
-                                                                                            </optgroup>
-                                                                                        <?php endforeach; ?>
+                                                                                        // Generate options
+                                                                                        foreach ($categories as $type => $category_list) {
+                                                                                            echo '<optgroup label="' . htmlspecialchars($type, ENT_QUOTES, 'UTF-8') . '">';
+                                                                                            foreach ($category_list as $category) {
+                                                                                                $selected = in_array($category, $current_categories) ? ' selected' : '';
+                                                                                                echo '<option value="' . htmlspecialchars($category, ENT_QUOTES, 'UTF-8') . '"' . $selected . '>'
+                                                                                                    . htmlspecialchars($category, ENT_QUOTES, 'UTF-8') . '</option>';
+                                                                                            }
+                                                                                            echo '</optgroup>';
+                                                                                        }
+                                                                                        ?>
                                                                                     </select>
                                                                                 </div>
                                                                             </form>
+
                                                                         </div>
                                                                         <div class="modal-footer">
                                                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -470,6 +488,7 @@ if ($category) {
                                                 </div>
                                             </div>
                                         </div>
+
 
                                         <!-- Comments Section -->
                                         <div class="card">
@@ -575,7 +594,6 @@ if ($category) {
             });
         });
     </script>
-
 
 </body>
 
