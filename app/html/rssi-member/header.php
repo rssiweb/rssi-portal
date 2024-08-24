@@ -227,12 +227,12 @@
         </a>
         <ul id="support360" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="create_ticketLink" href="create_ticket.php">
+            <a id="create_ticket" href="create_ticket.php">
               <span>Create Ticket</span>
             </a>
           </li>
           <li>
-            <a id="ticket_logLink" href="ticket_log.php">
+            <a id="ticket_log" href="ticket_log.php">
               <span>Ticket Log</span>
             </a>
           </li>
@@ -617,12 +617,16 @@
       }
       , {
         id: 'support360',
-        linkId: 'create_ticketLink',
+        linkId: 'create_ticket',
         url: 'create_ticket.php'
       }, {
         id: 'support360',
-        linkId: 'ticket_logLink',
+        linkId: 'ticket_log',
         url: 'ticket_log.php'
+      }, {
+        id: 'support360',
+        linkId: 'ticket_log',
+        url: 'ticket-dashboard.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
