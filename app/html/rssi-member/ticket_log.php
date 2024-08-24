@@ -50,8 +50,15 @@ $query = "
 
 // Apply role-based filtering
 if ($role !== 'Admin') {
-    $query .= " AND (t.raised_by = '" . pg_escape_string($con, $associatenumber) . "' 
-                    OR a.assigned_to = '" . pg_escape_string($con, $associatenumber) . "')";
+    $query .= " AND (
+                    t.raised_by = '" . pg_escape_string($con, $associatenumber) . "' 
+                    OR EXISTS (
+                        SELECT 1
+                        FROM support_ticket_assignment sa
+                        WHERE sa.ticket_id = t.ticket_id
+                        AND sa.assigned_to = '" . pg_escape_string($con, $associatenumber) . "'
+                    )
+                )";
 }
 
 // Apply other filters

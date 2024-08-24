@@ -190,6 +190,13 @@ while ($row = pg_fetch_assoc($result)) {
                                                         <option value="Critical">Critical</option>
                                                     </select>
                                                 </div>
+                                                <!-- Raised For (Associates/Students) -->
+                                                <div class="mb-3" id="associates_container">
+                                                    <label for="category" class="form-label">Category</label>
+                                                    <select id="category" name="category[]" class="form-control" multiple="multiple">
+                                                        <!-- Options will be populated dynamically via PHP -->
+                                                    </select>
+                                                </div>
 
                                                 <!-- Raised For (Associates/Students) -->
                                                 <div class="mb-3" id="associates_container">
