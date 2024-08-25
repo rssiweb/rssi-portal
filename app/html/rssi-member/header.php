@@ -262,6 +262,11 @@
               <span>In Stock</span>
             </a>
           </li>
+          <li>
+            <a id="inventory-insights" href="inventory-insights.php">
+              <span>Inventory Insights</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -659,6 +664,10 @@
         id: 'stockmanagement',
         linkId: 'stock_in',
         url: 'stock_in.php'
+      }, {
+        id: 'stockmanagement',
+        linkId: 'inventory-insights',
+        url: 'inventory-insights.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
