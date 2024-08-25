@@ -242,6 +242,27 @@
             </a>
           </li>
         </ul>
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#stockmanagement" data-bs-toggle="collapse" href="#">
+          <span>Stock Management</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="stockmanagement" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="stock_add" href="stock_add.php">
+              <span>Add Stock</span>
+            </a>
+          </li>
+          <li>
+            <a id="stock_out" href="stock_out.php">
+              <span>Distribute Stock</span>
+            </a>
+          </li>
+          <li>
+            <a id="stock_in" href="stock_in.php">
+              <span>In Stock</span>
+            </a>
+          </li>
+        </ul>
       </li><!-- End Components Nav -->
 
 
@@ -626,6 +647,18 @@
         id: 'support360',
         linkId: 'ticket_log',
         url: 'ticket-dashboard.php'
+      }, {
+        id: 'stockmanagement',
+        linkId: 'stock_add',
+        url: 'stock_add.php'
+      }, {
+        id: 'stockmanagement',
+        linkId: 'stock_out',
+        url: 'stock_out.php'
+      }, {
+        id: 'stockmanagement',
+        linkId: 'stock_in',
+        url: 'stock_in.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
