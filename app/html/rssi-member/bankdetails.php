@@ -12,10 +12,10 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-if ($role == 'Admin') {
+// if ($role == 'Admin') {
 
-    $id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : '';
-}
+//     $id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : '';
+// }
 
 $uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
 
@@ -198,7 +198,7 @@ foreach ($accountNatures as $accountNature) {
                     <div class="card">
                         <div class="card-body">
                             <br>
-                            <?php if ($role == 'Admin') { ?>
+                            <!-- <?php if ($role == 'Admin') { ?>
                                 <form action="" method="GET">
                                     <div class="form-group" style="display: inline-block;">
                                         <div class="col2" style="display: inline-block;">
@@ -221,7 +221,7 @@ foreach ($accountNatures as $accountNature) {
                                         <?php endif; ?>
                                     </div>
                                 </div>
-                            <?php } ?>
+                            <?php } ?> -->
                             <?php if (@$transaction_id != null && @$cmdtuples == 0) { ?>
                                 <div class="alert alert-danger alert-dismissible text-center" role="alert">
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -241,17 +241,60 @@ foreach ($accountNatures as $accountNature) {
                                 </script>
                             <?php } ?>
                             <div class="container">
-                                <div class="row">
-                                    <!-- First Column - Form -->
-                                    <div class="col-md-6">
-                                        <form action="#" method="post" enctype="multipart/form-data" id="bank_details">
-                                            <input type="hidden" name="form-type" value="bank_details">
-                                            <h2 class="mt-4">Bank Details</h2>
-                                            <hr>
-                                            <div class="mb-3 colored-area">
-                                                <p>Enter valid account number. You may include zero in the beginning of the account number (if required)</p>
-                                            </div>
-                                            <div class="mb-3">
+                                <div class="table-responsive">
+                                    <table class="table" id="table-id">
+                                        <thead>
+                                            <tr>
+                                                <th>A/c Type</th>
+                                                <th>A/c Number</th>
+                                                <th>Bank Name</th>
+                                                <th>IFSC</th>
+                                                <th>A/c Holder Name</th>
+                                                <th>Passbook Page</th>
+                                                <th>Last Updated</th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($latestSubmissions as $accountNature => $latestSubmission) : ?>
+                                                <tr>
+                                                    <td><?php echo ucfirst($accountNature); ?></td>
+                                                    <td><?php echo isset($latestSubmission['bank_account_number']) ? $latestSubmission['bank_account_number'] : 'N/A'; ?></td>
+                                                    <td><?php echo isset($latestSubmission['bank_name']) ? $latestSubmission['bank_name'] : 'N/A'; ?></td>
+                                                    <td><?php echo isset($latestSubmission['ifsc_code']) ? $latestSubmission['ifsc_code'] : 'N/A'; ?></td>
+                                                    <td><?php echo isset($latestSubmission['account_holder_name']) ? $latestSubmission['account_holder_name'] : 'N/A'; ?></td>
+                                                    <td>
+                                                        <?php if (isset($latestSubmission['passbook_page'])) : ?>
+                                                            <a href="<?php echo $latestSubmission['passbook_page']; ?>" target="_blank">Passbook</a>
+                                                        <?php else : ?>
+                                                            N/A
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        echo isset($latestSubmission['updated_by']) ? $latestSubmission['updated_by'] : 'N/A';
+                                                        ?>
+                                                        on
+                                                        <?php
+                                                        echo isset($latestSubmission['updated_on']) ? date('d/m/Y h:i A', strtotime($latestSubmission['updated_on'])) : 'N/A';
+                                                        ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- First Column - Form -->
+                                <div class="container">
+                                    <form action="#" method="post" enctype="multipart/form-data" id="bank_details">
+                                        <input type="hidden" name="form-type" value="bank_details">
+                                        <h3 class="mt-4">Add or Update Bank Details</h3>
+                                        <div class="mb-3 colored-area">
+                                            <p>Enter valid account number. You may include zero in the beginning of the account number (if required)</p>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
                                                 <label for="account_nature" class="form-label">Account Nature:</label>
                                                 <select class="form-select" id="account_nature" name="account_nature" required>
                                                     <option value="" selected disabled>Select your account nature</option>
@@ -260,73 +303,51 @@ foreach ($accountNatures as $accountNature) {
                                                 </select>
                                                 <div class="form-text">Please select the nature of your account.</div>
                                             </div>
+                                        </div>
 
-                                            <div class="mb-3">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
                                                 <label for="bank_account_number" class="form-label">Bank Account Number:</label>
                                                 <input class="form-control" type="text" id="bank_account_number" name="bank_account_number" placeholder="Enter your bank account number" required>
                                                 <div class="form-text">Please enter your bank account number.</div>
                                             </div>
-
-                                            <div class="mb-3">
+                                            <div class="col-md-6 mb-3">
                                                 <label for="bank_account_number_confirm" class="form-label">Confirm Bank Account Number:</label>
                                                 <input class="form-control" type="password" id="bank_account_number_confirm" name="bank_account_number_confirm" placeholder="Re-enter your bank account number" required onpaste="return false;">
                                                 <div class="form-text">Please re-enter your bank account number for confirmation.</div>
                                                 <div class="form-text" id="account_number_error" style="color: red;"></div>
                                             </div>
+                                        </div>
 
-                                            <div class="mb-3">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
                                                 <label for="bank_name" class="form-label">Name of the Bank:</label>
                                                 <input class="form-control" type="text" id="bank_name" name="bank_name" placeholder="Enter the name of your bank" required>
                                                 <div class="form-text">Please enter the name of your bank.</div>
                                             </div>
-
-                                            <div class="mb-3">
+                                            <div class="col-md-6 mb-3">
                                                 <label for="ifsc_code" class="form-label">Bank IFSC Code:</label>
                                                 <input class="form-control" type="text" id="ifsc_code" name="ifsc_code" placeholder="Enter the IFSC code of your bank" required>
                                                 <div class="form-text">Please enter the IFSC code of your bank.</div>
                                             </div>
-
-                                            <div class="mb-3">
-                                                <label for="account_holder_name" class="form-label">Name of the account holder:</label>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="account_holder_name" class="form-label">Name of the Account Holder:</label>
                                                 <input class="form-control" type="text" id="account_holder_name" name="account_holder_name" placeholder="Enter your name" required>
                                                 <div class="form-text">Please enter the name of the account holder.</div>
                                             </div>
-
-                                            <div class="mb-3">
+                                            <div class="col-md-6 mb-3">
                                                 <label for="passbook_page" class="form-label">First Page of Bank Account Passbook:</label>
                                                 <input class="form-control" type="file" id="passbook_page" name="passbook_page" required>
                                                 <div class="form-text">Please upload the first page of your bank account passbook.</div>
                                             </div>
-                                            <hr>
-                                            <button type="submit" id="submit_button" class="btn btn-primary">Submit</button>
-                                        </form>
-                                    </div>
-
-                                    <!-- Second Column - Bank Account Details -->
-                                    <div class="col-md-6" style="padding: 5%" ;>
-                                        <div>
-                                            <h3 class="mt-4">My current banking information</h3>
-
-                                            <?php foreach ($latestSubmissions as $accountNature => $latestSubmission) : ?>
-                                                <?php if ($latestSubmission !== null) : ?>
-                                                    <h4 class="mt-3"><?php echo ucfirst($accountNature); ?> Account Details</h4>
-                                                    <p class="mb-1">Bank Account Number: <?php echo isset($latestSubmission['bank_account_number']) ? $latestSubmission['bank_account_number'] : 'N/A'; ?></p>
-                                                    <p class="mb-1">Name of the Bank: <?php echo isset($latestSubmission['bank_name']) ? $latestSubmission['bank_name'] : 'N/A'; ?></p>
-                                                    <p class="mb-1">IFSC Code: <?php echo isset($latestSubmission['ifsc_code']) ? $latestSubmission['ifsc_code'] : 'N/A'; ?></p>
-                                                    <p class="mb-1">Account Holder Name: <?php echo isset($latestSubmission['account_holder_name']) ? $latestSubmission['account_holder_name'] : 'N/A'; ?></p>
-                                                    <?php if (isset($latestSubmission['passbook_page'])) : ?>
-                                                        <p class="mb-1"><a href="<?php echo $latestSubmission['passbook_page']; ?>" target="_blank">First Page of Bank Account Passbook</a></p>
-                                                    <?php endif; ?>
-                                                    <br>
-                                                    <p>(Last updated by <?php echo isset($latestSubmission['updated_by']) ? $latestSubmission['updated_by'] : 'N/A'; ?> on <?php echo isset($latestSubmission['updated_on']) ? $latestSubmission['updated_on'] : 'N/A'; ?>)</p>
-                                                <?php else : ?>
-                                                    <!-- Handle case when bank details are not available for the current account nature -->
-                                                    <p>No <?php echo ucfirst($accountNature); ?> account details available.</p>
-                                                <?php endif; ?>
-                                            <?php endforeach; ?>
                                         </div>
-                                    </div>
+                                        <hr>
+                                        <button type="submit" id="submit_button" class="btn btn-primary">Submit</button>
+                                    </form>
                                 </div>
+
                             </div>
                         </div>
                     </div>

@@ -150,6 +150,11 @@
               <span>My Allocation</span>
             </a>
           </li>
+          <li>
+            <a id="policyLink" href="resourcehub.php">
+              <span>Resource Hub</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 
@@ -251,11 +256,6 @@
             </a>
           </li>
           <li>
-            <a id="policyLink" href="infohub.php">
-              <span>Info Hub</span>
-            </a>
-          </li>
-          <li>
             <a id="archive_approval" href="archive_approval.php">
               <span>Document Approval</span>
             </a>
@@ -266,7 +266,7 @@
             </a>
           </li>
           <li>
-            <a id="dashboardLink" href="dashboard.php">
+            <a id="process-hubLink" href="process-hub.php">
               <span>Process Hub</span>
             </a>
           </li>
@@ -411,7 +411,7 @@
         id: 'acadamis',
         linkId: 'examAllotment',
         url: 'exam_marks_upload.php'
-      },{
+      }, {
         id: 'acadamis',
         linkId: 'examSummary',
         url: 'exam_summary_report.php'
@@ -501,14 +501,14 @@
         url: 'fees.php'
       },
       {
-        id: 'work',
+        id: 'myservices',
         linkId: 'policyLink',
-        url: 'infohub.php'
+        url: 'resourcehub.php'
       },
       {
         id: 'work',
-        linkId: 'dashboardLink',
-        url: 'dashboard.php'
+        linkId: 'process-hubLink',
+        url: 'process-hub.php'
       },
       {
         id: 'work',
@@ -592,7 +592,7 @@
       },
       {
         id: 'work',
-        linkId: 'dashboardLink',
+        linkId: 'process-hubLink',
         url: 'visitor.php'
       }, {
         id: 'work',
@@ -614,8 +614,7 @@
         id: 'work',
         linkId: 'bankdetails_admin',
         url: 'bankdetails_admin.php'
-      }
-      , {
+      }, {
         id: 'support360',
         linkId: 'create_ticket',
         url: 'create_ticket.php'

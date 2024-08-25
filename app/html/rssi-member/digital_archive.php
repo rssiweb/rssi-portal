@@ -11,9 +11,9 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-if ($role == 'Admin') {
-    $id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : '';
-}
+// if ($role == 'Admin') {
+//     $id = isset($_GET['get_aid']) ? strtoupper($_GET['get_aid']) : '';
+// }
 $uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
 
 $selectMemberQuery = "SELECT fullname,eduq FROM rssimyaccount_members WHERE associatenumber = '$uploadedfor'";
@@ -260,12 +260,11 @@ function generateRequiredAttribute($field)
 
                         <div class="card-body">
                             <br>
-                            <?php if ($role == 'Admin') : ?>
+                            <!-- <?php if ($role == 'Admin') : ?>
                                 <form action="" method="GET">
                                     <div class="form-group" style="display: inline-block;">
                                         <div class="col2" style="display: inline-block;">
                                             <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?= $id ?>">
-                                            <!-- <small class="form-text text-muted">Select Month</small> -->
                                         </div>
                                     </div>
                                     <div class="col2 left" style="display: inline-block;">
@@ -283,7 +282,7 @@ function generateRequiredAttribute($field)
                                         <?php endif; ?>
                                     </div>
                                 </div>
-                            <?php endif; ?>
+                            <?php endif; ?> -->
 
                             <?php if (@$transaction_id != null && @$cmdtuples == 0) { ?>
                                 <div class="alert alert-danger alert-dismissible text-center" role="alert">

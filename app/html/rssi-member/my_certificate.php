@@ -155,15 +155,18 @@ include("../../util/email.php");
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
@@ -192,7 +195,12 @@ include("../../util/email.php");
         });
     </script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 
 
     <style>
@@ -492,19 +500,6 @@ include("../../util/email.php");
                             <?php } ?><br>
 
                             <?php echo '
-                   <p>Select Number Of Rows</p>
-                   <div class="form-group">
-                       <select class="form-select" name="state" id="maxRows">
-                           <option value="5000">Show ALL Rows</option>
-                           <option value="5">5</option>
-                           <option value="10">10</option>
-                           <option value="15">15</option>
-                           <option value="20">20</option>
-                           <option value="50">50</option>
-                           <option value="70">70</option>
-                           <option value="100">100</option>
-                       </select>
-                   </div>
                    <div class="table-responsive">
                     <table class="table" id="table-id">
                         <thead>
@@ -535,18 +530,29 @@ include("../../util/email.php");
                                     <?php } ?>
                                     <?php echo '<td>' . $array['badge_name'] . '</td><td>' ?>
 
-                                    <?php if (@strlen($array['comment']) <= 90) {
+                                    <?php
+                                    $comment = $array['comment'];
+                                    $certificateNo = $array['certificate_no'];
+                                    ?>
 
-                                        echo $array['comment'] ?>
-
-                                    <?php } else { ?>
-
-                                        <?php echo substr($array['comment'], 0, 90) .
-                                            '&nbsp;...&nbsp;<button type="button" href="javascript:void(0)" onclick="showDetails(\'' . $array['certificate_no'] . '\')" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none; padding: 0px; border: none;" title="Details">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i></button>' ?>
-                                    <?php } ?>
-
-
+                                    <div id="comment-container-<?php echo $certificateNo; ?>">
+                                        <p>
+                                            <?php if (strlen($comment) > 90) { ?>
+                                                <span id="full-comment-<?php echo $certificateNo; ?>" class="d-inline">
+                                                    <?php echo substr($comment, 0, 90); ?>
+                                                    <span id="more-text-<?php echo $certificateNo; ?>" class="d-none">
+                                                        <?php echo substr($comment, 90); ?>
+                                                    </span>
+                                                </span>
+                                                <a href="javascript:void(0);" onclick="toggleComment('<?php echo $certificateNo; ?>')" id="toggle-link-<?php echo $certificateNo; ?>">
+                                                    <span id="toggle-text-<?php echo $certificateNo; ?>">Show more</span>
+                                                    <span id="toggle-text-more-<?php echo $certificateNo; ?>" class="d-none">Show less</span>
+                                                </a>
+                                            <?php } else { ?>
+                                                <span><?php echo $comment; ?></span>
+                                            <?php } ?>
+                                        </p>
+                                    </div>
                                     <?php echo '</td><td>' . $array['gems'] . '</td>' ?>
                                     <?php if ($array['issuedon'] == null) { ?>
                                         <?php echo '<td></td>' ?>
@@ -611,130 +617,6 @@ include("../../util/email.php");
                     </div>'
                             ?>
 
-
-                            <!-- Start Pagination -->
-                            <div class="pagination-container">
-                                <nav>
-                                    <ul class="pagination">
-                                        <li class="page-item" data-page="prev">
-                                            <button class="page-link pagination-button" aria-label="Previous">&lt;</button>
-                                        </li>
-                                        <!-- Here the JS Function Will Add the Rows -->
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">1</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">2</button>
-                                        </li>
-                                        <li class="page-item">
-                                            <button class="page-link pagination-button">3</button>
-                                        </li>
-                                        <li class="page-item" data-page="next" id="prev">
-                                            <button class="page-link pagination-button" aria-label="Next">&gt;</button>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-
-                            <script>
-                                getPagination('#table-id');
-
-                                function getPagination(table) {
-                                    var lastPage = 1;
-
-                                    $('#maxRows').on('change', function(evt) {
-                                        lastPage = 1;
-                                        $('.pagination').find('li').slice(1, -1).remove();
-                                        var trnum = 0;
-                                        var maxRows = parseInt($(this).val());
-
-                                        if (maxRows == 5000) {
-                                            $('.pagination').hide();
-                                        } else {
-                                            $('.pagination').show();
-                                        }
-
-                                        var totalRows = $(table + ' tbody tr').length;
-                                        $(table + ' tr:gt(0)').each(function() {
-                                            trnum++;
-                                            if (trnum > maxRows) {
-                                                $(this).hide();
-                                            }
-                                            if (trnum <= maxRows) {
-                                                $(this).show();
-                                            }
-                                        });
-
-                                        if (totalRows > maxRows) {
-                                            var pagenum = Math.ceil(totalRows / maxRows);
-                                            for (var i = 1; i <= pagenum; i++) {
-                                                $('.pagination #prev').before('<li class="page-item" data-page="' + i + '">\
-                                                <button class="page-link pagination-button">' + i + '</button>\
-                                                </li>').show();
-                                            }
-                                        }
-
-                                        $('.pagination [data-page="1"]').addClass('active');
-                                        $('.pagination li').on('click', function(evt) {
-                                            evt.stopImmediatePropagation();
-                                            evt.preventDefault();
-                                            var pageNum = $(this).attr('data-page');
-
-                                            var maxRows = parseInt($('#maxRows').val());
-
-                                            if (pageNum == 'prev') {
-                                                if (lastPage == 1) {
-                                                    return;
-                                                }
-                                                pageNum = --lastPage;
-                                            }
-                                            if (pageNum == 'next') {
-                                                if (lastPage == $('.pagination li').length - 2) {
-                                                    return;
-                                                }
-                                                pageNum = ++lastPage;
-                                            }
-
-                                            lastPage = pageNum;
-                                            var trIndex = 0;
-                                            $('.pagination li').removeClass('active');
-                                            $('.pagination [data-page="' + lastPage + '"]').addClass('active');
-                                            limitPagging();
-                                            $(table + ' tr:gt(0)').each(function() {
-                                                trIndex++;
-                                                if (
-                                                    trIndex > maxRows * pageNum ||
-                                                    trIndex <= maxRows * pageNum - maxRows
-                                                ) {
-                                                    $(this).hide();
-                                                } else {
-                                                    $(this).show();
-                                                }
-                                            });
-                                        });
-                                        limitPagging();
-                                    }).val(5).change();
-                                }
-
-                                function limitPagging() {
-                                    if ($('.pagination li').length > 7) {
-                                        if ($('.pagination li.active').attr('data-page') <= 3) {
-                                            $('.pagination li.page-item:gt(5)').hide();
-                                            $('.pagination li.page-item:lt(5)').show();
-                                            $('.pagination [data-page="next"]').show();
-                                        }
-                                        if ($('.pagination li.active').attr('data-page') > 3) {
-                                            $('.pagination li.page-item').hide();
-                                            $('.pagination [data-page="next"]').show();
-                                            var currentPage = parseInt($('.pagination li.active').attr('data-page'));
-                                            for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-                                                $('.pagination [data-page="' + i + '"]').show();
-                                            }
-                                        }
-                                    }
-                                }
-                            </script>
-
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
                                 const scriptURL = 'payment-api.php'
@@ -765,123 +647,6 @@ include("../../util/email.php");
                                     }
                                 }
                             </script>
-
-                            <!--------------- POP-UP BOX ------------
--------------------------------------->
-                            <style>
-                                .modal {
-                                    display: none;
-                                    /* Hidden by default */
-                                    position: fixed;
-                                    /* Stay in place */
-                                    z-index: 100;
-                                    /* Sit on top */
-                                    padding-top: 100px;
-                                    /* Location of the box */
-                                    left: 0;
-                                    top: 0;
-                                    width: 100%;
-                                    /* Full width */
-                                    height: 100%;
-                                    /* Full height */
-                                    overflow: auto;
-                                    /* Enable scroll if needed */
-                                    background-color: rgb(0, 0, 0);
-                                    /* Fallback color */
-                                    background-color: rgba(0, 0, 0, 0.4);
-                                    /* Black w/ opacity */
-                                }
-
-                                /* Modal Content */
-
-                                .modal-content {
-                                    background-color: #fefefe;
-                                    margin: auto;
-                                    padding: 20px;
-                                    border: 1px solid #888;
-                                    width: 100vh;
-                                }
-
-                                @media (max-width:767px) {
-                                    .modal-content {
-                                        width: 50vh;
-                                    }
-                                }
-
-                                /* The Close Button */
-
-                                .close {
-                                    color: #aaaaaa;
-                                    float: right;
-                                    font-size: 28px;
-                                    font-weight: bold;
-                                    text-align: right;
-                                }
-
-                                .close:hover,
-                                .close:focus {
-                                    color: #000;
-                                    text-decoration: none;
-                                    cursor: pointer;
-                                }
-                            </style>
-
-                            <div id="myModal" class="modal">
-
-                                <!-- Modal content -->
-                                <div class="modal-content">
-                                    <span class="close">&times;</span>
-
-                                    <div style="width:100%; text-align:right">
-                                        <p class="label label-info" style="display: inline !important;"><span class="certificate_no"></span></p>
-                                    </div>
-
-
-                                    <p style="font-size: small;">
-                                        <span class="comment"></span>
-                                    </p>
-                                </div>
-
-                            </div>
-                            <script>
-                                var data = <?php echo json_encode($resultArr) ?>
-
-                                // Get the modal
-                                var modal = document.getElementById("myModal");
-                                // Get the <span> element that closes the modal
-                                var span = document.getElementsByClassName("close")[0];
-
-                                function showDetails(id) {
-                                    // console.log(modal)
-                                    // console.log(modal.getElementsByClassName("data"))
-                                    var mydata = undefined
-                                    data.forEach(item => {
-                                        if (item["certificate_no"] == id) {
-                                            mydata = item;
-                                        }
-                                    })
-
-                                    var keys = Object.keys(mydata)
-                                    keys.forEach(key => {
-                                        var span = modal.getElementsByClassName(key)
-                                        if (span.length > 0)
-                                            span[0].innerHTML = mydata[key];
-                                    })
-                                    modal.style.display = "block";
-                                }
-                                // When the user clicks the button, open the modal 
-                                // When the user clicks on <span> (x), close the modal
-                                span.onclick = function() {
-                                    modal.style.display = "none";
-                                }
-                                // When the user clicks anywhere outside of the modal, close it
-                                window.onclick = function(event) {
-                                    if (event.target == modal) {
-                                        modal.style.display = "none";
-                                    }
-                                }
-                            </script>
-
                         </div>
 
                     </div>
@@ -898,6 +663,36 @@ include("../../util/email.php");
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
+    <script>
+        function toggleComment(certificateNo) {
+            const moreText = document.getElementById('more-text-' + certificateNo);
+            const toggleText = document.getElementById('toggle-text-' + certificateNo);
+            const toggleTextMore = document.getElementById('toggle-text-more-' + certificateNo);
+
+            if (moreText.classList.contains('d-none')) {
+                moreText.classList.remove('d-none');
+                toggleText.classList.add('d-none');
+                toggleTextMore.classList.remove('d-none');
+            } else {
+                moreText.classList.add('d-none');
+                toggleText.classList.remove('d-none');
+                toggleTextMore.classList.add('d-none');
+            }
+        }
+    </script>
 
 </body>
 
