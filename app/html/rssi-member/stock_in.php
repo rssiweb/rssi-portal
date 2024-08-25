@@ -14,19 +14,40 @@ if (!isLoggedIn("aid")) {
 // Query to fetch the total added and distributed counts
 $query = "
     SELECT
-        i.item_id,
-        i.item_name,
-        u.unit_id,
-        u.unit_name,
-        COALESCE(SUM(a.quantity_received), 0) AS total_added_count,
-        COALESCE(SUM(d.quantity_distributed), 0) AS total_distributed_count,
-        (COALESCE(SUM(a.quantity_received), 0) - COALESCE(SUM(d.quantity_distributed), 0)) AS in_stock
-    FROM stock_item i
-    JOIN stock_add a ON i.item_id = a.item_id
-    JOIN stock_item_unit u ON u.unit_id = a.unit_id
-    LEFT JOIN stock_out d ON i.item_id = d.item_distributed AND u.unit_id = d.unit
-    GROUP BY i.item_id, i.item_name, u.unit_id, u.unit_name
-    ORDER BY i.item_id, u.unit_id;
+    i.item_id,
+    i.item_name,
+    u.unit_id,
+    u.unit_name,
+    COALESCE((SELECT SUM(quantity_received) 
+              FROM stock_add 
+              WHERE item_id = i.item_id 
+              AND unit_id = u.unit_id), 0) AS total_added_count,
+    COALESCE((SELECT SUM(quantity_distributed) 
+              FROM stock_out 
+              WHERE item_distributed = i.item_id 
+              AND unit = u.unit_id), 0) AS total_distributed_count,
+    (COALESCE((SELECT SUM(quantity_received) 
+              FROM stock_add 
+              WHERE item_id = i.item_id 
+              AND unit_id = u.unit_id), 0) 
+     - 
+     COALESCE((SELECT SUM(quantity_distributed) 
+              FROM stock_out 
+              WHERE item_distributed = i.item_id 
+              AND unit = u.unit_id), 0)) AS in_stock
+FROM 
+    stock_item i
+JOIN 
+    stock_item_unit u 
+ON 
+    EXISTS (
+        SELECT 1 
+        FROM stock_add a 
+        WHERE a.item_id = i.item_id 
+        AND a.unit_id = u.unit_id
+    )
+ORDER BY 
+    i.item_id, u.unit_id;
 ";
 $result = pg_query($con, $query);
 
