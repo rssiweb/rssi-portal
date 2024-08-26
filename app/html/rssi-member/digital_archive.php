@@ -41,6 +41,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
         'aadhar_card' => $_FILES['aadhar_card'] ?? null,
         'offer_letter' => $_FILES['offer_letter'] ?? null,
         'previous_employment_information' => $_FILES['previous_employment_information'] ?? null,
+        'additional_doc' => $_FILES['additional_doc'] ?? null,
     ];
 
     // Get other form data
@@ -57,7 +58,14 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
             $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
 
             if ($doclink !== null) {
-                $certificateName = ($inputName === 'additional_certificate') ? $_POST['additional_certificate_name'] : null;
+                // Determine the certificate name based on the input name
+                if ($inputName === 'additional_certificate') {
+                    $certificateName = $_POST['additional_certificate_name'] ?? null;
+                } elseif ($inputName === 'additional_doc') {
+                    $certificateName = $_POST['additional_doc_name'] ?? null;
+                } else {
+                    $certificateName = null;
+                }
 
                 $insertQuery = "INSERT INTO archive (file_name, file_path, uploaded_for, uploaded_by, uploaded_on, transaction_id, certificate_name)
                                 VALUES ($1, $2, $3, $4, $5, $6, $7)";
@@ -75,6 +83,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
 $fileNamesMapping = array(
     "aadhar_card" => "Aadhar Card",
     "additional_certificate" => "Additional Certificate",
+    "additional_doc" => "Additional Document",
     "graduation" => "Graduation",
     "highschool" => "High School",
     "intermediate" => "Intermediate",
@@ -405,6 +414,25 @@ function generateRequiredAttribute($field)
                                             <input class="form-control" type="file" id="offer_letter" name="offer_letter" <?php echo isset($fieldStatusValues['Offer Letter']) ? $fieldStatusValues['Offer Letter'] : ''; ?> required>
                                         </div>
                                     </div>
+
+                                    <div class="row mt-2">
+                                        <!-- Additional doc -->
+                                        <div class="col-md-4">
+                                            <label for="additional_doc" class="form-label">Additional document:</label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input class="form-control" type="file" id="additional_doc" name="additional_doc" <?php echo isset($fieldStatusValues['Additional Document']) ? $fieldStatusValues['Additional Document'] : ''; ?>>
+                                        </div>
+                                        <!-- Certificate Name Input Field -->
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="additional_doc_name" name="additional_doc_name">
+                                                <option value="">Select Document Type</option>
+                                                <option value="caste_certificate">Caste Certificate</option>
+                                                <!-- Add more options as needed -->
+                                            </select>
+                                        </div>
+
+                                    </div>
                                     <hr>
                                     <button type="submit" id="submit_button" class="btn btn-primary">Submit</button>
                                 </form>
@@ -479,17 +507,29 @@ function generateRequiredAttribute($field)
     <!-- Add this script in your HTML file -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var additionalCertificateInput = document.getElementById('additional_certificate');
-            var additionalCertificateNameInput = document.getElementById('additional_certificate_name');
-
-            additionalCertificateInput.addEventListener('change', function() {
-                if (additionalCertificateInput.files.length > 0) {
-                    // If a file is selected, add the required attribute to the certificate name input
-                    additionalCertificateNameInput.setAttribute('required', 'required');
+            function toggleRequiredAttribute(fileInput, nameInput) {
+                if (fileInput.files.length > 0) {
+                    nameInput.setAttribute('required', 'required');
                 } else {
-                    // If no file is selected, remove the required attribute from the certificate name input
-                    additionalCertificateNameInput.removeAttribute('required');
+                    nameInput.removeAttribute('required');
                 }
+            }
+
+            // Select your file input elements
+            var additionalCertificateInput = document.getElementById('additional_certificate');
+            var additionalDocumentInput = document.getElementById('additional_doc');
+
+            // Select your corresponding certificate name inputs
+            var additionalCertificateNameInput = document.getElementById('additional_certificate_name');
+            var additionalDocumentNameInput = document.getElementById('additional_doc_name');
+
+            // Attach event listeners to the file inputs
+            additionalCertificateInput.addEventListener('change', function() {
+                toggleRequiredAttribute(additionalCertificateInput, additionalCertificateNameInput);
+            });
+
+            additionalDocumentInput.addEventListener('change', function() {
+                toggleRequiredAttribute(additionalDocumentInput, additionalDocumentNameInput);
             });
         });
     </script>
