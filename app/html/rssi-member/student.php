@@ -235,11 +235,11 @@ $classlist = [
     }
   </style>
   <!-- CSS Library Files -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
-    <!-- JavaScript Library Files -->
-    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+  <!-- JavaScript Library Files -->
+  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+  <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 </head>
 
 <body>
@@ -552,229 +552,76 @@ $classlist = [
                       </p> -->
                       <p>Remarks: <span class="remarks"></span></p>
 
-                      <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
+                      <script>
+                        var data = <?php echo json_encode($resultArr) ?>;
+                        var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
 
-                        <p><strong>Fee</strong></p>
-                        <!-- <span style="display: inline !important;" class="badge bg-secondary">PAID&nbsp;-&nbsp;<span class="maxmonth"></span></span> -->
+                        // Get the modal
+                        var modal = document.getElementById("myModal");
+                        // Get the <span> element that closes the modal
+                        var closedetails = [
+                          document.getElementById("closedetails-header"),
+                          document.getElementById("closedetails-footer")
+                        ];
 
-                        <form name="payment" action="#" method="POST">
-                          <input type="hidden" name="form-type" type="text" value="payment">
-                          <input type="hidden" class="form-control" name="studentid" id="studentid" type="text" value="">
-                          <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
+                        function showDetails(id) {
+                          var mydata = undefined
+                          data.forEach(item => {
+                            if (item["student_id"] == id) {
+                              mydata = item;
+                            }
+                          })
 
-                          <select name="year" id="year" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                            <!-- <option value="" disabled selected hidden>Select Year</option> -->
-                          </select>
+                          var keys = Object.keys(mydata)
+                          keys.forEach(key => {
+                            var span = modal.getElementsByClassName(key)
+                            if (span.length > 0)
+                              span[0].innerHTML = mydata[key];
+                          })
+                          modal.style.display = "block";
 
-                          <select name="ptype" id="ptype" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                            <option value="" disabled selected hidden>Select Type</option>
-                            <option value="Fees" selected>Fees</option>
-                            <option value="Admission Fee">Admission Fee</option>
-                            <option value="Fine">Fine</option>
-                            <option value="Uniform">Uniform</option>
-                            <option value="ID Card">ID Card</option>
-                          </select>
+                          //Print something start
 
-                          <select name="month" id="month" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                            <option value="" disabled selected hidden>Select Month</option>
-                            <option value="1">January</option>
-                            <option value="2">February</option>
-                            <option value="3">March</option>
-                            <option value="4">April</option>
-                            <option value="5">May</option>
-                            <option value="6">June</option>
-                            <option value="7">July</option>
-                            <option value="8">August</option>
-                            <option value="9">September</option>
-                            <option value="10">October</option>
-                            <option value="11">November</option>
-                            <option value="12">December</option>
-                          </select>
-
-                          <input type="number" name="fees" id="fees" class="form-control" style="display: -webkit-inline-box; width:15vh;" placeholder="Amount" required>
-                          <button type="submit" id="yes" class="btn btn-danger btn-sm " style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none">Update</button>
-                        </form>
-                        <hr>
-                        <p><strong>Distributed items and supplies</strong></p>
-                        <form name="distribution" action="#" method="POST">
-                          <input type="hidden" name="form-type" value="distribution">
-                          <input type="hidden" class="form-control" name="distributedto" id="distributedto" value="">
-                          <input type="hidden" class="form-control" name="distributedby" id="distributedby" value="">
-                          <div style="display: flex; flex-direction: row; align-items: center;">
-                            <select name="items" id="items" class="form-select" style="display: -webkit-inline-box; width:20vh;  margin-right: 10px;" required>
-                              <option value="" disabled selected hidden>Select Item</option>
-                              <option value="Uniform">Uniform</option>
-                              <option value="ID Card">ID Card</option>
-                              <option value="Notebook">Notebook</option>
-                              <option value="Pen">Pen</option>
-                              <option value="Pencil">Pencil</option>
-                              <option value="Sanitary Pads">Sanitary Pads</option>
-                            </select>
-                            <input type="number" name="quantity" id="quantity" class="form-control" style="width: 15vh; margin-right: 10px;" placeholder="Quantity" required>
-                            <input type="date" name="issuance_date" id="issuance_date" class="form-control" style="width: 15vh; margin-right: 10px;" placeholder="Issuance Date" required>
-                            <button type="submit" id="submit_distribution" class="btn btn-danger btn-sm" style="outline: none;">Update</button>
-                          </div>
-                        </form>
-                        <br>
-                        <script>
-                          var currentYear = new Date().getFullYear();
-                          for (var i = 0; i < 5; i++) {
-                            var year = currentYear;
-                            //next.toString().slice(-2)
-                            $('#year').append(new Option(year));
-                            currentYear--;
+                          var status = document.getElementById("status")
+                          status.innerHTML = mydata["filterstatus"]
+                          if (mydata["filterstatus"] === "Active") {
+                            status.classList.add("bg-success")
+                            status.classList.remove("bg-danger")
+                          } else {
+                            status.classList.remove("bg-success")
+                            status.classList.add("bg-danger")
                           }
-                        </script>
-                        <div class="modal-footer">
-                          <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
+                          // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
+                          //Print something END
+                          var profileimage = document.getElementById("profileimage")
+                          profileimage.src = mydata["photourl"]
+
+                          var studentid = document.getElementById("studentid")
+                          studentid.value = mydata["student_id"]
+
+                          var collectedby = document.getElementById("collectedby")
+                          collectedby.value = aid
+
+                          var distributedto = document.getElementById("distributedto")
+                          distributedto.value = mydata["student_id"]
+                          var distributedby = document.getElementById("distributedby")
+                          distributedby.value = aid
+                        }
+
+                        closedetails.forEach(function(element) {
+                          element.addEventListener("click", closeModal);
+                        });
+
+                        function closeModal() {
+                          var modal1 = document.getElementById("myModal");
+                          modal1.style.display = "none";
+                        }
+                      </script>
+
                     </div>
                   </div>
-                </div>
+                </div><!-- End Reports -->
               </div>
-            <?php } ?>
-            <script>
-              const scriptURL = 'payment-api.php';
-              const paymentForm = document.forms['payment'];
-              const distributionForm = document.forms['distribution'];
-
-              // Automatically show the modal when the form is submitted
-              const showModal = () => {
-                $('#myModal_p').modal({
-                  backdrop: 'static',
-                  keyboard: false
-                });
-                $('#myModal_p').modal('show');
-              };
-
-              // Automatically hide the modal when the submission is complete
-              const hideModal = () => {
-                $('#myModal_p').modal('hide');
-              };
-
-              paymentForm.addEventListener('submit', e => {
-                e.preventDefault();
-
-                showModal(); // Show the modal when the form is submitted
-
-                fetch(scriptURL, {
-                    method: 'POST',
-                    body: new FormData(paymentForm)
-                  })
-                  .then(response => response.text())
-                  .then(result => {
-                    hideModal(); // Hide the modal when the submission is complete
-
-                    if (result === 'success') {
-                      alert("Fee has been deposited successfully.");
-                      location.reload();
-                    } else {
-                      alert("Failed to deposit fee. Please try again later or contact our support team for assistance.");
-                    }
-                  })
-                  .catch(error => {
-                    hideModal(); // Hide the modal in case of an error
-                    console.error('Error!', error.message);
-                  });
-              });
-
-              distributionForm.addEventListener('submit', e => {
-                e.preventDefault();
-
-                showModal(); // Show the modal when the form is submitted
-
-                fetch(scriptURL, {
-                    method: 'POST',
-                    body: new FormData(distributionForm)
-                  })
-                  .then(response => response.text())
-                  .then(result => {
-                    hideModal(); // Hide the modal when the submission is complete
-
-                    if (result === 'success') {
-                      alert("Record has been updated.");
-                      location.reload();
-                    } else {
-                      alert("Error updating record. Please try again later or contact support.");
-                    }
-                  })
-                  .catch(error => {
-                    hideModal(); // Hide the modal in case of an error
-                    console.error('Error!', error.message);
-                  });
-              });
-            </script>
-
-            <script>
-              var data = <?php echo json_encode($resultArr) ?>;
-              var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
-
-              // Get the modal
-              var modal = document.getElementById("myModal");
-              // Get the <span> element that closes the modal
-              var closedetails = [
-                document.getElementById("closedetails-header"),
-                document.getElementById("closedetails-footer")
-              ];
-
-              function showDetails(id) {
-                var mydata = undefined
-                data.forEach(item => {
-                  if (item["student_id"] == id) {
-                    mydata = item;
-                  }
-                })
-
-                var keys = Object.keys(mydata)
-                keys.forEach(key => {
-                  var span = modal.getElementsByClassName(key)
-                  if (span.length > 0)
-                    span[0].innerHTML = mydata[key];
-                })
-                modal.style.display = "block";
-
-                //Print something start
-
-                var status = document.getElementById("status")
-                status.innerHTML = mydata["filterstatus"]
-                if (mydata["filterstatus"] === "Active") {
-                  status.classList.add("bg-success")
-                  status.classList.remove("bg-danger")
-                } else {
-                  status.classList.remove("bg-success")
-                  status.classList.add("bg-danger")
-                }
-                // laddu.innerHTML = mydata["student_id"] + mydata["student_id"]
-                //Print something END
-                var profileimage = document.getElementById("profileimage")
-                profileimage.src = mydata["photourl"]
-
-                var studentid = document.getElementById("studentid")
-                studentid.value = mydata["student_id"]
-
-                var collectedby = document.getElementById("collectedby")
-                collectedby.value = aid
-
-                var distributedto = document.getElementById("distributedto")
-                distributedto.value = mydata["student_id"]
-                var distributedby = document.getElementById("distributedby")
-                distributedby.value = aid
-              }
-
-              closedetails.forEach(function(element) {
-                element.addEventListener("click", closeModal);
-              });
-
-              function closeModal() {
-                var modal1 = document.getElementById("myModal");
-                modal1.style.display = "none";
-              }
-            </script>
-
-            </div>
-          </div>
-        </div><!-- End Reports -->
-      </div>
     </section>
     <!-- Bootstrap Modal -->
     <div class="modal fade" id="myModal_p" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

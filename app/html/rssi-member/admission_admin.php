@@ -7,6 +7,7 @@ include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -16,8 +17,8 @@ validation();
 <?php
 // Retrieve student ID from form input
 @$student_id = trim($_GET['student_id']);
-// Query database for student information based on ID
 
+// Query database for student information based on ID
 $result = pg_query($con, "SELECT * FROM rssimyprofile_student WHERE student_id = '$student_id'");
 $resultArr = pg_fetch_all($result);
 
@@ -33,10 +34,10 @@ if (@$_POST['form-type'] == "admission_admin") {
     $student_name = $_POST['student-name'];
     $date_of_birth = $_POST['date-of-birth'];
     $gender = $_POST['gender'];
-    $doclink_student_photo = $_POST['student-photo'];
+
     $aadhar_available = $_POST['aadhar-card'];
-    $aadhar_card = $_POST['aadhar-number'];
-    $doclink_aadhar_card = $_POST['aadhar-card-upload'];
+    $aadhar_card = $_POST['aadhar-number']; // This should be a string, not an array
+
     $guardian_name = $_POST['guardian-name'];
     $guardian_relation = $_POST['relation'];
     $guardian_aadhar = $_POST['guardian-aadhar-number'];
@@ -70,7 +71,7 @@ if (@$_POST['form-type'] == "admission_admin") {
         $effective_from = $_POST['effectivefrom'];
         $effective_from_str = "effectivefrom='$effective_from'";
     } else {
-        $effective_from_str = "effectivefrom=null";
+        $effective_from_str = "effectivefrom=NULL";
     }
 
     $remarks = htmlspecialchars($_POST['remarks'], ENT_QUOTES, 'UTF-8');
@@ -78,12 +79,85 @@ if (@$_POST['form-type'] == "admission_admin") {
     $updated_by = $_POST['updatedby'];
     $student_id = $_POST['student-id'];
     @$timestamp = date('Y-m-d H:i:s');
+    $student_photo = $_FILES['student-photo'] ?? null;
+    $aadhar_card_upload = $_FILES['aadhar-card-upload'] ?? null;
 
-    @$student_update = "UPDATE rssimyprofile_student SET type_of_admission='$type_of_admission', studentname='$student_name', dateofbirth='$date_of_birth', gender='$gender', student_photo_raw='$doclink_student_photo', aadhar_available='$aadhar_available', studentaadhar='$aadhar_card', upload_aadhar_card='$doclink_aadhar_card', guardiansname='$guardian_name', relationwithstudent='$guardian_relation', guardianaadhar='$guardian_aadhar', stateofdomicile='$state_of_domicile', postaladdress='$postal_address', contact='$telephone_number', emailaddress='$email_address', preferredbranch='$preferred_branch', class='$class', schooladmissionrequired='$school_admission_required', nameoftheschool='$school_name', nameoftheboard='$board_name', medium='$medium', familymonthlyincome='$family_monthly_income', totalnumberoffamilymembers='$total_family_members', payment_mode='$payment_mode', c_authentication_code='$c_authentication_code', transaction_id='$transaction_id', student_id='$student_id', nameofthesubjects='$subject_select', module='$module', category='$category', photourl='$photo_url', id_card_issued='$id_card_issued', filterstatus='$status', remarks='$remarks', $effective_from_str, scode='$scode', updated_by='$updated_by', age='$age', updated_on='$timestamp', payment_type='$payment_type', access_category='$access_category' WHERE student_id = '$student_id'";
+    $doclink_student_photo = null;
+    if (!empty($student_photo['name'])) {
+        $filename = "photo_" . $student_id . "_" . $timestamp;
+        $parent = '1ziDLJgSG7zTYG5i0LzrQ6pNq9--LQx3_t0_SoSR2tSJW8QTr-7EkPUBR67zn0os5NRfgeuDH';
+        $doclink_student_photo = uploadeToDrive($student_photo, $parent, $filename);
+    }
+
+    $doclink_aadhar_card = null;
+    if (!empty($aadhar_card_upload['name'])) {
+        $filename = "aadhar_" . $student_id . "_" . $timestamp;
+        $parent = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+        $doclink_aadhar_card = uploadeToDrive($aadhar_card_upload, $parent, $filename);
+    }
+
+    // Build the SQL query conditionally
+    $fields = [
+        "type_of_admission='$type_of_admission'",
+        "studentname='$student_name'",
+        "dateofbirth='$date_of_birth'",
+        "gender='$gender'",
+        "aadhar_available='$aadhar_available'",
+        "studentaadhar=" . ($aadhar_card ? "'$aadhar_card'" : "NULL"), // Handle aadhar card
+        "guardiansname='$guardian_name'",
+        "relationwithstudent='$guardian_relation'",
+        "guardianaadhar='$guardian_aadhar'",
+        "stateofdomicile='$state_of_domicile'",
+        "postaladdress='$postal_address'",
+        "contact='$telephone_number'",
+        "emailaddress='$email_address'",
+        "preferredbranch='$preferred_branch'",
+        "class='$class'",
+        "schooladmissionrequired='$school_admission_required'",
+        "nameoftheschool='$school_name'",
+        "nameoftheboard='$board_name'",
+        "medium='$medium'",
+        "familymonthlyincome='$family_monthly_income'",
+        "totalnumberoffamilymembers='$total_family_members'",
+        "payment_mode='$payment_mode'",
+        "c_authentication_code='$c_authentication_code'",
+        "transaction_id='$transaction_id'",
+        "student_id='$student_id'",
+        "nameofthesubjects='$subject_select'",
+        "module='$module'",
+        "category='$category'",
+        "photourl='$photo_url'",
+        "id_card_issued='$id_card_issued'",
+        "filterstatus='$status'",
+        "remarks='$remarks'",
+        $effective_from_str,
+        "scode='$scode'",
+        "updated_by='$updated_by'",
+        "age='$age'",
+        "updated_on='$timestamp'",
+        "payment_type='$payment_type'",
+        "access_category='$access_category'"
+    ];
+
+    // Include file links only if they are set
+    if ($doclink_student_photo) {
+        $fields[] = "student_photo_raw='$doclink_student_photo'";
+    }
+
+    if ($doclink_aadhar_card) {
+        $fields[] = "upload_aadhar_card='$doclink_aadhar_card'";
+    }
+
+    // Ensure fields are strings and concatenate them
+    $field_string = implode(", ", $fields);
+
+    @$student_update = "UPDATE rssimyprofile_student SET $field_string WHERE student_id = '$student_id'";
     $resultt = pg_query($con, $student_update);
     $cmdtuples = pg_affected_rows($resultt);
 }
 ?>
+<!doctype html>
+<html lang="en">
 
 <head>
     <!-- Google tag (gtag.js) -->
@@ -368,10 +442,19 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <label for="student-photo">Upload Student Photo:</label>
                                     </td>
                                     <td>
-                                        <input type="text" class="form-control" id="student-photo" name="student-photo" value="<?php echo $array['student_photo_raw'] ?>" readonly>
-                                        <small id="student-photo-help" class="form-text text-muted">Please upload a recent
-                                            passport
-                                            size photograph of the student.</small>
+                                        <!-- File input for uploading a new photo -->
+                                        <input type="file" class="form-control" id="student-photo" name="student-photo" accept="image/*">
+
+                                        <!-- Display existing photo link if available -->
+                                        <?php if (!empty($array['student_photo_raw'])): ?>
+                                            <div>
+                                                <a href="<?php echo htmlspecialchars($array['student_photo_raw']); ?>" target="_blank">View Current Photo</a>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <small id="student-photo-help" class="form-text text-muted">
+                                            Please upload a recent passport size photograph of the student.
+                                        </small>
                                     </td>
                                 </tr>
 
@@ -415,10 +498,19 @@ if (@$_POST['form-type'] == "admission_admin") {
                                             <label for="aadhar-card-upload">Upload Aadhar Card:</label>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" id="aadhar-card-upload" name="aadhar-card-upload" value="<?php echo $array['upload_aadhar_card'] ?>">
-                                            <small id="aadhar-card-upload-help" class="form-text text-muted">Please upload a
-                                                scanned
-                                                copy of the Aadhar card (if available).</small>
+                                            <!-- File input for uploading a new Aadhar card -->
+                                            <input type="file" class="form-control" id="aadhar-card-upload" name="aadhar-card-upload">
+
+                                            <!-- Display existing Aadhar card link if available -->
+                                            <?php if (!empty($array['upload_aadhar_card'])): ?>
+                                                <div>
+                                                    <a href="<?php echo htmlspecialchars($array['upload_aadhar_card']); ?>" target="_blank">View Current Aadhar Card</a>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <small id="aadhar-card-upload-help" class="form-text text-muted">
+                                                Please upload a scanned copy of the Aadhar card (if available).
+                                            </small>
                                         </td>
                                     </tr>
                                     <tr>
@@ -965,8 +1057,9 @@ if (@$_POST['form-type'] == "admission_admin") {
                         <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Last
                             updated
                             on <?php echo $array['updated_on'] ?> by <?php echo $array['updated_by'] ?></p>
+                    </fieldset>
                 </form>
-                </fieldset>
+
             <?php } ?>
         <?php
         } else if ($student_id == null) {
