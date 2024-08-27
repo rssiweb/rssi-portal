@@ -62,21 +62,24 @@ switch ($view) {
             d.timestamp,
             d.distributed_by
         ORDER BY d.timestamp desc;
-    ";    
+    ";
         break;
     case 'user_distribution':
         $query = "
-            SELECT
-                d.distributed_to,
-                i.item_name,
-                COALESCE(SUM(d.quantity_distributed), 0) AS total_distributed_count,
-                u.unit_name
-            FROM stock_out d
-            JOIN stock_item i ON i.item_id = d.item_distributed
-            JOIN stock_item_unit u ON u.unit_id = d.unit
-            GROUP BY d.distributed_to, i.item_id, i.item_name, u.unit_id, u.unit_name
-            ORDER BY d.distributed_to, i.item_id, u.unit_id;
-        ";
+    SELECT
+        d.distributed_to,
+        COALESCE(m.fullname, s.studentname) AS distributed_to_name,
+        i.item_name,
+        COALESCE(SUM(d.quantity_distributed), 0) AS total_distributed_count,
+        u.unit_name
+    FROM stock_out d
+    JOIN stock_item i ON i.item_id = d.item_distributed
+    JOIN stock_item_unit u ON u.unit_id = d.unit
+    LEFT JOIN rssimyaccount_members m ON m.associatenumber = d.distributed_to
+    LEFT JOIN rssimyprofile_student s ON s.student_id = d.distributed_to
+    GROUP BY d.distributed_to, m.fullname, s.studentname, i.item_id, i.item_name, u.unit_id, u.unit_name
+    ORDER BY d.distributed_to, i.item_id, u.unit_id;
+";
         break;
     default:
         echo 'Invalid view.';
