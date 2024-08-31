@@ -141,6 +141,11 @@
             </a>
           </li>
           <li>
+            <a id="exception-portalink" href="exception-portal.php">
+              <span>Raise Exception</span>
+            </a>
+          </li>
+          <li>
             <a id="documentLink" href="document.php">
               <span>My Document</span>
             </a>
@@ -668,7 +673,12 @@
         id: 'stockmanagement',
         linkId: 'inventory-insights',
         url: 'inventory-insights.php'
-      }
+      },
+      {
+        id: 'myservices',
+        linkId: 'exception-portalink',
+        url: 'exception-portal.php'
+      },
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
     ];

@@ -220,7 +220,7 @@ if (!$result) {
                                 </div>
                                 <div>
                                     <span>Category:</span>
-                                    <span class="box">General</span>
+                                    <span class="box"><?php echo $array['caste'] ?></span>
                                 </div>
 
                                 <div class="row colored-area">
