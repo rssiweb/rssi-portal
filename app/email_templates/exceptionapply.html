@@ -1,0 +1,44 @@
+Exception Reference ID: {{id}} has been submitted successfully and is pending with HR for approval
+<html>
+
+<head>
+    <style>
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+    </style>
+</head>
+
+<body>
+    <p>Dear {{applicantname}} ({{submittedBy}}),<br><br>Exception Reference ID: {{id}} has been submitted successfully
+        and is peanding with HR for approval.
+        <br><br>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Reference ID</th>
+                <th scope="col">Applicant ID</th>
+                <th scope="col">Type</th>
+                <th scope="col">Date</th>
+            </tr>
+            <tr>
+                <td>{{id}}</td>
+                <td>{{applicantname}} ({{submittedBy}})</td>
+                <td>{{exceptionType}}<br>{{reason}}</td>
+                <td>{{dateTime}}</td>
+            </tr>
+        </thead>
+    </table>
+
+    <p>You can view the status of your exception request at any time by navigating to My Account > Raise Exception >
+        Exception Dashboard. For further information, you may contact your HR.</p>
+
+    <p>--RSSI HR team</p>
+
+    <p>This is an automated message.</p>
+</body>
+
+</html>

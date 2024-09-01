@@ -509,6 +509,22 @@ if ($formtype == "gemsredeem") {
   $result = pg_query($con, $gemsredeem);
 }
 
+if ($formtype == "exceptionreviewform") {
+  @$reviewer_id = $_POST['reviewer_id'];
+  @$exceptionid = $_POST['exceptionid'];
+  @$exception_status = $_POST['exception_status'];
+  @$reviewer_remarks = $_POST['reviewer_remarks'];
+  $now = date('Y-m-d H:i:s');
+  $exceptionreview = "UPDATE exception_requests SET  reviewer_id = '$reviewer_id',  status = '$exception_status', reviewer_remarks = '$reviewer_remarks', reviewer_status_updated_on = '$now' WHERE id = '$exceptionid'";
+  $result = pg_query($con, $exceptionreview);
+  if ($result) {
+    $cmdtuples = pg_affected_rows($result);
+    if ($cmdtuples == 1)
+      echo "success";
+  } else
+    echo "failed";
+}
+
 if ($formtype == "archiveapproval") {
   @$reviewer_id = $_POST['reviewer_id'];
   @$doc_idd = $_POST['doc_idd'];

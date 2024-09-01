@@ -390,34 +390,6 @@
 
   </aside><!-- End Sidebar-->
 
-  <!-- <script>
-    var inactivityTime = function() {
-      var time;
-      document.onload = resetTimer;
-      document.onmousemove = resetTimer;
-      document.onmousedown = resetTimer; // touchscreen presses
-      document.ontouchstart = resetTimer;
-      document.onclick = resetTimer; // touchpad clicks
-      document.onkeydown = resetTimer; // onkeypress is deprectaed
-      document.addEventListener('scroll', resetTimer, true); // improved; see comments
-
-      function logout() {
-        alert("Your session has expired, please login again.")
-        location.href = 'logout.php'
-        window.close()
-      }
-
-      function resetTimer() {
-        clearTimeout(time);
-        time = setTimeout(logout, 1800000)
-        // 1000 milliseconds = 1 second
-      }
-    };
-    window.addEventListener("load", function() {
-      inactivityTime();
-    }, false);
-  </script> -->
-
   <script>
     // Get the current page URL
     const currentPage = window.location.href;
@@ -678,6 +650,11 @@
         id: 'myservices',
         linkId: 'exception-portalink',
         url: 'exception-portal.php'
+      },
+      {
+        id: 'myservices',
+        linkId: 'exception-portalink',
+        url: 'exception_admin.php'
       },
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },

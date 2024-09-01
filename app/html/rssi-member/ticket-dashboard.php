@@ -369,12 +369,12 @@ if (isset($_POST['category_update'])) {
                                                         <div class="row mb-4">
                                                             <!-- Subject -->
                                                             <div class="mb-3">
-                                                                <h4 class="fw-bold"><?php echo htmlspecialchars($ticket['short_description']); ?></h4>
+                                                                <h4 class="fw-bold"><?php echo $ticket['short_description']; ?></h4>
                                                             </div>
 
                                                             <!-- Description -->
                                                             <div class="mb-3">
-                                                                <p class="mb-0"><?php echo nl2br(htmlspecialchars($ticket['long_description'])); ?></p>
+                                                                <p class="mb-0"><?php echo $ticket['long_description']; ?></p>
                                                             </div>
 
                                                             <!-- Raised for -->

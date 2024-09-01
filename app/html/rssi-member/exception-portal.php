@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $exceptionType = $_POST['exceptionType'];
     $startDateTime = !empty($_POST['startDateTime']) ? $_POST['startDateTime'] : null;
     $endDateTime = !empty($_POST['endDateTime']) ? $_POST['endDateTime'] : null;
-    $reason = $_POST['reason'];
+    $reason = htmlspecialchars($_POST['reason'], ENT_QUOTES, 'UTF-8');
     $submittedBy = $associatenumber; // Replace with actual user information (e.g., session data)
 
     $success = true;
@@ -43,6 +43,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Check if the insertion was successful
     if (!$result) {
         $success = false;
+    }
+    if ($success && $email != "") {
+        sendEmail("exceptionapply", array(
+            "id" => $id,
+            "submittedBy" => $submittedBy,
+            "applicantname" => @$fullname,
+            "dateTime" => !empty($startDateTime)
+                ? @date("d/m/Y g:i a", strtotime($startDateTime))
+                : (!empty($endDateTime) ? @date("d/m/Y g:i a", strtotime($endDateTime)) : ''),
+            "exceptionType" => $exceptionType,
+            "reason" => $reason,
+            "now" => @date("d/m/Y g:i a", strtotime($now))
+        ), $email);
     }
 }
 ?>
@@ -113,7 +126,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     }
                                 </script>
                             <?php } ?>
-
+                            <div class="text-end">
+                                <span class="link-secondary"><a href="exception_admin.php" title="Exception Dashboard">Exception Dashboard</a></span>
+                                <span class="separator">
+                            </div>
                             <div class="container mt-4">
                                 <form name="exception" id="exception" method="post" action="">
                                     <div class="mb-3">

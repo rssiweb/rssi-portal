@@ -1,0 +1,49 @@
+Status Update on Your Exception Request | Reference ID: {{id}}
+<html>
+
+<head>
+    <style>
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+    </style>
+</head>
+
+<body>
+    <p>Dear {{fullname}},</p>
+
+    <p>Your exception request has been {{exception_status}}.</p>
+    <br>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Reference ID</th>
+                <th scope="col">Applicant ID</th>
+                <th scope="col">Type</th>
+                <th scope="col">Date</th>
+                <th scope="col">Status - HR remarks</th>
+            </tr>
+            <tr>
+                <td>{{id}}</td>
+                <td>{{fullname}} ({{submitted_by}})</td>
+                <td>{{exception_type}}<br>{{reason}}</td>
+                <td>{{date_time}}</td>
+                <td>{{exception_status}} — {{reviewer_remarks}}</td>
+            </tr>
+        </thead>
+    </table>
+    <br>
+    <p>You can view the status of your exception request at any time by navigating to My Account > Raise Exception >
+        Exception Dashboard. For further information, you may contact your HR.</p>
+
+    <p>--RSSI HR team</p>
+
+    <p>This is an automated message.</p>
+
+</body>
+
+</html>
