@@ -1,0 +1,27 @@
+Confirmation of Ticket Submission - Ticket ID: {{ticket_id}}
+<html>
+
+<body>
+    <p>Dear {{ticket_raisedby_name}} ({{ticket_raisedby_id}}),
+        <br><br>Your ticket (ID: {{ticket_id}}) has been successfully submitted on {{timestamp}}. Please find the
+        details of your ticket below:
+        <br><br>
+        <b>Ticket Details:</b>
+    <ul>
+        <li>Short Description: {{short_description}}</li>
+        <li>Severity Level: {{severity}}</li>
+        <li>Category: {{category}}</li>
+    </ul>
+
+    <p>Our support team is currently reviewing your request and will get back to you as soon as possible.</p>
+    <p>If you have any additional information or need to make updates regarding this ticket, please use the comment
+        section of your ticket by clicking the link below:</p>
+    <p><a href="https://login.rssi.in/rssi-member/ticket-dashboard.php?ticket_id={{ticket_id}}">Update Your Ticket</a>
+    </p>
+
+    <p>--Support360 Team</p>
+
+    <p>This is an automated message. Please do not reply to this email.</p>
+</body>
+
+</html>
