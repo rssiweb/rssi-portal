@@ -3,6 +3,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
 include("../../util/drive.php");
+include("../../util/email.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -36,6 +37,18 @@ if ($_POST) {
 
     $result = pg_query($con, $query);
     $cmdtuples = pg_affected_rows($result);
+
+    if ($cmdtuples == 1 && $email != "") {
+        sendEmail("ticketcreate", array(
+            "ticket_id" => $ticket_id,
+            "short_description" => $short_description,
+            "severity" => $severity,
+            "category" => $category,
+            "ticket_raisedby_name" => $fullname,
+            "ticket_raisedby_id" => $associatenumber,
+            "timestamp" => @date("d/m/Y g:i a", strtotime($timestamp))
+        ), $email);
+    }
 }
 
 // Query to fetch associates and students

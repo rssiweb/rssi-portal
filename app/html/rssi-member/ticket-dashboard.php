@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
+include("../../util/email.php"); // Make sure you have the email sending function
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -76,10 +77,32 @@ if ($ticket_id) {
         if ($assigned_to) {
             $inserted_by = $_SESSION['aid'];
             handleInsertion($con, "
-                INSERT INTO support_ticket_assignment (ticket_id, assigned_to, assigned_by) 
-                VALUES ($1, $2, $3)
-            ", array($ticket_id, $assigned_to, $inserted_by));
+        INSERT INTO support_ticket_assignment (ticket_id, assigned_to, assigned_by) 
+        VALUES ($1, $2, $3)
+    ", array($ticket_id, $assigned_to, $inserted_by));
+
+            // Send email notification to the newly assigned person
+            $result = pg_query_params($con, "
+        SELECT rm.email, rm.fullname 
+        FROM rssimyaccount_members rm 
+        WHERE rm.associatenumber = $1
+    ", array($assigned_to));
+
+            if ($result) {
+                $assigned_person = pg_fetch_assoc($result);
+                if (!empty($assigned_person['email'])) {
+                    sendEmail("ticketassign", array(
+                        "ticket_id" => $ticket_id,
+                        "assigned_to_name" => $assigned_person['fullname'],
+                        "assigned_to_id" => $assigned_to,
+                        "short_description" => $ticket['short_description'],
+                        "severity" => $ticket['severity'],
+                        "category" => $ticket['category']
+                    ), $assigned_person['email']);
+                }
+            }
         }
+
 
         // Handle new comment submission
         if ($comment) {
@@ -99,6 +122,54 @@ if ($ticket_id) {
             ", array($ticket_id));
             if ($result) {
                 $comments = pg_fetch_all($result);
+            }
+            $latest_comment = ($result) ? pg_fetch_assoc($result) : [];
+            // Send email notification to the commenter
+            if (!empty($latest_comment['commenter_email'])) {
+                sendEmail("ticketcomment_self", array(
+                    "ticket_id" => $ticket_id,
+                    "short_description" => $ticket['short_description'],
+                    "comment" => $latest_comment['comment'],
+                    "commentby_name" => $latest_comment['commenter_name'],
+                    "commentby_id" => $latest_comment['commented_by'],
+                    "timestamp" => @date("d/m/Y g:i a", strtotime($latest_comment['timestamp']))
+                ), $latest_comment['commenter_email']);
+            }
+            // Send email notification to raised by
+            if (!empty($ticket['raised_by_email'])) {
+                sendEmail("ticketcomment_others", array(
+                    "ticket_id" => $ticket_id,
+                    "short_description" => $ticket['short_description'],
+                    "severity" => $ticket['severity'],
+                    "category" => $ticket['category'],
+                    "ticket_raisedby_name" => $ticket['raised_by_name'],
+                    "ticket_raisedby_id" => $ticket['raised_by'],
+                ), $ticket['raised_by_email']);
+            }
+
+            // Fetch the latest assigned_to person for the ticket and their details
+            $result = pg_query_params($con, "
+    SELECT sta.assigned_to, rm.email, rm.fullname 
+    FROM support_ticket_assignment sta
+    JOIN rssimyaccount_members rm ON sta.assigned_to = rm.associatenumber
+    WHERE sta.ticket_id = $1
+    ORDER BY sta.timestamp DESC
+    LIMIT 1
+", array($ticket_id));
+
+            if ($result && pg_num_rows($result) > 0) { // Check if the query result is valid and not empty
+                $assigned_person = pg_fetch_assoc($result);
+                $assigned_to = $assigned_person['assigned_to']; // Fetch the assigned_to value from the result
+                if (!empty($assigned_person['email'])) {
+                    sendEmail("ticketcomment_others", array(
+                        "ticket_id" => $ticket_id,
+                        "short_description" => $ticket['short_description'],
+                        "severity" => $ticket['severity'],
+                        "category" => $ticket['category'],
+                        "ticket_assigned_to_name" => $assigned_person['fullname'],
+                        "ticket_assigned_to_id" => $assigned_to, // Now $assigned_to should have the correct value
+                    ), $assigned_person['email']);
+                }
             }
         }
 
@@ -227,6 +298,7 @@ if (isset($_POST['category_update'])) {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
