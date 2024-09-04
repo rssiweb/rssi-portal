@@ -12,7 +12,7 @@ validation();
 
 if ($role == 'Admin') {
     // Fetching the data and populating the $teachers array
-    $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active'";
+    $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active' AND COALESCE(substring(class FROM '^[^-]+'), NULL)='Offline'";
     $result = pg_query($con, $query);
 
     if (!$result) {
@@ -80,6 +80,7 @@ $query = "
             m.filterstatus,
             m.fullname,
             m.engagement,
+            COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode,
             m.effectivedate,
             m.doj,
             d.attendance_date,
@@ -92,10 +93,72 @@ $query = "
                 ELSE 'A'
             END AS attendance_status,
             s.reporting_time,
+            -- Updated logic for leave, exception, and regular late status
             CASE
-                WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
+                -- Leave condition takes the highest priority
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM leavedb_leavedb l
+                    WHERE l.applicantid = m.associatenumber
+                    AND l.status = 'Approved'
+                    AND l.halfday = 0
+                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
+                ) THEN 'Leave'
+
+                -- Exception condition takes the next priority if no leave is applied
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'late-entry'
+                    AND d.attendance_date = DATE(e.start_date_time)
+                ) 
+                AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM (
+                    SELECT e.start_date_time 
+                    FROM exception_requests e 
+                    WHERE e.submitted_by = m.associatenumber 
+                    AND e.status = 'Approved' 
+                    AND e.exception_type = 'late-entry' 
+                    AND d.attendance_date = DATE(e.start_date_time)
+                )::time) THEN 'L'
+                
+                -- Regular late status logic applies only if no leave or exception
+                WHEN NOT EXISTS (
+                    SELECT 1
+                    FROM leavedb_leavedb l
+                    WHERE l.applicantid = m.associatenumber
+                    AND l.status = 'Approved'
+                    AND l.halfday = 0
+                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
+                ) 
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'late-entry'
+                    AND d.attendance_date = DATE(e.start_date_time)
+                )
+                AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
                      AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
-                WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
+                WHEN NOT EXISTS (
+                    SELECT 1
+                    FROM leavedb_leavedb l
+                    WHERE l.applicantid = m.associatenumber
+                    AND l.status = 'Approved'
+                    AND l.halfday = 0
+                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
+                )
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'late-entry'
+                    AND d.attendance_date = DATE(e.start_date_time)
+                )
+                AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
                 ELSE NULL
             END AS late_status
         FROM
@@ -115,7 +178,6 @@ $query = "
                 OR DATE_TRUNC('month', TO_DATE(m.effectivedate, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
             )
             AND DATE_TRUNC('month', TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-            AND m.engagement IN ('Employee', 'Intern', 'Volunteer')
             $idCondition
             $teacherCondition
     )
@@ -124,6 +186,7 @@ $query = "
         filterstatus,
         fullname,
         engagement,
+        mode,
         attendance_date,
         attendance_status,
         punch_in,
@@ -132,11 +195,13 @@ $query = "
         late_status,
         COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
     FROM attendance_data
+    WHERE mode = 'Offline'  -- Use `mode` after `attendance_data` CTE is created
     GROUP BY
         associatenumber,
         filterstatus,
         fullname,
         engagement,
+        mode,
         attendance_date,
         attendance_status,
         punch_in,
@@ -145,7 +210,8 @@ $query = "
         late_status
     ORDER BY
         associatenumber,
-        attendance_date;";
+        attendance_date;
+";
 
 $result = pg_query($con, $query);
 
