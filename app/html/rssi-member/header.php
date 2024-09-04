@@ -317,6 +317,11 @@
             </a>
           </li>
           <li>
+            <a id="exception_adminLink" href="exception_admin.php">
+              <span>Exception Management</span>
+            </a>
+          </li>
+          <li>
             <a id="my_bookLink" href="my_book.php">
               <span>Libary Status</span>
             </a>
@@ -654,6 +659,10 @@
       {
         id: 'myservices',
         linkId: 'exception-portalink',
+        url: 'exception_admin.php'
+      }, {
+        id: 'work',
+        linkId: 'exception_adminLink',
         url: 'exception_admin.php'
       },
       // Add more menu items in the same format
