@@ -180,11 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             endDateTimeField.style.display = 'none';
 
             // Show the appropriate field based on the selected value
-            if (exceptionType === 'late-entry') {
+            if (exceptionType === 'entry') {
                 startDateTimeField.style.display = 'block';
                 document.getElementById('startDateTime').required = true; // Make field required
                 document.getElementById('endDateTime').required = false; // Remove required from the other field
-            } else if (exceptionType === 'early-exit') {
+            } else if (exceptionType === 'exit') {
                 endDateTimeField.style.display = 'block';
                 document.getElementById('endDateTime').required = true; // Make field required
                 document.getElementById('startDateTime').required = false; // Remove required from the other field
