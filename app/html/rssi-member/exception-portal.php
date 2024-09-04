@@ -136,20 +136,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <label for="exceptionType" class="form-label">Exception Type <span class="text-danger">*</span></label>
                                         <select class="form-select" id="exceptionType" name="exceptionType" required onchange="toggleDateTimeFields()">
                                             <option value="" disabled selected>Select exception type</option>
-                                            <option value="late-entry">Late Entry</option>
-                                            <option value="early-exit">Early Exit</option>
+                                            <option value="late-entry">Late Entry / Missed Entry</option>
+                                            <option value="early-exit">Early Exit / Missed Exit</option>
                                         </select>
                                     </div>
 
                                     <!-- Start Date-Time Field -->
                                     <div class="mb-3" id="startDateTimeField" style="display: none;">
-                                        <label for="startDateTime" class="form-label">Late Entry Date-Time <span class="text-danger">*</span></label>
+                                        <label for="startDateTime" class="form-label">Entry Date-Time <span class="text-danger">*</span></label>
                                         <input type="datetime-local" class="form-control" id="startDateTime" name="startDateTime" required>
                                     </div>
 
                                     <!-- End Date-Time Field -->
                                     <div class="mb-3" id="endDateTimeField" style="display: none;">
-                                        <label for="endDateTime" class="form-label">Early Exit Date-Time <span class="text-danger">*</span></label>
+                                        <label for="endDateTime" class="form-label">Exit Date-Time <span class="text-danger">*</span></label>
                                         <input type="datetime-local" class="form-control" id="endDateTime" name="endDateTime" required>
                                     </div>
 

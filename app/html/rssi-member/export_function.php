@@ -921,7 +921,7 @@ function monthly_attd_associate_export()
             m.effectivedate,
             m.doj,
             d.attendance_date,
-            p.punch_in,
+            COALESCE(p.punch_in, (SELECT e.start_date_time FROM exception_requests e WHERE e.submitted_by = m.associatenumber AND e.status = 'Approved' AND e.exception_type = 'late-entry' AND d.attendance_date = DATE(e.start_date_time))) AS punch_in,
             p.punch_out,
             CASE
                 WHEN p.punch_in IS NOT NULL AND p.punch_out IS NOT NULL THEN 'P'
@@ -930,7 +930,6 @@ function monthly_attd_associate_export()
                 ELSE 'A'
             END AS attendance_status,
             s.reporting_time,
-            -- Updated logic for leave, exception, and regular late status
             CASE
                 -- Leave condition takes the highest priority
                 WHEN EXISTS (
@@ -941,6 +940,16 @@ function monthly_attd_associate_export()
                     AND l.halfday = 0
                     AND d.attendance_date BETWEEN l.fromdate AND l.todate
                 ) THEN 'Leave'
+                
+                -- Half-day condition
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM leavedb_leavedb l
+                    WHERE l.applicantid = m.associatenumber
+                    AND l.status = 'Approved'
+                    AND l.halfday = 1
+                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
+                ) THEN 'HF'
 
                 -- Exception condition takes the next priority if no leave is applied
                 WHEN EXISTS (
@@ -950,15 +959,18 @@ function monthly_attd_associate_export()
                     AND e.status = 'Approved'
                     AND e.exception_type = 'late-entry'
                     AND d.attendance_date = DATE(e.start_date_time)
-                ) 
-                AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM (
-                    SELECT e.start_date_time 
-                    FROM exception_requests e 
-                    WHERE e.submitted_by = m.associatenumber 
-                    AND e.status = 'Approved' 
-                    AND e.exception_type = 'late-entry' 
-                    AND d.attendance_date = DATE(e.start_date_time)
-                )::time) THEN 'L'
+                ) THEN
+                    CASE
+                        WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM (
+                            SELECT e.start_date_time 
+                            FROM exception_requests e 
+                            WHERE e.submitted_by = m.associatenumber 
+                            AND e.status = 'Approved' 
+                            AND e.exception_type = 'late-entry' 
+                            AND d.attendance_date = DATE(e.start_date_time)
+                        )::time) THEN 'Exc.L'
+                        ELSE 'Exc.'
+                    END
                 
                 -- Regular late status logic applies only if no leave or exception
                 WHEN NOT EXISTS (
@@ -1032,7 +1044,7 @@ function monthly_attd_associate_export()
         late_status,
         COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
     FROM attendance_data
-    WHERE mode = 'Offline'  -- Use `mode` after `attendance_data` CTE is created
+    WHERE mode = 'Offline'
     GROUP BY
         associatenumber,
         filterstatus,
