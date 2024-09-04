@@ -98,7 +98,7 @@ if ($ticket_id) {
                         "short_description" => $ticket['short_description'],
                         "severity" => $ticket['severity'],
                         "category" => $ticket['category']
-                    ), $assigned_person['email']);
+                    ), $assigned_person['email'], False);
                 }
             }
         }
@@ -133,7 +133,7 @@ if ($ticket_id) {
                     "commentby_name" => $latest_comment['commenter_name'],
                     "commentby_id" => $latest_comment['commented_by'],
                     "timestamp" => @date("d/m/Y g:i a", strtotime($latest_comment['timestamp']))
-                ), $latest_comment['commenter_email']);
+                ), $latest_comment['commenter_email'], False);
             }
             // Send email notification to raised by
             if (!empty($ticket['raised_by_email'])) {
@@ -144,7 +144,7 @@ if ($ticket_id) {
                     "category" => $ticket['category'],
                     "ticket_raisedby_name" => $ticket['raised_by_name'],
                     "ticket_raisedby_id" => $ticket['raised_by'],
-                ), $ticket['raised_by_email']);
+                ), $ticket['raised_by_email'], False);
             }
 
             // Fetch the latest assigned_to person for the ticket and their details
