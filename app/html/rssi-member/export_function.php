@@ -891,177 +891,212 @@ function monthly_attd_associate_export()
 
   // Construct the SQL query
   $query = "
-    WITH date_range AS (
-        SELECT generate_series(
-            '$startDate'::date,
-            '$endDate'::date,
-            '1 day'::interval
-        ) AS attendance_date
-    ),
-    PunchInOut AS (
-        SELECT
-            a.user_id,
-            a.status,
-            DATE_TRUNC('day', a.punch_in) AS punch_date,
-            MIN(a.punch_in) AS punch_in,
-            CASE
-                WHEN COUNT(*) = 1 THEN NULL
-                ELSE MAX(a.punch_in)
-            END AS punch_out
-        FROM attendance a
-        GROUP BY a.user_id, a.status, DATE_TRUNC('day', a.punch_in)
-    ),
-    attendance_data AS (
-        SELECT
-            m.associatenumber,
-            m.filterstatus,
-            m.fullname,
-            m.engagement,
-            COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode,
-            m.effectivedate,
-            m.doj,
-            d.attendance_date,
-            COALESCE(p.punch_in, (SELECT e.start_date_time FROM exception_requests e WHERE e.submitted_by = m.associatenumber AND e.status = 'Approved' AND e.exception_type = 'late-entry' AND d.attendance_date = DATE(e.start_date_time))) AS punch_in,
-            p.punch_out,
-            CASE
-                WHEN p.punch_in IS NOT NULL AND p.punch_out IS NOT NULL THEN 'P'
-                WHEN p.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
-                WHEN TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
-                ELSE 'A'
-            END AS attendance_status,
-            s.reporting_time,
-            CASE
-                -- Leave condition takes the highest priority
-                WHEN EXISTS (
-                    SELECT 1
-                    FROM leavedb_leavedb l
-                    WHERE l.applicantid = m.associatenumber
-                    AND l.status = 'Approved'
-                    AND l.halfday = 0
-                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
-                ) THEN 'Leave'
-                
-                -- Half-day condition
-                WHEN EXISTS (
-                    SELECT 1
-                    FROM leavedb_leavedb l
-                    WHERE l.applicantid = m.associatenumber
-                    AND l.status = 'Approved'
-                    AND l.halfday = 1
-                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
-                ) THEN 'HF'
-
-                -- Exception condition takes the next priority if no leave is applied
-                WHEN EXISTS (
-                    SELECT 1
-                    FROM exception_requests e
-                    WHERE e.submitted_by = m.associatenumber
-                    AND e.status = 'Approved'
-                    AND e.exception_type = 'late-entry'
-                    AND d.attendance_date = DATE(e.start_date_time)
-                ) THEN
-                    CASE
-                        WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM (
-                            SELECT e.start_date_time 
-                            FROM exception_requests e 
-                            WHERE e.submitted_by = m.associatenumber 
-                            AND e.status = 'Approved' 
-                            AND e.exception_type = 'late-entry' 
-                            AND d.attendance_date = DATE(e.start_date_time)
-                        )::time) THEN 'Exc.L'
-                        ELSE 'Exc.'
-                    END
-                
-                -- Regular late status logic applies only if no leave or exception
-                WHEN NOT EXISTS (
-                    SELECT 1
-                    FROM leavedb_leavedb l
-                    WHERE l.applicantid = m.associatenumber
-                    AND l.status = 'Approved'
-                    AND l.halfday = 0
-                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
-                ) 
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM exception_requests e
-                    WHERE e.submitted_by = m.associatenumber
-                    AND e.status = 'Approved'
-                    AND e.exception_type = 'late-entry'
-                    AND d.attendance_date = DATE(e.start_date_time)
-                )
-                AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
-                     AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
-                WHEN NOT EXISTS (
-                    SELECT 1
-                    FROM leavedb_leavedb l
-                    WHERE l.applicantid = m.associatenumber
-                    AND l.status = 'Approved'
-                    AND l.halfday = 0
-                    AND d.attendance_date BETWEEN l.fromdate AND l.todate
-                )
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM exception_requests e
-                    WHERE e.submitted_by = m.associatenumber
-                    AND e.status = 'Approved'
-                    AND e.exception_type = 'late-entry'
-                    AND d.attendance_date = DATE(e.start_date_time)
-                )
-                AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
-                ELSE NULL
-            END AS late_status
-        FROM
-            date_range d
-        CROSS JOIN
-            rssimyaccount_members m
-        LEFT JOIN
-            PunchInOut p
-            ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
-        LEFT JOIN
-            associate_schedule s
-            ON m.associatenumber = s.associate_number
-            AND d.attendance_date BETWEEN s.start_date AND s.end_date
-        WHERE
-            (
-                (m.effectivedate IS NULL OR m.effectivedate = '')
-                OR DATE_TRUNC('month', TO_DATE(m.effectivedate, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-            )
-            AND DATE_TRUNC('month', TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-            $idCondition
-            $teacherCondition
-    )
+WITH date_range AS (
+    SELECT generate_series(
+        '$startDate'::date,
+        '$endDate'::date,
+        '1 day'::interval
+    ) AS attendance_date
+),
+PunchInOut AS (
     SELECT
-        associatenumber,
-        filterstatus,
-        fullname,
-        engagement,
-        mode,
-        attendance_date,
-        attendance_status,
-        punch_in,
-        punch_out,
-        reporting_time,
-        late_status,
-        COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
-    FROM attendance_data
-    WHERE mode = 'Offline'
-    GROUP BY
-        associatenumber,
-        filterstatus,
-        fullname,
-        engagement,
-        mode,
-        attendance_date,
-        attendance_status,
-        punch_in,
-        punch_out,
-        reporting_time,
-        late_status
-    ORDER BY
-        associatenumber,
-        attendance_date;
-";
+        a.user_id,
+        a.status,
+        DATE_TRUNC('day', a.punch_in) AS punch_date,
+        MIN(a.punch_in) AS punch_in,
+        CASE
+            WHEN COUNT(*) = 1 THEN NULL
+            ELSE MAX(a.punch_in)
+        END AS punch_out
+    FROM attendance a
+    GROUP BY a.user_id, a.status, DATE_TRUNC('day', a.punch_in)
+),
+attendance_data AS (
+    SELECT
+        m.associatenumber,
+        m.filterstatus,
+        m.fullname,
+        m.engagement,
+        COALESCE(substring(m.class FROM '^[^-]+'), NULL) AS mode,
+        m.effectivedate,
+        m.doj,
+        d.attendance_date,
+        COALESCE(p.punch_in, (
+            SELECT e.start_date_time 
+            FROM exception_requests e 
+            WHERE e.submitted_by = m.associatenumber 
+            AND e.status = 'Approved' 
+            AND e.exception_type = 'late-entry' 
+            AND d.attendance_date = DATE(e.start_date_time)
+        )) AS punch_in,
+        COALESCE(p.punch_out, (
+            SELECT e.end_date_time 
+            FROM exception_requests e 
+            WHERE e.submitted_by = m.associatenumber 
+            AND e.status = 'Approved' 
+            AND e.exception_type = 'early-exit' 
+            AND d.attendance_date = DATE(e.end_date_time)
+        )) AS punch_out,
+        CASE
+            -- Presence logic: If punch_in is available and either punch_out is available or is derived from early-exit exception, consider it Present
+            WHEN p.punch_in IS NOT NULL AND (
+                p.punch_out IS NOT NULL OR (
+                    EXISTS (
+                        SELECT 1
+                        FROM exception_requests e
+                        WHERE e.submitted_by = m.associatenumber
+                        AND e.status = 'Approved'
+                        AND e.exception_type = 'early-exit'
+                        AND d.attendance_date = DATE(e.end_date_time)
+                    )
+                )
+            ) THEN 'P'
+            WHEN p.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
+            WHEN TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
+            ELSE 'A'
+        END AS attendance_status,
+        s.reporting_time,
+        CASE
+            -- Leave condition takes the highest priority
+            WHEN EXISTS (
+                SELECT 1
+                FROM leavedb_leavedb l
+                WHERE l.applicantid = m.associatenumber
+                AND l.status = 'Approved'
+                AND l.halfday = 0
+                AND d.attendance_date BETWEEN l.fromdate AND l.todate
+            ) THEN 'Leave'
+            
+            -- Half-day condition
+            WHEN EXISTS (
+                SELECT 1
+                FROM leavedb_leavedb l
+                WHERE l.applicantid = m.associatenumber
+                AND l.status = 'Approved'
+                AND l.halfday = 1
+                AND d.attendance_date BETWEEN l.fromdate AND l.todate
+            ) THEN 'HF'
 
+            -- Exception condition takes the next priority if no leave is applied
+            WHEN EXISTS (
+                SELECT 1
+                FROM exception_requests e
+                WHERE e.submitted_by = m.associatenumber
+                AND e.status = 'Approved'
+                AND e.exception_type = 'late-entry'
+                AND d.attendance_date = DATE(e.start_date_time)
+            ) THEN
+                CASE
+                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM (
+                        SELECT e.start_date_time 
+                        FROM exception_requests e 
+                        WHERE e.submitted_by = m.associatenumber 
+                        AND e.status = 'Approved' 
+                        AND e.exception_type = 'late-entry' 
+                        AND d.attendance_date = DATE(e.start_date_time)
+                    )::time) THEN 'Exc.L'
+                    ELSE 'Exc.'
+                END
+            
+            -- Exception condition for early-exit
+            WHEN EXISTS (
+                SELECT 1
+                FROM exception_requests e
+                WHERE e.submitted_by = m.associatenumber
+                AND e.status = 'Approved'
+                AND e.exception_type = 'early-exit'
+                AND d.attendance_date = DATE(e.end_date_time)
+            ) AND p.punch_out IS NULL THEN 'Exc.'
+            
+            -- Regular late status logic applies only if no leave or exception
+            WHEN NOT EXISTS (
+                SELECT 1
+                FROM leavedb_leavedb l
+                WHERE l.applicantid = m.associatenumber
+                AND l.status = 'Approved'
+                AND l.halfday = 0
+                AND d.attendance_date BETWEEN l.fromdate AND l.todate
+            ) 
+            AND NOT EXISTS (
+                SELECT 1
+                FROM exception_requests e
+                WHERE e.submitted_by = m.associatenumber
+                AND e.status = 'Approved'
+                AND e.exception_type = 'late-entry'
+                AND d.attendance_date = DATE(e.start_date_time)
+            )
+            AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
+                 AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
+            WHEN NOT EXISTS (
+                SELECT 1
+                FROM leavedb_leavedb l
+                WHERE l.applicantid = m.associatenumber
+                AND l.status = 'Approved'
+                AND l.halfday = 0
+                AND d.attendance_date BETWEEN l.fromdate AND l.todate
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM exception_requests e
+                WHERE e.submitted_by = m.associatenumber
+                AND e.status = 'Approved'
+                AND e.exception_type = 'late-entry'
+                AND d.attendance_date = DATE(e.start_date_time)
+            )
+            AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
+            ELSE NULL
+        END AS late_status
+    FROM
+        date_range d
+    CROSS JOIN
+        rssimyaccount_members m
+    LEFT JOIN
+        PunchInOut p
+        ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
+    LEFT JOIN
+        associate_schedule s
+        ON m.associatenumber = s.associate_number
+        AND d.attendance_date BETWEEN s.start_date AND s.end_date
+    WHERE
+        (
+            (m.effectivedate IS NULL OR m.effectivedate = '')
+            OR DATE_TRUNC('month', TO_DATE(m.effectivedate, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        )
+        AND DATE_TRUNC('month', TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        $idCondition
+        $teacherCondition
+)
+SELECT
+    associatenumber,
+    filterstatus,
+    fullname,
+    engagement,
+    mode,
+    attendance_date,
+    attendance_status,
+    punch_in,
+    punch_out,
+    reporting_time,
+    late_status,
+    COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
+FROM attendance_data
+WHERE mode = 'Offline'
+GROUP BY
+    associatenumber,
+    filterstatus,
+    fullname,
+    engagement,
+    mode,
+    attendance_date,
+    attendance_status,
+    punch_in,
+    punch_out,
+    reporting_time,
+    late_status
+ORDER BY
+    associatenumber,
+    attendance_date;
+";
   $result = pg_query($con, $query);
 
   if (!$result) {
