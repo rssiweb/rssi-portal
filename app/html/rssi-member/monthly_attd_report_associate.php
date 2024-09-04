@@ -88,7 +88,7 @@ attendance_data AS (
             FROM exception_requests e 
             WHERE e.submitted_by = m.associatenumber 
             AND e.status = 'Approved' 
-            AND e.exception_type = 'late-entry' 
+            AND e.exception_type = 'entry' 
             AND d.attendance_date = DATE(e.start_date_time)
         )) AS punch_in,
         COALESCE(p.punch_out, (
@@ -96,11 +96,11 @@ attendance_data AS (
             FROM exception_requests e 
             WHERE e.submitted_by = m.associatenumber 
             AND e.status = 'Approved' 
-            AND e.exception_type = 'early-exit' 
+            AND e.exception_type = 'exit' 
             AND d.attendance_date = DATE(e.end_date_time)
         )) AS punch_out,
         CASE
-            -- Presence logic: If punch_in is available and either punch_out is available or is derived from early-exit exception, consider it Present
+            -- Presence logic: If punch_in is available and either punch_out is available or is derived from exit exception, consider it Present
             WHEN p.punch_in IS NOT NULL AND (
                 p.punch_out IS NOT NULL OR (
                     EXISTS (
@@ -108,7 +108,7 @@ attendance_data AS (
                         FROM exception_requests e
                         WHERE e.submitted_by = m.associatenumber
                         AND e.status = 'Approved'
-                        AND e.exception_type = 'early-exit'
+                        AND e.exception_type = 'exit'
                         AND d.attendance_date = DATE(e.end_date_time)
                     )
                 )
@@ -145,7 +145,7 @@ attendance_data AS (
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
                 AND e.status = 'Approved'
-                AND e.exception_type = 'late-entry'
+                AND e.exception_type = 'entry'
                 AND d.attendance_date = DATE(e.start_date_time)
             ) THEN
                 CASE
@@ -154,19 +154,19 @@ attendance_data AS (
                         FROM exception_requests e 
                         WHERE e.submitted_by = m.associatenumber 
                         AND e.status = 'Approved' 
-                        AND e.exception_type = 'late-entry' 
+                        AND e.exception_type = 'entry' 
                         AND d.attendance_date = DATE(e.start_date_time)
                     )::time) THEN 'Exc.L'
                     ELSE 'Exc.'
                 END
             
-            -- Exception condition for early-exit
+            -- Exception condition for exit
             WHEN EXISTS (
                 SELECT 1
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
                 AND e.status = 'Approved'
-                AND e.exception_type = 'early-exit'
+                AND e.exception_type = 'exit'
                 AND d.attendance_date = DATE(e.end_date_time)
             ) AND p.punch_out IS NULL THEN 'Exc.'
             
@@ -184,7 +184,7 @@ attendance_data AS (
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
                 AND e.status = 'Approved'
-                AND e.exception_type = 'late-entry'
+                AND e.exception_type = 'entry'
                 AND d.attendance_date = DATE(e.start_date_time)
             )
             AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
@@ -202,7 +202,7 @@ attendance_data AS (
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
                 AND e.status = 'Approved'
-                AND e.exception_type = 'late-entry'
+                AND e.exception_type = 'entry'
                 AND d.attendance_date = DATE(e.start_date_time)
             )
             AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'

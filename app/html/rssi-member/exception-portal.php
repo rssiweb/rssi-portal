@@ -136,8 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <label for="exceptionType" class="form-label">Exception Type <span class="text-danger">*</span></label>
                                         <select class="form-select" id="exceptionType" name="exceptionType" required onchange="toggleDateTimeFields()">
                                             <option value="" disabled selected>Select exception type</option>
-                                            <option value="late-entry">Late Entry / Missed Entry</option>
-                                            <option value="early-exit">Early Exit / Missed Exit</option>
+                                            <option value="entry">Late Entry / Missed Entry</option>
+                                            <option value="exit">Early Exit / Missed Exit</option>
                                         </select>
                                     </div>
 
