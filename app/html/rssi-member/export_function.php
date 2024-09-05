@@ -890,7 +890,7 @@ function monthly_attd_associate_export()
   }
 
   // Construct the SQL query
-  $query = "
+$query = "
 WITH date_range AS (
     SELECT generate_series(
         '$startDate'::date,
@@ -926,7 +926,7 @@ attendance_data AS (
             FROM exception_requests e 
             WHERE e.submitted_by = m.associatenumber 
             AND e.status = 'Approved' 
-            AND e.exception_type = 'late-entry' 
+            AND e.exception_type = 'entry' 
             AND d.attendance_date = DATE(e.start_date_time)
         )) AS punch_in,
         COALESCE(p.punch_out, (
@@ -934,19 +934,30 @@ attendance_data AS (
             FROM exception_requests e 
             WHERE e.submitted_by = m.associatenumber 
             AND e.status = 'Approved' 
-            AND e.exception_type = 'early-exit' 
+            AND e.exception_type = 'exit' 
             AND d.attendance_date = DATE(e.end_date_time)
         )) AS punch_out,
         CASE
-            -- Presence logic: If punch_in is available and either punch_out is available or is derived from early-exit exception, consider it Present
-            WHEN p.punch_in IS NOT NULL AND (
+            -- Presence logic: If punch_in is available (from either attendance or exception table) and either punch_out is available or is derived from an exit exception, consider it Present
+            WHEN (
+                p.punch_in IS NOT NULL OR (
+                    EXISTS (
+                        SELECT 1
+                        FROM exception_requests e
+                        WHERE e.submitted_by = m.associatenumber
+                        AND e.status = 'Approved'
+                        AND e.exception_type = 'entry'
+                        AND d.attendance_date = DATE(e.start_date_time)
+                    )
+                )
+            ) AND (
                 p.punch_out IS NOT NULL OR (
                     EXISTS (
                         SELECT 1
                         FROM exception_requests e
                         WHERE e.submitted_by = m.associatenumber
                         AND e.status = 'Approved'
-                        AND e.exception_type = 'early-exit'
+                        AND e.exception_type = 'exit'
                         AND d.attendance_date = DATE(e.end_date_time)
                     )
                 )
@@ -983,7 +994,7 @@ attendance_data AS (
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
                 AND e.status = 'Approved'
-                AND e.exception_type = 'late-entry'
+                AND e.exception_type = 'entry'
                 AND d.attendance_date = DATE(e.start_date_time)
             ) THEN
                 CASE
@@ -992,19 +1003,19 @@ attendance_data AS (
                         FROM exception_requests e 
                         WHERE e.submitted_by = m.associatenumber 
                         AND e.status = 'Approved' 
-                        AND e.exception_type = 'late-entry' 
+                        AND e.exception_type = 'entry' 
                         AND d.attendance_date = DATE(e.start_date_time)
                     )::time) THEN 'Exc.L'
                     ELSE 'Exc.'
                 END
             
-            -- Exception condition for early-exit
+            -- Exception condition for exit
             WHEN EXISTS (
                 SELECT 1
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
                 AND e.status = 'Approved'
-                AND e.exception_type = 'early-exit'
+                AND e.exception_type = 'exit'
                 AND d.attendance_date = DATE(e.end_date_time)
             ) AND p.punch_out IS NULL THEN 'Exc.'
             
@@ -1022,7 +1033,7 @@ attendance_data AS (
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
                 AND e.status = 'Approved'
-                AND e.exception_type = 'late-entry'
+                AND e.exception_type = 'entry'
                 AND d.attendance_date = DATE(e.start_date_time)
             )
             AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
@@ -1040,12 +1051,24 @@ attendance_data AS (
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
                 AND e.status = 'Approved'
-                AND e.exception_type = 'late-entry'
+                AND e.exception_type = 'entry'
                 AND d.attendance_date = DATE(e.start_date_time)
             )
             AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
             ELSE NULL
-        END AS late_status
+        END AS late_status,
+        -- Exit status
+        CASE
+            WHEN p.punch_out IS NULL AND EXISTS (
+                SELECT 1
+                FROM exception_requests e
+                WHERE e.submitted_by = m.associatenumber
+                AND e.status = 'Approved'
+                AND e.exception_type = 'exit'
+                AND d.attendance_date = DATE(e.end_date_time)
+            ) THEN 'Exc.'
+            ELSE NULL
+        END AS exit_status
     FROM
         date_range d
     CROSS JOIN
@@ -1078,6 +1101,7 @@ SELECT
     punch_out,
     reporting_time,
     late_status,
+    exit_status,
     COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
 FROM attendance_data
 WHERE mode = 'Offline'
@@ -1092,7 +1116,8 @@ GROUP BY
     punch_in,
     punch_out,
     reporting_time,
-    late_status
+    late_status,
+    exit_status
 ORDER BY
     associatenumber,
     attendance_date;
