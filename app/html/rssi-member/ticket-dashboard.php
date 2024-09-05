@@ -136,7 +136,7 @@ if ($ticket_id) {
                 ), $latest_comment['commenter_email'], False);
             }
             // Send email notification to raised by
-            if (!empty($ticket['raised_by_email'])) {
+            if (!empty($ticket['raised_by_email']) && ($ticket['raised_by_email']!=$latest_comment['commenter_email'])) {
                 sendEmail("ticketcomment_others", array(
                     "ticket_id" => $ticket_id,
                     "short_description" => $ticket['short_description'],
@@ -160,7 +160,7 @@ if ($ticket_id) {
             if ($result && pg_num_rows($result) > 0) { // Check if the query result is valid and not empty
                 $assigned_person = pg_fetch_assoc($result);
                 $assigned_to = $assigned_person['assigned_to']; // Fetch the assigned_to value from the result
-                if (!empty($assigned_person['email'])) {
+                if (!empty($assigned_person['email']) && ($assigned_person['email']!=$latest_comment['commenter_email'])) {
                     sendEmail("ticketcomment_others", array(
                         "ticket_id" => $ticket_id,
                         "short_description" => $ticket['short_description'],

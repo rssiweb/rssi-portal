@@ -179,3 +179,9 @@ $result = pg_query_params($connection, $sql, array($name, $age));
 npm install puppeteer
 cd /d/RSSILogin/app/html/rssi-member
 node generatePDF.js
+
+delete from support_ticket where ticket_id='66d9262c7dede'
+
+delete from support_ticket_assignment where ticket_id='66d9262c7dede'
+
+delete from support_ticket_status where ticket_id='66d9262c7dede'
