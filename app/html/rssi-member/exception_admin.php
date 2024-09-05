@@ -249,7 +249,7 @@ $resultArr = pg_fetch_all($result);
                                             <th>Submitted By</th>
                                             <th>Submitted On</th>
                                             <th>Exception Type</th>
-                                            <th>Time Frame</th>
+                                            <th>Exception Date & Time</th>
                                             <th>Reason</th>
                                             <th>Status</th>
                                             <th>Reviewed By</th>
@@ -271,7 +271,7 @@ $resultArr = pg_fetch_all($result);
                                                         <?php echo @date("d/m/Y g:i a", strtotime($array['submitted_on'])); ?>
                                                     </td>
                                                     <td>
-                                                        <?php echo htmlspecialchars($array['exception_type'] ?? ''); ?>
+                                                        <?php echo htmlspecialchars($array['sub_exception_type'] ?? ''); ?>
                                                     </td>
                                                     <td>
                                                         <?php

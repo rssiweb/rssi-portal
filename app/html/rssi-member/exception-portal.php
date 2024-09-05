@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Retrieve form data
     $exceptionType = $_POST['exceptionType'];
+    $subExceptionType = $_POST['subExceptionType'];
     $startDateTime = !empty($_POST['startDateTime']) ? $_POST['startDateTime'] : null;
     $endDateTime = !empty($_POST['endDateTime']) ? $_POST['endDateTime'] : null;
     $reason = htmlspecialchars($_POST['reason'], ENT_QUOTES, 'UTF-8');
@@ -31,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $success = true;
 
     // Prepare SQL statement for insertion
-    $sql = "INSERT INTO exception_requests (id, exception_type, start_date_time, end_date_time, reason, submitted_on, submitted_by) 
-    VALUES ('$id', '$exceptionType', " .
+    $sql = "INSERT INTO exception_requests (id, exception_type, sub_exception_type, start_date_time, end_date_time, reason, submitted_on, submitted_by) 
+    VALUES ('$id', '$exceptionType', '$subExceptionType'," .
         ($startDateTime ? "'$startDateTime'" : "NULL") . ", " .
         ($endDateTime ? "'$endDateTime'" : "NULL") . ", " .
         "'$reason', '$now', '$submittedBy')";
@@ -52,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             "dateTime" => !empty($startDateTime)
                 ? @date("d/m/Y g:i a", strtotime($startDateTime))
                 : (!empty($endDateTime) ? @date("d/m/Y g:i a", strtotime($endDateTime)) : ''),
-            "exceptionType" => $exceptionType,
+            "exceptionType" => $subExceptionType,
             "reason" => $reason,
             "now" => @date("d/m/Y g:i a", strtotime($now))
         ), $email);
@@ -126,18 +127,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     }
                                 </script>
                             <?php } ?>
-                            <div class="text-end">
-                                <span class="link-secondary"><a href="exception_admin.php" title="Exception Dashboard">Exception Dashboard</a></span>
-                                <span class="separator">
-                            </div>
                             <div class="container mt-4">
                                 <form name="exception" id="exception" method="post" action="">
                                     <div class="mb-3">
                                         <label for="exceptionType" class="form-label">Exception Type <span class="text-danger">*</span></label>
                                         <select class="form-select" id="exceptionType" name="exceptionType" required onchange="toggleDateTimeFields()">
                                             <option value="" disabled selected>Select exception type</option>
-                                            <option value="entry">Late Entry / Missed Entry</option>
-                                            <option value="exit">Early Exit / Missed Exit</option>
+                                            <option value="entry">Entry</option>
+                                            <option value="exit">Exit</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Sub Exception Type Field -->
+                                    <div class="mb-3" id="subExceptionTypeField" style="display: none;">
+                                        <label for="subExceptionType" class="form-label">Sub Exception Type <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="subExceptionType" name="subExceptionType" required>
+                                            <!-- Options will be populated dynamically -->
                                         </select>
                                     </div>
 
@@ -160,6 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <button type="submit" class="btn btn-primary">Submit</button>
                                 </form>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -174,23 +180,54 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             const exceptionType = document.getElementById('exceptionType').value;
             const startDateTimeField = document.getElementById('startDateTimeField');
             const endDateTimeField = document.getElementById('endDateTimeField');
+            const subExceptionTypeField = document.getElementById('subExceptionTypeField');
+            const subExceptionType = document.getElementById('subExceptionType');
 
-            // Hide both fields initially
+            // Hide all fields initially
             startDateTimeField.style.display = 'none';
             endDateTimeField.style.display = 'none';
+            subExceptionTypeField.style.display = 'none';
 
-            // Show the appropriate field based on the selected value
+            // Remove required attribute from date-time fields
+            document.getElementById('startDateTime').required = false;
+            document.getElementById('endDateTime').required = false;
+
+            // Clear sub-exception type options
+            subExceptionType.innerHTML = '';
+
             if (exceptionType === 'entry') {
+                // Show sub-exception type dropdown
+                subExceptionTypeField.style.display = 'block';
+
+                // Populate sub-exception type options for entry
+                subExceptionType.innerHTML = `
+                <option value="" disabled selected>Select sub exception type</option>
+                <option value="late-entry">Late Entry</option>
+                <option value="missed-entry">Missed Entry (Missed Punch In)</option>
+            `;
+
+                // Show start date-time field
                 startDateTimeField.style.display = 'block';
-                document.getElementById('startDateTime').required = true; // Make field required
-                document.getElementById('endDateTime').required = false; // Remove required from the other field
+                document.getElementById('startDateTime').required = true;
+
             } else if (exceptionType === 'exit') {
+                // Show sub-exception type dropdown
+                subExceptionTypeField.style.display = 'block';
+
+                // Populate sub-exception type options for exit
+                subExceptionType.innerHTML = `
+                <option value="" disabled selected>Select sub exception type</option>
+                <option value="early-exit">Early Exit</option>
+                <option value="missed-exit">Missed Exit (Missed Punch Out)</option>
+            `;
+
+                // Show end date-time field
                 endDateTimeField.style.display = 'block';
-                document.getElementById('endDateTime').required = true; // Make field required
-                document.getElementById('startDateTime').required = false; // Remove required from the other field
+                document.getElementById('endDateTime').required = true;
             }
         }
     </script>
+
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

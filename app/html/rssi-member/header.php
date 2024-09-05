@@ -141,11 +141,6 @@
             </a>
           </li>
           <li>
-            <a id="exception-portalink" href="exception-portal.php">
-              <span>Raise Exception</span>
-            </a>
-          </li>
-          <li>
             <a id="documentLink" href="document.php">
               <span>My Document</span>
             </a>
@@ -162,6 +157,23 @@
           </li>
         </ul>
       </li><!-- End Components Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#exceptionPortal" data-bs-toggle="collapse" href="#">
+          <span>Exception</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="exceptionPortal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="raiseException" href="exception-portal.php">
+              <span>Raise Exception</span>
+            </a>
+          </li>
+          <li>
+            <a id="dashboardException" href="exception_admin.php">
+              <span>Exception Dashboard</span>
+            </a>
+          </li>
+        </ul>
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#learning" data-bs-toggle="collapse" href="#">
@@ -314,11 +326,6 @@
           <li>
             <a id="leave_adminLink" href="leave_admin.php">
               <span>Leave Management</span>
-            </a>
-          </li>
-          <li>
-            <a id="exception_adminLink" href="exception_admin.php">
-              <span>Exception Management</span>
             </a>
           </li>
           <li>
@@ -652,19 +659,15 @@
         url: 'inventory-insights.php'
       },
       {
-        id: 'myservices',
-        linkId: 'exception-portalink',
+        id: 'exceptionPortal',
+        linkId: 'raiseException',
         url: 'exception-portal.php'
       },
       {
-        id: 'myservices',
-        linkId: 'exception-portalink',
+        id: 'exceptionPortal',
+        linkId: 'dashboardException',
         url: 'exception_admin.php'
-      }, {
-        id: 'work',
-        linkId: 'exception_adminLink',
-        url: 'exception_admin.php'
-      },
+      }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
     ];
