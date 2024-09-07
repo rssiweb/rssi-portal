@@ -27,13 +27,14 @@ if ($role == 'Admin') {
     // Free resultset
     pg_free_result($result);
 }
-?>
 
-<?php
 // Get filter values from GET parameters
 $id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
-$month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
+
 $selectedTeachers = isset($_GET['teacher_id']) ? $_GET['teacher_id'] : [];
+?>
+<?php
+$month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
 
 // Calculate the start and end dates of the month
 $startDate = date("Y-m-01", strtotime($month));
@@ -250,6 +251,7 @@ attendance_data AS (
         AND DATE_TRUNC('month', TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         $idCondition
         $teacherCondition
+        " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
 )
 SELECT
     associatenumber,
@@ -417,23 +419,24 @@ pg_close($con);
                                 </div>
                                 <form action="" method="GET" class="row g-2 align-items-center">
                                     <div class="row">
-                                        <div class="col-12 col-sm-2">
-                                            <div class="form-group">
-                                                <select name="get_aid" id="get_aid" class="form-select" style="display:inline-block" required>
-                                                    <?php if ($id == null) { ?>
-                                                        <option value="" disabled selected hidden>Select Status</option>
-                                                    <?php
-                                                    } else { ?>
-                                                        <option hidden selected><?php echo $id ?></option>
-                                                    <?php }
-                                                    ?>
-                                                    <option>Active</option>
-                                                    <option>Inactive</option>
-                                                </select>
-                                                <small class="form-text text-muted">Select Status</small>
-                                            </div>
-                                        </div>
                                         <?php if ($role == 'Admin') { ?>
+                                            <div class="col-12 col-sm-2">
+                                                <div class="form-group">
+                                                    <select name="get_aid" id="get_aid" class="form-select" style="display:inline-block" required>
+                                                        <?php if ($id == null) { ?>
+                                                            <option value="" disabled selected hidden>Select Status</option>
+                                                        <?php
+                                                        } else { ?>
+                                                            <option hidden selected><?php echo $id ?></option>
+                                                        <?php }
+                                                        ?>
+                                                        <option>Active</option>
+                                                        <option>Inactive</option>
+                                                    </select>
+                                                    <small class="form-text text-muted">Select Status</small>
+                                                </div>
+                                            </div>
+
                                             <div class="col-md-3">
                                                 <select class="form-select" id="teacher_id" name="teacher_id[]" multiple>
                                                     <option value="" disabled hidden>Select Teacher's ID</option>
