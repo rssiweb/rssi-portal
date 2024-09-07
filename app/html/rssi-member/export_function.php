@@ -870,6 +870,8 @@ function monthly_attd_associate_export()
   global $con;
   @$id = $_POST['id'];
   @$month = $_POST['month'];
+  @$associatenumber = $_POST['associateNumber'];
+  @$role = $_POST['role'];
   @$selectedTeachers = isset($_POST['selectedTeachers']) ? explode(',', $_POST['selectedTeachers']) : [];
 
   // Calculate the start and end dates of the month
@@ -1088,6 +1090,7 @@ attendance_data AS (
         AND DATE_TRUNC('month', TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         $idCondition
         $teacherCondition
+        " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
 )
 SELECT
     associatenumber,

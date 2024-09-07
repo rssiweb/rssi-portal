@@ -402,6 +402,8 @@ pg_close($con);
                                     <input type="hidden" value="monthly_attd_associate" name="export_type" />
                                     <input type="hidden" value="<?php echo $id ?>" name="id" />
                                     <input type="hidden" value="<?php echo $month ?>" name="month" />
+                                    <input type="hidden" value="<?php echo $associatenumber ?>" name="associateNumber" />
+                                    <input type="hidden" value="<?php echo $role ?>" name="role" />
                                     <input type="hidden" value="<?php echo implode(',', $selectedTeachers) ?>" name="selectedTeachers" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
