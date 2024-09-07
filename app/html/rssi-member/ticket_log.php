@@ -10,7 +10,12 @@ if (!isLoggedIn("aid")) {
 
 // Handle filtering
 $filter_ticket_id = isset($_POST['ticket_id']) ? $_POST['ticket_id'] : '';
-$filter_status = isset($_POST['status']) ? $_POST['status'] : '';
+$filter_status = isset($_POST['status']) ? $_POST['status'] : [];
+
+// Set default statuses if no filter value is selected
+if (empty($filter_status)) {
+    $filter_status = ['Open', 'In Progress']; // Default statuses
+}
 
 // Base query
 $query = "
@@ -62,23 +67,34 @@ if ($role !== 'Admin') {
                 )";
 }
 
-// Apply other filters
+// Apply ticket ID filter
 if ($filter_ticket_id) {
     $query .= " AND t.ticket_id = '" . pg_escape_string($con, $filter_ticket_id) . "'";
 }
-if ($filter_status) {
-    $query .= " AND s.status = '" . pg_escape_string($con, $filter_status) . "'";
+
+// Apply multi-select status filter
+if (!empty($filter_status)) {
+    // Escape each status for SQL safety
+    $escapedStatuses = array_map(function ($status) use ($con) {
+        return "'" . pg_escape_string($con, $status) . "'";
+    }, $filter_status);
+
+    $query .= " AND s.status IN (" . implode(", ", $escapedStatuses) . ")";
 }
+
 // Order by ticket timestamp in descending order
 $query .= " ORDER BY ticket_timestamp DESC";
 
+// Execute the query
 $result = pg_query($con, $query);
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
 
+// Fetch all results
 $resultArr = pg_fetch_all($result);
+
 ?>
 
 
@@ -147,27 +163,26 @@ $resultArr = pg_fetch_all($result);
                         <div class="card-body">
                             <br>
                             <div class="container">
-                                <form method="POST" class="filter-form">
-                                    <div class="form-group" style="display: inline-block;">
-                                        <div class="col2" style="display: inline-block;">
-                                            <input type="text" id="ticket_id" name="ticket_id" class="form-control" style="width:max-content; display:inline-block;" placeholder="Ticket ID" value="<?php echo htmlspecialchars($filter_ticket_id); ?>">
-
-                                            <select id="status" name="status" class="form-select" style="width:max-content; display:inline-block;">
-                                                <option value="">All Statuses</option>
-                                                <option value="In Progress" <?php echo $filter_status === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                <option value="Open" <?php echo $filter_status === 'Open' ? 'selected' : ''; ?>>Open</option>
-                                                <option value="Closed" <?php echo $filter_status === 'Closed' ? 'selected' : ''; ?>>Closed</option>
-                                                <option value="Resolved" <?php echo $filter_status === 'Resolved' ? 'selected' : ''; ?>>Resolved</option>
-                                            </select>
-                                        </div>
+                                <form method="POST" class="filter-form" style="display: flex;">
+                                    <div class="form-group" style="margin-right: 10px;">
+                                        <input type="text" id="ticket_id" name="ticket_id" class="form-control" placeholder="Ticket ID" value="<?php echo htmlspecialchars($filter_ticket_id); ?>" style="width: 200px;">
                                     </div>
-                                    <div class="col2 left" style="display: inline-block;">
+
+                                    <div class="form-group" style="margin-right: 10px;">
+                                        <select id="status" name="status[]" class="form-control" multiple style="width: 200px;">
+                                            <option value="In Progress" <?php echo in_array('In Progress', $filter_status ?? []) ? 'selected' : ''; ?>>In Progress</option>
+                                            <option value="Open" <?php echo in_array('Open', $filter_status ?? []) ? 'selected' : ''; ?>>Open</option>
+                                            <option value="Closed" <?php echo in_array('Closed', $filter_status ?? []) ? 'selected' : ''; ?>>Closed</option>
+                                            <option value="Resolved" <?php echo in_array('Resolved', $filter_status ?? []) ? 'selected' : ''; ?>>Resolved</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
                                         <button type="submit" class="btn btn-primary btn-sm" style="outline: none;">
                                             <i class="bi bi-search"></i>&nbsp;Filter
                                         </button>
                                     </div>
                                 </form>
-
                                 <div class="table-responsive">
                                     <table class="table" id="table-id">
                                         <thead>
@@ -185,10 +200,15 @@ $resultArr = pg_fetch_all($result);
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($resultArr as $array) { ?>
+                                            <?php if (empty($resultArr)) { ?>
                                                 <tr>
-                                                    <td><a href="ticket-dashboard.php?ticket_id=<?php echo urlencode($array['ticket_id']); ?>"><?php echo htmlspecialchars($array['ticket_id']); ?></a></td>
-                                                <?php echo '<td>' . htmlspecialchars($array['short_description']) . '</td>
+                                                    <td colspan="10">No records found</td>
+                                                </tr>
+                                            <?php } else { ?>
+                                                <?php foreach ($resultArr as $array) { ?>
+                                                    <tr>
+                                                        <td><a href="ticket-dashboard.php?ticket_id=<?php echo urlencode($array['ticket_id']); ?>"><?php echo htmlspecialchars($array['ticket_id']); ?></a></td>
+                                                    <?php echo '<td>' . $array['short_description'] . '</td>
                                                     <td>' . htmlspecialchars($array['action']) . '</td>
                                                     <td>' . @htmlspecialchars($array['category']) . '</td>
                                                     <td>' . htmlspecialchars($array['severity']) . '</td>
@@ -199,7 +219,8 @@ $resultArr = pg_fetch_all($result);
                                                     <td>' . htmlspecialchars($array['latest_status_description']) . '</td>
                                                     <!--<td>' . htmlspecialchars(@date("d/m/Y g:i a", strtotime($array['latest_status_timestamp']))) . '</td>-->
                                                 </tr>';
-                                            } ?>
+                                                } ?>
+                                                <?php } ?>
                                         </tbody>
                                     </table>
                                 </div>

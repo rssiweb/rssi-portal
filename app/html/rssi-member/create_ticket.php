@@ -34,8 +34,11 @@ if ($_POST) {
 
     $query = "INSERT INTO support_ticket (ticket_id, short_description, long_description, upload_file, severity, raised_by, raised_for, timestamp,action,category)
               VALUES ('$ticket_id', '$short_description', '$long_description', '$doclink', '$severity', '$associatenumber', '$raised_for', '$timestamp','$action_selection','$category')";
+    $statusInsertQuery = "INSERT INTO support_ticket_status (ticket_id, status) 
+                VALUES ('$ticket_id', 'Open')";
 
     $result = pg_query($con, $query);
+    $result_status = pg_query($con, $statusInsertQuery);
     $cmdtuples = pg_affected_rows($result);
 
     if ($cmdtuples == 1 && $email != "") {
