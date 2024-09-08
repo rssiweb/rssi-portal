@@ -38,7 +38,7 @@ if ($_POST) {
 
                 if (!$result) {
                     $success = false;
-                    break;
+                    break 2; // Exit both loops on error
                 }
             }
         }
@@ -49,12 +49,41 @@ if ($_POST) {
 $item_query = "
     SELECT
         i.item_id,
-        i.item_name
-    FROM stock_item i
-    JOIN stock_add a ON i.item_id = a.item_id
-    GROUP BY i.item_id, i.item_name
-    HAVING COALESCE(SUM(a.quantity_received), 0) > 0;
+        i.item_name,
+        u.unit_id,
+        u.unit_name,
+        COALESCE((SELECT SUM(quantity_received) 
+                  FROM stock_add 
+                  WHERE item_id = i.item_id 
+                  AND unit_id = u.unit_id), 0) AS total_added_count,
+        COALESCE((SELECT SUM(quantity_distributed) 
+                  FROM stock_out 
+                  WHERE item_distributed = i.item_id 
+                  AND unit = u.unit_id), 0) AS total_distributed_count,
+        (COALESCE((SELECT SUM(quantity_received) 
+                  FROM stock_add 
+                  WHERE item_id = i.item_id 
+                  AND unit_id = u.unit_id), 0) 
+         - 
+         COALESCE((SELECT SUM(quantity_distributed) 
+                  FROM stock_out 
+                  WHERE item_distributed = i.item_id 
+                  AND unit = u.unit_id), 0)) AS in_stock
+    FROM 
+        stock_item i
+    JOIN 
+        stock_item_unit u 
+    ON 
+        EXISTS (
+            SELECT 1 
+            FROM stock_add a 
+            WHERE a.item_id = i.item_id 
+            AND a.unit_id = u.unit_id
+        )
+    ORDER BY 
+        i.item_id, u.unit_id;
 ";
+
 $unit_query = "SELECT unit_id, unit_name FROM stock_item_unit";
 $recipient_query = "
     SELECT associatenumber AS id, fullname AS name FROM rssimyaccount_members WHERE filterstatus = 'Active'
@@ -71,15 +100,29 @@ $units = [];
 $recipients = [];
 
 while ($row = pg_fetch_assoc($item_result)) {
-    $items[] = ['id' => $row['item_id'], 'text' => $row['item_name']];
+    $is_out_of_stock = $row['in_stock'] <= 0;
+    $items[] = [
+        'item_id' => $row['item_id'],
+        'item_name' => $row['item_name'],
+        'unit_id' => $row['unit_id'],
+        'unit_name' => $row['unit_name'],
+        'in_stock' => $row['in_stock'],
+        'is_out_of_stock' => $is_out_of_stock
+    ];
 }
 
 while ($row = pg_fetch_assoc($unit_result)) {
-    $units[] = ['id' => $row['unit_id'], 'text' => $row['unit_name']];
+    $units[] = [
+        'id' => $row['unit_id'],
+        'text' => $row['unit_name']
+    ];
 }
 
 while ($row = pg_fetch_assoc($recipient_result)) {
-    $recipients[] = ['id' => $row['id'], 'text' => $row['name'] . ' (' . $row['id'] . ')'];
+    $recipients[] = [
+        'id' => $row['id'],
+        'text' => $row['name'] . ' (' . $row['id'] . ')'
+    ];
 }
 ?>
 
@@ -109,19 +152,13 @@ while ($row = pg_fetch_assoc($recipient_result)) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <style>
-        .x-btn:focus,
-        .button:focus,
-        [type="submit"]:focus {
-            outline: none;
-        }
-
-        #passwordHelpBlock {
-            display: block;
-        }
-
-        .input-help {
-            vertical-align: top;
-            display: inline-block;
+        .readonly-select {
+            pointer-events: none;
+            /* Prevent user from interacting with the select box */
+            background-color: #e9ecef;
+            /* Optional: Change background color to indicate read-only state */
+            color: #6c757d;
+            /* Optional: Change text color to indicate read-only state */
         }
     </style>
 </head>
@@ -179,7 +216,10 @@ while ($row = pg_fetch_assoc($recipient_result)) {
                                                 <label for="item_distributed" class="form-label">Item Distributed</label>
                                                 <select id="item_distributed" name="item_distributed[]" class="form-control" multiple="multiple" required>
                                                     <?php foreach ($items as $item): ?>
-                                                        <option value="<?php echo $item['id']; ?>"><?php echo $item['text']; ?></option>
+                                                        <option value="<?php echo htmlspecialchars($item['item_id']); ?>" data-unit="<?php echo htmlspecialchars($item['unit_id']); ?>" <?php echo $item['is_out_of_stock'] ? 'disabled' : ''; ?>>
+                                                            <?php echo htmlspecialchars($item['item_name']); ?> - <?php echo htmlspecialchars($item['unit_name']); ?>
+                                                            (<?php echo htmlspecialchars($item['in_stock']); ?> in stock)
+                                                        </option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -187,12 +227,16 @@ while ($row = pg_fetch_assoc($recipient_result)) {
                                             <!-- Unit -->
                                             <div class="mb-3">
                                                 <label for="unit" class="form-label">Unit</label>
-                                                <select id="unit" name="unit" class="form-control" required>
+                                                <select id="unit" name="unit" class="form-control readonly-select" required>
+                                                    <option value="" disabled selected>Select Unit</option>
                                                     <?php foreach ($units as $unit): ?>
-                                                        <option value="<?php echo $unit['id']; ?>"><?php echo $unit['text']; ?></option>
+                                                        <option value="<?php echo htmlspecialchars($unit['id']); ?>"><?php echo htmlspecialchars($unit['text']); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
+                                                <!-- Help text to indicate the field is auto-populated -->
+                                                <small class="form-text text-muted">This field is auto-populated based on your selection.</small>
                                             </div>
+
 
                                             <!-- Quantity Distributed -->
                                             <div class="mb-3">
@@ -205,7 +249,7 @@ while ($row = pg_fetch_assoc($recipient_result)) {
                                                 <label for="distributed_to" class="form-label">Distributed To</label>
                                                 <select id="distributed_to" name="distributed_to[]" class="form-control" multiple="multiple" required>
                                                     <?php foreach ($recipients as $recipient): ?>
-                                                        <option value="<?php echo $recipient['id']; ?>"><?php echo $recipient['text']; ?></option>
+                                                        <option value="<?php echo htmlspecialchars($recipient['id']); ?>"><?php echo htmlspecialchars($recipient['text']); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -234,10 +278,99 @@ while ($row = pg_fetch_assoc($recipient_result)) {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+
     <script>
         $(document).ready(function() {
+            // Initialize Select2
             $('#item_distributed').select2();
             $('#distributed_to').select2();
+
+            // Track previously selected items
+            let previousSelection = $('#item_distributed').val() || [];
+
+            // Handle item selection change
+            $('#item_distributed').on('change', function(event) {
+                let selectedItems = $(this).val(); // Currently selected items
+                let unitDropdown = $('#unit');
+                let allUnits = {};
+
+                // Gather all selected items' units from the previous selection
+                previousSelection.forEach(itemId => {
+                    let unitId = $(`#item_distributed option[value="${itemId}"]`).data('unit');
+                    allUnits[unitId] = (allUnits[unitId] || 0) + 1;
+                });
+
+                // Get the newly selected item
+                let newlySelectedItem = selectedItems.filter(item => !previousSelection.includes(item))[0];
+                if (newlySelectedItem) {
+                    let newItemUnit = $(`#item_distributed option[value="${newlySelectedItem}"]`).data('unit');
+
+                    // Check if the newly selected item belongs to a different unit
+                    if (Object.keys(allUnits).length > 0 && !allUnits.hasOwnProperty(newItemUnit)) {
+                        alert('Please select items from the same unit only.');
+
+                        // Remove the last selected item that triggered the alert
+                        selectedItems = selectedItems.filter(item => item !== newlySelectedItem);
+                        $(this).val(selectedItems).trigger('change');
+                        return;
+                    }
+                }
+
+                // Update the previous selection
+                previousSelection = selectedItems;
+
+                // Gather all selected items' units after the change
+                selectedItems.forEach(itemId => {
+                    let unitId = $(`#item_distributed option[value="${itemId}"]`).data('unit');
+                    allUnits[unitId] = (allUnits[unitId] || 0) + 1;
+                });
+
+                // Auto-select unit if only one unit is selected
+                if (Object.keys(allUnits).length === 1) {
+                    let unitId = Object.keys(allUnits)[0];
+                    unitDropdown.val(unitId).trigger('change');
+                }
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('#item_distributed').select2();
+            $('#distributed_to').select2();
+
+            // Handle item selection change
+            $('#item_distributed').on('change', function() {
+                let selectedItems = $(this).val(); // Currently selected items
+                let unitDropdown = $('#unit');
+                let allUnits = {};
+
+                // Gather all selected items' units
+                selectedItems.forEach(itemId => {
+                    let unitId = $(`#item_distributed option[value="${itemId}"]`).data('unit');
+                    allUnits[unitId] = (allUnits[unitId] || 0) + 1;
+                });
+
+                // If multiple units are selected, prevent further selection
+                if (Object.keys(allUnits).length > 1) {
+                    alert('Please select items from the same unit only.');
+
+                    // Remove the last selected item that triggered the alert
+                    let newlySelectedItem = selectedItems[selectedItems.length - 1];
+                    selectedItems = selectedItems.filter(item => item !== newlySelectedItem);
+                    $(this).val(selectedItems).trigger('change');
+                    return;
+                }
+
+                // Auto-select unit if only one unit is selected
+                if (Object.keys(allUnits).length === 1) {
+                    let unitId = Object.keys(allUnits)[0];
+                    unitDropdown.val(unitId).trigger('change');
+                } else {
+                    // If no items are selected, set the dropdown to "Select Unit"
+                    unitDropdown.val('').trigger('change');
+                }
+            });
         });
     </script>
 </body>
