@@ -455,7 +455,7 @@ if (isset($_POST['category_update'])) {
 
                                                             <!-- Description -->
                                                             <div class="mb-3">
-                                                                <p class="mb-0"><?php echo $ticket['long_description']; ?></p>
+                                                                <p class="mb-0"><?php echo nl2br($ticket['long_description']); ?></p>
                                                             </div>
 
                                                             <!-- Raised for -->
@@ -603,7 +603,7 @@ if (isset($_POST['category_update'])) {
                                                                         ?>
                                                                     </small>
                                                                 </div>
-                                                                <p class="mt-2 mb-0"><?php echo htmlspecialchars($comment['comment']); ?></p>
+                                                                <p class="mt-2 mb-0"><?php echo nl2br($comment['comment']); ?></p>
                                                                 <!-- Supporting Documents -->
                                                                 <?php if (!empty($comment['attachment'])): ?>
                                                                     <div class="mb-3">
