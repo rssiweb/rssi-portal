@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 include("../../util/email.php"); // Make sure you have the email sending function
+include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -107,10 +108,18 @@ if ($ticket_id) {
         // Handle new comment submission
         if ($comment) {
             $commented_by = $_SESSION['aid'];
+            // Upload and insert passbook page if provided
+            $doclink = null;
+            if (!empty($_FILES['attachment']['name'])) {
+                $attachment = $_FILES['attachment'];
+                $filename = $ticket_id . "_" . time();
+                $parent = '19j8P2pM1kSy3Dc_Clr-GcQlYCl5ZMAiQ';
+                $doclink = uploadeToDrive($attachment, $parent, $filename);
+            }
             handleInsertion($con, "
-                INSERT INTO support_comment (ticket_id, timestamp, comment, commented_by) 
-                VALUES ($1, NOW(), $2, $3)
-            ", array($ticket_id, $comment, $commented_by));
+                INSERT INTO support_comment (ticket_id, timestamp, comment, commented_by,attachment) 
+                VALUES ($1, NOW(), $2, $3,$4)
+            ", array($ticket_id, $comment, $commented_by, $doclink));
 
             // Refresh comments after inserting the new one
             $result = pg_query_params($con, "
@@ -136,7 +145,7 @@ if ($ticket_id) {
                 ), $latest_comment['commenter_email'], False);
             }
             // Send email notification to raised by
-            if (!empty($ticket['raised_by_email']) && ($ticket['raised_by_email']!=$latest_comment['commenter_email'])) {
+            if (!empty($ticket['raised_by_email']) && ($ticket['raised_by_email'] != $latest_comment['commenter_email'])) {
                 sendEmail("ticketcomment_others", array(
                     "ticket_id" => $ticket_id,
                     "short_description" => $ticket['short_description'],
@@ -160,7 +169,7 @@ if ($ticket_id) {
             if ($result && pg_num_rows($result) > 0) { // Check if the query result is valid and not empty
                 $assigned_person = pg_fetch_assoc($result);
                 $assigned_to = $assigned_person['assigned_to']; // Fetch the assigned_to value from the result
-                if (!empty($assigned_person['email']) && ($assigned_person['email']!=$latest_comment['commenter_email'])) {
+                if (!empty($assigned_person['email']) && ($assigned_person['email'] != $latest_comment['commenter_email'])) {
                     sendEmail("ticketcomment_others", array(
                         "ticket_id" => $ticket_id,
                         "short_description" => $ticket['short_description'],
@@ -595,30 +604,39 @@ if (isset($_POST['category_update'])) {
                                                                     </small>
                                                                 </div>
                                                                 <p class="mt-2 mb-0"><?php echo htmlspecialchars($comment['comment']); ?></p>
+                                                                <!-- Supporting Documents -->
+                                                                <?php if (!empty($comment['attachment'])): ?>
+                                                                    <div class="mb-3">
+                                                                        <a href="<?php echo htmlspecialchars($comment['attachment']); ?>" target="_blank">View Attachment</a>
+                                                                    </div>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </li>
                                                     <?php endforeach; ?>
                                                 </ul>
 
                                                 <!-- Add Comment -->
-                                                <form method="POST" class="mt-4">
+                                                <form method="POST" enctype="multipart/form-data" class="mt-4">
                                                     <div class="mb-3">
                                                         <label for="comment" class="form-label">Add Comment</label>
-                                                        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                                                        <textarea class="form-control" id="comment" name="comment" rows="3" required spellcheck="true" lang="en"></textarea>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="attachment" class="form-label">Attachment</label>
+                                                        <input class="form-control" type="file" id="attachment" name="attachment">
                                                     </div>
                                                     <button type="submit" class="btn btn-primary">Submit Comment</button>
                                                 </form>
                                             </div>
                                         </div>
+                                    <?php else: ?>
+                                        <p class="text-danger">We could not locate the ticket with ID <?php echo htmlspecialchars($ticket_id); ?>. Please verify the details and try again.</p>
+                                    <?php endif; ?>
                                     </div>
-                                <?php else: ?>
-                                    <p class="text-danger">We could not locate the ticket with ID <?php echo htmlspecialchars($ticket_id); ?>. Please verify the details and try again.</p>
-                                <?php endif; ?>
                             </div>
                         </div>
-                    </div>
 
-                </div>
+                    </div>
         </section>
 
     </main><!-- End #main -->
