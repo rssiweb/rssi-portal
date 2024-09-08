@@ -619,7 +619,7 @@ if (isset($_POST['category_update'])) {
                                                 <form method="POST" enctype="multipart/form-data" class="mt-4">
                                                     <div class="mb-3">
                                                         <label for="comment" class="form-label">Add Comment</label>
-                                                        <textarea class="form-control" id="comment" name="comment" rows="3" required spellcheck="true" lang="en"></textarea>
+                                                        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label for="attachment" class="form-label">Attachment</label>
