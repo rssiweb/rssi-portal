@@ -43,8 +43,10 @@ switch ($view) {
     case 'stock_distribution':
         $query = "
         SELECT
+            d.transaction_out_id AS Ref,
             d.date AS date_distribution,
             d.distributed_to,
+            COALESCE(m.fullname, s.studentname) AS distributed_to_name,
             i.item_name,
             d.quantity_distributed,
             u.unit_name,
@@ -53,9 +55,13 @@ switch ($view) {
         FROM stock_item i
         JOIN stock_out d ON i.item_id = d.item_distributed
         JOIN stock_item_unit u ON u.unit_id = d.unit
+        LEFT JOIN rssimyaccount_members m ON m.associatenumber = d.distributed_to
+        LEFT JOIN rssimyprofile_student s ON s.student_id = d.distributed_to
         GROUP BY 
+            d.transaction_out_id,
             d.date,
             d.distributed_to,
+            m.fullname, s.studentname,
             i.item_name,
             d.quantity_distributed,
             u.unit_name,
