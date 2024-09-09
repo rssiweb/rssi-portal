@@ -12,6 +12,9 @@ if (!isLoggedIn("aid")) {
 $filter_ticket_id = isset($_POST['ticket_id']) ? $_POST['ticket_id'] : '';
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
 
+// $role='User';
+// $associatenumber='VKGP24119';
+
 // Set default statuses if no filter value is selected
 if (empty($filter_status)) {
     $filter_status = ['Open', 'In Progress']; // Default statuses

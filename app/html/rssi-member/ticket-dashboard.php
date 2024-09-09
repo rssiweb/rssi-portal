@@ -39,12 +39,29 @@ function handleInsertion($con, $query, $params)
 
 // Fetch ticket details with raised_by information
 if ($ticket_id) {
-    $result = pg_query_params($con, "
+    // Base query to fetch ticket details with raised_by information
+    $ticketQuery = "
         SELECT st.*, rm.fullname AS raised_by_name, rm.phone AS raised_by_contact, rm.email AS raised_by_email, rm.photo AS raised_by_photo 
         FROM support_ticket st
         LEFT JOIN rssimyaccount_members rm ON st.raised_by = rm.associatenumber
         WHERE st.ticket_id = $1
-    ", array($ticket_id));
+    ";
+
+    // Apply role-based filtering for non-admin users
+    if ($role !== 'Admin') {
+        $ticketQuery .= " AND (
+                            st.raised_by = '" . pg_escape_string($con, $associatenumber) . "' 
+                            OR EXISTS (
+                                SELECT 1
+                                FROM support_ticket_assignment sa
+                                WHERE sa.ticket_id = st.ticket_id
+                                AND sa.assigned_to = '" . pg_escape_string($con, $associatenumber) . "'
+                            )
+                        )";
+    }
+
+    // Execute the query for ticket details
+    $result = pg_query_params($con, $ticketQuery, array($ticket_id));
     if ($result) {
         $ticket = pg_fetch_assoc($result);
     }
@@ -110,16 +127,18 @@ if ($ticket_id) {
             $commented_by = $_SESSION['aid'];
             // Upload and insert passbook page if provided
             $doclink = null;
+            $filename = null;
             if (!empty($_FILES['attachment']['name'])) {
                 $attachment = $_FILES['attachment'];
-                $filename = $ticket_id . "_" . time();
+                // $filename = $ticket_id . "_" . time();
+                $filename = basename($attachment['name']); // Extract original file name
                 $parent = '19j8P2pM1kSy3Dc_Clr-GcQlYCl5ZMAiQ';
                 $doclink = uploadeToDrive($attachment, $parent, $filename);
             }
             handleInsertion($con, "
-                INSERT INTO support_comment (ticket_id, timestamp, comment, commented_by,attachment) 
-                VALUES ($1, NOW(), $2, $3,$4)
-            ", array($ticket_id, $comment, $commented_by, $doclink));
+                INSERT INTO support_comment (ticket_id, timestamp, comment, commented_by,attachment,attachment_name) 
+                VALUES ($1, NOW(), $2, $3, $4, $5)
+            ", array($ticket_id, $comment, $commented_by, $doclink, $filename));
 
             // Refresh comments after inserting the new one
             $result = pg_query_params($con, "
@@ -607,7 +626,7 @@ if (isset($_POST['category_update'])) {
                                                                 <!-- Supporting Documents -->
                                                                 <?php if (!empty($comment['attachment'])): ?>
                                                                     <div class="mb-3">
-                                                                        <a href="<?php echo htmlspecialchars($comment['attachment']); ?>" target="_blank">View Attachment</a>
+                                                                        <a href="<?php echo htmlspecialchars($comment['attachment']); ?>" target="_blank"><?php echo $comment['attachment_name']; ?></a>
                                                                     </div>
                                                                 <?php endif; ?>
                                                             </div>
@@ -629,14 +648,15 @@ if (isset($_POST['category_update'])) {
                                                 </form>
                                             </div>
                                         </div>
-                                    <?php else: ?>
-                                        <p class="text-danger">We could not locate the ticket with ID <?php echo htmlspecialchars($ticket_id); ?>. Please verify the details and try again.</p>
-                                    <?php endif; ?>
                                     </div>
+                                <?php else: ?>
+                                    <p class="text-danger">We could not locate the ticket with ID <?php echo htmlspecialchars($ticket_id); ?>. This may be because the ticket does not exist or you do not have permission to access it. Please verify the details and try again.</p>
+                                <?php endif; ?>
                             </div>
                         </div>
-
                     </div>
+                </div>
+            </div>
         </section>
 
     </main><!-- End #main -->
