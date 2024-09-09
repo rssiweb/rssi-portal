@@ -153,16 +153,16 @@ if ($ticket_id) {
             }
             $latest_comment = ($result) ? pg_fetch_assoc($result) : [];
             // Send email notification to the commenter
-            if (!empty($latest_comment['commenter_email'])) {
-                sendEmail("ticketcomment_self", array(
-                    "ticket_id" => $ticket_id,
-                    "short_description" => $ticket['short_description'],
-                    "comment" => $latest_comment['comment'],
-                    "commentby_name" => $latest_comment['commenter_name'],
-                    "commentby_id" => $latest_comment['commented_by'],
-                    "timestamp" => @date("d/m/Y g:i a", strtotime($latest_comment['timestamp']))
-                ), $latest_comment['commenter_email'], False);
-            }
+            // if (!empty($latest_comment['commenter_email'])) {
+            //     sendEmail("ticketcomment_self", array(
+            //         "ticket_id" => $ticket_id,
+            //         "short_description" => $ticket['short_description'],
+            //         "comment" => $latest_comment['comment'],
+            //         "commentby_name" => $latest_comment['commenter_name'],
+            //         "commentby_id" => $latest_comment['commented_by'],
+            //         "timestamp" => @date("d/m/Y g:i a", strtotime($latest_comment['timestamp']))
+            //     ), $latest_comment['commenter_email'], False);
+            // }
             // Send email notification to raised by
             if (!empty($ticket['raised_by_email']) && ($ticket['raised_by_email'] != $latest_comment['commenter_email'])) {
                 sendEmail("ticketcomment_others", array(
@@ -622,7 +622,21 @@ if (isset($_POST['category_update'])) {
                                                                         ?>
                                                                     </small>
                                                                 </div>
-                                                                <p class="mt-2 mb-0"><?php echo nl2br($comment['comment']); ?></p>
+                                                                <?php
+                                                                if (!function_exists('makeClickableLinks')) {
+                                                                    function makeClickableLinks($text)
+                                                                    {
+                                                                        // Regular expression to identify URLs in the text
+                                                                        $text = preg_replace(
+                                                                            '~(https?://[^\s]+)~i', // Match URLs starting with http or https
+                                                                            '<a href="$1" target="_blank">$1</a>', // Replace with anchor tag
+                                                                            $text
+                                                                        );
+                                                                        return $text;
+                                                                    }
+                                                                }
+                                                                ?>
+                                                                <p class="mt-2 mb-0"><?php echo nl2br(makeClickableLinks($comment['comment'])); ?></p>
                                                                 <!-- Supporting Documents -->
                                                                 <?php if (!empty($comment['attachment'])): ?>
                                                                     <div class="mb-3">
