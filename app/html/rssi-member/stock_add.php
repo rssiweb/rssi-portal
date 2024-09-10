@@ -87,7 +87,7 @@ while ($row = pg_fetch_assoc($unit_result)) {
     <link href="../assets_new/css/style.css" rel="stylesheet">
 
     <!-- Include jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Include Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
