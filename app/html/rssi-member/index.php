@@ -261,10 +261,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 data-bs-slide-to="6"></button>
                             <button type="button" data-bs-target="#carouselExampleIndicators"
                                 data-bs-slide-to="7"></button>
-                            <button type="button" data-bs-target="#carouselExampleIndicators"
-                                data-bs-slide-to="8"></button>
-                            <button type="button" data-bs-target="#carouselExampleIndicators"
-                                data-bs-slide-to="9"></button>
                         </div>
                         <div class="carousel-inner">
                             <div class="carousel-item active">
@@ -314,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <a href="https://quiz.mygov.in/quiz/quiz-competition-on-anemia-first-1000-days/"
                                     target="_blank"><img
                                         src="https://static.mygov.in/media/quiz/2024/09/mygov_66ded9542454c.jpg"
-                                        class="d-block w-100" alt="Slide 9"></a>
+                                        class="d-block w-100" alt="Slide 8"></a>
                             </div>
                         </div>
                         <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators"
