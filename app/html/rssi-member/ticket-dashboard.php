@@ -108,7 +108,7 @@ if ($ticket_id) {
 
             if ($result) {
                 $assigned_person = pg_fetch_assoc($result);
-                if (!empty($assigned_person['email'])) {
+                if (!empty($assigned_person['email']) && ($status != 'Closed' && $status != 'Resolved')) {
                     sendEmail("ticketassign", array(
                         "ticket_id" => $ticket_id,
                         "assigned_to_name" => $assigned_person['fullname'],
@@ -117,6 +117,17 @@ if ($ticket_id) {
                         "severity" => $ticket['severity'],
                         "category" => $ticket['category']
                     ), $assigned_person['email'], False);
+                }
+                if (!empty($assigned_person['email']) && ($status == 'Closed' || $status == 'Resolved')) {
+                    $recipients = $assigned_person['email'] . ',' . $ticket['raised_by_email'];
+
+                    sendEmail("ticketStatus", array(
+                        "ticket_id" => $ticket_id,
+                        "short_description" => $ticket['short_description'],
+                        "severity" => $ticket['severity'],
+                        "status" => $status,
+                        "category" => $ticket['category']
+                    ), $recipients, false);
                 }
             }
         }
@@ -170,6 +181,12 @@ if ($ticket_id) {
                     "short_description" => $ticket['short_description'],
                     "severity" => $ticket['severity'],
                     "category" => $ticket['category'],
+                    "comment" => $latest_comment['comment'],
+                    "commentby_name" => $latest_comment['commenter_name'],
+                    "commentby_initials" => strtoupper(implode('', array_map(function ($part) {
+                        return $part[0];
+                    }, explode(' ', $latest_comment['commenter_name'])))),
+                    "commentby_id" => $latest_comment['commented_by'],
                     "ticket_raisedby_name" => $ticket['raised_by_name'],
                     "ticket_raisedby_id" => $ticket['raised_by'],
                 ), $ticket['raised_by_email'], False);
@@ -194,6 +211,12 @@ if ($ticket_id) {
                         "short_description" => $ticket['short_description'],
                         "severity" => $ticket['severity'],
                         "category" => $ticket['category'],
+                        "comment" => $latest_comment['comment'],
+                        "commentby_name" => $latest_comment['commenter_name'],
+                        "commentby_initials" => strtoupper(implode('', array_map(function ($part) {
+                            return $part[0];
+                        }, explode(' ', $latest_comment['commenter_name'])))),
+                        "commentby_id" => $latest_comment['commented_by'],
                         "ticket_assigned_to_name" => $assigned_person['fullname'],
                         "ticket_assigned_to_id" => $assigned_to, // Now $assigned_to should have the correct value
                     ), $assigned_person['email']);

@@ -1,27 +1,132 @@
 Confirmation of Ticket Submission - Ticket ID: {{ticket_id}}
 <html>
 
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .email-container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            border: 1px solid #e5e5e5;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #5A839B;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 10px 20px;
+        }
+
+        .content p {
+            font-size: 14px;
+            color: #333333;
+            line-height: 1.5;
+        }
+
+        .content ul {
+            padding-left: 20px;
+            font-size: 14px;
+            color: #333333;
+        }
+
+        .content ul li {
+            margin-bottom: 5px;
+        }
+
+        .ticket-details {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #5A839B;
+            border-radius: 5px;
+        }
+
+        .ticket-details h2 {
+            font-size: 16px;
+            color: #333333;
+            margin-bottom: 10px;
+        }
+
+        .cta-button {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .cta-button a {
+            display: inline-block;
+            padding: 10px 20px;
+            color: white;
+            background-color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+
+        .cta-button a:hover {
+            background-color: #0056b3;
+        }
+
+        .footer {
+            font-size: 12px;
+            color: #999999;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
 <body>
-    <p>Dear {{ticket_raisedby_name}} ({{ticket_raisedby_id}}),
-        <br><br>Your ticket (ID: {{ticket_id}}) has been successfully submitted on {{timestamp}}. Please find the
-        details of your ticket below:
-        <br><br>
-        <b>Ticket Details:</b>
-    <ul>
-        <li>Short Description: {{short_description}}</li>
-        <li>Severity Level: {{severity}}</li>
-        <li>Category: {{category}}</li>
-    </ul>
+    <div class="email-container">
+        <div class="header">
+            Confirmation of Ticket Submission - Ticket ID: {{ticket_id}}
+        </div>
 
-    <p>Our support team is currently reviewing your request and will get back to you as soon as possible.</p>
-    <p>If you have any additional information or need to make updates regarding this ticket, please use the comment
-        section of your ticket by clicking the link below:</p>
-    <p><a href="https://login.rssi.in/rssi-member/ticket-dashboard.php?ticket_id={{ticket_id}}">Update Your Ticket</a>
-    </p>
+        <div class="content">
+            <p>Dear {{ticket_raisedby_name}} ({{ticket_raisedby_id}}),</p>
 
-    <p>--Support360 Team</p>
+            <p>Your ticket (ID: <b>{{ticket_id}}</b>) has been successfully submitted on {{timestamp}}. Please find the
+                details of your ticket below:</p>
 
-    <p>This is an automated message. Please do not reply to this email.</p>
+            <div class="ticket-details">
+                <h2>Ticket Details:</h2>
+                <ul>
+                    <li><b>Short Description:</b> {{short_description}}</li>
+                    <li><b>Severity Level:</b> {{severity}}</li>
+                    <li><b>Category:</b> {{category}}</li>
+                </ul>
+            </div>
+
+            <p>Our support team is currently reviewing your request and will get back to you as soon as possible.</p>
+
+            <p>If you have any additional information or need to make updates regarding this ticket, please use the
+                comment section of your ticket by clicking the link below:</p>
+
+            <div class="cta-button">
+                <a href="https://login.rssi.in/rssi-member/ticket-dashboard.php?ticket_id={{ticket_id}}">Update Your
+                    Ticket</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>-- Support360 Team</p>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -1,5 +1,4 @@
-Ticket Assignment Notification - Ticket ID: {{ticket_id}}
-<!DOCTYPE html>
+Your Ticket {{ticket_id}} Has Been Marked as {{status}}
 <html>
 
 <head>
@@ -47,19 +46,32 @@ Ticket Assignment Notification - Ticket ID: {{ticket_id}}
 
         .ticket-info {
             margin: 20px 0;
-            padding: 10px;
+            padding: 15px;
             background-color: #f9f9f9;
             border-left: 4px solid #5A839B;
+            border-radius: 5px;
+        }
+
+        .ticket-info h2 {
+            font-size: 16px;
+            color: #333333;
+            margin-bottom: 10px;
         }
 
         .ticket-info ul {
             list-style-type: none;
             padding: 0;
+            margin: 0;
         }
 
         .ticket-info li {
             font-size: 14px;
+            color: #555555;
             margin: 5px 0;
+        }
+
+        .ticket-info li b {
+            color: #333333;
         }
 
         .cta-button {
@@ -93,15 +105,15 @@ Ticket Assignment Notification - Ticket ID: {{ticket_id}}
 <body>
     <div class="email-container">
         <div class="header">
-            Ticket Assignment Notification
+            Ticket Status Update
         </div>
         <div class="content">
-            <h1>Hello {{assigned_to_name}},</h1>
-            <p>A ticket (ID: <b>{{ticket_id}}</b>) has been assigned to you for further action. Please review the
-                details of the ticket below:</p>
+            <h1>Hello {{recipient_name}},</h1>
+            <p>We are writing to inform you that your ticket <b>{{ticket_id}}</b> has been updated. It is now marked as
+                <b>{{status}}</b>.</p>
 
             <div class="ticket-info">
-                <b>Ticket Details:</b>
+                <h2>Ticket Details</h2>
                 <ul>
                     <li><b>Short Description:</b> {{short_description}}</li>
                     <li><b>Severity Level:</b> {{severity}}</li>
@@ -109,9 +121,8 @@ Ticket Assignment Notification - Ticket ID: {{ticket_id}}
                 </ul>
             </div>
 
-            <p>To view and update the ticket, please use the comment section by clicking the link below:</p>
             <div class="cta-button">
-                <a href="https://login.rssi.in/rssi-member/ticket-dashboard.php?ticket_id={{ticket_id}}">Update Your
+                <a href="https://login.rssi.in/rssi-member/ticket-dashboard.php?ticket_id={{ticket_id}}">View Your
                     Ticket</a>
             </div>
         </div>

@@ -1,26 +1,137 @@
-New Comment Added to Ticket ID: {{ticket_id}}
+{{commentby_name}} has added a new comment to Ticket ID: {{ticket_id}}
 <html>
 
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .email-container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            border: 1px solid #e5e5e5;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #5A839B;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 10px 20px;
+        }
+
+        .comment-section {
+            display: table;
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .commenter-image {
+            /* display: table-cell; */
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #E2DEEC;
+            color: #403B4F;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            line-height: 50px;
+        }
+
+        .comment-content {
+            display: table-cell;
+            padding-left: 15px;
+            vertical-align: top;
+        }
+
+        .commenter-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .comment-body {
+            font-size: 1em;
+            color: #555;
+        }
+
+        .cta-button {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .cta-button a {
+            display: inline-block;
+            padding: 10px 20px;
+            color: white;
+            background-color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+
+        .cta-button a:hover {
+            background-color: #0056b3;
+        }
+
+        .footer {
+            font-size: 12px;
+            color: #999999;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
 <body>
-    <p>Dear {{ticket_raisedby_name}}{{ticket_assigned_to_name}} ({{ticket_raisedby_id}}{{ticket_assigned_to_id}}),
-        <br><br>A new comment has been added to your assigned ticket (ID: {{ticket_id}}). Please review the comment and
-        provide any necessary updates or responses.
-        <br><br>
-        <b>Ticket Details:</b>
-    <ul>
-        <li>Short Description: {{short_description}}</li>
-        <li>Severity Level: {{severity}}</li>
-        <li>Category: {{category}}</li>
-    </ul>
+    <div class="email-container">
+        <div class="header">
+            New Comment Added
+        </div>
+        <div class="content">
+            <p>Hello {{recipient_name}},</p>
+            <p>{{commentby_name}} has added a new comment to Ticket ID: {{ticket_id}}. Please review the comment and provide any necessary updates or responses.</p>
 
-    <p>To view the new comment or reply, please click the link below:</p>
-    <p><a href="https://login.rssi.in/rssi-member/ticket-dashboard.php?ticket_id={{ticket_id}}">View or Reply to Your
-            Ticket</a>
-    </p>
+            <p><strong>Ticket Short Description:</strong> {{short_description}}</p>
 
-    <p>--Support360 Team</p>
+            <div class="comment-section">
+                <div class="commenter-image">
+                    {{commentby_initials}}
+                </div>
+                <div class="comment-content">
+                    <div class="commenter-name">{{commentby_name}}</div>
+                    <div class="comment-body">{{comment}}</div>
+                </div>
+            </div>
 
-    <p>This is an automated message. Please do not reply to this email.</p>
+            <div class="cta-button">
+                <a href="https://login.rssi.in/rssi-member/ticket-dashboard.php?ticket_id={{ticket_id}}">View or Reply to Your Ticket</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>-- Support360 Team</p>
+        </div>
+    </div>
 </body>
 
 </html>
