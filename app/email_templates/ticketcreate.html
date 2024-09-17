@@ -38,16 +38,6 @@ Confirmation of Ticket Submission - Ticket ID: {{ticket_id}}
             line-height: 1.5;
         }
 
-        .content ul {
-            padding-left: 20px;
-            font-size: 14px;
-            color: #333333;
-        }
-
-        .content ul li {
-            margin-bottom: 5px;
-        }
-
         .ticket-details {
             margin: 20px 0;
             padding: 15px;
@@ -60,6 +50,18 @@ Confirmation of Ticket Submission - Ticket ID: {{ticket_id}}
             font-size: 16px;
             color: #333333;
             margin-bottom: 10px;
+        }
+
+        .ticket-details ul {
+            padding-left: 20px;
+            font-size: 14px;
+            color: #333333;
+            list-style-type: none;
+            margin: 0;
+        }
+
+        .ticket-details ul li {
+            margin-bottom: 8px;
         }
 
         .cta-button {
@@ -97,7 +99,7 @@ Confirmation of Ticket Submission - Ticket ID: {{ticket_id}}
         </div>
 
         <div class="content">
-            <p>Dear {{ticket_raisedby_name}} ({{ticket_raisedby_id}}),</p>
+            <p>Dear {{ticket_raisedby_name}},</p>
 
             <p>Your ticket (ID: <b>{{ticket_id}}</b>) has been successfully submitted on {{timestamp}}. Please find the
                 details of your ticket below:</p>

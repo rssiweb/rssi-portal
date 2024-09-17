@@ -121,7 +121,7 @@ if ($ticket_id) {
                 if (!empty($assigned_person['email']) && ($status == 'Closed' || $status == 'Resolved')) {
                     $recipients = $assigned_person['email'] . ',' . $ticket['raised_by_email'];
 
-                    sendEmail("ticketStatus", array(
+                    sendEmail("ticket_status", array(
                         "ticket_id" => $ticket_id,
                         "short_description" => $ticket['short_description'],
                         "severity" => $ticket['severity'],
