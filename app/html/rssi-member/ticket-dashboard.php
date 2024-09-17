@@ -116,7 +116,7 @@ if ($ticket_id) {
                         "short_description" => $ticket['short_description'],
                         "severity" => $ticket['severity'],
                         "category" => $ticket['category']
-                    ), $assigned_person['email'], False);
+                    ), $assigned_person['email']);
                 }
                 if (!empty($assigned_person['email']) && ($status == 'Closed' || $status == 'Resolved')) {
                     $recipients = $assigned_person['email'] . ',' . $ticket['raised_by_email'];
@@ -127,7 +127,7 @@ if ($ticket_id) {
                         "severity" => $ticket['severity'],
                         "status" => $status,
                         "category" => $ticket['category']
-                    ), $recipients, false);
+                    ), $recipients);
                 }
             }
         }
@@ -141,41 +141,52 @@ if ($ticket_id) {
             $filename = null;
             if (!empty($_FILES['attachment']['name'])) {
                 $attachment = $_FILES['attachment'];
-                // $filename = $ticket_id . "_" . time();
                 $filename = basename($attachment['name']); // Extract original file name
                 $parent = '19j8P2pM1kSy3Dc_Clr-GcQlYCl5ZMAiQ';
                 $doclink = uploadeToDrive($attachment, $parent, $filename);
             }
             handleInsertion($con, "
-                INSERT INTO support_comment (ticket_id, timestamp, comment, commented_by,attachment,attachment_name) 
-                VALUES ($1, NOW(), $2, $3, $4, $5)
-            ", array($ticket_id, $comment, $commented_by, $doclink, $filename));
+        INSERT INTO support_comment (ticket_id, timestamp, comment, commented_by,attachment,attachment_name) 
+        VALUES ($1, NOW(), $2, $3, $4, $5)
+    ", array($ticket_id, $comment, $commented_by, $doclink, $filename));
 
             // Refresh comments after inserting the new one
             $result = pg_query_params($con, "
-                SELECT sc.*, rm.fullname AS commenter_name, rm.phone AS commenter_contact, rm.email AS commenter_email,rm.photo AS commenter_photo 
-                FROM support_comment sc
-                LEFT JOIN rssimyaccount_members rm ON sc.commented_by = rm.associatenumber
-                WHERE sc.ticket_id = $1
-                ORDER BY sc.timestamp DESC
-            ", array($ticket_id));
+        SELECT sc.*, rm.fullname AS commenter_name, rm.phone AS commenter_contact, rm.email AS commenter_email,rm.photo AS commenter_photo 
+        FROM support_comment sc
+        LEFT JOIN rssimyaccount_members rm ON sc.commented_by = rm.associatenumber
+        WHERE sc.ticket_id = $1
+        ORDER BY sc.timestamp DESC
+    ", array($ticket_id));
             if ($result) {
                 $comments = pg_fetch_all($result);
             }
             $latest_comment = ($result) ? pg_fetch_assoc($result) : [];
-            // Send email notification to the commenter
-            // if (!empty($latest_comment['commenter_email'])) {
-            //     sendEmail("ticketcomment_self", array(
-            //         "ticket_id" => $ticket_id,
-            //         "short_description" => $ticket['short_description'],
-            //         "comment" => $latest_comment['comment'],
-            //         "commentby_name" => $latest_comment['commenter_name'],
-            //         "commentby_id" => $latest_comment['commented_by'],
-            //         "timestamp" => @date("d/m/Y g:i a", strtotime($latest_comment['timestamp']))
-            //     ), $latest_comment['commenter_email'], False);
-            // }
-            // Send email notification to raised by
+
+            // Fetch the latest assigned_to person for the ticket and their details
+            $result = pg_query_params($con, "
+        SELECT sta.assigned_to, rm.email, rm.fullname 
+        FROM support_ticket_assignment sta
+        JOIN rssimyaccount_members rm ON sta.assigned_to = rm.associatenumber
+        WHERE sta.ticket_id = $1
+        ORDER BY sta.timestamp DESC
+        LIMIT 1
+    ", array($ticket_id));
+
+            $recipients = [];
             if (!empty($ticket['raised_by_email']) && ($ticket['raised_by_email'] != $latest_comment['commenter_email'])) {
+                $recipients[] = $ticket['raised_by_email'];
+            }
+
+            if ($result && pg_num_rows($result) > 0) {
+                $assigned_person = pg_fetch_assoc($result);
+                if (!empty($assigned_person['email']) && ($assigned_person['email'] != $latest_comment['commenter_email'])) {
+                    $recipients[] = $assigned_person['email'];
+                }
+            }
+
+            if (!empty($recipients)) {
+                // Send email notification to all recipients
                 sendEmail("ticketcomment_others", array(
                     "ticket_id" => $ticket_id,
                     "short_description" => $ticket['short_description'],
@@ -189,40 +200,12 @@ if ($ticket_id) {
                     "commentby_id" => $latest_comment['commented_by'],
                     "ticket_raisedby_name" => $ticket['raised_by_name'],
                     "ticket_raisedby_id" => $ticket['raised_by'],
-                ), $ticket['raised_by_email'], False);
-            }
-
-            // Fetch the latest assigned_to person for the ticket and their details
-            $result = pg_query_params($con, "
-    SELECT sta.assigned_to, rm.email, rm.fullname 
-    FROM support_ticket_assignment sta
-    JOIN rssimyaccount_members rm ON sta.assigned_to = rm.associatenumber
-    WHERE sta.ticket_id = $1
-    ORDER BY sta.timestamp DESC
-    LIMIT 1
-", array($ticket_id));
-
-            if ($result && pg_num_rows($result) > 0) { // Check if the query result is valid and not empty
-                $assigned_person = pg_fetch_assoc($result);
-                $assigned_to = $assigned_person['assigned_to']; // Fetch the assigned_to value from the result
-                if (!empty($assigned_person['email']) && ($assigned_person['email'] != $latest_comment['commenter_email'])) {
-                    sendEmail("ticketcomment_others", array(
-                        "ticket_id" => $ticket_id,
-                        "short_description" => $ticket['short_description'],
-                        "severity" => $ticket['severity'],
-                        "category" => $ticket['category'],
-                        "comment" => $latest_comment['comment'],
-                        "commentby_name" => $latest_comment['commenter_name'],
-                        "commentby_initials" => strtoupper(implode('', array_map(function ($part) {
-                            return $part[0];
-                        }, explode(' ', $latest_comment['commenter_name'])))),
-                        "commentby_id" => $latest_comment['commented_by'],
-                        "ticket_assigned_to_name" => $assigned_person['fullname'],
-                        "ticket_assigned_to_id" => $assigned_to, // Now $assigned_to should have the correct value
-                    ), $assigned_person['email']);
-                }
+                    "ticket_assigned_to_name" => isset($assigned_person) ? $assigned_person['fullname'] : null,
+                    "ticket_assigned_to_id" => isset($assigned_person) ? $assigned_person['assigned_to'] : null,
+                ), implode(',', $recipients));
             }
         }
+
 
         // Fetch the latest status from support_ticket_status
         $result = pg_query_params($con, "
@@ -260,11 +243,61 @@ $results = pg_fetch_all($dropdown_result);
 
 // Fetch all assignment history from the support_ticket_assignment table
 $assignment_results = pg_query_params($con, "
-    SELECT sc.assigned_to, rm.fullname AS assigned_name, sc.assigned_by, sc.timestamp
-    FROM support_ticket_assignment sc
-    LEFT JOIN rssimyaccount_members rm ON sc.assigned_to = rm.associatenumber
-    WHERE sc.ticket_id = $1 
-    ORDER BY sc.timestamp DESC
+WITH assignment_status AS (
+    SELECT 
+        sta.ticket_id,
+        sta.assigned_to,
+        rm.fullname AS assigned_to_name,
+        sta.assigned_by,
+        sta.timestamp AS assigned_timestamp,
+        sts.status,
+        sts.timestamp AS status_timestamp,
+        ABS(EXTRACT(EPOCH FROM (sts.timestamp - sta.timestamp))) AS time_diff
+    FROM 
+        support_ticket_assignment sta
+        LEFT JOIN 
+    rssimyaccount_members rm ON sta.assigned_to = rm.associatenumber -- Join to get assigned_to_name
+    LEFT JOIN 
+        support_ticket_status sts ON sta.ticket_id = sts.ticket_id
+        AND sts.timestamp >= sta.timestamp - INTERVAL '1 second'
+        AND sts.timestamp <= sta.timestamp + INTERVAL '1 second'
+    WHERE 
+        sta.ticket_id = $1
+),
+closest_status AS (
+    SELECT 
+        ticket_id,
+        assigned_to,
+        assigned_by,
+        assigned_timestamp,
+        status,
+        status_timestamp,
+        assigned_to_name,
+        ROW_NUMBER() OVER (
+            PARTITION BY ticket_id, assigned_to, assigned_by, assigned_timestamp
+            ORDER BY time_diff ASC
+        ) AS rn
+    FROM 
+        assignment_status
+)
+SELECT 
+    sta.assigned_to,
+    cs.status,
+    cs.status_timestamp AS formatted_status_timestamp,
+    cs.assigned_to_name
+FROM 
+    support_ticket_assignment sta
+LEFT JOIN 
+    closest_status cs ON sta.ticket_id = cs.ticket_id
+    AND sta.assigned_to = cs.assigned_to
+    AND sta.assigned_by = cs.assigned_by
+    AND sta.timestamp = cs.assigned_timestamp
+    AND cs.rn = 1
+WHERE 
+    sta.ticket_id = $1
+ORDER BY 
+    sta.timestamp DESC;
+
 ", array($ticket_id));
 
 $assignments = [];
@@ -381,7 +414,7 @@ if (!function_exists('makeClickableLinks')) {
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Support Ticket Comments</title>
+    <title><?php echo $ticket['short_description']; ?></title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -599,16 +632,18 @@ if (!function_exists('makeClickableLinks')) {
                                                                 ?>
                                                                     <li class="mb-2">
                                                                         <div class="d-flex justify-content-between">
-                                                                            <span><?php echo htmlspecialchars($assignment['assigned_name']); ?></span>
-                                                                            <span class="text-muted"><?php echo htmlspecialchars((new DateTime($assignment['timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                            <span><?php echo htmlspecialchars($assignment['assigned_to_name']); ?>/<?php echo htmlspecialchars($assignment['status']); ?></span>
+                                                                            <span class="text-muted"><?php echo htmlspecialchars((new DateTime($assignment['formatted_status_timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                            </span>
                                                                         </div>
                                                                     </li>
                                                                 <?php else: // Hide remaining assignments initially 
                                                                 ?>
                                                                     <li class="mb-2 hidden-record">
                                                                         <div class="d-flex justify-content-between">
-                                                                            <span><?php echo htmlspecialchars($assignment['assigned_name']); ?></span>
-                                                                            <span class="text-muted"><?php echo htmlspecialchars((new DateTime($assignment['timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                            <span><?php echo htmlspecialchars($assignment['assigned_to_name']); ?>/<?php echo htmlspecialchars($assignment['status']); ?></span>
+                                                                            <span class="text-muted"><?php echo htmlspecialchars((new DateTime($assignment['formatted_status_timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                            </span>
                                                                         </div>
                                                                     </li>
                                                                 <?php endif; ?>
