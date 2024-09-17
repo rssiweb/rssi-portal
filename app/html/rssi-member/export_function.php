@@ -837,6 +837,7 @@ function exportAttendanceToCSVAssociate($attendanceData, $startDate, $endDate)
     $punch_in = $array['punch_in'] ? date('h:i:s A', strtotime($array['punch_in'])) : '';
     $punch_out = $array['punch_out'] ? date('h:i:s A', strtotime($array['punch_out'])) : '';
     $late_status = $array['late_status'] ?? '';
+    $exit_status = $array['exit_status'] ?? '';
 
     if ($attendance_date) {
       if ($punch_in) {
@@ -847,7 +848,11 @@ function exportAttendanceToCSVAssociate($attendanceData, $startDate, $endDate)
         $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_in"] = $punchInWithStatus;
       }
       if ($punch_out) {
-        $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_out"] = $punch_out;
+        $punchOutWithStatus = $punch_out;
+        if ($exit_status) {
+          $punchOutWithStatus .= " ($exit_status)";
+        }
+        $associateData[$associateNumber]["day_" . date("j", strtotime($attendance_date)) . "_out"] = $punchOutWithStatus;
       }
     }
   }
@@ -892,7 +897,7 @@ function monthly_attd_associate_export()
   }
 
   // Construct the SQL query
-$query = "
+  $query = "
 WITH date_range AS (
     SELECT generate_series(
         '$startDate'::date,
@@ -940,7 +945,7 @@ attendance_data AS (
             AND d.attendance_date = DATE(e.end_date_time)
         )) AS punch_out,
         CASE
-            -- Presence logic: If punch_in is available (from either attendance or exception table) and either punch_out is available or is derived from an exit exception, consider it Present
+            -- Presence logic
             WHEN (
                 p.punch_in IS NOT NULL OR (
                     EXISTS (
@@ -970,7 +975,7 @@ attendance_data AS (
         END AS attendance_status,
         s.reporting_time,
         CASE
-            -- Leave condition takes the highest priority
+            -- Leave condition
             WHEN EXISTS (
                 SELECT 1
                 FROM leavedb_leavedb l
@@ -990,25 +995,42 @@ attendance_data AS (
                 AND d.attendance_date BETWEEN l.fromdate AND l.todate
             ) THEN 'HF'
 
-            -- Exception condition takes the next priority if no leave is applied
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
+            -- Exception condition for entry with actual punch_in
+    WHEN EXISTS (
+        SELECT 1
+        FROM exception_requests e
+        WHERE e.submitted_by = m.associatenumber
+        AND e.status = 'Approved'
+        AND e.exception_type = 'entry'
+        AND d.attendance_date = DATE(e.start_date_time)
+    ) THEN
+        CASE
+            WHEN p.punch_in IS NOT NULL AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM (
+                SELECT e.start_date_time 
+                FROM exception_requests e 
+                WHERE e.submitted_by = m.associatenumber 
+                AND e.status = 'Approved' 
+                AND e.exception_type = 'entry' 
                 AND d.attendance_date = DATE(e.start_date_time)
-            ) THEN
+            )::time) THEN 'Exc.L'
+            ELSE 'Exc.'
+        END
+
+            -- Regular late status logic
+            WHEN p.punch_in IS NOT NULL
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM exception_requests e
+                    WHERE e.submitted_by = m.associatenumber
+                    AND e.status = 'Approved'
+                    AND e.exception_type = 'entry'
+                    AND d.attendance_date = DATE(e.start_date_time)
+                ) THEN
                 CASE
-                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM (
-                        SELECT e.start_date_time 
-                        FROM exception_requests e 
-                        WHERE e.submitted_by = m.associatenumber 
-                        AND e.status = 'Approved' 
-                        AND e.exception_type = 'entry' 
-                        AND d.attendance_date = DATE(e.start_date_time)
-                    )::time) THEN 'Exc.L'
-                    ELSE 'Exc.'
+                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
+                        AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
+                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
+                    ELSE NULL
                 END
             
             -- Exception condition for exit
@@ -1020,47 +1042,10 @@ attendance_data AS (
                 AND e.exception_type = 'exit'
                 AND d.attendance_date = DATE(e.end_date_time)
             ) AND p.punch_out IS NULL THEN 'Exc.'
-            
-            -- Regular late status logic applies only if no leave or exception
-            WHEN NOT EXISTS (
-                SELECT 1
-                FROM leavedb_leavedb l
-                WHERE l.applicantid = m.associatenumber
-                AND l.status = 'Approved'
-                AND l.halfday = 0
-                AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            ) 
-            AND NOT EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-            )
-            AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
-                 AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
-            WHEN NOT EXISTS (
-                SELECT 1
-                FROM leavedb_leavedb l
-                WHERE l.applicantid = m.associatenumber
-                AND l.status = 'Approved'
-                AND l.halfday = 0
-                AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            )
-            AND NOT EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-            )
-            AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
             ELSE NULL
         END AS late_status,
-        -- Exit status
         CASE
+            -- Exit status
             WHEN p.punch_out IS NULL AND EXISTS (
                 SELECT 1
                 FROM exception_requests e
