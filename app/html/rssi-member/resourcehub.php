@@ -268,8 +268,7 @@ validation(); ?>
                                         <?php } ?>
                                     </tbody>
                                 </table>
-                            </div>';
-                            ?>
+                            </div>
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
 

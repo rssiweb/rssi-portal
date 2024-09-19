@@ -59,6 +59,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         ), $email);
     }
 }
+// Fetch the latest reporting_time and exit_time for the associate
+$query = "SELECT reporting_time, exit_time FROM associate_schedule WHERE associate_number = '$associatenumber' ORDER BY start_date DESC LIMIT 1";
+$result = pg_query($con, $query);
+
+if ($result && pg_num_rows($result) > 0) {
+    $schedule = pg_fetch_assoc($result);
+    $latestReportingTime = $schedule['reporting_time'];
+    $latestExitTime = $schedule['exit_time'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -228,6 +237,83 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     </script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Fetch reporting time and exit time from PHP
+            const latestReportingTime = "<?php echo $latestReportingTime; ?>";
+            const latestExitTime = "<?php echo $latestExitTime; ?>";
+
+            // Function to convert time string (HH:MM:SS) to minutes since midnight
+            function timeToMinutes(timeStr) {
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return (hours * 60) + minutes;
+            }
+
+            // Convert the time strings to minutes
+            const reportingTimeMinutes = timeToMinutes(latestReportingTime);
+            const exitTimeMinutes = timeToMinutes(latestExitTime);
+
+            // Calculate thresholds in minutes
+            const reportingTimeThreshold = reportingTimeMinutes + 60; // 1 hour late
+            const exitTimeThreshold = exitTimeMinutes - 60; // 1 hour early
+
+            // Function to format minutes to HH:MM AM/PM
+            function formatMinutesToTime(minutes) {
+                const hours = Math.floor(minutes / 60);
+                const mins = Math.floor(minutes % 60);
+                const period = hours >= 12 ? 'PM' : 'AM';
+                const formattedHours = hours % 12 || 12; // Convert to 12-hour format
+                return `${String(formattedHours).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${period}`;
+            }
+
+            // Function to format date as dd/mm/yyyy
+            function formatDate(dateStr) {
+                const [year, month, day] = dateStr.split('-');
+                return `${day}/${month}/${year}`;
+            }
+
+            // Format the thresholds
+            const formattedReportingTimeThreshold = formatMinutesToTime(reportingTimeMinutes);
+            const formattedExitTimeThreshold = formatMinutesToTime(exitTimeMinutes);
+
+            // Handle change events for time inputs and exception type
+            document.getElementById('subExceptionType').addEventListener('change', function() {
+                checkTimes();
+            });
+
+            document.getElementById('startDateTime').addEventListener('change', function() {
+                checkTimes();
+            });
+
+            document.getElementById('endDateTime').addEventListener('change', function() {
+                checkTimes();
+            });
+
+            function checkTimes() {
+                const subExceptionType = document.getElementById('subExceptionType').value;
+                const selectedStartTime = document.getElementById('startDateTime').value;
+                const selectedEndTime = document.getElementById('endDateTime').value;
+
+                if (subExceptionType === 'late-entry' && selectedStartTime) {
+                    const selectedStartDateTime = new Date(selectedStartTime);
+                    const selectedStartMinutes = timeToMinutes(selectedStartTime.split('T')[1]);
+                    if (selectedStartMinutes > reportingTimeThreshold) {
+                        alert(`You are applying for a late-entry exception on ${formatDate(selectedStartTime.split('T')[0])} at ${formatMinutesToTime(selectedStartMinutes)}, which is more than 1 hour after your actual reporting time of ${formattedReportingTimeThreshold}. Please apply for leave through the leave portal.`);
+                        document.getElementById('startDateTime').value = ''; // Clear the selected time
+                    }
+                }
+
+                if (subExceptionType === 'early-exit' && selectedEndTime) {
+                    const selectedEndDateTime = new Date(selectedEndTime);
+                    const selectedEndMinutes = timeToMinutes(selectedEndTime.split('T')[1]);
+                    if (selectedEndMinutes < exitTimeThreshold) {
+                        alert(`You are applying for an early-exit exception on ${formatDate(selectedEndTime.split('T')[0])} at ${formatMinutesToTime(selectedEndMinutes)}, which is more than 1 hour before your actual exit time of ${formattedExitTimeThreshold}. Please apply for leave through the leave portal.`);
+                        document.getElementById('endDateTime').value = ''; // Clear the selected time
+                    }
+                }
+            }
+        });
+    </script>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
