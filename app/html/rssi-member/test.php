@@ -194,80 +194,92 @@ if (!$result) {
                                 <br>
                                 <div>
                                     <span>Student ID:</span>
-                                    <span class="value"><?php echo $array['student_id'] ?></span>
+                                    <span class="value student-id"><?php echo $array['student_id'] ?></span>
                                 </div>
                                 <div>
                                     <span>Full Name:</span>
-                                    <span class="value"><?php echo $array['studentname'] ?></span>
+                                    <span class="value student-name"><?php echo $array['studentname'] ?></span>
                                 </div>
                                 <div>
-                                    <span>Date of Birth (dd/mm/yyyy):</span>
-                                    <span class="value"><?php echo (new DateTime($array['dateofbirth']))->format('d/m/Y'); ?></span>
+                                    <span>Date of Birth (dd/mm/yyyy)*:</span>
+                                    <span class="value dob"><?php echo (new DateTime($array['dateofbirth']))->format('d/m/Y'); ?></span>
                                 </div>
                                 <div>
                                     <span>Student's Aadhaar:</span>
-                                    <span class="value"><?php if ($array['studentaadhar'] != null) {
-                                                            echo substr_replace($array['studentaadhar'], str_repeat("X", 4), 4, 4);
-                                                        } ?></span>
+                                    <span class="value aadhaar">
+                                        <?php
+                                        if (!empty($array['studentaadhar']) && strlen($array['studentaadhar']) === 12) {
+                                            echo substr($array['studentaadhar'], 0, 2) . str_repeat("X", 6) . substr($array['studentaadhar'], -4);
+                                        } else {
+                                            echo "N/A";  // Fallback in case Aadhaar is not 12 digits
+                                        }
+                                        ?>
+                                    </span>
                                 </div>
+
                                 <div>
                                     <span>Guardian's Name:</span>
-                                    <span class="value"><?php echo $array['guardiansname'] ?>&nbsp;(<?php echo $array['relationwithstudent'] ?>)</span>
+                                    <span class="value guardian-name"><?php echo $array['guardiansname'] ?>&nbsp;(<?php echo $array['relationwithstudent'] ?>)</span>
                                 </div>
                                 <div>
                                     <span>Gender:</span>
-                                    <span class="box"><?php echo $array['gender'] ?></span>
+                                    <span class="value gender"><?php echo $array['gender'] ?></span>
                                 </div>
                                 <div>
                                     <span>Category:</span>
-                                    <span class="box"><?php echo $array['caste'] ?></span>
+                                    <span class="value category"><?php echo @$array['caste'] ?></span>
                                 </div>
-
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 <div class="row colored-area">
                                     <h4 style="margin-left: 5px;">Contact Details</h4>
                                 </div>
                                 <br>
                                 <div>
                                     <span>Address:</span>
-                                    <span class="value"><?php echo $array['postaladdress'] ?></span>
+                                    <span class="value address"><?php echo $array['postaladdress'] ?></span>
                                 </div>
-
                                 <div>
                                     <span>Phone:</span>
-                                    <span class="value"><?php echo $array['contact'] ?></span>
+                                    <span class="value phone"><?php echo $array['contact'] ?></span>
                                 </div>
                                 <div>
                                     <span>Email:</span>
-                                    <span class="value"><?php echo $array['emailaddress'] ?></span>
+                                    <span class="value email"><?php echo $array['emailaddress'] ?></span>
                                 </div>
-
-
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 <div class="row colored-area">
                                     <h4 style="margin-left: 5px;">Education Details</h4>
                                 </div>
                                 <br>
                                 <div>
                                     <span>School Name:</span>
-                                    <span class="value"><?php echo $array['nameoftheschool'] ?></span>
+                                    <span class="value school-name"><?php echo $array['nameoftheschool'] ?></span>
                                 </div>
                                 <div>
                                     <span>Medium:</span>
-                                    <span class="value"><?php echo $array['medium'] ?></span>
+                                    <span class="value medium"><?php echo $array['medium'] ?></span>
                                 </div>
                                 <div>
                                     <span>Class:</span>
-                                    <span class="value"><?php echo $array['class'] ?></span>
+                                    <span class="value class"><?php echo $array['class'] ?></span>
                                 </div>
                                 <div>
                                     <span>Preferred Branch:</span>
-                                    <span class="value"><?php echo $array['preferredbranch'] ?></span>
+                                    <span class="value branch"><?php echo $array['preferredbranch'] ?></span>
                                 </div>
                             </td>
+                        </tr>
                         <tr>
                             <td>
                                 <div>
                                     <span>Registered in system:</span>
-                                    <span class="value"><?php echo htmlspecialchars($array['doa'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="value registered"><?php echo htmlspecialchars($array['doa'], ENT_QUOTES, 'UTF-8'); ?></span>
                                 </div>
                                 <br><br>
                                 <div>
@@ -278,6 +290,38 @@ if (!$result) {
                             </td>
                         </tr>
                     </tbody>
+
+                    <script>
+                        // Function to check if the value is missing and assign "N/A"
+                        function assignDefaultValue(selector, defaultValue = "N/A") {
+                            const elements = document.querySelectorAll(selector);
+                            elements.forEach(el => {
+                                if (!el.textContent.trim()) {
+                                    el.textContent = defaultValue;
+                                }
+                            });
+                        }
+
+                        // Assign default values to empty fields
+                        window.onload = function() {
+                            assignDefaultValue('.student-id');
+                            assignDefaultValue('.student-name');
+                            assignDefaultValue('.dob');
+                            assignDefaultValue('.aadhaar');
+                            assignDefaultValue('.guardian-name');
+                            assignDefaultValue('.gender');
+                            assignDefaultValue('.category');
+                            assignDefaultValue('.address');
+                            assignDefaultValue('.phone');
+                            assignDefaultValue('.email');
+                            assignDefaultValue('.school-name');
+                            assignDefaultValue('.medium');
+                            assignDefaultValue('.class');
+                            assignDefaultValue('.branch');
+                            assignDefaultValue('.registered');
+                        };
+                    </script>
+
                 </table>
     </div>
 <?php } ?>

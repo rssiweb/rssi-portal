@@ -208,7 +208,7 @@ if (!$result) {
                                 <p>Please find attached the terms and conditions of your employment.</p>
                                 <p><b><u>COMPENSATION and BENEFITS</u></b></p>
                                 <ol>
-                                    <li>You will be eligible for a gross salary of <b>₹<?php echo $array['salary'] / 12 ?>/- per month</b>.</li>
+                                    <li>You will be eligible for a gross salary of <b>₹<?php echo $array['salary'] / 12 ?>/- per month</b>. Please refer to the attached Annexure 1 for a complete breakdown of your compensation.</li>
                                     <li>You will receive reimbursement for the reasonable and properly documented pre-approved expenses and costs you incur in carrying out your service.
                                         You may receive non-cash benefits, e.g. Free tickets, and free access to services but if these types of benefits are accepted regularly and have substantial value, they may need to be taxed.</li>
                                 </ol>
