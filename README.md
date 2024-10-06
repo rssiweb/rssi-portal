@@ -101,6 +101,10 @@ docker-compose ps
 docker-compose restart
 docker system prune
 git stash
+
+git fetch origin
+git reset --hard origin/master
+git reset --hard HEAD~3
 http://web.local/generate-hash-for/2311 -> D:\services\.env
 http://rssi.in/generate-hash-for/2311 -> digital ocean
 
