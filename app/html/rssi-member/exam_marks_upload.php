@@ -15,22 +15,27 @@ $results = [];
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Check if exam_id is provided
     if (isset($_GET['exam_id']) && !empty($_GET['exam_id'])) {
-        // Initialize the base query
-        $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, e.teacher_id, e.full_marks_written, e.full_marks_viva, e.estatus,emd.id, emd.student_id, emd.viva_marks, emd.written_marks, s.studentname, s.category, s.class, m.fullname
+        // Initialize the base query with LEFT JOIN for viva and written teacher
+        $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, e.teacher_id_viva, e.teacher_id_written,
+                         e.full_marks_written, e.full_marks_viva, e.estatus, emd.id, emd.student_id, emd.viva_marks, emd.written_marks, 
+                         s.studentname, s.category, s.class, 
+                         viva_teacher.fullname AS fullname_viva,
+                         written_teacher.fullname AS fullname_written
                   FROM exams e
                   JOIN exam_marks_data emd ON e.exam_id = emd.exam_id
                   JOIN rssimyprofile_student s ON emd.student_id = s.student_id
-                  JOIN rssimyaccount_members m ON e.teacher_id = m.associatenumber
+                  LEFT JOIN rssimyaccount_members viva_teacher ON e.teacher_id_viva = viva_teacher.associatenumber
+                  LEFT JOIN rssimyaccount_members written_teacher ON e.teacher_id_written = written_teacher.associatenumber
                   WHERE e.exam_id = $1";
 
         // Initialize parameters array with exam_id
         $params = [$_GET['exam_id']];
 
-        // Check if the user role is not Admin
+        // Check if the user role is not Admin or Offline Manager
         if ($role !== 'Admin' && $role !== 'Offline Manager') {
             // Add condition to limit data to the teacher's records
-            $query .= " AND e.teacher_id = $2";
-            $params[] = $associatenumber;
+            $query .= " AND (e.teacher_id_viva = $2 OR e.teacher_id_written = $2)";
+            $params[] = $associatenumber; // For both viva and written teacher check
         }
 
         // Add ORDER BY clause
@@ -46,20 +51,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Fetch and store results
         $results = [];
         while ($row = pg_fetch_assoc($result)) {
-            // Get the value of etstaus from each row
+            // Get the value of estatus from each row
             $estatus = $row['estatus'];
             $results[] = $row;
         }
 
         pg_free_result($result);
 
+        // Fetch the last updated details
         $exam_id = $_GET['exam_id'];
-        $lastupdatedon = pg_query($con, "SELECT DISTINCT ON (exam_id, update_timestamp) exam_id, update_timestamp, updated_by FROM exam_update_history WHERE exam_id = '$exam_id' ORDER BY exam_id, update_timestamp DESC, updated_by;");
-
+        $lastupdatedon = pg_query($con, "SELECT DISTINCT ON (exam_id, update_timestamp) exam_id, update_timestamp, updated_by 
+                                         FROM exam_update_history 
+                                         WHERE exam_id = '$exam_id' 
+                                         ORDER BY exam_id, update_timestamp DESC, updated_by;");
         @$update_timestamp = pg_fetch_result($lastupdatedon, 0, 1);
         @$updated_by = pg_fetch_result($lastupdatedon, 0, 2);
     }
 }
+
 ?>
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -292,7 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php
                                         $unique_exams = [];
                                         foreach ($results as $row) {
-                                            $key = $row['exam_id'] . $row['exam_type'] . $row['academic_year'] . $row['subject'] . $row['teacher_id'] . $row['fullname'] . $row['full_marks_written'] . $row['full_marks_viva'] . $row['exam_mode'];
+                                            $key = $row['exam_id'] . $row['exam_type'] . $row['academic_year'] . $row['subject'] . $row['teacher_id_viva'] . $row['fullname_viva'] . $row['fullname_written'] . $row['full_marks_written'] . $row['full_marks_viva'] . $row['exam_mode'];
                                             $unique_exams[$key] = $row;
                                         }
                                         ?>
@@ -311,7 +320,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </div>
 
                                                 <div class="row exam-info">
-                                                    <div class="col-md-6"><strong>Teacher ID:</strong> <?php echo $unique_exam['teacher_id']; ?>-<?php echo $unique_exam['fullname']; ?></div>
+                                                    <!-- <div class="col-md-6"><strong>Teacher ID:</strong> <?php echo $unique_exam['teacher_id_viva']; ?>-<?php echo $unique_exam['fullname_viva']; ?></div> -->
+                                                    <div class="col-md-6">
+                                                        <strong>Examiner for Viva:</strong>
+                                                        <?php
+                                                        if (!empty($unique_exam['teacher_id_viva'])) {
+                                                            echo $unique_exam['teacher_id_viva'] . " - " . $unique_exam['fullname_viva'];
+                                                        } else {
+                                                            echo "Not Assigned";
+                                                        }
+                                                        ?>
+                                                    </div>
+
                                                     <div class="col-md-6"><strong>Exam mode:</strong>
                                                         <?php
                                                         if ($row['full_marks_written'] !== null) {
@@ -319,6 +339,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                         }
                                                         if ($row['full_marks_viva'] !== null) {
                                                             echo ' V-' . htmlspecialchars($row['full_marks_viva']);
+                                                        }
+                                                        ?>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Examiner for Written:</strong>
+                                                        <?php
+                                                        if (!empty($unique_exam['teacher_id_written'])) {
+                                                            echo $unique_exam['teacher_id_written'] . " - " . $unique_exam['fullname_written'];
+                                                        } else {
+                                                            echo "Not Assigned";
                                                         }
                                                         ?>
                                                     </div>

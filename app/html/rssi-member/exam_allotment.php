@@ -33,85 +33,88 @@ $results = [];
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // Initialize query with base SELECT statement
-    $query = "SELECT e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, 
-                     e.full_marks_written, e.full_marks_viva, e.exam_date_written, e.exam_date_viva, e.teacher_id, e.estatus, 
-                     STRING_AGG(DISTINCT emd.class::text, ',') AS classes, a.fullname
-              FROM exams e
-              JOIN rssimyaccount_members a ON e.teacher_id = a.associatenumber
-              JOIN exam_marks_data emd ON e.exam_id = emd.exam_id";
+    $query = "
+        SELECT 
+            e.exam_id, 
+            e.exam_type, 
+            e.exam_mode, 
+            e.academic_year, 
+            e.subject, 
+            e.full_marks_written, 
+            e.full_marks_viva, 
+            e.exam_date_written, 
+            e.exam_date_viva, 
+            e.teacher_id_viva, 
+            e.teacher_id_written, 
+            e.estatus, 
+            STRING_AGG(DISTINCT emd.class::text, ',') AS classes, 
+            a_viva.fullname AS fullname_viva,
+            a_written.fullname AS fullname_written
+        FROM exams e
+        LEFT JOIN rssimyaccount_members a_viva ON e.teacher_id_viva = a_viva.associatenumber
+        LEFT JOIN rssimyaccount_members a_written ON e.teacher_id_written = a_written.associatenumber
+        JOIN exam_marks_data emd ON e.exam_id = emd.exam_id
+    ";
 
-    // Initialize parameters array
+    // Initialize parameters array and conditions array
     $params = [];
-
-    // Initialize conditions array
     $conditions = [];
-
-    // Check if any filter value is provided
     $filterProvided = false;
 
-    // Check if exam_id is available
-    if (isset($_GET['exam_id']) && !empty($_GET['exam_id'])) {
-        $exam_id = $_GET['exam_id'];
+    // Build conditions based on GET parameters
+    if (!empty($_GET['exam_id'])) {
         $conditions[] = "e.exam_id = $" . (count($params) + 1);
-        $params[] = $exam_id;
+        $params[] = $_GET['exam_id'];
         $filterProvided = true;
     }
 
-    if (isset($_GET['exam_type']) && !empty($_GET['exam_type'])) {
-        $exam_type = $_GET['exam_type'];
+    if (!empty($_GET['exam_type'])) {
         $conditions[] = "e.exam_type = $" . (count($params) + 1);
-        $params[] = $exam_type;
+        $params[] = $_GET['exam_type'];
         $filterProvided = true;
     }
 
-    if (isset($_GET['academic_year']) && !empty($_GET['academic_year'])) {
-        $academic_year = $_GET['academic_year'];
+    if (!empty($_GET['academic_year'])) {
         $conditions[] = "e.academic_year = $" . (count($params) + 1);
-        $params[] = $academic_year;
+        $params[] = $_GET['academic_year'];
         $filterProvided = true;
     }
 
-    if (isset($_GET['subject']) && !empty($_GET['subject'])) {
-        $subject = $_GET['subject'];
+    if (!empty($_GET['subject'])) {
         $conditions[] = "e.subject = $" . (count($params) + 1);
-        $params[] = $subject;
+        $params[] = $_GET['subject'];
         $filterProvided = true;
     }
 
-    // Check if the user is not an admin
+    // Check user role and apply conditions accordingly
     if ($role !== 'Admin' && $role !== 'Offline Manager') {
-        // For non-Admin, filter by teacher_id
-        $conditions[] = "e.teacher_id = $" . (count($params) + 1);
-        $params[] = $associatenumber;
-    }
-
-    // Check if the user is an admin and a teacher_id filter is provided
-    if (($role === 'Admin' || $role === 'Offline Manager') && isset($_GET['teacher_id']) && !empty($_GET['teacher_id'])) {
-        $teacher_id = $_GET['teacher_id'];
-        $conditions[] = "e.teacher_id = $" . (count($params) + 1);
-        $params[] = $teacher_id;
-        $filterProvided = true;
+        // Only include conditions for regular users to see their assigned records
+        $conditions[] = "(e.teacher_id_viva = $" . (count($params) + 1) . " OR e.teacher_id_written = $" . (count($params) + 2) . ")";
+        $params[] = $associatenumber; // for viva
+        $params[] = $associatenumber; // for written
     }
 
     // Only execute the query if a filter is provided
-    if ($filterProvided) {
-        // Add WHERE clause if conditions are available
+    if ($filterProvided || $role === 'Admin' || $role === 'Offline Manager') {
         if (!empty($conditions)) {
             $query .= " WHERE " . implode(" AND ", $conditions);
         }
 
         // Add GROUP BY clause
         $query .= " GROUP BY e.exam_id, e.exam_type, e.exam_mode, e.academic_year, e.subject, 
-                            e.full_marks_written, e.full_marks_viva, e.exam_date_written, e.exam_date_viva, e.teacher_id, e.estatus, a.fullname";
+                            e.full_marks_written, e.full_marks_viva, e.exam_date_written, e.exam_date_viva, 
+                            e.teacher_id_viva, e.teacher_id_written, e.estatus, a_viva.fullname, a_written.fullname";
 
         // Execute the query
         $result = pg_query_params($con, $query, $params);
 
+        // Handle potential query error
         if (!$result) {
-            die("Error in SQL query: " . pg_last_error());
+            die("Error in SQL query: " . pg_last_error($con)); // Pass connection to get context of the error
         }
 
         // Fetch results
+        $results = []; // Initialize results array
         while ($row = pg_fetch_assoc($result)) {
             $results[] = $row;
         }
@@ -121,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     pg_close($con);
 }
+
 
 ?>
 <!doctype html>
@@ -241,11 +245,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                         </div>
                                         <?php if ($role == 'Admin' || $role == 'Offline Manager') { ?>
                                             <div class="col-md-3">
-                                                <label for="teacher_id" class="form-label">Teacher ID</label>
-                                                <select class="form-select" id="teacher_id" name="teacher_id">
+                                                <label for="teacher_id_viva" class="form-label">Teacher ID</label>
+                                                <select class="form-select" id="teacher_id_viva" name="teacher_id_viva">
                                                     <option value="" disabled selected hidden>Select Teacher's ID</option>
                                                     <?php foreach ($teachers as $teacher) { ?>
-                                                        <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id']) && $_GET['teacher_id'] == $teacher['associatenumber']) ? 'selected' : ''; ?>>
+                                                        <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id_viva']) && $_GET['teacher_id_viva'] == $teacher['associatenumber']) ? 'selected' : ''; ?>>
                                                             <?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?>
                                                         </option>
                                                     <?php } ?>
@@ -321,7 +325,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                             ?>
                                                         </td>
 
-                                                        <td><?php echo htmlspecialchars($row['teacher_id'].'-'.$row['fullname']); ?></td>
+                                                        <td>
+                                                            <?php
+                                                            $info = [];
+
+                                                            // Check for written assignment
+                                                            if (!empty($row['teacher_id_written'])) {
+                                                                $info[] = htmlspecialchars($row['teacher_id_written'] . '-' . $row['fullname_written']);
+                                                            } else {
+                                                                $info[] = 'Written: Not assigned yet';
+                                                            }
+
+                                                            // Check for viva assignment
+                                                            if (!empty($row['teacher_id_viva'])) {
+                                                                $info[] = htmlspecialchars($row['teacher_id_viva'] . '-' . $row['fullname_viva']);
+                                                            } else {
+                                                                $info[] = 'Viva: Not assigned yet';
+                                                            }
+
+                                                            // Display the information
+                                                            echo implode(' | ', $info);
+                                                            ?>
+
+                                                        </td>
 
                                                         <?php if ($role == 'Admin') : ?>
                                                             <td>
@@ -445,14 +471,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $("#exam_type").prop('disabled', false);
             $("#academic_year").prop('disabled', false);
             $("#subject").prop('disabled', false);
-            $("#teacher_id").prop('disabled', false);
+            $("#teacher_id_viva").prop('disabled', false);
         } else {
             // Enable input fields if checkbox is checked
             $("#exam_id").prop('disabled', false);
             $("#exam_type").prop('disabled', true);
             $("#academic_year").prop('disabled', true);
             $("#subject").prop('disabled', true);
-            $("#teacher_id").prop('disabled', true);
+            $("#teacher_id_viva").prop('disabled', true);
         }
 
         // Add event listener to checkbox
@@ -463,14 +489,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $("#exam_type").prop('disabled', true);
                 $("#academic_year").prop('disabled', true);
                 $("#subject").prop('disabled', true);
-                $("#teacher_id").prop('disabled', true);
+                $("#teacher_id_viva").prop('disabled', true);
             } else {
                 // Enable input fields if checkbox is not checked
                 $("#exam_id").prop('disabled', true);
                 $("#exam_type").prop('disabled', false);
                 $("#academic_year").prop('disabled', false);
                 $("#subject").prop('disabled', false);
-                $("#teacher_id").prop('disabled', false);
+                $("#teacher_id_viva").prop('disabled', false);
             }
         });
     </script>

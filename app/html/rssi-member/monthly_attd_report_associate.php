@@ -31,7 +31,7 @@ if ($role == 'Admin') {
 // Get filter values from GET parameters
 $id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
 
-$selectedTeachers = isset($_GET['teacher_id']) ? $_GET['teacher_id'] : [];
+$selectedTeachers = isset($_GET['teacher_id_viva']) ? $_GET['teacher_id_viva'] : [];
 ?>
 <?php
 $month = isset($_GET['get_month']) ? $_GET['get_month'] : date('Y-m');
@@ -419,10 +419,10 @@ pg_close($con);
                                             </div>
 
                                             <div class="col-md-3">
-                                                <select class="form-select" id="teacher_id" name="teacher_id[]" multiple>
+                                                <select class="form-select" id="teacher_id_viva" name="teacher_id_viva[]" multiple>
                                                     <option value="" disabled hidden>Select Teacher's ID</option>
                                                     <?php foreach ($teachers as $teacher) { ?>
-                                                        <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id']) && in_array($teacher['associatenumber'], $_GET['teacher_id'])) ? 'selected' : ''; ?>>
+                                                        <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id_viva']) && in_array($teacher['associatenumber'], $_GET['teacher_id_viva'])) ? 'selected' : ''; ?>>
                                                             <?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?>
                                                         </option>
                                                     <?php } ?>

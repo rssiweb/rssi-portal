@@ -71,7 +71,8 @@ if (@$_POST['form-type'] == "exam") {
     }
     $exam_type = $_POST['exam_type'];
     $academic_year = $_POST['academic_year'];
-    $teacher_id = $_POST['teacher_id'];
+    $teacher_id_viva = $_POST['teacher_id_viva'];
+    $teacher_id_written = $_POST['teacher_id_written'];
     $subject = $_POST['subject'];
     $exam_mode = $_POST['exam_mode'];
     $full_marks_written = $_POST['full_marks_written'];
@@ -83,11 +84,11 @@ if (@$_POST['form-type'] == "exam") {
     $exam_mode_pg_array = '{' . implode(',', $exam_mode) . '}';
 
     // Prepare the SQL query
-    $exam_sql = "INSERT INTO exams (exam_type, academic_year, teacher_id, subject, exam_mode, full_marks_written, full_marks_viva, exam_id, exam_date_written, exam_date_viva)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)";
+    $exam_sql = "INSERT INTO exams (exam_type, academic_year, teacher_id_viva, teacher_id_written, subject, exam_mode, full_marks_written, full_marks_viva, exam_id, exam_date_written, exam_date_viva)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11)";
 
     // Bind parameters for the prepared statement
-    $params = array($exam_type, $academic_year, $teacher_id, $subject, $exam_mode_pg_array);
+    $params = array($exam_type, $academic_year, $teacher_id_viva, $teacher_id_written, $subject, $exam_mode_pg_array);
 
     // Check if full_marks_written is not null, then set the parameter value
     if ($full_marks_written !== null && $full_marks_written !== "") {
@@ -142,7 +143,7 @@ if (@$_POST['form-type'] == "exam") {
             exit;
         }
     }
-    $examiner_data = pg_query($con, "Select phone,email,fullname from rssimyaccount_members where associatenumber='$teacher_id'");
+    $examiner_data = pg_query($con, "Select phone,email,fullname from rssimyaccount_members where associatenumber='$teacher_id_viva'");
     @$examiner_contact = pg_fetch_result($examiner_data, 0, 0);
     @$examiner_email = pg_fetch_result($examiner_data, 0, 1);
     @$examiner_name = pg_fetch_result($examiner_data, 0, 2);
@@ -341,18 +342,18 @@ pg_free_result($result);
                                                 <select class="form-select" id="academic_year" name="academic_year" required>
                                                 </select>
                                             </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label for="teacher_id">Select Teacher's ID:</label>
-                                                <select class="form-select" id="teacher_id" name="teacher_id" required>
+                                            <!-- <div class="col-md-4 mb-3">
+                                                <label for="teacher_id_viva">Select Teacher's ID:</label>
+                                                <select class="form-select" id="teacher_id_viva" name="teacher_id_viva" required>
                                                     <option value="" disabled selected hidden>Select Teacher's ID</option>
                                                     <?php foreach ($teachers as $teacher) { ?>
                                                         <option value="<?php echo $teacher['associatenumber']; ?>"><?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?></option>
                                                     <?php } ?>
                                                 </select>
-                                            </div>
-                                        </div>
+                                            </div> -->
+                                            <!-- </div>
 
-                                        <div class="row">
+                                        <div class="row"> -->
                                             <div class="col-md-4 mb-3">
                                                 <label for="subject" class="form-label">Subject</label>
                                                 <select class="form-select" id="subject" name="subject" required>
@@ -368,29 +369,45 @@ pg_free_result($result);
                                                     <option value="Project">Project</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-4 mb-3">
-                                                <label for="exam_mode" class="form-label">Exam Mode</label>
-                                                <select class="form-select" id="exam_mode" name="exam_mode[]" multiple required>
-                                                    <option value="Written">Written</option>
-                                                    <option value="Viva">Viva</option>
-                                                </select>
+                                            <div class="row">
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="exam_mode" class="form-label">Exam Mode</label>
+                                                    <select class="form-select" id="exam_mode" name="exam_mode[]" multiple required>
+                                                        <option value="Written">Written</option>
+                                                        <option value="Viva">Viva</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 mb-3" id="written_marks_wrapper" style="display: none;">
+                                                    <label for="full_marks_written" class="form-label">Full Marks Written</label>
+                                                    <input type="number" class="form-control" id="full_marks_written" name="full_marks_written">
+                                                    <label for="exam_date_written" class="form-label">Written Exam Date</label>
+                                                    <input type="date" class="form-control" id="exam_date_written" name="exam_date_written">
+                                                    <label for="teacher_id_written">Assigned Written Teacher ID:</label>
+                                                    <select class="form-select" id="teacher_id_written" name="teacher_id_written">
+                                                        <option value="" disabled selected hidden>Select Teacher's ID</option>
+                                                        <?php foreach ($teachers as $teacher) { ?>
+                                                            <option value="<?php echo $teacher['associatenumber']; ?>"><?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?></option>
+                                                        <?php } ?>
+                                                    </select>
+
+                                                </div>
+                                                <div class="col-md-4 mb-3" id="viva_marks_wrapper" style="display: none;">
+                                                    <label for="full_marks_viva" class="form-label">Full Marks Viva</label>
+                                                    <input type="number" class="form-control" id="full_marks_viva" name="full_marks_viva">
+                                                    <label for="exam_date_viva" class="form-label">Viva Exam Date</label>
+                                                    <input type="date" class="form-control" id="exam_date_viva" name="exam_date_viva">
+                                                    <label for="teacher_id_viva">Assigned Viva Teacher ID:</label>
+                                                    <select class="form-select" id="teacher_id_viva" name="teacher_id_viva">
+                                                        <option value="" disabled selected hidden>Select Teacher's ID</option>
+                                                        <?php foreach ($teachers as $teacher) { ?>
+                                                            <option value="<?php echo $teacher['associatenumber']; ?>"><?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?></option>
+                                                        <?php } ?>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div class="col-md-4 mb-3" id="written_marks_wrapper" style="display: none;">
-                                                <label for="full_marks_written" class="form-label">Full Marks Written</label>
-                                                <input type="number" class="form-control" id="full_marks_written" name="full_marks_written">
-                                                <label for="exam_date_written" class="form-label">Written Exam Date</label>
-                                                <input type="date" class="form-control" id="exam_date_written" name="exam_date_written">
+                                            <div class="text-end mt-3 mb-3">
+                                                <button type="submit" class="btn btn-primary">Create Exam</button>
                                             </div>
-                                            <div class="col-md-4 mb-3" id="viva_marks_wrapper" style="display: none;">
-                                                <label for="full_marks_viva" class="form-label">Full Marks Viva</label>
-                                                <input type="number" class="form-control" id="full_marks_viva" name="full_marks_viva">
-                                                <label for="exam_date_viva" class="form-label">Viva Exam Date</label>
-                                                <input type="date" class="form-control" id="exam_date_viva" name="exam_date_viva">
-                                            </div>
-                                        </div>
-                                        <div class="text-end mt-3 mb-3">
-                                            <button type="submit" class="btn btn-primary">Create Exam</button>
-                                        </div>
                                     </form>
                                 <?php endif; ?>
                             </div>
@@ -409,23 +426,6 @@ pg_free_result($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const form = document.getElementById("exam"); // Assuming the form has id="exam"
-            const fields = form.querySelectorAll("[required], input[type='number'][name^='full_marks']");
-
-            fields.forEach(field => {
-                const label = form.querySelector(`label[for="${field.id}"]`);
-                if (label) {
-                    const asterisk = document.createElement('span');
-                    asterisk.textContent = '*';
-                    asterisk.style.color = 'red';
-                    asterisk.style.marginLeft = '5px';
-                    label.appendChild(asterisk);
-                }
-            });
-        });
-    </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -453,17 +453,38 @@ pg_free_result($result);
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Get references to the exam mode select and marks inputs
+            const form = document.getElementById("exam"); // Assuming the form has id="exam"
             const examModeSelect = document.getElementById("exam_mode");
-            const writtenMarksWrapper = document.getElementById("written_marks_wrapper");
-            const writtenMarksInput = document.getElementById("full_marks_written");
-            const writtenDateInput = document.getElementById("exam_date_written");
-            const vivaMarksWrapper = document.getElementById("viva_marks_wrapper");
-            const vivaMarksInput = document.getElementById("full_marks_viva");
-            const vivaDateInput = document.getElementById("exam_date_viva");
+
+            // Function to add asterisks to required fields
+            function addAsterisksToRequiredFields() {
+                const fields = form.querySelectorAll("[required]");
+
+                fields.forEach(field => {
+                    const label = form.querySelector(`label[for="${field.id}"]`);
+                    if (label) {
+                        // Create and append the asterisk if not already present
+                        if (!label.querySelector('span.asterisk')) {
+                            const asterisk = document.createElement('span');
+                            asterisk.textContent = '*';
+                            asterisk.style.color = 'red';
+                            asterisk.style.marginLeft = '5px';
+                            asterisk.classList.add('asterisk');
+                            label.appendChild(asterisk);
+                        }
+                    }
+                });
+            }
 
             // Function to show/hide marks inputs based on selected exam mode
             function updateMarksInputs() {
+                const writtenMarksWrapper = document.getElementById("written_marks_wrapper");
+                const writtenMarksInput = document.getElementById("full_marks_written");
+                const writtenDateInput = document.getElementById("exam_date_written");
+                const vivaMarksWrapper = document.getElementById("viva_marks_wrapper");
+                const vivaMarksInput = document.getElementById("full_marks_viva");
+                const vivaDateInput = document.getElementById("exam_date_viva");
+
                 const selectedOptions = Array.from(examModeSelect.selectedOptions).map(option => option.value);
                 writtenMarksWrapper.style.display = selectedOptions.includes("Written") ? "block" : "none";
                 writtenMarksInput.required = selectedOptions.includes("Written");
@@ -471,6 +492,9 @@ pg_free_result($result);
                 vivaMarksWrapper.style.display = selectedOptions.includes("Viva") ? "block" : "none";
                 vivaMarksInput.required = selectedOptions.includes("Viva");
                 vivaDateInput.required = selectedOptions.includes("Viva");
+
+                // After updating the required attributes, re-run the function to add asterisks
+                addAsterisksToRequiredFields();
             }
 
             // Call updateMarksInputs on page load
@@ -478,6 +502,9 @@ pg_free_result($result);
 
             // Add event listener to exam mode select to update marks inputs when selection changes
             examModeSelect.addEventListener("change", updateMarksInputs);
+
+            // Initial asterisk addition for required fields on page load
+            addAsterisksToRequiredFields();
         });
     </script>
 </body>
