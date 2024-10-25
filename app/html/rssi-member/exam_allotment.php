@@ -291,6 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                     <th>Assigned to</th>
                                                     <?php if ($role == 'Admin') : ?>
                                                         <th>Unlink</th>
+                                                        <th>Edit</th>
                                                     <?php endif; ?>
                                                 </tr>
                                             </thead>
@@ -362,6 +363,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                                                 <?php else : ?>
                                                                     <?php echo htmlspecialchars($row['estatus']); ?>
                                                                 <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <a href="exam_data_update.php?fetch_exam_id=<?php echo $row['exam_id'] ?>" target="_blank">Edit</a>
                                                             </td>
                                                         <?php endif; ?>
                                                     </tr>
