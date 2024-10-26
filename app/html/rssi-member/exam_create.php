@@ -143,12 +143,29 @@ if (@$_POST['form-type'] == "exam") {
             exit;
         }
     }
-    $examiner_data = pg_query($con, "Select phone,email,fullname from rssimyaccount_members where associatenumber='$teacher_id_viva'");
-    @$examiner_contact = pg_fetch_result($examiner_data, 0, 0);
-    @$examiner_email = pg_fetch_result($examiner_data, 0, 1);
-    @$examiner_name = pg_fetch_result($examiner_data, 0, 2);
-    if (@$cmdtuples == 1 && $email != "") {
-        sendEmail("exam_create", array(
+    // Fetch details of both examiners in one query
+    $examiner_ids = [$teacher_id_viva, $teacher_id_written];
+    $examiner_data_query = pg_query($con, "SELECT associatenumber, phone, email, fullname 
+                                       FROM rssimyaccount_members 
+                                       WHERE associatenumber IN ('" . implode("','", $examiner_ids) . "')");
+
+    $examiners = [];
+    while ($row = pg_fetch_assoc($examiner_data_query)) {
+        $examiners[$row['associatenumber']] = $row;
+    }
+
+    // Assign details for Viva and Written examiners
+    $examiner_contact = $examiners[$teacher_id_viva]['phone'] ?? null;
+    $examiner_email = $examiners[$teacher_id_viva]['email'] ?? null;
+    $examiner_name = $examiners[$teacher_id_viva]['fullname'] ?? null;
+
+    $examiner_contact_written = $examiners[$teacher_id_written]['phone'] ?? null;
+    $examiner_email_written = $examiners[$teacher_id_written]['email'] ?? null;
+    $examiner_name_written = $examiners[$teacher_id_written]['fullname'] ?? null;
+
+    // Send emails if conditions are met
+    if ($cmdtuples == 1 && !empty($examiner_email)) {
+        sendEmail("exam_create", [
             "exam_id" => $exam_id,
             "exam_type" => $exam_type,
             "academic_year" => $academic_year,
@@ -157,7 +174,20 @@ if (@$_POST['form-type'] == "exam") {
             "full_marks_written" => $full_marks_written,
             "full_marks_viva" => $full_marks_viva,
             "examiner_name" => $examiner_name,
-        ), $examiner_email);
+        ], $examiner_email);
+    }
+
+    if ($cmdtuples == 1 && !empty($examiner_email_written)) {
+        sendEmail("exam_create", [
+            "exam_id" => $exam_id,
+            "exam_type" => $exam_type,
+            "academic_year" => $academic_year,
+            "subject" => $subject,
+            "exam_mode" => $exam_mode_pg_array,
+            "full_marks_written" => $full_marks_written,
+            "full_marks_viva" => $full_marks_viva,
+            "examiner_name" => $examiner_name_written,
+        ], $examiner_email_written);
     }
 
     // Output JavaScript alert message after all insertions are completed
