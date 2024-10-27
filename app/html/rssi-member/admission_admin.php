@@ -43,6 +43,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     $guardian_aadhar = $_POST['guardian-aadhar-number'];
     $state_of_domicile = $_POST['state'];
     $postal_address = htmlspecialchars($_POST['postal-address'], ENT_QUOTES, 'UTF-8');
+    $permanent_address = htmlspecialchars($_POST['permanent-address'], ENT_QUOTES, 'UTF-8');
     $telephone_number = $_POST['telephone'];
     $email_address = $_POST['email'];
     $preferred_branch = $_POST['branch'];
@@ -81,6 +82,8 @@ if (@$_POST['form-type'] == "admission_admin") {
     @$timestamp = date('Y-m-d H:i:s');
     $student_photo = $_FILES['student-photo'] ?? null;
     $aadhar_card_upload = $_FILES['aadhar-card-upload'] ?? null;
+    $caste_document = $_FILES['caste-document'] ?? null;
+    $caste=$_POST['caste'];
 
     $doclink_student_photo = null;
     if (!empty($student_photo['name'])) {
@@ -96,6 +99,13 @@ if (@$_POST['form-type'] == "admission_admin") {
         $doclink_aadhar_card = uploadeToDrive($aadhar_card_upload, $parent, $filename);
     }
 
+    $doclink_caste_document = null;
+    if (!empty($caste_document['name'])) {
+        $filename = "caste_" . $student_id . "_" . $timestamp;
+        $parent = '1NdMb6fh4eZ_2yVwaTK088M9s5Yn7MSVbq1D7oTU6loZIe4MokkI9yhhCorqD6RaSfISmPrya';
+        $doclink_caste_document = uploadeToDrive($caste_document, $parent, $filename);
+    }
+
     // Build the SQL query conditionally
     $fields = [
         "type_of_admission='$type_of_admission'",
@@ -109,6 +119,7 @@ if (@$_POST['form-type'] == "admission_admin") {
         "guardianaadhar='$guardian_aadhar'",
         "stateofdomicile='$state_of_domicile'",
         "postaladdress='$postal_address'",
+        "permanentaddress='$permanent_address'",
         "contact='$telephone_number'",
         "emailaddress='$email_address'",
         "preferredbranch='$preferred_branch'",
@@ -136,6 +147,7 @@ if (@$_POST['form-type'] == "admission_admin") {
         "age='$age'",
         "updated_on='$timestamp'",
         "payment_type='$payment_type'",
+        "caste='$caste'",
         "access_category='$access_category'"
     ];
 
@@ -146,6 +158,10 @@ if (@$_POST['form-type'] == "admission_admin") {
 
     if ($doclink_aadhar_card) {
         $fields[] = "upload_aadhar_card='$doclink_aadhar_card'";
+    }
+
+    if ($doclink_caste_document) {
+        $fields[] = "caste_document='$doclink_caste_document'";
     }
 
     // Ensure fields are strings and concatenate them
@@ -612,15 +628,43 @@ if (@$_POST['form-type'] == "admission_admin") {
                                     </tr>
                                     <tr>
                                         <td>
-                                            <label for="postal-address">Postal Address:</label>
+                                            <label for="postal-address">Current Address:</label>
                                         </td>
                                         <td>
-                                            <textarea class="form-control" id="postal-address" name="postal-address" rows="3" placeholder="Enter postal address" required><?php echo $array['postaladdress'] ?></textarea>
-                                            <small id="postal-address-help" class="form-text text-muted">Please enter the
-                                                complete
-                                                postal address of the student.</small>
+                                            <textarea class="form-control" id="postal-address" name="postal-address" rows="3" placeholder="Enter current address" required><?php echo $array['postaladdress'] ?? '' ?></textarea>
+                                            <small id="postal-address-help" class="form-text text-muted">Please enter the complete current address of the student.</small>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td>
+                                            <label for="permanent-address">Permanent Address:</label>
+                                        </td>
+                                        <td>
+                                            <textarea class="form-control" id="permanent-address" name="permanent-address" rows="3" placeholder="Enter permanent address" required><?php echo $array['permanentaddress'] ?? '' ?></textarea>
+                                            <small id="permanent-address-help" class="form-text text-muted">Please enter the complete permanent address of the student.</small>
+                                            <div>
+                                                <input type="checkbox" id="same-address" onclick="copyAddress()">
+                                                <label for="same-address">Same as current address</label>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <script>
+                                        function copyAddress() {
+                                            const currentAddress = document.getElementById('postal-address').value;
+                                            const permanentAddressField = document.getElementById('permanent-address');
+                                            const sameAddressCheckbox = document.getElementById('same-address');
+
+                                            if (sameAddressCheckbox.checked) {
+                                                permanentAddressField.value = currentAddress; // Copy current address to permanent address
+                                                permanentAddressField.readOnly = true; // Make it read-only when checkbox is checked
+                                            } else {
+                                                permanentAddressField.value = ''; // Clear permanent address when checkbox is unchecked
+                                                permanentAddressField.readOnly = false; // Make it editable again
+                                            }
+                                        }
+                                    </script>
+
                                     <tr>
                                         <td>
                                             <label for="telephone">Telephone Number:</label>
@@ -640,6 +684,43 @@ if (@$_POST['form-type'] == "admission_admin") {
                                             <input type="email" class="form-control" id="email" name="email" placeholder="Enter email address" value="<?php echo $array['emailaddress'] ?>">
                                             <small id="email-help" class="form-text text-muted">Please enter a valid email
                                                 address.</small>
+                                        </td>
+                                    </tr>
+                                    <!-- Caste Dropdown Field -->
+                                    <tr>
+                                        <td>
+                                            <label for="caste">Caste:</label>
+                                        </td>
+                                        <td>
+                                            <select class="form-select" id="caste" name="caste" required>
+                                                <!-- <option value="" disabled selected>Select your caste</option> -->
+                                                <option hidden selected><?php echo $array['caste'] ?></option>
+                                                <option value="General">General</option>
+                                                <option value="SC">Scheduled Caste (SC)</option>
+                                                <option value="ST">Scheduled Tribe (ST)</option>
+                                                <option value="OBC">Other Backward Class (OBC)</option>
+                                                <option value="EWS">Economically Weaker Section (EWS)</option>
+                                                <option value="Prefer not to disclose">Prefer not to disclose</option>
+                                                <!-- Add additional options as necessary -->
+                                            </select>
+                                            <small id="caste-help" class="form-text text-muted">Please select your caste category as per government records.</small>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Supporting Document Upload Field -->
+                                    <tr>
+                                        <td>
+                                            <label for="caste-document">Caste Certificate:</label>
+                                        </td>
+                                        <td>
+                                            <input type="file" class="form-control" id="caste-document" name="caste-document" accept=".pdf,.jpg,.jpeg,.png">
+                                            <!-- Display existing Caste Certificate if available -->
+                                            <?php if (!empty($array['caste_document'])): ?>
+                                                <div>
+                                                    <a href="<?php echo htmlspecialchars($array['caste_document']); ?>" target="_blank">View Caste Certificate</a>
+                                                </div>
+                                            <?php endif; ?>
+                                            <small id="caste-document-help" class="form-text text-muted">Upload your caste certificate (PDF, JPG, JPEG, or PNG).</small>
                                         </td>
                                     </tr>
                                     <tr>
@@ -1081,11 +1162,14 @@ if (@$_POST['form-type'] == "admission_admin") {
     <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
-            $('input[required], select[required], textarea[required]').each(function() {
-                $(this).closest('tr').find('label').append(' <span style="color: red">*</span>');
+            $('input, select, textarea').each(function() {
+                if ($(this).prop('required')) { // Check if the element has the required attribute
+                    $(this).closest('td').prev('td').find('label').append(' <span style="color: red">*</span>');
+                }
             });
         });
     </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var form = document.getElementById('admission_admin'); // select form by ID
