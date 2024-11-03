@@ -499,6 +499,7 @@ foreach ($accountNatures as $accountNature) {
                       <?php
                       // Initialize an array to store the total balance for each employee
                       $total_balance = [];
+                      $all_rows = []; // Initialize an array to store all rows
 
                       // Loop through the accrued bonus data
                       while ($row_accrued = pg_fetch_assoc($result_accrued_bonus)) :
@@ -514,16 +515,28 @@ foreach ($accountNatures as $accountNature) {
                         endif;
                         $total_balance[$employee_id] += $monthly_bonus_amount - $monthly_payout_bonus;
 
-                        // Output the data in HTML table format
-                        echo "<tr>";
-                        echo "<td>" . date('M', mktime(0, 0, 0, $pay_month, 1)) . '-' . $pay_year . "</td>";
-                        echo "<td>" . $monthly_bonus_amount . "</td>";
-                        echo "<td>" . $monthly_payout_bonus . "</td>";
-                        echo "<td>" . $total_balance[$employee_id] . "</td>";
-                        echo "</tr>";
+                        // Store the data in an array
+                        $all_rows[] = [
+                          'pay_month' => date('M', mktime(0, 0, 0, $pay_month, 1)) . '-' . $pay_year,
+                          'monthly_bonus_amount' => $monthly_bonus_amount,
+                          'monthly_payout_bonus' => $monthly_payout_bonus,
+                          'balance_bonus' => $total_balance[$employee_id]
+                        ];
                       endwhile;
-                      ?>
 
+                      // Get the last three rows
+                      $last_three_rows = array_slice($all_rows, -12);
+
+                      // Output the last three rows in HTML table format
+                      foreach ($last_three_rows as $row) :
+                        echo "<tr>";
+                        echo "<td>" . htmlspecialchars($row['pay_month']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['monthly_bonus_amount']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['monthly_payout_bonus']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['balance_bonus']) . "</td>";
+                        echo "</tr>";
+                      endforeach;
+                      ?>
                     </tbody>
                   </table>
               </td>
