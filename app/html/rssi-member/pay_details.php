@@ -87,7 +87,7 @@ while ($row = pg_fetch_assoc($result)) {
     $payslipEntryID = $row['payslip_entry_id'];
 
     // Query to get the total earnings for each payslip entry
-    $earningsQuery = pg_query($con, "SELECT SUM(amount) FROM payslip_component WHERE payslip_entry_id = '$payslipEntryID' AND components = 'Earning'") or die(pg_last_error());
+    $earningsQuery = pg_query($con, "SELECT SUM(amount) FROM payslip_component WHERE payslip_entry_id = '$payslipEntryID' AND components = 'Earning' AND subcategory !='Bonus Payout'") or die(pg_last_error());
     $earningsResult = pg_fetch_assoc($earningsQuery);
     $earnings = $earningsResult['sum'];
 

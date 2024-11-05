@@ -475,9 +475,9 @@ foreach ($accountNatures as $accountNature) {
                                 </div>
                             </td>
                         </tr>
-                        <tr>
-                            <td style="border: none;">
-                                <?php if (pg_num_rows($result_accrued_bonus) > 0) : ?>
+                        <?php if (pg_num_rows($result_accrued_bonus) > 0) : ?>
+                            <tr>
+                                <td style="border: none;">
                                     <table>
                                         <thead>
                                             <tr>
@@ -537,14 +537,14 @@ foreach ($accountNatures as $accountNature) {
                                             ?>
                                         </tbody>
                                     </table>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><!-- Button trigger modal -->
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">Show History Data</a>
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><!-- Button trigger modal -->
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">Show History Data</a>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                     <tfoot>
                         <tr>
