@@ -12,7 +12,7 @@ if (!isLoggedIn("aid")) {
 
 validation();
 // Initialize $ref from GET parameter
-$ref = isset($_GET['ref']) ? $_GET['ref'] : null;
+@$ref = $_GET['ref'];
 
 // Initialize variables
 $result = null;
@@ -24,7 +24,7 @@ $result_payout_bonus = null;
 $paymonth_comp = null;
 $payyear_comp = null;
 $employeeid_comp = null;
-$check_employeeid = null;
+// $check_employeeid = null;
 
 // Check user role
 if ($role == 'Admin') {
@@ -85,6 +85,11 @@ if ($role == 'Admin') {
         $result_accrued_bonus = pg_query_params($con, $query, array($paymonth_comp, $payyear_comp, $employeeid_comp));
     }
 } else {
+
+    // Query to check employeeid for non-admin users
+    $result_check = pg_query_params($con, "SELECT employeeid FROM payslip_entry WHERE payslip_entry_id = $1", array($ref));
+    @$check_employeeid = pg_fetch_result($result_check, 0, 0);
+
     // Query to retrieve payslip entry data for non-admin users
     $result = pg_query_params($con, "SELECT paymonth, payyear, employeeid,payslip_issued_on, * 
                                      FROM payslip_entry 
@@ -129,35 +134,27 @@ if ($role == 'Admin') {
                                                                        FROM payslip_entry 
                                                                        WHERE employeeid = $2)", array($ref, $user_check));
 
-        // Query to check employeeid for non-admin users
-        $result_check = pg_query_params($con, "SELECT employeeid 
-                                               FROM payslip_entry 
-                                               WHERE payslip_entry_id = $1", array($ref));
-        $row_check = pg_fetch_assoc($result_check);
-        $check_employeeid = $row_check['employeeid'];
-
-        // New query to retrieve accrued bonus and payout bonus data for non-admin users
         // New query to retrieve accrued bonus and payout bonus data for non-admin users
         $query = "
-SELECT employeeid, 
-       paymonth, 
-       payyear,
-       SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) AS monthly_bonus_amount,
-       SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) AS monthly_payout_bonus,
-       SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_accrued_bonus,
-       SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_payout_bonus,
-       -- Calculate the cumulative balance as accrued minus payout
-       SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth)
-       - SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS balance
-FROM payslip_component 
-JOIN payslip_entry ON payslip_entry.payslip_entry_id = payslip_component.payslip_entry_id 
-WHERE (subcategory = 'Monthly Bonus' OR subcategory = 'Bonus Payout') 
-  AND paymonth <= $1 
-  AND payyear <= $2 
-  AND payslip_entry.employeeid = $3 
-GROUP BY employeeid, paymonth, payyear, subcategory, amount
-ORDER BY payyear, paymonth;
-";
+                SELECT employeeid, 
+                    paymonth, 
+                    payyear,
+                    SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) AS monthly_bonus_amount,
+                    SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) AS monthly_payout_bonus,
+                    SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_accrued_bonus,
+                    SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_payout_bonus,
+                    -- Calculate the cumulative balance as accrued minus payout
+                    SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth)
+                    - SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS balance
+                FROM payslip_component 
+                JOIN payslip_entry ON payslip_entry.payslip_entry_id = payslip_component.payslip_entry_id 
+                WHERE (subcategory = 'Monthly Bonus' OR subcategory = 'Bonus Payout') 
+                AND paymonth <= $1 
+                AND payyear <= $2 
+                AND payslip_entry.employeeid = $3 
+                GROUP BY employeeid, paymonth, payyear, subcategory, amount
+                ORDER BY payyear, paymonth;
+                ";
 
         // Prepare and execute the query with dynamic parameters for non-admin
         $result_accrued_bonus = pg_query_params($con, $query, array($paymonth_comp, $payyear_comp, $employeeid_comp));
@@ -166,15 +163,18 @@ ORDER BY payyear, paymonth;
 
 // Fetch results into arrays
 $resultArr = pg_fetch_all($result);
-$resultArr_result_component = pg_fetch_all($result_component);
-$component_earning_total = pg_fetch_result($result_component_earning_total, 0, 0);
-$component_deduction_total = pg_fetch_result($result_component_deduction_total, 0, 0);
+if (!empty($resultArr)) {
+    $resultArr_result_component = pg_fetch_all($result_component);
+    $component_earning_total = pg_fetch_result($result_component_earning_total, 0, 0);
+    $component_deduction_total = pg_fetch_result($result_component_deduction_total, 0, 0);
+}
+
 
 // Check for errors in queries
-if (!$result || !$result_component || !$result_component_earning_total || !$result_component_deduction_total) {
-    echo "An error occurred.\n";
-    exit;
-}
+// if (!$result || !$result_component || !$result_component_earning_total || !$result_component_deduction_total) {
+//     echo "An error occurred.\n";
+//     exit;
+// }
 
 // Initialize array to store latest submissions for each account nature
 $latestSubmissions = [];
@@ -613,13 +613,47 @@ foreach ($accountNatures as $accountNature) {
                 </div>
             <?php } ?>
         <?php } else { ?>
+            <!-- Onboarding not initiated -->
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Access Denied</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <?php
+                            if (empty($ref)) {
+                                $error_message = "No reference ID entered.";
+                            } else {
+                                if (pg_num_rows($result) == 0 && @$check_employeeid == null) {
+                                    $error_message = "No record found for the entered reference ID";
+                                } else if (pg_num_rows($result) == 0 && $check_employeeid != $user_check) {
+                                    $error_message = "You are trying to access data that does not belong to you. If you think this is a mistake, please contact RSSI support team.";
+                                }
+                            }
+                            if (isset($error_message)) {
+                                echo $error_message;
+                            } ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         <?php } ?>
-
     </div>
     <!-- Load Bootstrap JS -->
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script>
+        window.onload = function() {
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            myModal.show();
+        };
+    </script>
 </body>
 
 </html>
