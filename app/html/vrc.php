@@ -72,6 +72,74 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Virtual Response Center</title>
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Container Styles */
+        .video-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f5f5f5;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        /* Video Stream Styles */
+        .video-stream {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            background-color: #000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 15px;
+        }
+
+        /* Toggle Switch Styles */
+        .camera-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .toggle-switch {
+            appearance: none;
+            width: 40px;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            position: relative;
+            outline: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-switch:checked {
+            background-color: #4CAF50;
+        }
+
+        .toggle-switch::before {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch:checked::before {
+            transform: translateX(20px);
+        }
+
+        .toggle-label {
+            font-size: 1rem;
+            margin-left: 10px;
+            color: #333;
+        }
+    </style>
 </head>
 
 <body>
@@ -116,9 +184,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <!-- Video Recording Section -->
             <div class="mb-3">
                 <label class="form-label">Video Recording:</label>
-                <div class="video-container">
+                <!-- <div class="video-container">
                     <video id="video" width="100%" height="300" autoplay muted></video>
                     <video id="previewVideo" width="100%" height="300" controls hidden></video>
+
+                    <div class="mb-3 form-check form-switch">
+                        <input type="checkbox" class="form-check-input" id="cameraToggle" checked>
+                        <label class="form-check-label" for="cameraToggle">Camera On/Off</label>
+                    </div>
+                </div> -->
+
+                <div class="video-container">
+                    <video id="video" class="video-stream" autoplay muted></video>
+                    <video id="previewVideo" class="video-stream" controls hidden></video>
+                    <!-- Camera Toggle Switch -->
+                    <div class="camera-toggle">
+                        <input type="checkbox" class="toggle-switch" id="cameraToggle" checked>
+                        <label class="toggle-label" for="cameraToggle">Camera On/Off</label>
+                    </div>
                 </div>
 
                 <p id="videoText">When you are ready, please start recording.</p>
@@ -150,6 +233,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         const videoElement = document.getElementById('video');
         const previewVideoElement = document.getElementById('previewVideo');
         const videoText = document.getElementById('videoText');
+        const cameraToggle = document.getElementById('cameraToggle');
+
+        // Function to start the camera
+        async function startCamera() {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: true
+            });
+            videoElement.srcObject = stream;
+            startRecordingButton.disabled = false;
+        }
+
+        // Function to stop the camera
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                videoElement.srcObject = null;
+                startRecordingButton.disabled = true;
+                stopRecordingButton.disabled = true;
+            }
+        }
+
+        // Initialize camera on page load
+        window.onload = startCamera;
+
+        // Toggle camera on/off
+        cameraToggle.addEventListener('change', () => {
+            if (cameraToggle.checked) {
+                startCamera();
+            } else {
+                stopCamera();
+            }
+        });
 
         // Show webcam feed as soon as the page loads (before starting recording)
         window.onload = async function() {
