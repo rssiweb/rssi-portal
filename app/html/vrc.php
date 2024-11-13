@@ -6,7 +6,7 @@ include(__DIR__ . "../../util/email.php");
 // Check if the form data has been submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve form data and sanitize
-    $application_number = $_POST['applicationNumber'];
+    $application_number = $_POST['applicationNumber_verify'];
     $name = $_POST['name'];
     $email = $_POST['email'];
     $videoData = $_POST['videoData'];
@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Prepare SQL statement to insert data into the table
-    $query = "INSERT INTO onlineinterview (unique_id, application_number, name, video,timestamp,ip_address,email) VALUES ($1, $2, $3, $4,$5,$6,$7)";
+    $query = "INSERT INTO vrc (unique_id, application_number, name, video,timestamp,ip_address,email) VALUES ($1, $2, $3, $4,$5,$6,$7)";
 
     // Using pg_query_params with correct parameters for a prepared statement
     $result = pg_query_params($con, $query, array($unique_id, $application_number, $name, $base64EncodedVideo, $now, $ip_address, $email));
@@ -181,34 +181,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <form id="applicationForm" method="POST" enctype="multipart/form-data">
             <!-- Application Number Input -->
-            <div class="mb-3">
-                <label for="applicationNumber" class="form-label">Application Number:</label>
-                <input type="text" class="form-control" id="applicationNumber" name="applicationNumber" required>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="applicationNumber_verify" name="applicationNumber_verify" placeholder="Enter your Application Number" required>
+                <!-- Change button type to 'button' to prevent form submission -->
+                <button type="button" class="btn btn-primary" id="verifybutton">Find your details</button>
             </div>
 
             <!-- Name Input -->
             <div class="mb-3">
                 <label for="name" class="form-label">Name:</label>
-                <input type="text" class="form-control" id="name" name="name" required>
+                <input type="text" class="form-control" id="name" name="name" readonly>
             </div>
+
             <!-- Email Input -->
             <div class="mb-3">
                 <label for="email" class="form-label">Email:</label>
-                <input type="email" class="form-control" id="email" name="email" required>
+                <input type="email" class="form-control" id="email" name="email" readonly>
             </div>
 
             <!-- Video Recording Section -->
             <div class="mb-3">
                 <label class="form-label">Video Recording:</label>
-                <!-- <div class="video-container">
-                    <video id="video" width="100%" height="300" autoplay muted></video>
-                    <video id="previewVideo" width="100%" height="300" controls hidden></video>
-
-                    <div class="mb-3 form-check form-switch">
-                        <input type="checkbox" class="form-check-input" id="cameraToggle" checked>
-                        <label class="form-check-label" for="cameraToggle">Camera On/Off</label>
-                    </div>
-                </div> -->
 
                 <div class="video-container">
                     <video id="video" class="video-stream" autoplay muted></video>
@@ -235,8 +228,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <!-- Submit Button -->
             <button type="submit" class="btn btn-success">Submit Application</button>
         </form>
+        <!-- Hidden Form for AJAX Request -->
+        <form name="get_details_vrc" id="get_details_vrc" action="#" method="POST">
+            <input type="hidden" name="form-type" value="get_details_vrc">
+            <input type="hidden" name="applicationNumber_verify_input">
+        </form>
     </div>
+    <script>
+        const applicationNumberInput = document.getElementById("applicationNumber_verify");
+        const applicationNumberVerifyInput = document.getElementsByName("applicationNumber_verify_input")[0]; // Accessing the hidden field properly
+        const nameInput = document.getElementById("name");
+        const emailInput = document.getElementById("email");
+        const submitButton = document.querySelector('button[type="submit"]');
 
+        // Copy value from applicationNumber_verify to hidden applicationNumber_verify_input
+        applicationNumberInput.addEventListener("input", function() {
+            applicationNumberVerifyInput.value = this.value;
+        });
+
+        // Function to handle the "verifybutton" click event
+        function handleVerifyButtonClick(event) {
+            event.preventDefault(); // prevent default form submission
+
+            // http://localhost:8082/rssi-member/payment-api.php
+
+            fetch('https://login.rssi.in/rssi-member/payment-api.php', {
+                    method: 'POST',
+                    body: new FormData(document.forms['get_details_vrc'])
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        nameInput.value = data.data.fullname;
+                        emailInput.value = data.data.email;
+                        submitButton.disabled = false; // Enable submit button
+                        alert("User data fetched successfully!");
+                    } else if (data.status === 'no_records') {
+                        submitButton.disabled = true; // Disable submit button
+                        nameInput.value = "";
+                        emailInput.value = "";
+                        alert("No records found in the database. Please proceed with other options.");
+                    } else {
+                        console.error('Error:', data.message);
+                        alert("Error retrieving user data. Please try again later or contact support.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Error fetching user data. Please try again later or contact support.");
+                });
+        }
+
+        // Add event listener to the "verifybutton" element
+        document.getElementById("verifybutton").addEventListener("click", handleVerifyButtonClick);
+    </script>
     <script>
         let mediaRecorder;
         let recordedChunks = [];

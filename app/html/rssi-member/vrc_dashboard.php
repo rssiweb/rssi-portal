@@ -16,7 +16,7 @@ if (!$con) {
 }
 
 // Fetch data from the database
-$query = "SELECT unique_id, application_number, name, video,timestamp,ip_address FROM onlineinterview order by timestamp";
+$query = "SELECT unique_id, application_number, name, video,timestamp,ip_address FROM vrc order by timestamp desc";
 $result = pg_query($con, $query);
 
 if (!$result) {

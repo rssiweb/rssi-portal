@@ -226,6 +226,31 @@ if ($formtype == "gen_otp_centr") {
   }
 }
 
+if ($formtype == "get_details_vrc") {
+  @$applicationNumber = $_POST['applicationNumber_verify_input'];
+
+  // Query to fetch data based on application number
+  $getDetails = "SELECT applicant_f_name, applicant_l_name, email FROM candidatepool WHERE application_number = '$applicationNumber'";
+  $result = pg_query($con, $getDetails);
+
+  if ($result) {
+    $row = pg_fetch_assoc($result);
+    if ($row) {
+      // Return 'success' with name and email data
+      echo json_encode(array('status' => 'success', 'data' => array(
+        'fullname' => $row['applicant_f_name'] . ' ' . $row['applicant_l_name'],
+        'email' => $row['email']
+      )));
+    } else {
+      // No matching record found
+      echo json_encode(array('status' => 'no_records', 'message' => 'No records found for the given application number.'));
+    }
+  } else {
+    // Error in query execution
+    echo json_encode(array('status' => 'error', 'message' => 'Error retrieving user data.'));
+  }
+}
+
 if ($formtype == "get_details") {
   @$contactnumber = $_POST['contactnumber_verify_input'];
   $getdetails = "SELECT fullname, email, tel FROM donation_userdata WHERE tel='$contactnumber'";
