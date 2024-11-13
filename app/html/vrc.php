@@ -165,7 +165,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="alert alert-success alert-dismissible text-center" role="alert">
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 <i class="bi bi-check2-circle"></i>
-                <span>Interview submitted successfully! Your submission reference ID is <?php echo $unique_id ?>. Please keep this ID for any future correspondence.</span>
+                <span>Video response received successfully! Your submission reference ID is <?php echo $unique_id ?>. Please keep this ID for any future correspondence.</span>
             </div>
             <script>
                 if (window.history.replaceState) {
