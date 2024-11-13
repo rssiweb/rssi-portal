@@ -1,12 +1,14 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
 include(__DIR__ . "/../util/login_util.php");
+include(__DIR__ . "../../util/email.php");
 
 // Check if the form data has been submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve form data and sanitize
     $application_number = $_POST['applicationNumber'];
     $name = $_POST['name'];
+    $email = $_POST['email'];
     $videoData = $_POST['videoData'];
     $now = date('Y-m-d H:i:s');
     function getUserIpAddr()
@@ -44,11 +46,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Prepare SQL statement to insert data into the table
-    $query = "INSERT INTO onlineinterview (unique_id, application_number, name, video,timestamp,ip_address) VALUES ($1, $2, $3, $4,$5,$6)";
+    $query = "INSERT INTO onlineinterview (unique_id, application_number, name, video,timestamp,ip_address,email) VALUES ($1, $2, $3, $4,$5,$6,$7)";
 
     // Using pg_query_params with correct parameters for a prepared statement
-    $result = pg_query_params($con, $query, array($unique_id, $application_number, $name, $base64EncodedVideo, $now, $ip_address));
+    $result = pg_query_params($con, $query, array($unique_id, $application_number, $name, $base64EncodedVideo, $now, $ip_address, $email));
     $cmdtuples = pg_affected_rows($result);
+
+    if (@$cmdtuples == 1 && $email != "") {
+        sendEmail("vrc", array(
+            "unique_id" => $unique_id,
+            "application_number" => $application_number,
+            "fullname" => @$name,
+            "now" => @date("d/m/Y g:i a", strtotime($now))
+        ), $email);
+    }
 
     // Check if insertion was successful
     if ($result) {
@@ -179,6 +190,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="mb-3">
                 <label for="name" class="form-label">Name:</label>
                 <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <!-- Email Input -->
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <input type="email" class="form-control" id="email" name="email" required>
             </div>
 
             <!-- Video Recording Section -->
