@@ -435,6 +435,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             previewRecordingButton.hidden = true;
             retakeRecordingButton.hidden = true;
             countdownDisplay.innerText = ""; // Reset countdown display
+            // Disable the submit button until a valid recording is made
+            submitButton.disabled = true;
         });
 
         // Helper function to convert Blob to Base64
