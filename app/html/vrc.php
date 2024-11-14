@@ -176,7 +176,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     </div><br>
 
-    <div class="container mt-5">
+    <div class="container">
         <h2 class="text-center">Virtual Response Center</h2>
 
         <form id="applicationForm" method="POST" enctype="multipart/form-data">
@@ -214,19 +214,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
 
                 <p id="videoText">When you are ready, please start recording.</p>
-                <div class="mt-3">
-                    <button type="button" class="btn btn-primary" id="startRecording">Start Recording</button>
-                    <button type="button" class="btn btn-danger" id="stopRecording" disabled>Stop Recording</button>
-                    <button type="button" class="btn btn-secondary" id="previewRecording" hidden>Preview</button>
-                    <button type="button" class="btn btn-warning" id="retakeRecording" hidden>Retake</button>
+
+                <div class="mt-3 d-flex justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-primary" id="startRecording">Start Recording</button>
+                        <button type="button" class="btn btn-danger" id="stopRecording" disabled>Stop Recording</button>
+                        <button type="button" class="btn btn-secondary" id="previewRecording" hidden>Preview</button>
+                        <button type="button" class="btn btn-warning" id="retakeRecording" hidden>Retake</button>
+                    </div>
+                    <!-- Submit Button aligned to the right -->
+                    <button type="submit" class="btn btn-success">Submit Application</button>
                 </div>
+
             </div>
 
             <!-- Hidden Input for Video Blob -->
             <input type="hidden" name="videoData" id="videoData">
-
-            <!-- Submit Button -->
-            <button type="submit" class="btn btn-success">Submit Application</button>
         </form>
         <!-- Hidden Form for AJAX Request -->
         <form name="get_details_vrc" id="get_details_vrc" action="#" method="POST">
@@ -282,10 +285,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Add event listener to the "verifybutton" element
         document.getElementById("verifybutton").addEventListener("click", handleVerifyButtonClick);
     </script>
+
     <script>
         let mediaRecorder;
         let recordedChunks = [];
         let stream;
+        let countdownTimer;
+        let remainingTime = 60; // 1-minute timer
 
         const startRecordingButton = document.getElementById('startRecording');
         const stopRecordingButton = document.getElementById('stopRecording');
@@ -294,7 +300,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         const videoElement = document.getElementById('video');
         const previewVideoElement = document.getElementById('previewVideo');
         const videoText = document.getElementById('videoText');
-        const cameraToggle = document.getElementById('cameraToggle');
+        const countdownDisplay = document.createElement('p'); // Countdown timer display
+
+        // Add countdown display below video text
+        videoText.after(countdownDisplay);
 
         // Function to start the camera
         async function startCamera() {
@@ -314,6 +323,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 startRecordingButton.disabled = true;
                 stopRecordingButton.disabled = true;
             }
+            clearInterval(countdownTimer); // Stop the countdown timer
+            remainingTime = 60; // Reset for next recording
+            countdownDisplay.innerText = ""; // Clear countdown display
         }
 
         // Initialize camera on page load
@@ -328,17 +340,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         });
 
-        // Show webcam feed as soon as the page loads (before starting recording)
-        window.onload = async function() {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            });
-            videoElement.srcObject = stream;
-        };
+        // Function to update countdown display
+        function updateCountdown() {
+            countdownDisplay.innerText = `Time Remaining: ${remainingTime} seconds`;
+            remainingTime--;
 
-        // Start recording and turn on the camera when button is clicked
-        startRecordingButton.addEventListener('click', async () => {
+            if (remainingTime < 0) {
+                stopRecordingButton.click(); // Automatically stop recording
+                clearInterval(countdownTimer);
+                remainingTime = 60; // Reset for next recording
+            }
+        }
+
+        // Function to start recording
+        startRecordingButton.addEventListener('click', () => {
             recordedChunks = [];
             mediaRecorder = new MediaRecorder(stream);
 
@@ -352,78 +367,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 const blob = new Blob(recordedChunks, {
                     type: 'video/webm'
                 });
-                recordedChunks = [];
-                const videoURL = URL.createObjectURL(blob);
+                const videoSizeMB = (blob.size / (1024 * 1024)).toFixed(2); // Calculate size in MB
+                alert(`Recording stopped! Final video size: ${videoSizeMB} MB`);
 
-                // Set preview video source and show preview
+                const videoURL = URL.createObjectURL(blob);
                 previewVideoElement.src = videoURL;
                 previewVideoElement.hidden = false;
                 videoElement.hidden = true;
-
                 videoText.hidden = true;
-                previewRecordingButton.hidden = true;
                 retakeRecordingButton.hidden = false;
                 startRecordingButton.disabled = true;
                 stopRecordingButton.disabled = true;
 
-                // Save video data as Base64 to send with form submission
                 blobToBase64(blob, base64Video => {
                     document.getElementById('videoData').value = base64Video;
                 });
             };
 
-            videoText.hidden = true; // Hide the prompt when recording starts
             mediaRecorder.start();
+            countdownTimer = setInterval(updateCountdown, 1000); // Start countdown
+            remainingTime = 60; // Reset timer to 60 seconds
+            countdownDisplay.innerText = `Time Remaining: ${remainingTime} seconds`;
 
-            // Button states
             startRecordingButton.disabled = true;
             stopRecordingButton.disabled = false;
-            previewRecordingButton.hidden = true;
-            retakeRecordingButton.hidden = true;
         });
 
-        // Stop recording and turn off the camera
+        // Function to stop recording
         stopRecordingButton.addEventListener('click', () => {
-            if (mediaRecorder.state === 'recording') {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
-                startRecordingButton.disabled = false;
-                stopRecordingButton.disabled = true;
-
-                // Stop all tracks to release the camera
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
+                clearInterval(countdownTimer); // Stop the countdown
+                remainingTime = 60; // Reset for next recording
             }
         });
 
-        // Preview the recorded video
-        previewRecordingButton.addEventListener('click', () => {
-            videoElement.hidden = true;
-            previewVideoElement.hidden = false;
-        });
-
-        // Retake video (reset to pre-recording state)
+        // Retake video functionality
         retakeRecordingButton.addEventListener('click', async () => {
-            // Stop current stream (if any)
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
+            // Ensure the camera toggle switch is set to "on"
+            cameraToggle.checked = true; // This forces the toggle to be in the "on" position
+            stopCamera();
+            await startCamera();
 
-            // Re-enable the webcam feed
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            });
-            videoElement.srcObject = stream;
-
-            // Reset the UI to initial state before recording
             recordedChunks = [];
             previewVideoElement.hidden = true;
             videoElement.hidden = false;
-            videoText.hidden = false; // Show the prompt again
+            videoText.hidden = false;
             startRecordingButton.disabled = false;
             stopRecordingButton.disabled = true;
             previewRecordingButton.hidden = true;
             retakeRecordingButton.hidden = true;
+            countdownDisplay.innerText = ""; // Reset countdown display
         });
 
         // Helper function to convert Blob to Base64
@@ -436,6 +430,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             reader.readAsDataURL(blob);
         }
     </script>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
