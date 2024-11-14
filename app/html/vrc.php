@@ -238,6 +238,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </form>
     </div>
     <script>
+        let userDataFetched = false; // To track if user data is fetched
+        let videoRecorded = false; // To track if video is recorded
         const applicationNumberInput = document.getElementById("applicationNumber_verify");
         const applicationNumberVerifyInput = document.getElementsByName("applicationNumber_verify_input")[0]; // Accessing the hidden field properly
         const nameInput = document.getElementById("name");
@@ -264,10 +266,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     if (data.status === 'success') {
                         nameInput.value = data.data.fullname;
                         emailInput.value = data.data.email;
-                        submitButton.disabled = false; // Enable submit button
+                        userDataFetched = true; // User data fetched successfully
                         alert("User data fetched successfully!");
                     } else if (data.status === 'no_records') {
-                        submitButton.disabled = true; // Disable submit button
+                        userDataFetched = false; // No records found
                         nameInput.value = "";
                         emailInput.value = "";
                         alert("No records found in the database. Please proceed with other options.");
@@ -275,6 +277,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         console.error('Error:', data.message);
                         alert("Error retrieving user data. Please try again later or contact support.");
                     }
+                    // Call checkSubmitButtonStatus after data fetch
+                    checkSubmitButtonStatus();
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -328,8 +332,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             countdownDisplay.innerText = ""; // Clear countdown display
         }
 
-        // Initialize camera on page load
-        window.onload = startCamera;
+        // Initialize camera and disable submit button on page load
+        window.onload = function() {
+            startCamera(); // Start the camera
+            submitButton.disabled = true; // Disable submit button initially
+        };
 
         // Toggle camera on/off
         cameraToggle.addEventListener('change', () => {
@@ -369,6 +376,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 });
                 const videoSizeMB = (blob.size / (1024 * 1024)).toFixed(2); // Calculate size in MB
                 alert(`Recording stopped! Final video size: ${videoSizeMB} MB`);
+
+                // Check if the video size is 0, and disable submit button if true
+                if (blob.size === 0) {
+                    submitButton.disabled = true; // Disable submit button
+                    alert("The video file size is 0. Please record a valid video.");
+                    videoRecorded = false; // Video is not valid
+                } else {
+                    videoRecorded = true; // Valid video
+                    checkSubmitButtonStatus(); // Check if submit button can be enabled
+                }
 
                 const videoURL = URL.createObjectURL(blob);
                 previewVideoElement.src = videoURL;
@@ -428,6 +445,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 callback(base64Data);
             };
             reader.readAsDataURL(blob);
+        }
+        // Function to check submit button status
+        function checkSubmitButtonStatus() {
+            // Enable submit button only if user data is fetched and video is recorded
+            if (userDataFetched && videoRecorded) {
+                submitButton.disabled = false;
+            } else {
+                submitButton.disabled = true;
+            }
         }
     </script>
 
