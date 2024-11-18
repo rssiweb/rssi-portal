@@ -405,7 +405,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <!-- <button type="submit" id="save" class="btn btn-success">Save</button> -->
                                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                                 <button type="submit" id="submit" class="btn btn-primary">Submit</button>
-                                                <div>Last Updated by: <?php echo $updated_by ?> on <?php echo date('d/m/Y h:i:s A', strtotime($update_timestamp)) ?></div>
+                                                <div>
+                                                    Last Updated by:
+                                                    <?php echo $updated_by ? $updated_by : "Not available"; ?>
+                                                    <?php if (!empty($update_timestamp)) : ?>
+                                                        on <?php echo date('d/m/Y h:i:s A', strtotime($update_timestamp)); ?>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
 
                                         </fieldset>
