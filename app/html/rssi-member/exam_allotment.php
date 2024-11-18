@@ -89,13 +89,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Check user role and apply conditions accordingly
     if ($role !== 'Admin' && $role !== 'Offline Manager') {
         // Only include conditions for regular users to see their assigned records
-        $conditions[] = "(e.teacher_id_viva = $" . (count($params) + 1) . " OR e.teacher_id_written = $" . (count($params) + 2) . ")";
+        $conditions[] = "(e.teacher_id_viva = $" . (count($params) + 1) . " OR e.teacher_id_written = $" . (count($params) + 1) . ")";
         $params[] = $associatenumber; // for viva
-        $params[] = $associatenumber; // for written
     }
 
     // Only execute the query if a filter is provided
     if ($filterProvided || $role === 'Admin' || $role === 'Offline Manager') {
+        // Add filter for Teacher ID (applies to both teacher_id_viva and teacher_id_written)
+        if (!empty($_GET['teacher_id_viva'])) {
+            $conditions[] = "(e.teacher_id_viva = $" . (count($params) + 1) . " OR e.teacher_id_written = $" . (count($params) + 1) . ")";
+            $params[] = $_GET['teacher_id_viva']; // for viva
+            $filterProvided = true;
+        }
         if (!empty($conditions)) {
             $query .= " WHERE " . implode(" AND ", $conditions);
         }
