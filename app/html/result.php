@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
     if ($exam_type == 'First Term') {
         $start_date = "$start_year-04-01";
         $end_date = "$start_year-07-31";
-    } elseif ($exam_type == 'Second Term') {
+    } elseif ($exam_type == 'Half Yearly') {
         $start_date = "$start_year-08-01";
         $end_date = "$start_year-11-30";
     } else {  // annual
