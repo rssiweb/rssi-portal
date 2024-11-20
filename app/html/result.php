@@ -187,6 +187,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
     }
 }
 ?>
+<?php
+// Fetch exam results and calculate percentages for all exams conducted this academic year
+$percentage_query = "
+    SELECT 
+        exams.exam_type,
+        ROUND(exam_marks_data.written_marks) AS written_marks,
+        ROUND(exam_marks_data.viva_marks) AS viva_marks,
+        exams.full_marks_written,
+        exams.full_marks_viva
+    FROM exam_marks_data
+    JOIN exams ON exam_marks_data.exam_id = exams.exam_id
+    WHERE exam_marks_data.student_id = $1
+    AND exams.academic_year = $2
+    ORDER BY exams.exam_type";
+
+// Prepare for storing exam percentages
+$exam_percentages = [
+    'First Term' => 'N/A',
+    'Half Yearly' => 'N/A',
+    'Annual' => 'N/A'
+];
+
+// Run the query to fetch marks data
+$percentage_result = pg_query_params($con, $percentage_query, [$student_id, $academic_year]);
+
+if ($percentage_result) {
+    // Initialize variables to calculate marks for each exam type
+    $exam_types = ['First Term', 'Half Yearly', 'Annual'];
+
+    // Loop through each exam type and calculate percentage
+    foreach ($exam_types as $exam_label) { // Using $exam_label instead of $exam_type
+        // Initialize totals for each exam type using unique variable names
+        $full_marks_for_exam = 0;
+        $obtained_marks_for_exam = 0;
+
+        // Fetch and process the data for the current exam type
+        pg_result_seek($percentage_result, 0); // Reset the result pointer before processing
+        while ($row = pg_fetch_assoc($percentage_result)) {
+            if ($row['exam_type'] == $exam_label) { // Compare with $exam_label
+                // Sum full marks and obtained marks using new variable names
+                $full_marks_for_exam += $row['full_marks_written'] + $row['full_marks_viva'];
+                $obtained_marks_for_exam += $row['written_marks'] + $row['viva_marks'];
+            }
+        }
+
+        // Calculate percentage if total marks are greater than zero
+        if ($full_marks_for_exam > 0) {
+            $percentage = ($obtained_marks_for_exam / $full_marks_for_exam) * 100;
+            $exam_percentages[$exam_label] = number_format($percentage, 2) . '%'; // Store result using $exam_label
+        } else {
+            $exam_percentages[$exam_label] = 'N/A';  // No data or no full marks
+        }
+    }
+}
+
+// Now you can use the $exam_percentages array to display the values in the HTML table
+
+?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -478,7 +537,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                 </tr>";
                     echo "</table>"; ?>
 
-                    <table class="table" border="0" align="right" style="width: 50%;">
+                    <!-- <table class="table" border="0" align="right" style="width: 50%;">
                         <tbody>
                             <tr>
                                 <td> Result </td>
@@ -494,6 +553,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                             </tr>
                         </tbody>
                     </table>
+                    <table class="table visible-xs" border="0" align="left" style="width: 40%; margin-left:0%; margin-top:0%;">
+                        <tbody>
+                            <tr>
+                                <td>Signature of Class Teacher / Center In-charge<br><br>Date:</td>
+                            </tr>
+                        </tbody>
+                    </table> -->
+
+                    <table border="0" align="right" style="width: 50%; margin: 0 auto;">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table class="table" border="0" style="width: 100%;">
+                                        <tbody>
+                                            <tr>
+                                                <td>Result</td>
+                                                <th><?php echo strtoupper($passOrFail) ?></th>
+                                            </tr>
+                                            <tr>
+                                                <td>Overall ranking</td>
+                                                <th></th>
+                                            </tr>
+                                            <tr>
+                                                <td>Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>)</td>
+                                                <td><?php echo $average_attendance_percentage ?></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <table class="table visible-xs" border="0" style="width: 100%; margin-top: 20%;">
+                                        <tbody>
+                                            <tr>
+                                                <td>Signature of Class Teacher / Center In-charge<br><br>Date:</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+
+                    <table class="table" border="1" style="width: 45%;">
+                        <tr>
+                            <th colspan="2">Summary of Examinations for Academic Year <?php echo $academic_year; ?></th>
+                        </tr>
+                        <tr>
+                            <th>Exam Type</th>
+                            <th>Marks Obtained</th>
+                        </tr>
+                        <tr>
+                            <td>First Term</td>
+                            <td><?php echo $exam_percentages['First Term']; ?></td>
+                        </tr>
+                        <tr>
+                            <td>Half Yearly</td>
+                            <td><?php echo $exam_percentages['Half Yearly']; ?></td>
+                        </tr>
+                        <tr>
+                            <td>Annual</td>
+                            <td><?php echo $exam_percentages['Annual']; ?></td>
+                        </tr>
+                    </table>
+
 
                 <?php } else {
                 echo "Error fetching exam details and marks.";
@@ -533,13 +659,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
             <?php
         }
             ?>
-            <table class="table visible-xs" border="0" align="left" style="width: 40%; margin-left:0%; margin-top:20%;">
-                <tbody>
-                    <tr>
-                        <td>Signature of Class Teacher / Center In-charge<br><br>Date:</td>
-                    </tr>
-                </tbody>
-            </table>
             <p class="report-footer visible-xs" style="text-align: right;">A - Absent denotes that the student was absent during the exam for that particular subject.</p>
 
     </div>
