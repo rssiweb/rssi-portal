@@ -1156,6 +1156,24 @@ if ($_POST['form-type'] == "contact_Form") {
   }
 }
 
+
+// Ensure this is included in your script where the POST request is handled
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['form-type'] == "email_verify_signup") {
+
+  $email = $_POST['email_verify'];
+
+  $query = "SELECT COUNT(*) AS count FROM signup WHERE email = $1";
+  $result = pg_query_params($con, $query, [$email]);
+
+  if ($result) {
+      $row = pg_fetch_assoc($result);
+      echo json_encode(['exists' => $row['count'] > 0]);
+  } else {
+      echo json_encode(['exists' => false]);
+  }
+  exit; // Ensure no further output is sent
+}
+
 if (@$_POST['form-type'] == "signup") {
   $applicant_name = $_POST['applicant-name'];
   $date_of_birth = $_POST['date-of-birth'];

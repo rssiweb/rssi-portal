@@ -10,7 +10,7 @@ function afterlogin($con, $date)
 {
     $application_number = $_SESSION['aid'];
 
-    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from signup WHERE application_number='$application_number'");
+    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from signup WHERE email='$application_number'");
 
     $row = pg_fetch_row($user_query);
     $password_updated_by = $row[0];
@@ -48,7 +48,7 @@ function checkLogin($con, $date)
     $application_number = $_POST['aid'];
     $password = $_POST['pass'];
 
-    $query = "SELECT password, absconding FROM signup WHERE application_number='$application_number'";
+    $query = "SELECT password, absconding FROM signup WHERE email='$application_number'";
     $result = pg_query($con, $query);
     $user = pg_fetch_row($result);
     @$existingHashFromDb = $user[0];
