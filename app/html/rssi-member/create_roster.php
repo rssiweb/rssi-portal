@@ -129,7 +129,7 @@ pg_close($con);
                                 </script>
                             <?php } ?>
                             <div class="container mt-4">
-                                <form action="#" method="post">
+                                <form action="#" id= "roster" method="post">
 
                                     <!-- Associate Number -->
                                     <div class="row mb-3">
