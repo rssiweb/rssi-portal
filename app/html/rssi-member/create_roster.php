@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $start_date = $_POST['start_date'];
     $end_date = $_POST['end_date'];
     $reporting_time = $_POST['reporting_time'];
-    $exit_time = $_POST['exit_time'];
+    $exit_time = $_POST['exit_time_s'];
     $timestamp = date('Y-m-d H:i:s');
     $id = uniqid(); // Generate unique ID in PHP
     $submittedBy = $associate_number; // Use the logged-in user's identifier for submission tracking
@@ -165,9 +165,9 @@ pg_close($con);
 
                                     <!-- Exit Time -->
                                     <div class="row mb-3">
-                                        <label for="exit_time" class="col-sm-3 col-form-label">Exit Time</label>
+                                        <label for="exit_time_s" class="col-sm-3 col-form-label">Exit Time</label>
                                         <div class="col-sm-9">
-                                            <input type="time" class="form-control" id="exit_time" name="exit_time" required>
+                                            <input type="time" class="form-control" id="exit_time_s" name="exit_time_s" required>
                                         </div>
                                     </div>
 
