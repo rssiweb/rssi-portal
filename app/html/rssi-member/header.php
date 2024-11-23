@@ -289,7 +289,7 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#rostermanagement" data-bs-toggle="collapse" href="#">
-          <span>Roster Management</span><i class="bi bi-chevron-down ms-auto"></i>
+          <span>Roster</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="rostermanagement" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -299,7 +299,7 @@
           </li>
           <li>
             <a id="view_roster" href="view_roster.php">
-              <span>Roster Overview</span>
+              <span>View Roster</span>
             </a>
           </li>
         </ul>

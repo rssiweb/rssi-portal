@@ -138,113 +138,110 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                         <div class="card-body">
                             <br>
-                            <div class="container">
+                            <form method="POST" action="#">
+                                <div class="text-end">
+                                    <!-- Edit Button -->
+                                    <button type="button" class="btn btn-warning" id="edit-btn" onclick="toggleEditMode()">Edit</button>
+                                    <!-- Save Button -->
+                                    <button type="submit" class="btn btn-primary" id="save-btn" style="display: none;">Save</button>
+                                </div>
                                 <div class="table-responsive">
-                                    <form method="POST" action="#">
-                                        <div class="text-end">
-                                            <!-- Edit Button -->
-                                            <button type="button" class="btn btn-warning" id="edit-btn" onclick="toggleEditMode()">Edit</button>
-                                            <!-- Save Button -->
-                                            <button type="submit" class="btn btn-primary" id="save-btn" style="display: none;">Save</button>
-                                        </div>
+                                    <table class="table" id="table-id">
+                                        <thead>
+                                            <tr>
+                                                <th>SL</th>
+                                                <th>Family ID</th>
+                                                <th>Address</th>
+                                                <th>Contact</th>
+                                                <th>Parent Name</th>
+                                                <th>Student Name</th>
+                                                <th>Age</th>
+                                                <th>Gender</th>
+                                                <th>Grade</th>
+                                                <th></th>
+                                                <th>Timestamp</th>
+                                                <th>Surveyor Name</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="data-tbody">
+                                            <?php while ($row = pg_fetch_assoc($result)): ?>
+                                                <tr class="table-row">
+                                                    <td><?php echo $serialNumber++; ?></td>
+                                                    <td><?php echo $row["family_id"]; ?></td>
+                                                    <!-- <td><span class="regular-text address-text"><?php echo $row["address"]; ?></span></td> -->
+                                                    <?php $shortAddress = strlen($row["address"]) > 30 ? substr($row["address"], 0, 30) . "..." : $row["address"]; ?>
+                                                    <td>
+                                                        <span class="short-address"><?php echo $shortAddress; ?></span>
+                                                        <span class="full-address" style="display: none;"><?php echo $row["address"]; ?></span>
+                                                        <a href="#" class="more-link">more</a>
+                                                    </td>
+                                                    <td><span class="regular-text"><?php echo $row["contact"]; ?></span></td>
+                                                    <td><span class="regular-text"><?php echo $row["parent_name"]; ?></span></td>
+                                                    <td><span class="regular-text"><?php echo $row["student_name"]; ?></span></td>
+                                                    <td><span class="regular-text"><?php echo $row["age"]; ?></span></td>
+                                                    <td><span class="regular-text"><?php echo $row["gender"]; ?></span></td>
+                                                    <td><span class="regular-text"><?php echo $row["grade"]; ?></span></td>
+                                                    <td>
+                                                        <!-- Link to open the modal -->
+                                                        <a href="#" class="misc-link" data-bs-toggle="modal" data-bs-target="#miscModal<?php echo $row["id"]; ?>">View Details</a>
+                                                    </td>
+                                                    <td><?php echo date('d/m/Y h:i A', strtotime($row["timestamp"])); ?></td>
+                                                    <td><?php echo $row["fullname"]; ?></td>
+                                                    <td>
+                                                        <!-- Regular text when in non-edit mode -->
+                                                        <span class="regular-text status-text"><?php echo $row["status"]; ?></span>
 
-                                        <table class="table" id="table-id">
-                                            <thead>
-                                                <tr>
-                                                    <th>SL</th>
-                                                    <th>Family ID</th>
-                                                    <th>Address</th>
-                                                    <th>Contact</th>
-                                                    <th>Parent Name</th>
-                                                    <th>Student Name</th>
-                                                    <th>Age</th>
-                                                    <th>Gender</th>
-                                                    <th>Grade</th>
-                                                    <th></th>
-                                                    <th>Timestamp</th>
-                                                    <th>Surveyor Name</th>
-                                                    <th>Status</th>
+                                                        <!-- Status dropdown for editing -->
+                                                        <select name="status[<?php echo $row['id']; ?>]" class="edit-input status-dropdown form-select" style="display: none;">
+                                                            <!-- Blank option for "no selection" state -->
+                                                            <option value="" <?php echo $row['status'] == '' ? 'selected' : ''; ?>>Select Status</option>
+                                                            <option value="No Show" <?php echo $row['status'] == 'No Show' ? 'selected' : ''; ?>>No Show</option>
+                                                            <option value="Enrollment Completed" <?php echo $row['status'] == 'Enrollment Completed' ? 'selected' : ''; ?>>Enrollment Completed</option>
+                                                        </select>
+                                                    </td>
                                                 </tr>
-                                            </thead>
-                                            <tbody id="data-tbody">
-                                                <?php while ($row = pg_fetch_assoc($result)): ?>
-                                                    <tr class="table-row">
-                                                        <td><?php echo $serialNumber++; ?></td>
-                                                        <td><?php echo $row["family_id"]; ?></td>
-                                                        <!-- <td><span class="regular-text address-text"><?php echo $row["address"]; ?></span></td> -->
-                                                        <?php $shortAddress = strlen($row["address"]) > 30 ? substr($row["address"], 0, 30) . "..." : $row["address"]; ?>
-                                                        <td>
-                                                            <span class="short-address"><?php echo $shortAddress; ?></span>
-                                                            <span class="full-address" style="display: none;"><?php echo $row["address"]; ?></span>
-                                                            <a href="#" class="more-link">more</a>
-                                                        </td>
-                                                        <td><span class="regular-text"><?php echo $row["contact"]; ?></span></td>
-                                                        <td><span class="regular-text"><?php echo $row["parent_name"]; ?></span></td>
-                                                        <td><span class="regular-text"><?php echo $row["student_name"]; ?></span></td>
-                                                        <td><span class="regular-text"><?php echo $row["age"]; ?></span></td>
-                                                        <td><span class="regular-text"><?php echo $row["gender"]; ?></span></td>
-                                                        <td><span class="regular-text"><?php echo $row["grade"]; ?></span></td>
-                                                        <td>
-                                                            <!-- Link to open the modal -->
-                                                            <a href="#" class="misc-link" data-bs-toggle="modal" data-bs-target="#miscModal<?php echo $row["id"]; ?>">View Details</a>
-                                                        </td>
-                                                        <td><?php echo date('d/m/Y h:i A', strtotime($row["timestamp"])); ?></td>
-                                                        <td><?php echo $row["fullname"]; ?></td>
-                                                        <td>
-                                                            <!-- Regular text when in non-edit mode -->
-                                                            <span class="regular-text status-text"><?php echo $row["status"]; ?></span>
 
-                                                            <!-- Status dropdown for editing -->
-                                                            <select name="status[<?php echo $row['id']; ?>]" class="edit-input status-dropdown form-select" style="display: none;">
-                                                                <!-- Blank option for "no selection" state -->
-                                                                <option value="" <?php echo $row['status'] == '' ? 'selected' : ''; ?>>Select Status</option>
-                                                                <option value="No Show" <?php echo $row['status'] == 'No Show' ? 'selected' : ''; ?>>No Show</option>
-                                                                <option value="Enrollment Completed" <?php echo $row['status'] == 'Enrollment Completed' ? 'selected' : ''; ?>>Enrollment Completed</option>
-                                                            </select>
-                                                        </td>
-                                                    </tr>
-
-                                                    <!-- Modal for "Misc" data -->
-                                                    <div class="modal fade" id="miscModal<?php echo $row["id"]; ?>" tabindex="-1" aria-labelledby="miscModalLabel<?php echo $row["id"]; ?>" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title" id="miscModalLabel<?php echo $row["id"]; ?>">Miscellaneous Data</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <p>Student Name: <?php echo $row["student_name"]; ?> (<?php echo $row["family_id"]; ?>)</p>
-                                                                    <p>Family Earning Source:
-                                                                        <?php
-                                                                        if ($row["earning_source"] == "other") {
-                                                                            echo $row["other_earning_source_input"];
-                                                                        } else {
-                                                                            echo $row["earning_source"];
-                                                                        }
-                                                                        ?>
-                                                                    </p>
-                                                                    <p>Already Going to School: <?php echo $row["already_going_school"]; ?></p>
-                                                                    <p>School Type: <?php echo $row["school_type"]; ?></p>
-                                                                    <p>Already Coaching: <?php echo $row["already_coaching"]; ?></p>
-                                                                    <p>Coaching Name: <?php echo $row["coaching_name"]; ?></p>
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                                </div>
+                                                <!-- Modal for "Misc" data -->
+                                                <div class="modal fade" id="miscModal<?php echo $row["id"]; ?>" tabindex="-1" aria-labelledby="miscModalLabel<?php echo $row["id"]; ?>" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="miscModalLabel<?php echo $row["id"]; ?>">Miscellaneous Data</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>Student Name: <?php echo $row["student_name"]; ?> (<?php echo $row["family_id"]; ?>)</p>
+                                                                <p>Family Earning Source:
+                                                                    <?php
+                                                                    if ($row["earning_source"] == "other") {
+                                                                        echo $row["other_earning_source_input"];
+                                                                    } else {
+                                                                        echo $row["earning_source"];
+                                                                    }
+                                                                    ?>
+                                                                </p>
+                                                                <p>Already Going to School: <?php echo $row["already_going_school"]; ?></p>
+                                                                <p>School Type: <?php echo $row["school_type"]; ?></p>
+                                                                <p>Already Coaching: <?php echo $row["already_coaching"]; ?></p>
+                                                                <p>Coaching Name: <?php echo $row["coaching_name"]; ?></p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
 
-                                                <?php endwhile; ?>
-                                            </tbody>
-                                        </table>
-                                    </form>
-
+                                            <?php endwhile; ?>
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                     </div><!-- End Reports -->
                 </div>
+            </div>
         </section>
 
     </main><!-- End #main -->
