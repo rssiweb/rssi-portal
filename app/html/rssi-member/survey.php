@@ -78,10 +78,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Commit the transaction if all data was inserted successfully
         pg_query($con, 'COMMIT');
-        
+
         // Display success message and redirect
         echo "<script>alert('Data added successfully.'); window.location.href = 'survey.php';</script>";
-        
     } catch (Exception $e) {
         // Rollback transaction on error
         pg_query($con, 'ROLLBACK');
@@ -92,269 +91,312 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 ?>
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Potential Student Survey</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'AW-11316670180');
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Create Survey</title>
+
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
-        .form-container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="form-container">
-                    <h1 class="text-center mb-4">Potential Student Survey</h1>
-                    <form method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" id="surveyForm" onsubmit="return validateForm()">
-                        <!-- Parent's Name -->
-                        <div class="mb-3">
-                            <label for="parentName" class="form-label">Parent's Name</label>
-                            <input type="text" class="form-control" id="parentName" name="parentName" placeholder="Enter parent's name" required>
-                        </div>
-                        <!-- Address -->
-                        <div class="mb-3">
-                            <label for="address" class="form-label">Address</label>
-                            <div class="input-group">
-                                <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter address" required></textarea>
-                                <button class="btn btn-outline-secondary" type="button" id="getAddressBtn">Get Current Address</button>
-                            </div>
-                        </div>
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-                        <div class="row">
-                            <!-- Contact Number -->
-                            <div class="col-md-6 mb-3">
-                                <label for="contact" class="form-label">Contact Number</label>
-                                <input type="tel" class="form-control" id="contact" name="contact" placeholder="Enter contact number" required>
-                            </div>
-                            <!-- Alternative Contact Number -->
-                            <div class="col-md-6 mb-3">
-                                <label for="altcontact" class="form-label">Alternative Contact Number</label>
-                                <input type="tel" class="form-control" id="altcontact" name="altcontact" placeholder="Enter alternative contact number">
-                            </div>
-                        </div>
+    <main id="main" class="main">
 
-                        <div class="mb-3">
-                            <label for="houseStay">How long does the family stay in the current house?</label>
-                            <select class="form-select" id="houseStay" name="houseStay" required>
-                                <option value="" disabled selected>Select duration</option>
-                                <option value="<1">Less than 1 year</option>
-                                <option value="1">1 year</option>
-                                <option value="2">2 years</option>
-                                <option value="3">3 years</option>
-                                <option value="4">4 years</option>
-                                <option value="5">5 years</option>
-                                <option value=">5">More than 5 years</option>
-                            </select>
-                        </div>
+        <div class="pagetitle">
+            <h1>Create Survey</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Survey</a></li>
+                    <li class="breadcrumb-item active">Create Survey</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
-                        <!-- Total number of family members -->
-                        <div class="mb-3">
-                            <label for="familyMembers">Total number of family members:</label>
-                            <input type="number" class="form-control" id="familyMembers" name="familyMembers" required>
-                        </div>
+        <section class="section dashboard">
+            <div class="row">
 
-                        <!-- Main source of earning for the family -->
-                        <div class="mb-3">
-                            <label for="earningSource">Main source of earning for the family:</label>
-                            <select class="form-select" id="earningSource" name="earningSource" onchange="checkOtherOption()" required>
-                                <option value="" selected disabled>Select an option</option>
-                                <option value="agriculture">Agriculture</option>
-                                <option value="business">Business</option>
-                                <option value="government_job">Government Job</option>
-                                <option value="private_job">Private Job</option>
-                                <option value="Construction Worker">Construction Worker</option>
-                                <option value="Electrician">Electrician</option>
-                                <option value="Plumber">Plumber</option>
-                                <option value="Carpenter">Carpenter</option>
-                                <option value="Welder">Welder</option>
-                                <option value="Mechanic">Mechanic</option>
-                                <option value="Painter">Painter</option>
-                                <option value="Mason">Mason</option>
-                                <option value="Roofer">Roofer</option>
-                                <option value="Landscaper">Landscaper</option>
-                                <option value="Janitor">Janitor</option>
-                                <option value="Factory Worker">Factory Worker</option>
-                                <option value="Warehouse Worker">Warehouse Worker</option>
-                                <option value="Truck Driver">Truck Driver</option>
-                                <option value="Delivery Driver">Delivery Driver</option>
-                                <option value="other">Other</option>
-                            </select>
-                            <div id="otherEarningSource" style="display: none;">
-                                <label for="otherEarningSourceInput">Enter other source:</label>
-                                <input type="text" class="form-control" id="otherEarningSourceInput" name="otherEarningSourceInput">
-                            </div>
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
 
-                            <!-- Additional Information -->
-                            <div class="mb-3">
-                                <label for="additionalInfo" class="form-label">Additional Information</label>
-                                <textarea class="form-control" id="additionalInfo" name="additionalInfo" rows="3" placeholder="Enter any additional information"></textarea>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-body">
-                                    <!-- Checkbox for Interest in Admission -->
-                                    <div class="mb-3">
-                                        <label for="interestInAdmission">Interested in Admission</label>
-                                        <select class="form-select" id="interestInAdmission" name="interestInAdmission" onchange="toggleStudentFields()" required>
-                                            <option value="" selected disabled>Select an option</option>
-                                            <option value="no">No</option>
-                                            <option value="yes">Yes</option>
-                                        </select>
-                                    </div>
-                                    <!-- Student Details -->
-                                    <div id="studentsContainer" style="display: none;">
-                                        <div class="student-details">
-                                            <!-- Student's Name -->
+                        <div class="card-body">
+                            <br>
+                            <div class="row justify-content-center">
+                                <div class="col-md-8">
+                                    <div class="form-container">
+                                        <h1 class="text-center mb-4">Potential Student Survey</h1>
+                                        <form method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" id="surveyForm" onsubmit="return validateForm()">
+                                            <!-- Parent's Name -->
                                             <div class="mb-3">
-                                                <label for="sname">Student's Name</label>
-                                                <input type="text" class="form-control" id="sname" name="students[0][name]" placeholder="Enter student's name">
+                                                <label for="parentName" class="form-label">Parent's Name</label>
+                                                <input type="text" class="form-control" id="parentName" name="parentName" placeholder="Enter parent's name" required>
+                                            </div>
+                                            <!-- Address -->
+                                            <div class="mb-3">
+                                                <label for="address" class="form-label">Address</label>
+                                                <div class="input-group">
+                                                    <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter address" required></textarea>
+                                                    <button class="btn btn-outline-secondary" type="button" id="getAddressBtn">Get Current Address</button>
+                                                </div>
                                             </div>
 
-                                            <!-- Age and Gender -->
                                             <div class="row">
-                                                <!-- Age -->
+                                                <!-- Contact Number -->
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="sage" class="form-label">Age</label>
-                                                    <input type="number" class="form-control" id="sage" name="students[0][age]" placeholder="Enter student's age">
+                                                    <label for="contact" class="form-label">Contact Number</label>
+                                                    <input type="tel" class="form-control" id="contact" name="contact" placeholder="Enter contact number" required>
                                                 </div>
-                                                <!-- Gender -->
+                                                <!-- Alternative Contact Number -->
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="sgender" class="form-label">Gender</label>
-                                                    <select class="form-select" id="sgender" name="students[0][gender]">
-                                                        <option value="" selected disabled>Select gender</option>
-                                                        <option value="Male">Male</option>
-                                                        <option value="Female">Female</option>
-                                                        <option value="Binary">Binary</option>
-                                                        <option value="Prefer not to say">Prefer not to say</option>
-                                                    </select>
+                                                    <label for="altcontact" class="form-label">Alternative Contact Number</label>
+                                                    <input type="tel" class="form-control" id="altcontact" name="altcontact" placeholder="Enter alternative contact number">
                                                 </div>
                                             </div>
 
-                                            <!-- Grade Eligibility -->
                                             <div class="mb-3">
-                                                <label for="sgrade">Grade Eligibility</label>
-                                                <select class="form-select" id="sgrade" name="students[0][grade]">
-                                                    <option value="" selected disabled>Select Grade</option>
-                                                    <option value="Nursery">Nursery</option>
-                                                    <option value="LKG">LKG</option>
-                                                    <option value="UKG">UKG</option>
-                                                    <option value="Class 1">Class 1</option>
-                                                    <option value="Class 2">Class 2</option>
-                                                    <option value="Class 3">Class 3</option>
-                                                    <option value="Class 4">Class 4</option>
-                                                    <option value="Class 5">Class 5</option>
-                                                    <option value="Class 6">Class 6</option>
-                                                    <!-- Add additional grade options here -->
+                                                <label for="houseStay">How long does the family stay in the current house?</label>
+                                                <select class="form-select" id="houseStay" name="houseStay" required>
+                                                    <option value="" disabled selected>Select duration</option>
+                                                    <option value="<1">Less than 1 year</option>
+                                                    <option value="1">1 year</option>
+                                                    <option value="2">2 years</option>
+                                                    <option value="3">3 years</option>
+                                                    <option value="4">4 years</option>
+                                                    <option value="5">5 years</option>
+                                                    <option value=">5">More than 5 years</option>
                                                 </select>
                                             </div>
 
-                                            <!-- Other student details -->
+                                            <!-- Total number of family members -->
                                             <div class="mb-3">
-                                                <label for="alreadyGoingSchool">Is the student already going to school?</label>
-                                                <select class="form-select" id="alreadyGoingSchool" name="students[0][already_going_school]">
+                                                <label for="familyMembers">Total number of family members:</label>
+                                                <input type="number" class="form-control" id="familyMembers" name="familyMembers" required>
+                                            </div>
+
+                                            <!-- Main source of earning for the family -->
+                                            <div class="mb-3">
+                                                <label for="earningSource">Main source of earning for the family:</label>
+                                                <select class="form-select" id="earningSource" name="earningSource" onchange="checkOtherOption()" required>
                                                     <option value="" selected disabled>Select an option</option>
-                                                    <option value="yes">Yes</option>
-                                                    <option value="no">No</option>
+                                                    <option value="agriculture">Agriculture</option>
+                                                    <option value="business">Business</option>
+                                                    <option value="government_job">Government Job</option>
+                                                    <option value="private_job">Private Job</option>
+                                                    <option value="Construction Worker">Construction Worker</option>
+                                                    <option value="Electrician">Electrician</option>
+                                                    <option value="Plumber">Plumber</option>
+                                                    <option value="Carpenter">Carpenter</option>
+                                                    <option value="Welder">Welder</option>
+                                                    <option value="Mechanic">Mechanic</option>
+                                                    <option value="Painter">Painter</option>
+                                                    <option value="Mason">Mason</option>
+                                                    <option value="Roofer">Roofer</option>
+                                                    <option value="Landscaper">Landscaper</option>
+                                                    <option value="Janitor">Janitor</option>
+                                                    <option value="Factory Worker">Factory Worker</option>
+                                                    <option value="Warehouse Worker">Warehouse Worker</option>
+                                                    <option value="Truck Driver">Truck Driver</option>
+                                                    <option value="Delivery Driver">Delivery Driver</option>
+                                                    <option value="other">Other</option>
                                                 </select>
-                                            </div>
+                                                <div id="otherEarningSource" style="display: none;">
+                                                    <label for="otherEarningSourceInput">Enter other source:</label>
+                                                    <input type="text" class="form-control" id="otherEarningSourceInput" name="otherEarningSourceInput">
+                                                </div>
 
-                                            <!-- School Type -->
-                                            <div class="mb-3" id="schoolType">
-                                                <label for="schoolType">Type of school currently attending:</label>
-                                                <select class="form-select" id="schoolType" name="students[0][school_type]">
-                                                    <option value="" selected disabled>Select an option</option>
-                                                    <option value="private">Private</option>
-                                                    <option value="government">Government</option>
-                                                </select>
-                                            </div>
+                                                <!-- Additional Information -->
+                                                <div class="mb-3">
+                                                    <label for="additionalInfo" class="form-label">Additional Information</label>
+                                                    <textarea class="form-control" id="additionalInfo" name="additionalInfo" rows="3" placeholder="Enter any additional information"></textarea>
+                                                </div>
 
-                                            <!-- Coaching Classes -->
-                                            <div class="mb-3">
-                                                <label for="alreadyCoaching">Is the student already attending any coaching classes?</label>
-                                                <select class="form-select" id="alreadyCoaching" name="students[0][already_coaching]">
-                                                    <option value="" selected disabled>Select an option</option>
-                                                    <option value="yes">Yes</option>
-                                                    <option value="no">No</option>
-                                                </select>
-                                            </div>
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <!-- Checkbox for Interest in Admission -->
+                                                        <div class="mb-3">
+                                                            <label for="interestInAdmission">Interested in Admission</label>
+                                                            <select class="form-select" id="interestInAdmission" name="interestInAdmission" onchange="toggleStudentFields()" required>
+                                                                <option value="" selected disabled>Select an option</option>
+                                                                <option value="no">No</option>
+                                                                <option value="yes">Yes</option>
+                                                            </select>
+                                                        </div>
+                                                        <!-- Student Details -->
+                                                        <div id="studentsContainer" style="display: none;">
+                                                            <div class="student-details">
+                                                                <!-- Student's Name -->
+                                                                <div class="mb-3">
+                                                                    <label for="sname">Student's Name</label>
+                                                                    <input type="text" class="form-control" id="sname" name="students[0][name]" placeholder="Enter student's name">
+                                                                </div>
 
-                                            <!-- Coaching Name -->
-                                            <div class="mb-3" id="coachingNameInput">
-                                                <label for="coachingName">Name of the coaching:</label>
-                                                <input type="text" class="form-control" id="coachingName" name="students[0][coaching_name]">
-                                            </div>
+                                                                <!-- Age and Gender -->
+                                                                <div class="row">
+                                                                    <!-- Age -->
+                                                                    <div class="col-md-6 mb-3">
+                                                                        <label for="sage" class="form-label">Age</label>
+                                                                        <input type="number" class="form-control" id="sage" name="students[0][age]" placeholder="Enter student's age">
+                                                                    </div>
+                                                                    <!-- Gender -->
+                                                                    <div class="col-md-6 mb-3">
+                                                                        <label for="sgender" class="form-label">Gender</label>
+                                                                        <select class="form-select" id="sgender" name="students[0][gender]">
+                                                                            <option value="" selected disabled>Select gender</option>
+                                                                            <option value="Male">Male</option>
+                                                                            <option value="Female">Female</option>
+                                                                            <option value="Binary">Binary</option>
+                                                                            <option value="Prefer not to say">Prefer not to say</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
 
-                                            <div class="mb-3">
-                                                <button type="button" class="btn btn-primary" onclick="addStudentDetails()">Add Student</button>
-                                                <!-- <button type="button" class="btn btn-danger" onclick="removeStudentDetails(this)">Remove Student</button> -->
-                                            </div>
-                                        </div>
+                                                                <!-- Grade Eligibility -->
+                                                                <div class="mb-3">
+                                                                    <label for="sgrade">Grade Eligibility</label>
+                                                                    <select class="form-select" id="sgrade" name="students[0][grade]">
+                                                                        <option value="" selected disabled>Select Grade</option>
+                                                                        <option value="Nursery">Nursery</option>
+                                                                        <option value="LKG">LKG</option>
+                                                                        <option value="UKG">UKG</option>
+                                                                        <option value="Class 1">Class 1</option>
+                                                                        <option value="Class 2">Class 2</option>
+                                                                        <option value="Class 3">Class 3</option>
+                                                                        <option value="Class 4">Class 4</option>
+                                                                        <option value="Class 5">Class 5</option>
+                                                                        <option value="Class 6">Class 6</option>
+                                                                        <!-- Add additional grade options here -->
+                                                                    </select>
+                                                                </div>
+
+                                                                <!-- Other student details -->
+                                                                <div class="mb-3">
+                                                                    <label for="alreadyGoingSchool">Is the student already going to school?</label>
+                                                                    <select class="form-select" id="alreadyGoingSchool" name="students[0][already_going_school]">
+                                                                        <option value="" selected disabled>Select an option</option>
+                                                                        <option value="yes">Yes</option>
+                                                                        <option value="no">No</option>
+                                                                    </select>
+                                                                </div>
+
+                                                                <!-- School Type -->
+                                                                <div class="mb-3" id="schoolType">
+                                                                    <label for="schoolType">Type of school currently attending:</label>
+                                                                    <select class="form-select" id="schoolType" name="students[0][school_type]">
+                                                                        <option value="" selected disabled>Select an option</option>
+                                                                        <option value="private">Private</option>
+                                                                        <option value="government">Government</option>
+                                                                    </select>
+                                                                </div>
+
+                                                                <!-- Coaching Classes -->
+                                                                <div class="mb-3">
+                                                                    <label for="alreadyCoaching">Is the student already attending any coaching classes?</label>
+                                                                    <select class="form-select" id="alreadyCoaching" name="students[0][already_coaching]">
+                                                                        <option value="" selected disabled>Select an option</option>
+                                                                        <option value="yes">Yes</option>
+                                                                        <option value="no">No</option>
+                                                                    </select>
+                                                                </div>
+
+                                                                <!-- Coaching Name -->
+                                                                <div class="mb-3" id="coachingNameInput">
+                                                                    <label for="coachingName">Name of the coaching:</label>
+                                                                    <input type="text" class="form-control" id="coachingName" name="students[0][coaching_name]">
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <button type="button" class="btn btn-primary" onclick="addStudentDetails()">Add Student</button>
+                                                                    <!-- <button type="button" class="btn btn-danger" onclick="removeStudentDetails(this)">Remove Student</button> -->
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <script>
+                                                    document.addEventListener("DOMContentLoaded", function() {
+                                                        toggleStudentFields();
+                                                        document.getElementById('interestInAdmission').addEventListener('change', toggleStudentFields);
+                                                    });
+
+                                                    function toggleStudentFields() {
+                                                        var dropdown = document.getElementById('interestInAdmission');
+                                                        var studentFields = document.querySelectorAll('.student-details .mb-3 input, .student-details .mb-3 select');
+
+                                                        if (dropdown.value === 'yes') {
+                                                            document.getElementById('studentsContainer').style.display = 'block';
+                                                            studentFields.forEach(function(field) {
+                                                                // Check if the field is the coachingName input
+                                                                if (field.id !== 'coachingName' && field.id !== 'schoolType') {
+                                                                    // If it's not the coachingName input, mark it as required
+                                                                    field.required = true;
+                                                                }
+                                                            });
+                                                        } else {
+                                                            document.getElementById('studentsContainer').style.display = 'none';
+                                                            studentFields.forEach(function(field) {
+                                                                field.required = false;
+                                                                field.value = ''; // Reset field value
+                                                            });
+                                                        }
+                                                    }
+                                                </script>
+                                                <!-- Submit and Surveyor Details -->
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <button type="submit" class="btn btn-primary mt-2">Submit</button>
+                                                    <p class="mb-0">Surveyor Id: <?php echo $fullname . '&nbsp;(' . $associatenumber . ')' ?></p>
+                                                </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
-
-                            <script>
-                                document.addEventListener("DOMContentLoaded", function() {
-                                    toggleStudentFields();
-                                    document.getElementById('interestInAdmission').addEventListener('change', toggleStudentFields);
-                                });
-
-                                function toggleStudentFields() {
-                                    var dropdown = document.getElementById('interestInAdmission');
-                                    var studentFields = document.querySelectorAll('.student-details .mb-3 input, .student-details .mb-3 select');
-
-                                    if (dropdown.value === 'yes') {
-                                        document.getElementById('studentsContainer').style.display = 'block';
-                                        studentFields.forEach(function(field) {
-                                            // Check if the field is the coachingName input
-                                            if (field.id !== 'coachingName' && field.id !== 'schoolType') {
-                                                // If it's not the coachingName input, mark it as required
-                                                field.required = true;
-                                            }
-                                        });
-                                    } else {
-                                        document.getElementById('studentsContainer').style.display = 'none';
-                                        studentFields.forEach(function(field) {
-                                            field.required = false;
-                                            field.value = ''; // Reset field value
-                                        });
-                                    }
-                                }
-                            </script>
-                            <!-- Submit and Surveyor Details -->
-                            <div class="d-flex justify-content-between align-items-center">
-                                <button type="submit" class="btn btn-primary mt-2">Submit</button>
-                                <p class="mb-0">Surveyor Id: <?php echo $fullname . '&nbsp;(' . $associatenumber . ')' ?></p>
-                            </div>
-                    </form>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
+
+    </main><!-- End #main -->
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-AH1SsjB9g5JTYrtoDkVhY2Pn9HlXKG+C4fE9g6kfmHfAe8h+if3rpTkHidv+3wRK" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-EpDs/fzj3EhLioRy5zflSbSRnPZvC5Zx/9Tl8KZ5u3xN4G8W4FbWyRjJeabjkt+s" crossorigin="anonymous"></script>
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o&libraries=places"></script>
 
 
