@@ -536,31 +536,6 @@ if ($percentage_result) {
             <th>$gradeAndDesc[0]-$gradeAndDesc[1]</th>
                 </tr>";
                     echo "</table>"; ?>
-
-                    <!-- <table class="table" border="0" align="right" style="width: 50%;">
-                        <tbody>
-                            <tr>
-                                <td> Result </td>
-                                <th><?php echo strtoupper($passOrFail) ?></th>
-                            </tr>
-                            <tr>
-                                <td> Overall ranking </th>
-                                <th></th>
-                            </tr>
-                            <tr>
-                                <td> Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>) </th>
-                                <td><?php echo $average_attendance_percentage ?></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table class="table visible-xs" border="0" align="left" style="width: 40%; margin-left:0%; margin-top:0%;">
-                        <tbody>
-                            <tr>
-                                <td>Signature of Class Teacher / Center In-charge<br><br>Date:</td>
-                            </tr>
-                        </tbody>
-                    </table> -->
-
                     <table border="0" align="right" style="width: 50%; margin: 0 auto;">
                         <tbody>
                             <tr>
