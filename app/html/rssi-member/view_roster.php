@@ -15,6 +15,7 @@ $query = "
     SELECT s.*, m.fullname 
     FROM associate_schedule s
     INNER JOIN rssimyaccount_members m ON s.associate_number = m.associatenumber
+    order by timestamp desc
 ";
 $result = pg_query($con, $query);
 
