@@ -287,6 +287,42 @@
         </ul>
       </li><!-- End Components Nav -->
 
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#rostermanagement" data-bs-toggle="collapse" href="#">
+          <span>Roster Management</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="rostermanagement" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="create_roster" href="create_roster.php">
+              <span>Create Roster</span>
+            </a>
+          </li>
+          <li>
+            <a id="view_roster" href="view_roster.php">
+              <span>Roster Overview</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#survey" data-bs-toggle="collapse" href="#">
+          <span>Survey</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="survey" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="create_survey" href="survey.php">
+              <span>Create Survey</span>
+            </a>
+          </li>
+          <li>
+            <a id="view_survey" href="survey_view.php">
+              <span>View Survey Results</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
+
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
@@ -667,6 +703,26 @@
         id: 'exceptionPortal',
         linkId: 'dashboardException',
         url: 'exception_admin.php'
+      },
+      {
+        id: 'rostermanagement',
+        linkId: 'create_roster',
+        url: 'create_roster.php'
+      },
+      {
+        id: 'rostermanagement',
+        linkId: 'view_roster',
+        url: 'view_roster.php'
+      },
+      {
+        id: 'survey',
+        linkId: 'create_survey',
+        url: 'survey.php'
+      },
+      {
+        id: 'survey',
+        linkId: 'view_survey',
+        url: 'survey_view.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },

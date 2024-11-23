@@ -162,7 +162,7 @@ if ($_POST && isset($_POST['login'])) {
                                             <label for="yourUsername" class="form-label">Username</label>
                                             <div class="input-group has-validation">
                                                 <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-person"></i></span>
-                                                <input type="text" name="aid" class="form-control" id="aid" placeholder="Associate Number" required>
+                                                <input type="email" name="aid" class="form-control" id="aid" placeholder="Username" required>
                                                 <div class="invalid-feedback">Please enter your username.</div>
                                             </div>
                                         </div>

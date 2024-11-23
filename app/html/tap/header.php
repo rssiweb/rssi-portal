@@ -33,7 +33,7 @@
             $file_id = $matches[1]; ?>
             <img src="<?php echo 'https://drive.google.com/thumbnail?id=' . $file_id ?>" alt="Profile" class="rounded-circle" width="30" height="30">
             <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo $applicant_name ?></span>
-          </a><!-- End Profile Iamge Icon -->
+          </a>
 
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
             <li class="dropdown-header">
@@ -99,50 +99,34 @@
           <span>Dashboard</span>
         </a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link collapsed" id="applicationForm" href="application_form.php">
-          <span>Application Form</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link collapsed" id="indentityVerification" href="identity_verification.php">
-          <span>Identity Verification</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link collapsed" id="documentVerification" href="document_verification.php">
-          <span>Document Verification</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link collapsed" id="OfficialLetter" href="official_letter.php">
-          <span>Official Letter</span>
-        </a>
-      </li>
 
-
-      <!-- <li class="nav-item">
+      <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#myservices" data-bs-toggle="collapse" href="#">
-          <span>My Services</span><i class="bi bi-chevron-down ms-auto"></i>
+          <span>NextGen CareerScape</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="myservices" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a id="leaveLink" href="leave.php">
-              <span>Apply for Leave</span>
+          <li class="nav-item">
+            <a class="nav-link collapsed" id="applicationForm" href="application_form.php">
+              <span>Application Form</span>
             </a>
           </li>
-          <li>
-            <a id="documentLink" href="document.php">
-              <span>My Document</span>
+          <li class="nav-item">
+            <a class="nav-link collapsed" id="indentityVerification" href="identity_verification.php">
+              <span>Identity Verification</span>
             </a>
           </li>
-          <li>
-            <a id="allocationLink" href="allocation.php">
-              <span>My Allocation</span>
+          <li class="nav-item">
+            <a class="nav-link collapsed" id="documentVerification" href="document_verification.php">
+              <span>Document Verification</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link collapsed" id="OfficialLetter" href="official_letter.php">
+              <span>Official Letter</span>
             </a>
           </li>
         </ul>
-      </li> -->
+      </li>
 
       <li class="nav-heading">Pages</li>
 
@@ -170,242 +154,19 @@
 
   </aside><!-- End Sidebar-->
 
-  <!-- <script>
-    var inactivityTime = function() {
-      var time;
-      document.onload = resetTimer;
-      document.onmousemove = resetTimer;
-      document.onmousedown = resetTimer; // touchscreen presses
-      document.ontouchstart = resetTimer;
-      document.onclick = resetTimer; // touchpad clicks
-      document.onkeydown = resetTimer; // onkeypress is deprectaed
-      document.addEventListener('scroll', resetTimer, true); // improved; see comments
-
-      function logout() {
-        alert("Your session has expired, please login again.")
-        location.href = 'logout.php'
-        window.close()
-      }
-
-      function resetTimer() {
-        clearTimeout(time);
-        time = setTimeout(logout, 1800000)
-        // 1000 milliseconds = 1 second
-      }
-    };
-    window.addEventListener("load", function() {
-      inactivityTime();
-    }, false);
-  </script> -->
-
   <script>
     // Get the current page URL
     const currentPage = window.location.href;
 
     // Define an array of menu items and their corresponding IDs and URLs
     const menuItems = [{
-        id: 'acadamis',
-        linkId: 'examLink',
-        url: 'exam.php'
-      },
-      {
         id: 'myservices',
-        linkId: 'documentLink',
-        url: 'document.php'
-      },
-      {
+        linkId: 'applicationForm',
+        url: 'application_form.php'
+      },{
         id: 'myservices',
-        linkId: 'allocationLink',
-        url: 'allocation.php'
-      },
-      {
-        id: 'myservices',
-        linkId: 'documentLink',
-        url: 'my_certificate.php'
-      },
-      {
-        id: 'myservices',
-        linkId: 'documentLink',
-        url: 'pay_details.php'
-      },
-      {
-        id: 'myservices',
-        linkId: 'documentLink',
-        url: 'gps.php'
-      },
-      {
-        id: 'myservices',
-        linkId: 'leaveLink',
-        url: 'leave.php'
-      }, {
-        id: 'learning',
-        linkId: 'iexploreLink',
-        url: 'iexplore.php'
-      },
-      {
-        id: 'learning',
-        linkId: 'iexploreLink',
-        url: 'my_learning.php'
-      },
-      {
-        id: 'learning',
-        linkId: 'viscoLink',
-        url: 'visco.php'
-      },
-      {
-        id: 'learning',
-        linkId: 'libraryLink',
-        url: 'library.php'
-      },
-      {
-        id: 'learning',
-        linkId: 'libraryLink',
-        url: 'my_book.php'
-      },
-      {
-        id: 'rewards',
-        linkId: 'redeem_gemsLink',
-        url: 'redeem_gems.php'
-      },
-      {
-        id: 'claims',
-        linkId: 'reimbursementLink',
-        url: 'reimbursementstatus.php'
-      },
-      {
-        id: 'claims',
-        linkId: 'reimbursementLink',
-        url: 'reimbursement.php'
-      },
-      {
-        id: 'claims',
-        linkId: 'medimateLink',
-        url: 'medimate.php'
-      },
-      {
-        id: 'work',
-        linkId: 'studentLink',
-        url: 'student.php'
-      },
-      {
-        id: 'work',
-        linkId: 'studentLink',
-        url: 'fees.php'
-      },
-      {
-        id: 'work',
-        linkId: 'policyLink',
-        url: 'policy.php'
-      },
-      {
-        id: 'work',
-        linkId: 'dashboardLink',
-        url: 'dashboard.php'
-      },
-      {
-        id: 'work',
-        linkId: 'gpsLink',
-        url: 'gps.php'
-      },
-      {
-        id: 'work',
-        linkId: 'facultyLink',
-        url: 'faculty.php'
-      },
-      {
-        id: 'work',
-        linkId: 'facultyLink',
-        url: 'facultyexp.php'
-      },
-      {
-        id: 'work',
-        linkId: 'leave_adminLink',
-        url: 'leave_admin.php'
-      },
-      {
-        id: 'work',
-        linkId: 'leave_adminLink',
-        url: 'leaveallo.php'
-      },
-      {
-        id: 'work',
-        linkId: 'leave_adminLink',
-        url: 'leaveadjustment.php'
-      },
-      {
-        id: 'work',
-        linkId: 'my_bookLink',
-        url: 'my_book.php'
-      },
-      {
-        id: 'work',
-        linkId: 'medistatusLink',
-        url: 'medistatus.php'
-      },
-      {
-        id: 'work',
-        linkId: 'payroll_processingLink',
-        url: 'payroll_processing.php'
-      },
-      {
-        id: 'work',
-        linkId: 'reimbursementstatusLink',
-        url: 'reimbursementstatus.php'
-      },
-      {
-        id: 'work',
-        linkId: 'donationinfo_adminLink',
-        url: 'donationinfo_admin.php'
-      },
-      {
-        id: 'work',
-        linkId: 'pmsLink',
-        url: 'pms.php'
-      },
-      {
-        id: 'work',
-        linkId: 'amsLink',
-        url: 'ams.php'
-      },
-      {
-        id: 'performance',
-        linkId: 'my_appraisalLink',
-        url: 'my_appraisal.php'
-      },
-      {
-        id: 'performance',
-        linkId: 'my_appraisalLink',
-        url: 'ipf-management.php'
-      },
-      {
-        id: 'work',
-        linkId: 'userlogLink',
-        url: 'userlog.php'
-      },
-      {
-        id: 'work',
-        linkId: 'dashboardLink',
-        url: 'visitor.php'
-      }, {
-        id: 'work',
-        linkId: 'onexitLink',
-        url: 'onexit.php'
-      }, {
-        id: 'myservices',
-        linkId: 'documentLink',
-        url: 'digital_archive.php'
-      }, {
-        id: 'myservices',
-        linkId: 'documentLink',
-        url: 'bankdetails.php'
-      }, {
-        id: 'work',
-        linkId: 'archive_approval',
-        url: 'archive_approval.php'
-      }, {
-        id: 'work',
-        linkId: 'bankdetails_admin',
-        url: 'bankdetails_admin.php'
+        linkId: 'indentityVerification',
+        url: 'identity_verification.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },

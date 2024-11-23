@@ -88,3 +88,61 @@
     </div>
 </body>
 </html>
+<!-- <tr>
+                                                <td>
+                                                    <label for="applicant-photo">Upload Applicant Photo:</label>
+                                                </td>
+                                                <td>
+                                                <?php // Extract file ID using regular expression
+                                                    preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)\//', $array["applicant_photo"], $matches);
+                                                    $file_id = $matches[1]; ?>
+                                                    <img id="applicant-photo-preview" src="<?php echo 'https://drive.google.com/thumbnail?id=' . $file_id ?>" alt="Uploaded Photo" style="max-width: 200px; max-height: 200px;">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label for="resume-upload">Upload
+                                                        Resume:</label>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)\//', $array["resume_upload"], $matches);
+                                                    $file_id = $matches[1];
+                                                    $api_key = "AIzaSyCtWC48inXWXUM8s6hSeX89LP78sfGLk_g"; // Replace with your actual Google Drive API
+                                                    // Function to get file name from Google Drive using file ID
+                                                    function get_file_name_from_google_drive($file_id, $api_key)
+                                                    {
+                                                        // Google Drive API endpoint for fetching file metadata
+                                                        $url = "https://www.googleapis.com/drive/v3/files/$file_id?key=$api_key";
+
+                                                        // Initialize cURL session
+                                                        $ch = curl_init();
+
+                                                        // Set cURL options
+                                                        curl_setopt($ch, CURLOPT_URL, $url);
+                                                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                                                        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disabling SSL verification (optional)
+
+                                                        // Execute cURL request
+                                                        $response = curl_exec($ch);
+
+                                                        // Close cURL session
+                                                        curl_close($ch);
+
+                                                        // Decode JSON response
+                                                        $data = json_decode($response, true);
+
+                                                        // Extract file name from metadata
+                                                        if (isset($data['name'])) {
+                                                            return $data['name'];
+                                                        } else {
+                                                            return null;
+                                                        }
+                                                    }
+                                                    $filename = get_file_name_from_google_drive($file_id, $api_key);
+                                                    ?>
+
+                                                    <a href="<?php echo $array["resume_upload"] ?>" target="_blank"><?php echo $filename ?></a>
+
+                                                </td>
+                                            </tr> -->
