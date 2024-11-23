@@ -173,7 +173,7 @@ pg_close($con);
 
                                     <!-- Submit Button -->
                                     <div class="text-end">
-                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                        <button type="submit" name="search_by_id" class="btn btn-primary">Submit</button>
                                     </div>
                                 </form>
                             </div>
