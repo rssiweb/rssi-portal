@@ -198,9 +198,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                                             <select name="status[<?php echo $row['id']; ?>]" class="edit-input status-dropdown form-select" style="display: none;">
                                                                 <!-- Blank option for "no selection" state -->
                                                                 <option value="" <?php echo $row['status'] == '' ? 'selected' : ''; ?>>Select Status</option>
-                                                                <option value="Pending" <?php echo $row['status'] == 'Pending' ? 'selected' : ''; ?>>Pending</option>
-                                                                <option value="No Show Up" <?php echo $row['status'] == 'No Show Up' ? 'selected' : ''; ?>>No Show Up</option>
-                                                                <option value="Admitted" <?php echo $row['status'] == 'Admitted' ? 'selected' : ''; ?>>Admitted</option>
+                                                                <option value="No Show" <?php echo $row['status'] == 'No Show' ? 'selected' : ''; ?>>No Show</option>
+                                                                <option value="Enrollment Completed" <?php echo $row['status'] == 'Enrollment Completed' ? 'selected' : ''; ?>>Enrollment Completed</option>
                                                             </select>
                                                         </td>
                                                     </tr>
@@ -263,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <?php if (!empty($resultArr)) : ?>
                 // Initialize DataTables only if resultArr is not empty
                 $('#table-id').DataTable({
-                    // paging: false,
+                    paging: false,
                     "order": [] // Disable initial sorting
                     // other options...
                 });
