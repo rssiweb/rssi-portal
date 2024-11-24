@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
@@ -11,47 +10,68 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-$result = pg_query($con, "SELECT s.family_id, s.contact, s.parent_name, sd.id, sd.status,sd.student_name, sd.age, sd.gender, sd.grade, s.timestamp, s.surveyor_id, s.address, rm.fullname, s.earning_source, s.other_earning_source_input, sd.already_going_school, sd.school_type, sd.already_coaching, sd.coaching_name
-        FROM survey_data s 
-        LEFT JOIN student_data sd ON s.family_id = sd.family_id
-        JOIN rssimyaccount_members rm ON s.surveyor_id = rm.associatenumber
-        ORDER BY s.timestamp DESC");
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-}
+// Handle AJAX request for record fetching and updating
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if the request is for updating statuses via AJAX
+    if (isset($_POST['formType']) && $_POST['formType'] === 'ajax') {
+        // Process status update via AJAX
+        $updatedStatus = $_POST['updatedStatus'] ?? [];
 
-$resultArr = pg_fetch_all($result);
-// Check if the query was successful
-if ($result) {
-    $serialNumber = 1; // Initialize serial number for table rows
-} else {
-    // Output error message if query fails
-    echo "Error executing query: " . pg_last_error($con);
-    exit; // Terminate further execution if the query fails
-}
+        foreach ($updatedStatus as $statusData) {
+            $id = $statusData['id'];
+            $status = $statusData['status'];
 
-// Check if the form was submitted
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Retrieve the status data from the form
-    $statuses = $_POST['status']; // This is an associative array with id as key and status as value
+            // Update the status in the database
+            $sql = "UPDATE student_data SET status = $1 WHERE id = $2";
+            $result = pg_query_params($con, $sql, array($status, $id));
 
-    foreach ($statuses as $id => $status) {
-        // Update the status in the database for each id
-        $sql = "UPDATE student_data SET status = $1 WHERE id = $2";
-        $result = pg_query_params($con, $sql, array($status, $id));
-
-        if (!$result) {
-            echo "Error updating status for id: $id. " . pg_last_error($con);
-            exit;
+            if (!$result) {
+                echo json_encode(['success' => false, 'message' => "Error updating status for id: $id. " . pg_last_error($con)]);
+                exit;
+            }
         }
-    }
 
-    // Redirect back or show a success message
-    header("Location: survey_view.php"); // Redirect to the page after updating
-    exit;
+        // Return success response
+        echo json_encode(['success' => true]);
+        exit;
+    } else {
+        // Handle the case for fetching records
+        $offset = $_POST['offset'] ?? 0;
+        $limit = $_POST['limit'] ?? 10;
+
+        // Apply LIMIT and OFFSET directly in the query
+        $limitQuery = $limit ? "LIMIT $limit OFFSET $offset" : "";
+
+        $result = pg_query($con, "
+            SELECT s.family_id, s.contact, s.parent_name, sd.id, sd.status, sd.student_name, sd.age, sd.gender, sd.grade, 
+                   s.timestamp, rm.fullname AS surveyor_name, s.address 
+            FROM survey_data s 
+            LEFT JOIN student_data sd ON s.family_id = sd.family_id
+            JOIN rssimyaccount_members rm ON s.surveyor_id = rm.associatenumber
+            ORDER BY s.timestamp DESC, sd.id ASC -- Stable sorting to ensure unique rows
+            $limitQuery
+        ");
+
+        if ($result) {
+            $records = pg_fetch_all($result) ?: [];
+            $isLastBatch = !$limit || count($records) < $limit;
+
+            echo json_encode([
+                "success" => true,
+                "records" => $records,
+                "isLastBatch" => $isLastBatch,
+            ]);
+        } else {
+            echo json_encode([
+                "success" => false,
+                "message" => "Error fetching data.",
+            ]);
+        }
+        exit;
+    }
 }
 ?>
+
 
 <!doctype html>
 <html lang="en">
@@ -82,6 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+
+    <!-- Scripts to Fetch Data and Initialize DataTable -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+
 
     <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
     <!-- Glow Cookies v3.0.1 -->
@@ -92,25 +120,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+
     <style>
         @media (min-width:767px) {
             .left {
                 margin-left: 2%;
             }
         }
+
+        /* Loader styling */
+        #progressLoader .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
-    <!-- CSS Library Files -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
-    <!-- JavaScript Library Files -->
-    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 
 </head>
-
-<!-- =========================
-     NAVIGATION LINKS     
-============================== -->
 
 <body>
     <?php include 'inactive_session_expire_check.php'; ?>
@@ -138,13 +177,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                         <div class="card-body">
                             <br>
-                            <form method="POST" action="#">
-                                <div class="text-end">
-                                    <!-- Edit Button -->
-                                    <button type="button" class="btn btn-warning" id="edit-btn" onclick="toggleEditMode()">Edit</button>
-                                    <!-- Save Button -->
-                                    <button type="submit" class="btn btn-primary" id="save-btn" style="display: none;">Save</button>
+
+                            <!-- Add progress loader HTML -->
+                            <div id="pageOverlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999;">
+                                <div id="progressLoader" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                    <p>Submitting, please wait...</p>
+                                    <div class="loader"></div> <!-- Custom loader (you can style as needed) -->
                                 </div>
+                            </div>
+
+                            <div class="text-end mb-3">
+                                <label for="recordsPerLoad" class="form-label me-2">Records Per Load:</label>
+                                <select id="recordsPerLoad" class="form-select d-inline-block" style="width: auto;">
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+
+                            <form id="statusForm" method="POST">
+                                <input type="hidden" name="form-type" id="formType" value="ajax">
+                                <div class="text-end mb-3">
+                                    <button type="button" id="editBtn" class="btn btn-primary">Edit</button>
+                                    <button type="button" id="saveBtn" class="btn btn-success" style="display: none;">Save</button>
+                                </div>
+
                                 <div class="table-responsive">
                                     <table class="table" id="table-id">
                                         <thead>
@@ -158,86 +216,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                                 <th>Age</th>
                                                 <th>Gender</th>
                                                 <th>Grade</th>
-                                                <th></th>
                                                 <th>Timestamp</th>
                                                 <th>Surveyor Name</th>
                                                 <th>Status</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="data-tbody">
-                                            <?php while ($row = pg_fetch_assoc($result)): ?>
-                                                <tr class="table-row">
-                                                    <td><?php echo $serialNumber++; ?></td>
-                                                    <td><?php echo $row["family_id"]; ?></td>
-                                                    <!-- <td><span class="regular-text address-text"><?php echo $row["address"]; ?></span></td> -->
-                                                    <?php $shortAddress = strlen($row["address"]) > 30 ? substr($row["address"], 0, 30) . "..." : $row["address"]; ?>
-                                                    <td>
-                                                        <span class="short-address"><?php echo $shortAddress; ?></span>
-                                                        <span class="full-address" style="display: none;"><?php echo $row["address"]; ?></span>
-                                                        <a href="#" class="more-link">more</a>
-                                                    </td>
-                                                    <td><span class="regular-text"><?php echo $row["contact"]; ?></span></td>
-                                                    <td><span class="regular-text"><?php echo $row["parent_name"]; ?></span></td>
-                                                    <td><span class="regular-text"><?php echo $row["student_name"]; ?></span></td>
-                                                    <td><span class="regular-text"><?php echo $row["age"]; ?></span></td>
-                                                    <td><span class="regular-text"><?php echo $row["gender"]; ?></span></td>
-                                                    <td><span class="regular-text"><?php echo $row["grade"]; ?></span></td>
-                                                    <td>
-                                                        <!-- Link to open the modal -->
-                                                        <a href="#" class="misc-link" data-bs-toggle="modal" data-bs-target="#miscModal<?php echo $row["id"]; ?>">View Details</a>
-                                                    </td>
-                                                    <td><?php echo date('d/m/Y h:i A', strtotime($row["timestamp"])); ?></td>
-                                                    <td><?php echo $row["fullname"]; ?></td>
-                                                    <td>
-                                                        <!-- Regular text when in non-edit mode -->
-                                                        <span class="regular-text status-text"><?php echo $row["status"]; ?></span>
-
-                                                        <!-- Status dropdown for editing -->
-                                                        <select name="status[<?php echo $row['id']; ?>]" class="edit-input status-dropdown form-select" style="display: none;">
-                                                            <!-- Blank option for "no selection" state -->
-                                                            <option value="" <?php echo $row['status'] == '' ? 'selected' : ''; ?>>Select Status</option>
-                                                            <option value="No Show" <?php echo $row['status'] == 'No Show' ? 'selected' : ''; ?>>No Show</option>
-                                                            <option value="Enrollment Completed" <?php echo $row['status'] == 'Enrollment Completed' ? 'selected' : ''; ?>>Enrollment Completed</option>
-                                                        </select>
-                                                    </td>
-                                                </tr>
-
-                                                <!-- Modal for "Misc" data -->
-                                                <div class="modal fade" id="miscModal<?php echo $row["id"]; ?>" tabindex="-1" aria-labelledby="miscModalLabel<?php echo $row["id"]; ?>" aria-hidden="true">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="miscModalLabel<?php echo $row["id"]; ?>">Miscellaneous Data</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p>Student Name: <?php echo $row["student_name"]; ?> (<?php echo $row["family_id"]; ?>)</p>
-                                                                <p>Family Earning Source:
-                                                                    <?php
-                                                                    if ($row["earning_source"] == "other") {
-                                                                        echo $row["other_earning_source_input"];
-                                                                    } else {
-                                                                        echo $row["earning_source"];
-                                                                    }
-                                                                    ?>
-                                                                </p>
-                                                                <p>Already Going to School: <?php echo $row["already_going_school"]; ?></p>
-                                                                <p>School Type: <?php echo $row["school_type"]; ?></p>
-                                                                <p>Already Coaching: <?php echo $row["already_coaching"]; ?></p>
-                                                                <p>Coaching Name: <?php echo $row["coaching_name"]; ?></p>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                            <?php endwhile; ?>
-                                        </tbody>
+                                        <tbody id="data-tbody"></tbody>
                                     </table>
                                 </div>
                             </form>
+
+                            <div class="text-center">
+                                <button id="loadMoreBtn" class="btn btn-primary">Load More</button>
+                            </div>
                         </div>
                     </div><!-- End Reports -->
                 </div>
@@ -250,73 +241,171 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+
     <script>
-        $(document).ready(function() {
-            // Check if resultArr is empty
-            <?php if (!empty($resultArr)) : ?>
-                // Initialize DataTables only if resultArr is not empty
-                $('#table-id').DataTable({
-                    paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
+        let offset = 0; // Start from the first record
+        let table; // Declare a variable for DataTable
+
+        const fetchRecords = async (limit = 10) => {
+            try {
+                const response = await $.post("", {
+                    offset,
+                    limit
                 });
-            <?php endif; ?>
-        });
-    </script>
-    <script>
-        // Toggle between Edit and View modes (for status only)
-        function toggleEditMode() {
-            // Get all status dropdowns and text
-            var statusText = document.querySelectorAll('.status-text');
-            var statusDropdown = document.querySelectorAll('.status-dropdown');
+                const data = JSON.parse(response);
 
-            // Toggle display between status text and dropdown
-            statusText.forEach(function(text) {
-                text.style.display = text.style.display === 'none' ? 'inline-block' : 'none'; // Toggle text visibility
-            });
+                if (data.success) {
+                    const tbody = $("#data-tbody");
+                    const records = data.records;
 
-            statusDropdown.forEach(function(dropdown) {
-                dropdown.style.display = dropdown.style.display === 'none' ? 'inline-block' : 'none'; // Toggle dropdown visibility
-            });
+                    if (records.length > 0) {
+                        records.forEach((record, index) => {
+                            const isStudentNameNull = record.student_name === null;
 
-            // Toggle the visibility of the Edit and Save buttons
-            var editBtn = document.getElementById('edit-btn');
-            var saveBtn = document.getElementById('save-btn');
+                            const statusField = isStudentNameNull ?
+                                `<span class="regular-text status-text">${record.status}</span>` :
+                                `<span class="regular-text status-text" style="display: block;">${record.status}</span>
+                             <select name="status[${record.id}]" class="edit-input status-dropdown form-select" style="display: none;">
+                                 <option value="" disabled selected>Select Status</option>
+                                 <option value="No Show" ${record.status === 'No Show' ? 'selected' : ''}>No Show</option>
+                                 <option value="Enrollment Completed" ${record.status === 'Enrollment Completed' ? 'selected' : ''}>Enrollment Completed</option>
+                             </select>`;
 
-            if (editBtn.style.display === 'none') {
-                editBtn.style.display = 'inline-block';
-                saveBtn.style.display = 'none';
-            } else {
-                editBtn.style.display = 'none';
-                saveBtn.style.display = 'inline-block';
-            }
-        }
-    </script>
-    <script>
-        $(document).ready(function() {
-            // Toggle full address visibility on "more" link click
-            $('.more-link').click(function(e) {
-                e.preventDefault();
-                var shortAddress = $(this).siblings('.short-address');
-                var fullAddress = $(this).siblings('.full-address');
-                if (fullAddress.is(':visible')) {
-                    // If full address is visible, toggle to show short address
-                    shortAddress.show();
-                    fullAddress.hide();
-                    $(this).text('more');
+                            tbody.append(`
+                            <tr>
+                                <td>${offset + index + 1}</td>
+                                <td>${record.family_id}</td>
+                                <td>
+                                    <span class="short-address">${record.address.length > 30 ? record.address.substring(0, 30) + "..." : record.address}</span>
+                                    <span class="full-address" style="display: none;">${record.address}</span>
+                                    ${record.address.length > 30 ? '<a href="#" class="more-link">more</a>' : ''}
+                                </td>
+                                <td>${record.contact}</td>
+                                <td>${record.parent_name}</td>
+                                <td>${record.student_name}</td>
+                                <td>${record.age}</td>
+                                <td>${record.gender}</td>
+                                <td>${record.grade}</td>
+                                <td>${record.timestamp}</td>
+                                <td>${record.surveyor_name}</td>
+                                <td>${statusField}</td>
+                            </tr>
+                        `);
+                        });
+
+                        offset += records.length;
+
+                        // If DataTable is not initialized yet, initialize it
+                        if (!table) {
+                            table = $('#table-id').DataTable({
+                                paging: false,
+                                "order": [], // Disable initial sorting
+                            });
+                        } else {
+                            // If DataTable is already initialized, just redraw it after adding new rows
+                            table.clear().rows.add(tbody.find('tr')).draw();
+                        }
+                    }
+
+                    if (data.isLastBatch) {
+                        $("#loadMoreBtn").hide();
+                    }
                 } else {
-                    // If short address is visible, toggle to show full address
-                    shortAddress.hide();
-                    fullAddress.show();
-                    $(this).text('less');
+                    alert(data.message || "Failed to load records.");
+                }
+            } catch (error) {
+                console.error("Error fetching records:", error);
+            }
+        };
+
+        const toggleEdit = () => {
+            $(".status-text").toggle(); // Hide text view (show dropdown)
+            $(".status-dropdown").toggle(); // Show dropdown for editing
+            $("#saveBtn").show(); // Show the Save button
+            $("#editBtn").hide(); // Hide the Edit button
+        };
+
+        const saveChanges = () => {
+            const updatedStatus = [];
+            $(".status-dropdown").each(function() {
+                const statusValue = $(this).val();
+                if (statusValue) { // Only push if the status is valid
+                    updatedStatus.push({
+                        id: $(this).attr("name").split("[")[1].split("]")[0],
+                        status: statusValue
+                    });
                 }
             });
+
+            // Show progress loader while saving
+            $("#progressLoader").show();
+            $("#pageOverlay").show(); // Show the overlay to block interaction
+
+            $.ajax({
+                url: "sur.php", // Correct PHP file for saving status
+                type: "POST",
+                data: {
+                    formType: 'ajax',
+                    updatedStatus: updatedStatus
+                },
+                success: function(response) {
+                    const data = JSON.parse(response);
+                    if (data.success) {
+                        alert("Status updated successfully.");
+                        $(".status-text").show(); // Show text again
+                        $(".status-dropdown").hide(); // Hide dropdown
+                        $("#saveBtn").hide(); // Hide Save button
+                        $("#editBtn").show(); // Show Edit button
+
+                        // Reload the page after showing the alert
+                        location.reload();
+                    } else {
+                        alert("Error saving status.");
+                    }
+                },
+                complete: function() {
+                    // Hide progress loader after the request is complete
+                    $("#progressLoader").hide();
+                    $("#pageOverlay").hide(); // Hide the overlay after submission
+                }
+            });
+        };
+
+        $(document).ready(() => {
+            fetchRecords();
+
+            $("#loadMoreBtn").click(() => {
+                const limit = $("#recordsPerLoad").val() === "ALL" ? null : parseInt($("#recordsPerLoad").val(), 10);
+                fetchRecords(limit);
+            });
+
+            $("#editBtn").click(toggleEdit);
+
+            $("#saveBtn").click(saveChanges);
         });
     </script>
 
+    <script>
+        $(document).on("click", ".more-link", function(e) {
+            e.preventDefault();
+            const shortAddress = $(this).siblings(".short-address");
+            const fullAddress = $(this).siblings(".full-address");
+
+            if (fullAddress.is(":visible")) {
+                // Hide full address and show short address
+                fullAddress.hide();
+                shortAddress.show();
+                $(this).text("more");
+            } else {
+                // Show full address and hide short address
+                fullAddress.show();
+                shortAddress.hide();
+                $(this).text("less");
+            }
+        });
+    </script>
 </body>
 
 </html>
