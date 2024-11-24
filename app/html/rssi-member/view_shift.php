@@ -127,6 +127,8 @@ pg_close($con); // Close the connection when done
 
     <!-- Bootstrap JS and Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty
