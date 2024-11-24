@@ -289,17 +289,22 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#rostermanagement" data-bs-toggle="collapse" href="#">
-          <span>Roster</span><i class="bi bi-chevron-down ms-auto"></i>
+          <span>Workforce Management</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="rostermanagement" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="create_roster" href="create_roster.php">
-              <span>Create Roster</span>
+            <a id="shift_planner" href="shift_planner.php">
+              <span>Shift Planner</span>
             </a>
           </li>
           <li>
-            <a id="view_roster" href="view_roster.php">
-              <span>View Roster</span>
+            <a id="view_shift" href="view_shift.php">
+              <span>View Shift</span>
+            </a>
+          </li>
+          <li>
+            <a id="closure_assign" href="closure_assign.php">
+              <span>Closing Duty Roster</span>
             </a>
           </li>
         </ul>
@@ -706,13 +711,17 @@
       },
       {
         id: 'rostermanagement',
-        linkId: 'create_roster',
-        url: 'create_roster.php'
+        linkId: 'shift_planner',
+        url: 'shift_planner.php'
       },
       {
         id: 'rostermanagement',
-        linkId: 'view_roster',
-        url: 'view_roster.php'
+        linkId: 'view_shift',
+        url: 'view_shift.php'
+      },{
+        id: 'rostermanagement',
+        linkId: 'closure_assign',
+        url: 'closure_assign.php'
       },
       {
         id: 'survey',

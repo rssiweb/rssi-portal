@@ -94,7 +94,7 @@ echo "<script>var userRole = '$role';</script>";
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Center Closure Calendar</title>
+    <title>Closing Duty Roster</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -124,12 +124,12 @@ echo "<script>var userRole = '$role';</script>";
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Center Closure Calendar</h1>
+            <h1>Closing Duty Roster</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">Center Closure Calendar</li>
+                    <li class="breadcrumb-item active">Closing Duty Roster</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->

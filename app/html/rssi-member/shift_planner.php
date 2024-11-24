@@ -63,7 +63,7 @@ pg_close($con);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Create Roster</title>
+    <title>Shift Planner</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -88,12 +88,12 @@ pg_close($con);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Create Roster</h1>
+            <h1>Shift Planner</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Roster Management</a></li>
-                    <li class="breadcrumb-item active">Create Roster</li>
+                    <li class="breadcrumb-item"><a href="#">Workforce Management</a></li>
+                    <li class="breadcrumb-item active">Shift Planner</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
