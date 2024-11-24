@@ -320,12 +320,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </div>
 
                                                 <div class="row exam-info">
-                                                    <!-- <div class="col-md-6"><strong>Teacher ID:</strong> <?php echo $unique_exam['teacher_id_viva']; ?>-<?php echo $unique_exam['fullname_viva']; ?></div> -->
+
                                                     <div class="col-md-6">
-                                                        <strong>Examiner for Viva:</strong>
+                                                        <strong>Examiner for Written:</strong>
                                                         <?php
-                                                        if (!empty($unique_exam['teacher_id_viva'])) {
-                                                            echo $unique_exam['teacher_id_viva'] . " - " . $unique_exam['fullname_viva'];
+                                                        if (!empty($unique_exam['teacher_id_written'])) {
+                                                            echo $unique_exam['teacher_id_written'] . " - " . $unique_exam['fullname_written'];
                                                         } else {
                                                             echo "Not Assigned";
                                                         }
@@ -342,16 +342,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                         }
                                                         ?>
                                                     </div>
+
                                                     <div class="col-md-6">
-                                                        <strong>Examiner for Written:</strong>
+                                                        <strong>Examiner for Viva:</strong>
                                                         <?php
-                                                        if (!empty($unique_exam['teacher_id_written'])) {
-                                                            echo $unique_exam['teacher_id_written'] . " - " . $unique_exam['fullname_written'];
+                                                        if (!empty($unique_exam['teacher_id_viva'])) {
+                                                            echo $unique_exam['teacher_id_viva'] . " - " . $unique_exam['fullname_viva'];
                                                         } else {
                                                             echo "Not Assigned";
                                                         }
                                                         ?>
                                                     </div>
+
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
