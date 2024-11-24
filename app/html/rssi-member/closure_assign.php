@@ -163,9 +163,13 @@ echo "<script>var userRole = '$role';</script>";
                                 </select>
                                 <button id="goToDate" class="btn btn-primary mx-2">Go</button>
                             </div>
-
-                            <div id="calendar"></div>
-
+                            <div class="container">
+                                <div class="row justify-content-center">
+                                    <div class="col-12 col-md-8 col-lg-6">
+                                        <div id="calendar" class="w-100"></div>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- Modal for Assigning Associate -->
                             <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
                                 <div class="modal-dialog">
@@ -199,7 +203,7 @@ echo "<script>var userRole = '$role';</script>";
             </div>
         </section>
 
-    </main><!-- End #main --
+    </main><!-- End #main -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
@@ -308,16 +312,29 @@ echo "<script>var userRole = '$role';</script>";
                 const assignmentForDate = assignments.find(assignment => assignment.date === date);
 
                 // Clear the dropdown and re-populate options
-                associateIdSelect.innerHTML = '<option value="" disabled>Select Associate</option>';
-                associates.forEach(associate => {
-                    const option = document.createElement('option');
-                    option.value = associate.associatenumber; // Set value as associatenumber
-                    option.textContent = `${associate.associatenumber} - ${associate.fullname}`; // Display associatenumber-fullname
-                    if (assignmentForDate && assignmentForDate.assigned_to === associate.associatenumber) {
-                        option.selected = true; // Pre-select if this associate is already assigned
-                    }
-                    associateIdSelect.appendChild(option);
-                });
+                associateIdSelect.innerHTML = '<option value="" disabled selected>Select Associate</option>';
+
+                // Check if there's no assignment for the selected date
+                if (!assignmentForDate) {
+                    // If no assignment, just populate the dropdown with associates
+                    associates.forEach(associate => {
+                        const option = document.createElement('option');
+                        option.value = associate.associatenumber; // Set value as associatenumber
+                        option.textContent = `${associate.associatenumber} - ${associate.fullname}`; // Display associatenumber-fullname
+                        associateIdSelect.appendChild(option);
+                    });
+                } else {
+                    // If there is an assignment, pre-select the assigned associate
+                    associates.forEach(associate => {
+                        const option = document.createElement('option');
+                        option.value = associate.associatenumber; // Set value as associatenumber
+                        option.textContent = `${associate.associatenumber} - ${associate.fullname}`; // Display associatenumber-fullname
+                        if (assignmentForDate.assigned_to === associate.associatenumber) {
+                            option.selected = true; // Pre-select if this associate is already assigned
+                        }
+                        associateIdSelect.appendChild(option);
+                    });
+                }
 
                 modal.show();
             }
