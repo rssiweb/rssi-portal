@@ -122,6 +122,11 @@
               <span>Exam Summary Report</span>
             </a>
           </li>
+          <li>
+            <a id="progress_curve" href="progress_curve.php">
+              <span>Students' Progress Curve</span>
+            </a>
+          </li>
           <!-- <li>
             <a id="uploadMarks" href="exam_marks_upload.php">
               <span>Upload Marks</span>
@@ -457,6 +462,11 @@
         id: 'acadamis',
         linkId: 'createExam',
         url: 'exam_create.php'
+      },
+      {
+        id: 'acadamis',
+        linkId: 'progress_curve',
+        url: 'progress_curve.php'
       },
       {
         id: 'acadamis',

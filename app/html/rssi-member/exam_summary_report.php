@@ -241,7 +241,7 @@ foreach ($rows as $row) {
                             <br>
 
                             <div class="container">
-                                <h4>Exam Summary Report</h4>
+                                <!-- <h4>Exam Summary Report</h4> -->
                                 <div class="table-responsive">
                                     <table id="table-id" class="table">
                                         <thead>
@@ -302,6 +302,7 @@ foreach ($rows as $row) {
     <script>
         $(document).ready(function() {
             $('#table-id').DataTable({
+                paging: false,
                 "order": [] // Disable initial sorting
             });
         });
