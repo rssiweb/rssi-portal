@@ -12,6 +12,7 @@ if (!isLoggedIn("aid")) {
 // Handle form submission
 $exam_type = $_GET['exam_type'] ?? '';
 $academic_year = $_GET['academic_year'] ?? '';
+$class_filter = $_GET['get_class'] ?? []; // Fetch selected classes (if any)
 
 $students_query = "
     SELECT 
@@ -62,8 +63,17 @@ $students_query = "
     AND exams.exam_date_viva = attendance_viva.date
     JOIN rssimyprofile_student student ON exam_marks_data.student_id = student.student_id
     WHERE exams.exam_type = $1 
-    AND exams.academic_year = $2
-    ORDER BY 
+    AND exams.academic_year = $2";
+
+// Add the class filter if applicable
+if (!empty($class_filter)) {
+    $placeholders = array_map(function ($key) {
+        return '$' . ($key + 3);
+    }, array_keys($class_filter));
+    $students_query .= " AND student.class IN (" . implode(', ', $placeholders) . ")";
+}
+// Order the results
+$students_query .= "ORDER BY 
         CASE 
             WHEN student.class = 'Nursery' THEN 1
             WHEN student.class = 'LKG' THEN 2
@@ -77,7 +87,13 @@ $students_query = "
             ELSE CAST(student.class AS INTEGER)
         END";
 
-$students_result = pg_query_params($con, $students_query, [$exam_type, $academic_year]);
+// Prepare query parameters
+$params = [$exam_type, $academic_year];
+if (!empty($class_filter)) {
+    $params = array_merge($params, $class_filter);
+}
+
+$students_result = pg_query_params($con, $students_query, $params);
 
 // Prepare the data
 $students_data = [];
@@ -129,7 +145,25 @@ foreach ($rows as $row) {
         ];
     }
 }
-
+$classlist = [
+    "Nursery",
+    "LKG",
+    "UKG",
+    "Pre-school",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    '10',
+    "11",
+    "12",
+    "Vocational training",
+]
 ?>
 
 <!doctype html>
@@ -218,6 +252,27 @@ foreach ($rows as $row) {
                                         <?php } else { ?>
                                             <option hidden selected><?php echo $academic_year ?></option>
                                         <?php } ?>
+                                    </select>
+
+                                    <label for="get_class" class="me-2">Class:</label>
+                                    <select name="get_class[]" id="get_class" class="form-select me-2" style="width:max-content; display:inline-block" multiple>
+                                        <?php if ($class_filter == null) { ?>
+                                            <option value="" disabled selected hidden>Select Class</option>
+
+                                            <?php foreach ($classlist as $cls) { ?>
+                                                <option><?php echo $cls ?></option>
+                                            <?php } ?>
+
+                                            <?php
+                                        } else {
+
+                                            foreach ($classlist as $cls) { ?>
+                                                <option <?php if (in_array($cls, $class_filter)) {
+                                                            echo "selected";
+                                                        } ?>><?php echo $cls ?></option>
+                                        <?php }
+                                        }
+                                        ?>
                                     </select>
 
                                     <button type="submit" class="btn btn-primary btn-sm" style="outline: none;">Apply Filters</button>
