@@ -451,7 +451,8 @@ if ($percentage_result) {
                                         $exam = str_replace(" ", "%20", $exam_type);
                                         $url = "https://login.rssi.in/result.php?student_id=$student_id&exam_type=$exam_type&academic_year=$academic_year";
                                         $url_u = urlencode($url); ?>
-                                        <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url_u ?>" width="80px" />&nbsp;
+                                        <!-- https://qrcode.tec-it.com/API/QRCode?data= -->
+                                        <img class="qrimage" src="https://api.qrserver.com/v1/create-qr-code/?data=<?php echo $url_u ?>" width="80px" />&nbsp;
                                         <img src=<?php echo $student_details['photourl'] ?> width=80px height=80px />
                                     </div>
                                 </div>
