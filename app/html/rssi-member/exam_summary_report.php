@@ -232,51 +232,61 @@ $classlist = [
                         <div class="card-body">
                             <br>
                             <div class="container">
-                                <form method="GET" action="" class="d-flex align-items-center">
-                                    <label for="exam_type" class="me-2">Exam Type:</label>
-                                    <select name="exam_type" class="form-select me-2" style="width: max-content; display: inline-block;" required>
-                                        <?php if ($exam_type == null) { ?>
-                                            <option value="" disabled selected hidden>Select Exam Name</option>
-                                        <?php } else { ?>
-                                            <option hidden selected><?php echo $exam_type ?></option>
-                                        <?php } ?>
-                                        <option>First Term</option>
-                                        <option>Half Yearly</option>
-                                        <option>Annual</option>
-                                    </select>
+                                <form method="GET" action="">
+                                    <div class="row align-items-center g-2">
+                                        <!-- Exam Type -->
+                                        <div class="col-md-auto">
+                                            <label for="exam_type" class="form-label me-2">Exam Type:</label>
+                                            <select name="exam_type" class="form-select" required>
+                                                <?php if ($exam_type == null) { ?>
+                                                    <option value="" disabled selected hidden>Select Exam Name</option>
+                                                <?php } else { ?>
+                                                    <option hidden selected><?php echo $exam_type ?></option>
+                                                <?php } ?>
+                                                <option>First Term</option>
+                                                <option>Half Yearly</option>
+                                                <option>Annual</option>
+                                            </select>
+                                        </div>
 
-                                    <label for="academic_year" class="me-2">Academic Year:</label>
-                                    <select id="academic_year" name="academic_year" class="form-select me-2" style="width: max-content; display: inline-block;" required>
-                                        <?php if ($academic_year == null) { ?>
-                                            <option value="" disabled selected hidden>Select Year</option>
-                                        <?php } else { ?>
-                                            <option hidden selected><?php echo $academic_year ?></option>
-                                        <?php } ?>
-                                    </select>
+                                        <!-- Academic Year -->
+                                        <div class="col-md-auto">
+                                            <label for="academic_year" class="form-label me-2">Academic Year:</label>
+                                            <select id="academic_year" name="academic_year" class="form-select" required>
+                                                <?php if ($academic_year == null) { ?>
+                                                    <option value="" disabled selected hidden>Select Year</option>
+                                                <?php } else { ?>
+                                                    <option hidden selected><?php echo $academic_year ?></option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
 
-                                    <label for="get_class" class="me-2">Class:</label>
-                                    <select name="get_class[]" id="get_class" class="form-select me-2" style="width:max-content; display:inline-block" multiple>
-                                        <?php if ($class_filter == null) { ?>
-                                            <option value="" disabled selected hidden>Select Class</option>
+                                        <!-- Class -->
+                                        <div class="col-md-auto">
+                                            <label for="get_class" class="form-label me-2">Class:</label>
+                                            <select name="get_class[]" id="get_class" class="form-select" multiple>
+                                                <?php if ($class_filter == null) { ?>
+                                                    <option value="" disabled selected hidden>Select Class</option>
+                                                    <?php foreach ($classlist as $cls) { ?>
+                                                        <option><?php echo $cls ?></option>
+                                                    <?php } ?>
+                                                    <?php } else {
+                                                    foreach ($classlist as $cls) { ?>
+                                                        <option <?php if (in_array($cls, $class_filter)) {
+                                                                    echo "selected";
+                                                                } ?>><?php echo $cls ?></option>
+                                                <?php }
+                                                } ?>
+                                            </select>
+                                        </div>
 
-                                            <?php foreach ($classlist as $cls) { ?>
-                                                <option><?php echo $cls ?></option>
-                                            <?php } ?>
-
-                                            <?php
-                                        } else {
-
-                                            foreach ($classlist as $cls) { ?>
-                                                <option <?php if (in_array($cls, $class_filter)) {
-                                                            echo "selected";
-                                                        } ?>><?php echo $cls ?></option>
-                                        <?php }
-                                        }
-                                        ?>
-                                    </select>
-
-                                    <button type="submit" class="btn btn-primary btn-sm" style="outline: none;">Apply Filters</button>
+                                        <!-- Submit Button -->
+                                        <div class="col-md-auto">
+                                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                        </div>
+                                    </div>
                                 </form>
+
                                 <script>
                                     <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
                                         var currentYear = new Date().getFullYear() - 1;

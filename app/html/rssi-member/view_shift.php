@@ -15,9 +15,43 @@ $query = "
     SELECT s.*, m.fullname 
     FROM associate_schedule s
     INNER JOIN rssimyaccount_members m ON s.associate_number = m.associatenumber
-    order by timestamp desc
+    ORDER BY s.associate_number, s.start_date, s.end_date, s.timestamp DESC
 ";
 $result = pg_query($con, $query);
+
+$data = [];
+while ($row = pg_fetch_assoc($result)) {
+    $associateNumber = $row['associate_number'];
+    $reportingTime = $row['reporting_time'];
+    $exitTime = $row['exit_time'];
+
+    if (!isset($data[$associateNumber])) {
+        $data[$associateNumber] = [];
+    }
+
+    $merged = false;
+
+    foreach ($data[$associateNumber] as &$entry) {
+        // Check if reporting_time and exit_time match
+        if (
+            $entry['reporting_time'] === $reportingTime &&
+            $entry['exit_time'] === $exitTime
+        ) {
+            // Merge rows: update start_date, end_date, timestamp, and submittedby
+            $entry['start_date'] = min($entry['start_date'], $row['start_date']);
+            $entry['end_date'] = max($entry['end_date'], $row['end_date']);
+            $entry['timestamp'] = max($entry['timestamp'], $row['timestamp']);
+            $entry['submittedby'] = $row['submittedby'];
+            $merged = true;
+            break;
+        }
+    }
+
+    if (!$merged) {
+        // Add as a new entry
+        $data[$associateNumber][] = $row;
+    }
+}
 
 if (!$result) {
     die("Error executing query: " . pg_last_error($con));
@@ -103,17 +137,19 @@ pg_close($con); // Close the connection when done
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php while ($row = pg_fetch_assoc($result)) { ?>
-                                            <tr>
-                                                <td><?php echo htmlspecialchars($row['fullname']); ?> (<?php echo htmlspecialchars($row['associate_number']); ?>)</td>
-                                                <td><?php echo date("d/m/Y", strtotime($row['start_date'])); ?></td>
-                                                <td><?php echo date("d/m/Y", strtotime($row['end_date'])); ?></td>
-                                                <td><?php echo htmlspecialchars($row['reporting_time']); ?></td>
-                                                <td><?php echo htmlspecialchars($row['exit_time']); ?></td>
-                                                <td><?php echo date("d/m/Y H:i:s", strtotime($row['timestamp'])); ?></td>
-                                                <td><?php echo htmlspecialchars($row['submittedby']); ?></td>
-                                            </tr>
-                                        <?php } ?>
+                                        <?php foreach ($data as $associateRows): ?>
+                                            <?php foreach ($associateRows as $row): ?>
+                                                <tr>
+                                                    <td><?php echo htmlspecialchars($row['fullname']); ?> (<?php echo htmlspecialchars($row['associate_number']); ?>)</td>
+                                                    <td><?php echo date("d/m/Y", strtotime($row['start_date'])); ?></td>
+                                                    <td><?php echo date("d/m/Y", strtotime($row['end_date'])); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['reporting_time']); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['exit_time']); ?></td>
+                                                    <td><?php echo date("d/m/Y H:i:s", strtotime($row['timestamp'])); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['submittedby']); ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endforeach; ?>
                                     </tbody>
                                 </table>
                             </div>
