@@ -83,7 +83,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     $student_photo = $_FILES['student-photo'] ?? null;
     $aadhar_card_upload = $_FILES['aadhar-card-upload'] ?? null;
     $caste_document = $_FILES['caste-document'] ?? null;
-    $caste=$_POST['caste'];
+    $caste = $_POST['caste'];
 
     $doclink_student_photo = null;
     if (!empty($student_photo['name'])) {
@@ -693,16 +693,23 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         </td>
                                         <td>
                                             <select class="form-select" id="caste" name="caste" required>
-                                                <!-- <option value="" disabled selected>Select your caste</option> -->
-                                                <option hidden selected><?php echo $array['caste'] ?></option>
+                                                <!-- Check if the caste value is null or empty -->
+                                                <?php if (empty($array['caste'])): ?>
+                                                    <option value="" hidden selected>Select your caste</option>
+                                                <?php else: ?>
+                                                    <option hidden selected><?php echo htmlspecialchars($array['caste']); ?></option>
+                                                <?php endif; ?>
+
                                                 <option value="General">General</option>
                                                 <option value="SC">Scheduled Caste (SC)</option>
                                                 <option value="ST">Scheduled Tribe (ST)</option>
                                                 <option value="OBC">Other Backward Class (OBC)</option>
                                                 <option value="EWS">Economically Weaker Section (EWS)</option>
                                                 <option value="Prefer not to disclose">Prefer not to disclose</option>
+                                                <option value="Do not know">Do not know</option>
                                                 <!-- Add additional options as necessary -->
                                             </select>
+
                                             <small id="caste-help" class="form-text text-muted">Please select your caste category as per government records.</small>
                                         </td>
                                     </tr>
