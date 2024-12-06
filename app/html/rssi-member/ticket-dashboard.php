@@ -536,15 +536,84 @@ if (!function_exists('makeClickableLinks')) {
                                                             </div>
                                                         </div>
                                                         <div class="row mb-4">
-                                                            <!-- Subject -->
-                                                            <div class="mb-3">
-                                                                <h4 class="fw-bold"><?php echo $ticket['short_description']; ?></h4>
+                                                            <div class="mb-3" id="subject-container">
+                                                                <!-- Subject Text with Pencil Icon -->
+                                                                <div class="d-flex align-items-center">
+                                                                    <h4 class="fw-bold mb-0" id="subject-text">
+                                                                        <?php echo $ticket['short_description']; ?>
+                                                                    </h4>
+
+                                                                    <!-- Edit Pencil Icon (Visible only to the raised_by user) -->
+                                                                    <?php if ($ticket['raised_by'] == $associatenumber): ?>
+                                                                        <i class="bi bi-pencil edit-icon ms-2" id="edit-subject" style="cursor: pointer;" onclick="editSubject()"></i>
+                                                                    <?php endif; ?>
+                                                                </div>
+
+                                                                <!-- Editable Input - Hidden by default -->
+                                                                <div id="subject-edit-container" class="d-none mt-2">
+                                                                    <form id="subject-form" method="POST" action="payment-api.php">
+                                                                        <input type="hidden" name="form-type" value="short_description">
+                                                                        <input type="hidden" name="ticket_id" value="<?php echo $ticket['ticket_id']; ?>">
+                                                                        <input type="text" id="subject-input" class="form-control mb-2" name="value" value="<?php echo $ticket['short_description']; ?>">
+                                                                        <!-- Submit Button to Save -->
+                                                                        <div class="d-flex">
+                                                                            <button type="submit" id="save-subject" class="btn">
+                                                                                <i class="bi bi-save save-icon"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                            <script>
+                                                                // Function to toggle between the subject text and editable input
+                                                                function editSubject() {
+                                                                    // Hide the text and show the input field
+                                                                    document.getElementById('subject-text').classList.add('d-none');
+                                                                    document.getElementById('edit-subject').classList.add('d-none');
+                                                                    document.getElementById('subject-edit-container').classList.remove('d-none');
+                                                                }
+                                                            </script>
+
+                                                            <div class="mb-3" id="description-container">
+                                                                <!-- Description Text -->
+                                                                <div class="d-flex align-items-center">
+                                                                    <p class="mb-0 flex-grow-1" id="description-text">
+                                                                        <?php echo nl2br(makeClickableLinks($ticket['long_description'])); ?>
+                                                                    </p>
+
+                                                                    <!-- Edit Pencil Icon (Only visible if the user is allowed to edit) -->
+                                                                    <?php if ($ticket['raised_by'] == $associatenumber): ?>
+                                                                        <i class="bi bi-pencil edit-icon" id="edit-description" style="cursor: pointer; margin-left: 10px;" onclick="editDescription()"></i>
+                                                                    <?php endif; ?>
+                                                                </div>
+
+                                                                <!-- Editable Textarea - Hidden by default -->
+                                                                <div id="description-edit-container" class="d-none mt-2">
+                                                                    <form id="description-form" method="POST" action="payment-api.php">
+                                                                        <input type="hidden" name="form-type" value="long_description">
+                                                                        <input type="hidden" name="ticket_id" value="<?php echo $ticket['ticket_id']; ?>">
+                                                                        <textarea id="description-input" class="form-control mb-2" name="value"><?php echo $ticket['long_description']; ?></textarea>
+                                                                        <!-- Submit Button to Save -->
+                                                                        <div class="d-flex justify-content-start">
+                                                                            <button type="submit" id="save-description" class="btn">
+                                                                                <i class="bi bi-save save-icon"></i>
+                                                                            </button>
+
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
                                                             </div>
 
-                                                            <!-- Description -->
-                                                            <div class="mb-3">
-                                                                <p class="mb-0"><?php echo nl2br(makeClickableLinks($ticket['long_description'])); ?></p>
-                                                            </div>
+                                                            <script>
+                                                                // Toggle description text and text area visibility
+                                                                function editDescription() {
+                                                                    // Hide the text and show the textarea
+                                                                    document.getElementById('description-text').classList.add('d-none');
+                                                                    document.getElementById('edit-description').classList.add('d-none');
+                                                                    document.getElementById('description-edit-container').classList.remove('d-none');
+                                                                }
+                                                            </script>
+
 
                                                             <!-- Raised for -->
                                                             <div class="mb-3">
@@ -669,42 +738,72 @@ if (!function_exists('makeClickableLinks')) {
 
                                                 <ul class="list-group p-0">
                                                     <?php foreach ($comments as $comment): ?>
-                                                        <li class="list-group-item d-flex align-items-start mb-3 p-0 border-0">
+                                                        <li class="list-group-item d-flex align-items-start mb-3 p-0 border-0" id="comment-<?php echo $comment['comment_id']; ?>">
                                                             <img src="<?php echo isset($comment['commenter_photo']) ? $comment['commenter_photo'] : 'https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg'; ?>" alt="Commenter Image" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
 
                                                             <div class="w-100">
-                                                                <div class="d-flex align-items-center">
-                                                                    <strong class="me-2"><?php echo htmlspecialchars($comment['commenter_name']); ?></strong>
-                                                                    <small class="text-muted" style="white-space: nowrap;">
-                                                                        <?php
-                                                                        $commentTime = new DateTime($comment['timestamp']);
-                                                                        $now = new DateTime();
-                                                                        $interval = $now->diff($commentTime);
+                                                                <div class="d-flex justify-content-between">
+                                                                    <div>
+                                                                        <strong class="me-2"><?php echo htmlspecialchars($comment['commenter_name']); ?></strong>
+                                                                        <small class="text-muted" style="white-space: nowrap;">
+                                                                            <?php
+                                                                            $commentTime = new DateTime($comment['timestamp']);
+                                                                            $now = new DateTime();
+                                                                            $interval = $now->diff($commentTime);
 
-                                                                        if ($interval->days > 0) {
-                                                                            echo htmlspecialchars($commentTime->format('d/m/Y h:i A'));
-                                                                        } elseif ($interval->h > 0) {
-                                                                            echo htmlspecialchars($interval->h . ' hours ago');
-                                                                        } elseif ($interval->i > 0) {
-                                                                            echo htmlspecialchars($interval->i . ' minutes ago');
-                                                                        } else {
-                                                                            echo htmlspecialchars($interval->s . ' seconds ago');
-                                                                        }
-                                                                        ?>
-                                                                    </small>
+                                                                            if ($interval->days > 0) {
+                                                                                echo htmlspecialchars($commentTime->format('d/m/Y h:i A'));
+                                                                            } elseif ($interval->h > 0) {
+                                                                                echo htmlspecialchars($interval->h . ' hours ago');
+                                                                            } elseif ($interval->i > 0) {
+                                                                                echo htmlspecialchars($interval->i . ' minutes ago');
+                                                                            } else {
+                                                                                echo htmlspecialchars($interval->s . ' seconds ago');
+                                                                            }
+                                                                            ?>
+                                                                        </small>
+                                                                        <?php if ($comment['edit_flag'] == true): ?>
+                                                                            &nbsp;<small class="text-muted">Edited</small>
+                                                                        <?php endif; ?>
+                                                                    </div>
+
                                                                 </div>
 
-                                                                <p class="mt-2 mb-0"><?php echo nl2br(makeClickableLinks($comment['comment'])); ?></p>
+                                                                <p class="mt-2 mb-0" id="comment-text-<?php echo $comment['comment_id']; ?>">
+                                                                    <?php echo nl2br(makeClickableLinks($comment['comment'])); ?>
+                                                                </p>
                                                                 <!-- Supporting Documents -->
                                                                 <?php if (!empty($comment['attachment'])): ?>
                                                                     <div class="mb-3">
-                                                                        <a href="<?php echo htmlspecialchars($comment['attachment']); ?>" target="_blank"><?php echo $comment['attachment_name']; ?></a>
+                                                                        <a href="<?php echo htmlspecialchars($comment['attachment']); ?>" target="_blank">
+                                                                            <?php echo htmlspecialchars($comment['attachment_name']); ?>
+                                                                        </a>
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                                <?php if ($comment['commented_by'] == $associatenumber): ?>
+                                                                    <!-- Hidden Textarea (Initially hidden) -->
+                                                                    <form id="comment-edit-form-<?php echo $comment['comment_id']; ?>" method="POST" action="payment-api.php">
+                                                                        <input type="hidden" name="form-type" value="comment_edit">
+                                                                        <input type="hidden" name="comment_id" value="<?php echo $comment['comment_id']; ?>">
+                                                                        <div id="edit-container-<?php echo $comment['comment_id']; ?>" class="d-none mt-2">
+                                                                            <textarea class="form-control" id="comment-input-<?php echo $comment['comment_id']; ?>" name="comment"><?php echo htmlspecialchars(trim($comment['comment'])); ?></textarea>
+                                                                            <button type="button" class="btn btn-sm btn-primary mt-2" onclick="saveCommentEdit(<?php echo $comment['comment_id']; ?>)">Save</button>
+                                                                            <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="cancelEdit(<?php echo $comment['comment_id']; ?>)">Cancel</button>
+                                                                        </div>
+                                                                    </form>
+
+                                                                    <!-- Edit and Delete options -->
+                                                                    <div class="d-flex align-items-center mt-2">
+                                                                        <span class="text-muted" style="cursor: pointer;" onclick="editComment(<?php echo $comment['comment_id']; ?>)">Edit</span>
+                                                                        <span class="text-muted mx-2">.</span>
+                                                                        <span class="text-muted" style="cursor: pointer;" onclick="deleteComment(<?php echo $comment['comment_id']; ?>)">Delete</span>
                                                                     </div>
                                                                 <?php endif; ?>
                                                             </div>
                                                         </li>
                                                     <?php endforeach; ?>
                                                 </ul>
+
 
                                                 <!-- Add Comment -->
                                                 <form method="POST" enctype="multipart/form-data" class="mt-4">
@@ -776,6 +875,138 @@ if (!function_exists('makeClickableLinks')) {
                 // Other select2 options if needed
             });
         });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Subject edit toggle
+            const subjectText = document.getElementById("subject-text");
+            const subjectEditContainer = document.getElementById("subject-edit-container");
+            const editSubject = document.getElementById("edit-subject");
+
+            // Description edit toggle
+            const descriptionText = document.getElementById("description-text");
+            const descriptionEditContainer = document.getElementById("description-edit-container");
+            const editDescription = document.getElementById("edit-description");
+
+            // Toggle Subject Edit Mode
+            editSubject.addEventListener("click", function() {
+                subjectText.classList.add("d-none");
+                subjectEditContainer.classList.remove("d-none");
+            });
+
+            // Toggle Description Edit Mode
+            editDescription.addEventListener("click", function() {
+                descriptionText.classList.add("d-none");
+                descriptionEditContainer.classList.remove("d-none");
+            });
+
+            // Handle form submission
+            document.getElementById("subject-form").addEventListener("submit", function(event) {
+                event.preventDefault(); // Prevent the form from submitting normally
+
+                const formData = new FormData(this); // Gather form data
+                submitForm(formData);
+            });
+
+            document.getElementById("description-form").addEventListener("submit", function(event) {
+                event.preventDefault(); // Prevent the form from submitting normally
+
+                const formData = new FormData(this); // Gather form data
+                submitForm(formData);
+            });
+
+            // Function to submit form data using AJAX
+            function submitForm(formData) {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "payment-api.php", true);
+
+                // Handle the response
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            // Success alert and page reload
+                            alert("Data has been successfully updated!");
+                            location.reload(); // Reload the page to show updated data
+                        } else {
+                            // Failure alert
+                            alert(response.message || "Update failed. Please try again.");
+                        }
+                    }
+                };
+
+                // Send the form data
+                xhr.send(formData);
+            }
+        });
+    </script>
+    <script>
+        // Function to switch from the paragraph to textarea for editing
+        function editComment(commentId) {
+            // Hide the <p> tag and show the textarea form
+            document.getElementById("comment-text-" + commentId).classList.add("d-none"); // Hide the paragraph
+            document.getElementById("edit-container-" + commentId).classList.remove("d-none"); // Show the textarea
+        }
+
+        // Function to cancel editing and revert to the original comment text
+        function cancelEdit(commentId) {
+            document.getElementById("comment-text-" + commentId).classList.remove("d-none"); // Show the paragraph
+            document.getElementById("edit-container-" + commentId).classList.add("d-none"); // Hide the textarea
+        }
+        // Function to save edited comment via AJAX
+        function saveCommentEdit(commentId) {
+            const commentText = document.getElementById("comment-input-" + commentId).value;
+
+            const formData = new FormData();
+            formData.append('form-type', 'comment_edit');
+            formData.append('comment_id', commentId);
+            formData.append('comment', commentText);
+
+            fetch('payment-api.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json()) // Parse the response as JSON
+                .then(data => {
+                    if (data.success) {
+                        alert("Comment updated successfully.");
+                        location.reload(); // Reload the page to show updated data
+                    } else {
+                        // Show error message from the server if available
+                        alert(data.message || "Failed to update comment.");
+                    }
+                })
+                .catch(error => {
+                    // Log the error for debugging
+                    console.error('Error:', error);
+                    alert("An error occurred while updating the comment."); // General error alert
+                });
+        }
+
+        // Function to delete comment via AJAX
+        function deleteComment(commentId) {
+            const formData = new FormData();
+            formData.append('form-type', 'comment_delete');
+            formData.append('comment_id', commentId);
+
+            fetch('payment-api.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Comment deleted successfully.");
+                        location.reload(); // Reload the page to show updated data
+                    } else {
+                        alert("Failed to delete comment.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred while deleting the comment.");
+                });
+        }
     </script>
 
 </body>

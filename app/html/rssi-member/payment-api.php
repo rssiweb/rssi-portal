@@ -93,6 +93,69 @@ if ($formtype == "policybodyedit") {
 }
 
 
+if ($formtype == "short_description" || $formtype == "long_description") {
+  // Get the ticket ID and the new value from the form
+  $ticket_id = $_POST['ticket_id'];
+  $value = $_POST['value'];
+
+  if (empty($ticket_id) || empty($value)) {
+    echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+    exit;
+  }
+
+  // Determine which column to update
+  $column = ($formtype === 'short_description') ? 'short_description' : 'long_description';
+
+  // Prepare and execute the update query
+  $query = "UPDATE support_ticket SET $column = $1 WHERE ticket_id = $2";
+  $stmt = pg_prepare($con, "update_query", $query);
+  $result = pg_execute($con, "update_query", [$value, $ticket_id]);
+
+  // Return a response based on the result
+  if ($result) {
+    echo json_encode(['success' => true]);
+  } else {
+    echo json_encode(['success' => false, 'message' => 'Database update failed']);
+  }
+}
+
+
+if ($formtype == "comment_edit" || $formtype == "comment_delete") {
+  $formType = $_POST['form-type'];
+  $commentId = $_POST['comment_id'];
+
+  if ($formType == 'comment_edit') {
+    $comment = $_POST['comment'];
+
+    // Sanitize and validate comment input
+    $comment = htmlspecialchars(trim($comment));
+
+    // Use PostgreSQL prepare and execute
+    $query = "UPDATE support_comment SET comment = $1, edit_flag = true WHERE comment_id = $2";
+    $result = pg_query_params($con, $query, [$comment, $commentId]);
+
+    if ($result) {
+      echo json_encode(['success' => true]);
+    } else {
+      echo json_encode(['success' => false, 'message' => 'Failed to update comment.']);
+    }
+    exit; // Stop further script execution
+  }
+
+  if ($formType == 'comment_delete') {
+    $query = "DELETE FROM support_comment WHERE comment_id = $1";
+    $result = pg_query_params($con, $query, [$commentId]);
+
+    if ($result) {
+      echo json_encode(['success' => true]);
+    } else {
+      echo json_encode(['success' => false, 'message' => 'Failed to delete comment.']);
+    }
+    exit; // Stop further script execution
+  }
+}
+
+
 if ($formtype == "paydelete") {
   @$refid = $_POST['pid'];
   $paydelete = "DELETE from fees WHERE id = $refid";
@@ -1166,10 +1229,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['form-type'] == "email_verif
   $result = pg_query_params($con, $query, [$email]);
 
   if ($result) {
-      $row = pg_fetch_assoc($result);
-      echo json_encode(['exists' => $row['count'] > 0]);
+    $row = pg_fetch_assoc($result);
+    echo json_encode(['exists' => $row['count'] > 0]);
   } else {
-      echo json_encode(['exists' => false]);
+    echo json_encode(['exists' => false]);
   }
   exit; // Ensure no further output is sent
 }
