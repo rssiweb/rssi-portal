@@ -579,7 +579,7 @@ if (!function_exists('makeClickableLinks')) {
                                                                 }
                                                             </script>
 
-                                                            <div class="mb-3 d-flex align-items-start" id="description-container">
+                                                            <div class="mb-3 align-items-start position-relative" id="description-container">
                                                                 <!-- Description Text -->
                                                                 <p class="mb-0 flex-grow-1" id="description-text">
                                                                     <?php echo nl2br(makeClickableLinks($ticket['long_description'])); ?>
@@ -587,7 +587,7 @@ if (!function_exists('makeClickableLinks')) {
 
                                                                 <!-- Edit Pencil Icon (Only visible if the user is allowed to edit) -->
                                                                 <?php if ($ticket['raised_by'] == $associatenumber): ?>
-                                                                    <i class="bi bi-pencil edit-icon ms-2" id="edit-description" style="cursor: pointer;" onclick="editDescription()" title="Edit Description"></i>
+                                                                    <i class="bi bi-pencil edit-icon position-absolute" id="edit-description" style="cursor: pointer; top: 0; right: 10px;" onclick="editDescription()" title="Edit Description"></i>
                                                                 <?php endif; ?>
 
                                                                 <!-- Editable Textarea - Hidden by default -->
@@ -605,7 +605,6 @@ if (!function_exists('makeClickableLinks')) {
                                                                     </form>
                                                                 </div>
                                                             </div>
-
 
                                                             <script>
                                                                 // Toggle description text and text area visibility
