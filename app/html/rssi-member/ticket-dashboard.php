@@ -536,25 +536,27 @@ if (!function_exists('makeClickableLinks')) {
                                                             </div>
                                                         </div>
                                                         <div class="row mb-4">
-                                                            <div class="mb-3" id="subject-container">
+                                                            <div class="mb-3 d-flex align-items-start" id="subject-container">
                                                                 <!-- Subject Text with Pencil Icon -->
-                                                                <div class="d-flex align-items-center">
-                                                                    <h4 class="fw-bold mb-0" id="subject-text">
-                                                                        <?php echo $ticket['short_description']; ?>
-                                                                    </h4>
 
-                                                                    <!-- Edit Pencil Icon (Visible only to the raised_by user) -->
-                                                                    <?php if ($ticket['raised_by'] == $associatenumber): ?>
-                                                                        <i class="bi bi-pencil edit-icon ms-2" id="edit-subject" style="cursor: pointer;" onclick="editSubject()"></i>
-                                                                    <?php endif; ?>
-                                                                </div>
+                                                                <h4 class="fw-bold mb-0" id="subject-text">
+                                                                    <?php echo $ticket['short_description']; ?>
+                                                                </h4>
+
+                                                                <!-- Edit Pencil Icon (Visible only to the raised_by user) -->
+                                                                <?php if ($ticket['raised_by'] == $associatenumber): ?>
+                                                                    <i class="bi bi-pencil edit-icon ms-2" id="edit-subject" style="cursor: pointer;"
+                                                                        onclick="editSubject()" title="Edit Subject"></i>
+                                                                <?php endif; ?>
+
 
                                                                 <!-- Editable Input - Hidden by default -->
-                                                                <div id="subject-edit-container" class="d-none mt-2">
+                                                                <div id="subject-edit-container" class="d-none mt-2 w-100">
                                                                     <form id="subject-form" method="POST" action="payment-api.php">
                                                                         <input type="hidden" name="form-type" value="short_description">
                                                                         <input type="hidden" name="ticket_id" value="<?php echo $ticket['ticket_id']; ?>">
-                                                                        <input type="text" id="subject-input" class="form-control mb-2" name="value" value="<?php echo $ticket['short_description']; ?>">
+                                                                        <input type="text" id="subject-input" class="form-control mb-2" name="value"
+                                                                            value="<?php echo $ticket['short_description']; ?>">
                                                                         <!-- Submit Button to Save -->
                                                                         <div class="d-flex">
                                                                             <button type="submit" id="save-subject" class="btn">
@@ -564,6 +566,7 @@ if (!function_exists('makeClickableLinks')) {
                                                                     </form>
                                                                 </div>
                                                             </div>
+
                                                             <script>
                                                                 // Function to toggle between the subject text and editable input
                                                                 function editSubject() {
@@ -574,35 +577,33 @@ if (!function_exists('makeClickableLinks')) {
                                                                 }
                                                             </script>
 
-                                                            <div class="mb-3" id="description-container">
+                                                            <div class="mb-3 d-flex align-items-start" id="description-container">
                                                                 <!-- Description Text -->
-                                                                <div class="d-flex align-items-center">
-                                                                    <p class="mb-0 flex-grow-1" id="description-text">
-                                                                        <?php echo nl2br(makeClickableLinks($ticket['long_description'])); ?>
-                                                                    </p>
+                                                                <p class="mb-0 flex-grow-1" id="description-text">
+                                                                    <?php echo nl2br(makeClickableLinks($ticket['long_description'])); ?>
+                                                                </p>
 
-                                                                    <!-- Edit Pencil Icon (Only visible if the user is allowed to edit) -->
-                                                                    <?php if ($ticket['raised_by'] == $associatenumber): ?>
-                                                                        <i class="bi bi-pencil edit-icon" id="edit-description" style="cursor: pointer; margin-left: 10px;" onclick="editDescription()"></i>
-                                                                    <?php endif; ?>
-                                                                </div>
+                                                                <!-- Edit Pencil Icon (Only visible if the user is allowed to edit) -->
+                                                                <?php if ($ticket['raised_by'] == $associatenumber): ?>
+                                                                    <i class="bi bi-pencil edit-icon ms-2" id="edit-description" style="cursor: pointer;" onclick="editDescription()" title="Edit Description"></i>
+                                                                <?php endif; ?>
 
                                                                 <!-- Editable Textarea - Hidden by default -->
-                                                                <div id="description-edit-container" class="d-none mt-2">
+                                                                <div id="description-edit-container" class="d-none mt-2 w-100">
                                                                     <form id="description-form" method="POST" action="payment-api.php">
                                                                         <input type="hidden" name="form-type" value="long_description">
                                                                         <input type="hidden" name="ticket_id" value="<?php echo $ticket['ticket_id']; ?>">
-                                                                        <textarea id="description-input" class="form-control mb-2" name="value"><?php echo $ticket['long_description']; ?></textarea>
+                                                                        <textarea id="description-input" class="form-control mb-2 w-100" name="value"><?php echo $ticket['long_description']; ?></textarea>
                                                                         <!-- Submit Button to Save -->
                                                                         <div class="d-flex justify-content-start">
                                                                             <button type="submit" id="save-description" class="btn">
                                                                                 <i class="bi bi-save save-icon"></i>
                                                                             </button>
-
                                                                         </div>
                                                                     </form>
                                                                 </div>
                                                             </div>
+
 
                                                             <script>
                                                                 // Toggle description text and text area visibility
