@@ -251,6 +251,7 @@ WITH assignment_status AS (
         sta.assigned_by,
         sta.timestamp AS assigned_timestamp,
         sts.status,
+        sts.updated_by,
         sts.timestamp AS status_timestamp,
         ABS(EXTRACT(EPOCH FROM (sts.timestamp - sta.timestamp))) AS time_diff
     FROM 
@@ -271,6 +272,7 @@ closest_status AS (
         assigned_by,
         assigned_timestamp,
         status,
+        updated_by, -- Include updated_by here
         status_timestamp,
         assigned_to_name,
         ROW_NUMBER() OVER (
@@ -284,7 +286,8 @@ SELECT
     sta.assigned_to,
     cs.status,
     cs.status_timestamp AS formatted_status_timestamp,
-    cs.assigned_to_name
+    cs.assigned_to_name,
+    cs.updated_by -- Make sure updated_by is included in the final select
 FROM 
     support_ticket_assignment sta
 LEFT JOIN 
@@ -297,7 +300,6 @@ WHERE
     sta.ticket_id = $1
 ORDER BY 
     sta.timestamp DESC;
-
 ", array($ticket_id));
 
 $assignments = [];
@@ -691,8 +693,8 @@ if (!function_exists('makeClickableLinks')) {
                                                             <!-- Ticket Raised -->
                                                             <li class="mb-2">
                                                                 <div class="d-flex justify-content-between">
-                                                                    <span><?php echo htmlspecialchars($ticket['raised_by_name']); ?> (Raised)</span>
-                                                                    <span class="text-muted"><?php echo htmlspecialchars((new DateTime($ticket['timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                    <span class="text-wrap" style="max-width: 50%; word-wrap: break-word;"><?php echo htmlspecialchars($ticket['raised_by_name']); ?> (Raised)</span>
+                                                                    <span class="text-muted" style="max-width: 50%; text-align: left;"><?php echo htmlspecialchars((new DateTime($ticket['timestamp']))->format('d/m/Y h:i A')); ?></span>
                                                                 </div>
                                                             </li>
 
@@ -702,8 +704,11 @@ if (!function_exists('makeClickableLinks')) {
                                                                 ?>
                                                                     <li class="mb-2">
                                                                         <div class="d-flex justify-content-between">
-                                                                            <span><?php echo htmlspecialchars($assignment['assigned_to_name']); ?>/<?php echo htmlspecialchars($assignment['status']); ?></span>
-                                                                            <span class="text-muted"><?php echo htmlspecialchars((new DateTime($assignment['formatted_status_timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                            <span class="text-wrap" style="max-width: 50%; word-wrap: break-word;"><?php echo htmlspecialchars($assignment['assigned_to_name']); ?>/<?php echo htmlspecialchars($assignment['status']); ?></span>
+                                                                            <span class="text-muted" style="max-width: 50%; text-align: left;"
+                                                                                data-bs-toggle="tooltip"
+                                                                                title="Updated by: <?php echo htmlspecialchars($assignment['updated_by']); ?>">
+                                                                                <?php echo htmlspecialchars((new DateTime($assignment['formatted_status_timestamp']))->format('d/m/Y h:i A')); ?>
                                                                             </span>
                                                                         </div>
                                                                     </li>
@@ -711,8 +716,11 @@ if (!function_exists('makeClickableLinks')) {
                                                                 ?>
                                                                     <li class="mb-2 hidden-record">
                                                                         <div class="d-flex justify-content-between">
-                                                                            <span><?php echo htmlspecialchars($assignment['assigned_to_name']); ?>/<?php echo htmlspecialchars($assignment['status']); ?></span>
-                                                                            <span class="text-muted"><?php echo htmlspecialchars((new DateTime($assignment['formatted_status_timestamp']))->format('d/m/Y h:i A')); ?></span>
+                                                                            <span class="text-wrap" style="max-width: 50%; word-wrap: break-word;"><?php echo htmlspecialchars($assignment['assigned_to_name']); ?>/<?php echo htmlspecialchars($assignment['status']); ?></span>
+                                                                            <span class="text-muted" style="max-width: 50%; text-align: left;"
+                                                                                data-bs-toggle="tooltip"
+                                                                                title="Updated by: <?php echo htmlspecialchars($assignment['updated_by']); ?>">
+                                                                                <?php echo htmlspecialchars((new DateTime($assignment['formatted_status_timestamp']))->format('d/m/Y h:i A')); ?>
                                                                             </span>
                                                                         </div>
                                                                     </li>
@@ -727,6 +735,17 @@ if (!function_exists('makeClickableLinks')) {
                                                             <?php endif; ?>
                                                         </ul>
                                                     </div>
+
+                                                    <script>
+                                                        // Enable Bootstrap tooltip
+                                                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                                                        tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+                                                            new bootstrap.Tooltip(tooltipTriggerEl);
+                                                        });
+                                                    </script>
+
+
+
                                                 </div>
                                             </div>
                                         </div>
