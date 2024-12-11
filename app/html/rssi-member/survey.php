@@ -114,7 +114,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
@@ -157,18 +158,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 <div class="col-md-8">
                                     <div class="form-container">
                                         <h1 class="text-center mb-4">Potential Student Survey</h1>
-                                        <form method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" id="surveyForm" onsubmit="return validateForm()">
+                                        <form method="post"
+                                            action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>"
+                                            id="surveyForm" onsubmit="return validateForm()">
                                             <!-- Parent's Name -->
                                             <div class="mb-3">
                                                 <label for="parentName" class="form-label">Parent's Name</label>
-                                                <input type="text" class="form-control" id="parentName" name="parentName" placeholder="Enter parent's name" required>
+                                                <input type="text" class="form-control" id="parentName"
+                                                    name="parentName" placeholder="Enter parent's name" required>
                                             </div>
                                             <!-- Address -->
                                             <div class="mb-3">
                                                 <label for="address" class="form-label">Address</label>
                                                 <div class="input-group">
-                                                    <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter address" required></textarea>
-                                                    <button class="btn btn-outline-secondary" type="button" id="getAddressBtn">Get Current Address</button>
+                                                    <textarea class="form-control" id="address" name="address" rows="3"
+                                                        placeholder="Enter address" required></textarea>
+                                                    <button class="btn btn-outline-secondary" type="button"
+                                                        id="getAddressBtn">Get Current Address</button>
                                                 </div>
                                             </div>
 
@@ -176,17 +182,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                 <!-- Contact Number -->
                                                 <div class="col-md-6 mb-3">
                                                     <label for="contact" class="form-label">Contact Number</label>
-                                                    <input type="tel" class="form-control" id="contact" name="contact" placeholder="Enter contact number" required>
+                                                    <input type="tel" class="form-control" id="contact" name="contact"
+                                                        placeholder="Enter contact number" pattern="[0-9]{10}"
+                                                        title="Please enter a valid 10-digit contact number" required>
                                                 </div>
+
                                                 <!-- Alternative Contact Number -->
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="altcontact" class="form-label">Alternative Contact Number</label>
-                                                    <input type="tel" class="form-control" id="altcontact" name="altcontact" placeholder="Enter alternative contact number">
+                                                    <label for="altcontact" class="form-label">Alternative Contact
+                                                        Number</label>
+                                                    <input type="tel" class="form-control" id="altcontact"
+                                                        name="altcontact"
+                                                        placeholder="Enter alternative contact number">
                                                 </div>
                                             </div>
 
                                             <div class="mb-3">
-                                                <label for="houseStay">How long does the family stay in the current house?</label>
+                                                <label for="houseStay">How long does the family stay in the current
+                                                    house?</label>
                                                 <select class="form-select" id="houseStay" name="houseStay" required>
                                                     <option value="" disabled selected>Select duration</option>
                                                     <option value="<1">Less than 1 year</option>
@@ -202,13 +215,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                             <!-- Total number of family members -->
                                             <div class="mb-3">
                                                 <label for="familyMembers">Total number of family members:</label>
-                                                <input type="number" class="form-control" id="familyMembers" name="familyMembers" required>
+                                                <input type="number" class="form-control" id="familyMembers"
+                                                    name="familyMembers" required>
                                             </div>
 
                                             <!-- Main source of earning for the family -->
                                             <div class="mb-3">
-                                                <label for="earningSource">Main source of earning for the family:</label>
-                                                <select class="form-select" id="earningSource" name="earningSource" onchange="checkOtherOption()" required>
+                                                <label for="earningSource">Main source of earning for the
+                                                    family:</label>
+                                                <select class="form-select" id="earningSource" name="earningSource"
+                                                    onchange="checkOtherOption()" required>
                                                     <option value="" selected disabled>Select an option</option>
                                                     <option value="agriculture">Agriculture</option>
                                                     <option value="business">Business</option>
@@ -233,22 +249,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                 </select>
                                                 <div id="otherEarningSource" style="display: none;">
                                                     <label for="otherEarningSourceInput">Enter other source:</label>
-                                                    <input type="text" class="form-control" id="otherEarningSourceInput" name="otherEarningSourceInput">
+                                                    <input type="text" class="form-control" id="otherEarningSourceInput"
+                                                        name="otherEarningSourceInput">
                                                 </div>
 
                                                 <!-- Additional Information -->
                                                 <div class="mb-3">
-                                                    <label for="additionalInfo" class="form-label">Additional Information</label>
-                                                    <textarea class="form-control" id="additionalInfo" name="additionalInfo" rows="3" placeholder="Enter any additional information"></textarea>
+                                                    <label for="additionalInfo" class="form-label">Additional
+                                                        Information</label>
+                                                    <textarea class="form-control" id="additionalInfo"
+                                                        name="additionalInfo" rows="3"
+                                                        placeholder="Enter any additional information"></textarea>
                                                 </div>
 
                                                 <div class="card">
                                                     <div class="card-body">
                                                         <!-- Checkbox for Interest in Admission -->
                                                         <div class="mb-3">
-                                                            <label for="interestInAdmission">Interested in Admission</label>
-                                                            <select class="form-select" id="interestInAdmission" name="interestInAdmission" onchange="toggleStudentFields()" required>
-                                                                <option value="" selected disabled>Select an option</option>
+                                                            <label for="interestInAdmission">Interested in
+                                                                Admission</label>
+                                                            <select class="form-select" id="interestInAdmission"
+                                                                name="interestInAdmission"
+                                                                onchange="toggleStudentFields()" required>
+                                                                <option value="" selected disabled>Select an option
+                                                                </option>
                                                                 <option value="no">No</option>
                                                                 <option value="yes">Yes</option>
                                                             </select>
@@ -259,7 +283,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                 <!-- Student's Name -->
                                                                 <div class="mb-3">
                                                                     <label for="sname">Student's Name</label>
-                                                                    <input type="text" class="form-control" id="sname" name="students[0][name]" placeholder="Enter student's name">
+                                                                    <input type="text" class="form-control" id="sname"
+                                                                        name="students[0][name]"
+                                                                        placeholder="Enter student's name">
                                                                 </div>
 
                                                                 <!-- Age and Gender -->
@@ -267,17 +293,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                     <!-- Age -->
                                                                     <div class="col-md-6 mb-3">
                                                                         <label for="sage" class="form-label">Age</label>
-                                                                        <input type="number" class="form-control" id="sage" name="students[0][age]" placeholder="Enter student's age">
+                                                                        <input type="number" class="form-control"
+                                                                            id="sage" name="students[0][age]"
+                                                                            placeholder="Enter student's age">
                                                                     </div>
                                                                     <!-- Gender -->
                                                                     <div class="col-md-6 mb-3">
-                                                                        <label for="sgender" class="form-label">Gender</label>
-                                                                        <select class="form-select" id="sgender" name="students[0][gender]">
-                                                                            <option value="" selected disabled>Select gender</option>
+                                                                        <label for="sgender"
+                                                                            class="form-label">Gender</label>
+                                                                        <select class="form-select" id="sgender"
+                                                                            name="students[0][gender]">
+                                                                            <option value="" selected disabled>Select
+                                                                                gender</option>
                                                                             <option value="Male">Male</option>
                                                                             <option value="Female">Female</option>
                                                                             <option value="Binary">Binary</option>
-                                                                            <option value="Prefer not to say">Prefer not to say</option>
+                                                                            <option value="Prefer not to say">Prefer not
+                                                                                to say</option>
                                                                         </select>
                                                                     </div>
                                                                 </div>
@@ -285,8 +317,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                 <!-- Grade Eligibility -->
                                                                 <div class="mb-3">
                                                                     <label for="sgrade">Grade Eligibility</label>
-                                                                    <select class="form-select" id="sgrade" name="students[0][grade]">
-                                                                        <option value="" selected disabled>Select Grade</option>
+                                                                    <select class="form-select" id="sgrade"
+                                                                        name="students[0][grade]">
+                                                                        <option value="" selected disabled>Select Grade
+                                                                        </option>
                                                                         <option value="Nursery">Nursery</option>
                                                                         <option value="LKG">LKG</option>
                                                                         <option value="UKG">UKG</option>
@@ -302,9 +336,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                                                                 <!-- Other student details -->
                                                                 <div class="mb-3">
-                                                                    <label for="alreadyGoingSchool">Is the student already going to school?</label>
-                                                                    <select class="form-select" id="alreadyGoingSchool" name="students[0][already_going_school]">
-                                                                        <option value="" selected disabled>Select an option</option>
+                                                                    <label for="alreadyGoingSchool">Is the student
+                                                                        already going to school?</label>
+                                                                    <select class="form-select" id="alreadyGoingSchool"
+                                                                        name="students[0][already_going_school]">
+                                                                        <option value="" selected disabled>Select an
+                                                                            option</option>
                                                                         <option value="yes">Yes</option>
                                                                         <option value="no">No</option>
                                                                     </select>
@@ -312,9 +349,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                                                                 <!-- School Type -->
                                                                 <div class="mb-3" id="schoolType">
-                                                                    <label for="schoolType">Type of school currently attending:</label>
-                                                                    <select class="form-select" id="schoolType" name="students[0][school_type]">
-                                                                        <option value="" selected disabled>Select an option</option>
+                                                                    <label for="schoolType">Type of school currently
+                                                                        attending:</label>
+                                                                    <select class="form-select" id="schoolType"
+                                                                        name="students[0][school_type]">
+                                                                        <option value="" selected disabled>Select an
+                                                                            option</option>
                                                                         <option value="private">Private</option>
                                                                         <option value="government">Government</option>
                                                                     </select>
@@ -322,9 +362,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                                                                 <!-- Coaching Classes -->
                                                                 <div class="mb-3">
-                                                                    <label for="alreadyCoaching">Is the student already attending any coaching classes?</label>
-                                                                    <select class="form-select" id="alreadyCoaching" name="students[0][already_coaching]">
-                                                                        <option value="" selected disabled>Select an option</option>
+                                                                    <label for="alreadyCoaching">Is the student already
+                                                                        attending any coaching classes?</label>
+                                                                    <select class="form-select" id="alreadyCoaching"
+                                                                        name="students[0][already_coaching]">
+                                                                        <option value="" selected disabled>Select an
+                                                                            option</option>
                                                                         <option value="yes">Yes</option>
                                                                         <option value="no">No</option>
                                                                     </select>
@@ -332,12 +375,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                                                                 <!-- Coaching Name -->
                                                                 <div class="mb-3" id="coachingNameInput">
-                                                                    <label for="coachingName">Name of the coaching:</label>
-                                                                    <input type="text" class="form-control" id="coachingName" name="students[0][coaching_name]">
+                                                                    <label for="coachingName">Name of the
+                                                                        coaching:</label>
+                                                                    <input type="text" class="form-control"
+                                                                        id="coachingName"
+                                                                        name="students[0][coaching_name]">
                                                                 </div>
 
                                                                 <div class="mb-3">
-                                                                    <button type="button" class="btn btn-primary" onclick="addStudentDetails()">Add Student</button>
+                                                                    <button type="button" class="btn btn-primary"
+                                                                        onclick="addStudentDetails()">Add
+                                                                        Student</button>
                                                                     <!-- <button type="button" class="btn btn-danger" onclick="removeStudentDetails(this)">Remove Student</button> -->
                                                                 </div>
                                                             </div>
@@ -346,7 +394,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                 </div>
 
                                                 <script>
-                                                    document.addEventListener("DOMContentLoaded", function() {
+                                                    document.addEventListener("DOMContentLoaded", function () {
                                                         toggleStudentFields();
                                                         document.getElementById('interestInAdmission').addEventListener('change', toggleStudentFields);
                                                     });
@@ -357,7 +405,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                                                         if (dropdown.value === 'yes') {
                                                             document.getElementById('studentsContainer').style.display = 'block';
-                                                            studentFields.forEach(function(field) {
+                                                            studentFields.forEach(function (field) {
                                                                 // Check if the field is the coachingName input
                                                                 if (field.id !== 'coachingName' && field.id !== 'schoolType') {
                                                                     // If it's not the coachingName input, mark it as required
@@ -366,7 +414,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                             });
                                                         } else {
                                                             document.getElementById('studentsContainer').style.display = 'none';
-                                                            studentFields.forEach(function(field) {
+                                                            studentFields.forEach(function (field) {
                                                                 field.required = false;
                                                                 field.value = ''; // Reset field value
                                                             });
@@ -376,7 +424,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                 <!-- Submit and Surveyor Details -->
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <button type="submit" class="btn btn-primary mt-2">Submit</button>
-                                                    <p class="mb-0">Surveyor Id: <?php echo $fullname . '&nbsp;(' . $associatenumber . ')' ?></p>
+                                                    <p class="mb-0">Surveyor Id:
+                                                        <?php echo $fullname . '&nbsp;(' . $associatenumber . ')' ?></p>
                                                 </div>
                                         </form>
                                     </div>
@@ -391,20 +440,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </main><!-- End #main -->
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-AH1SsjB9g5JTYrtoDkVhY2Pn9HlXKG+C4fE9g6kfmHfAe8h+if3rpTkHidv+3wRK" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+        integrity="sha384-AH1SsjB9g5JTYrtoDkVhY2Pn9HlXKG+C4fE9g6kfmHfAe8h+if3rpTkHidv+3wRK"
+        crossorigin="anonymous"></script>
     <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o&libraries=places"></script>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAO7Z3VLtKImi3UGFE6n6QKhDqfDBBCT3o&libraries=places"></script>
 
 
     <script>
-        document.getElementById('getAddressBtn').addEventListener('click', function() {
+        document.getElementById('getAddressBtn').addEventListener('click', function () {
             // Check if Geolocation is supported
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
+                navigator.geolocation.getCurrentPosition(function (position) {
                     // Retrieve latitude and longitude
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
@@ -414,7 +468,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     var latlng = new google.maps.LatLng(lat, lng);
                     geocoder.geocode({
                         'location': latlng
-                    }, function(results, status) {
+                    }, function (results, status) {
                         if (status === google.maps.GeocoderStatus.OK) {
                             if (results[0]) {
                                 // Update the address field with the retrieved address
@@ -443,17 +497,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             var studentDetails = document.querySelector('.student-details').cloneNode(true);
 
             // Clear the input values in the cloned student details
-            studentDetails.querySelectorAll('input').forEach(function(input) {
+            studentDetails.querySelectorAll('input').forEach(function (input) {
                 input.value = '';
             });
 
             // Clear the select values in the cloned student details
-            studentDetails.querySelectorAll('select').forEach(function(select) {
+            studentDetails.querySelectorAll('select').forEach(function (select) {
                 select.selectedIndex = 0; // Reset to the default option
             });
 
             // Update input field names and IDs
-            studentDetails.querySelectorAll('input, select').forEach(function(input) {
+            studentDetails.querySelectorAll('input, select').forEach(function (input) {
                 var oldName = input.getAttribute('name');
                 var newName = oldName.replace('[0]', '[' + studentCount + ']');
                 input.setAttribute('name', newName);
@@ -470,7 +524,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             removeButton.textContent = 'Remove Student';
             removeButton.type = 'button';
             removeButton.classList.add('btn', 'btn-danger');
-            removeButton.addEventListener('click', function() {
+            removeButton.addEventListener('click', function () {
                 removeStudentDetails(this);
             });
             studentDetails.appendChild(removeButton);
@@ -505,7 +559,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             var requiredElements = document.querySelectorAll('input[required], select[required], textarea[required]');
 
             // Loop through each required element
-            requiredElements.forEach(function(element) {
+            requiredElements.forEach(function (element) {
                 // Get the ID of the element
                 var elementId = element.id;
 
@@ -520,12 +574,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         // Run the function initially when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             updateLabels();
         });
 
         // Use event delegation to handle dynamically added elements
-        document.body.addEventListener('change', function(event) {
+        document.body.addEventListener('change', function (event) {
             // Update the labels whenever a change occurs
             updateLabels();
         });
