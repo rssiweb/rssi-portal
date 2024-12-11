@@ -42,15 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Apply LIMIT and OFFSET directly in the query
         $limitQuery = $limit ? "LIMIT $limit OFFSET $offset" : "";
 
-        $result = pg_query($con, "
-            SELECT s.family_id, s.contact, s.parent_name, sd.id, sd.status, sd.student_name, sd.age, sd.gender, sd.grade, 
-                   s.timestamp, rm.fullname AS surveyor_name, s.address 
+        $result = pg_query($con, "SELECT s.family_id, s.contact, s.parent_name, sd.id, sd.status, sd.student_name, sd.age, sd.gender, sd.grade, 
+                   s.timestamp, rm.fullname AS surveyor_name, s.address, s.earning_source, s.other_earning_source_input, sd.already_going_school, sd.school_type, sd.already_coaching, sd.coaching_name
             FROM survey_data s 
             LEFT JOIN student_data sd ON s.family_id = sd.family_id
             JOIN rssimyaccount_members rm ON s.surveyor_id = rm.associatenumber
             ORDER BY s.timestamp DESC, sd.id ASC -- Stable sorting to ensure unique rows
-            $limitQuery
-        ");
+            $limitQuery");
 
         if ($result) {
             $records = pg_fetch_all($result) ?: [];
@@ -97,7 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- Template Main CSS File -->
@@ -179,8 +178,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <br>
 
                             <!-- Add progress loader HTML -->
-                            <div id="pageOverlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999;">
-                                <div id="progressLoader" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                            <div id="pageOverlay"
+                                style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999;">
+                                <div id="progressLoader"
+                                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                                     <p>Submitting, please wait...</p>
                                     <div class="loader"></div> <!-- Custom loader (you can style as needed) -->
                                 </div>
@@ -200,7 +201,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <input type="hidden" name="form-type" id="formType" value="ajax">
                                 <div class="text-end mb-3">
                                     <button type="button" id="editBtn" class="btn btn-primary">Edit</button>
-                                    <button type="button" id="saveBtn" class="btn btn-success" style="display: none;">Save</button>
+                                    <button type="button" id="saveBtn" class="btn btn-success"
+                                        style="display: none;">Save</button>
                                 </div>
 
                                 <div class="table-responsive">
@@ -216,6 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <th>Age</th>
                                                 <th>Gender</th>
                                                 <th>Grade</th>
+                                                <th>Details</th>
                                                 <th>Timestamp</th>
                                                 <th>Surveyor Name</th>
                                                 <th>Status</th>
@@ -237,10 +240,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </main><!-- End #main -->
 
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
 
@@ -288,11 +294,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <td>${record.age}</td>
                                 <td>${record.gender}</td>
                                 <td>${record.grade}</td>
+                                <td><a href="#" class="misc-link" data-bs-toggle="modal" data-bs-target="#miscModal${record.family_id}">View</a></td>
                                 <td>${record.timestamp}</td>
                                 <td>${record.surveyor_name}</td>
                                 <td>${statusField}</td>
                             </tr>
                         `);
+
+                            // Append modal to body
+                            $("body").append(`
+                        <div class="modal fade" id="miscModal${record.family_id}" tabindex="-1" aria-labelledby="miscModalLabel${record.family_id}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="miscModalLabel${record.family_id}">Miscellaneous Data</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Student Name: ${record.student_name} (${record.family_id})</p>
+                                        <p>Family Earning Source: 
+                                            ${record.earning_source === "other" ? record.other_earning_source_input : record.earning_source}
+                                        </p>
+                                        <p>Already Going to School: ${record.already_going_school}</p>
+                                        <p>School Type: ${record.school_type}</p>
+                                        <p>Already Coaching: ${record.already_coaching}</p>
+                                        <p>Coaching Name: ${record.coaching_name}</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
                         });
 
                         offset += records.length;
@@ -329,7 +363,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         const saveChanges = () => {
             const updatedStatus = [];
-            $(".status-dropdown").each(function() {
+            $(".status-dropdown").each(function () {
                 const statusValue = $(this).val();
                 if (statusValue) { // Only push if the status is valid
                     updatedStatus.push({
@@ -350,7 +384,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     formType: 'ajax',
                     updatedStatus: updatedStatus
                 },
-                success: function(response) {
+                success: function (response) {
                     const data = JSON.parse(response);
                     if (data.success) {
                         alert("Status updated successfully.");
@@ -365,7 +399,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         alert("Error saving status.");
                     }
                 },
-                complete: function() {
+                complete: function () {
                     // Hide progress loader after the request is complete
                     $("#progressLoader").hide();
                     $("#pageOverlay").hide(); // Hide the overlay after submission
@@ -388,7 +422,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
 
     <script>
-        $(document).on("click", ".more-link", function(e) {
+        $(document).on("click", ".more-link", function (e) {
             e.preventDefault();
             const shortAddress = $(this).siblings(".short-address");
             const fullAddress = $(this).siblings(".full-address");

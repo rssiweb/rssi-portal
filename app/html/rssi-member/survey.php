@@ -192,8 +192,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                     <label for="altcontact" class="form-label">Alternative Contact
                                                         Number</label>
                                                     <input type="tel" class="form-control" id="altcontact"
-                                                        name="altcontact"
-                                                        placeholder="Enter alternative contact number">
+                                                        name="altcontact" placeholder="Enter alternative contact number"
+                                                        pattern="[0-9]{10}"
+                                                        title="Please enter a valid 10-digit alternative contact number">
                                                 </div>
                                             </div>
 
@@ -425,7 +426,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <button type="submit" class="btn btn-primary mt-2">Submit</button>
                                                     <p class="mb-0">Surveyor Id:
-                                                        <?php echo $fullname . '&nbsp;(' . $associatenumber . ')' ?></p>
+                                                        <?php echo $fullname . '&nbsp;(' . $associatenumber . ')' ?>
+                                                    </p>
                                                 </div>
                                         </form>
                                     </div>
