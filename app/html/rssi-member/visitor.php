@@ -101,7 +101,8 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- Template Main CSS File -->
@@ -150,38 +151,52 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                                 Record count: <?php echo sizeof($resultArr) ?>
                             </div>
                             <form id="myform" action="" method="GET">
-                                Customize your search by selecting any combination of filters to retrieve the data.<br><br>
+                                Customize your search by selecting any combination of filters to retrieve the
+                                data.<br><br>
                                 <div class="form-group" style="display: inline-block;">
                                     <div class="col2">
-                                        <input name="visitid" class="form-control" style="width: max-content; display: inline-block;" placeholder="Visit ID" value="<?php echo $visitid ?>">
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Visit Id<span style="color:red"></span></small>
+                                        <input name="visitid" class="form-control"
+                                            style="width: max-content; display: inline-block;" placeholder="Visit ID"
+                                            value="<?php echo $visitid ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Visit Id<span
+                                                style="color:red"></span></small>
                                     </div>
                                     <div class="col2">
-                                        <input name="contact" class="form-control" style="width: max-content; display: inline-block;" placeholder="Contact" value="<?php echo $contact ?>">
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Contact<span style="color:red"></span></small>
+                                        <input name="contact" class="form-control"
+                                            style="width: max-content; display: inline-block;" placeholder="Contact"
+                                            value="<?php echo $contact ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Contact<span
+                                                style="color:red"></span></small>
                                     </div>
                                     <div class="col2">
-                                        <input type="date" name="visitdatefrom" class="form-control" style="width: max-content; display: inline-block;" placeholder="Select visit date" value="<?php echo $visitdatefrom ?>">
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Visit date<span style="color:red"></span></small>
+                                        <input type="date" name="visitdatefrom" class="form-control"
+                                            style="width: max-content; display: inline-block;"
+                                            placeholder="Select visit date" value="<?php echo $visitdatefrom ?>">
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Visit date<span
+                                                style="color:red"></span></small>
                                     </div>
                                     <div class="col2">
-                                        <select name="ayear" id="ayear" class="form-select" style="width:max-content; display:inline-block" placeholder="Academic Year">
+                                        <select name="ayear" id="ayear" class="form-select"
+                                            style="width:max-content; display:inline-block" placeholder="Academic Year">
                                             <?php if ($ayear == null) { ?>
                                                 <option value="" disabled selected hidden>Academic Year</option>
-                                            <?php
+                                                <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $ayear ?></option>
                                             <?php }
                                             ?>
                                         </select>
-                                        <small id="passwordHelpBlock" class="form-text text-muted">Academic Year<span style="color:red"></span></small>
+                                        <small id="passwordHelpBlock" class="form-text text-muted">Academic Year<span
+                                                style="color:red"></span></small>
                                     </div>
                                 </div>
                                 <div class="col2 left" style="display: inline-block;">
-                                    <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
+                                    <button type="submit" name="search_by_id" id="search_by_id"
+                                        class="btn btn-success btn-sm" style="outline: none;">
                                         <i class="bi bi-search"></i>&nbsp;Search
                                     </button>&nbsp;
-                                    <a href="https://rssi.in/visit-us" target="_blank" class="btn btn-warning btn-sm" role="button">
+                                    <a href="https://rssi.in/visit-us" target="_blank" class="btn btn-warning btn-sm"
+                                        role="button">
                                         <i class="bi bi-plus-lg"></i>&nbsp;Registration
                                     </a>
                                 </div>
@@ -216,19 +231,26 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                                 <td>' . date("d/m/Y", strtotime($array['visitenddate'])) . '</td>
                                 
                                 <td><span class="noticea"><a href="' . $array['nationalid'] . '" target="_blank"><i class="bi bi-filetype-pdf" style="font-size:17px;color: #767676;"></i></a></span></td>' ?>
-                                    <?php
-                                    // Extracting the file ID from the URL
-                                    $urlParts = parse_url($array['photo']);
-                                    $pathParts = explode('/', $urlParts['path']);
-                                    $fileId = $pathParts[3];
+                                    <td>
+                                        <?php
+                                        // Assuming $array['photo'] contains the URL
+                                        if (!empty($array['photo'])) {
+                                            // Extracting the file ID from the URL
+                                            $urlParts = parse_url($array['photo']);
+                                            $pathParts = explode('/', $urlParts['path']);
+                                            $fileId = $pathParts[3];
 
-                                    // Generating the desired URL format
-                                    $thumbnailUrl = "https://drive.google.com/thumbnail?id=$fileId";
-                                    ?>
-                                    <?php echo '<td><img src="' . str_replace("/open?id=", "/thumbnail?id=", $thumbnailUrl) . '" width="50" height="50"/></td>
-                                <td>' . $array['visitpurpose'] . ($array['other_reason'] ? ' - ' . $array['other_reason'] : '') . '</td>
-                                <td>' . $array['visitbranch'] . '</td>'  ?>
+                                            // Generating the preview URL for iframe
+                                            $previewUrl = "https://drive.google.com/file/d/$fileId/preview";
 
+                                            echo '<iframe src="' . $previewUrl . '" width="50" height="50" frameborder="0" allow="autoplay"></iframe>';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php echo $array['visitpurpose'] . ($array['other_reason'] ? ' - ' . $array['other_reason'] : '') ?>
+                                    </td>
+                                    <td><?php echo $array['visitbranch'] ?></td>
 
                                     <?php if ($array['visitstatus'] == 'Approved' && $array['visitenddate'] >= $today) { ?>
                                         <?php echo '<td><p class="badge bg-success">approved</p></td>' ?>
@@ -253,22 +275,22 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                   
                   <a href="https://api.whatsapp.com/send?phone=91' . $array['tel'] . '&text=Dear ' . $array['fullname'] . ',%0A%0AYour visit request has been approved. Visit Id: *' . $array['visitid'] . '*%0A%0AYou are all set to visit RSSI Learning Centre, Lucknow. This pass is valid for the period from ' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . ' to ' . date("d/m/Y", strtotime($array['visitenddate'])) . '. Upon arrival at the Learning Centre, the centre in-charge will take you through visitor guidelines.%0A%0A*General guidelines:*%0A%0A✔ Please declare your identity at the security check and submit if you have prohibited items.%0A✔ Please note that no weapons, flammable liquids, or gases are allowed inside the center premises.%0A✔ If you wish to donate or contribute anything to the beneficiaries, please inform in advance by email to info@rssi.in. Under no circumstances are any loose food items allowed to be distributed. For any packaged food, please check the batch and expiry date properly.%0A✔ Do not donate cash directly to anyone at the centre. Kindly follow the donation process, for more details please visit the donation portal https://www.rssi.in/donation-portal%0A%0AWe look forward to meeting you.%0A%0A-- RSSI NGO
 " target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tel'] . '"></i></a>'
-                                                ?>
+                                                    ?>
                                                 <?php echo '
                   
                   <a href="https://api.whatsapp.com/send?phone=919956623060&text=Dear Centre In-charge,%0A%0AA visit to RSSI Learning Centre, Lucknow has been scheduled. Please refer to the details below.%0A%0AVisit ID - *' . $array['visitid'] . '*%0ADate - ' . date("d/m/Y h:i A", strtotime($array['visitstartdatetime'])) . ' to ' . date("d/m/Y", strtotime($array['visitenddate'])) . '.%0APurpose of visit - ' . $array['visitpurpose'] . ($array['other_reason'] ? ' - ' . $array['other_reason'] : '') . '%0A%0APlease inform the students and concerned class teachers accordingly. During this period all the students and teachers should be present in the centre and the centre should be functional as per schedule including academic activities.%0A%0ATo check visitor details, please click here https://login.rssi.in/rssi-member/visitor.php?visitid=' . $array['visitid'] . '%0A%0A-- RSSI NGO%0A%0A**This is a system generated message." target="_blank"><i class="bi bi-bell" style="color:#444444;" title="Notify Centre Incharge"></i></a>'
-                                                ?>
+                                                    ?>
                                             <?php } else if ($array['visitstatus'] == "Rejected") { ?>
                                                 <?php echo '
                   
                   <a href="https://api.whatsapp.com/send?phone=91' . $array['tel'] . '&text=Dear ' . $array['fullname'] . ',%0A%0AYour visit request (' . $array['visitid'] . ') has been REJECTED in the system due to any of the reasons mentioned below.%0A%0A1) The document is invalid.%0A2) The National Identifier Number is invalid.%0A3) Improper scanning of the uploaded document. Please scan the entire document and if the address or any other relevant information is mentioned on the other side, scan both the sides of the National Identifier.%0A%0APlease ensure that the scanned document is clearly legible, and re-upload the same.%0A%0A-- RSSI%0A%0A**This is a system generated message." target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tel'] . '"></i></a>'
-                                                ?>
+                                                    ?>
                                             <?php } else if ($array['visitstatus'] == "Visited") { ?>
                                                 <?php echo '
                   
                   <a href="https://api.whatsapp.com/send?phone=91' . $array['tel'] . '&text=Dear ' . $array['fullname'] . ' (' . $array['visitid'] . '),%0A%0AThank you for visiting RSSI Offline Centre, Lucknow. Hope you have a great time with the kids.%0A%0AAlso, we would love to hear your feedback, please rate us and share your experience here - https://g.page/r/CQkWqmErGMS7EAg/review%0A%0AHope to see you again.%0A%0A-- Team RSSI
 " target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['tel'] . '"></i></a>'
-                                                ?>
+                                                    ?>
                                             <?php } ?>
                                         <?php } else { ?>
                                             <?php echo '<i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>' ?>
@@ -279,9 +301,9 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                                             <?php if (@$array['visitstatus'] == 'Approved') { ?>
                                                 <input type="hidden" name="template" type="text" value="visitapprove">
                                             <?php } else if (@$array['visitstatus'] == 'Rejected') { ?>
-                                                <input type="hidden" name="template" type="text" value="visitreject">
+                                                    <input type="hidden" name="template" type="text" value="visitreject">
                                             <?php } else if (@$array['visitstatus'] == 'Visited') { ?>
-                                                <input type="hidden" name="template" type="text" value="visited">
+                                                        <input type="hidden" name="template" type="text" value="visited">
                                             <?php } ?>
 
                                             <?php echo '<input type="hidden" name="data[visitid]" type="text" value="' . $array['visitid'] . '">
@@ -295,21 +317,22 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                   </form>' ?>
                                         <?php } else { ?>
                                             <?php echo '<i class="bi bi-envelope-at" style="color:#A2A2A2;" title="Send Email"></i>' ?>
-                                    <?php }
+                                        <?php }
                                     } ?>
-                                <?php echo '</td></tr>';
+                                    <?php echo '</td></tr>';
                                 } ?>
                             <?php } else if ($visitid == null && $contact == null && $visitdatefrom == null) {
-                            ?>
-                                <tr>
-                                    <td colspan="5">Please provide either the Visit ID, Contact, Visit Date, or Academic Year.</td>
-                                </tr>
-                            <?php
+                                ?>
+                                    <tr>
+                                        <td colspan="5">Please provide either the Visit ID, Contact, Visit Date, or Academic
+                                            Year.</td>
+                                    </tr>
+                                <?php
                             } else {
-                            ?>
-                                <tr>
-                                    <td colspan="5">No record was found for the selected filter value.</td>
-                                </tr>
+                                ?>
+                                    <tr>
+                                        <td colspan="5">No record was found for the selected filter value.</td>
+                                    </tr>
                             <?php }
 
                             echo '</tbody>
@@ -323,10 +346,13 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
 
     </main><!-- End #main -->
 
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
@@ -344,7 +370,8 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
             <div class="modal-content">
                 <div class="modal-header">
                     <h1 class="modal-title fs-5" id="exampleModalLabel">Visitor Status Control Panel</h1>
-                    <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div style="width:100%; text-align:right">
@@ -356,9 +383,12 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                     <?php if ($role == "Admin") { ?>
                         <form id="visitreviewform" name="visitreviewform" action="#" method="POST" class="row g-3">
 
-                            <input type="hidden" class="form-control" name="form-type" type="text" value="visitreviewform" readonly>
-                            <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
-                            <input type="hidden" class="form-control" name="visitid" id="visitid" type="text" value="" readonly>
+                            <input type="hidden" class="form-control" name="form-type" type="text" value="visitreviewform"
+                                readonly>
+                            <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text"
+                                value="<?php echo $associatenumber ?>" readonly>
+                            <input type="hidden" class="form-control" name="visitid" id="visitid" type="text" value=""
+                                readonly>
 
                             <div class="col-md-3">
                                 <div class="input-help">
@@ -366,21 +396,25 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                                         <option value disabled selected>Select Branch</option>
                                         <option value="Gomti Nagar, Lucknow">Gomti Nagar, Lucknow</option>
                                     </select>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">Which branch do you want to visit?<span style="color:red">*</span></small>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">Which branch do you want to
+                                        visit?<span style="color:red">*</span></small>
                                 </div>
                             </div>
 
                             <div class="col-md-3">
                                 <div class="input-help">
-                                    <input type="datetime-local" class="form-control" id="visitstartdatetime" name="visitstartdatetime" required>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit start date<span style="color:red">*</span></small>
+                                    <input type="datetime-local" class="form-control" id="visitstartdatetime"
+                                        name="visitstartdatetime" required>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit start date<span
+                                            style="color:red">*</span></small>
                                 </div>
                             </div>
 
                             <div class="col-md-3">
                                 <div class="input-help">
                                     <input type="date" class="form-control" id="visitenddate" name="visitenddate" required>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit end date<span style="color:red">*</span></small>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit end date<span
+                                            style="color:red">*</span></small>
                                 </div>
                             </div>
 
@@ -393,13 +427,15 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                                         <option value="Visited">Visited</option>
                                         <option value="Duplicate entry">Duplicate entry</option>
                                     </select>
-                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit status<span style="color:red">*</span></small>
+                                    <small id="passwordHelpBlock" class="form-text text-muted">Visit status<span
+                                            style="color:red">*</span></small>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="input-help">
-                                    <textarea type="text" name="hrremarks" id="hrremarks" class="form-control" placeholder="HR remarks"></textarea>
+                                    <textarea type="text" name="hrremarks" id="hrremarks" class="form-control"
+                                        placeholder="HR remarks"></textarea>
                                     <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
                                 </div>
                             </div>
@@ -410,9 +446,11 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                         </form>
 
                     <?php } ?>
-                    <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Updated by: <span class="visitstatusupdatedby"></span> on <span class="visitstatusupdatedon"></span>
+                    <p style="font-size:small; text-align: right; font-style: italic; color:#A2A2A2;">Updated by: <span
+                            class="visitstatusupdatedby"></span> on <span class="visitstatusupdatedon"></span>
                     <div class="modal-footer">
-                        <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" id="closedetails-footer" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -498,7 +536,7 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                 document.getElementById("visitupdate").disabled = false;
             }
         }
-        closedetails.forEach(function(element) {
+        closedetails.forEach(function (element) {
             element.addEventListener("click", closeModal);
         });
 
@@ -514,9 +552,9 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
         form.addEventListener('submit', e => {
             e.preventDefault()
             fetch(scriptURL, {
-                    method: 'POST',
-                    body: new FormData(document.getElementById('visitreviewform'))
-                })
+                method: 'POST',
+                body: new FormData(document.getElementById('visitreviewform'))
+            })
                 .then(response =>
                     alert("Record has been updated.") +
                     location.reload()
@@ -530,9 +568,9 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
             form.addEventListener('submit', e => {
                 e.preventDefault()
                 fetch('mailer.php', {
-                        method: 'POST',
-                        body: new FormData(document.forms[formId])
-                    })
+                    method: 'POST',
+                    body: new FormData(document.forms[formId])
+                })
                     .then(response =>
                         alert("Email has been sent.")
                     )
