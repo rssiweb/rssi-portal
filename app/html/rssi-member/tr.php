@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $application_number = pg_escape_string($con, $_POST['applicationNumber_verify']);
     $applicant_name = pg_escape_string($con, $_POST['name']);
     $applicant_email = pg_escape_string($con, $_POST['email']);
+    $documents_string = isset($_POST['documents']) && is_array($_POST['documents']) ? pg_escape_string($con, implode(',', $_POST['documents'])) : '';
     $subject_knowledge = (int) $_POST['subjectKnowledge'];
     $computer_knowledge = (int) $_POST['computerKnowledge'];
     $demo_class = (int) $_POST['demoClass'];
@@ -66,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $declaration = isset($_POST['declaration']) && $_POST['declaration'] == 'on' ? 'true' : 'false';
 
     // Insert data into the interview table
-    $insert_query = "INSERT INTO interview (application_number, applicant_name, applicant_email, subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration) 
-                     VALUES ('$application_number', '$applicant_name', '$applicant_email', $subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration)";
+    $insert_query = "INSERT INTO interview (interview_id,application_number, applicant_name, applicant_email, documents,subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address) 
+                     VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$documents_string',$subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address')";
 
     // Execute the query
     $result = pg_query($con, $insert_query);
@@ -165,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                         <div class="card-body">
                             <br>
-                            <?php if (@$ticket_id != null && @$cmdtuples == 0) { ?>
+                            <?php if (@$interview_id != null && @$cmdtuples == 0) { ?>
 
                                 <div class="alert alert-danger alert-dismissible" role="alert"
                                     style="text-align: -webkit-center;">
@@ -182,7 +183,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <button type="button" class="btn-close" data-bs-dismiss="alert"
                                             aria-label="Close"></button>
                                         <i class="bi bi-check2-circle"></i>
-                                        <span>Ticket successfully created. Your Ticket ID is <?php echo @$ticket_id ?>.</span>
+                                        <span>Assessment successfully submitted. Reference ID:
+                                        <?php echo @$interview_id; ?>.</span>
                                     </div>
                                     <script>
                                         if (window.history.replaceState) {
@@ -273,7 +275,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         </div>
 
                                         <div class="container my-5">
-                                            <!-- <h2 class="mb-4 text-center">Interview Assessment Form</h2> -->
 
                                             <div class="row g-3 align-items-center">
 
