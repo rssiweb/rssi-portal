@@ -5,19 +5,129 @@ include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
-    exit;
 }
 
 validation();
 
-// Check if the form data has been submitted
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Retrieve and sanitize form data
-    $application_number = htmlspecialchars($_POST['applicationNumber_verify'] ?? '');
-    $name = htmlspecialchars($_POST['name'] ?? '');
-    $email = htmlspecialchars($_POST['email'] ?? '');
-    $now = date('Y-m-d H:i:s');
+if (isset($_GET['applicationNumber_verify'])) {
+    // Get the application number from the GET parameter
+    $applicationNumber = $_GET['applicationNumber_verify'];
+    $isFormDisabled = null;
+
+    // Escape the application number to prevent SQL injection
+    $applicationNumberEscaped = pg_escape_string($con, $applicationNumber);
+
+    // Query to fetch data from candidatepool table based on application number
+    $getDetails = "SELECT * FROM candidatepool WHERE application_number = '$applicationNumberEscaped'";
+    $result = pg_query($con, $getDetails);
+
+    if ($result) {
+        $row = pg_fetch_assoc($result);
+        if ($row) {
+            // Query to fetch interview data from the interview table based on application number
+            $getInterview = "SELECT * FROM interview WHERE application_number = '$applicationNumberEscaped'";
+            $interviewResult = pg_query($con, $getInterview);
+
+            // Initialize interview data response as null
+            $interviewDataResponse = null;
+
+            // Check if interview data exists
+            if ($interviewResult && pg_num_rows($interviewResult) > 0) {
+                $interviewData = pg_fetch_assoc($interviewResult);
+
+                $formStatus = $interviewData['form_status']; // Assuming you fetched this column from your query
+
+                $isFormDisabled = ($formStatus == true) ? 'disabled' : '';
+
+                // Split interviewer_ids into an array
+                $interviewerIds = explode(',', $interviewData['interviewer_ids']);
+
+                // Fetch interviewer details if interviewer IDs are available
+                if (!empty($interviewerIds)) {
+                    $interviewerIdsQuoted = array_map(function ($id) use ($con) {
+                        return "'" . pg_escape_string($con, $id) . "'";
+                    }, $interviewerIds);
+                    $interviewerIdsFinal = implode(',', $interviewerIdsQuoted);
+
+                    $query = "SELECT associatenumber AS id, fullname AS name, position
+                    FROM rssimyaccount_members
+                    WHERE associatenumber IN ($interviewerIdsFinal) AND filterstatus = 'Active'";
+                    $employeeResult = pg_query($con, $query);
+
+                    // Collect interviewer details
+                    $interviewers = [];
+                    if ($employeeResult && pg_num_rows($employeeResult) > 0) {
+                        while ($employee = pg_fetch_assoc($employeeResult)) {
+                            $interviewers[] = $employee;
+                        }
+                    }
+
+                    // Add interview data and interviewer details to the response
+                    $interviewDataResponse = array(
+                        'documentsList' => $interviewData['documents'], // Assuming documents are stored as comma-separated values
+                        'subjectKnowledge' => $interviewData['subject_knowledge'],
+                        'computerKnowledge' => $interviewData['computer_knowledge'],
+                        'demoClass' => $interviewData['demo_class'],
+                        'writtenTest' => $interviewData['written_test'],
+                        'experience' => $interviewData['experience'],
+                        'remarks' => $interviewData['remarks'],
+                        'declaration' => $interviewData['declaration'],
+                        'duration' => $interviewData['duration'],
+                        'interviewers' => $interviewers // Include interviewer details
+                    );
+                }
+            }
+
+            // Prepare final response
+            $responseData = array(
+                'applicantFullName' => $row['applicant_f_name'] . ' ' . $row['applicant_l_name'],
+                'application_number' => $row['application_number'],
+                'email' => $row['email'],
+                'base_branch' => $row['branch'],
+                'association_type' => $row['association'],
+                'resumeLink' => $row['resume_upload'],
+                'aadhar_number' => $row['identifier_number'],
+                'contact' => $row['telephone'],
+                'photo' => $row['applicant_photo'],
+                'subject_preference_1' => $row['subject1'],
+                'position' => 'Post: ' . $row['post_select'] . ', Job: ' . $row['job_select'],
+                'interview_data' => $interviewDataResponse,
+            );
+        } else {
+            // No matching record found in candidatepool
+            $responseData = ['status' => 'no_records', 'message' => 'No records found for the given application number.'];
+        }
+    } else {
+        // Error in query execution for candidatepool
+        $responseData = ['status' => 'error', 'message' => 'Error retrieving user data.'];
+    }
+}
+
+// Check if form is submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Fetch form data
+    $interview_id = uniqid();
+    $application_number = pg_escape_string($con, $responseData['application_number']);
+    $applicant_name = htmlspecialchars($responseData['applicantFullName']);
+    $applicant_email = htmlspecialchars($responseData['email']);
+    $documents_string = isset($_POST['documents']) && is_array($_POST['documents']) ? pg_escape_string($con, implode(',', $_POST['documents'])) : '';
+    $subject_knowledge = (int) $_POST['subjectKnowledge'];
+    $computer_knowledge = (int) $_POST['computerKnowledge'];
+    $demo_class = (int) $_POST['demoClass'];
+    $duration = (int) $_POST['demoClass'];
+    $written_test = isset($_POST['writtenTest']) ? (int) $_POST['writtenTest'] : NULL;
+    $experience = pg_escape_string($con, $_POST['experience']);
+    $remarks = pg_escape_string($con, $_POST['remarks']);
+
+    // Check if interviewer_ids is set and not empty, if not, set it to an empty string
+    $interviewer_ids_string = isset($_POST['interviewer_ids']) ? pg_escape_string($con, $_POST['interviewer_ids']) : '';
+
+    $interview_duration = (int) $_POST['interview_duration'];
+
+    // Correct the declaration field to boolean (true/false)
+    $declaration = isset($_POST['declaration']) && $_POST['declaration'] == 'on' ? 'true' : 'false';
 
     function getUserIpAddr()
     {
@@ -34,41 +144,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $ip_address = getUserIpAddr();
 
-    // Generate a unique ID
-    $unique_id = uniqid();
-
-    // Validate database connection
-    if (!$con) {
-        die("Error: Unable to connect to the database.");
-    }
-}
-
-// Check if form is submitted
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Fetch form data
-    $interview_id = uniqid();
-    $application_number = pg_escape_string($con, $_POST['applicationNumber_verify']);
-    $applicant_name = pg_escape_string($con, $_POST['name']);
-    $applicant_email = pg_escape_string($con, $_POST['email']);
-    $documents_string = isset($_POST['documents']) && is_array($_POST['documents']) ? pg_escape_string($con, implode(',', $_POST['documents'])) : '';
-    $subject_knowledge = (int) $_POST['subjectKnowledge'];
-    $computer_knowledge = (int) $_POST['computerKnowledge'];
-    $demo_class = (int) $_POST['demoClass'];
-    $written_test = isset($_POST['writtenTest']) ? (int) $_POST['writtenTest'] : NULL;
-    $experience = pg_escape_string($con, $_POST['experience']);
-    $remarks = pg_escape_string($con, $_POST['remarks']);
-
-    // Check if interviewer_ids is set and not empty, if not, set it to an empty string
-    $interviewer_ids_string = isset($_POST['interviewer_ids']) ? pg_escape_string($con, $_POST['interviewer_ids']) : '';
-
-    $interview_duration = (int) $_POST['interview_duration'];
-
-    // Correct the declaration field to boolean (true/false)
-    $declaration = isset($_POST['declaration']) && $_POST['declaration'] == 'on' ? 'true' : 'false';
-
     // Insert data into the interview table
-    $insert_query = "INSERT INTO interview (interview_id,application_number, applicant_name, applicant_email, documents,subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address) 
-                     VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$documents_string',$subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address')";
+    $insert_query = "INSERT INTO interview (interview_id,application_number, applicant_name, applicant_email, documents,subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address,duration)
+    VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$documents_string',$subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address','$duration')";
 
     // Execute the query
     $result = pg_query($con, $insert_query);
@@ -76,6 +154,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 ?>
+<?php
+// Check if 'submitted_by' is available in the interview data
+$submittedByName = '';
+$submittedById = '';
+
+if (!empty($interviewData['submitted_by'])) {
+    // Query to fetch fullname from rssimyaccount_members based on submitted_by (associatenumber)
+    $submittedById = $interviewData['submitted_by']; // Assuming this holds the associatenumber
+    $query = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = '$submittedById'";
+
+    $result = pg_query($con, $query);
+    if ($result && pg_num_rows($result) > 0) {
+        $submittedBy = pg_fetch_assoc($result);
+        $submittedByName = $submittedBy['fullname'];
+    } else {
+        $submittedByName = 'Information not found';
+    }
+} else {
+    // Default name and ID when submitted_by is empty
+    $submittedByName = $fullname;
+    $submittedById = $associatenumber;
+}
+?>
+
 <!doctype html>
 <html lang="en">
 
@@ -166,277 +268,321 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                         <div class="card-body">
                             <br>
-                            <?php if (@$interview_id != null && @$cmdtuples == 0) { ?>
+                            <?php
+                            if (@$interview_id != null && @$cmdtuples == 0) {
+                                // Error handling: display a message when an error occurs
+                                echo '<div class="alert alert-danger alert-dismissible text-center" role="alert">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        <span>Error: We encountered an error while updating the record. Please try again.</span>
+                                    </div>';
+                            } else if (@$cmdtuples == 1) {
+                                // Success handling: display a confirmation message and redirect
+                                echo '<script>
+                                    var applicationNumber = "' . @$applicationNumber . '";
+                                    if (confirm("Assessment successfully submitted. Reference ID: " + "' . @$interview_id . '" + ". Click OK to view the updated record.")) {
+                                        window.location.href = "tr.php?applicationNumber_verify=" + applicationNumber;
+                                    }
+                                </script>';
+                            }
+                            ?>
 
-                                <div class="alert alert-danger alert-dismissible" role="alert"
-                                    style="text-align: -webkit-center;">
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                        aria-label="Close"></button>
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                    <span>ERROR: Oops, something wasn't right.</span>
-                                </div>
-                                <?php
-                            } else if (@$cmdtuples == 1) { ?>
-
-                                    <div class="alert alert-success alert-dismissible" role="alert"
-                                        style="text-align: -webkit-center;">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                            aria-label="Close"></button>
-                                        <i class="bi bi-check2-circle"></i>
-                                        <span>Assessment successfully submitted. Reference ID:
-                                        <?php echo @$interview_id; ?>.</span>
-                                    </div>
-                                    <script>
-                                        if (window.history.replaceState) {
-                                            window.history.replaceState(null, null, window.location.href);
-                                        }
-                                    </script>
-                            <?php } ?>
                             <div class="container">
 
-                                <form id="applicationForm" method="POST">
+                                <form id="lookupForm" method="GET">
                                     <!-- Application Number Input -->
                                     <div class="input-group mb-3">
                                         <input type="text" class="form-control" id="applicationNumber_verify"
                                             name="applicationNumber_verify" placeholder="Enter your Application Number"
-                                            required>
-                                        <button type="button" class="btn btn-primary" id="verifybutton">Fetch Applicant
-                                            Data</button>
+                                            value="<?php echo htmlspecialchars($applicationNumberEscaped); ?>" required>
+                                        <button type="submit" class="btn btn-primary">Fetch Applicant Data</button>
                                     </div>
-                                    <div id="detailsSection" class="d-none">
-                                        <!-- Name Input -->
-                                        <input type="hidden" class="form-control" id="name" name="name" readonly>
-                                        <input type="hidden" class="form-control" id="email" name="email" readonly>
-                                        <div class="card">
-                                            <div class="card-body mt-3">
-                                                <div class="row align-items-center">
-                                                    <!-- First Table (Contact details) -->
-                                                    <div class="col-md-5">
-                                                        <table style="width: 100%; border-collapse: collapse;">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td><strong>Applicant Name:</strong></td>
-                                                                    <td><span id="applicantFullName"></span></td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>Application Number:</strong></td>
-                                                                    <td><span id="applicationNumber"></span></td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>Contact Number:</strong></td>
-                                                                    <td><span id="contactNumber"></span></td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>Email:</strong></td>
-                                                                    <td><span id="email_view"></span></td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
+                                </form>
 
-                                                    <!-- Second Table (Additional details) -->
-                                                    <div class="col-md-4">
-                                                        <table style="width: 100%; border-collapse: collapse;">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td><strong>Aadhar Card Number:</strong></td>
-                                                                    <td><span id="aadharNumberElement"></span></td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>Association Type:</strong></td>
-                                                                    <td><span id="associationType"></span></td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>Work Profile:</strong></td>
-                                                                    <td><span id="position"></span></td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>Subject Preference 1:</strong></td>
-                                                                    <td><span id="subjectPreference1"></span></td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td></td>
-                                                                    <td><span id="resumeText"></span></td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
+                                <div id="detailsSection">
+                                    <!-- Name Input -->
+                                    <div class="card">
+                                        <div class="card-body mt-3">
+                                            <div class="row align-items-center">
+                                                <!-- First Table (Contact details) -->
+                                                <div class="col-md-5">
+                                                    <table style="width: 100%; border-collapse: collapse;">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td><strong>Applicant Name:</strong></td>
+                                                                <td><?php echo htmlspecialchars($responseData['applicantFullName']); ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Application Number:</strong></td>
+                                                                <td><?php echo htmlspecialchars($responseData['application_number']); ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Contact Number:</strong></td>
+                                                                <td><?php echo htmlspecialchars($responseData['contact']); ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Email:</strong></td>
+                                                                <td><?php echo htmlspecialchars($responseData['email']); ?>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
 
-                                                    <!-- Candidate Photo (in the same row) -->
-                                                    <div class="col-md-3 d-flex justify-content-center">
-                                                        <div class="photo-box"
-                                                            style="border: 1px solid #ccc; padding: 10px; width: 150px; height: 200px; display: flex; align-items: center; justify-content: center;"
-                                                            id="candidatePhotoContainer">
-                                                            <!-- The iframe will be dynamically inserted here if the photo is available -->
-                                                        </div>
+                                                </div>
+
+                                                <!-- Second Table (Additional details) -->
+                                                <div class="col-md-4">
+                                                    <table style="width: 100%; border-collapse: collapse;">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td><strong>Aadhar Card Number:</strong></td>
+                                                                <td>
+                                                                    <?php
+                                                                    $aadharNumber = !empty($responseData['aadhar_number']) ? $responseData['aadhar_number'] : "N/A";
+                                                                    if ($aadharNumber !== "N/A" && strlen($aadharNumber) === 12) {
+                                                                        $aadharNumber = substr($aadharNumber, 0, 2) . "XX-XXXX" . substr($aadharNumber, -4);
+                                                                    }
+                                                                    echo htmlspecialchars($aadharNumber);
+                                                                    ?>
+                                                                </td>
+
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Association Type:</strong></td>
+                                                                <td><?php echo htmlspecialchars($responseData['association_type']); ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Work Profile:</strong></td>
+                                                                <td><?php echo htmlspecialchars($responseData['position']); ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Subject Preference 1:</strong></td>
+                                                                <td>
+                                                                    <?php echo htmlspecialchars(!empty($responseData['subject_preference_1']) ? $responseData['subject_preference_1'] : 'N/A'); ?>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td></td>
+                                                                <td>
+                                                                    <a href="<?php echo htmlspecialchars($responseData['resumeLink']); ?>"
+                                                                        target="_blank" id="resumeText">View
+                                                                        Applicant CV</a>
+                                                                </td>
+
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <!-- Candidate Photo (in the same row) -->
+                                                <div class="col-md-3 d-flex justify-content-center">
+                                                    <div class="photo-box"
+                                                        style="border: 1px solid #ccc; padding: 10px; width: 150px; height: 200px; display: flex; align-items: center; justify-content: center;"
+                                                        id="candidatePhotoContainer">
+                                                        <?php
+                                                        if (!empty($responseData['photo'])) {
+                                                            // Extract photo ID from the Google Drive link
+                                                            $photoID = explode('id=', $responseData['photo'])[1];
+                                                            $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
+                                                            echo '<iframe src="' . $previewUrl . '" width="150" height="200" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
+                                                        } else {
+                                                            echo "No photo available";
+                                                        }
+                                                        ?>
                                                     </div>
                                                 </div>
+
                                             </div>
                                         </div>
+                                    </div>
+                                    <form id="applicationForm" method="POST">
+                                        <fieldset <?php echo $isFormDisabled; ?>>
+                                            <div class="container my-5">
+                                                <div class="row g-3 align-items-center">
 
-                                        <div class="container my-5">
-
-                                            <div class="row g-3 align-items-center">
-
-                                                <!-- Subject Knowledge -->
-                                                <div class="col-md-6">
-                                                    <label for="documents" class="form-label">Documents
-                                                        Checklist</label>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="documents" class="form-label">Verified Documents</label>
-                                                    <select id="documents" name="documents[]" class="form-control"
-                                                        multiple="multiple">
-                                                        <option value="highschool_marksheet">Highschool Marksheet
-                                                        </option>
-                                                        <option value="intermediate_marksheet">Intermediate Marksheet
-                                                        </option>
-                                                        <option value="graduation_marksheet">Graduation Marksheet
-                                                        </option>
-                                                        <option value="post_graduation_marksheet">Post-Graduation
-                                                            Marksheet</option>
-                                                        <option value="additional_training_course_certificate">
-                                                            Additional training or course Certificate</option>
-                                                        <option value="previous_employment_info">Previous employment
-                                                            information</option>
-                                                        <option value="pan_card">PAN Card</option>
-                                                        <option value="aadhar_card">Aadhar Card</option>
-                                                    </select>
-                                                </div>
-                                                <!-- Subject Knowledge -->
-                                                <div class="col-md-6">
-                                                    <label for="subjectKnowledge" class="form-label">Subject
-                                                        Knowledge</label>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <input type="number" class="form-control" name="subjectKnowledge"
-                                                        id="subjectKnowledge" min="1" max="10"
-                                                        placeholder="Enter marks (1-10)" required>
-                                                </div>
-
-                                                <!-- Computer Knowledge -->
-                                                <div class="col-md-6">
-                                                    <label for="computerKnowledge" class="form-label">Computer
-                                                        Knowledge</label>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <input type="number" class="form-control" name="computerKnowledge"
-                                                        id="computerKnowledge" min="1" max="10"
-                                                        placeholder="Enter marks (1-10)" required>
-                                                </div>
-
-                                                <!-- Demo Class Performance -->
-                                                <div class="col-md-6">
-                                                    <label for="demoClass" class="form-label">Demo Class
-                                                        Performance</label>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <input type="number" class="form-control" name="demoClass"
-                                                        id="demoClass" min="1" max="10" placeholder="Enter marks (1-10)"
-                                                        required>
-                                                </div>
-
-                                                <!-- Written Test Marks -->
-                                                <div class="col-md-6">
-                                                    <label for="writtenTest" class="form-label">Written Test
-                                                        Marks</label>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <input type="number" class="form-control" name="writtenTest"
-                                                        id="writtenTest" placeholder="Enter marks">
-                                                </div>
-
-                                                <!-- Experience and Qualifications -->
-                                                <div class="col-md-6">
-                                                    <label for="experience" class="form-label">Experience and
-                                                        Qualifications</label>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <textarea class="form-control" name="experience" id="experience"
-                                                        rows="3" placeholder="Enter details" required></textarea>
-                                                </div>
-
-                                                <!-- Remarks -->
-                                                <div class="col-md-6">
-                                                    <label for="remarks" class="form-label">Remarks</label>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <textarea class="form-control" name="remarks" id="remarks" rows="3"
-                                                        placeholder="Enter remarks" required></textarea>
-                                                </div>
-
-                                                <!-- Interviewer Panel Section -->
-                                                <div class="row border p-3 rounded mt-5">
-
-                                                    <div class="col-md-12 mt-3">
-                                                        <table class="table table-bordered" id="interviewer_table">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Employee No.</th>
-                                                                    <th>Name</th>
-                                                                    <th>Designation</th>
-                                                                    <th>Action</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <!-- Dynamic rows will be added here -->
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                    <div class="col-md-12 mb-3">
-                                                        <div class="row">
-                                                            <div class="col-md-4">
-                                                                <input type="text" id="employee_no" class="form-control"
-                                                                    placeholder="Enter Employee ID for multiple Interviewers">
-                                                            </div>
-                                                            <div class="col-md-4">
-                                                                <button type="button" id="add_interviewer"
-                                                                    class="btn btn-primary">Add Interviewer</button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <input type="hidden" id="interviewer_ids" name="interviewer_ids">
-                                                <div class="row mt-3">
-                                                    <div class="col-md-12">
-                                                        <label class="form-label fw-bold">Interview Assessment filled
-                                                            by: </label>
-                                                        <span
-                                                            class="fw-normal"><?php echo $fullname . ' (' . $associatenumber . ')'; ?></span>
-                                                    </div>
-                                                </div>
-                                                <div class="row mt-3">
+                                                    <!-- Subject Knowledge -->
                                                     <div class="col-md-6">
-                                                        <label for="interview_duration" class="form-label">Interview
-                                                            Duration:</label>
-                                                        <input type="number" name="interview_duration"
-                                                            id="interview_duration" class="form-control"
-                                                            placeholder="Minutes">
+                                                        <label for="documents" class="form-label">Documents
+                                                            Checklist</label>
+                                                    </div>
+                                                    <?php
+                                                    // Check if 'documentsList' exists and is not null, then split it; otherwise, use an empty array
+                                                    $documentsListArray = isset($interviewDataResponse['documentsList']) && $interviewDataResponse['documentsList'] !== null
+                                                        ? explode(',', $interviewDataResponse['documentsList'])
+                                                        : [];
+                                                    ?>
+
+                                                    <div class="col-md-6">
+                                                        <label for="documents" class="form-label">Verified Documents</label>
+                                                        <select id="documents" name="documents[]" class="form-control"
+                                                            multiple="multiple" required>
+                                                            <option value="highschool_marksheet" <?php echo in_array('highschool_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Highschool Marksheet</option>
+                                                            <option value="intermediate_marksheet" <?php echo in_array('intermediate_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Intermediate Marksheet</option>
+                                                            <option value="graduation_marksheet" <?php echo in_array('graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Graduation Marksheet</option>
+                                                            <option value="post_graduation_marksheet" <?php echo in_array('post_graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Post-Graduation Marksheet</option>
+                                                            <option value="additional_training_course_certificate" <?php echo in_array('additional_training_course_certificate', $documentsListArray) ? 'selected' : ''; ?>>Additional
+                                                                training or course Certificate</option>
+                                                            <option value="previous_employment_info" <?php echo in_array('previous_employment_info', $documentsListArray) ? 'selected' : ''; ?>>Previous employment information</option>
+                                                            <option value="pan_card" <?php echo in_array('pan_card', $documentsListArray) ? 'selected' : ''; ?>>PAN Card</option>
+                                                            <option value="aadhar_card" <?php echo in_array('aadhar_card', $documentsListArray) ? 'selected' : ''; ?>>Aadhar Card
+                                                            </option>
+                                                        </select>
+                                                    </div>
+
+                                                    <!-- Subject Knowledge -->
+                                                    <div class="col-md-6">
+                                                        <label for="subjectKnowledge" class="form-label">Subject
+                                                            Knowledge</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <input type="number" class="form-control" name="subjectKnowledge"
+                                                            id="subjectKnowledge" min="1" max="10"
+                                                            placeholder="Enter marks (1-10)"
+                                                            value="<?php echo isset($interviewDataResponse['subjectKnowledge']) ? htmlspecialchars($interviewDataResponse['subjectKnowledge']) : ''; ?>"
+                                                            required>
+                                                    </div>
+
+                                                    <!-- Computer Knowledge -->
+                                                    <div class="col-md-6">
+                                                        <label for="computerKnowledge" class="form-label">Computer
+                                                            Knowledge</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <input type="number" class="form-control" name="computerKnowledge"
+                                                            id="computerKnowledge" min="1" max="10"
+                                                            placeholder="Enter marks (1-10)"
+                                                            value="<?php echo isset($interviewDataResponse['computerKnowledge']) ? htmlspecialchars($interviewDataResponse['computerKnowledge']) : ''; ?>"
+                                                            required>
+                                                    </div>
+
+                                                    <!-- Demo Class Performance -->
+                                                    <div class="col-md-6">
+                                                        <label for="demoClass" class="form-label">Demo Class
+                                                            Performance</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <input type="number" class="form-control" name="demoClass"
+                                                            id="demoClass" min="1" max="10" placeholder="Enter marks (1-10)"
+                                                            value="<?php echo isset($interviewDataResponse['demoClass']) ? htmlspecialchars($interviewDataResponse['demoClass']) : ''; ?>"
+                                                            required>
+                                                    </div>
+
+                                                    <!-- Written Test Marks -->
+                                                    <div class="col-md-6">
+                                                        <label for="writtenTest" class="form-label">Written Test
+                                                            Marks</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <input type="number" class="form-control" name="writtenTest"
+                                                            id="writtenTest" placeholder="Enter marks"
+                                                            value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>">
+                                                    </div>
+
+                                                    <!-- Experience and Qualifications -->
+                                                    <div class="col-md-6">
+                                                        <label for="experience" class="form-label">Experience and
+                                                            Qualifications</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <textarea class="form-control" name="experience" id="experience"
+                                                            rows="3" placeholder="Enter details"
+                                                            required><?php echo isset($interviewDataResponse['experience']) ? htmlspecialchars($interviewDataResponse['experience']) : ''; ?></textarea>
+                                                    </div>
+
+                                                    <!-- Remarks -->
+                                                    <div class="col-md-6">
+                                                        <label for="remarks" class="form-label">Remarks</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <textarea class="form-control" name="remarks" id="remarks" rows="3"
+                                                            placeholder="Enter remarks"
+                                                            required><?php echo isset($interviewDataResponse['remarks']) ? htmlspecialchars($interviewDataResponse['remarks']) : ''; ?></textarea>
+                                                    </div>
+
+                                                    <!-- Interviewer Panel Section -->
+                                                    <div class="row border p-3 rounded mt-5">
+
+                                                        <div class="col-md-12 mt-3">
+                                                            <table class="table table-bordered" id="interviewer_table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Employee No.</th>
+                                                                        <th>Name</th>
+                                                                        <th>Designation</th>
+                                                                        <th>Action</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <!-- Dynamic rows will be added here -->
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        <div class="col-md-12 mb-3">
+                                                            <div class="row">
+                                                                <div class="col-md-4">
+                                                                    <input type="text" id="employee_no" class="form-control"
+                                                                        placeholder="Enter Employee ID for multiple Interviewers">
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <button type="button" id="add_interviewer"
+                                                                        class="btn btn-primary">Add Interviewer</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <input type="hidden" id="interviewer_ids" name="interviewer_ids">
+                                                    <div class="row mt-3">
+                                                        <div class="col-md-12">
+                                                            <label class="form-label">Interview Assessment filled by: </label>
+                                                            <span class="fw-normal">
+                                                                <?php
+                                                                // If submitted_by is not empty, display the name without associatenumber
+                                                                if (!empty($submittedByName)) {
+                                                                    echo $submittedByName;
+                                                                }
+                                                                // If submitted_by is empty, display name and associatenumber
+                                                                if (empty($interviewData['submitted_by'])) {
+                                                                    echo '&nbsp;(' . $submittedById . ')';
+                                                                }
+                                                                ?>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mt-3">
+                                                        <div class="col-md-6">
+                                                            <label for="interview_duration" class="form-label">Interview
+                                                                Duration:</label>
+                                                            <input type="number" name="interview_duration"
+                                                                id="interview_duration" class="form-control"
+                                                                placeholder="Minutes"
+                                                                value="<?php echo isset($interviewDataResponse['duration']) ? htmlspecialchars($interviewDataResponse['duration']) : ''; ?>" required>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3 form-check">
+                                                        <input type="checkbox" class="form-check-input" id="declaration" name="declaration"
+                                                            <?php
+                                                            // Check if $interviewDataResponse is not null and contains the 'declaration' key before accessing it
+                                                            echo (isset($interviewDataResponse['declaration']) && $interviewDataResponse['declaration'] == true) ? 'checked' : '';
+                                                            ?>
+                                                            required>
+                                                        <label class="form-check-label" for="declaration">
+                                                            I accept that I have read the terms of agreement and agree to abide by the terms and conditions mentioned therein.
+                                                        </label>
                                                     </div>
                                                 </div>
-
-                                                <div class="mb-3 form-check">
-                                                    <input type="checkbox" class="form-check-input" id="declaration"
-                                                        name="declaration" required>
-                                                    <label class="form-check-label" for="declaration">I accept that I
-                                                        have read the terms of agreement and agree to abide by the terms
-                                                        and conditions mentioned therein.</label>
+                                                <!-- Submit Button -->
+                                                <div class="text-center mt-4">
+                                                    <button type="submit" id="submit_form" class="btn btn-primary">Submit</button>
                                                 </div>
                                             </div>
-
-                                            <!-- Submit Button -->
-                                            <div class="text-center mt-4">
-                                                <button type="submit" class="btn btn-primary">Submit</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-
-                                <!-- Hidden Form for AJAX Request -->
-                                <form id="get_details_tr" action="#" method="POST">
-                                    <input type="hidden" name="form-type" value="get_details_tr">
-                                    <input type="hidden" name="applicationNumber_verify_input">
-                                </form>
+                                        </fieldset>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -447,137 +593,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </main><!-- End #main -->
 
     <script>
-        const applicationNumberInput = document.getElementById("applicationNumber_verify");
-        const hiddenApplicationNumberInput = document.getElementsByName("applicationNumber_verify_input")[0];
-        const nameInput = document.getElementById("name");
-        const emailInput = document.getElementById("email");
-        const detailsSection = document.getElementById("detailsSection");
-
-        // Card fields
-        const applicantFullName = document.getElementById("applicantFullName");
-        const applicationNumber = document.getElementById("applicationNumber");
-        const contactNumber = document.getElementById("contactNumber");
-        const email_view = document.getElementById("email_view");
-        const aadharNumberElement = document.getElementById("aadharNumberElement");
-        const associationType = document.getElementById("associationType");
-        // const preferredBranch = document.getElementById("preferredBranch");
-        const position = document.getElementById("position");
-        const subjectPreference1 = document.getElementById("subjectPreference1");
-        const resumeLink = document.getElementById("resumeLink");
-
-        applicationNumberInput.addEventListener("input", function () {
-            hiddenApplicationNumberInput.value = this.value;
-        });
-
-        document.getElementById("verifybutton").addEventListener("click", function (event) {
-            event.preventDefault();
-
-            fetch('http://localhost:8082/rssi-member/payment-api.php', {
-                method: 'POST',
-                body: new FormData(document.getElementById("get_details_tr"))
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Populate the card fields with fetched data
-                        nameInput.value = data.data.applicantFullName;
-                        emailInput.value = data.data.email;
-
-                        applicantFullName.textContent = data.data.applicantFullName || "N/A";
-                        applicationNumber.textContent = data.data.application_number || "N/A";
-                        contactNumber.textContent = data.data.contact || "N/A";
-                        email_view.textContent = data.data.email || "N/A";
-                        // aadharNumber.textContent = data.data.aadhar_number || "N/A";
-
-                        // Fetch and mask the Aadhar number
-                        let aadharNumber = data.data.aadhar_number || "N/A";
-
-                        // Check if Aadhar number is valid (12 digits)
-                        if (aadharNumber !== "N/A" && aadharNumber.length === 12) {
-                            aadharNumber = aadharNumber.slice(0, 2) + "XX-XXXX" + aadharNumber.slice(-4);
-                        }
-
-                        // Update the DOM element with the masked Aadhar number
-                        aadharNumberElement.textContent = aadharNumber;
-
-                        associationType.textContent = data.data.association_type || "N/A";
-                        // preferredBranch.textContent = data.data.base_branch || "N/A";
-                        position.textContent = data.data.position || "N/A";
-                        subjectPreference1.textContent = data.data.subject_preference_1 || "N/A";
-
-                        // Handle Resume Link
-                        if (data.data.resumeLink) {
-                            resumeText.innerHTML = `<a href="${data.data.resumeLink}" target="_blank">View Applicant CV</a>`;
-                        } else {
-                            resumeText.textContent = "No resume uploaded yet"; // Display plain text instead of a link
-                        }
-
-                        const candidatePhotoContainer = document.getElementById("candidatePhotoContainer");
-
-                        if (data.data.photo) {
-                            // Extract file ID from the Google Drive link
-                            const photoID = data.data.photo.split("id=")[1];
-
-                            // Generate the preview URL for iframe
-                            const previewUrl = `https://drive.google.com/file/d/${photoID}/preview`;
-
-                            // Create iframe dynamically
-                            const iframe = document.createElement('iframe');
-                            iframe.src = previewUrl;
-                            iframe.width = "150";
-                            iframe.height = "200";
-                            iframe.frameborder = "0";
-                            iframe.allow = "autoplay";
-                            iframe.sandbox = "allow-scripts allow-same-origin"
-
-                            // Clear previous content and append the iframe
-                            candidatePhotoContainer.innerHTML = '';
-                            candidatePhotoContainer.appendChild(iframe);
-                        } else {
-                            // Default placeholder when no photo is available
-                            candidatePhotoContainer.innerHTML = "No photo available";
-                        }
-
-                        // Make the details section visible
-                        detailsSection.classList.remove("d-none");
-                        // Disable the form fields and button after fetching the data
-                        // applicationNumberInput.disabled = true;
-                        // document.getElementById("verifybutton").disabled = true;
-                        alert("User data fetched successfully!");
-                    } else if (data.status === 'no_records') {
-                        // Clear the card fields
-                        applicantFullName.textContent = "";
-                        applicationNumber.textContent = "";
-                        contactNumber.textContent = "";
-                        email_view.textContent = "";
-                        aadharNumberElement.textContent = "";
-                        associationType.textContent = "";
-                        // preferredBranch.textContent = "";
-                        position.textContent = "";
-                        subjectPreference1.textContent = "";
-                        resumeText.textContent = "";
-
-                        // Hide the details section
-                        detailsSection.classList.add("d-none");
-                        alert("No records found in the database.");
-                    } else {
-                        console.error('Error:', data.message);
-                        alert("Error retrieving user data.");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("Error fetching user data. Please try again later.");
-                });
-        });
-    </script>
-    <script>
-        window.onload = function () {
+        window.onload = function() {
             // Select all input elements with the 'required' attribute
             const requiredFields = document.querySelectorAll('input[required], select[required], textarea[required]');
 
             // Loop through each required field
-            requiredFields.forEach(function (field) {
+            requiredFields.forEach(function(field) {
                 // Get the label associated with the field
                 const label = document.querySelector(`label[for="${field.id}"]`);
 
@@ -601,11 +622,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script src="../assets_new/js/main.js"></script>
 
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             const interviewerIds = []; // Array to hold the IDs of interviewers
 
             // Add interviewer
-            $('#add_interviewer').on('click', function () {
+            $('#add_interviewer').on('click', function() {
                 const employeeNo = $('#employee_no').val();
 
                 if (!employeeNo) {
@@ -620,11 +641,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $.ajax({
                     url: 'payment-api.php',
                     type: 'POST',
-                    data: { 'form-type': 'fetch_employee', employee_no: employeeNo },
+                    data: {
+                        'form-type': 'fetch_employee',
+                        employee_no: employeeNo
+                    },
                     dataType: 'json',
-                    success: function (response) {
+                    success: function(response) {
                         if (response.success) {
-                            const { id, name, position } = response.data;
+                            const {
+                                id,
+                                name,
+                                position
+                            } = response.data;
 
                             // Check if interviewer is already added
                             if (interviewerIds.includes(id)) {
@@ -652,18 +680,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             alert(response.message || 'Unable to fetch employee details.');
                         }
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         const errorMessage = xhr.responseJSON?.message || 'An error occurred while fetching employee details.';
                         alert(errorMessage);
                     },
-                    complete: function () {
+                    complete: function() {
                         $('#add_interviewer').prop('disabled', false).text('Add Interviewer');
                     },
                 });
             });
 
             // Remove interviewer
-            $('#interviewer_table').on('click', '.remove-row', function () {
+            $('#interviewer_table').on('click', '.remove-row', function() {
                 const id = $(this).data('id');
 
                 // Remove the row from the table
@@ -679,9 +707,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $('#interviewer_ids').val(interviewerIds.join(','));
             });
         });
-
-
+        document.getElementById('submit_form').addEventListener('click', function(event) {
+            var interviewerIds = document.getElementById('interviewer_ids').value;
+            if (!interviewerIds) {
+                alert('At least one interviewer is required!');
+                event.preventDefault(); // Prevent form submission
+            }
+        });
     </script>
+    <script>
+        // Embed PHP data into JavaScript
+        var responseData = <?php echo json_encode($responseData); ?>;
+
+        // Check if interviewers data exists and populate the table
+        if (responseData.interview_data && responseData.interview_data.interviewers) {
+            const interviewers = responseData.interview_data.interviewers;
+
+            const interviewerTableBody = document.querySelector('#interviewer_table tbody');
+
+            // Loop through interviewers and create rows for each
+            interviewers.forEach(interviewer => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td>${interviewer.id}</td>
+            <td>${interviewer.name}</td>
+            <td>${interviewer.position}</td>
+            <td></td>
+        `;
+                interviewerTableBody.appendChild(row);
+            });
+        }
+
+        // Function to remove an interviewer from the table (if needed)
+        function removeInterviewer(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+    </script>
+
 
 </body>
 
