@@ -155,26 +155,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 ?>
 <?php
-// Check if 'submitted_by' is available in the interview data
+// Initialize variables for name and ID
 $submittedByName = '';
 $submittedById = '';
 
+// Check if 'submitted_by' is available in the interview data
 if (!empty($interviewData['submitted_by'])) {
-    // Query to fetch fullname from rssimyaccount_members based on submitted_by (associatenumber)
-    $submittedById = $interviewData['submitted_by']; // Assuming this holds the associatenumber
+    // If 'submitted_by' is not empty, fetch the name from rssimyaccount_members
+    $submittedById = $interviewData['submitted_by']; // This holds the associatenumber
     $query = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = '$submittedById'";
 
     $result = pg_query($con, $query);
     if ($result && pg_num_rows($result) > 0) {
         $submittedBy = pg_fetch_assoc($result);
-        $submittedByName = $submittedBy['fullname'];
+        $submittedByName = $submittedBy['fullname']; // Get the name from the database
     } else {
-        $submittedByName = 'Information not found';
+        $submittedByName = 'Information not found'; // If no match is found in the database
     }
 } else {
-    // Default name and ID when submitted_by is empty
-    $submittedByName = $fullname;
-    $submittedById = $associatenumber;
+    // If 'submitted_by' is empty, use default name and ID
+    $submittedByName = $fullname;  // Default fullname
+    $submittedById = $associatenumber; // Default associatenumber
 }
 ?>
 
@@ -293,296 +294,299 @@ if (!empty($interviewData['submitted_by'])) {
                                     <div class="input-group mb-3">
                                         <input type="text" class="form-control" id="applicationNumber_verify"
                                             name="applicationNumber_verify" placeholder="Enter your Application Number"
-                                            value="<?php echo htmlspecialchars($applicationNumberEscaped); ?>" required>
+                                            value="<?php echo @htmlspecialchars($applicationNumberEscaped); ?>" required>
                                         <button type="submit" class="btn btn-primary">Fetch Applicant Data</button>
                                     </div>
                                 </form>
+                                <?php
+                                // Check if responseData and interviewDataResponse contain data
+                                if (!empty($responseData) && !empty($interviewDataResponse)) {
+                                ?>
+                                    <div id="detailsSection">
+                                        <!-- Name Input -->
+                                        <div class="card">
+                                            <div class="card-body mt-3">
+                                                <div class="row align-items-center">
+                                                    <!-- First Table (Contact details) -->
+                                                    <div class="col-md-5">
+                                                        <table style="width: 100%; border-collapse: collapse;">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td><strong>Applicant Name:</strong></td>
+                                                                    <td><?php echo htmlspecialchars($responseData['applicantFullName']); ?>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Application Number:</strong></td>
+                                                                    <td><?php echo htmlspecialchars($responseData['application_number']); ?>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Contact Number:</strong></td>
+                                                                    <td><?php echo htmlspecialchars($responseData['contact']); ?>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Email:</strong></td>
+                                                                    <td><?php echo htmlspecialchars($responseData['email']); ?>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
 
-                                <div id="detailsSection">
-                                    <!-- Name Input -->
-                                    <div class="card">
-                                        <div class="card-body mt-3">
-                                            <div class="row align-items-center">
-                                                <!-- First Table (Contact details) -->
-                                                <div class="col-md-5">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <tbody>
-                                                            <tr>
-                                                                <td><strong>Applicant Name:</strong></td>
-                                                                <td><?php echo htmlspecialchars($responseData['applicantFullName']); ?>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>Application Number:</strong></td>
-                                                                <td><?php echo htmlspecialchars($responseData['application_number']); ?>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>Contact Number:</strong></td>
-                                                                <td><?php echo htmlspecialchars($responseData['contact']); ?>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>Email:</strong></td>
-                                                                <td><?php echo htmlspecialchars($responseData['email']); ?>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-
-                                                </div>
-
-                                                <!-- Second Table (Additional details) -->
-                                                <div class="col-md-4">
-                                                    <table style="width: 100%; border-collapse: collapse;">
-                                                        <tbody>
-                                                            <tr>
-                                                                <td><strong>Aadhar Card Number:</strong></td>
-                                                                <td>
-                                                                    <?php
-                                                                    $aadharNumber = !empty($responseData['aadhar_number']) ? $responseData['aadhar_number'] : "N/A";
-                                                                    if ($aadharNumber !== "N/A" && strlen($aadharNumber) === 12) {
-                                                                        $aadharNumber = substr($aadharNumber, 0, 2) . "XX-XXXX" . substr($aadharNumber, -4);
-                                                                    }
-                                                                    echo htmlspecialchars($aadharNumber);
-                                                                    ?>
-                                                                </td>
-
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>Association Type:</strong></td>
-                                                                <td><?php echo htmlspecialchars($responseData['association_type']); ?>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>Work Profile:</strong></td>
-                                                                <td><?php echo htmlspecialchars($responseData['position']); ?>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>Subject Preference 1:</strong></td>
-                                                                <td>
-                                                                    <?php echo htmlspecialchars(!empty($responseData['subject_preference_1']) ? $responseData['subject_preference_1'] : 'N/A'); ?>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td></td>
-                                                                <td>
-                                                                    <a href="<?php echo htmlspecialchars($responseData['resumeLink']); ?>"
-                                                                        target="_blank" id="resumeText">View
-                                                                        Applicant CV</a>
-                                                                </td>
-
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-
-                                                <!-- Candidate Photo (in the same row) -->
-                                                <div class="col-md-3 d-flex justify-content-center">
-                                                    <div class="photo-box"
-                                                        style="border: 1px solid #ccc; padding: 10px; width: 150px; height: 200px; display: flex; align-items: center; justify-content: center;"
-                                                        id="candidatePhotoContainer">
-                                                        <?php
-                                                        if (!empty($responseData['photo'])) {
-                                                            // Extract photo ID from the Google Drive link
-                                                            $photoID = explode('id=', $responseData['photo'])[1];
-                                                            $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
-                                                            echo '<iframe src="' . $previewUrl . '" width="150" height="200" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
-                                                        } else {
-                                                            echo "No photo available";
-                                                        }
-                                                        ?>
                                                     </div>
-                                                </div>
 
+                                                    <!-- Second Table (Additional details) -->
+                                                    <div class="col-md-4">
+                                                        <table style="width: 100%; border-collapse: collapse;">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td><strong>Aadhar Card Number:</strong></td>
+                                                                    <td>
+                                                                        <?php
+                                                                        $aadharNumber = !empty($responseData['aadhar_number']) ? $responseData['aadhar_number'] : "N/A";
+                                                                        if ($aadharNumber !== "N/A" && strlen($aadharNumber) === 12) {
+                                                                            $aadharNumber = substr($aadharNumber, 0, 2) . "XX-XXXX" . substr($aadharNumber, -4);
+                                                                        }
+                                                                        echo htmlspecialchars($aadharNumber);
+                                                                        ?>
+                                                                    </td>
+
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Association Type:</strong></td>
+                                                                    <td><?php echo htmlspecialchars($responseData['association_type']); ?>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Work Profile:</strong></td>
+                                                                    <td><?php echo htmlspecialchars($responseData['position']); ?>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Subject Preference 1:</strong></td>
+                                                                    <td>
+                                                                        <?php echo htmlspecialchars(!empty($responseData['subject_preference_1']) ? $responseData['subject_preference_1'] : 'N/A'); ?>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td></td>
+                                                                    <td>
+                                                                        <a href="<?php echo htmlspecialchars($responseData['resumeLink']); ?>"
+                                                                            target="_blank" id="resumeText">View
+                                                                            Applicant CV</a>
+                                                                    </td>
+
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    <!-- Candidate Photo (in the same row) -->
+                                                    <div class="col-md-3 d-flex justify-content-center">
+                                                        <div class="photo-box"
+                                                            style="border: 1px solid #ccc; padding: 10px; width: 150px; height: 200px; display: flex; align-items: center; justify-content: center;"
+                                                            id="candidatePhotoContainer">
+                                                            <?php
+                                                            if (!empty($responseData['photo'])) {
+                                                                // Extract photo ID from the Google Drive link
+                                                                $photoID = explode('id=', $responseData['photo'])[1];
+                                                                $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
+                                                                echo '<iframe src="' . $previewUrl . '" width="150" height="200" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
+                                                            } else {
+                                                                echo "No photo available";
+                                                            }
+                                                            ?>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <form id="applicationForm" method="POST">
-                                        <fieldset <?php echo $isFormDisabled; ?>>
-                                            <div class="container my-5">
-                                                <div class="row g-3 align-items-center">
+                                        <form id="applicationForm" method="POST">
+                                            <fieldset <?php echo $isFormDisabled; ?>>
+                                                <div class="container my-5">
+                                                    <div class="row g-3 align-items-center">
 
-                                                    <!-- Subject Knowledge -->
-                                                    <div class="col-md-6">
-                                                        <label for="documents" class="form-label">Documents
-                                                            Checklist</label>
-                                                    </div>
-                                                    <?php
-                                                    // Check if 'documentsList' exists and is not null, then split it; otherwise, use an empty array
-                                                    $documentsListArray = isset($interviewDataResponse['documentsList']) && $interviewDataResponse['documentsList'] !== null
-                                                        ? explode(',', $interviewDataResponse['documentsList'])
-                                                        : [];
-                                                    ?>
-
-                                                    <div class="col-md-6">
-                                                        <label for="documents" class="form-label">Verified Documents</label>
-                                                        <select id="documents" name="documents[]" class="form-control"
-                                                            multiple="multiple" required>
-                                                            <option value="highschool_marksheet" <?php echo in_array('highschool_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Highschool Marksheet</option>
-                                                            <option value="intermediate_marksheet" <?php echo in_array('intermediate_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Intermediate Marksheet</option>
-                                                            <option value="graduation_marksheet" <?php echo in_array('graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Graduation Marksheet</option>
-                                                            <option value="post_graduation_marksheet" <?php echo in_array('post_graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Post-Graduation Marksheet</option>
-                                                            <option value="additional_training_course_certificate" <?php echo in_array('additional_training_course_certificate', $documentsListArray) ? 'selected' : ''; ?>>Additional
-                                                                training or course Certificate</option>
-                                                            <option value="previous_employment_info" <?php echo in_array('previous_employment_info', $documentsListArray) ? 'selected' : ''; ?>>Previous employment information</option>
-                                                            <option value="pan_card" <?php echo in_array('pan_card', $documentsListArray) ? 'selected' : ''; ?>>PAN Card</option>
-                                                            <option value="aadhar_card" <?php echo in_array('aadhar_card', $documentsListArray) ? 'selected' : ''; ?>>Aadhar Card
-                                                            </option>
-                                                        </select>
-                                                    </div>
-
-                                                    <!-- Subject Knowledge -->
-                                                    <div class="col-md-6">
-                                                        <label for="subjectKnowledge" class="form-label">Subject
-                                                            Knowledge</label>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <input type="number" class="form-control" name="subjectKnowledge"
-                                                            id="subjectKnowledge" min="1" max="10"
-                                                            placeholder="Enter marks (1-10)"
-                                                            value="<?php echo isset($interviewDataResponse['subjectKnowledge']) ? htmlspecialchars($interviewDataResponse['subjectKnowledge']) : ''; ?>"
-                                                            required>
-                                                    </div>
-
-                                                    <!-- Computer Knowledge -->
-                                                    <div class="col-md-6">
-                                                        <label for="computerKnowledge" class="form-label">Computer
-                                                            Knowledge</label>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <input type="number" class="form-control" name="computerKnowledge"
-                                                            id="computerKnowledge" min="1" max="10"
-                                                            placeholder="Enter marks (1-10)"
-                                                            value="<?php echo isset($interviewDataResponse['computerKnowledge']) ? htmlspecialchars($interviewDataResponse['computerKnowledge']) : ''; ?>"
-                                                            required>
-                                                    </div>
-
-                                                    <!-- Demo Class Performance -->
-                                                    <div class="col-md-6">
-                                                        <label for="demoClass" class="form-label">Demo Class
-                                                            Performance</label>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <input type="number" class="form-control" name="demoClass"
-                                                            id="demoClass" min="1" max="10" placeholder="Enter marks (1-10)"
-                                                            value="<?php echo isset($interviewDataResponse['demoClass']) ? htmlspecialchars($interviewDataResponse['demoClass']) : ''; ?>"
-                                                            required>
-                                                    </div>
-
-                                                    <!-- Written Test Marks -->
-                                                    <div class="col-md-6">
-                                                        <label for="writtenTest" class="form-label">Written Test
-                                                            Marks</label>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <input type="number" class="form-control" name="writtenTest"
-                                                            id="writtenTest" placeholder="Enter marks"
-                                                            value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>">
-                                                    </div>
-
-                                                    <!-- Experience and Qualifications -->
-                                                    <div class="col-md-6">
-                                                        <label for="experience" class="form-label">Experience and
-                                                            Qualifications</label>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <textarea class="form-control" name="experience" id="experience"
-                                                            rows="3" placeholder="Enter details"
-                                                            required><?php echo isset($interviewDataResponse['experience']) ? htmlspecialchars($interviewDataResponse['experience']) : ''; ?></textarea>
-                                                    </div>
-
-                                                    <!-- Remarks -->
-                                                    <div class="col-md-6">
-                                                        <label for="remarks" class="form-label">Remarks</label>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <textarea class="form-control" name="remarks" id="remarks" rows="3"
-                                                            placeholder="Enter remarks"
-                                                            required><?php echo isset($interviewDataResponse['remarks']) ? htmlspecialchars($interviewDataResponse['remarks']) : ''; ?></textarea>
-                                                    </div>
-
-                                                    <!-- Interviewer Panel Section -->
-                                                    <div class="row border p-3 rounded mt-5">
-
-                                                        <div class="col-md-12 mt-3">
-                                                            <table class="table table-bordered" id="interviewer_table">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th>Employee No.</th>
-                                                                        <th>Name</th>
-                                                                        <th>Designation</th>
-                                                                        <th>Action</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    <!-- Dynamic rows will be added here -->
-                                                                </tbody>
-                                                            </table>
+                                                        <!-- Subject Knowledge -->
+                                                        <div class="col-md-6">
+                                                            <label for="documents" class="form-label">Documents
+                                                                Checklist</label>
                                                         </div>
-                                                        <div class="col-md-12 mb-3">
-                                                            <div class="row">
-                                                                <div class="col-md-4">
-                                                                    <input type="text" id="employee_no" class="form-control"
-                                                                        placeholder="Enter Employee ID for multiple Interviewers">
-                                                                </div>
-                                                                <div class="col-md-4">
-                                                                    <button type="button" id="add_interviewer"
-                                                                        class="btn btn-primary">Add Interviewer</button>
+                                                        <?php
+                                                        // Check if 'documentsList' exists and is not null, then split it; otherwise, use an empty array
+                                                        $documentsListArray = isset($interviewDataResponse['documentsList']) && $interviewDataResponse['documentsList'] !== null
+                                                            ? explode(',', $interviewDataResponse['documentsList'])
+                                                            : [];
+                                                        ?>
+
+                                                        <div class="col-md-6">
+                                                            <label for="documents" class="form-label">Verified Documents</label>
+                                                            <select id="documents" name="documents[]" class="form-control"
+                                                                multiple="multiple" required>
+                                                                <option value="highschool_marksheet" <?php echo in_array('highschool_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Highschool Marksheet</option>
+                                                                <option value="intermediate_marksheet" <?php echo in_array('intermediate_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Intermediate Marksheet</option>
+                                                                <option value="graduation_marksheet" <?php echo in_array('graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Graduation Marksheet</option>
+                                                                <option value="post_graduation_marksheet" <?php echo in_array('post_graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Post-Graduation Marksheet</option>
+                                                                <option value="additional_training_course_certificate" <?php echo in_array('additional_training_course_certificate', $documentsListArray) ? 'selected' : ''; ?>>Additional
+                                                                    training or course Certificate</option>
+                                                                <option value="previous_employment_info" <?php echo in_array('previous_employment_info', $documentsListArray) ? 'selected' : ''; ?>>Previous employment information</option>
+                                                                <option value="pan_card" <?php echo in_array('pan_card', $documentsListArray) ? 'selected' : ''; ?>>PAN Card</option>
+                                                                <option value="aadhar_card" <?php echo in_array('aadhar_card', $documentsListArray) ? 'selected' : ''; ?>>Aadhar Card
+                                                                </option>
+                                                            </select>
+                                                        </div>
+
+                                                        <!-- Subject Knowledge -->
+                                                        <div class="col-md-6">
+                                                            <label for="subjectKnowledge" class="form-label">Subject
+                                                                Knowledge</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <input type="number" class="form-control" name="subjectKnowledge"
+                                                                id="subjectKnowledge" min="1" max="10"
+                                                                placeholder="Enter marks (1-10)"
+                                                                value="<?php echo isset($interviewDataResponse['subjectKnowledge']) ? htmlspecialchars($interviewDataResponse['subjectKnowledge']) : ''; ?>"
+                                                                required>
+                                                        </div>
+
+                                                        <!-- Computer Knowledge -->
+                                                        <div class="col-md-6">
+                                                            <label for="computerKnowledge" class="form-label">Computer
+                                                                Knowledge</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <input type="number" class="form-control" name="computerKnowledge"
+                                                                id="computerKnowledge" min="1" max="10"
+                                                                placeholder="Enter marks (1-10)"
+                                                                value="<?php echo isset($interviewDataResponse['computerKnowledge']) ? htmlspecialchars($interviewDataResponse['computerKnowledge']) : ''; ?>"
+                                                                required>
+                                                        </div>
+
+                                                        <!-- Demo Class Performance -->
+                                                        <div class="col-md-6">
+                                                            <label for="demoClass" class="form-label">Demo Class
+                                                                Performance</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <input type="number" class="form-control" name="demoClass"
+                                                                id="demoClass" min="1" max="10" placeholder="Enter marks (1-10)"
+                                                                value="<?php echo isset($interviewDataResponse['demoClass']) ? htmlspecialchars($interviewDataResponse['demoClass']) : ''; ?>"
+                                                                required>
+                                                        </div>
+
+                                                        <!-- Written Test Marks -->
+                                                        <div class="col-md-6">
+                                                            <label for="writtenTest" class="form-label">Written Test
+                                                                Marks</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <input type="number" class="form-control" name="writtenTest"
+                                                                id="writtenTest" placeholder="Enter marks"
+                                                                value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>">
+                                                        </div>
+
+                                                        <!-- Experience and Qualifications -->
+                                                        <div class="col-md-6">
+                                                            <label for="experience" class="form-label">Experience and
+                                                                Qualifications</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <textarea class="form-control" name="experience" id="experience"
+                                                                rows="3" placeholder="Enter details"
+                                                                required><?php echo isset($interviewDataResponse['experience']) ? htmlspecialchars($interviewDataResponse['experience']) : ''; ?></textarea>
+                                                        </div>
+
+                                                        <!-- Remarks -->
+                                                        <div class="col-md-6">
+                                                            <label for="remarks" class="form-label">Remarks</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <textarea class="form-control" name="remarks" id="remarks" rows="3"
+                                                                placeholder="Enter remarks"
+                                                                required><?php echo isset($interviewDataResponse['remarks']) ? htmlspecialchars($interviewDataResponse['remarks']) : ''; ?></textarea>
+                                                        </div>
+
+                                                        <!-- Interviewer Panel Section -->
+                                                        <div class="row border p-3 rounded mt-5">
+
+                                                            <div class="col-md-12 mt-3">
+                                                                <table class="table table-bordered" id="interviewer_table">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Employee No.</th>
+                                                                            <th>Name</th>
+                                                                            <th>Designation</th>
+                                                                            <th>Action</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <!-- Dynamic rows will be added here -->
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <div class="col-md-12 mb-3">
+                                                                <div class="row">
+                                                                    <div class="col-md-4">
+                                                                        <input type="text" id="employee_no" class="form-control"
+                                                                            placeholder="Enter Employee ID for multiple Interviewers">
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <button type="button" id="add_interviewer"
+                                                                            class="btn btn-primary">Add Interviewer</button>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <input type="hidden" id="interviewer_ids" name="interviewer_ids">
-                                                    <div class="row mt-3">
-                                                        <div class="col-md-12">
-                                                            <label class="form-label">Interview Assessment filled by: </label>
-                                                            <span class="fw-normal">
-                                                                <?php
-                                                                // If submitted_by is not empty, display the name without associatenumber
-                                                                if (!empty($submittedByName)) {
-                                                                    echo $submittedByName;
-                                                                }
-                                                                // If submitted_by is empty, display name and associatenumber
-                                                                if (empty($interviewData['submitted_by'])) {
-                                                                    echo '&nbsp;(' . $submittedById . ')';
-                                                                }
-                                                                ?>
-                                                            </span>
+                                                        <input type="hidden" id="interviewer_ids" name="interviewer_ids">
+                                                        <div class="row mt-3">
+                                                            <div class="col-md-12">
+                                                                <label class="form-label">Interview Assessment filled by: </label>
+                                                                <span class="fw-normal">
+                                                                    <?php
+                                                                    // Display name and ID in the format "Name (ID)"
+                                                                    echo $submittedByName . '&nbsp;(' . $submittedById . ')';
+                                                                    ?>
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="row mt-3">
-                                                        <div class="col-md-6">
-                                                            <label for="interview_duration" class="form-label">Interview
-                                                                Duration:</label>
-                                                            <input type="number" name="interview_duration"
-                                                                id="interview_duration" class="form-control"
-                                                                placeholder="Minutes"
-                                                                value="<?php echo isset($interviewDataResponse['duration']) ? htmlspecialchars($interviewDataResponse['duration']) : ''; ?>" required>
+                                                        <div class="row mt-3">
+                                                            <div class="col-md-6">
+                                                                <label for="interview_duration" class="form-label">Interview
+                                                                    Duration:</label>
+                                                                <input type="number" name="interview_duration"
+                                                                    id="interview_duration" class="form-control"
+                                                                    placeholder="Minutes"
+                                                                    value="<?php echo isset($interviewDataResponse['duration']) ? htmlspecialchars($interviewDataResponse['duration']) : ''; ?>" required>
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <div class="mb-3 form-check">
-                                                        <input type="checkbox" class="form-check-input" id="declaration" name="declaration"
-                                                            <?php
-                                                            // Check if $interviewDataResponse is not null and contains the 'declaration' key before accessing it
-                                                            echo (isset($interviewDataResponse['declaration']) && $interviewDataResponse['declaration'] == true) ? 'checked' : '';
-                                                            ?>
-                                                            required>
-                                                        <label class="form-check-label" for="declaration">
-                                                            I accept that I have read the terms of agreement and agree to abide by the terms and conditions mentioned therein.
-                                                        </label>
+                                                        <div class="mb-3 form-check">
+                                                            <input type="checkbox" class="form-check-input" id="declaration" name="declaration"
+                                                                <?php
+                                                                // Check if $interviewDataResponse is not null and contains the 'declaration' key before accessing it
+                                                                echo (isset($interviewDataResponse['declaration']) && $interviewDataResponse['declaration'] == true) ? 'checked' : '';
+                                                                ?>
+                                                                required>
+                                                            <label class="form-check-label" for="declaration">
+                                                                I accept that I have read the terms of agreement and agree to abide by the terms and conditions mentioned therein.
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Submit Button -->
+                                                    <div class="text-center mt-4">
+                                                        <button type="submit" id="submit_form" class="btn btn-primary">Submit</button>
                                                     </div>
                                                 </div>
-                                                <!-- Submit Button -->
-                                                <div class="text-center mt-4">
-                                                    <button type="submit" id="submit_form" class="btn btn-primary">Submit</button>
-                                                </div>
-                                            </div>
-                                        </fieldset>
-                                    </form>
-                                </div>
+                                            </fieldset>
+                                        </form>
+                                    </div>
+                                <?php
+                                } else {
+                                    // Show message when no data is available
+                                    echo "Please enter a valid application number to view the data.";
+                                }
+                                ?>
                             </div>
                         </div>
                     </div>

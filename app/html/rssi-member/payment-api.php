@@ -318,7 +318,7 @@ if ($formtype == "get_details_vrc") {
 }
 
 if ($formtype == "fetch_employee") {
-  $employee_no = pg_escape_string($con, $_POST['employee_no']);
+  $employee_no = strtoupper(pg_escape_string($con, $_POST['employee_no']));
   $query = "SELECT associatenumber AS id, fullname AS name, position 
             FROM rssimyaccount_members 
             WHERE associatenumber = '$employee_no' AND filterstatus = 'Active'";
@@ -329,95 +329,6 @@ if ($formtype == "fetch_employee") {
     echo json_encode(['success' => true, 'data' => $data]);
   } else {
     echo json_encode(['success' => false, 'message' => 'Employee not found.']);
-  }
-  exit;
-}
-
-if ($formtype == "get_details_tr") {
-  @$applicationNumber = $_POST['applicationNumber_verify_input'];
-
-  // Escape the application number to prevent SQL injection
-  $applicationNumberEscaped = pg_escape_string($con, $applicationNumber);
-
-  // Query to fetch data from candidatepool table based on application number
-  $getDetails = "SELECT * FROM candidatepool WHERE application_number = '$applicationNumberEscaped'";
-  $result = pg_query($con, $getDetails);
-
-  if ($result) {
-      $row = pg_fetch_assoc($result);
-      if ($row) {
-          // Query to fetch interview data from the interview table based on application number
-          $getInterview = "SELECT * FROM interview WHERE application_number = '$applicationNumberEscaped'";
-          $interviewResult = pg_query($con, $getInterview);
-
-          // Initialize interview data response
-          $interviewDataResponse = null;
-
-          // Check if interview data exists
-          if ($interviewResult && pg_num_rows($interviewResult) > 0) {
-              $interviewData = pg_fetch_assoc($interviewResult);
-
-              // Split interviewer_ids into an array
-              $interviewerIds = explode(',', $interviewData['interviewer_ids']);
-
-              // Fetch interviewer details if interviewer IDs are available
-              if (!empty($interviewerIds)) {
-                  $interviewerIdsQuoted = array_map(function ($id) use ($con) {
-                      return "'" . pg_escape_string($con, $id) . "'";
-                  }, $interviewerIds);
-                  $interviewerIdsFinal = implode(',', $interviewerIdsQuoted);
-
-                  $query = "SELECT associatenumber AS id, fullname AS name, position 
-                            FROM rssimyaccount_members 
-                            WHERE associatenumber IN ($interviewerIdsFinal) AND filterstatus = 'Active'";
-                  $employeeResult = pg_query($con, $query);
-
-                  // Collect interviewer details
-                  $interviewers = [];
-                  if ($employeeResult && pg_num_rows($employeeResult) > 0) {
-                      while ($employee = pg_fetch_assoc($employeeResult)) {
-                          $interviewers[] = $employee;
-                      }
-                  }
-
-                  // Add interview data and interviewer details to the response
-                  $interviewDataResponse = array(
-                      'documentsList' => $interviewData['documents'], // Assuming documents are stored as comma-separated values
-                      'subjectKnowledge' => $interviewData['subject_knowledge'],
-                      'computerKnowledge' => $interviewData['computer_knowledge'],
-                      'demoClass' => $interviewData['demo_class'],
-                      'writtenTest' => $interviewData['written_test'],
-                      'experience' => $interviewData['experience'],
-                      'remarks' => $interviewData['remarks'],
-                      'interviewers' => $interviewers // Include interviewer details
-                  );
-              }
-          }
-
-          // Prepare final response
-          $responseData = array(
-              'applicantFullName' => $row['applicant_f_name'] . ' ' . $row['applicant_l_name'],
-              'application_number' => $row['application_number'],
-              'email' => $row['email'],
-              'base_branch' => $row['branch'],
-              'association_type' => $row['association'],
-              'resumeLink' => $row['resume_upload'],
-              'aadhar_number' => $row['identifier_number'],
-              'contact' => $row['telephone'],
-              'photo' => $row['applicant_photo'],
-              'subject_preference_1' => $row['subject1'],
-              'position' => 'Post: ' . $row['post_select'] . ', Job: ' . $row['job_select'],
-              'interview_data' => $interviewDataResponse
-          );
-
-          echo json_encode(['status' => 'success', 'data' => $responseData]);
-      } else {
-          // No matching record found in candidatepool
-          echo json_encode(['status' => 'no_records', 'message' => 'No records found for the given application number.']);
-      }
-  } else {
-      // Error in query execution for candidatepool
-      echo json_encode(['status' => 'error', 'message' => 'Error retrieving user data.']);
   }
   exit;
 }
