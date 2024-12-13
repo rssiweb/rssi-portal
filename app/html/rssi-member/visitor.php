@@ -22,6 +22,9 @@ $today = date("Y-m-d");
 // Initialize the WHERE clause of the query
 $whereClause = " WHERE 1=1"; // Always true condition to start with
 
+// Specify the column to order by, e.g., 'visitdatefrom' or any other column
+$orderBy = " ORDER BY vd.timestamp DESC"; // Change to your desired column and direction
+
 // Add conditions based on the filled input fields
 if (!empty($visitid)) {
     $whereClause .= " AND vd.visitid = '$visitid'";
@@ -48,7 +51,7 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                 CONCAT(EXTRACT(YEAR FROM vd.visitstartdatetime) - CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) < 4 THEN 1 ELSE 0 END, '-', 
                 EXTRACT(YEAR FROM vd.visitstartdatetime) + CASE WHEN EXTRACT(MONTH FROM vd.visitstartdatetime) >= 4 THEN 1 ELSE 0 END) AS academic_year
               FROM visitor_userdata AS ud
-              JOIN visitor_visitdata AS vd ON ud.tel = vd.tel $whereClause";
+              JOIN visitor_visitdata AS vd ON ud.tel = vd.tel $whereClause $orderBy";
 
     // Execute the query
     $result = pg_query($con, $query);

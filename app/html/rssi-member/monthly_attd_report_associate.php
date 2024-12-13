@@ -84,124 +84,110 @@ attendance_data AS (
         m.effectivedate,
         m.doj,
         d.attendance_date,
-        COALESCE(p.punch_in, (
-            SELECT e.start_date_time 
-            FROM exception_requests e 
-            WHERE e.submitted_by = m.associatenumber 
-            AND e.status = 'Approved' 
-            AND e.exception_type = 'entry' 
-            AND d.attendance_date = DATE(e.start_date_time)
-        )) AS punch_in,
-        COALESCE(p.punch_out, (
-            SELECT e.end_date_time 
-            FROM exception_requests e 
-            WHERE e.submitted_by = m.associatenumber 
-            AND e.status = 'Approved' 
-            AND e.exception_type = 'exit' 
-            AND d.attendance_date = DATE(e.end_date_time)
-        )) AS punch_out,
-        CASE
-            -- Presence logic
-            WHEN (
-                p.punch_in IS NOT NULL OR (
-                    EXISTS (
-                        SELECT 1
-                        FROM exception_requests e
-                        WHERE e.submitted_by = m.associatenumber
-                        AND e.status = 'Approved'
-                        AND e.exception_type = 'entry'
-                        AND d.attendance_date = DATE(e.start_date_time)
-                    )
-                )
-            ) AND (
-                p.punch_out IS NOT NULL OR (
-                    EXISTS (
-                        SELECT 1
-                        FROM exception_requests e
-                        WHERE e.submitted_by = m.associatenumber
-                        AND e.status = 'Approved'
-                        AND e.exception_type = 'exit'
-                        AND d.attendance_date = DATE(e.end_date_time)
-                    )
-                )
-            ) THEN 'P'
-            WHEN p.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
-            WHEN TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
-            ELSE 'A'
-        END AS attendance_status,
-        s.reporting_time,
-        CASE
-            -- Leave condition
-            WHEN EXISTS (
-                SELECT 1
-                FROM leavedb_leavedb l
-                WHERE l.applicantid = m.associatenumber
-                AND l.status = 'Approved'
-                AND l.halfday = 0
-                AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            ) THEN 'Leave'
-            
-            -- Half-day condition
-            WHEN EXISTS (
-                SELECT 1
-                FROM leavedb_leavedb l
-                WHERE l.applicantid = m.associatenumber
-                AND l.status = 'Approved'
-                AND l.halfday = 1
-                AND d.attendance_date BETWEEN l.fromdate AND l.todate
-            ) THEN 'HF'
-
-            -- Exception condition for entry with actual punch_in
-    WHEN EXISTS (
-        SELECT 1
-        FROM exception_requests e
-        WHERE e.submitted_by = m.associatenumber
-        AND e.status = 'Approved'
-        AND e.exception_type = 'entry'
-        AND d.attendance_date = DATE(e.start_date_time)
-    ) THEN
-        CASE
-            WHEN p.punch_in IS NOT NULL AND EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM (
-                SELECT e.start_date_time 
-                FROM exception_requests e 
-                WHERE e.submitted_by = m.associatenumber 
-                AND e.status = 'Approved' 
-                AND e.exception_type = 'entry' 
+        
+        -- Override punch_in if missed-entry exception exists and is approved
+        COALESCE(
+            (
+                SELECT e.start_date_time
+                FROM exception_requests e
+                WHERE e.submitted_by = m.associatenumber
+                AND e.status = 'Approved'
+                AND e.exception_type = 'entry'
+                AND e.sub_exception_type = 'missed-entry'
                 AND d.attendance_date = DATE(e.start_date_time)
-            )::time) THEN 'Exc.L'
-            ELSE 'Exc.'
-        END
+                LIMIT 1
+            ),
+            p.punch_in -- fallback to original punch_in if no exception
+        ) AS punch_in,
 
-            -- Regular late status logic
-            WHEN p.punch_in IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM exception_requests e
-                    WHERE e.submitted_by = m.associatenumber
-                    AND e.status = 'Approved'
-                    AND e.exception_type = 'entry'
-                    AND d.attendance_date = DATE(e.start_date_time)
-                ) THEN
-                CASE
-                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time)
-                        AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
-                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
-                    ELSE NULL
-                END
-            
-            -- Exception condition for exit
-            WHEN EXISTS (
-                SELECT 1
+        -- Handle punch_out logic similarly (using exception if available)
+        COALESCE(
+            (
+                SELECT e.end_date_time
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
                 AND e.status = 'Approved'
                 AND e.exception_type = 'exit'
                 AND d.attendance_date = DATE(e.end_date_time)
-            ) AND p.punch_out IS NULL THEN 'Exc.'
+                LIMIT 1
+            ),
+            p.punch_out
+        ) AS punch_out,
+
+        -- Attendance status logic
+        CASE
+            WHEN p.punch_in IS NOT NULL THEN 'P'
+            WHEN p.punch_in IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
+            WHEN TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
+            ELSE 'A'
+        END AS attendance_status,
+
+        s.reporting_time,
+
+        -- Updated Late status logic based on the overridden punch_in
+        CASE
+            -- If missed-entry exception is applied, recalculate the status
+            WHEN EXISTS (
+                SELECT 1
+                FROM exception_requests e
+                WHERE e.submitted_by = m.associatenumber
+                AND e.status = 'Approved'
+                AND e.exception_type = 'entry'
+                AND e.sub_exception_type = 'missed-entry'
+                AND d.attendance_date = DATE(e.start_date_time)
+            ) THEN
+                CASE
+                    -- If the overridden punch_in is late (after reporting time + 10 mins), it should be 'L'
+                    WHEN EXTRACT(EPOCH FROM COALESCE(
+                        (
+                            SELECT e.start_date_time
+                            FROM exception_requests e
+                            WHERE e.submitted_by = m.associatenumber
+                            AND e.status = 'Approved'
+                            AND e.exception_type = 'entry'
+                            AND e.sub_exception_type = 'missed-entry'
+                            AND d.attendance_date = DATE(e.start_date_time)
+                            LIMIT 1
+                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
+                    -- If the overridden punch_in is within 10 mins of reporting time, it should be 'W'
+                    WHEN EXTRACT(EPOCH FROM COALESCE(
+                        (
+                            SELECT e.start_date_time
+                            FROM exception_requests e
+                            WHERE e.submitted_by = m.associatenumber
+                            AND e.status = 'Approved'
+                            AND e.exception_type = 'entry'
+                            AND e.sub_exception_type = 'missed-entry'
+                            AND d.attendance_date = DATE(e.start_date_time)
+                            LIMIT 1
+                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM s.reporting_time)
+                        AND EXTRACT(EPOCH FROM COALESCE(
+                            (
+                                SELECT e.start_date_time
+                                FROM exception_requests e
+                                WHERE e.submitted_by = m.associatenumber
+                                AND e.status = 'Approved'
+                                AND e.exception_type = 'entry'
+                                AND e.sub_exception_type = 'missed-entry'
+                                AND d.attendance_date = DATE(e.start_date_time)
+                                LIMIT 1
+                            ), p.punch_in)::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
+                    -- If it's on time (or earlier), status should be NULL (not late)
+                    ELSE NULL
+                END
+            -- For regular punch-ins, apply standard lateness logic
+            WHEN p.punch_in IS NOT NULL THEN
+                CASE
+                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time + INTERVAL '1 minute')
+                        AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time + INTERVAL '1 minute') + 600 THEN 'W'
+                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
+                    ELSE NULL
+                END
             ELSE NULL
         END AS late_status,
+
+        -- Exit status logic remains unchanged
         CASE
-            -- Exit status
             WHEN p.punch_out IS NULL AND EXISTS (
                 SELECT 1
                 FROM exception_requests e
@@ -211,7 +197,21 @@ attendance_data AS (
                 AND d.attendance_date = DATE(e.end_date_time)
             ) THEN 'Exc.'
             ELSE NULL
-        END AS exit_status
+        END AS exit_status,
+
+        -- Status 'Exc.' for overridden punch-in time from exception
+        CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM exception_requests e
+                WHERE e.submitted_by = m.associatenumber
+                AND e.status = 'Approved'
+                AND e.exception_type = 'entry'
+                AND e.sub_exception_type = 'missed-entry'
+                AND d.attendance_date = DATE(e.start_date_time)
+            ) THEN 'Exc.'
+            ELSE NULL
+        END AS exception_status
     FROM
         date_range d
     CROSS JOIN
@@ -246,6 +246,7 @@ SELECT
     reporting_time,
     late_status,
     exit_status,
+    exception_status,  -- Include the exception status in the final result
     COUNT(*) FILTER (WHERE attendance_status = 'P') OVER (PARTITION BY associatenumber) AS attended_classes
 FROM attendance_data
 WHERE mode = 'Offline'
@@ -261,7 +262,8 @@ GROUP BY
     punch_out,
     reporting_time,
     late_status,
-    exit_status
+    exit_status,
+    exception_status
 ORDER BY
     associatenumber,
     attendance_date;
@@ -309,7 +311,8 @@ pg_close($con);
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- Template Main CSS File -->
@@ -376,14 +379,17 @@ pg_close($con);
 
                         <div class="card-body">
                             <br>
-                            <div class="d-flex justify-content-between align-items-center position-absolute top-5 end-0 p-3">
+                            <div
+                                class="d-flex justify-content-between align-items-center position-absolute top-5 end-0 p-3">
                                 <form method="POST" action="export_function.php">
                                     <input type="hidden" value="monthly_attd_associate" name="export_type" />
                                     <input type="hidden" value="<?php echo $id ?>" name="id" />
                                     <input type="hidden" value="<?php echo $month ?>" name="month" />
-                                    <input type="hidden" value="<?php echo $associatenumber ?>" name="associateNumber" />
+                                    <input type="hidden" value="<?php echo $associatenumber ?>"
+                                        name="associateNumber" />
                                     <input type="hidden" value="<?php echo $role ?>" name="role" />
-                                    <input type="hidden" value="<?php echo implode(',', $selectedTeachers) ?>" name="selectedTeachers" />
+                                    <input type="hidden" value="<?php echo implode(',', $selectedTeachers) ?>"
+                                        name="selectedTeachers" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
                         padding: 0px;
@@ -403,10 +409,11 @@ pg_close($con);
                                         <?php if ($role == 'Admin') { ?>
                                             <div class="col-12 col-sm-2">
                                                 <div class="form-group">
-                                                    <select name="get_aid" id="get_aid" class="form-select" style="display:inline-block" required>
+                                                    <select name="get_aid" id="get_aid" class="form-select"
+                                                        style="display:inline-block" required>
                                                         <?php if ($id == null) { ?>
                                                             <option value="" disabled selected hidden>Select Status</option>
-                                                        <?php
+                                                            <?php
                                                         } else { ?>
                                                             <option hidden selected><?php echo $id ?></option>
                                                         <?php }
@@ -419,7 +426,8 @@ pg_close($con);
                                             </div>
 
                                             <div class="col-md-3">
-                                                <select class="form-select" id="teacher_id_viva" name="teacher_id_viva[]" multiple>
+                                                <select class="form-select" id="teacher_id_viva" name="teacher_id_viva[]"
+                                                    multiple>
                                                     <option value="" disabled hidden>Select Teacher's ID</option>
                                                     <?php foreach ($teachers as $teacher) { ?>
                                                         <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id_viva']) && in_array($teacher['associatenumber'], $_GET['teacher_id_viva'])) ? 'selected' : ''; ?>>
@@ -433,18 +441,20 @@ pg_close($con);
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <input type="text" name="get_month" id="get_month" class="form-control" placeholder="Month" value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
+                                                <input type="text" name="get_month" id="get_month" class="form-control"
+                                                    placeholder="Month"
+                                                    value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
                                                 <small class="form-text text-muted">Select Month</small>
                                             </div>
                                         </div>
                                         <script>
-                                            $(function() {
+                                            $(function () {
                                                 $("#get_month").datepicker({
                                                     dateFormat: "yy-mm", // Format to show in the input
                                                     changeMonth: true,
                                                     changeYear: true,
                                                     showButtonPanel: true,
-                                                    onClose: function(dateText, inst) {
+                                                    onClose: function (dateText, inst) {
                                                         var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
                                                         var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
                                                         $(this).val(year + '-' + (parseInt(month) + 1)); // Adjust month by adding 1
@@ -456,7 +466,8 @@ pg_close($con);
 
 
                                         <div class="col-12 col-sm-2">
-                                            <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
+                                            <button type="submit" name="search_by_id" class="btn btn-success"
+                                                style="outline: none;">
                                                 <i class="bi bi-search"></i> Search
                                             </button>
                                         </div>
@@ -479,12 +490,12 @@ pg_close($con);
                                 ?>
                                 <div class="row align-items-center">
                                     <div class="col-6">
-                                        <?php if ($dateTime !== null) : ?>
+                                        <?php if ($dateTime !== null): ?>
                                             You are viewing data for
                                             <span class="blink-text">
                                                 <?= $dateTime->format('F Y') ?>
                                             </span>
-                                        <?php else : ?>
+                                        <?php else: ?>
                                             Invalid month format
                                         <?php endif; ?>
                                     </div>
@@ -534,7 +545,7 @@ pg_close($con);
                                                 $punchIn = $row['punch_in'] ? date("h:i A", strtotime($row['punch_in'])) : '';
                                                 $punchOut = $row['punch_out'] && $row['punch_out'] ? date("h:i A", strtotime($row['punch_out'])) : '';
 
-                                                echo "<td>" . $punchIn . ($row['late_status'] ? " (" . $row['late_status'] . ")" : "") . "</td><td>" . $punchOut . ($row['exit_status'] ? " (" . $row['exit_status'] . ")" : "") . "</td>";
+                                                echo "<td>" . $punchIn . ($row['late_status'] ? " (" . $row['late_status'] . ")" : "") . ($row['exception_status'] ? " (" . $row['exception_status'] . ")" : "") . "</td><td>" . $punchOut . ($row['exit_status'] ? " (" . $row['exit_status'] . ")" : "") . "</td>";
                                             }
                                             ?>
                                         </tbody>
@@ -547,10 +558,13 @@ pg_close($con);
                 </div>
         </section>
     </main>
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>

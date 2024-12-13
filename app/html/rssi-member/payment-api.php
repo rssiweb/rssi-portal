@@ -317,6 +317,23 @@ if ($formtype == "get_details_vrc") {
   }
 }
 
+if ($formtype == "fetch_employee") { 
+  $employee_no = pg_escape_string($con, $_POST['employee_no']);
+  $query = "SELECT associatenumber AS id, fullname AS name, position 
+            FROM rssimyaccount_members 
+            WHERE associatenumber = '$employee_no' AND filterstatus = 'Active'";
+  $result = pg_query($con, $query);
+
+  if ($result && pg_num_rows($result) > 0) {
+      $data = pg_fetch_assoc($result);
+      echo json_encode(['success' => true, 'data' => $data]);
+  } else {
+      echo json_encode(['success' => false, 'message' => 'Employee not found.']);
+  }
+  exit;
+}
+
+
 if ($formtype == "get_details_tr") {
   @$applicationNumber = $_POST['applicationNumber_verify_input'];
 

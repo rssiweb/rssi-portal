@@ -41,12 +41,39 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!$con) {
         die("Error: Unable to connect to the database.");
     }
-
-    // Database connection is open; add logic here if necessary
-
-    // Close the database connection
-    pg_close($con);
 }
+
+// Check if form is submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Fetch form data
+    $interview_id = uniqid();
+    $application_number = pg_escape_string($con, $_POST['applicationNumber_verify']);
+    $applicant_name = pg_escape_string($con, $_POST['name']);
+    $applicant_email = pg_escape_string($con, $_POST['email']);
+    $subject_knowledge = (int) $_POST['subjectKnowledge'];
+    $computer_knowledge = (int) $_POST['computerKnowledge'];
+    $demo_class = (int) $_POST['demoClass'];
+    $written_test = isset($_POST['writtenTest']) ? (int) $_POST['writtenTest'] : NULL;
+    $experience = pg_escape_string($con, $_POST['experience']);
+    $remarks = pg_escape_string($con, $_POST['remarks']);
+
+    // Check if interviewer_ids is set and not empty, if not, set it to an empty string
+    $interviewer_ids_string = isset($_POST['interviewer_ids']) ? pg_escape_string($con, $_POST['interviewer_ids']) : '';
+
+    $interview_duration = (int) $_POST['interview_duration'];
+
+    // Correct the declaration field to boolean (true/false)
+    $declaration = isset($_POST['declaration']) && $_POST['declaration'] == 'on' ? 'true' : 'false';
+
+    // Insert data into the interview table
+    $insert_query = "INSERT INTO interview (application_number, applicant_name, applicant_email, subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration) 
+                     VALUES ('$application_number', '$applicant_name', '$applicant_email', $subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration)";
+
+    // Execute the query
+    $result = pg_query($con, $insert_query);
+    $cmdtuples = pg_affected_rows($result);
+}
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -101,6 +128,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <!-- Include Select2 CSS and JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
 
 </head>
 
@@ -134,6 +165,31 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                         <div class="card-body">
                             <br>
+                            <?php if (@$ticket_id != null && @$cmdtuples == 0) { ?>
+
+                                <div class="alert alert-danger alert-dismissible" role="alert"
+                                    style="text-align: -webkit-center;">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span>ERROR: Oops, something wasn't right.</span>
+                                </div>
+                                <?php
+                            } else if (@$cmdtuples == 1) { ?>
+
+                                    <div class="alert alert-success alert-dismissible" role="alert"
+                                        style="text-align: -webkit-center;">
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                            aria-label="Close"></button>
+                                        <i class="bi bi-check2-circle"></i>
+                                        <span>Ticket successfully created. Your Ticket ID is <?php echo @$ticket_id ?>.</span>
+                                    </div>
+                                    <script>
+                                        if (window.history.replaceState) {
+                                            window.history.replaceState(null, null, window.location.href);
+                                        }
+                                    </script>
+                            <?php } ?>
                             <div class="container">
 
                                 <form id="applicationForm" method="POST">
@@ -142,7 +198,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                         <input type="text" class="form-control" id="applicationNumber_verify"
                                             name="applicationNumber_verify" placeholder="Enter your Application Number"
                                             required>
-                                        <button type="submit" class="btn btn-primary" id="verifybutton">Fetch Applicant
+                                        <button type="button" class="btn btn-primary" id="verifybutton">Fetch Applicant
                                             Data</button>
                                     </div>
                                     <div id="detailsSection" class="d-none">
@@ -193,8 +249,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                     <td><span id="position"></span></td>
                                                                 </tr>
                                                                 <tr>
-                                                                    <td><strong>Subject Preference [Preference
-                                                                            1]:</strong></td>
+                                                                    <td><strong>Subject Preference 1:</strong></td>
                                                                     <td><span id="subjectPreference1"></span></td>
                                                                 </tr>
                                                                 <tr>
@@ -221,14 +276,41 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                             <!-- <h2 class="mb-4 text-center">Interview Assessment Form</h2> -->
 
                                             <div class="row g-3 align-items-center">
+
+                                                <!-- Subject Knowledge -->
+                                                <div class="col-md-6">
+                                                    <label for="documents" class="form-label">Documents
+                                                        Checklist</label>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="documents" class="form-label">Verified Documents</label>
+                                                    <select id="documents" name="documents[]" class="form-control"
+                                                        multiple="multiple">
+                                                        <option value="highschool_marksheet">Highschool Marksheet
+                                                        </option>
+                                                        <option value="intermediate_marksheet">Intermediate Marksheet
+                                                        </option>
+                                                        <option value="graduation_marksheet">Graduation Marksheet
+                                                        </option>
+                                                        <option value="post_graduation_marksheet">Post-Graduation
+                                                            Marksheet</option>
+                                                        <option value="additional_training_course_certificate">
+                                                            Additional training or course Certificate</option>
+                                                        <option value="previous_employment_info">Previous employment
+                                                            information</option>
+                                                        <option value="pan_card">PAN Card</option>
+                                                        <option value="aadhar_card">Aadhar Card</option>
+                                                    </select>
+                                                </div>
                                                 <!-- Subject Knowledge -->
                                                 <div class="col-md-6">
                                                     <label for="subjectKnowledge" class="form-label">Subject
                                                         Knowledge</label>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <input type="number" class="form-control" id="subjectKnowledge"
-                                                        min="1" max="10" placeholder="Enter marks (1-10)" required>
+                                                    <input type="number" class="form-control" name="subjectKnowledge"
+                                                        id="subjectKnowledge" min="1" max="10"
+                                                        placeholder="Enter marks (1-10)" required>
                                                 </div>
 
                                                 <!-- Computer Knowledge -->
@@ -237,8 +319,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                         Knowledge</label>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <input type="number" class="form-control" id="computerKnowledge"
-                                                        min="1" max="10" placeholder="Enter marks (1-10)" required>
+                                                    <input type="number" class="form-control" name="computerKnowledge"
+                                                        id="computerKnowledge" min="1" max="10"
+                                                        placeholder="Enter marks (1-10)" required>
                                                 </div>
 
                                                 <!-- Demo Class Performance -->
@@ -247,8 +330,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                         Performance</label>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <input type="number" class="form-control" id="demoClass" min="1"
-                                                        max="10" placeholder="Enter marks (1-10)" required>
+                                                    <input type="number" class="form-control" name="demoClass"
+                                                        id="demoClass" min="1" max="10" placeholder="Enter marks (1-10)"
+                                                        required>
                                                 </div>
 
                                                 <!-- Written Test Marks -->
@@ -257,8 +341,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                         Marks</label>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <input type="number" class="form-control" id="writtenTest"
-                                                        placeholder="Enter marks">
+                                                    <input type="number" class="form-control" name="writtenTest"
+                                                        id="writtenTest" placeholder="Enter marks">
                                                 </div>
 
                                                 <!-- Experience and Qualifications -->
@@ -267,8 +351,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                         Qualifications</label>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <textarea class="form-control" id="experience" rows="3"
-                                                        placeholder="Enter details" required></textarea>
+                                                    <textarea class="form-control" name="experience" id="experience"
+                                                        rows="3" placeholder="Enter details" required></textarea>
                                                 </div>
 
                                                 <!-- Remarks -->
@@ -276,20 +360,66 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                     <label for="remarks" class="form-label">Remarks</label>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <textarea class="form-control" id="remarks" rows="3"
+                                                    <textarea class="form-control" name="remarks" id="remarks" rows="3"
                                                         placeholder="Enter remarks" required></textarea>
                                                 </div>
+
+                                                <!-- Interviewer Panel Section -->
+                                                <div class="row border p-3 rounded mt-5">
+
+                                                    <div class="col-md-12 mt-3">
+                                                        <table class="table table-bordered" id="interviewer_table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Employee No.</th>
+                                                                    <th>Name</th>
+                                                                    <th>Designation</th>
+                                                                    <th>Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <!-- Dynamic rows will be added here -->
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="col-md-12 mb-3">
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <input type="text" id="employee_no" class="form-control"
+                                                                    placeholder="Enter Employee ID for multiple Interviewers">
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <button type="button" id="add_interviewer"
+                                                                    class="btn btn-primary">Add Interviewer</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" id="interviewer_ids" name="interviewer_ids">
+                                                <div class="row mt-3">
+                                                    <div class="col-md-12">
+                                                        <label class="form-label fw-bold">Interview Assessment filled
+                                                            by: </label>
+                                                        <span
+                                                            class="fw-normal"><?php echo $fullname . ' (' . $associatenumber . ')'; ?></span>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-md-6">
+                                                        <label for="interview_duration" class="form-label">Interview
+                                                            Duration:</label>
+                                                        <input type="number" name="interview_duration"
+                                                            id="interview_duration" class="form-control"
+                                                            placeholder="Minutes">
+                                                    </div>
+                                                </div>
+
                                                 <div class="mb-3 form-check">
                                                     <input type="checkbox" class="form-check-input" id="declaration"
                                                         name="declaration" required>
-                                                    <label class="form-check-label" for="declaration">I hereby declare
-                                                        that the information provided in this interview assessment form
-                                                        is true and accurate to the best of my knowledge. I affirm that
-                                                        I have filled this form with complete impartiality and fairness,
-                                                        without any bias, prejudice, or external influence. I further
-                                                        confirm that no unethical or biased means were used in
-                                                        evaluating the candidate, and the assessment was conducted
-                                                        solely based on their performance and qualifications.</label>
+                                                    <label class="form-check-label" for="declaration">I accept that I
+                                                        have read the terms of agreement and agree to abide by the terms
+                                                        and conditions mentioned therein.</label>
                                                 </div>
                                             </div>
 
@@ -363,7 +493,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                         // Check if Aadhar number is valid (12 digits)
                         if (aadharNumber !== "N/A" && aadharNumber.length === 12) {
-                            aadharNumber = aadharNumber.slice(0, 2) + "XXXX-XXXX" + aadharNumber.slice(-4);
+                            aadharNumber = aadharNumber.slice(0, 2) + "XX-XXXX" + aadharNumber.slice(-4);
                         }
 
                         // Update the DOM element with the masked Aadhar number
@@ -458,14 +588,100 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     </script>
 
-
-<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            const interviewerIds = []; // Array to hold the IDs of interviewers
+
+            // Add interviewer
+            $('#add_interviewer').on('click', function () {
+                const employeeNo = $('#employee_no').val();
+
+                if (!employeeNo) {
+                    alert('Please enter an Employee No.');
+                    return;
+                }
+
+                // Disable button and show loading text
+                $('#add_interviewer').prop('disabled', true).text('Loading...');
+
+                // Fetch employee details via AJAX
+                $.ajax({
+                    url: 'payment-api.php',
+                    type: 'POST',
+                    data: { 'form-type': 'fetch_employee', employee_no: employeeNo },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.success) {
+                            const { id, name, position } = response.data;
+
+                            // Check if interviewer is already added
+                            if (interviewerIds.includes(id)) {
+                                alert('This interviewer has already been added.');
+                            } else {
+                                // Add the interviewer ID to the array
+                                interviewerIds.push(id);
+
+                                // Create a new row for the added interviewer
+                                const newRow = `
+                            <tr id="row-${id}">
+                                <td>${id}</td>
+                                <td>${name}</td>
+                                <td>${position}</td>
+                                <td><button type="button" class="btn btn-danger btn-sm remove-row" data-id="${id}">X</button></td>
+                            </tr>
+                        `;
+                                $('#interviewer_table tbody').append(newRow);
+                                $('#employee_no').val(''); // Clear the input
+                            }
+
+                            // Update the hidden input field with the current list of interviewer IDs
+                            $('#interviewer_ids').val(interviewerIds.join(','));
+                        } else {
+                            alert(response.message || 'Unable to fetch employee details.');
+                        }
+                    },
+                    error: function (xhr) {
+                        const errorMessage = xhr.responseJSON?.message || 'An error occurred while fetching employee details.';
+                        alert(errorMessage);
+                    },
+                    complete: function () {
+                        $('#add_interviewer').prop('disabled', false).text('Add Interviewer');
+                    },
+                });
+            });
+
+            // Remove interviewer
+            $('#interviewer_table').on('click', '.remove-row', function () {
+                const id = $(this).data('id');
+
+                // Remove the row from the table
+                $(`#row-${id}`).remove();
+
+                // Remove the interviewer ID from the array
+                const index = interviewerIds.indexOf(id);
+                if (index > -1) {
+                    interviewerIds.splice(index, 1);
+                }
+
+                // Update the hidden input field with the current list of interviewer IDs
+                $('#interviewer_ids').val(interviewerIds.join(','));
+            });
+        });
+
+
+    </script>
+
 </body>
 
 </html>
