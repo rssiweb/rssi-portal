@@ -149,86 +149,64 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                         <!-- Name Input -->
                                         <input type="hidden" class="form-control" id="name" name="name" readonly>
                                         <input type="hidden" class="form-control" id="email" name="email" readonly>
-
                                         <div class="card">
                                             <div class="card-body mt-3">
                                                 <div class="row align-items-center">
-                                                    <!-- Candidate Information -->
-                                                    <div class="col-md-8">
-                                                        <div class="row">
-                                                            <div class="col-md-12 d-flex align-items-center">
-                                                                <p>
-                                                                    <strong class="d-inline-block">Applicant
-                                                                        Name:</strong>
-                                                                    <span id="applicantFullName"></span>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <p>
-                                                                    <strong class="d-inline-block">Application
-                                                                        Number:</strong>
-                                                                    <span id="applicationNumber"></span>
-                                                                </p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <p>
-                                                                    <strong class="d-inline-block">Contact
-                                                                        Number:</strong>
-                                                                    <span id="contactNumber"></span>
-                                                                </p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <p>
-                                                                    <strong class="d-inline-block">Email:</strong>
-                                                                    <span id="email_view"></span>
-                                                                </p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <p>
-                                                                    <strong class="d-inline-block">Aadhar Card
-                                                                        Number:</strong>
-                                                                    <span id="aadharNumberElement"></span>
-                                                                </p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <p>
-                                                                    <strong class="d-inline-block">Association
-                                                                        Type:</strong>
-                                                                    <span id="associationType"></span>
-                                                                </p>
-                                                                <!-- <p>
-                                                                    <strong class="d-inline-block">Preferred
-                                                                        Branch:</strong>
-                                                                    <span id="preferredBranch"></span>
-                                                                </p> -->
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <p>
-                                                                    <strong class="d-inline-block">Work
-                                                                        Profile:</strong>
-                                                                    <span id="position"></span>
-                                                                </p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <p>
-                                                                    <strong class="d-inline-block">Subject Preference
-                                                                        [Preference 1]:</strong>
-                                                                    <span id="subjectPreference1"></span>
-                                                                </p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <p>
-                                                                    <span id="resumeText"></span>
-                                                                    <!-- Placeholder for resume text -->
-                                                                </p>
-                                                            </div>
-                                                        </div>
+                                                    <!-- First Table (Contact details) -->
+                                                    <div class="col-md-5">
+                                                        <table style="width: 100%; border-collapse: collapse;">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td><strong>Applicant Name:</strong></td>
+                                                                    <td><span id="applicantFullName"></span></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Application Number:</strong></td>
+                                                                    <td><span id="applicationNumber"></span></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Contact Number:</strong></td>
+                                                                    <td><span id="contactNumber"></span></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Email:</strong></td>
+                                                                    <td><span id="email_view"></span></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
                                                     </div>
 
-                                                    <!-- Candidate Photo -->
-                                                    <div class="col-md-4 d-flex justify-content-center">
+                                                    <!-- Second Table (Additional details) -->
+                                                    <div class="col-md-4">
+                                                        <table style="width: 100%; border-collapse: collapse;">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td><strong>Aadhar Card Number:</strong></td>
+                                                                    <td><span id="aadharNumberElement"></span></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Association Type:</strong></td>
+                                                                    <td><span id="associationType"></span></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Work Profile:</strong></td>
+                                                                    <td><span id="position"></span></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Subject Preference [Preference
+                                                                            1]:</strong></td>
+                                                                    <td><span id="subjectPreference1"></span></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td></td>
+                                                                    <td><span id="resumeText"></span></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    <!-- Candidate Photo (in the same row) -->
+                                                    <div class="col-md-3 d-flex justify-content-center">
                                                         <div class="photo-box"
                                                             style="border: 1px solid #ccc; padding: 10px; width: 150px; height: 200px; display: flex; align-items: center; justify-content: center;"
                                                             id="candidatePhotoContainer">
@@ -481,7 +459,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </script>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
 </body>
 
 </html>
