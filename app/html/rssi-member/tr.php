@@ -300,7 +300,7 @@ if (!empty($interviewData['submitted_by'])) {
                                 </form>
                                 <?php
                                 // Check if responseData and interviewDataResponse contain data
-                                if (!empty($responseData) && !empty($interviewDataResponse)) {
+                                if (!empty($responseData)) {
                                 ?>
                                     <div id="detailsSection">
                                         <!-- Name Input -->
