@@ -313,7 +313,7 @@ if (!empty($interviewData['submitted_by'])) {
                                 </form>
                                 <?php
                                 // Check if responseData and interviewDataResponse contain data
-                                if (!empty($responseData)) {
+                                if (!empty($responseData) && @$responseData['status'] != 'no_records' && @$responseData['status'] != 'error') {
                                 ?>
                                     <div id="detailsSection">
                                         <!-- Name Input -->
@@ -508,14 +508,15 @@ if (!empty($interviewData['submitted_by'])) {
 
                                                         <!-- Written Test Marks -->
                                                         <div class="col-md-6">
-                                                            <label for="writtenTest" class="form-label">Written Test
-                                                                Marks (RTET)</label>
+                                                            <label for="writtenTest" class="form-label">Written Test Marks (RTET)</label>
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <input type="number" class="form-control" name="writtenTest"
-                                                                id="writtenTest" placeholder="Enter marks"
-                                                                value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>"
-                                                                <?php echo isRequired('writtenTest', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
+                                                            <div class="input-group">
+                                                                <input type="number" class="form-control" name="writtenTest" id="writtenTest" placeholder="Enter marks"
+                                                                    value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>"
+                                                                    <?php echo isRequired('writtenTest', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
+                                                                <button type="button" id="fetchWrittenTest" class="btn btn-primary">Fetch</button>
+                                                            </div>
                                                         </div>
 
                                                         <!-- Experience and Qualifications -->
@@ -780,7 +781,51 @@ if (!empty($interviewData['submitted_by'])) {
             row.remove();
         }
     </script>
+    <script>
+        $(document).ready(function() {
+            // When the fetch button is clicked
+            document.getElementById('fetchWrittenTest').addEventListener('click', function() {
+                const applicationNumber = "<?php echo $responseData['application_number']; ?>"; // Use the application number from PHP
 
+                // Check if application number is valid
+                if (!applicationNumber) {
+                    alert("Application number is missing.");
+                    return;
+                }
+
+                // Make AJAX request to fetch written test data
+                $.ajax({
+                    url: 'payment-api.php',
+                    type: 'POST',
+                    data: {
+                        'form-type': 'fetch_rtet', // Form type to specify the action
+                        'application_number': applicationNumber // Send the application number
+                    },
+                    dataType: 'json', // Expect JSON response
+                    success: function(response) {
+                        console.log("Response received:", response); // Log the entire response for debugging
+
+                        // Check if the response status is 'success'
+                        if (response.status === 'success') {
+                            // Convert writtenTest to number if it's not already
+                            var writtenTestValue = parseFloat(response.writtenTest);
+
+                            console.log("Setting writtenTest value to:", writtenTestValue); // Log the value to be set
+                            document.getElementById('writtenTest').value = writtenTestValue; // Set the fetched value in the input field
+                        } else {
+                            // If no data or error in response
+                            alert(response.message || 'No data found for this application number.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle AJAX errors
+                        console.error('AJAX Error:', error);
+                        alert('An error occurred while fetching data.');
+                    }
+                });
+            });
+        });
+    </script>
 
 </body>
 

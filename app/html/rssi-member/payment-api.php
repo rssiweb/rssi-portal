@@ -333,6 +333,44 @@ if ($formtype == "fetch_employee") {
   exit;
 }
 
+if ($formtype == "fetch_rtet") {
+  if (isset($_POST['application_number']) && !empty(trim($_POST['application_number']))) {
+    // Sanitize the application number by trimming any unnecessary spaces
+    $applicationNumber = trim($_POST['application_number']);
+
+    // Prepare the query with a placeholder for the application number
+    $query = "SELECT score FROM rtet WHERE application_id = $1";
+
+    // Prepare the statement
+    $result = pg_prepare($con, "fetch_rtet_query", $query);
+
+    // Execute the prepared statement with the sanitized application number
+    $result = pg_execute($con, "fetch_rtet_query", array($applicationNumber));
+
+    if ($result) {
+      if (pg_num_rows($result) > 0) {
+        $data = pg_fetch_assoc($result);
+        // Return the fetched score as a float in the response
+        echo json_encode(['status' => 'success', 'writtenTest' => floatval($data['score'])]);
+      } else {
+        // If no records found
+        echo json_encode(['status' => 'no_records', 'message' => 'No records found for the given application number.']);
+      }
+    } else {
+      // In case of query failure
+      echo json_encode(['status' => 'error', 'message' => 'Database query failed: ' . pg_last_error($con)]);
+    }
+  } else {
+    // If application number is missing or invalid
+    echo json_encode(['status' => 'error', 'message' => 'Application number is missing or invalid.']);
+  }
+} else {
+  echo json_encode(['status' => 'error', 'message' => 'Invalid form type received: ' . htmlspecialchars($formtype)]);
+}
+
+
+
+
 
 if ($formtype == "get_details") {
   @$contactnumber = $_POST['contactnumber_verify_input'];
