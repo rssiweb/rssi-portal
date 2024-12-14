@@ -10,7 +10,7 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-
+$interview_id = null;
 if (isset($_GET['applicationNumber_verify'])) {
     // Get the application number from the GET parameter
     $applicationNumber = $_GET['applicationNumber_verify'];
@@ -116,7 +116,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $subject_knowledge = (int) $_POST['subjectKnowledge'];
     $computer_knowledge = (int) $_POST['computerKnowledge'];
     $demo_class = (int) $_POST['demoClass'];
-    $duration = (int) $_POST['demoClass'];
     $written_test = isset($_POST['writtenTest']) ? (int) $_POST['writtenTest'] : NULL;
     $experience = pg_escape_string($con, $_POST['experience']);
     $remarks = pg_escape_string($con, $_POST['remarks']);
@@ -146,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Insert data into the interview table
     $insert_query = "INSERT INTO interview (interview_id,application_number, applicant_name, applicant_email, documents,subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address,duration)
-    VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$documents_string',$subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address','$duration')";
+    VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$documents_string',$subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address','$interview_duration')";
 
     // Execute the query
     $result = pg_query($con, $insert_query);
@@ -271,7 +270,7 @@ if (!empty($interviewData['submitted_by'])) {
                             <br>
 
                             <?php
-                            if (@$interview_id != null && @$cmdtuples == 0) {
+                            if ($interview_id != null && $cmdtuples == 0) {
                                 // Error handling: display a message when an error occurs
                             ?>
                                 <div class="alert alert-danger alert-dismissible text-center" role="alert">
@@ -283,8 +282,8 @@ if (!empty($interviewData['submitted_by'])) {
                                 // Success handling: display a confirmation message and redirect
                             ?>
                                 <script>
-                                    var applicationNumber = "<?php echo @$applicationNumber; ?>";
-                                    var interviewID = "<?php echo @$interview_id; ?>";
+                                    var applicationNumber = "<?php echo $_GET['applicationNumber_verify']; ?>";
+                                    var interviewID = "<?php echo $interview_id; ?>";
 
                                     // Show an alert message with the reference ID
                                     alert("Assessment successfully submitted. Reference ID: " + interviewID);
@@ -435,7 +434,7 @@ if (!empty($interviewData['submitted_by'])) {
                                             return $currentAssociationType && in_array($fieldName, $associationRequirements[$currentAssociationType] ?? []);
                                         }
                                         ?>
-                                        <form id="applicationForm" method="POST">
+                                        <form id="applicationForm" action="#" method="POST">
                                             <fieldset <?php echo $isFormDisabled; ?>>
                                                 <div class="container my-5">
                                                     <div class="row g-3 align-items-center">
