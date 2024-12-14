@@ -333,6 +333,29 @@
         </ul>
       </li><!-- End Components Nav -->
 
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#careerPortal" data-bs-toggle="collapse" href="#">
+          <span>Career Portal</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="careerPortal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="interview_dashboard" href="interview_dashboard.php">
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a id="technical_interview" href="technical_interview.php">
+              <span>Technical Interview</span>
+            </a>
+          </li>
+          <li>
+            <a id="hr_interview" href="hr_interview.php">
+              <span>HR Interview</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
+
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
@@ -728,7 +751,7 @@
         id: 'rostermanagement',
         linkId: 'view_shift',
         url: 'view_shift.php'
-      },{
+      }, {
         id: 'rostermanagement',
         linkId: 'closure_assign',
         url: 'closure_assign.php'
@@ -742,6 +765,20 @@
         id: 'survey',
         linkId: 'view_survey',
         url: 'survey_view.php'
+      }, {
+        id: 'careerPortal',
+        linkId: 'interview_dashboard',
+        url: 'interview_dashboard.php'
+      },
+      {
+        id: 'careerPortal',
+        linkId: 'technical_interview',
+        url: 'technical_interview.php'
+      },
+      {
+        id: 'careerPortal',
+        linkId: 'hr_interview',
+        url: 'hr_interview.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },

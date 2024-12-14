@@ -281,7 +281,7 @@ if (!empty($interviewData['submitted_by'])) {
                                 echo '<script>
                                     var applicationNumber = "' . @$applicationNumber . '";
                                     if (confirm("Assessment successfully submitted. Reference ID: " + "' . @$interview_id . '" + ". Click OK to view the updated record.")) {
-                                        window.location.href = "tr.php?applicationNumber_verify=" + applicationNumber;
+                                        window.location.href = "technical_interview.php?applicationNumber_verify=" + applicationNumber;
                                     }
                                 </script>';
                             }
