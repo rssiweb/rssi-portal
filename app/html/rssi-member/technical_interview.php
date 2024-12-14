@@ -478,7 +478,7 @@ if (!empty($interviewData['submitted_by'])) {
                                                         <!-- Written Test Marks -->
                                                         <div class="col-md-6">
                                                             <label for="writtenTest" class="form-label">Written Test
-                                                                Marks</label>
+                                                                Marks (RTET)</label>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <input type="number" class="form-control" name="writtenTest"
