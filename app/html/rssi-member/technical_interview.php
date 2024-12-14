@@ -273,17 +273,21 @@ if (!empty($interviewData['submitted_by'])) {
                             if (@$interview_id != null && @$cmdtuples == 0) {
                                 // Error handling: display a message when an error occurs
                                 echo '<div class="alert alert-danger alert-dismissible text-center" role="alert">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <span>Error: We encountered an error while updating the record. Please try again.</span>
-                                    </div>';
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <span>Error: We encountered an error while updating the record. Please try again.</span>
+          </div>';
                             } else if (@$cmdtuples == 1) {
                                 // Success handling: display a confirmation message and redirect
                                 echo '<script>
-                                    var applicationNumber = "' . @$applicationNumber . '";
-                                    if (confirm("Assessment successfully submitted. Reference ID: " + "' . @$interview_id . '" + ". Click OK to view the updated record.")) {
-                                        window.location.href = "technical_interview.php?applicationNumber_verify=" + applicationNumber;
-                                    }
-                                </script>';
+        var applicationNumber = "' . @$applicationNumber . '";
+        if (confirm("Assessment successfully submitted. Reference ID: " + "' . @$interview_id . '" + ". Click OK to view the updated record.")) {
+            window.location.href = "technical_interview.php?applicationNumber_verify=" + applicationNumber;
+        }
+        // Prevent resubmission after redirect
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>';
                             }
                             ?>
 
