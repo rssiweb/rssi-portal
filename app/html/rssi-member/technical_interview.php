@@ -250,12 +250,12 @@ if (!empty($interviewData['submitted_by'])) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Interview Assessment</h1>
+            <h1>Technical Interview</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">Interview Assessment</li>
+                    <li class="breadcrumb-item"><a href="#">Career Portal</a></li>
+                    <li class="breadcrumb-item active">Technical Interview</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -269,25 +269,35 @@ if (!empty($interviewData['submitted_by'])) {
 
                         <div class="card-body">
                             <br>
+
                             <?php
                             if (@$interview_id != null && @$cmdtuples == 0) {
                                 // Error handling: display a message when an error occurs
-                                echo '<div class="alert alert-danger alert-dismissible text-center" role="alert">
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            <span>Error: We encountered an error while updating the record. Please try again.</span>
-          </div>';
+                            ?>
+                                <div class="alert alert-danger alert-dismissible text-center" role="alert">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <span>Error: We encountered an error while updating the record. Please try again.</span>
+                                </div>
+                            <?php
                             } else if (@$cmdtuples == 1) {
                                 // Success handling: display a confirmation message and redirect
-                                echo '<script>
-        var applicationNumber = "' . @$applicationNumber . '";
-        if (confirm("Assessment successfully submitted. Reference ID: " + "' . @$interview_id . '" + ". Click OK to view the updated record.")) {
-            window.location.href = "technical_interview.php?applicationNumber_verify=" + applicationNumber;
-        }
-        // Prevent resubmission after redirect
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
-    </script>';
+                            ?>
+                                <script>
+                                    var applicationNumber = "<?php echo @$applicationNumber; ?>";
+                                    var interviewID = "<?php echo @$interview_id; ?>";
+
+                                    // Show an alert message with the reference ID
+                                    alert("Assessment successfully submitted. Reference ID: " + interviewID);
+
+                                    // Redirect to the updated record after the alert
+                                    window.location.href = "technical_interview.php?applicationNumber_verify=" + applicationNumber;
+
+                                    // Prevent resubmission after redirect
+                                    if (window.history.replaceState) {
+                                        window.history.replaceState(null, null, window.location.href);
+                                    }
+                                </script>
+                            <?php
                             }
                             ?>
 
@@ -407,6 +417,24 @@ if (!empty($interviewData['submitted_by'])) {
                                                 </div>
                                             </div>
                                         </div>
+                                        <?php
+                                        // Define an array mapping association types to required fields
+                                        $associationRequirements = [
+                                            'Intern' => [],
+                                            'Employee' => ['subjectKnowledge', 'computerKnowledge', 'demoClass', 'writtenTest'],
+                                            'Membership' => [],
+                                            // Add more as needed
+                                        ];
+
+                                        // Get the current association type (assuming it's available in $row['association'])
+                                        $currentAssociationType = $responseData['association_type'] ?? null;
+
+                                        // Function to check if a field is required for the current association type
+                                        function isRequired($fieldName, $associationRequirements, $currentAssociationType)
+                                        {
+                                            return $currentAssociationType && in_array($fieldName, $associationRequirements[$currentAssociationType] ?? []);
+                                        }
+                                        ?>
                                         <form id="applicationForm" method="POST">
                                             <fieldset <?php echo $isFormDisabled; ?>>
                                                 <div class="container my-5">
@@ -451,7 +479,7 @@ if (!empty($interviewData['submitted_by'])) {
                                                                 id="subjectKnowledge" min="1" max="10"
                                                                 placeholder="Enter marks (1-10)"
                                                                 value="<?php echo isset($interviewDataResponse['subjectKnowledge']) ? htmlspecialchars($interviewDataResponse['subjectKnowledge']) : ''; ?>"
-                                                                required>
+                                                                <?php echo isRequired('subjectKnowledge', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
                                                         </div>
 
                                                         <!-- Computer Knowledge -->
@@ -464,7 +492,7 @@ if (!empty($interviewData['submitted_by'])) {
                                                                 id="computerKnowledge" min="1" max="10"
                                                                 placeholder="Enter marks (1-10)"
                                                                 value="<?php echo isset($interviewDataResponse['computerKnowledge']) ? htmlspecialchars($interviewDataResponse['computerKnowledge']) : ''; ?>"
-                                                                required>
+                                                                <?php echo isRequired('computerKnowledge', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
                                                         </div>
 
                                                         <!-- Demo Class Performance -->
@@ -476,7 +504,7 @@ if (!empty($interviewData['submitted_by'])) {
                                                             <input type="number" class="form-control" name="demoClass"
                                                                 id="demoClass" min="1" max="10" placeholder="Enter marks (1-10)"
                                                                 value="<?php echo isset($interviewDataResponse['demoClass']) ? htmlspecialchars($interviewDataResponse['demoClass']) : ''; ?>"
-                                                                required>
+                                                                <?php echo isRequired('demoClass', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
                                                         </div>
 
                                                         <!-- Written Test Marks -->
@@ -487,7 +515,8 @@ if (!empty($interviewData['submitted_by'])) {
                                                         <div class="col-md-6">
                                                             <input type="number" class="form-control" name="writtenTest"
                                                                 id="writtenTest" placeholder="Enter marks"
-                                                                value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>">
+                                                                value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>"
+                                                                <?php echo isRequired('writtenTest', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
                                                         </div>
 
                                                         <!-- Experience and Qualifications -->
