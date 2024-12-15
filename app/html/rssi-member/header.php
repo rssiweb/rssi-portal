@@ -340,7 +340,7 @@
         <ul id="careerPortal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
             <a id="interview_dashboard" href="interview_dashboard.php">
-              <span>Dashboard</span>
+              <span>Interview Dashboard</span>
             </a>
           </li>
           <li>

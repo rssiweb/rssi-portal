@@ -11,13 +11,48 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-$result = pg_query($con, "SELECT * FROM candidatepool LIMIT 100");
+// Handle filtering
+$filter_application_number = isset($_POST['filter_application_number']) ? trim($_POST['filter_application_number']) : '';
+$filter_status = isset($_POST['status']) ? $_POST['status'] : [];
+
+// Start building the query
+$query = "SELECT * FROM candidatepool WHERE interview_timestamp IS NOT NULL";
+
+// Add filters based on user input
+$conditions = [];
+if (!empty($filter_application_number)) {
+    $conditions[] = "application_number = '" . pg_escape_string($con, $filter_application_number) . "'";
+}
+
+if (!empty($filter_status)) {
+    // Escape each status value using the connection
+    $statuses = array_map(function ($status) use ($con) {
+        return pg_escape_string($con, $status);
+    }, $filter_status);
+    $conditions[] = "interview_status IN ('" . implode("', '", $statuses) . "')";
+}
+
+// Append conditions to the query
+if (!empty($conditions)) {
+    $query .= " AND " . implode(" AND ", $conditions);
+}
+
+// Add a limit of 100 if no filters are applied
+if (empty($filter_application_number) && empty($filter_status)) {
+    $query .= " LIMIT 100";
+}
+
+// Execute the query
+$result = pg_query($con, $query);
+
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
 
+// Fetch and process the results
 $resultArr = pg_fetch_all($result);
+
 ?>
 
 <!doctype html>
@@ -39,7 +74,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>User log</title>
+    <title>Interview Dashboard</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -86,17 +121,17 @@ $resultArr = pg_fetch_all($result);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>User log</h1>
+            <h1>Interview Dashboard</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">User log</li>
+                    <li class="breadcrumb-item"><a href="#">Career Portal</a></li>
+                    <li class="breadcrumb-item active">Interview Dashboard</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
 
-        <section class="section dashboard">
+        <section class="section Interview Dashboard">
             <div class="row">
 
                 <!-- Reports -->
@@ -105,41 +140,75 @@ $resultArr = pg_fetch_all($result);
 
                         <div class="card-body">
                             <br>
-                            <div class="col" style="display: inline-block; width:99%; text-align:right">
-                                Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                            <div class="container">
+                                <form method="POST" class="filter-form" style="display: flex;">
+                                    <div class="form-group" style="margin-right: 10px;">
+                                        <input type="text" id="filter_application_number" name="filter_application_number" class="form-control" placeholder="Application Number" value="<?php echo htmlspecialchars($filter_application_number); ?>" style="width: 200px;">
+                                    </div>
+
+                                    <div class="form-group" style="margin-right: 10px;">
+                                        <select id="status" name="status[]" class="form-control" multiple>
+                                            <option value="Technical Interview Scheduled" <?php echo in_array('Technical Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>Technical Interview Scheduled</option>
+                                            <option value="HR Interview Scheduled" <?php echo in_array('HR Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>HR Interview Scheduled</option>
+                                            <option value="Interview Pending" <?php echo in_array('Interview Pending', $filter_status ?? []) ? 'selected' : ''; ?>>Interview Pending</option>
+                                            <option value="Awaiting HR Feedback" <?php echo in_array('Awaiting HR Feedback', $filter_status ?? []) ? 'selected' : ''; ?>>Awaiting HR Feedback</option>
+                                            <option value="Recommended" <?php echo in_array('Recommended', $filter_status ?? []) ? 'selected' : ''; ?>>Recommended</option>
+                                            <option value="Not Recommended" <?php echo in_array('Not Recommended', $filter_status ?? []) ? 'selected' : ''; ?>>Not Recommended</option>
+                                            <option value="Under Review" <?php echo in_array('Under Review', $filter_status ?? []) ? 'selected' : ''; ?>>Under Review</option>
+                                            <option value="Offer Extended" <?php echo in_array('Offer Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Extended</option>
+                                            <option value="Offer Accepted" <?php echo in_array('Offer Accepted', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Accepted</option>
+                                            <option value="Offer Declined" <?php echo in_array('Offer Declined', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Declined</option>
+                                            <option value="No Show" <?php echo in_array('No Show', $filter_status ?? []) ? 'selected' : ''; ?>>No Show</option>
+                                            <option value="Interview Incomplete" <?php echo in_array('Interview Incomplete', $filter_status ?? []) ? 'selected' : ''; ?>>Interview Incomplete</option>
+                                            <option value="Rescheduled" <?php echo in_array('Rescheduled', $filter_status ?? []) ? 'selected' : ''; ?>>Rescheduled</option>
+                                        </select>
+
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-primary btn-sm" style="outline: none;">
+                                            <i class="bi bi-search"></i>&nbsp;Filter
+                                        </button>
+                                    </div>
+                                </form>
+                                <div class="table-responsive">
+                                    <table class="table" id="table-id">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Application Number</th>
+                                                <th scope="col">Applicant Name</th>
+                                                <th scope="col">Technical Interview Scheduled On</th>
+                                                <th scope="col">HR Interview Scheduled On</th>
+                                                <th scope="col">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            foreach ($resultArr as $array) {
+                                                $interviewTimestamp = empty($array['interview_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['interview_timestamp']));
+                                                $hrTimestamp = empty($array['hr_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_timestamp']));
+
+                                                $interviewStatus = empty($array['interview_status']) ? '' : $array['interview_status'];
+                                            ?>
+                                                <tr>
+                                                    <td><?php echo $array['application_number']; ?></td>
+                                                    <td><?php echo $array['applicant_f_name'] . ' ' . $array['applicant_l_name']; ?></td>
+                                                    <td><?php echo $interviewTimestamp; ?></td>
+                                                    <td><?php echo $hrTimestamp; ?></td>
+                                                    <td><?php echo $interviewStatus; ?></td>
+                                                </tr>
+                                            <?php
+                                            }
+                                            ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <?php echo '
-                    <div class="container">
-                    <div class="table-responsive">
-                    <table class="table" id="table-id">
-                        <thead>
-                            <tr>
-                                <th scope="col">SL.No</th>
-                                <th scope="col">User name</th>
-                                <th scope="col">IP Address</th>
-                                <th scope="col">Login time</th>
-                            </tr>
-                        </thead>
-                        <tbody>';
-                            foreach ($resultArr as $array) {
-                                echo '
-                            <tr>
-                                <td style="line-height: 1.7;">' . $array['id'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['username'] . '</td>
-                                <td style="line-height: 1.7;">' . $array['ipaddress'] . '</td>
-                                <td style="line-height: 1.7;">' . @date("d/m/Y g:i a", strtotime($array['logintime'])) . '</td>
-                            </tr>';
-                            }
-                            echo '</tbody>
-                        </table>
-                        </div>';
-                            ?>
                         </div>
-                    </div>
-                </div><!-- End Reports -->
+                    </div><!-- End Reports -->
+                </div>
             </div>
         </section>
-
     </main><!-- End #main -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>

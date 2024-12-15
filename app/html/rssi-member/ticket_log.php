@@ -7,7 +7,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-
+validation();
 // Handle filtering
 $filter_ticket_id = isset($_POST['ticket_id']) ? $_POST['ticket_id'] : '';
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
