@@ -183,131 +183,152 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <div class="card-body">
                             <br>
-                            <form name="verification" id="verification" action="#" method="post" enctype="multipart/form-data">
-                                <input type="hidden" name="form-type" value="verification">
-                                <?php foreach ($resultArr as $array) { ?>
-                                <table class="table">
-                                    <tbody>
-                                        <tr>
-                                            <td><label for="identifier">Choose any National Identifier from the below list.</label></td>
-                                            <td>
 
-                                                <select class="form-select" id="identifier" name="identifier" required>
-                                                    <option value="" disabled <?php echo empty($array['identifier']) ? 'selected' : ''; ?>>-- Select an Identifier --</option>
-                                                    <?php if (!empty($array['identifier'])) { ?>
-                                                        <option value="<?php echo htmlspecialchars($array['identifier']); ?>" selected><?php echo htmlspecialchars($array['identifier']); ?></option>
-                                                    <?php } ?>
-                                                    <option value="Aadhaar">Aadhaar</option>
-                                                    <option value="PAN (Permanent Account Number)">PAN (Permanent Account Number)</option>
-                                                    <option value="Voter ID">Voter ID</option>
-                                                    <option value="Passport">Passport</option>
-                                                    <option value="Ration Card">Ration Card</option>
-                                                    <option value="Driving License">Driving License</option>
-                                                    <option value="National Population Register (NPR) Number">National Population Register (NPR) Number</option>
-                                                    <option value="PR Card (Person of Indian Origin)">PR Card (Person of Indian Origin)</option>
-                                                </select>
+                            <?php foreach ($resultArr as $array) { ?>
+                                <div class="container">
+                                    <form name="verification" id="verification" action="#" method="post" enctype="multipart/form-data">
+                                        <input type="hidden" name="form-type" value="verification">
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <tbody>
+                                                    <tr>
+                                                        <td><label for="identifier">Choose any National Identifier from the below list.</label></td>
+                                                        <td>
 
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><label for="identifierNumber">Enter your National Identifier Number.</label></td>
-                                            <td>
+                                                            <select class="form-select" id="identifier" name="identifier" required>
+                                                                <option value="" disabled <?php echo empty($array['identifier']) ? 'selected' : ''; ?>>-- Select an Identifier --</option>
+                                                                <?php if (!empty($array['identifier'])) { ?>
+                                                                    <option value="<?php echo htmlspecialchars($array['identifier']); ?>" selected><?php echo htmlspecialchars($array['identifier']); ?></option>
+                                                                <?php } ?>
+                                                                <option value="Aadhaar">Aadhaar</option>
+                                                                <option value="PAN (Permanent Account Number)">PAN (Permanent Account Number)</option>
+                                                                <option value="Voter ID">Voter ID</option>
+                                                                <option value="Passport">Passport</option>
+                                                                <option value="Ration Card">Ration Card</option>
+                                                                <option value="Driving License">Driving License</option>
+                                                                <option value="National Population Register (NPR) Number">National Population Register (NPR) Number</option>
+                                                                <option value="PR Card (Person of Indian Origin)">PR Card (Person of Indian Origin)</option>
+                                                            </select>
 
-                                                <input type="text" class="form-control" id="identifierNumber" name="identifierNumber" placeholder="Enter your identifier number" value="<?php echo ($array["identifier_number"]); ?>" required>
-                                                <small class="form-text text-muted">
-                                                    In order for your application to be processed, all required documents must be submitted.
-                                                </small>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><label for="supportingDocument">Upload a copy of your valid identification.</label></td>
-                                            <td>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><label for="identifierNumber">Enter your National Identifier Number.</label></td>
+                                                        <td>
 
-                                                <input type="file" class="form-control" id="supportingDocument" name="supportingDocument" accept=".pdf, image/*" required>
-                                                <small class="form-text text-muted">
-                                                    Please upload a high-quality PDF/image, no larger than 1 MB. For ID cards, both sides must be included.
-                                                </small>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Confidentiality Statement</td>
-                                            <td>
-                                                <div class="border p-3" style="max-height: 200px; overflow-y: auto;">
-                                                    <div>
-                                                        <ol>
-                                                            <li>
-                                                                <p>Personal Information Collection</p>
-                                                                <p>
-                                                                    All personal information collected by RSSI is done so exclusively with your consent, by means of a form
-                                                                    posted on our website, an email received from you, or by telephone. No information is collected automatically.
-                                                                </p>
-                                                            </li>
-                                                            <li>
-                                                                <p>Use of Your Personal Information</p>
-                                                                <p>
-                                                                    The personal information collected is only used by RSSI staff for the purposes defined at the time of the
-                                                                    collection or a use that complies with these purposes. We do not share your information with any third parties.
-                                                                </p>
-                                                                <p>
-                                                                    As mentioned above, we use your personal information to appropriately process your requests and present you
-                                                                    with the information you need to access. We also use all of the information you provide voluntarily in order
-                                                                    to make your visits on our site possible. This information might, at a later time, allow us to add customized
-                                                                    elements to our site or to plan its content more appropriately, based on user interests.
-                                                                </p>
-                                                                <p>
-                                                                    If you have granted us the permission to, we can use your personal information in order to send you newsletters,
-                                                                    with the intent of offering you the best service possible.
-                                                                </p>
-                                                            </li>
-                                                            <li>
-                                                                <p>Sharing of Your Personal Information</p>
-                                                                <p>
-                                                                    We will not, in any circumstances, share your personal information with other individuals or organizations without
-                                                                    your permission, including public organizations, corporations, or individuals, except when applicable by law. We
-                                                                    do not sell, communicate, or divulge your information to any mailing lists. We can offer to add your address to an
-                                                                    RSSI Network mailing list or list server if you request it. In this last case, you may at any time ask us to remove
-                                                                    your name from such lists.
-                                                                </p>
-                                                                <p>
-                                                                    The only exception is if the law or a court order compels us to. We will share your information with government
-                                                                    agencies if they need or request it.
-                                                                </p>
-                                                            </li>
-                                                            <li>
-                                                                <p>Storage and Safety of Your Personal Information</p>
-                                                                <p>
-                                                                    We store your file ourselves. In addition, we use and apply the appropriate security measures to preserve the
-                                                                    confidentiality of your information.
-                                                                </p>
-                                                                <p>
-                                                                    RSSI notably uses software to monitor traffic on its network in order to detect unauthorized attempts to download
-                                                                    or change information, or to otherwise damage the site. This software receives and records the IP address of the
-                                                                    computer used by the person visiting our website, the date and time of the visit, and the pages viewed. We do not
-                                                                    attempt to make the connection between these addresses and the identities of the individuals who visit our site,
-                                                                    unless an intrusion or disruption attempt is detected.
-                                                                </p>
-                                                            </li>
-                                                        </ol>
-                                                    </div>
+                                                            <input type="text" class="form-control" id="identifierNumber" name="identifierNumber" placeholder="Enter your identifier number" value="<?php echo ($array["identifier_number"]); ?>" required>
+                                                            <small class="form-text text-muted">
+                                                                In order for your application to be processed, all required documents must be submitted.
+                                                            </small>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><label for="supportingDocument">Upload a copy of your valid identification.</label></td>
+                                                        <td>
 
-                                                    </p>
-                                                    <!-- Insert full text of confidentiality statement here -->
-                                                </div>
-                                                <div class="form-check mt-2">
-                                                    <input class="form-check-input" type="checkbox" id="agreeConfidentiality" name="agreeConfidentiality" required>
-                                                    <label class="form-check-label" for="agreeConfidentiality">
-                                                        I acknowledge that I have read and understand the Confidentiality Statement. I give my consent to the processing of my personal data by RSSI.
-                                                    </label>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <?php } ?>
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                                            <input type="file" class="form-control" id="supportingDocument" name="supportingDocument" accept=".pdf, image/*" required>
+                                                            <div class="photo-box mt-2" id="candidatePhotoContainer" style="width: 400px; height: 250px;">
+                                                                <?php
+                                                                if (!empty($array['supporting_document'])) {
+                                                                    // Extract file ID using regular expression
+                                                                    preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)\//', $array['supporting_document'], $matches);
+                                                                    $file_id = $matches[1];
+                                                                    // Generate the preview URL for iframe
+                                                                    $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+                                                                    echo '<iframe src="' . $preview_url . '"style="width: 100%; height: 100%;" 
+                                                            frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
+                                                                } else {
+                                                                    echo "No photo available";
+                                                                }
+                                                                ?>
+                                                            </div>
+                                                            <small class="form-text text-muted">
+                                                                Please upload a high-quality PDF/image, no larger than 1 MB. For ID cards, both sides must be included.
+                                                            </small>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Confidentiality Statement</td>
+                                                        <td>
+                                                            <div class="border p-3" style="max-height: 200px; overflow-y: auto;">
+                                                                <div>
+                                                                    <ol>
+                                                                        <li>
+                                                                            <p>Personal Information Collection</p>
+                                                                            <p>
+                                                                                All personal information collected by RSSI is done so exclusively with your consent, by means of a form
+                                                                                posted on our website, an email received from you, or by telephone. No information is collected automatically.
+                                                                            </p>
+                                                                        </li>
+                                                                        <li>
+                                                                            <p>Use of Your Personal Information</p>
+                                                                            <p>
+                                                                                The personal information collected is only used by RSSI staff for the purposes defined at the time of the
+                                                                                collection or a use that complies with these purposes. We do not share your information with any third parties.
+                                                                            </p>
+                                                                            <p>
+                                                                                As mentioned above, we use your personal information to appropriately process your requests and present you
+                                                                                with the information you need to access. We also use all of the information you provide voluntarily in order
+                                                                                to make your visits on our site possible. This information might, at a later time, allow us to add customized
+                                                                                elements to our site or to plan its content more appropriately, based on user interests.
+                                                                            </p>
+                                                                            <p>
+                                                                                If you have granted us the permission to, we can use your personal information in order to send you newsletters,
+                                                                                with the intent of offering you the best service possible.
+                                                                            </p>
+                                                                        </li>
+                                                                        <li>
+                                                                            <p>Sharing of Your Personal Information</p>
+                                                                            <p>
+                                                                                We will not, in any circumstances, share your personal information with other individuals or organizations without
+                                                                                your permission, including public organizations, corporations, or individuals, except when applicable by law. We
+                                                                                do not sell, communicate, or divulge your information to any mailing lists. We can offer to add your address to an
+                                                                                RSSI Network mailing list or list server if you request it. In this last case, you may at any time ask us to remove
+                                                                                your name from such lists.
+                                                                            </p>
+                                                                            <p>
+                                                                                The only exception is if the law or a court order compels us to. We will share your information with government
+                                                                                agencies if they need or request it.
+                                                                            </p>
+                                                                        </li>
+                                                                        <li>
+                                                                            <p>Storage and Safety of Your Personal Information</p>
+                                                                            <p>
+                                                                                We store your file ourselves. In addition, we use and apply the appropriate security measures to preserve the
+                                                                                confidentiality of your information.
+                                                                            </p>
+                                                                            <p>
+                                                                                RSSI notably uses software to monitor traffic on its network in order to detect unauthorized attempts to download
+                                                                                or change information, or to otherwise damage the site. This software receives and records the IP address of the
+                                                                                computer used by the person visiting our website, the date and time of the visit, and the pages viewed. We do not
+                                                                                attempt to make the connection between these addresses and the identities of the individuals who visit our site,
+                                                                                unless an intrusion or disruption attempt is detected.
+                                                                            </p>
+                                                                        </li>
+                                                                    </ol>
+                                                                </div>
+
+                                                                </p>
+                                                                <!-- Insert full text of confidentiality statement here -->
+                                                            </div>
+                                                            <div class="form-check mt-2">
+                                                                <input class="form-check-input" type="checkbox" id="agreeConfidentiality" name="agreeConfidentiality" required>
+                                                                <label class="form-check-label" for="agreeConfidentiality">
+                                                                    I acknowledge that I have read and understand the Confidentiality Statement. I give my consent to the processing of my personal data by RSSI.
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="text-end">
+                                            <button type="submit" class="btn btn-primary">Submit</button>
+                                        </div>
+                                    </form>
                                 </div>
-                            </form>
+                            <?php } ?>
+
 
                         </div>
                     </div>

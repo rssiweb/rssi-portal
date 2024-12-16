@@ -102,44 +102,31 @@
 
   <ul class="sidebar-nav" id="sidebar-nav">
 
-    <li class="nav-item">
+    <!-- <li class="nav-item">
       <a class="nav-link collapsed" id="homeLink" href="home.php">
         <span>Dashboard</span>
       </a>
-    </li>
-
+    </li> -->
     <li class="nav-item">
-      <a class="nav-link collapsed" data-bs-target="#myservices" data-bs-toggle="collapse" href="#">
-        <span>NextGen CareerScape</span><i class="bi bi-chevron-down ms-auto"></i>
+      <a class="nav-link collapsed" id="applicationForm" href="application_form.php">
+        <span>Application Form</span>
       </a>
-      <ul id="myservices" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-        <li class="nav-item">
-          <a class="nav-link collapsed" id="applicationForm" href="application_form.php">
-            <span>Application Form</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link collapsed" id="indentityVerification" href="identity_verification.php">
-            <span>Identity Verification</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link collapsed" id="documentVerification" href="document_verification.php">
-            <span>Document Verification</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link collapsed" id="OfficialLetter" href="official_letter.php">
-            <span>Official Letter</span>
-          </a>
-        </li>
-      </ul>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link collapsed" id="indentityVerification" href="identity_verification.php">
+        <span>Identity Verification</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link collapsed" id="documentVerification" href="document_verification.php">
+        <span>Document Verification</span>
+      </a>
     </li>
 
     <li class="nav-heading">Pages</li>
 
     <li class="nav-item">
-      <a class="nav-link collapsed" href="myprofile.php" target="_blank">
+      <a class="nav-link collapsed" href="#" target="_blank">
         <i class="bi bi-person"></i>
         <span>Profile</span>
       </a>
@@ -168,14 +155,14 @@
 
   // Define an array of menu items and their corresponding IDs and URLs
   const menuItems = [{
-    id: 'myservices',
-    linkId: 'applicationForm',
-    url: 'application_form.php'
-  }, {
-    id: 'myservices',
-    linkId: 'indentityVerification',
-    url: 'identity_verification.php'
-  }
+      id: 'myservices',
+      linkId: 'applicationForm',
+      url: 'application_form.php'
+    }, {
+      id: 'myservices',
+      linkId: 'indentityVerification',
+      url: 'identity_verification.php'
+    }
     // Add more menu items in the same format
     // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
   ];
@@ -192,12 +179,21 @@
   });
 </script>
 <script>
-  // Check if the current page is home.php
-  if (window.location.href.includes('home.php')) {
-    // Remove the "collapsed" class from the appropriate element
-    document.addEventListener('DOMContentLoaded', function () {
-      var homeLink = document.getElementById('homeLink');
-      homeLink.classList.remove('collapsed');
-    });
+  // Function to remove the "collapsed" class from the specified link
+  function toggleCollapsedClass(page, linkId) {
+    if (window.location.href.includes(page)) {
+      document.addEventListener('DOMContentLoaded', function() {
+        var link = document.getElementById(linkId);
+        if (link) {
+          link.classList.remove('collapsed');
+        }
+      });
+    }
   }
+
+  // Call the function for 'home.php' and 'profile.php'
+  toggleCollapsedClass('home.php', 'homeLink');
+  toggleCollapsedClass('application_form.php', 'applicationForm');
+  toggleCollapsedClass('identity_verification.php', 'indentityVerification');
+  toggleCollapsedClass('document_verification.php', 'documentVerification');
 </script>

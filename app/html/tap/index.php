@@ -33,7 +33,7 @@ function afterlogin($con, $date)
         header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
         unset($_SESSION["login_redirect"]);
     } else {
-        header("Location: home.php");
+        header("Location: application_form.php");
     }
 }
 
