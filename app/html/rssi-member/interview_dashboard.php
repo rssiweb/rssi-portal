@@ -158,7 +158,7 @@ $resultArr = pg_fetch_all($result);
                                             <option value="Offer Extended" <?php echo in_array('Offer Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Extended</option>
                                             <option value="Offer Accepted" <?php echo in_array('Offer Accepted', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Accepted</option>
                                             <option value="Offer Declined" <?php echo in_array('Offer Declined', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Declined</option>
-                                            <option value="No Show" <?php echo in_array('No Show', $filter_status ?? []) ? 'selected' : ''; ?>>No Show</option>
+                                            <option value="No-Show" <?php echo in_array('No-Show', $filter_status ?? []) ? 'selected' : ''; ?>>No-Show</option>
                                             <option value="Interview Incomplete" <?php echo in_array('Interview Incomplete', $filter_status ?? []) ? 'selected' : ''; ?>>Interview Incomplete</option>
                                             <option value="Rescheduled" <?php echo in_array('Rescheduled', $filter_status ?? []) ? 'selected' : ''; ?>>Rescheduled</option>
                                         </select>
@@ -180,6 +180,7 @@ $resultArr = pg_fetch_all($result);
                                                 <th scope="col">Technical Interview Scheduled On</th>
                                                 <th scope="col">HR Interview Scheduled On</th>
                                                 <th scope="col">Status</th>
+                                                <th scope="col">Enter Evaluation</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -187,6 +188,16 @@ $resultArr = pg_fetch_all($result);
                                             foreach ($resultArr as $array) {
                                                 $interviewTimestamp = empty($array['interview_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['interview_timestamp']));
                                                 $hrTimestamp = empty($array['hr_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_timestamp']));
+                                                $linkToShow = '';
+
+                                                // Check if HR interview is scheduled
+                                                if (!empty($array['hr_timestamp'])) {
+                                                    $linkToShow = '<a href="hr_interview.php?applicationNumber_verify=' . $array['application_number'] . '" target="_blank">HR Interview</a>';
+                                                }
+                                                // Check if TR interview is scheduled and HR interview is not scheduled
+                                                elseif (!empty($array['interview_timestamp'])&&$array['interview_status']!='No-Show') {
+                                                    $linkToShow = '<a href="technical_interview.php?applicationNumber_verify=' . $array['application_number'] . '" target="_blank">Technical Interview</a>';
+                                                }
 
                                                 $interviewStatus = empty($array['interview_status']) ? '' : $array['interview_status'];
                                             ?>
@@ -196,6 +207,7 @@ $resultArr = pg_fetch_all($result);
                                                     <td><?php echo $interviewTimestamp; ?></td>
                                                     <td><?php echo $hrTimestamp; ?></td>
                                                     <td><?php echo $interviewStatus; ?></td>
+                                                    <td><?php echo $linkToShow; ?></td>
                                                 </tr>
                                             <?php
                                             }
