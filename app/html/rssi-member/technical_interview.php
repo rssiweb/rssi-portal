@@ -74,7 +74,7 @@ if (isset($_GET['applicationNumber_verify'])) {
                         'experience' => $interviewData['experience'],
                         'remarks' => $interviewData['remarks'],
                         'declaration' => $interviewData['declaration'],
-                        'duration' => $interviewData['duration'],
+                        'interview_duration' => $interviewData['interview_duration'],
                         'interviewers' => $interviewers // Include interviewer details
                     );
                 }
@@ -144,8 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $ip_address = getUserIpAddr();
 
     // Insert data into the interview table
-    $insert_query = "INSERT INTO interview (interview_id,application_number, applicant_name, applicant_email, documents,subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address,duration)
-    VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$documents_string',$subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address','$interview_duration')";
+    $insert_query = "INSERT INTO interview (interview_id,application_number, applicant_name, applicant_email, documents,subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address)
+    VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$documents_string',$subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address')";
 
     // Execute the query
     $result = pg_query($con, $insert_query);
@@ -468,43 +468,33 @@ if (!empty($interviewData['submitted_by'])) {
                                                             </select>
                                                         </div>
 
-                                                        <!-- Subject Knowledge -->
-                                                        <div class="col-md-6">
-                                                            <label for="subjectKnowledge" class="form-label">Subject
-                                                                Knowledge</label>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <input type="number" class="form-control" name="subjectKnowledge"
-                                                                id="subjectKnowledge" min="1" max="10"
-                                                                placeholder="Enter marks (1-10)"
-                                                                value="<?php echo isset($interviewDataResponse['subjectKnowledge']) ? htmlspecialchars($interviewDataResponse['subjectKnowledge']) : ''; ?>"
-                                                                <?php echo isRequired('subjectKnowledge', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
-                                                        </div>
+                                                        <?php
+                                                        $fields = [
+                                                            'subjectKnowledge' => 'Subject Knowledge',
+                                                            'computerKnowledge' => 'Computer Knowledge',
+                                                            'demoClass' => 'Demo Class Performance'
+                                                        ];
 
-                                                        <!-- Computer Knowledge -->
-                                                        <div class="col-md-6">
-                                                            <label for="computerKnowledge" class="form-label">Computer
-                                                                Knowledge</label>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <input type="number" class="form-control" name="computerKnowledge"
-                                                                id="computerKnowledge" min="1" max="10"
-                                                                placeholder="Enter marks (1-10)"
-                                                                value="<?php echo isset($interviewDataResponse['computerKnowledge']) ? htmlspecialchars($interviewDataResponse['computerKnowledge']) : ''; ?>"
-                                                                <?php echo isRequired('computerKnowledge', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
-                                                        </div>
-
-                                                        <!-- Demo Class Performance -->
-                                                        <div class="col-md-6">
-                                                            <label for="demoClass" class="form-label">Demo Class
-                                                                Performance</label>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <input type="number" class="form-control" name="demoClass"
-                                                                id="demoClass" min="1" max="10" placeholder="Enter marks (1-10)"
-                                                                value="<?php echo isset($interviewDataResponse['demoClass']) ? htmlspecialchars($interviewDataResponse['demoClass']) : ''; ?>"
-                                                                <?php echo isRequired('demoClass', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
-                                                        </div>
+                                                        foreach ($fields as $field => $label) {
+                                                        ?>
+                                                            <div class="col-md-6">
+                                                                <label for="<?php echo $field; ?>" class="form-label"><?php echo $label; ?></label>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <input
+                                                                    type="number"
+                                                                    class="form-control"
+                                                                    name="<?php echo $field; ?>"
+                                                                    id="<?php echo $field; ?>"
+                                                                    min="1"
+                                                                    max="10"
+                                                                    placeholder="Enter marks (1-10)"
+                                                                    value="<?php echo isset($interviewDataResponse[$field]) ? htmlspecialchars($interviewDataResponse[$field]) : ''; ?>"
+                                                                    <?php echo isRequired($field, $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
+                                                            </div>
+                                                        <?php
+                                                        }
+                                                        ?>
 
                                                         <!-- Written Test Marks -->
                                                         <div class="col-md-6">
@@ -590,7 +580,7 @@ if (!empty($interviewData['submitted_by'])) {
                                                                 <input type="number" name="interview_duration"
                                                                     id="interview_duration" class="form-control"
                                                                     placeholder="Minutes"
-                                                                    value="<?php echo isset($interviewDataResponse['duration']) ? htmlspecialchars($interviewDataResponse['duration']) : ''; ?>" required>
+                                                                    value="<?php echo isset($interviewDataResponse['interview_duration']) ? htmlspecialchars($interviewDataResponse['interview_duration']) : ''; ?>" required>
                                                             </div>
                                                         </div>
 

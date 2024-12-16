@@ -27,7 +27,7 @@ if (isset($_GET['applicationNumber_verify'])) {
         $row = pg_fetch_assoc($result);
         if ($row) {
             // Query to fetch interview data from the interview table based on application number
-            $getInterview = "SELECT * FROM interview WHERE application_number = '$applicationNumberEscaped'";
+            $getInterview = "SELECT * FROM hr_interview WHERE application_number = '$applicationNumberEscaped'";
             $interviewResult = pg_query($con, $getInterview);
 
             // Initialize interview data response as null
@@ -66,15 +66,17 @@ if (isset($_GET['applicationNumber_verify'])) {
 
                     // Add interview data and interviewer details to the response
                     $interviewDataResponse = array(
-                        'documentsList' => $interviewData['documents'], // Assuming documents are stored as comma-separated values
-                        'subjectKnowledge' => $interviewData['subject_knowledge'],
-                        'computerKnowledge' => $interviewData['computer_knowledge'],
-                        'demoClass' => $interviewData['demo_class'],
-                        'writtenTest' => $interviewData['written_test'],
+                        'adaptability' => $interviewData['adaptability'], // Assuming documents are stored as comma-separated values
+                        'clarity_of_thoughts' => $interviewData['clarity_of_thoughts'],
+                        'educational_orientation' => $interviewData['educational_orientation'],
+                        'communication' => $interviewData['communication'],
+                        'cultural_fit' => $interviewData['cultural_fit'],
+                        'personality_bearing' => $interviewData['personality_bearing'],
                         'experience' => $interviewData['experience'],
                         'remarks' => $interviewData['remarks'],
+                        'hr_interview_status' => $interviewData['hr_interview_status'],
                         'declaration' => $interviewData['declaration'],
-                        'duration' => $interviewData['duration'],
+                        'interview_duration' => $interviewData['interview_duration'],
                         'interviewers' => $interviewers // Include interviewer details
                     );
                 }
@@ -112,16 +114,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $application_number = pg_escape_string($con, $responseData['application_number']);
     $applicant_name = htmlspecialchars($responseData['applicantFullName']);
     $applicant_email = htmlspecialchars($responseData['email']);
-    $documents_string = isset($_POST['documents']) && is_array($_POST['documents']) ? pg_escape_string($con, implode(',', $_POST['documents'])) : '';
-    $subject_knowledge = (int) $_POST['subjectKnowledge'];
-    $computer_knowledge = (int) $_POST['computerKnowledge'];
-    $demo_class = (int) $_POST['demoClass'];
-    $written_test = isset($_POST['writtenTest']) ? (int) $_POST['writtenTest'] : NULL;
+    $adaptability = (int) $_POST['adaptability'];
+    $clarity_of_thoughts = (int) $_POST['clarity_of_thoughts'];
+    $educational_orientation = (int) $_POST['educational_orientation'];
+    $communication = (int) $_POST['communication'];
+    $cultural_fit = (int) $_POST['cultural_fit'];
+    $personality_bearing = (int) $_POST['personality_bearing'];
     $experience = pg_escape_string($con, $_POST['experience']);
     $remarks = pg_escape_string($con, $_POST['remarks']);
 
     // Check if interviewer_ids is set and not empty, if not, set it to an empty string
     $interviewer_ids_string = isset($_POST['interviewer_ids']) ? pg_escape_string($con, $_POST['interviewer_ids']) : '';
+    $hr_interview_status = pg_escape_string($con, $_POST['hr_interview_status']);
 
     $interview_duration = (int) $_POST['interview_duration'];
 
@@ -144,8 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $ip_address = getUserIpAddr();
 
     // Insert data into the interview table
-    $insert_query = "INSERT INTO interview (interview_id,application_number, applicant_name, applicant_email, documents,subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address,duration)
-    VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$documents_string',$subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address','$interview_duration')";
+    $insert_query = "INSERT INTO hr_interview (interview_id,application_number, applicant_name, applicant_email, adaptability,clarity_of_thoughts, educational_orientation, communication, cultural_fit, personality_bearing,experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address,hr_interview_status)
+    VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$adaptability',$clarity_of_thoughts, $educational_orientation, $communication, $cultural_fit, $personality_bearing,'$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address','$hr_interview_status')";
 
     // Execute the query
     $result = pg_query($con, $insert_query);
@@ -290,7 +294,7 @@ if (!empty($interviewData['submitted_by'])) {
                                     alert("Assessment successfully submitted. Reference ID: " + interviewID);
 
                                     // Redirect to the updated record after the alert
-                                    window.location.href = "technical_interview.php?applicationNumber_verify=" + applicationNumber;
+                                    window.location.href = "hr_interview.php?applicationNumber_verify=" + applicationNumber;
 
                                     // Prevent resubmission after redirect
                                     if (window.history.replaceState) {
@@ -445,18 +449,13 @@ if (!empty($interviewData['submitted_by'])) {
 
                                                         <?php
                                                         $fields = [
-                                                            // 'continual_learning' => 'Continual Learning',
-                                                            // 'initiative' => 'Initiative/Proactiveness',
                                                             'adaptability' => 'Adaptability',
                                                             'clarity_of_thoughts' => 'Clarity Of Thoughts',
                                                             'educational_orientation' => 'Educational Sector Orientation',
                                                             'communication' => 'Communication',
-                                                            // 'interpersonal_skills' => 'Interpersonal Skills',
                                                             'cultural_fit' => 'Cultural Fit',
                                                             'personality_bearing' => 'Personality/Bearing'
                                                         ];
-
-                                                        $options = ['Excellent', 'Good', 'Satisfactory', 'Not Satisfactory'];
 
                                                         foreach ($fields as $field => $label) {
                                                         ?>
@@ -464,19 +463,17 @@ if (!empty($interviewData['submitted_by'])) {
                                                                 <label for="<?php echo $field; ?>" class="form-label"><?php echo $label; ?></label>
                                                             </div>
                                                             <div class="col-md-6">
-                                                                <select class="form-select" name="<?php echo $field; ?>" id="<?php echo $field; ?>"
+                                                                <input
+                                                                    type="number"
+                                                                    name="<?php echo $field; ?>"
+                                                                    id="<?php echo $field; ?>"
+                                                                    class="form-control"
+                                                                    min="1"
+                                                                    max="10"
+                                                                    step="1"
+                                                                    placeholder="Enter marks (1-10)"
+                                                                    value="<?php echo isset($interviewDataResponse[$field]) ? $interviewDataResponse[$field] : ''; ?>"
                                                                     <?php echo isRequired($field, $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
-                                                                    <option value="" <?php echo !isset($interviewDataResponse[$field]) ? 'selected disabled hidden' : ''; ?>>Select an option</option>
-                                                                    <?php
-                                                                    foreach ($options as $option) {
-                                                                    ?>
-                                                                        <option value="<?php echo $option; ?>" <?php echo (isset($interviewDataResponse[$field]) && $interviewDataResponse[$field] == $option) ? 'selected' : ''; ?>>
-                                                                            <?php echo $option; ?>
-                                                                        </option>
-                                                                    <?php
-                                                                    }
-                                                                    ?>
-                                                                </select>
                                                             </div>
                                                         <?php
                                                         }
@@ -556,17 +553,17 @@ if (!empty($interviewData['submitted_by'])) {
                                                                 <input type="number" name="interview_duration"
                                                                     id="interview_duration" class="form-control"
                                                                     placeholder="Minutes"
-                                                                    value="<?php echo isset($interviewDataResponse['duration']) ? htmlspecialchars($interviewDataResponse['duration']) : ''; ?>" required>
+                                                                    value="<?php echo isset($interviewDataResponse['interview_duration']) ? htmlspecialchars($interviewDataResponse['interview_duration']) : ''; ?>" required>
                                                             </div>
                                                         </div>
                                                         <div class="row mt-3">
                                                             <div class="col-md-6">
-                                                                <label for="status" class="form-label">Status</label>
-                                                                <select id="status" class="form-select" required>
-                                                                    <option value="" disabled selected>Select Status</option>
-                                                                    <option value="recommended">Recommended</option>
-                                                                    <option value="not_recommended">Not Recommended</option>
-                                                                    <option value="on_hold">On Hold</option>
+                                                                <label for="hr_interview_status" class="form-label">Status</label>
+                                                                <select id="hr_interview_status" name="hr_interview_status" class="form-select" required>
+                                                                    <option value="" disabled <?php echo !isset($interviewDataResponse['hr_interview_status']) ? 'selected' : ''; ?>>Select Status</option>
+                                                                    <option value="recommended" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'recommended') ? 'selected' : ''; ?>>Recommended</option>
+                                                                    <option value="not_recommended" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'not_recommended') ? 'selected' : ''; ?>>Not Recommended</option>
+                                                                    <option value="on_hold" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'on_hold') ? 'selected' : ''; ?>>On Hold</option>
                                                                 </select>
                                                             </div>
                                                         </div>
