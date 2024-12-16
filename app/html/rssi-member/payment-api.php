@@ -364,12 +364,7 @@ if ($formtype == "fetch_rtet") {
     // If application number is missing or invalid
     echo json_encode(['status' => 'error', 'message' => 'Application number is missing or invalid.']);
   }
-} else {
-  echo json_encode(['status' => 'error', 'message' => 'Invalid form type received: ' . htmlspecialchars($formtype)]);
 }
-
-
-
 
 
 if ($formtype == "get_details") {
