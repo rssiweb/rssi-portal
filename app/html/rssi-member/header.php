@@ -334,16 +334,16 @@
       </li><!-- End Components Nav -->
 
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#careerPortal" data-bs-toggle="collapse" href="#">
-          <span>Career Portal</span><i class="bi bi-chevron-down ms-auto"></i>
+        <a class="nav-link collapsed" data-bs-target="#peoplePlus" data-bs-toggle="collapse" href="#">
+          <span>People Plus</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="careerPortal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+        <ul id="peoplePlus" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="interview_dashboard" href="interview_dashboard.php">
-              <span>Interview Dashboard</span>
+            <a id="interview_central" href="interview_central.php">
+              <span>Interview Central</span>
             </a>
           </li>
-          <li>
+          <!-- <li>
             <a id="technical_interview" href="technical_interview.php">
               <span>Technical Interview</span>
             </a>
@@ -352,7 +352,7 @@
             <a id="hr_interview" href="hr_interview.php">
               <span>HR Interview</span>
             </a>
-          </li>
+          </li> -->
         </ul>
       </li><!-- End Components Nav -->
 
@@ -766,18 +766,16 @@
         linkId: 'view_survey',
         url: 'survey_view.php'
       }, {
-        id: 'careerPortal',
-        linkId: 'interview_dashboard',
-        url: 'interview_dashboard.php'
-      },
-      {
-        id: 'careerPortal',
-        linkId: 'technical_interview',
+        id: 'peoplePlus',
+        linkId: 'interview_central',
+        url: 'interview_central.php'
+      }, {
+        id: 'peoplePlus',
+        linkId: 'interview_central',
         url: 'technical_interview.php'
-      },
-      {
-        id: 'careerPortal',
-        linkId: 'hr_interview',
+      }, {
+        id: 'peoplePlus',
+        linkId: 'interview_central',
         url: 'hr_interview.php'
       }
       // Add more menu items in the same format
@@ -796,12 +794,19 @@
     });
   </script>
   <script>
-    // Check if the current page is home.php
-    if (window.location.href.includes('home.php')) {
-      // Remove the "collapsed" class from the appropriate element
-      document.addEventListener('DOMContentLoaded', function() {
-        var homeLink = document.getElementById('homeLink');
-        homeLink.classList.remove('collapsed');
-      });
+    // Function to remove the "collapsed" class from the specified link
+    function toggleCollapsedClass(page, linkId) {
+      if (window.location.href.includes(page)) {
+        document.addEventListener('DOMContentLoaded', function() {
+          var link = document.getElementById(linkId);
+          if (link) {
+            link.classList.remove('collapsed');
+          }
+        });
+      }
     }
+
+    // Call the function for 'home.php' and 'profile.php'
+    toggleCollapsedClass('home.php', 'homeLink');
+    // toggleCollapsedClass('profile.php', 'profileLink');
   </script>

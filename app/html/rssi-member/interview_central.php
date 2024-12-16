@@ -74,7 +74,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Interview Dashboard</title>
+    <title>Interview Central</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -121,17 +121,17 @@ $resultArr = pg_fetch_all($result);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Interview Dashboard</h1>
+            <h1>Interview Central</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Career Portal</a></li>
-                    <li class="breadcrumb-item active">Interview Dashboard</li>
+                    <li class="breadcrumb-item"><a href="#">People Plus</a></li>
+                    <li class="breadcrumb-item active">Interview Central</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
 
-        <section class="section Interview Dashboard">
+        <section class="section Interview Central">
             <div class="row">
 
                 <!-- Reports -->
@@ -192,11 +192,11 @@ $resultArr = pg_fetch_all($result);
 
                                                 // Check if HR interview is scheduled
                                                 if (!empty($array['hr_timestamp'])) {
-                                                    $linkToShow = '<a href="hr_interview.php?applicationNumber_verify=' . $array['application_number'] . '" target="_blank">HR Interview</a>';
+                                                    $linkToShow = '<a href="hr_interview.php?applicationNumber_verify=' . $array['application_number'] . '">HR Interview</a>';
                                                 }
                                                 // Check if TR interview is scheduled and HR interview is not scheduled
-                                                elseif (!empty($array['interview_timestamp'])&&$array['interview_status']!='No-Show') {
-                                                    $linkToShow = '<a href="technical_interview.php?applicationNumber_verify=' . $array['application_number'] . '" target="_blank">Technical Interview</a>';
+                                                elseif (!empty($array['interview_timestamp']) && $array['interview_status'] != 'No-Show') {
+                                                    $linkToShow = '<a href="technical_interview.php?applicationNumber_verify=' . $array['application_number'] . '">Technical Interview</a>';
                                                 }
 
                                                 $interviewStatus = empty($array['interview_status']) ? '' : $array['interview_status'];
