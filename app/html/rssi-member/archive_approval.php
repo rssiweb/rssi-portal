@@ -20,12 +20,12 @@ if ($role == 'Admin') {
     @$user_id = strtoupper($_GET['user_id']);
 
     if ($user_id > 0) {
-        $result = pg_query($con, "SELECT archive.remarks as aremarks, archive.*, rssimyaccount_members.*
+        $result = pg_query($con, "SELECT archive.remarks as aremarks, archive.*,rssimyaccount_members.fullname
             FROM archive
             JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber
             WHERE archive.uploaded_for='$user_id' AND rssimyaccount_members.filterstatus='$id'");
     } else {
-        $result = pg_query($con, "SELECT archive.remarks as aremarks, archive.*, rssimyaccount_members.*
+        $result = pg_query($con, "SELECT archive.remarks as aremarks, archive.*, rssimyaccount_members.fullname
             FROM archive
             JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber
             WHERE rssimyaccount_members.filterstatus='$id'

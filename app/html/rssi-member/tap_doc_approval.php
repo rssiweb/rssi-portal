@@ -52,7 +52,7 @@ if (!$application_number): ?>
 // If application_number is provided, proceed to fetch the data
 if ($application_number > 0) {
     $result = pg_query($con, "
-            SELECT DISTINCT ON (archive.file_name) archive.remarks as aremarks, archive.*, signup.*
+            SELECT DISTINCT ON (archive.file_name) archive.remarks as aremarks, archive.*
             FROM archive
             JOIN signup ON archive.uploaded_for = signup.application_number
             WHERE archive.uploaded_for = '$application_number'
@@ -383,14 +383,14 @@ $resultArr = pg_fetch_all($result);
                     const fileId = doc.file_path.split('/')[5];
                     previewContent = `
             <h5>${doc.file_name}</h5>
-            <p>Uploaded by: ${doc.uploaded_by} ${doc.uploaded_on ? new Date(doc.uploaded_on).toLocaleString() : ''}</p>
+            <p>Uploaded by: ${doc.uploaded_by} ${doc.uploaded_on ? (new Date(doc.uploaded_on).getDate().toString().padStart(2, '0')) + '/' + (new Date(doc.uploaded_on).getMonth() + 1).toString().padStart(2, '0') + '/' + new Date(doc.uploaded_on).getFullYear() + ' ' + new Date(doc.uploaded_on).toLocaleTimeString() : ''}</p>
             <iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" height="400px"></iframe>
         `;
                 } else {
                     // Handle other file types
                     previewContent = `
             <h5>${doc.file_name}</h5>
-            <p>Uploaded by: ${doc.uploaded_by} ${doc.uploaded_on ? new Date(doc.uploaded_on).toLocaleString() : ''}</p>
+            <p>Uploaded by: ${doc.uploaded_by} ${doc.uploaded_on ? (new Date(doc.uploaded_on).getDate().toString().padStart(2, '0')) + '/' + (new Date(doc.uploaded_on).getMonth() + 1).toString().padStart(2, '0') + '/' + new Date(doc.uploaded_on).getFullYear() + ' ' + new Date(doc.uploaded_on).toLocaleTimeString() : ''}</p>
             <p class="text-muted">Preview not available for this file type.</p>
         `;
                 }
@@ -424,7 +424,7 @@ $resultArr = pg_fetch_all($result);
                             <div class="d-flex justify-content-between">
                                 <!-- Reviewed by Section -->
                                 <div>
-                                    ${doc.reviewed_by ? `<p>Reviewed by: ${doc.reviewed_by} ${doc.reviewed_on ? new Date(doc.reviewed_on).toLocaleString() : ''}</p>` : ''}
+                                    ${doc.reviewed_by ? `<p>Reviewed by: ${doc.reviewed_by} ${doc.reviewed_on ? (new Date(doc.reviewed_on).getDate().toString().padStart(2, '0')) + '/' + (new Date(doc.reviewed_on).getMonth() + 1).toString().padStart(2, '0') + '/' + new Date(doc.reviewed_on).getFullYear() + ' ' + new Date(doc.reviewed_on).toLocaleTimeString() : ''}</p>` : ''}
                                 </div>
 
                                 <!-- Submit Button -->
