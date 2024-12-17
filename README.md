@@ -189,3 +189,76 @@ delete from support_ticket where ticket_id='66d9262c7dede'
 delete from support_ticket_assignment where ticket_id='66d9262c7dede'
 
 delete from support_ticket_status where ticket_id='66d9262c7dede'
+
+
+SELECT 
+    'CREATE TABLE ' || table_name || ' (' ||
+    string_agg(column_name || ' ' || 
+               CASE
+                   WHEN character_maximum_length IS NOT NULL 
+                        THEN data_type || '(' || character_maximum_length || ')'
+                   ELSE data_type
+               END, ', ') || ');' AS create_table_query
+FROM information_schema.columns
+WHERE table_name = 'signup'
+GROUP BY table_name;
+
+
+ALTER SEQUENCE signup_id_seq RESTART WITH 1;
+
+
+CREATE TABLE signup (
+    -- Candidate Information
+    application_number character varying(100) PRIMARY KEY, -- Unique application number
+    applicant_name character varying(100),
+    gender character varying(10),
+    date_of_birth date,
+    telephone character varying(10),
+    email character varying(100),
+    postal_address text,
+    permanent_address text,
+    caste text,
+    education_qualification text,
+    specialization text,
+    work_experience text,
+    identifier text,
+    identifier_number text,
+    association character varying(100), -- Added association
+    branch character varying(100),      -- Added branch
+    
+    -- Job and Interview Information
+    job_select character varying(225),
+    post_select character varying(225),
+    subject1 character varying(225),
+    subject2 character varying(20),
+    subject3 character varying(20),
+    medium character varying(225),
+    membership_purpose text,
+    purpose text,
+    availability text,
+    interests character varying(50),
+    
+    -- Miscellaneous Information
+    duration integer, -- Duration column added
+    consent boolean,
+    heard_about character varying(100),
+    
+    -- Document and File Uploads
+    payment_photo text,
+    applicant_photo text,
+    resume_upload text,
+    supporting_document text,
+    caste_document text,
+    
+    -- Password and Security Information
+    password text,
+    password_updated_by text,
+    password_updated_on timestamp without time zone,
+    default_pass_updated_on timestamp without time zone,
+    
+    -- Timestamp Information
+    timestamp timestamp without time zone,
+    interview_timestamp timestamp without time zone,
+    hr_timestamp timestamp without time zone,
+    interview_status text
+);
