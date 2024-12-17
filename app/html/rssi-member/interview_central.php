@@ -16,7 +16,7 @@ $filter_application_number = isset($_POST['filter_application_number']) ? trim($
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
 
 // Start building the query
-$query = "SELECT * FROM candidatepool WHERE interview_timestamp IS NOT NULL";
+$query = "SELECT * FROM candidatepool WHERE interview_timestamp IS NOT NULL AND interview_status!='No-Show'";
 
 // Add filters based on user input
 $conditions = [];
