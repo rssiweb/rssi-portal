@@ -393,7 +393,9 @@ if (!empty($interviewData['submitted_by'])) {
                                                                         <td>
                                                                             <a href="<?php echo htmlspecialchars($responseData['resumeLink']); ?>"
                                                                                 target="_blank" id="resumeText">View
-                                                                                Applicant CV</a>
+                                                                                Applicant CV</a><br>
+                                                                                <a href="tap_doc_approval.php?application_number=<?php echo htmlspecialchars($responseData['application_number']); ?>"
+                                                                                target="_blank" id="resumeText">Centralized Document Verification System</a>
                                                                         </td>
 
                                                                     </tr>

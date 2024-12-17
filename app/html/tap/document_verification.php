@@ -11,7 +11,7 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-$uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
+$uploadedfor = !empty($id) ? $id : $application_number ?? '';
 
 $selectMemberQuery = "SELECT applicant_name,education_qualification FROM signup WHERE application_number='$application_number'";
 $memberResult = pg_query($con, $selectMemberQuery);
@@ -42,8 +42,8 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
     ];
 
     // Get other form data
-    $uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
-    $uploadedby = $associatenumber ?? ''; // Make sure you have the $associatenumber variable defined somewhere
+    $uploadedfor = !empty($id) ? $id : $application_number ?? '';
+    $uploadedby = $application_number ?? ''; // Make sure you have the $application_number variable defined somewhere
     $now = date('Y-m-d H:i:s');
     $transaction_id = time();
 

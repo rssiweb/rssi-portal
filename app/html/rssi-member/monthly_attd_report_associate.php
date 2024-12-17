@@ -126,6 +126,25 @@ attendance_data AS (
 
         -- Updated Late status logic based on the overridden punch_in
         CASE
+        -- Leave condition
+            WHEN EXISTS (
+                SELECT 1
+                FROM leavedb_leavedb l
+                WHERE l.applicantid = m.associatenumber
+                AND l.status = 'Approved'
+                AND l.halfday = 0
+                AND d.attendance_date BETWEEN l.fromdate AND l.todate
+            ) THEN 'Leave'
+            
+            -- Half-day condition
+            WHEN EXISTS (
+                SELECT 1
+                FROM leavedb_leavedb l
+                WHERE l.applicantid = m.associatenumber
+                AND l.status = 'Approved'
+                AND l.halfday = 1
+                AND d.attendance_date BETWEEN l.fromdate AND l.todate
+            ) THEN 'HF'
             -- If missed-entry exception is applied, recalculate the status
             WHEN EXISTS (
                 SELECT 1
@@ -413,7 +432,7 @@ pg_close($con);
                                                         style="display:inline-block" required>
                                                         <?php if ($id == null) { ?>
                                                             <option value="" disabled selected hidden>Select Status</option>
-                                                            <?php
+                                                        <?php
                                                         } else { ?>
                                                             <option hidden selected><?php echo $id ?></option>
                                                         <?php }
@@ -448,13 +467,13 @@ pg_close($con);
                                             </div>
                                         </div>
                                         <script>
-                                            $(function () {
+                                            $(function() {
                                                 $("#get_month").datepicker({
                                                     dateFormat: "yy-mm", // Format to show in the input
                                                     changeMonth: true,
                                                     changeYear: true,
                                                     showButtonPanel: true,
-                                                    onClose: function (dateText, inst) {
+                                                    onClose: function(dateText, inst) {
                                                         var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
                                                         var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
                                                         $(this).val(year + '-' + (parseInt(month) + 1)); // Adjust month by adding 1

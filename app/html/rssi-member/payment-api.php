@@ -383,6 +383,29 @@ if ($formtype == "get_details") {
   }
 }
 
+if ($formtype == "update-document") {
+  // Get the document ID, status, and remarks from the POST data
+  $docId = $_POST['doc_id'];
+  $status = $_POST['status'];
+  $remarks = $_POST['remarks'];
+  $field_status = ($_POST['status'] == 'Verified') ? 'disabled' : null;
+  $reviewed_by = $_POST['reviewed_by'];
+  $reviewed_on = date('Y-m-d H:i:s');
+
+  // Prepare the SQL query to update the document status and remarks
+  $query = "UPDATE archive SET verification_status = $1, remarks = $2, field_status = $3,reviewed_by = $4,reviewed_on = $5 WHERE doc_id = $6";
+  $result = pg_query_params($con, $query, array($status, $remarks, $field_status, $reviewed_by, $reviewed_on, $docId));
+
+  // Check if the update was successful
+  if ($result) {
+    // Send a successful JSON response
+    echo json_encode(['success' => true, 'message' => 'Document status updated successfully.']);
+  } else {
+    // Send a failure JSON response
+    echo json_encode(['success' => false, 'message' => 'Failed to update document status.']);
+  }
+}
+
 if ($formtype == "donation_form") {
   if (isset($_POST['form-type']) && $_POST['form-type'] === "donation_form") {
     $tel = $_POST['tel'];

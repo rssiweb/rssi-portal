@@ -94,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               </script>';
     }
 }
-$isFormDisabled=null;
+$isFormDisabled = null;
 ?>
 
 
@@ -137,54 +137,6 @@ $isFormDisabled=null;
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <style>
-        .milestones {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background-color: #f0f0f0;
-            border-radius: 10px;
-            margin: 20px auto;
-        }
-
-        .milestone {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background-color: #ccc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 12px;
-            position: relative;
-        }
-
-        .milestone.active {
-            background-color: #4CAF50;
-        }
-
-        .milestone::after {
-            content: '';
-            width: 100%;
-            height: 4px;
-            background-color: #ccc;
-            position: absolute;
-            top: 50%;
-            left: 100%;
-            z-index: -1;
-        }
-
-        .milestone.active::after {
-            background-color: #4CAF50;
-            width: calc(100% - 50px);
-        }
-
-        .step-label {
-            margin-top: 10px;
-            text-align: center;
-        }
-    </style>
 </head>
 
 <body>
@@ -298,39 +250,6 @@ $isFormDisabled=null;
                                                     </tr>
                                                 </table>
 
-
-                                                <!-- <tr>
-                                                        <td>
-
-                                                            <label for="applicant-name">Application Number:</label>
-                                                        </td>
-                                                        <td><?php echo $array["application_number"] ?>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-
-                                                            <label for="applicant-name">Applicant
-                                                                Name:</label>
-                                                        </td>
-                                                        <td><?php echo $array["applicant_name"] ?>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <label for="date-of-birth">Date of
-                                                                Birth:</label>
-                                                        </td>
-                                                        <td><?php echo $array["date_of_birth"] ?>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <label for="gender">Gender:</label>
-                                                        </td>
-                                                        <td><?php echo $array["gender"] ?>
-                                                        </td>
-                                                    </tr> -->
                                                 <table class="table">
                                                     <tbody>
                                                         <tr>
@@ -458,16 +377,26 @@ $isFormDisabled=null;
                                                                 <label for="caste-document">Caste Certificate:</label>
                                                             </td>
                                                             <td>
-                                                                <input type="file" class="form-control" id="caste-document" name="caste-document" accept=".pdf,.jpg,.jpeg,.png">
-                                                                <!-- Display existing Caste Certificate if available -->
-                                                                <?php if (!empty($caste_filename)): ?>
+                                                                <div class="d-flex align-items-center">
+                                                                    <!-- Left side: File input -->
                                                                     <div>
-                                                                        <a href="<?php echo htmlspecialchars($array['caste_document']); ?>" target="_blank"><?php echo htmlspecialchars($caste_filename); ?></a>
+                                                                        <input type="file" class="form-control" id="caste-document" name="caste-document" accept=".pdf,.jpg,.jpeg,.png">
                                                                     </div>
-                                                                <?php endif; ?>
+
+                                                                    <!-- Right side: Uploaded file or message -->
+                                                                    <div class="ms-2 d-flex align-items-center">
+                                                                        <?php if (!empty($caste_filename)): ?>
+                                                                            <a href="<?php echo htmlspecialchars($array['caste_document']); ?>" target="_blank"><?php echo htmlspecialchars($caste_filename); ?></a>
+                                                                        <?php else: ?>
+                                                                            <span>No file uploaded yet.</span>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Help text below the input field -->
                                                                 <small id="caste-document-help" class="form-text text-muted">Upload your caste certificate (PDF, JPG, JPEG, or PNG).</small>
                                                             </td>
                                                         </tr>
+
                                                         <tr>
                                                             <td>
                                                                 <label for="branch">Preferred
@@ -574,14 +503,22 @@ $isFormDisabled=null;
                                                                 <label for="applicant-photo">Upload Applicant Photo:</label>
                                                             </td>
                                                             <td>
-                                                                <input type="file" class="form-control" id="applicant-photo" name="applicant-photo" accept="image/*">
-
-                                                                <?php if (!empty($photo_filename)): ?>
+                                                                <div class="d-flex align-items-center">
+                                                                    <!-- Left side: File input -->
                                                                     <div>
-                                                                        <a href="<?php echo htmlspecialchars($array['applicant_photo']); ?>" target="_blank"><?php echo htmlspecialchars($photo_filename); ?></a>
+                                                                        <input type="file" class="form-control" id="applicant-photo" name="applicant-photo" accept="image/*">
                                                                     </div>
-                                                                <?php endif; ?>
 
+                                                                    <!-- Right side: Uploaded file or message -->
+                                                                    <div class="ms-2 d-flex align-items-center">
+                                                                        <?php if (!empty($photo_filename)): ?>
+                                                                            <a href="<?php echo htmlspecialchars($array['applicant_photo']); ?>" target="_blank"><?php echo htmlspecialchars($photo_filename); ?></a>
+                                                                        <?php else: ?>
+                                                                            <span>No file uploaded yet.</span>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Help text below the input field -->
                                                                 <small id="applicant-photo-help" class="form-text text-muted">
                                                                     Please upload a recent passport size photograph of the applicant.
                                                                 </small>
@@ -592,20 +529,27 @@ $isFormDisabled=null;
                                                                 <label for="resume-upload">Upload Resume:</label>
                                                             </td>
                                                             <td>
-                                                                <input type="file" class="form-control" id="resume-upload" name="resume-upload">
-
-                                                                <?php if (!empty($resume_filename)): ?>
+                                                                <div class="d-flex align-items-center">
+                                                                    <!-- Left side: File input -->
                                                                     <div>
-                                                                        <a href="<?php echo htmlspecialchars($array['resume_upload']); ?>" target="_blank"><?php echo htmlspecialchars($resume_filename); ?></a>
+                                                                        <input type="file" class="form-control" id="resume-upload" name="resume-upload">
                                                                     </div>
-                                                                <?php endif; ?>
 
+                                                                    <!-- Right side: Uploaded file or message -->
+                                                                    <div class="ms-2 d-flex align-items-center">
+                                                                        <?php if (!empty($resume_filename)): ?>
+                                                                            <a href="<?php echo htmlspecialchars($array['resume_upload']); ?>" target="_blank"><?php echo htmlspecialchars($resume_filename); ?></a>
+                                                                        <?php else: ?>
+                                                                            <span>No file uploaded yet.</span>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Help text below the input field -->
                                                                 <small id="resume-upload-help" class="form-text text-muted">
                                                                     Please upload a scanned copy of the Resume.
                                                                 </small>
                                                             </td>
                                                         </tr>
-
 
                                                         <tr>
                                                             <td>

@@ -227,21 +227,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         <td>
 
                                                             <input type="file" class="form-control" id="supportingDocument" name="supportingDocument" accept=".pdf, image/*" required>
-                                                            <div class="photo-box mt-2" id="candidatePhotoContainer" style="width: 400px; height: 250px;">
-                                                                <?php
-                                                                if (!empty($array['supporting_document'])) {
+                                                            <?php if (!empty($array['supporting_document'])): ?>
+                                                                <div class="photo-box mt-2" id="candidatePhotoContainer" style="width: 400px; height: 250px;">
+                                                                    <?php
                                                                     // Extract file ID using regular expression
                                                                     preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)\//', $array['supporting_document'], $matches);
                                                                     $file_id = $matches[1];
                                                                     // Generate the preview URL for iframe
                                                                     $preview_url = "https://drive.google.com/file/d/$file_id/preview";
-                                                                    echo '<iframe src="' . $preview_url . '"style="width: 100%; height: 100%;" 
-                                                            frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
-                                                                } else {
-                                                                    echo "No photo available";
-                                                                }
-                                                                ?>
-                                                            </div>
+                                                                    ?>
+                                                                    <iframe src="<?php echo $preview_url; ?>" style="width: 100%; height: 100%;"
+                                                                        frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>
+                                                                </div>
+                                                            <?php endif; ?>
                                                             <small class="form-text text-muted">
                                                                 Please upload a high-quality PDF/image, no larger than 1 MB. For ID cards, both sides must be included.
                                                             </small>
