@@ -19,8 +19,8 @@ if (isset($_GET['applicationNumber_verify'])) {
     // Escape the application number to prevent SQL injection
     $applicationNumberEscaped = pg_escape_string($con, $applicationNumber);
 
-    // Query to fetch data from candidatepool table based on application number
-    $getDetails = "SELECT * FROM candidatepool WHERE application_number = '$applicationNumberEscaped'";
+    // Query to fetch data from signup table based on application number
+    $getDetails = "SELECT * FROM signup WHERE application_number = '$applicationNumberEscaped'";
     $result = pg_query($con, $getDetails);
 
     if ($result) {
@@ -84,7 +84,7 @@ if (isset($_GET['applicationNumber_verify'])) {
 
             // Prepare final response
             $responseData = array(
-                'applicantFullName' => $row['applicant_f_name'] . ' ' . $row['applicant_l_name'],
+                'applicantFullName' => $row['applicant_name'],
                 'application_number' => $row['application_number'],
                 'email' => $row['email'],
                 'base_branch' => $row['branch'],
@@ -99,11 +99,11 @@ if (isset($_GET['applicationNumber_verify'])) {
                 'interview_data' => $interviewDataResponse,
             );
         } else {
-            // No matching record found in candidatepool
+            // No matching record found in signup
             $responseData = ['status' => 'no_records', 'message' => 'No records found for the given application number.'];
         }
     } else {
-        // Error in query execution for candidatepool
+        // Error in query execution for signup
         $responseData = ['status' => 'error', 'message' => 'Error retrieving user data.'];
     }
 }

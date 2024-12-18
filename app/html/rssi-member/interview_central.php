@@ -16,7 +16,7 @@ $filter_application_number = isset($_POST['filter_application_number']) ? trim($
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
 
 // Start building the query
-$query = "SELECT * FROM candidatepool WHERE interview_timestamp IS NOT NULL AND interview_status!='No-Show'";
+$query = "SELECT * FROM signup WHERE interview_timestamp IS NOT NULL AND interview_status!='No-Show'";
 
 // Add filters based on user input
 $conditions = [];
@@ -203,7 +203,7 @@ $resultArr = pg_fetch_all($result);
                                             ?>
                                                 <tr>
                                                     <td><?php echo $array['application_number']; ?></td>
-                                                    <td><?php echo $array['applicant_f_name'] . ' ' . $array['applicant_l_name']; ?></td>
+                                                    <td><?php echo $array['applicant_name']; ?></td>
                                                     <td><?php echo $interviewTimestamp; ?></td>
                                                     <td><?php echo $hrTimestamp; ?></td>
                                                     <td><?php echo $interviewStatus; ?></td>
