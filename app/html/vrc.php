@@ -255,9 +255,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         function handleVerifyButtonClick(event) {
             event.preventDefault(); // prevent default form submission
 
-            // http://localhost:8082/rssi-member/payment-api.php
+            // Determine the correct script URL based on the environment
+            const scriptURL = window.location.hostname === 'localhost' ?
+                'http://localhost:8082/rssi-member/payment-api.php' :
+                'https://login.rssi.in/rssi-member/payment-api.php';
 
-            fetch('https://login.rssi.in/rssi-member/payment-api.php', {
+            fetch(scriptURL, {
                     method: 'POST',
                     body: new FormData(document.forms['get_details_vrc'])
                 })
