@@ -416,12 +416,19 @@ if (!empty($interviewData['submitted_by'])) {
                                                                 id="candidatePhotoContainer">
                                                                 <?php
                                                                 if (!empty($responseData['photo'])) {
-                                                                    // Extract photo ID from the Google Drive link
-                                                                    $photoID = explode('id=', $responseData['photo'])[1];
-                                                                    $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
-                                                                    echo '<iframe src="' . $previewUrl . '" width="150" height="200" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
+                                                                    // Extract photo ID from the Google Drive link using a regular expression
+                                                                    $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
+                                                                    if (preg_match($pattern, $responseData['photo'], $matches)) {
+                                                                        $photoID = $matches[1]; // Extracted file ID
+                                                                        $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
+                                                                        echo '<iframe src="' . $previewUrl . '" width="150" height="200" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
+                                                                    } else {
+                                                                        // If no valid photo ID is found
+                                                                        echo "Invalid Google Drive photo URL.";
+                                                                    }
                                                                 } else {
-                                                                    echo "No photo available";
+                                                                    // If photo is not provided
+                                                                    echo "No photo available.";
                                                                 }
                                                                 ?>
                                                             </div>
