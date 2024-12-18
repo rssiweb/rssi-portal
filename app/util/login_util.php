@@ -9,14 +9,12 @@ function isLoggedIn(string $key)
 @include("member_data.php");
 @include("student_data.php");
 
-ob_start(); // Start output buffering
 function passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on)
 {
     if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-        echo '<script type="text/javascript">';
-        echo 'alert("For security reasons, you must change your password before accessing additional features.");';
-        echo 'window.location.href = "defaultpasswordreset.php";';
-        echo '</script>';
+        // Redirect to default password reset page
+        header("Location: defaultpasswordreset.php");
+        exit;
     }
 }
 
@@ -37,8 +35,8 @@ function checkPageAccess()
 
     // Access control is role-based, where pages created under the "Admin" role are only accessible by "Admin" users, and pages created under the "Offline Manager" role are only accessible by "Offline Manager" users. Pages not explicitly assigned to a specific role are accessible by all users.
     $roleAccessControl = array(
-        "Admin" => array("scan", "dashboard", "student", "fees", "process", "ipf-management", "faculty", "facultyexp", "leave_admin", "payroll_processing", "donationinfo_admin", "pms", "onexit", "userlog", "onboarding", "exit", "visitor", "admission_admin", "expletter", "offerletter", "archive_approval", "bankdetails_admin", "exam_create", "exam_data_update", "vig_dashboard", "shift_planner", "view_shift", "interview_central", "technical_interview", "hr_interview","tap_doc_approval"),
-        "Offline Manager" => array("scan", "dashboard", "student", "admission_admin", "onboarding", "exit", "visitor", "interview_central", "technical_interview","tap_doc_approval"),
+        "Admin" => array("scan", "dashboard", "student", "fees", "process", "ipf-management", "faculty", "facultyexp", "leave_admin", "payroll_processing", "donationinfo_admin", "pms", "onexit", "userlog", "onboarding", "exit", "visitor", "admission_admin", "expletter", "offerletter", "archive_approval", "bankdetails_admin", "exam_create", "exam_data_update", "vig_dashboard", "shift_planner", "view_shift", "interview_central", "technical_interview", "hr_interview", "tap_doc_approval"),
+        "Offline Manager" => array("scan", "dashboard", "student", "admission_admin", "onboarding", "exit", "visitor", "interview_central", "technical_interview", "tap_doc_approval"),
         "Advanced User" => array("scan", "student"),
         "User" => array("")
     );
