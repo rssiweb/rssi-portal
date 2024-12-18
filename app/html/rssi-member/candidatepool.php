@@ -44,7 +44,7 @@ if (!empty($filter_status)) {
     $statuses = array_map(function ($status) use ($con) {
         return pg_escape_string($con, $status);
     }, $filter_status);
-    $conditions[] = "interview_status IN ('" . implode("', '", $statuses) . "')";
+    $conditions[] = "application_status IN ('" . implode("', '", $statuses) . "')";
 }
 
 if (!empty($lyear)) {
@@ -144,7 +144,7 @@ $resultArr = pg_fetch_all($result);
             </nav>
         </div><!-- End Page Title -->
 
-        <section class="section Candidate Pool">
+        <section class="section dashboard">
             <div class="row">
 
                 <!-- Reports -->
@@ -224,11 +224,11 @@ $resultArr = pg_fetch_all($result);
                                         <?php
                                         // Iterate through the fetched candidate information
                                         foreach ($resultArr as $array) {
-                                            $interviewTimestamp = empty($array['interview_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['interview_timestamp']));
-                                            $hrTimestamp = empty($array['hr_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_timestamp']));
+                                            $interviewTimestamp = empty($array['tech_interview_schedule']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['tech_interview_schedule']));
+                                            $hrTimestamp = empty($array['hr_interview_schedule']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_interview_schedule']));
                                             $linkToShow = '';
 
-                                            $interviewStatus = empty($array['interview_status']) ? '' : $array['interview_status'];
+                                            $interviewStatus = empty($array['application_status']) ? '' : $array['application_status'];
                                         ?>
                                             <tr>
                                                 <td><?php echo !empty($array['timestamp']) ? @date("d/m/Y g:i a", strtotime($array['timestamp'])) : ''; ?></td>
@@ -241,7 +241,7 @@ $resultArr = pg_fetch_all($result);
                                                 <td><?php echo $interviewTimestamp; ?></td>
                                                 <td><?php echo $hrTimestamp; ?></td>
                                                 <td><?php echo $interviewStatus; ?></td>
-                                                <td></td>
+                                                <td><a href='candidate_profile.php?application_number=<?php echo $array['application_number']; ?>' target="_blank">Access Profile</a></td>
                                             </tr>
                                         <?php
                                         }

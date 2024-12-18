@@ -94,7 +94,7 @@ if (isset($_GET['applicationNumber_verify'])) {
                 'contact' => $row['telephone'],
                 'photo' => $row['applicant_photo'],
                 'subject_preference_1' => $row['subject1'],
-                'hr_timestamp' => $row['hr_timestamp'],
+                'hr_interview_schedule' => $row['hr_interview_schedule'],
                 'position' => 'Post: ' . $row['post_select'] . ', Job: ' . $row['job_select'],
                 'interview_data' => $interviewDataResponse,
             );
@@ -322,7 +322,7 @@ if (!empty($interviewData['submitted_by'])) {
                                 // Check if responseData contains valid data and status is not 'no_records' or 'error'
                                 if (!empty($responseData) && @$responseData['status'] != 'no_records' && @$responseData['status'] != 'error') {
                                     // Check if HR interview is scheduled or not
-                                    if (empty($responseData['hr_timestamp'])) {
+                                    if (empty($responseData['hr_interview_schedule'])) {
                                         // HR interview not scheduled yet
                                         echo "The HR interview has not been scheduled yet for this application number.";
                                     } else { ?>

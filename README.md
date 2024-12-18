@@ -258,7 +258,7 @@ CREATE TABLE signup (
     
     -- Timestamp Information
     timestamp timestamp without time zone,
-    interview_timestamp timestamp without time zone,
-    hr_timestamp timestamp without time zone,
-    interview_status text
+    tech_interview_schedule timestamp without time zone,
+    hr_interview_schedule timestamp without time zone,
+    application_status text
 );

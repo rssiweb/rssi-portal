@@ -16,7 +16,7 @@ $filter_application_number = isset($_POST['filter_application_number']) ? trim($
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
 
 // Start building the query
-$query = "SELECT * FROM signup WHERE interview_timestamp IS NOT NULL AND interview_status!='No-Show' order by interview_timestamp desc";
+$query = "SELECT * FROM signup WHERE tech_interview_schedule IS NOT NULL AND application_status!='No-Show' order by tech_interview_schedule desc";
 
 // Add filters based on user input
 $conditions = [];
@@ -29,7 +29,7 @@ if (!empty($filter_status)) {
     $statuses = array_map(function ($status) use ($con) {
         return pg_escape_string($con, $status);
     }, $filter_status);
-    $conditions[] = "interview_status IN ('" . implode("', '", $statuses) . "')";
+    $conditions[] = "application_status IN ('" . implode("', '", $statuses) . "')";
 }
 
 // Append conditions to the query
@@ -186,20 +186,20 @@ $resultArr = pg_fetch_all($result);
                                         <tbody>
                                             <?php
                                             foreach ($resultArr as $array) {
-                                                $interviewTimestamp = empty($array['interview_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['interview_timestamp']));
-                                                $hrTimestamp = empty($array['hr_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_timestamp']));
+                                                $interviewTimestamp = empty($array['tech_interview_schedule']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['tech_interview_schedule']));
+                                                $hrTimestamp = empty($array['hr_interview_schedule']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_interview_schedule']));
                                                 $linkToShow = '';
 
                                                 // Check if HR interview is scheduled
-                                                if (!empty($array['hr_timestamp'])) {
+                                                if (!empty($array['hr_interview_schedule'])) {
                                                     $linkToShow = '<a href="hr_interview.php?applicationNumber_verify=' . $array['application_number'] . '">HR Interview</a>';
                                                 }
                                                 // Check if TR interview is scheduled and HR interview is not scheduled
-                                                elseif (!empty($array['interview_timestamp']) && $array['interview_status'] != 'No-Show') {
+                                                elseif (!empty($array['tech_interview_schedule']) && $array['application_status'] != 'No-Show') {
                                                     $linkToShow = '<a href="technical_interview.php?applicationNumber_verify=' . $array['application_number'] . '">Technical Interview</a>';
                                                 }
 
-                                                $interviewStatus = empty($array['interview_status']) ? '' : $array['interview_status'];
+                                                $interviewStatus = empty($array['application_status']) ? '' : $array['application_status'];
                                             ?>
                                                 <tr>
                                                     <td><?php echo $array['application_number']; ?></td>
