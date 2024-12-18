@@ -29,17 +29,42 @@
 
         <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
           <?php
-          // Extract file ID using regular expression
-          preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)\//', $applicant_photo, $matches);
-          $file_id = $matches[1];
-          // Generate the preview URL for iframe
-          $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+          // Default value for preview_url and initials
+          $preview_url = '';
+          $initials = '';
+
+          // Check if the photo exists
+          if (!empty($applicant_photo)) {
+            // Extract file ID using regular expression
+            preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)\//', $applicant_photo, $matches);
+
+            // Check if a match was found
+            if (isset($matches[1])) {
+              $file_id = $matches[1];
+              // Generate the preview URL for iframe
+              $preview_url = "https://drive.google.com/file/d/$file_id/preview";
+            }
+          } else {
+            // If no photo, extract initials from applicant's name
+            $name_parts = explode(" ", $applicant_name);
+            $initials = strtoupper(substr($name_parts[0], 0, 1)); // First name initial
+            if (isset($name_parts[1])) {
+              $initials .= strtoupper(substr($name_parts[1], 0, 1)); // Last name initial (if exists)
+            }
+          }
           ?>
+
           <div class="profile-photo">
-            <!-- Dynamically creating the iframe for profile picture -->
-            <iframe src="<?php echo $preview_url; ?>" width="30" height="30" frameborder="0" allow="autoplay"
-              sandbox="allow-scripts allow-same-origin"></iframe>
+            <?php if (!empty($preview_url)): ?>
+              <!-- Show the applicant photo if preview_url is set -->
+              <iframe src="<?php echo $preview_url; ?>" width="30" height="30" frameborder="0" allow="autoplay"
+                sandbox="allow-scripts allow-same-origin"></iframe>
+            <?php else: ?>
+              <!-- Show initials if no photo -->
+              <div class="profile-initials" style="width: 30px; height: 30px; background-color: #007bff; color: white; text-align: center; line-height: 30px; border-radius: 50%;"><?php echo $initials; ?></div>
+            <?php endif; ?>
           </div>
+
           <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo $applicant_name ?></span>
         </a>
 
@@ -126,7 +151,7 @@
     <li class="nav-heading">Pages</li>
 
     <li class="nav-item">
-      <a class="nav-link collapsed" href="#" target="_blank">
+      <a class="nav-link collapsed" href="#">
         <i class="bi bi-person"></i>
         <span>Profile</span>
       </a>

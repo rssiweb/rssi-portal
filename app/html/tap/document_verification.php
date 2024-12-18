@@ -20,7 +20,7 @@ if ($memberResult && pg_num_rows($memberResult) > 0) {
     // Fetch $datafor from rssimyaccount_members table
     $memberData = pg_fetch_assoc($memberResult);
     $datafor = $memberData['applicant_name'];
-    $eduq = $memberData['education_qualification'];
+    $education_qualification = $memberData['education_qualification'];
 }
 
 
@@ -164,7 +164,7 @@ $requiredFields = [
 // Get the corresponding required fields based on the value of $eduq
 $required = [];
 foreach ($requiredFields as $qualification => $fields) {
-    if (strpos($eduq, $qualification) !== false) {
+    if (!empty($education_qualification) && strpos($education_qualification, $qualification) !== false) {
         $required = array_merge($required, $fields);
     }
 }
@@ -387,7 +387,7 @@ function generateRequiredAttribute($field)
                                             <label for="pan_card" class="form-label">PAN Card:</label>
                                         </div>
                                         <div class="col-md-4">
-                                            <input class="form-control" type="file" id="pan_card" name="pan_card" <?php echo isset($fieldStatusValues['PAN Card']) ? $fieldStatusValues['PAN Card'] : ''; ?> required>
+                                            <input class="form-control" type="file" id="pan_card" name="pan_card" <?php echo isset($fieldStatusValues['PAN Card']) ? $fieldStatusValues['PAN Card'] : ''; ?>>
                                         </div>
                                     </div>
 
