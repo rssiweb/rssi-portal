@@ -11,12 +11,27 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
+// Calculate academic year for current period
+if (date('m') == 1 || date('m') == 2 || date('m') == 3) { // Upto March
+    $current_academic_year = (date('Y') - 1) . '-' . date('Y');
+} else { // After March
+    $current_academic_year = date('Y') . '-' . (date('Y') + 1);
+}
+
 // Handle filtering
 $filter_application_number = isset($_POST['filter_application_number']) ? trim($_POST['filter_application_number']) : '';
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
+@$lyear = isset($_POST['lyear']) ? $_POST['lyear'] : $current_academic_year;
 
 // Start building the query
-$query = "SELECT * FROM signup WHERE interview_timestamp IS NOT NULL AND interview_status!='No-Show' order by interview_timestamp desc";
+$query = "SELECT *, 
+          CASE 
+              WHEN EXTRACT(MONTH FROM timestamp) IN (1, 2, 3) THEN 
+                  (EXTRACT(YEAR FROM timestamp) - 1) || '-' || EXTRACT(YEAR FROM timestamp)
+              ELSE 
+                  EXTRACT(YEAR FROM timestamp) || '-' || (EXTRACT(YEAR FROM timestamp) + 1)
+          END AS academic_year
+          FROM signup";
 
 // Add filters based on user input
 $conditions = [];
@@ -32,15 +47,21 @@ if (!empty($filter_status)) {
     $conditions[] = "interview_status IN ('" . implode("', '", $statuses) . "')";
 }
 
-// Append conditions to the query
-if (!empty($conditions)) {
-    $query .= " AND " . implode(" AND ", $conditions);
+if (!empty($lyear)) {
+    $conditions[] = "CASE 
+                        WHEN EXTRACT(MONTH FROM timestamp) IN (1, 2, 3) THEN 
+                            (EXTRACT(YEAR FROM timestamp) - 1) || '-' || EXTRACT(YEAR FROM timestamp)
+                        ELSE 
+                            EXTRACT(YEAR FROM timestamp) || '-' || (EXTRACT(YEAR FROM timestamp) + 1)
+                    END = '" . pg_escape_string($con, $lyear) . "'";
 }
 
-// Add a limit of 100 if no filters are applied
-if (empty($filter_application_number) && empty($filter_status)) {
-    $query .= " LIMIT 100";
+// Append conditions to the query
+if (!empty($conditions)) {
+    $query .= " WHERE " . implode(" AND ", $conditions);
 }
+
+$query .= " ORDER BY timestamp DESC";
 
 // Execute the query
 $result = pg_query($con, $query);
@@ -74,7 +95,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Interview Central</title>
+    <title>Candidate Pool</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -94,20 +115,12 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <style>
-        @media (min-width:767px) {
-            .left {
-                margin-left: 2%;
-            }
-        }
-    </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
     <!-- JavaScript Library Files -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
-
 </head>
 
 <!-- =========================
@@ -121,17 +134,17 @@ $resultArr = pg_fetch_all($result);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Interview Central</h1>
+            <h1>Candidate Pool</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">People Plus</a></li>
-                    <li class="breadcrumb-item active">Interview Central</li>
+                    <li class="breadcrumb-item active">Candidate Pool</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
 
-        <section class="section Interview Central">
+        <section class="section Candidate Pool">
             <div class="row">
 
                 <!-- Reports -->
@@ -141,13 +154,32 @@ $resultArr = pg_fetch_all($result);
                         <div class="card-body">
                             <br>
                             <div class="container">
-                                <form method="POST" class="filter-form" style="display: flex;">
-                                    <div class="form-group" style="margin-right: 10px;">
-                                        <input type="text" id="filter_application_number" name="filter_application_number" class="form-control" placeholder="Application Number" value="<?php echo htmlspecialchars($filter_application_number); ?>" style="width: 200px;">
+                                <form method="POST" class="filter-form d-flex flex-wrap" style="gap: 10px;">
+                                    <div class="form-group">
+                                        <input type="text" id="filter_application_number" name="filter_application_number" class="form-control" placeholder="Application Number" value="<?php echo htmlspecialchars($filter_application_number); ?>" style="max-width: 200px;">
                                     </div>
-
-                                    <div class="form-group" style="margin-right: 10px;">
-                                        <select id="status" name="status[]" class="form-control" multiple>
+                                    <div class="form-group">
+                                        <select name="lyear" id="lyear" class="form-select" required>
+                                            <?php if ($lyear == null) { ?>
+                                                <option value="" disabled selected hidden>Academic Year</option>
+                                            <?php } else { ?>
+                                                <option hidden selected><?php echo $lyear ?></option>
+                                            <?php } ?>
+                                            <!-- Add options dynamically if needed -->
+                                            <?php
+                                            // Dynamically generate the academic year options
+                                            $currentYear = date('Y');
+                                            for ($i = 0; $i < 5; $i++) {
+                                                $startYear = $currentYear - $i;
+                                                $endYear = $startYear + 1;
+                                                $value = "$startYear-$endYear";
+                                                echo "<option value='$value'>$value</option>";
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="status" name="status[]" class="form-select" multiple>
                                             <option value="Technical Interview Scheduled" <?php echo in_array('Technical Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>Technical Interview Scheduled</option>
                                             <option value="HR Interview Scheduled" <?php echo in_array('HR Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>HR Interview Scheduled</option>
                                             <option value="Interview Pending" <?php echo in_array('Interview Pending', $filter_status ?? []) ? 'selected' : ''; ?>>Interview Pending</option>
@@ -162,59 +194,60 @@ $resultArr = pg_fetch_all($result);
                                             <option value="Interview Incomplete" <?php echo in_array('Interview Incomplete', $filter_status ?? []) ? 'selected' : ''; ?>>Interview Incomplete</option>
                                             <option value="Rescheduled" <?php echo in_array('Rescheduled', $filter_status ?? []) ? 'selected' : ''; ?>>Rescheduled</option>
                                         </select>
-
                                     </div>
-
                                     <div class="form-group">
-                                        <button type="submit" class="btn btn-primary btn-sm" style="outline: none;">
+                                        <button type="submit" class="btn btn-primary btn-sm">
                                             <i class="bi bi-search"></i>&nbsp;Filter
                                         </button>
                                     </div>
                                 </form>
-                                <div class="table-responsive">
-                                    <table class="table" id="table-id">
-                                        <thead>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table" id="table-id">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Applied on</th>
+                                            <th scope="col">Application Number</th>
+                                            <th scope="col">Applicant Name</th>
+                                            <th scope="col">Association</th>
+                                            <th scope="col">Post</th>
+                                            <th scope="col">Subject Preference</th>
+                                            <th scope="col">Identity Verification</th>
+                                            <th scope="col">Technical Interview Scheduled On</th>
+                                            <th scope="col">HR Interview Scheduled On</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        // Iterate through the fetched candidate information
+                                        foreach ($resultArr as $array) {
+                                            $interviewTimestamp = empty($array['interview_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['interview_timestamp']));
+                                            $hrTimestamp = empty($array['hr_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_timestamp']));
+                                            $linkToShow = '';
+
+                                            $interviewStatus = empty($array['interview_status']) ? '' : $array['interview_status'];
+                                        ?>
                                             <tr>
-                                                <th scope="col">Application Number</th>
-                                                <th scope="col">Applicant Name</th>
-                                                <th scope="col">Technical Interview Scheduled On</th>
-                                                <th scope="col">HR Interview Scheduled On</th>
-                                                <th scope="col">Status</th>
-                                                <th scope="col">Enter Evaluation</th>
+                                                <td><?php echo !empty($array['timestamp']) ? @date("d/m/Y g:i a", strtotime($array['timestamp'])) : ''; ?></td>
+                                                <td><?php echo $array['application_number']; ?></td>
+                                                <td><?php echo $array['applicant_name']; ?></td>
+                                                <td><?php echo $array['association']; ?></td>
+                                                <td><?php echo $array['post_select']; ?></td>
+                                                <td><?php echo $array['subject1']; ?>,<?php echo $array['subject2']; ?>,<?php echo $array['subject3']; ?></td>
+                                                <td><?php echo $array['identifier']; ?></td>
+                                                <td><?php echo $interviewTimestamp; ?></td>
+                                                <td><?php echo $hrTimestamp; ?></td>
+                                                <td><?php echo $interviewStatus; ?></td>
+                                                <td></td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            foreach ($resultArr as $array) {
-                                                $interviewTimestamp = empty($array['interview_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['interview_timestamp']));
-                                                $hrTimestamp = empty($array['hr_timestamp']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_timestamp']));
-                                                $linkToShow = '';
-
-                                                // Check if HR interview is scheduled
-                                                if (!empty($array['hr_timestamp'])) {
-                                                    $linkToShow = '<a href="hr_interview.php?applicationNumber_verify=' . $array['application_number'] . '">HR Interview</a>';
-                                                }
-                                                // Check if TR interview is scheduled and HR interview is not scheduled
-                                                elseif (!empty($array['interview_timestamp']) && $array['interview_status'] != 'No-Show') {
-                                                    $linkToShow = '<a href="technical_interview.php?applicationNumber_verify=' . $array['application_number'] . '">Technical Interview</a>';
-                                                }
-
-                                                $interviewStatus = empty($array['interview_status']) ? '' : $array['interview_status'];
-                                            ?>
-                                                <tr>
-                                                    <td><?php echo $array['application_number']; ?></td>
-                                                    <td><?php echo $array['applicant_name']; ?></td>
-                                                    <td><?php echo $interviewTimestamp; ?></td>
-                                                    <td><?php echo $hrTimestamp; ?></td>
-                                                    <td><?php echo $interviewStatus; ?></td>
-                                                    <td><?php echo $linkToShow; ?></td>
-                                                </tr>
-                                            <?php
-                                            }
-                                            ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        <?php
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div><!-- End Reports -->
@@ -243,7 +276,6 @@ $resultArr = pg_fetch_all($result);
             <?php endif; ?>
         });
     </script>
-
 </body>
 
 </html>

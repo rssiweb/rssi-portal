@@ -339,20 +339,15 @@
         </a>
         <ul id="peoplePlus" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
+            <a id="candidatePool" href="candidatepool.php">
+              <span>Candidate Pool</span>
+            </a>
+          </li>
+          <li>
             <a id="interview_central" href="interview_central.php">
               <span>Interview Central</span>
             </a>
           </li>
-          <!-- <li>
-            <a id="technical_interview" href="technical_interview.php">
-              <span>Technical Interview</span>
-            </a>
-          </li>
-          <li>
-            <a id="hr_interview" href="hr_interview.php">
-              <span>HR Interview</span>
-            </a>
-          </li> -->
         </ul>
       </li><!-- End Components Nav -->
 
@@ -777,6 +772,11 @@
         id: 'peoplePlus',
         linkId: 'interview_central',
         url: 'hr_interview.php'
+      }
+      , {
+        id: 'peoplePlus',
+        linkId: 'candidatePool',
+        url: 'candidatepool.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
