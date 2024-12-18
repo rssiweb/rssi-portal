@@ -4,7 +4,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util_tap.php");
 
 $date = date('Y-m-d H:i:s');
-$login_failed_dialog = false;
+$login_failed_dialog = "";
 
 function afterlogin($con, $date)
 {
@@ -19,14 +19,27 @@ function afterlogin($con, $date)
 
     passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
 
-    // instead of REMOTE_ADDR use REMOTE_ADDR to get real client IP
-    $result = pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$application_number','$_SERVER[REMOTE_ADDR]','$date')");
+    function getUserIpAddr()
+    {
+        if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
+            return $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+            $ip = trim($ipList[0]);
+            return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : $_SERVER['REMOTE_ADDR'];
+        } else {
+            return $_SERVER['REMOTE_ADDR'];
+        }
+    }
+
+    $user_ip = getUserIpAddr();
+    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$application_number','$_SERVER[REMOTE_ADDR]','$date')");
 
     if (isset($_SESSION["login_redirect"])) {
         $params = "";
         if (isset($_SESSION["login_redirect_params"])) {
             foreach ($_SESSION["login_redirect_params"] as $key => $value) {
-                $params = $params . "$key=$value&";
+                $params .= "$key=$value&";
             }
             unset($_SESSION["login_redirect_params"]);
         }
@@ -35,11 +48,11 @@ function afterlogin($con, $date)
     } else {
         header("Location: application_form.php");
     }
+    exit;
 }
 
 if (isLoggedIn("aid")) {
     afterlogin($con, $date);
-    exit;
 }
 
 function checkLogin($con, $date)
@@ -50,30 +63,30 @@ function checkLogin($con, $date)
 
     $query = "SELECT password, absconding FROM signup WHERE email='$application_number'";
     $result = pg_query($con, $query);
-    $user = pg_fetch_row($result);
-    @$existingHashFromDb = $user[0];
-    @$absconding = $user[1];
-
-    // Verify password
-    @$loginSuccess = password_verify($password, $existingHashFromDb);
-
-    if (!$loginSuccess) {
-        // Incorrect password
-        $login_failed_dialog = "Incorrect username or password.";
-    } else {
-        // Password is correct
-        if ($absconding !== null) {
-            // Account is inactive
-            $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
+    if ($result) {
+        $user = pg_fetch_assoc($result);
+        if ($user) {
+            $existingHashFromDb = $user['password'];
+            $absconding = $user['absconding'];
+            if (password_verify($password, $existingHashFromDb)) {
+                if (!empty($absconding)) {
+                    $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
+                } else {
+                    $_SESSION['aid'] = $application_number;
+                    afterlogin($con, $date);
+                }
+            } else {
+                $login_failed_dialog = "Incorrect username or password.";
+            }
         } else {
-            // Password is correct and account is active
-            $_SESSION['aid'] = $application_number;
-            afterlogin($con, $date);
+            $login_failed_dialog = "User not found.";
         }
+    } else {
+        $login_failed_dialog = "Error executing query.";
     }
 }
 
-if ($_POST && isset($_POST['login'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['login'])) {
         checkLogin($con, $date);
     }
@@ -84,25 +97,13 @@ if ($_POST && isset($_POST['login'])) {
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-
-        gtag('config', 'AW-11316670180');
-    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RSSI-My Account</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- Template Main CSS File -->
@@ -136,20 +137,15 @@ if ($_POST && isset($_POST['login'])) {
 <body>
     <main>
         <div class="container">
-
             <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
                 <div class="container">
                     <div class="row justify-content-center">
                         <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
-
                             <div class="container text-center py-4">
                                 <div class="logo">
-                                    <!-- <span class="d-lg-block" style="margin-right:10%;">Phoenix</span>
-                                    <span class="by-line">by RSSI NGO</span> -->
                                     <img src="../img/phoenix.png" alt="Phoenix Logo" width="40%">
                                 </div>
                             </div>
-
                             <div class="card mb-3">
                                 <div class="card-body">
                                     <div class="pt-4 pb-2">
@@ -268,7 +264,7 @@ if ($_POST && isset($_POST['login'])) {
     </div>
 
     <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
