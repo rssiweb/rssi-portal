@@ -11,12 +11,12 @@ function isLoggedIn(string $key)
 function passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on)
 {
     if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
-        echo '<script type="text/javascript">';
-        echo 'alert("For security reasons, you must change your password before accessing additional features.");';
-        echo 'window.location.href = "defaultpasswordreset.php";';
-        echo '</script>';
+        // Redirect to default password reset page
+        header("Location: defaultpasswordreset.php");
+        exit;
     }
 }
+
 function validation()
 {
     global $password_updated_by;

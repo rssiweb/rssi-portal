@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util_tap.php");
 
 $date = date('Y-m-d H:i:s');
@@ -9,9 +8,7 @@ $login_failed_dialog = "";
 function afterlogin($con, $date)
 {
     $application_number = $_SESSION['aid'];
-
     $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from signup WHERE email='$application_number'");
-
     $row = pg_fetch_row($user_query);
     $password_updated_by = $row[0];
     $password_updated_on = $row[1];
@@ -33,7 +30,7 @@ function afterlogin($con, $date)
     }
 
     $user_ip = getUserIpAddr();
-    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$application_number','$_SERVER[REMOTE_ADDR]','$date')");
+    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$application_number','$user_ip','$date')");
 
     if (isset($_SESSION["login_redirect"])) {
         $params = "";
