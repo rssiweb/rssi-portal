@@ -778,6 +778,11 @@
         linkId: 'candidatePool',
         url: 'candidatepool.php'
       }
+      , {
+        id: 'peoplePlus',
+        linkId: 'candidatePool',
+        url: 'candidate_profile.php'
+      }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
     ];

@@ -46,7 +46,7 @@ function checkPageAccess()
 
     // Access control is role-based, where pages created under the "Admin" role are only accessible by "Admin" users, and pages created under the "Offline Manager" role are only accessible by "Offline Manager" users. Pages not explicitly assigned to a specific role are accessible by all users.
     $roleAccessControl = array(
-        "Admin" => array("scan", "dashboard", "student", "fees", "process", "ipf-management", "faculty", "facultyexp", "leave_admin", "payroll_processing", "donationinfo_admin", "pms", "onexit", "userlog", "onboarding", "exit", "visitor", "admission_admin", "expletter", "offerletter", "archive_approval", "bankdetails_admin", "exam_create", "exam_data_update", "vig_dashboard", "shift_planner", "view_shift", "interview_central", "technical_interview", "hr_interview", "tap_doc_approval","candidatepool"),
+        "Admin" => array("scan", "dashboard", "student", "fees", "process", "ipf-management", "faculty", "facultyexp", "leave_admin", "payroll_processing", "donationinfo_admin", "pms", "onexit", "userlog", "onboarding", "exit", "visitor", "admission_admin", "expletter", "offerletter", "archive_approval", "bankdetails_admin", "exam_create", "exam_data_update", "vig_dashboard", "shift_planner", "view_shift", "interview_central", "technical_interview", "hr_interview", "tap_doc_approval","candidatepool","candidate_profile"),
         "Offline Manager" => array("scan", "dashboard", "student", "admission_admin", "onboarding", "exit", "visitor", "interview_central", "technical_interview", "tap_doc_approval"),
         "Advanced User" => array("scan", "student"),
         "User" => array("")

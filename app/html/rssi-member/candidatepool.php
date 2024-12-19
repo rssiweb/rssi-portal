@@ -180,19 +180,22 @@ $resultArr = pg_fetch_all($result);
                                     </div>
                                     <div class="form-group">
                                         <select id="status" name="status[]" class="form-select" multiple>
+                                            <option value="Application Submitted" <?php echo in_array('Application Submitted', $filter_status ?? []) ? 'selected' : ''; ?>>Application Submitted</option>
+                                            <option value="Application Re-Submitted" <?php echo in_array('Application Re-Submitted', $filter_status ?? []) ? 'selected' : ''; ?>>Application Re-Submitted</option>
+                                            <option value="Identity verification document submitted" <?php echo in_array('Identity verification document submitted', $filter_status ?? []) ? 'selected' : ''; ?>>Identity verification document submitted</option>
+                                            <option value="Photo Verification Completed" <?php echo in_array('Photo Verification Completed', $filter_status ?? []) ? 'selected' : ''; ?>>Photo Verification Completed</option>
+                                            <option value="Photo Verification Failed" <?php echo in_array('Photo Verification Failed', $filter_status ?? []) ? 'selected' : ''; ?>>Photo Verification Failed</option>
+                                            <option value="Identity Verification Completed" <?php echo in_array('Identity Verification Completed', $filter_status ?? []) ? 'selected' : ''; ?>>Identity Verification Completed</option>
+                                            <option value="Identity Verification Failed" <?php echo in_array('Identity Verification Failed', $filter_status ?? []) ? 'selected' : ''; ?>>Identity Verification Failed</option>
                                             <option value="Technical Interview Scheduled" <?php echo in_array('Technical Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>Technical Interview Scheduled</option>
+                                            <option value="Technical Interview Completed" <?php echo in_array('Technical Interview Completed', $filter_status ?? []) ? 'selected' : ''; ?>>Technical Interview Completed</option>
                                             <option value="HR Interview Scheduled" <?php echo in_array('HR Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>HR Interview Scheduled</option>
-                                            <option value="Interview Pending" <?php echo in_array('Interview Pending', $filter_status ?? []) ? 'selected' : ''; ?>>Interview Pending</option>
-                                            <option value="Awaiting HR Feedback" <?php echo in_array('Awaiting HR Feedback', $filter_status ?? []) ? 'selected' : ''; ?>>Awaiting HR Feedback</option>
                                             <option value="Recommended" <?php echo in_array('Recommended', $filter_status ?? []) ? 'selected' : ''; ?>>Recommended</option>
                                             <option value="Not Recommended" <?php echo in_array('Not Recommended', $filter_status ?? []) ? 'selected' : ''; ?>>Not Recommended</option>
-                                            <option value="Under Review" <?php echo in_array('Under Review', $filter_status ?? []) ? 'selected' : ''; ?>>Under Review</option>
-                                            <option value="Offer Extended" <?php echo in_array('Offer Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Extended</option>
-                                            <option value="Offer Accepted" <?php echo in_array('Offer Accepted', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Accepted</option>
-                                            <option value="Offer Declined" <?php echo in_array('Offer Declined', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Declined</option>
+                                            <option value="On Hold" <?php echo in_array('On Hold', $filter_status ?? []) ? 'selected' : ''; ?>>On Hold</option>
                                             <option value="No-Show" <?php echo in_array('No-Show', $filter_status ?? []) ? 'selected' : ''; ?>>No-Show</option>
-                                            <option value="Interview Incomplete" <?php echo in_array('Interview Incomplete', $filter_status ?? []) ? 'selected' : ''; ?>>Interview Incomplete</option>
-                                            <option value="Rescheduled" <?php echo in_array('Rescheduled', $filter_status ?? []) ? 'selected' : ''; ?>>Rescheduled</option>
+                                            <option value="Offer Extended" <?php echo in_array('Offer Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Extended</option>
+                                            <option value="Offer Not Extended" <?php echo in_array('Offer Not Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Not Extended</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
@@ -241,7 +244,7 @@ $resultArr = pg_fetch_all($result);
                                                 <td><?php echo $interviewTimestamp; ?></td>
                                                 <td><?php echo $hrTimestamp; ?></td>
                                                 <td><?php echo $interviewStatus; ?></td>
-                                                <td><a href='candidate_profile.php?application_number=<?php echo $array['application_number']; ?>' target="_blank">Access Profile</a></td>
+                                                <td><a href='candidate_profile.php?application_number=<?php echo $array['application_number']; ?>' target="_blank">Profile</a></td>
                                             </tr>
                                         <?php
                                         }
