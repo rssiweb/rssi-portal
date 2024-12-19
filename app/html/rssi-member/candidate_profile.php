@@ -6,6 +6,7 @@ include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -31,6 +32,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['photo_verification'])) {
         $photo_verification = pg_escape_string($con, $_POST['photo_verification']);
         $updates[] = "photo_verification = '$photo_verification'";
+        // Conditional update for application_status based on the identity_verification status
+        if ($photo_verification == 'Approved') {
+            $updates[] = "application_status = 'Photo Verification Completed'";
+        } elseif ($photo_verification == 'Rejected') {
+            $updates[] = "application_status = 'Photo Verification Failed'";
+        }
     }
 
     if (isset($_POST['identity_verification'])) {
@@ -56,10 +63,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $updates[] = "hr_interview_schedule = '$hr_interview_schedule'";
         $updates[] = "application_status = 'HR Interview Scheduled'";
     }
+    if (isset($_POST['no_show']) && $_POST['no_show'] === 'on') {
+        $no_show = pg_escape_string($con, $_POST['no_show']);
+        $updates[] = "no_show = TRUE";
+        $updates[] = "application_status = 'No-Show'";
+    }
 
     if (isset($_POST['offer_extended'])) {
         $offer_extended = pg_escape_string($con, $_POST['offer_extended']);
         $updates[] = "offer_extended = '$offer_extended'";
+        // Conditional update for application_status based on the offer_extended status
+        if ($offer_extended == 'Yes') {
+            $updates[] = "application_status = 'Offer Extended'";
+        } elseif ($offer_extended == 'No') {
+            $updates[] = "application_status = 'Offer Not Extended'";
+        }
     }
 
     // If no updates are present, exit
@@ -79,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Success: Profile was updated
         echo '<script>
             var applicationNumber = "' . $_GET['application_number'] . '";
-            alert("Data submitted successfully!");
+            alert("Profile updated successfully!");
             window.location.href = "candidate_profile.php?application_number=" + applicationNumber;  // Reload the page
         </script>';
     } else {
@@ -323,7 +341,7 @@ $isFormDisabled = null;
                                                                 <label for="caste">Caste:</label>
                                                             </td>
                                                             <td>
-                                                                <?php echo $array["work_experience"] ?>
+                                                                <?php echo $array["caste"] ?>
                                                             </td>
                                                         </tr>
 
@@ -502,7 +520,7 @@ $isFormDisabled = null;
                                                                 <label for="photo_verification">Photo Verification:</label>
                                                             </td>
                                                             <td>
-                                                                <select class="form-select" id="photo_verification" name="photo_verification" <?php echo ($array['photo_verification'] == 'Approved') ? 'disabled' : ''; ?>>
+                                                                <select class="form-select" id="photo_verification" name="photo_verification" <?php echo (($array['application_status'] == 'Application Submitted' || $array['application_status'] == 'Application Re-Submitted') && $array['photo_verification'] != 'Approved') ? '' : 'disabled'; ?>>
                                                                     <option value="" disabled <?php echo empty($array['photo_verification']) ? 'selected' : ''; ?>>Select status</option>
                                                                     <option value="Approved" <?php echo ($array['photo_verification'] == 'Approved') ? 'selected' : ''; ?>>Approved</option>
                                                                     <option value="Rejected" <?php echo ($array['photo_verification'] == 'Rejected') ? 'selected' : ''; ?>>Rejected</option>
@@ -517,7 +535,7 @@ $isFormDisabled = null;
                                                                 <label for="identity_verification">Identity Verification:</label>
                                                             </td>
                                                             <td>
-                                                                <select class="form-select" id="identity_verification" name="identity_verification" <?php echo ($array['identity_verification'] == 'Approved') ? 'disabled' : ''; ?>>
+                                                                <select class="form-select" id="identity_verification" name="identity_verification" <?php echo ($array['identity_verification'] == 'Approved' || $array['application_status'] != 'Photo Verification Completed') ? 'disabled' : ''; ?>>
                                                                     <option value="" disabled <?php echo empty($array['identity_verification']) ? 'selected' : ''; ?>>Select status</option>
                                                                     <option value="Approved" <?php echo ($array['identity_verification'] == 'Approved') ? 'selected' : ''; ?>>Approved</option>
                                                                     <option value="Rejected" <?php echo ($array['identity_verification'] == 'Rejected') ? 'selected' : ''; ?>>Rejected</option>
@@ -533,7 +551,7 @@ $isFormDisabled = null;
                                                             </td>
                                                             <td>
                                                                 <input type="datetime-local" class="form-control" id="tech_interview_schedule" name="tech_interview_schedule"
-                                                                    value="<?php echo htmlspecialchars($array['tech_interview_schedule'] ?? ''); ?>" <?php echo ($array['application_status'] != 'Identity Verification Completed') ? 'disabled' : ''; ?>>
+                                                                    value="<?php echo htmlspecialchars($array['tech_interview_schedule'] ?? ''); ?>" <?php echo (!empty($array['tech_interview_schedule']) || $array['application_status'] != 'Identity Verification Completed') ? 'disabled' : ''; ?>>
                                                                 <small id="tech-help" class="form-text text-muted">Select the date and time for the technical interview.</small>
                                                             </td>
                                                         </tr>
@@ -545,8 +563,28 @@ $isFormDisabled = null;
                                                             </td>
                                                             <td>
                                                                 <input type="datetime-local" class="form-control" id="hr_interview_schedule" name="hr_interview_schedule"
-                                                                    value="<?php echo htmlspecialchars($array['hr_interview_schedule'] ?? ''); ?>" <?php echo ($array['application_status'] != 'Technical Interview Completed') ? 'disabled' : ''; ?>>
+                                                                    value="<?php echo htmlspecialchars($array['hr_interview_schedule'] ?? ''); ?>"
+                                                                    <?php echo (!empty($array['hr_interview_schedule']) || $array['application_status'] != 'Technical Interview Completed') ? 'disabled' : ''; ?>>
                                                                 <small id="hr-help" class="form-text text-muted">Select the date and time for the HR interview.</small>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="no_show">No Show:</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" class="form-check-input" id="no_show" name="no_show"
+                                                                    <?php
+                                                                    // Enable checkbox only for 'Technical Interview Scheduled' or 'HR Interview Scheduled'
+                                                                    if (in_array($array['application_status'], ['Technical Interview Scheduled', 'HR Interview Scheduled'])) {
+                                                                        // Check if the checkbox should be checked
+                                                                        echo ($array['no_show'] == 'true') ? 'checked' : '';
+                                                                    } else {
+                                                                        // Disable for all other statuses
+                                                                        echo 'disabled';
+                                                                    }
+                                                                    ?>>
+                                                                <small id="no-show-help" class="form-text text-muted">Check if the candidate is marked as No-Show.</small>
                                                             </td>
                                                         </tr>
 
@@ -556,7 +594,7 @@ $isFormDisabled = null;
                                                                 <label for="offer_extended">Offer Extended:</label>
                                                             </td>
                                                             <td>
-                                                                <select class="form-select" id="offer_extended" name="offer_extended" <?php echo ($array['application_status'] != 'Recommended') ? 'disabled' : ''; ?>>
+                                                                <select class="form-select" id="offer_extended" name="offer_extended" <?php echo (!empty($array['offer_extended'])) || ($array['application_status'] != 'Recommended') ? 'disabled' : ''; ?>>
                                                                     <option value="" disabled <?php echo empty($array['offer_extended']) ? 'selected' : ''; ?>>Select status</option>
                                                                     <option value="Yes" <?php echo ($array['offer_extended'] == 'Yes') ? 'selected' : ''; ?>>Yes</option>
                                                                     <option value="No" <?php echo ($array['offer_extended'] == 'No') ? 'selected' : ''; ?>>No</option>

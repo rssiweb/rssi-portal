@@ -37,9 +37,9 @@ if (isset($_GET['applicationNumber_verify'])) {
             if ($interviewResult && pg_num_rows($interviewResult) > 0) {
                 $interviewData = pg_fetch_assoc($interviewResult);
 
-                $formStatus = $interviewData['form_status']; // Assuming you fetched this column from your query
+                $formStatus = $interviewData['hr_interview_status']; // Assuming you fetched this column from your query
 
-                $isFormDisabled = ($formStatus == true) ? 'disabled' : '';
+                $isFormDisabled = ($formStatus != 'On Hold') ? 'disabled' : '';
 
                 // Split interviewer_ids into an array
                 $interviewerIds = explode(',', $interviewData['interviewer_ids']);
@@ -148,15 +148,77 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $ip_address = getUserIpAddr();
 
-    // Insert data into the interview table
-    $insert_query = "INSERT INTO hr_interview (interview_id,application_number, applicant_name, applicant_email, adaptability,clarity_of_thoughts, educational_orientation, communication, cultural_fit, personality_bearing,experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address,hr_interview_status)
-    VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$adaptability',$clarity_of_thoughts, $educational_orientation, $communication, $cultural_fit, $personality_bearing,'$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address','$hr_interview_status')";
+    if (empty($interviewDataResponse['hr_interview_status'])) {
+        // Execute the INSERT query
+        $insert_query = "INSERT INTO hr_interview (
+            interview_id,
+            application_number,
+            applicant_name,
+            applicant_email,
+            adaptability,
+            clarity_of_thoughts,
+            educational_orientation,
+            communication,
+            cultural_fit,
+            personality_bearing,
+            experience,
+            remarks,
+            interviewer_ids,
+            interview_duration,
+            declaration,
+            submitted_by,
+            ip_address,
+            hr_interview_status
+        ) VALUES (
+            '$interview_id',
+            '$application_number',
+            '$applicant_name',
+            '$applicant_email',
+            '$adaptability',
+            $clarity_of_thoughts,
+            $educational_orientation,
+            $communication,
+            $cultural_fit,
+            $personality_bearing,
+            '$experience',
+            '$remarks',
+            '$interviewer_ids_string',
+            $interview_duration,
+            $declaration,
+            '$associatenumber',
+            '$ip_address',
+            '$hr_interview_status'
+        )";
 
-    // Execute the query
-    $result = pg_query($con, $insert_query);
+        $result = pg_query($con, $insert_query);
+    } else {
+        // Execute the UPDATE query
+        $update_query = "UPDATE hr_interview SET 
+            adaptability = '$adaptability',
+            clarity_of_thoughts = $clarity_of_thoughts,
+            educational_orientation = $educational_orientation,
+            communication = $communication,
+            cultural_fit = $cultural_fit,
+            personality_bearing = $personality_bearing,
+            experience = '$experience',
+            remarks = '$remarks',
+            interviewer_ids = '$interviewer_ids_string',
+            interview_duration = $interview_duration,
+            declaration = $declaration,
+            submitted_by = '$associatenumber',
+            ip_address = '$ip_address',
+            hr_interview_status = '$hr_interview_status'
+        WHERE application_number = '$application_number'";
+
+        $result = pg_query($con, $update_query);
+    }
+
+    $update_query_signup = "UPDATE signup SET application_status=$1 WHERE application_number=$2";
+    pg_prepare($con, "update_signup", $update_query_signup);
+    pg_execute($con, "update_signup", array($hr_interview_status, $application_number));
+
     $cmdtuples = pg_affected_rows($result);
 }
-
 ?>
 <?php
 // Initialize variables for name and ID
@@ -574,9 +636,9 @@ if (!empty($interviewData['submitted_by'])) {
                                                                     <label for="hr_interview_status" class="form-label">Status</label>
                                                                     <select id="hr_interview_status" name="hr_interview_status" class="form-select" required>
                                                                         <option value="" disabled <?php echo !isset($interviewDataResponse['hr_interview_status']) ? 'selected' : ''; ?>>Select Status</option>
-                                                                        <option value="recommended" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'recommended') ? 'selected' : ''; ?>>Recommended</option>
-                                                                        <option value="not_recommended" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'not_recommended') ? 'selected' : ''; ?>>Not Recommended</option>
-                                                                        <option value="on_hold" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'on_hold') ? 'selected' : ''; ?>>On Hold</option>
+                                                                        <option value="Recommended" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'Recommended') ? 'selected' : ''; ?>>Recommended</option>
+                                                                        <option value="Not Recommended" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'Not Recommended') ? 'selected' : ''; ?>>Not Recommended</option>
+                                                                        <option value="On Hold" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'On Hold') ? 'selected' : ''; ?>>On Hold</option>
                                                                     </select>
                                                                 </div>
                                                             </div>

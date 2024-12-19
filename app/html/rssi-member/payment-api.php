@@ -1386,8 +1386,8 @@ if (@$_POST['form-type'] == "signup") {
 
 
   // Build the SQL query
-  $columns = "applicant_name, date_of_birth, gender, telephone, email, branch, association, job_select, purpose, interests, post_select, membership_purpose, payment_photo, applicant_photo, resume_upload, heard_about, consent, timestamp, application_number, subject1, subject2, subject3, password,default_pass_updated_on,postal_address,permanent_address,education_qualification,specialization,work_experience";
-  $values = "'$applicant_name', '$date_of_birth', '$gender', '$telephone', '$email', '$branch', '$association', '$job_select', '$purpose', '$interests', '$post_select', '$membership_purpose', '$doclink_payment_photo', '$doclink_applicant_photo','$doclink_resume_photo','$heard_about', '$consent','$timestamp','$application_number','$subject1','$subject2','$subject3','$newpass_hash','$timestamp','$postal_address', '$permanent_address', '$education_qualification', '$specialization', '$work_experience'";
+  $columns = "applicant_name, date_of_birth, gender, telephone, email, branch, association, job_select, purpose, interests, post_select, membership_purpose, payment_photo, applicant_photo, resume_upload, heard_about, consent, timestamp, application_number, subject1, subject2, subject3, password,default_pass_updated_on,postal_address,permanent_address,education_qualification,specialization,work_experience,application_status";
+  $values = "'$applicant_name', '$date_of_birth', '$gender', '$telephone', '$email', '$branch', '$association', '$job_select', '$purpose', '$interests', '$post_select', '$membership_purpose', '$doclink_payment_photo', '$doclink_applicant_photo','$doclink_resume_photo','$heard_about', '$consent','$timestamp','$application_number','$subject1','$subject2','$subject3','$newpass_hash','$timestamp','$postal_address', '$permanent_address', '$education_qualification', '$specialization', '$work_experience','Application Submitted'";
 
   // Conditionally add duration to columns and values
   if ($duration != null) {

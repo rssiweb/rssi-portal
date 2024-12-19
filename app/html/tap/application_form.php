@@ -34,19 +34,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
     $uploadedFile_caste = $_FILES['caste-document'];
     $uploadedFile_photo = $_FILES['applicant-photo'];
     $uploadedFile_resume = $_FILES['resume-upload'];
+    $application_status = 'Application Re-Submitted';
 
     if (empty($_FILES['caste-document']['name'])) {
         $doclink_caste_document = null;
     } else {
         $filename_caste_document = "caste_" . "$application_number" . "_" . time();
-        $parent_caste_document = '1YyJLwbXQqNJeESSfPINjTW2OVFOh5IGD53Aaf1ZNqsnDeWAFdh6ECr3TnbNXM95yWdS5si-z';
+        $parent_caste_document = '1SGPfr_1b85s4KAuvt8n098VXIrvkBGY9';
         $doclink_caste_document = uploadeToDrive($uploadedFile_caste, $parent_caste_document, $filename_caste_document);
     }
     if (empty($_FILES['applicant-photo']['name'])) {
         $doclink_applicant_photo = null;
     } else {
         $filename_applicant_photo = "photo_" . "$application_number" . "_" . time();
-        $parent_applicant_photo = '1YyJLwbXQqNJeESSfPINjTW2OVFOh5IGD53Aaf1ZNqsnDeWAFdh6ECr3TnbNXM95yWdS5si-z';
+        $parent_applicant_photo = '1CgXW0M1ClTLRFrJjOCh490GVAq0IVAlM5OmAcfTtXVWxmnR9cx_I_Io7uD_iYE7-5rWDND82';
         $doclink_applicant_photo = uploadeToDrive($uploadedFile_photo, $parent_applicant_photo, $filename_applicant_photo);
     }
 
@@ -70,6 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
     if ($doclink_caste_document) $update_fields[] = "caste_document = '$doclink_caste_document'";
     if ($doclink_applicant_photo) $update_fields[] = "applicant_photo = '$doclink_applicant_photo'";
     if ($doclink_resume) $update_fields[] = "resume_upload = '$doclink_resume'";
+    if ($application_status) $update_fields[] = "application_status = '$application_status'";
 
     // If there are fields to update, execute the update query
     if (count($update_fields) > 0) {
@@ -94,7 +96,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               </script>';
     }
 }
-$isFormDisabled = null;
 ?>
 
 
@@ -198,6 +199,7 @@ $isFormDisabled = null;
                                 $caste_filename = !empty($array['caste_document']) ? get_file_name_from_google_drive(extract_file_id($array['caste_document']), $api_key) : null;
                                 $photo_filename = !empty($array['applicant_photo']) ? get_file_name_from_google_drive(extract_file_id($array['applicant_photo']), $api_key) : null;
                                 $resume_filename = !empty($array['resume_upload']) ? get_file_name_from_google_drive(extract_file_id($array['resume_upload']), $api_key) : null;
+                                $isFormDisabled = !empty($array["tech_interview_schedule"]) ? 'disabled' : null;
                                 ?>
 
                                 <div class="container">

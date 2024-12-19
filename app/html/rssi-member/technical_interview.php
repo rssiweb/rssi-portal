@@ -120,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $written_test = isset($_POST['writtenTest']) ? (int) $_POST['writtenTest'] : NULL;
     $experience = pg_escape_string($con, $_POST['experience']);
     $remarks = pg_escape_string($con, $_POST['remarks']);
+    $application_status = 'Technical Interview Completed';
 
     // Check if interviewer_ids is set and not empty, if not, set it to an empty string
     $interviewer_ids_string = isset($_POST['interviewer_ids']) ? pg_escape_string($con, $_POST['interviewer_ids']) : '';
@@ -147,6 +148,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Insert data into the interview table
     $insert_query = "INSERT INTO interview (interview_id,application_number, applicant_name, applicant_email, documents,subject_knowledge, computer_knowledge, demo_class, written_test, experience, remarks, interviewer_ids, interview_duration, declaration,submitted_by,ip_address)
     VALUES ('$interview_id','$application_number', '$applicant_name', '$applicant_email', '$documents_string',$subject_knowledge, $computer_knowledge, $demo_class, $written_test, '$experience', '$remarks', '$interviewer_ids_string', $interview_duration, $declaration,'$associatenumber','$ip_address')";
+
+    $update_query_signup = "UPDATE signup SET application_status=$1 WHERE application_number=$2";
+    pg_prepare($con, "update_signup", $update_query_signup);
+    pg_execute($con, "update_signup", array($application_status, $application_number));
 
     // Execute the query
     $result = pg_query($con, $insert_query);
