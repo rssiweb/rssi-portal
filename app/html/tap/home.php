@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util_tap.php");
+include("../../util/email.php");
+include("../../util/drive.php");
 
 if (!isLoggedIn("aid")) {
   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -10,6 +11,95 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
+
+// SQL query to fetch current application status
+$sql = "SELECT application_status, tech_interview_schedule, hr_interview_schedule,photo_verification,identity_verification,supporting_document,timestamp FROM signup WHERE application_number='$application_number'";
+$result = pg_query($con, $sql);
+$data = pg_fetch_assoc($result);
+
+if (!$data) {
+  echo "An error occurred.
+";
+  exit;
+}
+
+$application_status = $data['application_status'];
+
+function getStatus($application_status, $conditions, $completedStatus, $defaultStatus)
+{
+  // Loop through the status conditions
+  foreach ($conditions as $status => $valid_statuses) {
+    // Check if the application status exists in the valid status array
+    if (in_array($application_status, $valid_statuses)) {
+      return $status;  // Return the matching status type
+    }
+  }
+  return $defaultStatus;  // Return default if no match is found
+}
+
+$workflow = [
+  "Application Submission" => [
+    "status" => "Completed",
+    "remarks" => !empty($data['timestamp'])
+      ? "Application submitted on " . date('d/m/Y h:i A', strtotime($data['timestamp']))
+      : "Application submission timestamp not available",
+  ],
+  "Photo Verification" => [
+    "status" => ($data['photo_verification'] == 'Approved') ? "Completed" :
+      getStatus($application_status, [
+        "Completed" => ["Photo Verification Completed", "Identity Verification Completed", "Identity Verification Failed", "Technical Interview Scheduled", "Technical Interview Completed", "HR Interview Scheduled", "Recommended", "Not Recommended", "On Hold", "No-Show", "Offer Extended", "Offer Not Extended"],
+        "Photo Verification Failed" => ["Photo Verification Failed"],
+      ], "Pending", "Pending"),
+    "remarks" => "",
+  ],
+  "Identity Verification" => [
+    "status" => (empty($data['identity_verification']) && !empty($data['supporting_document'])) ? "Identity verification document submitted" :
+      getStatus($application_status, [
+        "Completed" => ["Identity Verification Completed", "Technical Interview Scheduled", "Technical Interview Completed", "HR Interview Scheduled", "Recommended", "Not Recommended", "On Hold", "No-Show", "Offer Extended", "Offer Not Extended"],
+        "Identity Verification Document Submitted" => ["Identity verification document submitted"],
+        "Identity Verification Failed" => ["Identity Verification Failed"],
+      ], "Pending", "Pending"),
+    "remarks" => "",
+  ],
+  "Interview Scheduling" => [
+    "status" => !empty($data['tech_interview_schedule']) ? "Completed" : "Pending",
+    "remarks" => !empty($data['tech_interview_schedule'])
+      ? "Scheduled for " . date('d/m/Y h:i A', strtotime($data['tech_interview_schedule']))
+      : "",
+  ],
+  "Interview" => [
+    "status" => getStatus($application_status, [
+      "Completed" => array_merge(
+        ["Technical Interview Completed", "HR Interview Scheduled", "Recommended", "Not Recommended", "On Hold", "Offer Extended", "Offer Not Extended"],
+        !empty($data['hr_interview_schedule']) && $application_status == "No-Show" ? ["No-Show"] : []
+      ),
+      "Technical Interview No-Show" => empty($data['hr_interview_schedule']) && $application_status == "No-Show" ? ["No-Show"] : [],
+    ], "Pending", "Pending"),
+    "remarks" => "",
+  ],
+  "HR Interview Scheduling" => [
+    "status" => !empty($data['hr_interview_schedule']) ? "Completed" : "Pending",
+    "remarks" => !empty($data['hr_interview_schedule'])
+      ? "Scheduled for " . date('d/m/Y h:i A', strtotime($data['hr_interview_schedule']))
+      : "",
+  ],
+  "HR Interview" => [
+    "status" => getStatus($application_status, [
+      "Completed" => ["Recommended", "Not Recommended", "On Hold", "Offer Extended", "Offer Not Extended"],
+      "HR Interview No-Show" => !empty($data['hr_interview_schedule']) && $application_status == "No-Show" ? ["No-Show"] : [],
+    ], "Pending", "Pending"),
+    "remarks" => "",
+  ],
+  "Issuance of Offer Letter" => [
+    "status" => $application_status === "Offer Extended" ? "Offer Extended" : ($application_status === "Offer Not Extended" ? "Offer Not Extended" : "Pending"),
+    "remarks" => "",
+  ],
+  "Issuance of Joining Letter" => [
+    "status" => "Pending",
+    "remarks" => "",
+  ],
+];
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -30,7 +120,7 @@ validation();
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Talent Acquisition Portal</title>
+  <title>Application Workflow</title>
 
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
@@ -50,54 +140,6 @@ validation();
       policyLink: 'https://www.rssi.in/disclaimer'
     });
   </script>
-  <style>
-    .milestones {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      background-color: #f0f0f0;
-      border-radius: 10px;
-      margin: 20px auto;
-    }
-
-    .milestone {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background-color: #ccc;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 12px;
-      position: relative;
-    }
-
-    .milestone.active {
-      background-color: #4CAF50;
-    }
-
-    .milestone::after {
-      content: '';
-      width: 100%;
-      height: 4px;
-      background-color: #ccc;
-      position: absolute;
-      top: 50%;
-      left: 100%;
-      z-index: -1;
-    }
-
-    .milestone.active::after {
-      background-color: #4CAF50;
-      width: calc(100% - 50px);
-    }
-
-    .step-label {
-      margin-top: 10px;
-      text-align: center;
-    }
-  </style>
 </head>
 
 <body>
@@ -108,11 +150,11 @@ validation();
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Talent Acquisition Portal (TAP)</h1>
+      <h1>Application Workflow</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-          <li class="breadcrumb-item">TAP</li>
+          <li class="breadcrumb-item">Application Workflow</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -126,39 +168,27 @@ validation();
 
             <div class="card-body">
               <br>
-              <div class="milestones">
-                <div class="milestone active">
-                  <div class="step-label">Application Submission</div>
-                </div>
-                <div class="milestone">
-                  <div class="step-label">Identity Verification</div>
-                </div>
-                <div class="milestone">
-                  <div class="step-label">Interview Scheduling</div>
-                </div>
-                <div class="milestone">
-                  <div class="step-label">Document Verification</div>
-                </div>
-                <div class="milestone">
-                  <div class="step-label">Interview Status</div>
-                </div>
-                <div class="milestone">
-                  <div class="step-label">HR Interview Scheduling</div>
-                </div>
-                <div class="milestone">
-                  <div class="step-label">HR Interview Status</div>
-                </div>
-                <div class="milestone">
-                  <div class="step-label">Issuance of Offer Letter</div>
-                </div>
-                <div class="milestone">
-                  <div class="step-label">Issuance of Joining Letter</div>
-                </div>
-                <div class="milestone">
-                  <div class="step-label">Onboarding</div>
-                </div>
+              <div class="container">
+                <!-- <h2 class="text-center mb-4">Application Workflow</h2> -->
+                <table class="table table-bordered">
+                  <thead class="table-dark">
+                    <tr>
+                      <th scope="col">Action Items</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($workflow as $step => $details): ?>
+                      <tr>
+                        <td><?= htmlspecialchars($step) ?></td>
+                        <td><?= htmlspecialchars($details['status']) ?></td>
+                        <td><?= htmlspecialchars($details['remarks']) ?></td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
               </div>
-
             </div>
           </div>
         </div><!-- End Reports -->
@@ -176,5 +206,3 @@ validation();
   <script src="../assets_new/js/main.js"></script>
 
 </body>
-
-</html>

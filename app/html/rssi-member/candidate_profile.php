@@ -131,7 +131,7 @@ $isFormDisabled = null;
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Application Form</title>
+    <title>Candidate Profile</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -161,11 +161,13 @@ $isFormDisabled = null;
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Application Form</h1>
+            <h1>Candidate Profile</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item">Application Form</li>
+                    <li class="breadcrumb-item">People Plus</li>
+                    <li class="breadcrumb-item"><a href="candidatepool.php">Candidate Pool</a></li>
+                    <li class="breadcrumb-item">Candidate Profile</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -520,7 +522,7 @@ $isFormDisabled = null;
                                                                 <label for="photo_verification">Photo Verification:</label>
                                                             </td>
                                                             <td>
-                                                                <select class="form-select" id="photo_verification" name="photo_verification" <?php echo (($array['application_status'] == 'Application Submitted' || $array['application_status'] == 'Application Re-Submitted') && $array['photo_verification'] != 'Approved') ? '' : 'disabled'; ?>>
+                                                                <select class="form-select" id="photo_verification" name="photo_verification" <?php echo (($array['application_status'] == 'Application Submitted' || $array['application_status'] == 'Application Re-Submitted' || $array['application_status'] == 'Identity verification document submitted') && $array['photo_verification'] != 'Approved') ? '' : 'disabled'; ?>>
                                                                     <option value="" disabled <?php echo empty($array['photo_verification']) ? 'selected' : ''; ?>>Select status</option>
                                                                     <option value="Approved" <?php echo ($array['photo_verification'] == 'Approved') ? 'selected' : ''; ?>>Approved</option>
                                                                     <option value="Rejected" <?php echo ($array['photo_verification'] == 'Rejected') ? 'selected' : ''; ?>>Rejected</option>

@@ -441,7 +441,7 @@ function generateRequiredAttribute($field)
                                         <thead>
                                             <tr>
                                                 <th>File Name</th>
-                                                <th>File</th>
+                                                <!-- <th>File</th> -->
                                                 <th>Uploaded By</th>
                                                 <th>Uploaded On</th>
                                                 <!-- <th>Transaction ID</th> -->
@@ -455,7 +455,7 @@ function generateRequiredAttribute($field)
                                                 <tr>
                                                     <td><?php echo $submission['file_name']; ?><?php echo isset($submission['certificate_name']) ? ' - ' . $submission['certificate_name'] : ''; ?>
                                                     </td>
-                                                    <td><a href="<?php echo $submission['file_path']; ?>" target="_blank" title="<?php echo $submission['file_name']; ?>_<?php echo $submission['transaction_id']; ?>">Document</a></td>
+                                                    <!-- <td><a href="<?php echo $submission['file_path']; ?>" target="_blank" title="<?php echo $submission['file_name']; ?>_<?php echo $submission['transaction_id']; ?>">Document</a></td> -->
                                                     <td><?php echo $submission['uploaded_by']; ?></td>
                                                     <td><?php echo date('d/m/Y g:i a', strtotime($submission['uploaded_on'])); ?>
                                                     </td>

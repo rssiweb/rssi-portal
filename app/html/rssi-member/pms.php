@@ -15,14 +15,16 @@ validation();
 date_default_timezone_set('Asia/Kolkata');
 
 if ($_POST) {
-    @$user_id = strtoupper($_POST['userid']);
-    @$password = $_POST['newpass'];
     @$type = $_POST['type'];
+    @$user_id = ($type === "Applicant") ? $_POST['userid'] : strtoupper($_POST['userid']);
+    @$password = $_POST['newpass'];
     @$newpass_hash = password_hash($password, PASSWORD_DEFAULT);
-    $now = date('Y-m-d H:i:s');
+    $now = date('Y-m-d H:i:s');    
 
     if ($type == "Associate") {
         $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', default_pass_updated_by='$user_check', default_pass_updated_on='$now' where associatenumber='$user_id'";
+    } if ($type == "Applicant") {
+        $change_password_query = "UPDATE signup SET password='$newpass_hash', default_pass_updated_by='$user_check', default_pass_updated_on='$now' where application_number='$user_id'";
     } else {
         $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash', default_pass_updated_by='$user_check', default_pass_updated_on='$now' where student_id='$user_id'";
     }
@@ -41,6 +43,10 @@ if ($get_id == "Associate" && $get_status != null) {
     $change_details = "SELECT * from rssimyprofile_student where student_id='$get_status'";
 } else if ($get_id == "Student" && $get_status == null) {
     $change_details = "SELECT * from rssimyprofile_student where filterstatus='Active' AND default_pass_updated_on is not null";
+} else if ($get_id == "Applicant" && $get_status != null) {
+    $change_details = "SELECT * from signup where application_number='$get_status'";
+} else if ($get_id == "Applicant" && $get_status == null) {
+    $change_details = "SELECT * from signup where default_pass_updated_on is not null";
 } else {
     $change_details = "SELECT * from rssimyprofile_student where student_id=''";
 }
@@ -160,6 +166,7 @@ $resultArrr = pg_fetch_all($result);
                                             ?>
                                             <option>Associate</option>
                                             <option>Student</option>
+                                            <option>Applicant</option>
                                         </select>
                                         <input type="text" name="userid" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="" required>
                                         <input type="password" name="newpass" id="newpass" class="form-control" style="width:max-content; display:inline-block" placeholder="New password" value="" required>
@@ -192,6 +199,7 @@ $resultArrr = pg_fetch_all($result);
                                             ?>
                                             <option>Associate</option>
                                             <option>Student</option>
+                                            <option>Applicant</option>
                                         </select>&nbsp;
                                         <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="<?php echo $get_status ?>">
                                     </div>
@@ -223,7 +231,7 @@ $resultArrr = pg_fetch_all($result);
                                 echo '<tbody>';
                                 foreach ($resultArrr as $array) {
                                     echo '<tr>
-                                <td>' . @$array['associatenumber'] . @$array['student_id'] ?>
+                                <td>' . @$array['associatenumber'] . @$array['student_id']. @$array['application_number'] ?>
 
                                     <?php if ($array['password_updated_by'] == null || $array['password_updated_on'] < $array['default_pass_updated_on']) { ?>
                                         <?php echo '<p class="badge bg-warning">defaulter</p>' ?><?php } ?>
@@ -239,7 +247,7 @@ $resultArrr = pg_fetch_all($result);
                                         <?php } ?>
 
 
-                                        <?php echo '<td>' . $array['default_pass_updated_by'] . '</td>' ?>
+                                        <?php echo '<td>' . ($array['default_pass_updated_by'] ?? 'System') . '</td>'; ?>
 
                                         <?php if ($array['password_updated_on'] != null) { ?>
 
