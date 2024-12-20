@@ -13,7 +13,7 @@ if (!isLoggedIn("aid")) {
 validation();
 $uploadedfor = !empty($id) ? $id : $application_number ?? '';
 
-$selectMemberQuery = "SELECT applicant_name,education_qualification FROM signup WHERE application_number='$application_number'";
+$selectMemberQuery = "SELECT applicant_name,education_qualification,application_status,tech_interview_schedule,identity_verification FROM signup WHERE application_number='$application_number'";
 $memberResult = pg_query($con, $selectMemberQuery);
 
 if ($memberResult && pg_num_rows($memberResult) > 0) {
@@ -21,6 +21,10 @@ if ($memberResult && pg_num_rows($memberResult) > 0) {
     $memberData = pg_fetch_assoc($memberResult);
     $datafor = $memberData['applicant_name'];
     $education_qualification = $memberData['education_qualification'];
+    $isFormDisabled = ($memberData["identity_verification"] !== 'Approved' ||
+        (!empty($memberData["tech_interview_schedule"]) && $memberData["application_status"] === 'No-Show'))
+        ? 'disabled'
+        : null;
 }
 
 
@@ -309,99 +313,100 @@ function generateRequiredAttribute($field)
                             <?php } ?>
                             <div class="container">
                                 <form action="#" method="post" enctype="multipart/form-data" id="archive">
-                                    <input type="hidden" name="form-type" value="archive">
-                                    <h3 class="mt-4">Upload Documents</h3>
-                                    <div class="mb-3 colored-area">
-                                        <p>To save your changes, please submit the form. Once submitted, the updated
-                                            information will be displayed here for your reference.</p>
-                                    </div>
-                                    <br>
-                                    <!-- Highschool Marksheet -->
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <label for="highschool" class="form-label">Highschool Marksheet:</label>
+                                    <fieldset <?php echo $isFormDisabled; ?>>
+                                        <input type="hidden" name="form-type" value="archive">
+                                        <h3 class="mt-4">Upload Documents</h3>
+                                        <div class="mb-3 colored-area">
+                                            <p>To save your changes, please submit the form. Once submitted, the updated
+                                                information will be displayed here for your reference.</p>
                                         </div>
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="file" id="highschool" name="highschool" <?= generateRequiredAttribute("highschool") ?> <?php echo isset($fieldStatusValues['High School']) ? $fieldStatusValues['High School'] : ''; ?>>
+                                        <br>
+                                        <!-- Highschool Marksheet -->
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label for="highschool" class="form-label">Highschool Marksheet:</label>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="file" id="highschool" name="highschool" <?= generateRequiredAttribute("highschool") ?> <?php echo isset($fieldStatusValues['High School']) ? $fieldStatusValues['High School'] : ''; ?>>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Intermediate Marksheet -->
-                                    <div class="row mt-2">
-                                        <div class="col-md-4">
-                                            <label for="intermediate" class="form-label">Intermediate Marksheet:</label>
+                                        <!-- Intermediate Marksheet -->
+                                        <div class="row mt-2">
+                                            <div class="col-md-4">
+                                                <label for="intermediate" class="form-label">Intermediate Marksheet:</label>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="file" id="intermediate" name="intermediate" <?= generateRequiredAttribute("intermediate") ?> <?php echo isset($fieldStatusValues['Intermediate']) ? $fieldStatusValues['Intermediate'] : ''; ?>>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="file" id="intermediate" name="intermediate" <?= generateRequiredAttribute("intermediate") ?> <?php echo isset($fieldStatusValues['Intermediate']) ? $fieldStatusValues['Intermediate'] : ''; ?>>
-                                        </div>
-                                    </div>
 
-                                    <!-- Graduation Marksheet -->
-                                    <div class="row mt-2">
-                                        <div class="col-md-4">
-                                            <label for="graduation" class="form-label">Graduation Marksheet:</label>
+                                        <!-- Graduation Marksheet -->
+                                        <div class="row mt-2">
+                                            <div class="col-md-4">
+                                                <label for="graduation" class="form-label">Graduation Marksheet:</label>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="file" id="graduation" name="graduation" <?= generateRequiredAttribute("graduation") ?> <?php echo isset($fieldStatusValues['Graduation']) ? $fieldStatusValues['Graduation'] : ''; ?>>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="file" id="graduation" name="graduation" <?= generateRequiredAttribute("graduation") ?> <?php echo isset($fieldStatusValues['Graduation']) ? $fieldStatusValues['Graduation'] : ''; ?>>
-                                        </div>
-                                    </div>
 
-                                    <!-- Post-Graduation Marksheet -->
-                                    <div class="row mt-2">
-                                        <div class="col-md-4">
-                                            <label for="post_graduation" class="form-label">Post-Graduation Marksheet:</label>
+                                        <!-- Post-Graduation Marksheet -->
+                                        <div class="row mt-2">
+                                            <div class="col-md-4">
+                                                <label for="post_graduation" class="form-label">Post-Graduation Marksheet:</label>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="file" id="post_graduation" name="post_graduation" <?= generateRequiredAttribute("post_graduation") ?> <?php echo isset($fieldStatusValues['Post Graduation']) ? $fieldStatusValues['Post Graduation'] : ''; ?>>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="file" id="post_graduation" name="post_graduation" <?= generateRequiredAttribute("post_graduation") ?> <?php echo isset($fieldStatusValues['Post Graduation']) ? $fieldStatusValues['Post Graduation'] : ''; ?>>
+                                        <div class="row mt-2">
+                                            <!-- Additional training or course Certificate -->
+                                            <div class="col-md-4">
+                                                <label for="additional_certificate" class="form-label">Additional training
+                                                    or course Certificate:</label>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="file" id="additional_certificate" name="additional_certificate" <?php echo isset($fieldStatusValues['Additional Certificate']) ? $fieldStatusValues['Additional Certificate'] : ''; ?>>
+                                            </div>
+                                            <!-- Certificate Name Input Field -->
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="text" id="additional_certificate_name" name="additional_certificate_name" placeholder="Training/Certificate Name">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="row mt-2">
-                                        <!-- Additional training or course Certificate -->
-                                        <div class="col-md-4">
-                                            <label for="additional_certificate" class="form-label">Additional training
-                                                or course Certificate:</label>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="file" id="additional_certificate" name="additional_certificate" <?php echo isset($fieldStatusValues['Additional Certificate']) ? $fieldStatusValues['Additional Certificate'] : ''; ?>>
-                                        </div>
-                                        <!-- Certificate Name Input Field -->
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="text" id="additional_certificate_name" name="additional_certificate_name" placeholder="Training/Certificate Name">
-                                        </div>
-                                    </div>
 
-                                    <div class="row mt-2">
-                                        <!-- Previous employment information -->
-                                        <div class="col-md-4">
-                                            <label for="previous_employment_information" class="form-label">Previous
-                                                employment information:</label>
+                                        <div class="row mt-2">
+                                            <!-- Previous employment information -->
+                                            <div class="col-md-4">
+                                                <label for="previous_employment_information" class="form-label">Previous
+                                                    employment information:</label>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="file" id="previous_employment_information" name="previous_employment_information" <?php echo isset($fieldStatusValues['Previous employment information']) ? $fieldStatusValues['Previous employment information'] : ''; ?>>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="file" id="previous_employment_information" name="previous_employment_information" <?php echo isset($fieldStatusValues['Previous employment information']) ? $fieldStatusValues['Previous employment information'] : ''; ?>>
-                                        </div>
-                                    </div>
 
-                                    <div class="row mt-2">
-                                        <!-- PAN Card -->
-                                        <div class="col-md-4">
-                                            <label for="pan_card" class="form-label">PAN Card:</label>
+                                        <div class="row mt-2">
+                                            <!-- PAN Card -->
+                                            <div class="col-md-4">
+                                                <label for="pan_card" class="form-label">PAN Card:</label>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="file" id="pan_card" name="pan_card" <?php echo isset($fieldStatusValues['PAN Card']) ? $fieldStatusValues['PAN Card'] : ''; ?>>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="file" id="pan_card" name="pan_card" <?php echo isset($fieldStatusValues['PAN Card']) ? $fieldStatusValues['PAN Card'] : ''; ?>>
-                                        </div>
-                                    </div>
 
-                                    <div class="row mt-2">
-                                        <!-- Aadhar Card -->
-                                        <div class="col-md-4">
-                                            <label for="aadhar_card" class="form-label">Aadhar Card:</label>
+                                        <div class="row mt-2">
+                                            <!-- Aadhar Card -->
+                                            <div class="col-md-4">
+                                                <label for="aadhar_card" class="form-label">Aadhar Card:</label>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="file" id="aadhar_card" name="aadhar_card" <?php echo isset($fieldStatusValues['Aadhar Card']) ? $fieldStatusValues['Aadhar Card'] : ''; ?> required>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="file" id="aadhar_card" name="aadhar_card" <?php echo isset($fieldStatusValues['Aadhar Card']) ? $fieldStatusValues['Aadhar Card'] : ''; ?> required>
-                                        </div>
-                                    </div>
 
-                                    <!-- <div class="row mt-2">
+                                        <!-- <div class="row mt-2">
                                         <div class="col-md-4">
                                             <label for="offer_letter" class="form-label">Offer Letter (Signed Copy):</label>
                                         </div>
@@ -410,26 +415,27 @@ function generateRequiredAttribute($field)
                                         </div>
                                     </div> -->
 
-                                    <div class="row mt-2">
-                                        <!-- Additional doc -->
-                                        <div class="col-md-4">
-                                            <label for="additional_doc" class="form-label">Additional document:</label>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <input class="form-control" type="file" id="additional_doc" name="additional_doc" <?php echo isset($fieldStatusValues['Additional Document']) ? $fieldStatusValues['Additional Document'] : ''; ?>>
-                                        </div>
-                                        <!-- Certificate Name Input Field -->
-                                        <div class="col-md-4">
-                                            <select class="form-select" id="additional_doc_name" name="additional_doc_name">
-                                                <option value="">Select Document Type</option>
-                                                <option value="caste_certificate">Caste Certificate</option>
-                                                <!-- Add more options as needed -->
-                                            </select>
-                                        </div>
+                                        <div class="row mt-2">
+                                            <!-- Additional doc -->
+                                            <div class="col-md-4">
+                                                <label for="additional_doc" class="form-label">Additional document:</label>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input class="form-control" type="file" id="additional_doc" name="additional_doc" <?php echo isset($fieldStatusValues['Additional Document']) ? $fieldStatusValues['Additional Document'] : ''; ?>>
+                                            </div>
+                                            <!-- Certificate Name Input Field -->
+                                            <div class="col-md-4">
+                                                <select class="form-select" id="additional_doc_name" name="additional_doc_name">
+                                                    <option value="">Select Document Type</option>
+                                                    <option value="caste_certificate">Caste Certificate</option>
+                                                    <!-- Add more options as needed -->
+                                                </select>
+                                            </div>
 
-                                    </div>
-                                    <hr>
-                                    <button type="submit" id="submit_button" class="btn btn-primary">Submit</button>
+                                        </div>
+                                        <hr>
+                                        <button type="submit" id="submit_button" class="btn btn-primary">Submit</button>
+                                    </fieldset>
                                 </form>
 
 
