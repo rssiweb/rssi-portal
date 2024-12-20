@@ -19,6 +19,13 @@ $application_number = isset($_GET['application_number']) ? $_GET['application_nu
 $sql = "SELECT * FROM signup WHERE application_number='$application_number'";
 $result = pg_query($con, $sql);
 $resultArr = pg_fetch_all($result);
+// Check if there are any results
+if ($resultArr && count($resultArr) > 0) {
+    // Accessing specific column values from the first result (assuming there is only one row)
+    $applicant_email = $resultArr[0]['email'];
+    $applicant_name = $resultArr[0]['applicant_name'];
+    $application_number = $resultArr[0]['application_number'];
+}
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -93,63 +100,80 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $update_result = pg_query($con, $update_query);
     $cmdtuples = pg_affected_rows($update_result);
 
-    // Check if the query was successful
-    if ($cmdtuples == 1 && $photo_verification == 'Approved') {
-        if ($email != "") {
-            // Adjust the parameters for your sendEmail function accordingly
-            sendEmail("tap_photo_verification_completed", array(
-                "applicant_name" => $applicant_name
-            ), $email, False);
+    if (isset($_POST['photo_verification'])) {
+        // Check if the query was successful
+        if ($cmdtuples == 1 && $photo_verification == 'Approved') {
+            if ($applicant_email != "") {
+                // Adjust the parameters for your sendEmail function accordingly
+                sendEmail("tap_photo_verification_completed", array(
+                    "application_number" => $application_number,
+                    "applicant_name" => $applicant_name
+                ), $applicant_email, False);
+            }
+        }
+        if ($cmdtuples == 1 && $photo_verification == 'Rejected') {
+            if ($applicant_email != "") {
+                // Adjust the parameters for your sendEmail function accordingly
+                sendEmail("tap_photo_verification_failed", array(
+                    "application_number" => $application_number,
+                    "applicant_name" => $applicant_name
+                ), $applicant_email, False);
+            }
         }
     }
-    if ($cmdtuples == 1 && $photo_verification == 'Rejected') {
-        if ($email != "") {
-            // Adjust the parameters for your sendEmail function accordingly
-            sendEmail("tap_photo_verification_failed", array(
-                "applicant_name" => $applicant_name
-            ), $email, False);
+    if (isset($_POST['identity_verification'])) {
+        if ($cmdtuples == 1 && $identity_verification == 'Approved') {
+            if ($applicant_email != "") {
+                // Adjust the parameters for your sendEmail function accordingly
+                sendEmail("tap_identity_verification_completed", array(
+                    "application_number" => $application_number,
+                    "applicant_name" => $applicant_name
+                ), $applicant_email, False);
+            }
+        }
+        if ($cmdtuples == 1 && $identity_verification == 'Rejected') {
+            if ($applicant_email != "") {
+                // Adjust the parameters for your sendEmail function accordingly
+                sendEmail("tap_identity_verification_failed", array(
+                    "application_number" => $application_number,
+                    "applicant_name" => $applicant_name
+                ), $applicant_email, False);
+            }
         }
     }
-    if ($cmdtuples == 1 && $identity_verification == 'Approved') {
-        if ($email != "") {
-            // Adjust the parameters for your sendEmail function accordingly
-            sendEmail("tap_identity_verification_completed", array(
-                "applicant_name" => $applicant_name
-            ), $email, False);
+    if (isset($_POST['tech_interview_schedule']) && !empty($_POST['tech_interview_schedule'])) {
+        if ($cmdtuples == 1 && !empty($tech_interview_schedule) && (empty($no_show) || $no_show == false)) {
+            if ($applicant_email != "") {
+                // Adjust the parameters for your sendEmail function accordingly
+                sendEmail("tap_technical_interview_schedule", array(
+                    "application_number" => $application_number,
+                    "applicant_name" => $applicant_name,
+                    "tech_interview_schedule" => date("d/m/Y g:i a", strtotime($tech_interview_schedule))
+                ), $applicant_email, False);
+            }
         }
     }
-    if ($cmdtuples == 1 && $identity_verification == 'Rejected') {
-        if ($email != "") {
-            // Adjust the parameters for your sendEmail function accordingly
-            sendEmail("tap_identity_verification_faild", array(
-                "applicant_name" => $applicant_name
-            ), $email, False);
+    if (isset($_POST['hr_interview_schedule']) && !empty($_POST['hr_interview_schedule'])) {
+        if ($cmdtuples == 1 && !empty($hr_interview_schedule) && (empty($no_show) || $no_show == false)) {
+            if ($applicant_email != "") {
+                // Adjust the parameters for your sendEmail function accordingly
+                sendEmail("tap_hr_interview_schedule", array(
+                    "application_number" => $application_number,
+                    "applicant_name" => $applicant_name,
+                    "hr_interview_schedule" => date("d/m/Y g:i a", strtotime($hr_interview_schedule))
+                ), $applicant_email, False);
+            }
         }
     }
-    if ($cmdtuples == 1 && !empty($tech_interview_schedule) && (empty($no_show) || $no_show==false)) {
-        if ($email != "") {
-            // Adjust the parameters for your sendEmail function accordingly
-            sendEmail("tap_technical_interview_schedule", array(
-                "applicant_name" => $applicant_name,
-                "tech_interview_schedule" => date("d/m/Y g:i a", strtotime($tech_interview_schedule))
-            ), $email, False);
-        }
-    }
-    if ($cmdtuples == 1 && !empty($hr_interview_schedule) && (empty($no_show) || $no_show==false)) {
-        if ($email != "") {
-            // Adjust the parameters for your sendEmail function accordingly
-            sendEmail("tap_hr_interview_schedule", array(
-                "applicant_name" => $applicant_name,
-                "hr_interview_schedule" => date("d/m/Y g:i a", strtotime($hr_interview_schedule))
-            ), $email, False);
-        }
-    }
-    if ($cmdtuples == 1 && $no_show == true) {
-        if ($email != "") {
-            // Adjust the parameters for your sendEmail function accordingly
-            sendEmail("tap_no_show", array(
-                "applicant_name" => $applicant_name
-            ), $email, False);
+    if (isset($_POST['no_show']) && $_POST['no_show'] === 'on') {
+        if ($cmdtuples == 1 && $no_show == true) {
+            if ($applicant_email != "") {
+                // Adjust the parameters for your sendEmail function accordingly
+                sendEmail("tap_no_show", array(
+                    "application_number" => $application_number,
+                    "applicant_name" => $applicant_name
+                ), $applicant_email, False);
+            }
         }
     }
 

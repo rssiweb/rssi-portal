@@ -132,11 +132,11 @@
         <span>Dashboard</span>
       </a>
     </li>
-    <!-- <li class="nav-item">
+    <li class="nav-item">
       <a class="nav-link collapsed" id="applicationForm" href="application_form.php">
         <span>Application Form</span>
       </a>
-    </li> -->
+    </li>
     <li class="nav-item">
       <a class="nav-link collapsed" id="indentityVerification" href="identity_verification.php">
         <span>Identity Verification</span>
@@ -151,7 +151,7 @@
     <li class="nav-heading">Pages</li>
 
     <li class="nav-item">
-      <a class="nav-link collapsed" id="applicationForm" href="application_form.php">
+      <a class="nav-link collapsed" href="#">
         <i class="bi bi-person"></i>
         <span>Profile</span>
       </a>
