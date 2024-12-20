@@ -93,6 +93,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $update_result = pg_query($con, $update_query);
     $cmdtuples = pg_affected_rows($update_result);
 
+    // Check if the query was successful
+    if ($cmdtuples == 1 && $photo_verification == 'Approved') {
+        if ($email != "") {
+            // Adjust the parameters for your sendEmail function accordingly
+            sendEmail("tap_photo_verification_completed", array(
+                "applicant_name" => $applicant_name
+            ), $email, False);
+        }
+    }
+    if ($cmdtuples == 1 && $photo_verification == 'Rejected') {
+        if ($email != "") {
+            // Adjust the parameters for your sendEmail function accordingly
+            sendEmail("tap_photo_verification_failed", array(
+                "applicant_name" => $applicant_name
+            ), $email, False);
+        }
+    }
+    if ($cmdtuples == 1 && $identity_verification == 'Approved') {
+        if ($email != "") {
+            // Adjust the parameters for your sendEmail function accordingly
+            sendEmail("tap_identity_verification_completed", array(
+                "applicant_name" => $applicant_name
+            ), $email, False);
+        }
+    }
+    if ($cmdtuples == 1 && $identity_verification == 'Rejected') {
+        if ($email != "") {
+            // Adjust the parameters for your sendEmail function accordingly
+            sendEmail("tap_identity_verification_faild", array(
+                "applicant_name" => $applicant_name
+            ), $email, False);
+        }
+    }
+    if ($cmdtuples == 1 && !empty($tech_interview_schedule) && (empty($no_show) || $no_show==false)) {
+        if ($email != "") {
+            // Adjust the parameters for your sendEmail function accordingly
+            sendEmail("tap_technical_interview_schedule", array(
+                "applicant_name" => $applicant_name,
+                "tech_interview_schedule" => date("d/m/Y g:i a", strtotime($tech_interview_schedule))
+            ), $email, False);
+        }
+    }
+    if ($cmdtuples == 1 && !empty($hr_interview_schedule) && (empty($no_show) || $no_show==false)) {
+        if ($email != "") {
+            // Adjust the parameters for your sendEmail function accordingly
+            sendEmail("tap_hr_interview_schedule", array(
+                "applicant_name" => $applicant_name,
+                "hr_interview_schedule" => date("d/m/Y g:i a", strtotime($hr_interview_schedule))
+            ), $email, False);
+        }
+    }
+    if ($cmdtuples == 1 && $no_show == true) {
+        if ($email != "") {
+            // Adjust the parameters for your sendEmail function accordingly
+            sendEmail("tap_no_show", array(
+                "applicant_name" => $applicant_name
+            ), $email, False);
+        }
+    }
+
     if ($cmdtuples == 1) {
         // Success: Profile was updated
         echo '<script>
