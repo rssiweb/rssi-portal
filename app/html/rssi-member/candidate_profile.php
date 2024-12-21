@@ -76,6 +76,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $updates[] = "application_status = 'No-Show'";
     }
 
+    if (isset($_POST['skip_tec_interview']) && $_POST['skip_tec_interview'] === 'on') {
+        $no_show = pg_escape_string($con, $_POST['skip_tec_interview']);
+        $updates[] = "skip_tec_interview = TRUE";
+        $updates[] = "application_status = 'Technical Interview Completed'";
+    }
+    if (isset($_POST['skip_hr_interview']) && $_POST['skip_hr_interview'] === 'on') {
+        $no_show = pg_escape_string($con, $_POST['skip_hr_interview']);
+        $updates[] = "skip_hr_interview = TRUE";
+        $updates[] = "application_status = 'Recommended'";
+    }
     if (isset($_POST['offer_extended'])) {
         $offer_extended = pg_escape_string($con, $_POST['offer_extended']);
         $updates[] = "offer_extended = '$offer_extended'";
@@ -671,6 +681,45 @@ $isFormDisabled = null;
                                                                     }
                                                                     ?>>
                                                                 <small id="no-show-help" class="form-text text-muted">Check if the candidate is marked as No-Show.</small>
+                                                            </td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>
+                                                                <label for="no_show">Skip Techniccal Interview:</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" class="form-check-input" id="skip_tech_interview" name="skip_tech_interview"
+                                                                    <?php
+                                                                    // Enable checkbox only for 'Technical Interview Scheduled' or 'HR Interview Scheduled'
+                                                                    if (in_array($array['application_status'], ['Identity Verification Completed'])) {
+                                                                        // Check if the checkbox should be checked
+                                                                        echo ($array['skip_tech_interview'] == 'true') ? 'checked' : '';
+                                                                    } else {
+                                                                        // Disable for all other statuses
+                                                                        echo 'disabled';
+                                                                    }
+                                                                    ?>>
+                                                                <small id="no-show-help" class="form-text text-muted">Check if the candidate is marked to skip the technical interview.</small>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="no_show">Skip HR Interview:</label>
+                                                            </td>
+                                                            <td>
+                                                                <input type="checkbox" class="form-check-input" id="skip_hr_interview" name="skip_hr_interview"
+                                                                    <?php
+                                                                    // Enable checkbox only for 'Technical Interview Scheduled' or 'HR Interview Scheduled'
+                                                                    if (in_array($array['application_status'], ['Technical Interview Completed'])) {
+                                                                        // Check if the checkbox should be checked
+                                                                        echo ($array['skip_hr_interview'] == 'true') ? 'checked' : '';
+                                                                    } else {
+                                                                        // Disable for all other statuses
+                                                                        echo 'disabled';
+                                                                    }
+                                                                    ?>>
+                                                                <small id="no-show-help" class="form-text text-muted">Check if the candidate is marked to skip the HR interview.</small>
                                                             </td>
                                                         </tr>
 
