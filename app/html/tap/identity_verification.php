@@ -16,6 +16,13 @@ validation();
 $sql = "SELECT * FROM signup WHERE application_number='$application_number'";
 $result = pg_query($con, $sql);
 $resultArr = pg_fetch_all($result);
+// Check if there are any results
+if ($resultArr && count($resultArr) > 0) {
+    // Accessing specific column values from the first result (assuming there is only one row)
+    $applicant_email = $resultArr[0]['email'];
+    $applicant_name = $resultArr[0]['applicant_name'];
+    $application_number = $resultArr[0]['application_number'];
+}
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -49,6 +56,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
         $update_query = "UPDATE signup SET " . implode(", ", $update_fields) . " WHERE application_number = '$application_number'";
         $result = pg_query($con, $update_query);
         $cmdtuples = pg_affected_rows($result);
+    }
+    if ($cmdtuples == 1) {
+        if ($applicant_email != "") {
+            // Adjust the parameters for your sendEmail function accordingly
+            sendEmail("tap_identity_document_submitted", array(
+                "application_number" => $application_number,
+                "applicant_name" => $applicant_name,
+            ), $applicant_email);
+        }
     }
 }
 

@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/email.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -218,6 +219,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     pg_execute($con, "update_signup", array($hr_interview_status, $application_number));
 
     $cmdtuples = pg_affected_rows($result);
+
+    if (!empty($interviewer_ids_string)) {
+        // Convert the string of IDs into an array
+        $interviewer_ids = explode(',', $interviewer_ids_string);
+
+        // Sanitize each ID and create a string for the SQL IN clause
+        $sanitized_ids = array_map(function ($id) use ($con) {
+            return "'" . pg_escape_string($con, trim($id)) . "'";
+        }, $interviewer_ids);
+
+        // Join sanitized IDs into a string for the SQL query
+        $id_list = implode(',', $sanitized_ids);
+
+        // Query to fetch names and emails
+        $query = "SELECT fullname, email FROM rssimyaccount_members WHERE associatenumber IN ($id_list)";
+        $result = pg_query($con, $query);
+
+        if ($result && pg_num_rows($result) > 0) {
+            $recipients = [];
+            $interviewer_details = [];
+
+            while ($row = pg_fetch_assoc($result)) {
+                $interviewer_details[] = [
+                    'name' => $row['fullname'],
+                    'email' => $row['email']
+                ];
+                if (!empty($row['email'])) {
+                    $recipients[] = $row['email'];
+                }
+            }
+
+            if (!empty($recipients)) {
+                // Send email notification to all recipients
+                // foreach ($interviewer_details as $interviewer) {
+                sendEmail("tap_hr_interview_completed", array(
+                    "application_number" => $application_number, // Assumes candidate ID is posted
+                    "applicant_name" => $applicant_name, // Assumes candidate name is posted
+                    //"interviewer_name" => $interviewer['name'],
+                ), $recipients); //$interviewer['email']
+                // }
+            }
+        }
+    }
 }
 ?>
 <?php
