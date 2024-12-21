@@ -1299,7 +1299,7 @@ if ($_POST['form-type'] == "contact_Form") {
 // Ensure this is included in your script where the POST request is handled
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['form-type'] == "email_verify_signup") {
 
-  $email = $_POST['email_verify'];
+  $email = strtolower($_POST['email_verify']);
 
   $query = "SELECT COUNT(*) AS count FROM signup WHERE email = $1";
   $result = pg_query_params($con, $query, [$email]);

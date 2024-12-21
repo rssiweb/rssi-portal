@@ -33,7 +33,7 @@ if ($_POST) {
 }
 
 @$get_id = $_POST['get_id'];
-@$get_status = strtoupper($_POST['get_status']);
+@$get_status = ($get_id === "Applicant") ? $_POST['get_status'] : strtoupper($_POST['get_status']);
 
 if ($get_id == "Associate" && $get_status != null) {
     $change_details = "SELECT * from rssimyaccount_members where associatenumber='$get_status'";
