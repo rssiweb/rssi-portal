@@ -342,7 +342,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                     id="specialization"
                                                                     name="specialization"
                                                                     placeholder="e.g., Computer Science, Physics, Fine Arts"
-                                                                    value="<?php echo ($array["specialization"]); ?>"
+                                                                    value="<?php echo htmlspecialchars($array['specialization'], ENT_QUOTES, 'UTF-8'); ?>"
                                                                     required>
                                                                 <small id="specialization-help" class="form-text text-muted">
                                                                     Please write the name of the subject, stream, or area of specialization in which you have done graduation or masters.
@@ -360,7 +360,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                     id="work-experience"
                                                                     name="work-experience"
                                                                     placeholder="e.g., 3 years in Teaching, 2 years in Marketing"
-                                                                    value="<?php echo ($array["work_experience"]); ?>">
+                                                                    value="<?php echo htmlspecialchars($array['work_experience'], ENT_QUOTES, 'UTF-8'); ?>">
                                                                 <small id="work-experience-help" class="form-text text-muted">
                                                                     Specify your work experience, including job title and duration, if applicable.
                                                                 </small>
@@ -444,7 +444,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                 <label for="purpose">Purpose of Volunteering:</label>
                                                             </td>
                                                             <td>
-                                                                <?php echo $array["purpose"] ?>
+                                                                <?php echo htmlspecialchars($array["purpose"], ENT_QUOTES, 'UTF-8'); ?>
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -498,7 +498,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                 <label for="membershipPurpose">Purpose of Membership:</label>
                                                             </td>
                                                             <td>
-                                                                <?php echo $array["membership_purpose"] ?>
+                                                                <?php echo htmlspecialchars($array["membership_purpose"], ENT_QUOTES, 'UTF-8'); ?>
                                                             </td>
                                                         </tr>
                                                         <tr>

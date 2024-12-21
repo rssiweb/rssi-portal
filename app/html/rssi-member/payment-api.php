@@ -1314,7 +1314,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['form-type'] == "email_verif
 }
 
 if (@$_POST['form-type'] == "signup") {
-  $applicant_name = htmlspecialchars(trim($_POST['applicant-name']), ENT_QUOTES, 'UTF-8');
+  $applicant_name = pg_escape_string($con, trim($_POST['applicant-name']));
   $date_of_birth = $_POST['date-of-birth'];
   $gender = $_POST['gender'];
   $telephone = $_POST['telephone'];
@@ -1322,19 +1322,19 @@ if (@$_POST['form-type'] == "signup") {
   $branch = $_POST['branch'];
   $association = $_POST['association'];
   $job_select = $_POST['job-select'];
-  $purpose = htmlspecialchars(trim($_POST['purpose']), ENT_QUOTES, 'UTF-8');
+  $purpose = pg_escape_string($con, trim($_POST['purpose']));
   $interests = $_POST['interests'];
   $post_select = $_POST['post-select'];
-  $membership_purpose = htmlspecialchars(trim($_POST['membershipPurpose']), ENT_QUOTES, 'UTF-8');
+  $membership_purpose = pg_escape_string($con, trim($_POST['membershipPurpose']));
   $subject1 = $_POST['subject1'];
   $subject2 = $_POST['subject2'];
   $subject3 = $_POST['subject3'];
   $heard_about = $_POST['heard_about'];
-  $postal_address = htmlspecialchars(trim($_POST['postal-address']), ENT_QUOTES, 'UTF-8');
-  $permanent_address = htmlspecialchars(trim($_POST['permanent-address']), ENT_QUOTES, 'UTF-8');  
+  $postal_address = pg_escape_string($con, trim($_POST['postal-address']));
+  $permanent_address = pg_escape_string($con, trim($_POST['permanent-address']));
   $education_qualification = $_POST['education-qualification'];
-  $specialization = htmlspecialchars(trim($_POST['specialization']), ENT_QUOTES, 'UTF-8');
-  $work_experience = htmlspecialchars(trim($_POST['work-experience']), ENT_QUOTES, 'UTF-8');  
+  $specialization = pg_escape_string($con, trim($_POST['specialization']));
+  $work_experience = pg_escape_string($con, trim($_POST['work-experience']));
   $consent = !empty($_POST['consent']) ? 1 : 0;
   $application_number = uniqid();
   $timestamp = date('Y-m-d H:i:s');
