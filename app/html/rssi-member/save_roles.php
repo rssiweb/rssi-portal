@@ -123,13 +123,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>HR Interview</h1>
+            <h1>Role Based Access Control</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">People Plus</a></li>
-                    <li class="breadcrumb-item"><a href="interview_central.php">Interview Central</a></li>
-                    <li class="breadcrumb-item active">HR Interview</li>
+                    <li class="breadcrumb-item"><a href="#">Work</a></li>
+                    <li class="breadcrumb-item active">Role Based Access Control</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -144,8 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="card-body">
                             <br>
                             <div class="container mt-5">
-                                <h2>Portal Roles Management</h2>
-
+                                <!-- <h2>Portal Roles Management</h2> -->
                                 <form method="POST" action="#">
                                     <fieldset>
                                         <table id="rolesTable" class="table">
@@ -164,12 +162,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 foreach ($page_files as $file) {
                                                     $pageName = htmlspecialchars($file);
                                                     $selectSQL = "SELECT p.page_category, 
-                                COALESCE(json_object_agg(r.role_name, pr.has_access) FILTER (WHERE r.role_name IS NOT NULL), '{}') AS roles 
-                                FROM pages p 
-                                LEFT JOIN page_roles pr ON p.id = pr.page_id 
-                                LEFT JOIN roles r ON pr.role_id = r.id 
-                                WHERE p.page_name = $1 
-                                GROUP BY p.id;";
+                                    COALESCE(json_object_agg(r.role_name, pr.has_access) FILTER (WHERE r.role_name IS NOT NULL), '{}') AS roles 
+                                    FROM pages p 
+                                    LEFT JOIN page_roles pr ON p.id = pr.page_id 
+                                    LEFT JOIN roles r ON pr.role_id = r.id 
+                                    WHERE p.page_name = $1 
+                                    GROUP BY p.id;";
                                                     $result = pg_query_params($con, $selectSQL, [$pageName]);
                                                     $row = $result && pg_num_rows($result) > 0 ? pg_fetch_assoc($result) : null;
 
@@ -189,6 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                         echo "<td>";
                                                         echo "<input type='hidden' name='roles[$pageName][$role]' value='0'>";  // Hidden input with value 0 for unchecked
                                                         echo "<input type='checkbox' name='roles[$pageName][$role]' value='1' $checked>"; // Checkbox input
+                                                        echo "<span class='role-text'>" . ($checked ? 'Yes' : 'No') . "</span>"; // Text representation
                                                         echo "</td>";
                                                     }
 
@@ -215,7 +214,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </div>
                                     </fieldset>
                                 </form>
-
                             </div>
                         </div>
                     </div>
@@ -275,37 +273,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const toggleButton = document.getElementById('toggleButton');
             const submitButton = document.getElementById('submitButton');
             const form = document.querySelector('form');
+            const inputs = document.querySelectorAll('input[type="checkbox"], input[type="text"], .role-text');
             let isEditMode = false; // Tracks if we are in edit mode
 
             // Function to toggle between editable and non-editable modes
             toggleButton.addEventListener('click', function() {
-                const inputs = document.querySelectorAll('input[type="checkbox"], input[type="text"]');
-
                 isEditMode = !isEditMode; // Toggle edit mode
+                toggleFormMode();
+            });
 
+            // Function to update the form mode (editable or non-editable)
+            function toggleFormMode() {
                 inputs.forEach(input => {
                     if (isEditMode) {
-                        input.removeAttribute('readonly');
-                        input.removeAttribute('disabled');
+                        if (input.classList.contains('role-text')) {
+                            input.style.display = 'none'; // Hide text data in editable mode
+                        } else {
+                            input.removeAttribute('readonly');
+                            input.removeAttribute('disabled');
+                        }
                     } else {
-                        input.setAttribute('readonly', true);
-                        input.setAttribute('disabled', true);
+                        if (input.classList.contains('role-text')) {
+                            input.style.display = 'inline'; // Show text data in non-editable mode
+                        } else {
+                            input.setAttribute('readonly', true);
+                            input.setAttribute('disabled', true);
+                        }
                     }
                 });
 
                 // Update button visibility and text
                 toggleButton.style.display = isEditMode ? 'none' : 'inline-block';
                 submitButton.style.display = isEditMode ? 'inline-block' : 'none';
-            });
+            }
 
             // Disable checkboxes and text fields on page load in non-editable mode
-            const inputs = document.querySelectorAll('input[type="checkbox"], input[type="text"]');
-            inputs.forEach(input => {
-                if (!isEditMode) {
-                    input.setAttribute('readonly', true);
-                    input.setAttribute('disabled', true);
-                }
-            });
+            toggleFormMode();
 
             // Handle form submission
             form.addEventListener('submit', function(event) {
@@ -332,10 +335,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 });
             });
+
+            // Listen for any external event (e.g., clicking "Sort") that disables the form
+            document.querySelectorAll('.sort-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (isEditMode) {
+                        isEditMode = false; // Force non-editable mode
+                        toggleFormMode();
+                    }
+                });
+            });
         });
     </script>
-
-
 </body>
 
 </html>
