@@ -244,7 +244,7 @@ attendance_data AS (
         AND d.attendance_date BETWEEN s.start_date AND s.end_date
     WHERE
         (
-            (m.effectivedate IS NULL OR m.effectivedate = '')
+            (m.filterstatus = 'Active')
             OR DATE_TRUNC('month', TO_DATE(m.effectivedate, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         )
         AND DATE_TRUNC('month', TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE

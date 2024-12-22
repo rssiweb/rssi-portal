@@ -34,6 +34,7 @@ function checkPageAccess()
     global $filterstatus;
     global $role;
     $currentUrl = $_SERVER['REQUEST_URI'];
+
     // Extract the page name between the last "/" and ".php"
     $lastSlashPosition = strrpos($currentUrl, "/");
     $lastDotPhpPosition = strrpos($currentUrl, ".php");
@@ -44,13 +45,51 @@ function checkPageAccess()
         "Inactive" => array("home", "leave", "document", "my_certificate", "pay_details", "allocation", "my_appraisal", "appraisee_response", "redeem_gems", "reimbursement", "reimbursementstatus", "myprofile") // Add pages for inactive users if needed
     );
 
-    // Access control is role-based, where pages created under the "Admin" role are only accessible by "Admin" users, and pages created under the "Offline Manager" role are only accessible by "Offline Manager" users. Pages not explicitly assigned to a specific role are accessible by all users.
-    $roleAccessControl = array(
-        "Admin" => array("scan", "dashboard", "student", "fees", "process", "ipf-management", "faculty", "facultyexp", "leave_admin", "payroll_processing", "donationinfo_admin", "pms", "onexit", "userlog", "onboarding", "exit", "visitor", "admission_admin", "expletter", "offerletter", "archive_approval", "bankdetails_admin", "exam_create", "exam_data_update", "vrc_dashboard", "shift_planner", "view_shift", "interview_central", "technical_interview", "hr_interview", "tap_doc_approval","talent_pool","applicant_profile"),
-        "Offline Manager" => array("scan", "dashboard", "student", "admission_admin", "onboarding", "exit", "visitor", "interview_central", "technical_interview", "tap_doc_approval"),
-        "Advanced User" => array("scan", "student"),
-        "User" => array("")
-    );
+    // Fetch roles and associated pages dynamically from the database
+    $roleAccessControl = array();
+
+    // Add a default "User" role entry
+    $roleAccessControl["User"] = array(""); 
+
+    // Legacy db connection using pg_connect
+    $servername = $_ENV["DB_HOST"];
+    $username = $_ENV["DB_USER"];
+    $password = $_ENV["DB_PASSWORD"];
+    $dbname = $_ENV["DB_NAME"];
+    $connection_string = "host=$servername user=$username password=$password dbname=$dbname";
+    $con = pg_connect($connection_string);
+
+    // SQL Query to fetch role names and associated pages
+    $sql = "
+        SELECT r.role_name, 
+               COALESCE(array_agg(p.page_name), '{}') AS pages
+        FROM roles r
+        LEFT JOIN page_roles pr ON r.id = pr.role_id
+        LEFT JOIN pages p ON pr.page_id = p.id
+        WHERE pr.has_access = true
+        GROUP BY r.role_name
+    ";
+
+    // Execute the query
+    $result = pg_query($con, $sql); // Assuming $con is your PostgreSQL connection
+
+    // Fetch the results and populate the $roleAccessControl array
+    if ($result) {
+        while ($row = pg_fetch_assoc($result)) {
+            // Split the page string into an array, remove ".php" and add to the role access control
+            $pages = explode(",", trim($row['pages'], "{}"));
+            $roleAccessControl[$row['role_name']] = array_map(function ($page) {
+                return rtrim($page, ".php"); // Remove ".php" from page name
+            }, $pages);
+        }
+    } else {
+        return "Error fetching role access data.";
+    }
+
+    // // Debugging step: Print the final $roleAccessControl array to check how it looks
+    // echo "<pre>"; // For better readability
+    // print_r($roleAccessControl); // Print the array
+    // echo "</pre>";
 
     // Check user status access control
     if ($filterstatus != 'Active' && !in_array($pageName, $statusAccessControl['Inactive'])) {
@@ -73,9 +112,11 @@ function checkPageAccess()
     if (($pageNameExists) && !in_array($pageName, $roleAccessControl[$role])) {
         return "Access Denied. You do not have permission to access this page.";
     }
+
     // If everything is fine, allow access
     return "allow";
 }
+
 function validation()
 {
     global $password_updated_by;
