@@ -180,7 +180,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                         <div class="col-12">
                                             <p class="small mb-0">Forgot password? <a href="#" data-bs-toggle="modal" data-bs-target="#popup">Click here</a></p>
-                                            </p>
                                         </div>
                                     </form>
                                 </div>
