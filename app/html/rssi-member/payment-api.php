@@ -293,7 +293,7 @@ if ($formtype == "get_details_vrc") {
   @$applicationNumber = $_POST['applicationNumber_verify_input'];
 
   // Query to fetch data based on application number
-  $getDetails = "SELECT applicant_f_name, applicant_l_name, email FROM candidatepool WHERE application_number = '$applicationNumber'";
+  $getDetails = "SELECT applicant_name, email FROM signup WHERE application_number = '$applicationNumber'";
   $result = pg_query($con, $getDetails);
 
   if ($result) {
@@ -303,7 +303,7 @@ if ($formtype == "get_details_vrc") {
       echo json_encode(array(
         'status' => 'success',
         'data' => array(
-          'fullname' => $row['applicant_f_name'] . ' ' . $row['applicant_l_name'],
+          'fullname' => $row['applicant_name'],
           'email' => $row['email']
         )
       ));

@@ -95,7 +95,7 @@ $resultArr = pg_fetch_all($result);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Candidate Pool</title>
+    <title>Talent Pool</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -134,12 +134,12 @@ $resultArr = pg_fetch_all($result);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Candidate Pool</h1>
+            <h1>Talent Pool</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">People Plus</a></li>
-                    <li class="breadcrumb-item active">Candidate Pool</li>
+                    <li class="breadcrumb-item active">Talent Pool</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -244,7 +244,7 @@ $resultArr = pg_fetch_all($result);
                                                 <td><?php echo $interviewTimestamp; ?></td>
                                                 <td><?php echo $hrTimestamp; ?></td>
                                                 <td><?php echo $interviewStatus; ?></td>
-                                                <td><a href='candidate_profile.php?application_number=<?php echo $array['application_number']; ?>' target="_blank">Profile</a></td>
+                                                <td><a href='applicant_profile.php?application_number=<?php echo $array['application_number']; ?>' target="_blank">Profile</a></td>
                                             </tr>
                                         <?php
                                         }

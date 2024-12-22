@@ -5,12 +5,12 @@
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Candidatepool
+ * talent_pool
  *
- * @ORM\Table(name="candidatepool")
+ * @ORM\Table(name="talent_pool")
  * @ORM\Entity
  */
-class Candidatepool
+class talent_pool
 {
     /**
      * @var string
@@ -116,7 +116,7 @@ class Candidatepool
      *
      * @param string|null $applicantFName
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setApplicantFName($applicantFName = null)
     {
@@ -140,7 +140,7 @@ class Candidatepool
      *
      * @param string|null $applicantLName
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setApplicantLName($applicantLName = null)
     {
@@ -164,7 +164,7 @@ class Candidatepool
      *
      * @param string|null $nationalIdentifier
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setNationalIdentifier($nationalIdentifier = null)
     {
@@ -188,7 +188,7 @@ class Candidatepool
      *
      * @param string|null $nationalIdentifierNumber
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setNationalIdentifierNumber($nationalIdentifierNumber = null)
     {
@@ -212,7 +212,7 @@ class Candidatepool
      *
      * @param string|null $email
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setEmail($email = null)
     {
@@ -236,7 +236,7 @@ class Candidatepool
      *
      * @param string|null $contact
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setContact($contact = null)
     {
@@ -260,7 +260,7 @@ class Candidatepool
      *
      * @param string|null $baseBranch
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setBaseBranch($baseBranch = null)
     {
@@ -284,7 +284,7 @@ class Candidatepool
      *
      * @param string|null $associationType
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setAssociationType($associationType = null)
     {
@@ -308,7 +308,7 @@ class Candidatepool
      *
      * @param string|null $supportingDocument
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setSupportingDocument($supportingDocument = null)
     {
@@ -332,7 +332,7 @@ class Candidatepool
      *
      * @param string|null $cv
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setCv($cv = null)
     {
@@ -356,7 +356,7 @@ class Candidatepool
      *
      * @param \DateTime|null $appliedon
      *
-     * @return Candidatepool
+     * @return talent_pool
      */
     public function setAppliedon($appliedon = null)
     {

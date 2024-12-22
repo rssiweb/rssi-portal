@@ -339,8 +339,8 @@
         </a>
         <ul id="peoplePlus" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="candidatePool" href="candidatepool.php">
-              <span>Candidate Pool</span>
+            <a id="talent_pool" href="talent_pool.php">
+              <span>Talent Pool</span>
             </a>
           </li>
           <li>
@@ -775,13 +775,13 @@
       }
       , {
         id: 'peoplePlus',
-        linkId: 'candidatePool',
-        url: 'candidatepool.php'
+        linkId: 'talent_pool',
+        url: 'talent_pool.php'
       }
       , {
         id: 'peoplePlus',
-        linkId: 'candidatePool',
-        url: 'candidate_profile.php'
+        linkId: 'talent_pool',
+        url: 'applicant_profile.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
