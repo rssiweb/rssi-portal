@@ -437,6 +437,11 @@
               <span>User log</span>
             </a>
           </li>
+          <li>
+            <a id="access_panel" href="access_panel.php">
+              <span>Access Panel</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Forms Nav -->
 
@@ -782,6 +787,10 @@
         id: 'peoplePlus',
         linkId: 'talent_pool',
         url: 'applicant_profile.php'
+      }, {
+        id: 'work',
+        linkId: 'access_panel',
+        url: 'access_panel.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },

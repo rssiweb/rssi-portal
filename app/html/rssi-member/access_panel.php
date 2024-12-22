@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($allSuccess) {
         echo "<script>
                 alert('Roles and access levels have been successfully saved!');
-                window.location.href = 'save_roles.php';
+                window.location.href = 'access_panel.php';
               </script>";
     } else {
         echo "<script>
@@ -90,6 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     exit;
 }
+// Define the edit mode variable for the frontend
+$isEditMode = isset($_GET['edit']) && $_GET['edit'] == 'true'; // Example condition to toggle edit mode
 ?>
 
 
@@ -99,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Roles Management</title>
+    <title>Access Panel</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -123,12 +125,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Role Based Access Control</h1>
+            <h1>Access Panel</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">Role Based Access Control</li>
+                    <li class="breadcrumb-item active">Access Panel</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -142,8 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <div class="card-body">
                             <br>
-                            <div class="container mt-5">
-                                <!-- <h2>Portal Roles Management</h2> -->
+                            <div class="container">
+                                <!-- <h2>Access Panel</h2> -->
                                 <form method="POST" action="#">
                                     <fieldset>
                                         <table id="rolesTable" class="table">
@@ -160,14 +162,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <tbody>
                                                 <?php
                                                 foreach ($page_files as $file) {
-                                                    $pageName = htmlspecialchars($file);
+                                                    $pageName = htmlspecialchars($file);  // Ensure this is correctly sanitized
                                                     $selectSQL = "SELECT p.page_category, 
-                                    COALESCE(json_object_agg(r.role_name, pr.has_access) FILTER (WHERE r.role_name IS NOT NULL), '{}') AS roles 
-                                    FROM pages p 
-                                    LEFT JOIN page_roles pr ON p.id = pr.page_id 
-                                    LEFT JOIN roles r ON pr.role_id = r.id 
-                                    WHERE p.page_name = $1 
-                                    GROUP BY p.id;";
+                                                    COALESCE(json_object_agg(r.role_name, pr.has_access) FILTER (WHERE r.role_name IS NOT NULL), '{}') AS roles 
+                                                    FROM pages p 
+                                                    LEFT JOIN page_roles pr ON p.id = pr.page_id 
+                                                    LEFT JOIN roles r ON pr.role_id = r.id 
+                                                    WHERE p.page_name = $1 
+                                                    GROUP BY p.id;";
                                                     $result = pg_query_params($con, $selectSQL, [$pageName]);
                                                     $row = $result && pg_num_rows($result) > 0 ? pg_fetch_assoc($result) : null;
 
@@ -176,7 +178,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                                     echo '<tr>';
                                                     echo "<td>$pageName</td>";
-                                                    echo "<td><input type='text' class='form-control' name='page_category[$pageName]' value='" . htmlspecialchars($pageCategory) . "' readonly></td>";
+
+                                                    // Show either an input or plain text for page category depending on mode
+                                                    if ($isEditMode) {
+                                                        echo "<td><input type='text' class='form-control page-category' name='page_category[$pageName]' value='" . htmlspecialchars($pageCategory) . "' data-page-name='$pageName'></td>";
+                                                    } else {
+                                                        echo "<td><span class='form-control-plaintext page-category' data-page-name='$pageName'>" . htmlspecialchars($pageCategory) . "</span></td>";
+                                                    }
 
                                                     // Loop through roles to check if the role has access
                                                     foreach (['Admin', 'Offline Manager', 'Advanced User', 'User'] as $role) {
@@ -198,17 +206,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </table>
 
                                         <!-- Form Row -->
-                                        <div class="row">
+                                        <div class="row align-items-center">
                                             <!-- Edit/Save Button (left side) -->
-                                            <div class="col-6">
-                                                <button type="button" id="toggleButton" class="btn btn-warning mt-3" onclick="toggleEdit()">Edit</button>
+                                            <div class="col-6 d-flex">
+                                                <button type="button" id="toggleButton" class="btn btn-warning me-2" onclick="toggleEdit()">Edit</button>
                                                 <!-- Save/Submit Button -->
-                                                <button type="submit" id="submitButton" class="btn btn-primary mt-3" style="display:none;">Save</button>
+                                                <button type="submit" id="submitButton" class="btn btn-primary" style="display:none;">Save</button>
                                             </div>
                                             <!-- View Page Access Info Link (right side) -->
                                             <div class="col-6 text-end">
                                                 <a href="#" data-bs-toggle="modal" data-bs-target="#accessControlModal">
-                                                    View Page Access Info
+                                                    How Access Control Works?
                                                 </a>
                                             </div>
                                         </div>
@@ -269,12 +277,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
     </script>
     <script>
+        let isEditMode = <?php echo $isEditMode ? 'true' : 'false'; ?>; // Set based on PHP
+
         document.addEventListener('DOMContentLoaded', function() {
             const toggleButton = document.getElementById('toggleButton');
             const submitButton = document.getElementById('submitButton');
-            const form = document.querySelector('form');
+            const pageCategoryElements = document.querySelectorAll('.page-category'); // Target Page Category elements
             const inputs = document.querySelectorAll('input[type="checkbox"], input[type="text"], .role-text');
-            let isEditMode = false; // Tracks if we are in edit mode
 
             // Function to toggle between editable and non-editable modes
             toggleButton.addEventListener('click', function() {
@@ -284,6 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Function to update the form mode (editable or non-editable)
             function toggleFormMode() {
+                // Toggle input fields
                 inputs.forEach(input => {
                     if (isEditMode) {
                         if (input.classList.contains('role-text')) {
@@ -302,49 +312,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 });
 
-                // Update button visibility and text
+                // Handle the page category field visibility (input vs text)
+                pageCategoryElements.forEach(element => {
+                    const pageName = element.getAttribute('data-page-name'); // Get the page name dynamically from data attribute
+
+                    if (isEditMode) {
+                        // If it's a span (non-editable mode), convert it to an input (editable mode)
+                        if (element.tagName === 'SPAN') {
+                            const input = document.createElement('input');
+                            input.type = 'text';
+                            input.classList.add('form-control');
+                            input.value = element.textContent.trim();
+
+                            // Set the name attribute dynamically
+                            input.name = `page_category[${pageName}]`; // Dynamically set the name attribute
+                            input.setAttribute('data-page-name', pageName); // Store pageName for later use
+
+                            element.replaceWith(input); // Replace span with input
+                        }
+                    } else {
+                        // If it's an input, replace it with a span (non-editable mode)
+                        if (element.tagName === 'INPUT') {
+                            const span = document.createElement('span');
+                            span.classList.add('form-control-plaintext');
+                            span.textContent = element.value;
+
+                            // Store pageName in a data attribute for later use
+                            const pageName = element.name.split('[')[1].split(']')[0]; // Extract pageName from input name
+                            span.setAttribute('data-page-name', pageName); // Store pageName in data attribute
+
+                            element.replaceWith(span); // Replace input with span
+                        }
+                    }
+                });
+
+                // Update button visibility
                 toggleButton.style.display = isEditMode ? 'none' : 'inline-block';
                 submitButton.style.display = isEditMode ? 'inline-block' : 'none';
             }
 
-            // Disable checkboxes and text fields on page load in non-editable mode
+            // Initial toggle on page load
             toggleFormMode();
-
-            // Handle form submission
-            form.addEventListener('submit', function(event) {
-                // Ensure that unchecked checkboxes are sent to the server
-                document.querySelectorAll('.page').forEach(page => {
-                    const checkboxes = page.querySelectorAll('input[type="checkbox"]');
-                    let allUnchecked = true; // To track if all checkboxes are unchecked
-
-                    checkboxes.forEach(checkbox => {
-                        if (checkbox.checked) {
-                            allUnchecked = false; // At least one checkbox is checked
-                        }
-                    });
-
-                    // If all checkboxes are unchecked, add hidden inputs with value 'false'
-                    if (allUnchecked) {
-                        checkboxes.forEach(checkbox => {
-                            const hiddenInput = document.createElement('input');
-                            hiddenInput.type = 'hidden';
-                            hiddenInput.name = checkbox.name; // Use the checkbox's name
-                            hiddenInput.value = 'false'; // Mark as unchecked
-                            page.appendChild(hiddenInput); // Append to the form
-                        });
-                    }
-                });
-            });
-
-            // Listen for any external event (e.g., clicking "Sort") that disables the form
-            document.querySelectorAll('.sort-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    if (isEditMode) {
-                        isEditMode = false; // Force non-editable mode
-                        toggleFormMode();
-                    }
-                });
-            });
         });
     </script>
 </body>
