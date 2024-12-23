@@ -145,6 +145,31 @@ attendance_data AS (
                 AND l.halfday = 1
                 AND d.attendance_date BETWEEN l.fromdate AND l.todate
             ) THEN 'HF'
+             -- Late status logic for entry exception with late-entry subcategory
+            WHEN EXISTS (
+                SELECT 1
+                FROM exception_requests e
+                WHERE e.submitted_by = m.associatenumber
+                AND e.status = 'Approved'
+                AND e.exception_type = 'entry'
+                AND e.sub_exception_type = 'late-entry'
+                AND d.attendance_date = DATE(e.start_date_time)
+            ) THEN
+                CASE
+                    -- If punch_in is within the approved exception time
+                    WHEN p.punch_in IS NOT NULL AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM (
+                        SELECT e.start_date_time 
+                        FROM exception_requests e 
+                        WHERE e.submitted_by = m.associatenumber
+                        AND e.status = 'Approved'
+                        AND e.exception_type = 'entry'
+                        AND e.sub_exception_type = 'late-entry'
+                        AND d.attendance_date = DATE(e.start_date_time)
+                    )::time) THEN 'Exc.'
+                    -- If punch_in is after the approved exception time
+                    WHEN p.punch_in IS NOT NULL THEN 'Exc.L'
+                    ELSE NULL
+                END
             -- If missed-entry exception is applied, recalculate the status
             WHEN EXISTS (
                 SELECT 1
