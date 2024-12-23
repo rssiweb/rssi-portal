@@ -176,7 +176,7 @@ foreach ($accountNatures as $accountNature) {
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -201,22 +201,14 @@ foreach ($accountNatures as $accountNature) {
 
                         <div class="card-body">
                             <br>
-                            <?php if (@$claimid != null && @$cmdtuples == 0) { ?>
-                                <div class="alert alert-danger alert-dismissible text-center" role="alert">
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                    <span>ERROR: Oops, something wasn't right.</span>
-                                </div>
-                            <?php } else if (@$cmdtuples == 1) { ?>
-                                <div class="alert alert-success alert-dismissible text-center" role="alert">
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-check2-circle" style="font-size: medium;"></i>
-                                    <span>Claim no <?php echo @$claimid ?> has been submitted.</span>
-                                </div>
+                            <?php if ($_POST && $cmdtuples == 0) { ?>
                                 <script>
-                                    if (window.history.replaceState) {
-                                        window.history.replaceState(null, null, window.location.href);
-                                    }
+                                    alert("ERROR: Oops, something wasn't right.");
+                                </script>
+                            <?php } else if ($_POST && $cmdtuples == 1) { ?>
+                                <script>
+                                    alert("Claim no <?php echo $claimid ?> has been submitted.");
+                                    window.location.href = window.location.href;
                                 </script>
                             <?php } ?>
 
@@ -313,23 +305,23 @@ foreach ($accountNatures as $accountNature) {
                                     <tbody>
                                         <tr>
                                             <td style="line-height: 2;">
-                                               <?php foreach ($latestSubmissions as $accountNature => $latestSubmission) : ?>
-                                                <?php if ($latestSubmission !== null) : ?>
-                                                    <h4 class="mt-3"><?php echo ucfirst($accountNature); ?> Account Details</h4>
-                                                    <p class="mb-1">Bank Account Number: <?php echo isset($latestSubmission['bank_account_number']) ? $latestSubmission['bank_account_number'] : 'N/A'; ?></p>
-                                                    <p class="mb-1">Name of the Bank: <?php echo isset($latestSubmission['bank_name']) ? $latestSubmission['bank_name'] : 'N/A'; ?></p>
-                                                    <p class="mb-1">IFSC Code: <?php echo isset($latestSubmission['ifsc_code']) ? $latestSubmission['ifsc_code'] : 'N/A'; ?></p>
-                                                    <p class="mb-1">Account Holder Name: <?php echo isset($latestSubmission['account_holder_name']) ? $latestSubmission['account_holder_name'] : 'N/A'; ?></p>
-                                                    <?php if (isset($latestSubmission['passbook_page'])) : ?>
-                                                        <p class="mb-1"><a href="<?php echo $latestSubmission['passbook_page']; ?>" target="_blank">First Page of Bank Account Passbook</a></p>
+                                                <?php foreach ($latestSubmissions as $accountNature => $latestSubmission) : ?>
+                                                    <?php if ($latestSubmission !== null) : ?>
+                                                        <h4 class="mt-3"><?php echo ucfirst($accountNature); ?> Account Details</h4>
+                                                        <p class="mb-1">Bank Account Number: <?php echo isset($latestSubmission['bank_account_number']) ? $latestSubmission['bank_account_number'] : 'N/A'; ?></p>
+                                                        <p class="mb-1">Name of the Bank: <?php echo isset($latestSubmission['bank_name']) ? $latestSubmission['bank_name'] : 'N/A'; ?></p>
+                                                        <p class="mb-1">IFSC Code: <?php echo isset($latestSubmission['ifsc_code']) ? $latestSubmission['ifsc_code'] : 'N/A'; ?></p>
+                                                        <p class="mb-1">Account Holder Name: <?php echo isset($latestSubmission['account_holder_name']) ? $latestSubmission['account_holder_name'] : 'N/A'; ?></p>
+                                                        <?php if (isset($latestSubmission['passbook_page'])) : ?>
+                                                            <p class="mb-1"><a href="<?php echo $latestSubmission['passbook_page']; ?>" target="_blank">First Page of Bank Account Passbook</a></p>
+                                                        <?php endif; ?>
+                                                        <br>
+                                                        <p>(Last updated by <?php echo isset($latestSubmission['updated_by']) ? $latestSubmission['updated_by'] : 'N/A'; ?> on <?php echo isset($latestSubmission['updated_on']) ? $latestSubmission['updated_on'] : 'N/A'; ?>)</p>
+                                                    <?php else : ?>
+                                                        <!-- Handle case when bank details are not available for the current account nature -->
+                                                        <p>No <?php echo ucfirst($accountNature); ?> account details available.</p>
                                                     <?php endif; ?>
-                                                    <br>
-                                                    <p>(Last updated by <?php echo isset($latestSubmission['updated_by']) ? $latestSubmission['updated_by'] : 'N/A'; ?> on <?php echo isset($latestSubmission['updated_on']) ? $latestSubmission['updated_on'] : 'N/A'; ?>)</p>
-                                                <?php else : ?>
-                                                    <!-- Handle case when bank details are not available for the current account nature -->
-                                                    <p>No <?php echo ucfirst($accountNature); ?> account details available.</p>
-                                                <?php endif; ?>
-                                            <?php endforeach; ?>
+                                                <?php endforeach; ?>
                                             </td>
                                         </tr>
                                     </tbody>
