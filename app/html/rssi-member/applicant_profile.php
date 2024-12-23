@@ -106,6 +106,78 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Construct the dynamic UPDATE query
     $update_query = "UPDATE signup SET " . implode(", ", $updates) . " WHERE application_number = '$application_number'";
+    if (isset($_POST['offer_extended'])) {
+        // Retrieve the offer_extended value
+        $offer_extended = $_POST['offer_extended'];
+
+        // Conditional insert into rssimyaccount_members if offer_extended is 'Yes'
+        if ($offer_extended === 'Yes') {
+            $insert_query = "
+            INSERT INTO rssimyaccount_members (
+                fullname,
+                email,
+                basebranch,
+                gender,
+                dateofbirth,
+                currentaddress,
+                permanentaddress,
+                workexperience,
+                nationalidentifier,
+                applicationnumber,
+                position,
+                phone,
+                identifier,
+                photo,
+                filterstatus,
+                iddoc,
+                eduq,
+                mjorsub,
+                password,
+                default_pass_updated_by,
+                default_pass_updated_on,
+                associatenumber
+            )
+            SELECT 
+                applicant_name AS fullname,
+                email,
+                branch AS basebranch,
+                gender,
+                date_of_birth AS dateofbirth,
+                postal_address AS currentaddress,
+                permanent_address AS permanentaddress,
+                work_experience AS workexperience,
+                identifier_number AS nationalidentifier,
+                application_number AS applicationnumber,
+                CONCAT(association, '-', post_select) AS position,
+                telephone AS phone,
+                identifier,
+                applicant_photo AS photo,
+                'In Progress' AS filterstatus,
+                supporting_document AS iddoc,
+                education_qualification AS eduq,
+                specialization AS mjorsub,
+                LEFT(MD5(RANDOM()::text), 6) AS password, -- Generate a default 6-character password
+                'System' AS default_pass_updated_by,
+                CURRENT_TIMESTAMP AS default_pass_updated_on, -- Use the current timestamp for the update time
+                CONCAT(
+                        CASE 
+                            WHEN association = 'Employee' THEN 'E'
+                            WHEN association = 'Volunteer' THEN 'V'
+                            WHEN association = 'Intern' THEN 'I'
+                            WHEN association = 'Membership' THEN 'M'
+                        END,
+                        CASE
+                            WHEN branch = 'Lucknow' THEN 'LKO'
+                            WHEN branch = 'West Bengal' THEN 'KGP'
+                        END,
+                        RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),
+                        LPAD((SELECT COUNT(associatenumber) + 6 FROM rssimyaccount_members)::text, 3, '0')
+                    ) AS associatenumber
+            FROM signup 
+            WHERE application_number = '$application_number';
+            ";
+        }
+    }
 
     // Execute the query
     $update_result = pg_query($con, $update_query);
@@ -113,15 +185,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (isset($_POST['photo_verification'])) {
         // Check if the query was successful
-        if ($cmdtuples == 1 && $photo_verification == 'Approved') {
-            if ($applicant_email != "") {
-                // Adjust the parameters for your sendEmail function accordingly
-                sendEmail("tap_photo_verification_completed", array(
-                    "application_number" => $application_number,
-                    "applicant_name" => $applicant_name
-                ), $applicant_email, False);
-            }
-        }
+        // if ($cmdtuples == 1 && $photo_verification == 'Approved') {
+        //     if ($applicant_email != "") {
+        //         // Adjust the parameters for your sendEmail function accordingly
+        //         sendEmail("tap_photo_verification_completed", array(
+        //             "application_number" => $application_number,
+        //             "applicant_name" => $applicant_name
+        //         ), $applicant_email, False);
+        //     }
+        // }
         if ($cmdtuples == 1 && $photo_verification == 'Rejected') {
             if ($applicant_email != "") {
                 // Adjust the parameters for your sendEmail function accordingly
@@ -188,18 +260,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Execute the query (assuming you have a database connection $con)
+    $result = pg_query($con, $insert_query);
+
+    if ($result && pg_affected_rows($result) > 0) {
+        // Insert was successful
+        echo '<script>
+        var applicationNumber = "' . htmlspecialchars($_GET['application_number']) . '";
+        alert("Record successfully inserted into rssimyaccount_members.");
+        window.location.href = "applicant_profile.php?application_number=" + applicationNumber;  // Redirect to the applicant profile page
+    </script>';
+    } else {
+        // Insert failed
+        echo '<script>
+        alert("Error: Failed to insert record into rssimyaccount_members. ' . addslashes(pg_last_error($con)) . '");
+    </script>';
+    }
+
+    // Check if profile was updated
     if ($cmdtuples == 1) {
         // Success: Profile was updated
         echo '<script>
-            var applicationNumber = "' . $_GET['application_number'] . '";
-            alert("Changes to the Applicant Profile have been saved successfully.");
-            window.location.href = "applicant_profile.php?application_number=" + applicationNumber;  // Reload the page
-        </script>';
+        var applicationNumber = "' . htmlspecialchars($_GET['application_number']) . '";
+        alert("Changes to the Applicant Profile have been saved successfully.");
+        window.location.href = "applicant_profile.php?application_number=" + applicationNumber;  // Reload the page
+    </script>';
     } else {
-        // Failure: Record was not updated
+        // Failure: Profile was not updated
         echo '<script>
-            alert("Error: We encountered an error while updating the record. Please try again.");
-        </script>';
+        alert("Error: We encountered an error while updating the record. Please try again.");
+    </script>';
     }
 }
 
