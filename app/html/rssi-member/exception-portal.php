@@ -119,21 +119,15 @@ if ($result && pg_num_rows($result) > 0) {
                         <div class="card-body">
                             <br>
                             <?php if ($_POST && !$success) { ?>
-                                <div class="alert alert-danger alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                    <span>An error occurred while submitting the request.</span>
-                                </div>
-                            <?php } elseif ($_POST && $success) { ?>
-                                <div class="alert alert-success alert-dismissible" role="alert" style="text-align: -webkit-center;">
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-check2-circle"></i>
-                                    <span>Exception request submitted successfully. ID: <?php echo @$id ?>.</span>
-                                </div>
                                 <script>
-                                    if (window.history.replaceState) {
-                                        window.history.replaceState(null, null, window.location.href);
-                                    }
+                                    // Show error message in a JavaScript alert
+                                    alert("An error occurred while submitting the request.");
+                                </script>
+                            <?php } elseif ($_POST && $success) { ?>
+                                <script>
+                                    // Show success message with ID in a JavaScript alert
+                                    alert("Exception request submitted successfully. ID: <?php echo @$id ?>");
+                                    window.location.href = window.location.href; // Redirects to the same page after success
                                 </script>
                             <?php } ?>
                             <div class="container mt-4">
