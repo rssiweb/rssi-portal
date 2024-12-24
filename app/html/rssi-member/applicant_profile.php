@@ -176,6 +176,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             FROM signup 
             WHERE application_number = '$application_number';
             ";
+            // Execute the query (assuming you have a database connection $con)
+            $result = pg_query($con, $insert_query);
         }
     }
 
@@ -259,9 +261,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
     }
-
-    // Execute the query (assuming you have a database connection $con)
-    $result = pg_query($con, $insert_query);
 
     if ($result && pg_affected_rows($result) > 0) {
         // Insert was successful
