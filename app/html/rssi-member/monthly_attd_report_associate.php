@@ -118,7 +118,7 @@ attendance_data AS (
         CASE
             WHEN p.punch_in IS NOT NULL THEN 'P'
             WHEN p.punch_in IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
-            WHEN TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
+            WHEN m.doj > d.attendance_date THEN NULL
             ELSE 'A'
         END AS attendance_status,
 
@@ -270,9 +270,9 @@ attendance_data AS (
     WHERE
         (
             (m.filterstatus = 'Active')
-            OR DATE_TRUNC('month', TO_DATE(m.effectivedate, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+            OR DATE_TRUNC('month', m.effectivedate)::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         )
-        AND DATE_TRUNC('month', TO_DATE(m.doj, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+        AND DATE_TRUNC('month', m.doj)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         $idCondition
         $teacherCondition
         " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
