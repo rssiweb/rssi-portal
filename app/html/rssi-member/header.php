@@ -538,6 +538,10 @@
         id: 'learning',
         linkId: 'iexploreLink',
         url: 'iexplore.php'
+      }, {
+        id: 'learning',
+        linkId: 'iexploreLink',
+        url: 'iexplore_defaulters.php'
       },
       {
         id: 'learning',
@@ -777,13 +781,11 @@
         id: 'peoplePlus',
         linkId: 'interview_central',
         url: 'hr_interview.php'
-      }
-      , {
+      }, {
         id: 'peoplePlus',
         linkId: 'talent_pool',
         url: 'talent_pool.php'
-      }
-      , {
+      }, {
         id: 'peoplePlus',
         linkId: 'talent_pool',
         url: 'applicant_profile.php'

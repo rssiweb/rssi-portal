@@ -109,6 +109,12 @@ $resultArr1 = pg_fetch_all($result1);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 </head>
 
 <body>
@@ -156,6 +162,11 @@ $resultArr1 = pg_fetch_all($result1);
                                         <span>Database has been updated successfully for course id <?php echo @$courseid ?>.</span>
                                     </div>
                                 <?php } ?>
+                                <div class="row">
+                                    <div class="col" style="text-align: right;">
+                                        <a href="iexplore_defaulters.php">iExplore Defaulters</a>
+                                    </div>
+                                </div>
                                 <div class="container">
                                     <div class="row">
                                         <div class="col">
@@ -239,7 +250,7 @@ $resultArr1 = pg_fetch_all($result1);
                             <?php } ?>
                             <div class="row">
                                 <div class="col" style="text-align: right;">
-                                    <a href="my_learning.php" target="_self" class="btn btn-sm btn-link" role="button">My Learning History</a>
+                                    <a href="my_learning.php" target="_self">My Learning History</a>
                                 </div>
                             </div>
                             <?php if ($role != 'Admin') { ?>
@@ -268,15 +279,16 @@ $resultArr1 = pg_fetch_all($result1);
 
                             <form action="" method="GET">
                                 <div class="container">
-                                    Customize your search by selecting any combination of filters to retrieve the data.<br><br>
-                                    <div class="row">
-                                        <div class="col-md-4">
+                                    Customize your search by selecting any combination of filters to retrieve the data.
+                                    <br><br>
+                                    <div class="row d-flex align-items-center">
+                                        <div class="col-md-3">
                                             <div class="mb-3">
                                                 <label for="courseid1" class="form-label">Course ID</label>
                                                 <input type="text" name="courseid1" class="form-control" id="courseid1" placeholder="Enter Course ID" value="<?php echo htmlspecialchars($courseid1); ?>">
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="mb-3">
                                                 <label for="language1" class="form-label">Language</label>
                                                 <select name="language1" class="form-select" id="language1">
@@ -285,7 +297,7 @@ $resultArr1 = pg_fetch_all($result1);
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="mb-3">
                                                 <label for="type1" class="form-label">Type</label>
                                                 <select name="type1" class="form-select" id="type1">
@@ -294,10 +306,8 @@ $resultArr1 = pg_fetch_all($result1);
                                                 </select>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col">
-                                            <button type="submit" name="search_by_id" class="btn btn-primary">
+                                        <div class="col-md-3 d-flex justify-content-left">
+                                            <button type="submit" name="search_by_id" class="btn btn-sm btn-primary">
                                                 <i class="bi bi-search"></i> Search
                                             </button>
                                         </div>
@@ -305,9 +315,6 @@ $resultArr1 = pg_fetch_all($result1);
                                 </div>
                             </form>
 
-                            <div class="col" style="display: inline-block; width:99%; text-align:right">
-                                Record count:&nbsp;<?php echo sizeof($resultArr1) ?>
-                            </div>
                             <?php echo '
                             <div class="table-responsive">
                     <table class="table" id="table-id">
@@ -336,7 +343,7 @@ $resultArr1 = pg_fetch_all($result1);
                                         <td><?php echo $array['validity']; ?></td>
                                         <td>
                                             <div class="col">
-                                                <a href="<?php echo $array['url'] . $associatenumber; ?>" target="_blank" title="<?php echo $array['coursename'] . '-' . $array['language']; ?>" class="btn btn-sm btn-link" role="button">Launch</a>
+                                                <a href="<?php echo $array['url'] . $associatenumber; ?>" target="_blank" title="<?php echo $array['coursename'] . '-' . $array['language']; ?>">Launch</a>
                                             </div>
                                         </td>
                                     </tr>
@@ -352,7 +359,7 @@ $resultArr1 = pg_fetch_all($result1);
                             } else {
                             ?>
                                 <tr>
-                                    <td colspan="7">No record found for <?php echo $courseid1 . ' ' . $language1; ?></td>
+                                    <td colspan="7">No record found for <?php echo $courseid1 . ' ' . $language1 . ' ' . $type1; ?></td>
                                 </tr>
                             <?php
                             }
@@ -408,6 +415,19 @@ $resultArr1 = pg_fetch_all($result1);
                 submit3Button.style.display = 'inline-block';
             }
         }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArr1)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
+        });
     </script>
 </body>
 
