@@ -104,7 +104,7 @@ if ($selectedAssociate) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Mandatory Course Status</title>
+    <title>My Learning</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -142,12 +142,13 @@ if ($selectedAssociate) {
         <main id="main" class="main">
 
             <div class="pagetitle">
-                <h1>Mandatory Course Status</h1>
+                <h1>My Learning</h1>
                 <nav>
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                        <li class="breadcrumb-item"><a href="#">Work</a></li>
-                        <li class="breadcrumb-item active">Mandatory Course Status</li>
+                        <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
+                        <li class="breadcrumb-item"><a href="iexplore.php">iExplore</a></li>
+                        <li class="breadcrumb-item active">My Learning</li>
                     </ol>
                 </nav>
             </div><!-- End Page Title -->
@@ -164,23 +165,23 @@ if ($selectedAssociate) {
                                 <div class="container my-5">
                                     <!-- Filter Form -->
                                     <form method="POST" class="mb-4">
-                                        <div class="row g-3 align-items-center">
-                                            <div class="col-auto">
-                                                <label for="associatenumber" class="form-label">Associate Number</label>
-                                                <input
-                                                    type="text"
-                                                    class="form-control"
-                                                    id="associatenumber"
-                                                    name="associatenumber"
-                                                    value="<?= htmlspecialchars($selectedAssociate ?? '') ?>"
-                                                    placeholder="Enter Associate Number"
-                                                    required>
-                                            </div>
-                                            <div class="col-auto">
-                                                <button type="submit" class="btn btn-primary">Filter</button>
-                                            </div>
-                                        </div>
-                                    </form>
+    <div class="mb-3">
+        <label for="associatenumber" class="form-label">Associate Number</label>
+        <div class="input-group">
+            <input 
+                type="text" 
+                class="form-control" 
+                id="associatenumber" 
+                name="associatenumber" 
+                value="<?= htmlspecialchars($selectedAssociate ?? '') ?>" 
+                placeholder="Enter Associate Number" 
+                required>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </div>
+</form>
+
+
 
                                     <!-- Data Table -->
                                     <?php if ($data): ?>
