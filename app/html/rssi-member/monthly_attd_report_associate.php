@@ -138,6 +138,18 @@ attendance_data AS (
             
             -- Half-day condition
             WHEN EXISTS (
+            SELECT 1
+            FROM leavedb_leavedb l
+            WHERE l.applicantid = m.associatenumber
+            AND l.status = 'Approved'
+            AND l.halfday = 1
+            AND d.attendance_date BETWEEN l.fromdate AND l.todate
+            GROUP BY l.applicantid, d.attendance_date
+            HAVING COUNT(*) >= 2
+            ) THEN 'Leave'
+            
+            -- Half-day condition
+            WHEN EXISTS (
                 SELECT 1
                 FROM leavedb_leavedb l
                 WHERE l.applicantid = m.associatenumber
