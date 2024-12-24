@@ -9,61 +9,83 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
-@$cid = $_GET['get_cid'];
-@$wbtstatus = $_GET['wbtstatus'];
 
-if ($role == 'Admin') {
-    @$aid = $_GET['get_aid'];
-
-
-    if ($aid != null && $cid == null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
-        $result = pg_query($con, "SELECT * FROM wbt_status 
-        left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$aid' order by timestamp desc");
-    } else if ($aid != null && $cid == null && ($wbtstatus == 'Completed')) {
-        $result = pg_query($con, "SELECT * FROM wbt_status 
-        left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$aid' AND passingmarks <= f_score * 100 order by timestamp desc");
-    } else if ($aid != null && $cid == null && ($wbtstatus == 'Incomplete')) {
-        $result = pg_query($con, "SELECT * FROM wbt_status 
-        left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$aid' AND passingmarks > f_score * 100 order by timestamp desc");
-    } else if ($aid == null && $cid != null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
-        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' order by timestamp desc");
-    } else if ($aid == null && $cid != null && ($wbtstatus == 'Completed')) {
-        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND passingmarks <= f_score * 100 order by timestamp desc");
-    } else if ($aid == null && $cid != null && ($wbtstatus == 'Incomplete')) {
-        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND passingmarks > f_score * 100 order by timestamp desc");
-    } else if ($aid != null && $cid != null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
-        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND wassociatenumber='$aid' order by timestamp desc");
-    } else if ($aid != null && $cid != null && $wbtstatus == 'Completed') {
-        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND wassociatenumber='$aid' AND passingmarks <= f_score * 100 order by timestamp desc");
-    } else if ($aid != null && $cid != null && $wbtstatus == 'Incomplete') {
-        $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='$cid' AND wassociatenumber='$aid' AND passingmarks > f_score * 100 order by timestamp desc");
-    } else {
-        $result = pg_query($con, "SELECT * FROM wbt_status 
-        left join wbt ON wbt.courseid=wbt_status.courseid WHERE wbt_status.courseid='' order by timestamp desc");
+// Fetch associate numbers for the filter
+$associates = [];
+$associatesQuery = "SELECT DISTINCT associatenumber FROM wbt_status";
+$result = pg_query($con, $associatesQuery);
+if ($result) {
+    while ($row = pg_fetch_assoc($result)) {
+        $associates[] = $row;
     }
 }
-if ($role != 'Admin' && $cid != null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
-    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND wbt_status.courseid='$cid' order by timestamp desc");
-} else if ($role != 'Admin' && $cid == null && ($wbtstatus == null || $wbtstatus == 'ALL')) {
-    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' order by timestamp desc");
-} else if ($role != 'Admin' && $cid == null && $wbtstatus == 'Completed') {
-    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND passingmarks <= f_score * 100 order by timestamp desc");
-} else if ($role != 'Admin' && $cid == null && $wbtstatus == 'Incomplete') {
-    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND passingmarks > f_score * 100 order by timestamp desc");
-} else if ($role != 'Admin' && $cid != null && $wbtstatus == 'Completed') {
-    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND passingmarks <= f_score * 100 AND wbt_status.courseid='$cid' order by timestamp desc");
-} else if ($role != 'Admin' && $cid != null && $wbtstatus == 'Incomplete') {
-    $result = pg_query($con, "SELECT * FROM wbt_status left join wbt ON wbt.courseid=wbt_status.courseid WHERE wassociatenumber='$user_check' AND passingmarks > f_score * 100 AND wbt_status.courseid='$cid' order by timestamp desc");
-}
 
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-}
+// Handle the filter submission
+$selectedAssociate = $_POST['associatenumber'] ?? null;
+$data = [];
 
-$resultArr = pg_fetch_all($result);
+if ($selectedAssociate) {
+    $query = "
+    WITH LatestAttempts AS (
+        SELECT 
+            ws.associatenumber,
+            ws.courseid,
+            MAX(ws.timestamp) AS latest_timestamp
+        FROM 
+            wbt_status ws
+        JOIN 
+            wbt w ON ws.courseid = w.courseid
+        WHERE 
+            w.is_mandatory = TRUE
+        GROUP BY 
+            ws.associatenumber, ws.courseid
+    )
+    SELECT 
+        ws.associatenumber,
+        ws.timestamp AS completed_on,
+        w.courseid,
+        w.coursename,
+        ROUND(ws.f_score * 100, 2) AS score_percentage,
+        CASE 
+            WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 'Completed'
+            ELSE 'Incomplete'
+        END AS status,
+        CASE 
+            WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 
+                TO_CHAR(ws.timestamp + (w.validity || ' years')::INTERVAL, 'YYYY-MM-DD HH24:MI:SS')
+            ELSE NULL
+        END AS valid_upto,
+        CASE 
+            WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN
+                CASE 
+                    WHEN ws.timestamp + (w.validity || ' years')::INTERVAL > NOW() THEN 'Active'
+                    ELSE 'Expired'
+                END
+            ELSE NULL
+        END AS additional_status
+    FROM 
+        wbt_status ws
+    JOIN 
+        LatestAttempts la ON ws.associatenumber = la.associatenumber 
+                          AND ws.courseid = la.courseid 
+                          AND ws.timestamp = la.latest_timestamp
+    JOIN 
+        wbt w ON ws.courseid = w.courseid
+    WHERE 
+        ws.associatenumber = $1";
+
+    $stmt = pg_prepare($con, "fetch_data", $query);
+    $result = pg_execute($con, "fetch_data", [$selectedAssociate]);
+
+    if ($result) {
+        while ($row = pg_fetch_assoc($result)) {
+            $data[] = $row;
+        }
+    }
+}
 ?>
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="en">
 
 <head>
@@ -80,16 +102,12 @@ $resultArr = pg_fetch_all($result);
         gtag('config', 'AW-11316670180');
     </script>
     <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>iExplore-My Learning</title>
-    <meta content="" name="description">
-    <meta content="" name="keywords">
+    <title>Mandatory Course Status</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
-
-
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -106,203 +124,140 @@ $resultArr = pg_fetch_all($result);
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+
 </head>
 
-<!-- =========================
-     NAVIGATION LINKS     
-============================== -->
-
 <body>
-    <?php include 'inactive_session_expire_check.php'; ?>
-    <?php include 'header.php'; ?>
 
-    <main id="main" class="main">
+    <body>
+        <?php include 'inactive_session_expire_check.php'; ?>
+        <?php include 'header.php'; ?>
 
-        <div class="pagetitle">
-            <h1>My Learning</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
-                    <li class="breadcrumb-item"><a href="iexplore.php">iExplore</a></li>
-                    <li class="breadcrumb-item active">My Learning</li>
-                </ol>
-            </nav>
-        </div><!-- End Page Title -->
+        <main id="main" class="main">
 
-        <section class="section dashboard">
-            <div class="row">
+            <div class="pagetitle">
+                <h1>Mandatory Course Status</h1>
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                        <li class="breadcrumb-item"><a href="#">Work</a></li>
+                        <li class="breadcrumb-item active">Mandatory Course Status</li>
+                    </ol>
+                </nav>
+            </div><!-- End Page Title -->
 
-                <!-- Reports -->
-                <div class="col-12">
-                    <div class="card">
+            <section class="section dashboard">
+                <div class="row">
 
-                        <div class="card-body">
-                            <br>
-                            <div style="text-align: right;">
-                                <div class="col" style="display: inline-block;">
-                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                    <!-- Reports -->
+                    <div class="col-12">
+                        <div class="card">
+
+                            <div class="card-body">
+                                <br>
+                                <div class="container my-5">
+                                    <!-- Filter Form -->
+                                    <form method="POST" class="mb-4">
+                                        <div class="row g-3 align-items-center">
+                                            <div class="col-auto">
+                                                <label for="associatenumber" class="form-label">Associate Number</label>
+                                                <input
+                                                    type="text"
+                                                    class="form-control"
+                                                    id="associatenumber"
+                                                    name="associatenumber"
+                                                    value="<?= htmlspecialchars($selectedAssociate ?? '') ?>"
+                                                    placeholder="Enter Associate Number"
+                                                    required>
+                                            </div>
+                                            <div class="col-auto">
+                                                <button type="submit" class="btn btn-primary">Filter</button>
+                                            </div>
+                                        </div>
+                                    </form>
+
+                                    <!-- Data Table -->
+                                    <?php if ($data): ?>
+                                        <div class="table-responsive">
+                                            <table id="coursesTable" class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Associate Number</th>
+                                                        <th>Completed On</th>
+                                                        <th>Course ID</th>
+                                                        <th>Course Name</th>
+                                                        <th>Score</th>
+                                                        <th>Status</th>
+                                                        <th>Valid Upto</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($data as $row): ?>
+                                                        <tr>
+                                                            <td><?= htmlspecialchars($row['associatenumber']) ?></td>
+                                                            <td><?= htmlspecialchars($row['completed_on']) ?></td>
+                                                            <td><?= htmlspecialchars($row['courseid']) ?></td>
+                                                            <td><?= htmlspecialchars($row['coursename']) ?></td>
+                                                            <td><?= htmlspecialchars($row['score_percentage']) ?>%</td>
+                                                            <td>
+                                                                <?php if ($row['status'] === 'Incomplete'): ?>
+                                                                    Incomplete
+                                                                <?php elseif ($row['status'] === 'Completed' && $row['additional_status'] === 'Active'): ?>
+                                                                    Active
+                                                                <?php elseif ($row['status'] === 'Completed' && $row['additional_status'] === 'Expired'): ?>
+                                                                    Expired
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php if ($row['status'] === 'Completed'): ?>
+                                                                    <?= htmlspecialchars($row['valid_upto']) ?>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php elseif ($selectedAssociate): ?>
+                                        <p class="text-danger">No records found for the selected associate number.</p>
+                                    <?php endif; ?>
                                 </div>
+
                             </div>
-                            <!--<form action="process_assignment.php" method="POST" class="row g-3 align-items-center">
-                                <div class="col-md-2">
-                                    <label for="associate_id" class="form-label">Associate ID</label>
-                                    <input type="text" class="form-control" id="associate_id" name="associate_id" required>
-                                    <div class="form-text">Enter the ID of the associate</div>
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="course_id" class="form-label">Course ID</label>
-                                    <input type="text" class="form-control" id="course_id" name="course_id" required>
-                                    <div class="form-text">Enter the ID of the course completed</div>
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="status" class="form-label">Status</label>
-                                    <select class="form-select" id="status" name="status" required>
-                                        <option value="" disabled selected>Select Status</option>
-                                        <option value="Completed">Completed</option>
-                                        <option value="Incomplete">Incomplete</option>
-                                    </select>
-                                    <div class="form-text">Select the completion status</div>
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="score" class="form-label">Score</label>
-                                    <input type="number" class="form-control" id="score" name="score" min="0" max="100">
-                                    <div class="form-text">Enter the score (if applicable)</div>
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="completion_date" class="form-label">Completion Date</label>
-                                    <input type="date" class="form-control" id="completion_date" name="completion_date">
-                                    <div class="form-text">Select the completion date</div>
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-primary">Submit</button>
-                                </div>
-                            </form>
-                            <br>-->
-
-                            <form action="" method="GET">
-                                <div class="form-group" style="display: inline-block;">
-                                    <div class="col2" style="display: inline-block;">
-                                        <?php if ($role == 'Admin') { ?>
-                                            <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?php echo $aid ?>">
-                                        <?php } ?>
-
-                                        <select name="wbtstatus" class="form-select" style="width:max-content; display:inline-block">
-                                            <?php if ($wbtstatus == null) { ?>
-                                                <option value="" disabled selected hidden>Status</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $wbtstatus ?></option>
-                                            <?php }
-                                            ?>
-                                            <option>Completed</option>
-                                            <option>Incomplete</option>
-                                            <option>ALL</option>
-                                        </select>
-
-                                        <input name="get_cid" class="form-control" style="width:max-content; display:inline-block" placeholder="Course id" value="<?php echo $cid ?>">
-                                    </div>
-                                </div>
-                                <div class="col2 left" style="display: inline-block;">
-                                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                        <i class="bi bi-search"></i>&nbsp;Search</button>
-                                </div>
-                            </form>
-                            <?php echo '
-                            <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                            <th scope="col">Associate number</th>
-                            <th scope="col">Completed on</th>
-                            <th scope="col">Course id</th>    
-                            <th scope="col">Course name</th>    
-                            <th scope="col">Score</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Valid upto</th>
-                            </tr>
-                        </thead>' ?>
-                            <?php if ($resultArr != null) {
-                                echo '<tbody>';
-                                foreach ($resultArr as $array) {
-                                    echo '
-                                <tr><td>' . substr($array['wassociatenumber'], 0, 10) . '</td>
-                                    <td>' . @date("d/m/Y g:i a", strtotime($array['timestamp'])) . '</td>
-                                    <td>' . $array['courseid'] . '</td>
-                                    <td>' . $array['coursename'] . '</td>
-                                    <td>' . round((float)$array['f_score'] * 100) . '%' . '</td><td>' ?>
-
-                                    <?php
-                                    $validity = $array['validity'];
-                                    $date = date_create($array['timestamp']);
-                                    date_add($date, date_interval_create_from_date_string("$validity years"));
-                                    date_format($date, "d/m/Y g:i a");
-
-                                    if (($array['passingmarks'] <= round((float)$array['f_score'] * 100))) { ?>
-
-                                        <?php echo 'Completed' ?>
-
-                                    <?php } else { ?>
-
-                                        <?php echo 'Incomplete' ?>
-                                    <?php } ?>
-
-                                    <?php echo
-                                    '</td><td>' ?>
-                                    <?php if ($array['passingmarks'] <= round((float)$array['f_score'] * 100)) { ?>
-                                        <?php
-                                        // $validity = $array['validity'];
-                                        // $date = date_create($array['timestamp']);
-                                        // date_add($date, date_interval_create_from_date_string("$validity years"));
-                                        echo date_format($date, "d/m/Y g:i a");
-                                        ?>&nbsp;
-
-
-
-                                        <?php if ((date_format($date, "Y-m-d") > date('Y-m-d', time()))) { ?>
-
-                                            <?php echo '<span class="badge bg-success">Active</span>' ?>
-
-                                        <?php } else { ?>
-
-                                            <?php echo '<span class="badge bg-secondary">Expired</span>' ?>
-
-                                        <?php
-                                        } ?>
-                                    <?php } ?>
-                                <?php echo '</td></tr>';
-                                }
-                            } else if ($role == 'Admin' && $cid == null && $aid == null) { ?>
-                                <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
-                            <?php } else if ($role != 'Admin' && $cid == null) { ?>
-                                <?php echo '<tr><td colspan="5">Please select Filter value.</td> </tr>'; ?>
-                            <?php } else {
-                                echo '<tr>
-                        <td colspan="5">No record was found for the selected filter value.' ?>
-                            <?php echo '</td>
-                    </tr>';
-                            }
-                            echo '</tbody>
-                     </table>
-                     </div>';
-                            ?>
                         </div>
+                    </div><!-- End Reports -->
+                </div>
+            </section>
 
-                    </div>
-                </div><!-- End Reports -->
-            </div>
-        </section>
+        </main><!-- End #main -->
 
-    </main><!-- End #main -->
+        <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+        <!-- Vendor JS Files -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
-    <!-- Vendor JS Files -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+        <!-- Template Main JS File -->
+        <script src="../assets_new/js/main.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Check if resultArr is empty
+                <?php if (!empty($result)) : ?>
+                    // Initialize DataTables only if resultArr is not empty
+                    $('#coursesTable').DataTable({
+                        // paging: false,
+                        "order": [] // Disable initial sorting
+                        // other options...
+                    });
+                <?php endif; ?>
+            });
+        </script>
 
-    <!-- Template Main JS File -->
-    <script src="../assets_new/js/main.js"></script>
-
-</body>
+    </body>
 
 </html>
