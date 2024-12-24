@@ -10,77 +10,73 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-// Fetch associate numbers for the filter
-$associates = [];
-$associatesQuery = "SELECT DISTINCT associatenumber FROM wbt_status";
-$result = pg_query($con, $associatesQuery);
-if ($result) {
-    while ($row = pg_fetch_assoc($result)) {
-        $associates[] = $row;
-    }
-}
-
 // Handle the filter submission
 $selectedAssociate = $_POST['associatenumber'] ?? null;
 $data = [];
 
-if ($selectedAssociate) {
-    $query = "
-    WITH LatestAttempts AS (
-        SELECT 
-            ws.associatenumber,
-            ws.courseid,
-            MAX(ws.timestamp) AS latest_timestamp
-        FROM 
-            wbt_status ws
-        JOIN 
-            wbt w ON ws.courseid = w.courseid
-        WHERE 
-            w.is_mandatory = TRUE
-        GROUP BY 
-            ws.associatenumber, ws.courseid
-    )
+// Determine the associate number to use for the query
+$associateNumber = ($role === 'Admin' && $selectedAssociate) ? $selectedAssociate : $user_check;
+
+// Define the query template
+$query = "
+WITH LatestAttempts AS (
     SELECT 
         ws.associatenumber,
-        ws.timestamp AS completed_on,
-        w.courseid,
-        w.coursename,
-        ROUND(ws.f_score * 100, 2) AS score_percentage,
-        CASE 
-            WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 'Completed'
-            ELSE 'Incomplete'
-        END AS status,
-        CASE 
-            WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 
-                TO_CHAR(ws.timestamp + (w.validity || ' years')::INTERVAL, 'YYYY-MM-DD HH24:MI:SS')
-            ELSE NULL
-        END AS valid_upto,
-        CASE 
-            WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN
-                CASE 
-                    WHEN ws.timestamp + (w.validity || ' years')::INTERVAL > NOW() THEN 'Active'
-                    ELSE 'Expired'
-                END
-            ELSE NULL
-        END AS additional_status
+        ws.courseid,
+        MAX(ws.timestamp) AS latest_timestamp
     FROM 
         wbt_status ws
     JOIN 
-        LatestAttempts la ON ws.associatenumber = la.associatenumber 
-                          AND ws.courseid = la.courseid 
-                          AND ws.timestamp = la.latest_timestamp
-    JOIN 
         wbt w ON ws.courseid = w.courseid
     WHERE 
-        ws.associatenumber = $1";
+        w.is_mandatory = TRUE
+    GROUP BY 
+        ws.associatenumber, ws.courseid
+)
+SELECT 
+    ws.associatenumber,
+    ws.timestamp AS completed_on,
+    w.courseid,
+    w.coursename,
+    ROUND(ws.f_score * 100, 2) AS score_percentage,
+    CASE 
+        WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 'Completed'
+        ELSE 'Incomplete'
+    END AS status,
+    CASE 
+        WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 
+            TO_CHAR(ws.timestamp + (w.validity || ' years')::INTERVAL, 'YYYY-MM-DD HH24:MI:SS')
+        ELSE NULL
+    END AS valid_upto,
+    CASE 
+        WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN
+            CASE 
+                WHEN ws.timestamp + (w.validity || ' years')::INTERVAL > NOW() THEN 'Active'
+                ELSE 'Expired'
+            END
+        ELSE NULL
+    END AS additional_status
+FROM 
+    wbt_status ws
+JOIN 
+    LatestAttempts la ON ws.associatenumber = la.associatenumber 
+                      AND ws.courseid = la.courseid 
+                      AND ws.timestamp = la.latest_timestamp
+JOIN 
+    wbt w ON ws.courseid = w.courseid
+WHERE 
+    ws.associatenumber = $1"; // The WHERE clause will be dynamically adjusted based on role
 
-    $stmt = pg_prepare($con, "fetch_data", $query);
-    $result = pg_execute($con, "fetch_data", [$selectedAssociate]);
+// Prepare the statement
+$stmt = pg_prepare($con, "fetch_data", $query);
 
-    if ($result) {
-        while ($row = pg_fetch_assoc($result)) {
-            $data[] = $row;
-        }
+// Execute the query with the appropriate associate number
+$result = pg_execute($con, "fetch_data", [$associateNumber]);
+
+// Fetch the results if the query was successful
+if ($result) {
+    while ($row = pg_fetch_assoc($result)) {
+        $data[] = $row;
     }
 }
 ?>
@@ -164,25 +160,24 @@ if ($selectedAssociate) {
                                 <br>
                                 <div class="container my-5">
                                     <!-- Filter Form -->
-                                    <form method="POST" class="mb-4">
-    <div class="mb-3">
-        <label for="associatenumber" class="form-label">Associate Number</label>
-        <div class="input-group">
-            <input 
-                type="text" 
-                class="form-control" 
-                id="associatenumber" 
-                name="associatenumber" 
-                value="<?= htmlspecialchars($selectedAssociate ?? '') ?>" 
-                placeholder="Enter Associate Number" 
-                required>
-            <button type="submit" class="btn btn-primary">Filter</button>
-        </div>
-    </div>
-</form>
-
-
-
+                                    <?php if ($role === 'Admin'): ?>
+                                        <form method="POST" class="mb-4">
+                                            <div class="mb-3">
+                                                <label for="associatenumber" class="form-label">Associate Number</label>
+                                                <div class="input-group">
+                                                    <input
+                                                        type="text"
+                                                        class="form-control"
+                                                        id="associatenumber"
+                                                        name="associatenumber"
+                                                        value="<?= htmlspecialchars($selectedAssociate ?? '') ?>"
+                                                        placeholder="Enter Associate Number"
+                                                        required>
+                                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    <?php endif; ?>
                                     <!-- Data Table -->
                                     <?php if ($data): ?>
                                         <div class="table-responsive">
