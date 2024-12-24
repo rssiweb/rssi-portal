@@ -598,7 +598,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
@@ -612,15 +611,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 document.getElementById('telephone').value = telephone.slice(0, 10); // Truncate to 10 digits
             }
         }
-    </script>
-    <script>
-        $(document).ready(function() {
-            $('input, select, textarea').each(function() {
-                if ($(this).prop('required')) { // Check if the element has the required attribute
-                    $(this).closest('td').prev('td').find('label').append(' <span style="color: red">*</span>');
-                }
-            });
-        });
     </script>
     <script>
         function copyAddress() {
@@ -637,7 +627,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
     </script>
+    <!-- Add this script at the end of the HTML body -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        // Add event listener to intercept Escape key press
+        document.body.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Prevent default behavior of Escape key
+                event.preventDefault();
+            }
+        });
+    </script>
+    <script>
+        // Function to show loading modal
+        function showLoadingModal() {
+            $('#myModal').modal('show');
+        }
 
+        // Function to hide loading modal
+        function hideLoadingModal() {
+            $('#myModal').modal('hide');
+        }
+
+        // Add event listener to form submission
+        document.getElementById('signup').addEventListener('submit', function(event) {
+            // Show loading modal when form is submitted
+            showLoadingModal();
+        });
+
+        // Optional: Close loading modal when the page is fully loaded
+        window.addEventListener('load', function() {
+            // Hide loading modal
+            hideLoadingModal();
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('input, select, textarea').each(function() {
+                if ($(this).prop('required')) { // Check if the element has the required attribute
+                    $(this).closest('td').prev('td').find('label').append(' <span style="color: red">*</span>');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
