@@ -1433,3 +1433,31 @@ if (@$_POST['form-type'] == "signup") {
     echo json_encode(array("error" => true, "errorMessage" => "Error occurred during form submission."));
   }
 }
+
+if (isset($_POST['form-type']) && $_POST['form-type'] == 'holiday') {
+  // Get the year from the POST request
+  $year = isset($_POST['year']) ? $_POST['year'] : date("Y");
+
+  // Query to fetch holidays for the given year
+  $query = "SELECT holiday_date, TO_CHAR(holiday_date, 'Day') AS day, holiday_name 
+          FROM holidays 
+          WHERE EXTRACT(YEAR FROM holiday_date) = $1
+          ORDER BY holiday_date ASC";
+  // Prepare the query
+  $result = pg_prepare($con, "holiday_query", $query);
+
+  // Execute the query with the year parameter
+  $result = pg_execute($con, "holiday_query", array($year));
+
+  // Check if the query executed successfully
+  if ($result) {
+    $holidays = pg_fetch_all($result);
+    if ($holidays) {
+      echo json_encode($holidays);
+    } else {
+      echo json_encode(["message" => "No holidays found for this year."]);
+    }
+  } else {
+    echo json_encode(["error" => "Error executing the query."]);
+  }
+}
