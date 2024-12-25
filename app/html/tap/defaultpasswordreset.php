@@ -152,7 +152,7 @@ if (@$login_failed_dialog) { ?>
 </head>
 
 <body>
-    <!-- <?php include 'inactive_session_expire_check.php'; ?> -->
+    <?php include 'inactive_session_expire_check.php'; ?>
     <div class="page-topbar">
         <div class="logo-area"> </div>
     </div>

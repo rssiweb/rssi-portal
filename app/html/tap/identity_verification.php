@@ -178,7 +178,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
 
     <?php include 'header.php'; ?>
-    <!-- <?php include 'inactive_session_expire_check.php'; ?> -->
+    <?php include 'inactive_session_expire_check.php'; ?>
 
     <main id="main" class="main">
 
