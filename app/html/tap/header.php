@@ -57,7 +57,7 @@
           <div class="profile-photo">
             <?php if (!empty($preview_url)): ?>
               <!-- Show the applicant photo if preview_url is set -->
-              <iframe src="<?php echo $preview_url; ?>" width="30" height="30" frameborder="0" allow="autoplay"
+              <iframe src="<?php echo $preview_url; ?>" class="rounded-circle" width="30" height="30" frameborder="0" allow="autoplay"
                 sandbox="allow-scripts allow-same-origin"></iframe>
             <?php else: ?>
               <!-- Show initials if no photo -->

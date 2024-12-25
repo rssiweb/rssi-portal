@@ -404,14 +404,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                 <label for="caste-document">Caste Certificate:</label>
                                                             </td>
                                                             <td>
-                                                                <div class="d-flex align-items-center">
+                                                                <div class="d-flex flex-column flex-sm-row align-items-center">
                                                                     <!-- Left side: File input -->
-                                                                    <div>
+                                                                    <div class="mb-2 mb-sm-0">
                                                                         <input type="file" class="form-control" id="caste-document" name="caste-document" accept=".pdf,.jpg,.jpeg,.png">
                                                                     </div>
 
                                                                     <!-- Right side: Uploaded file or message -->
-                                                                    <div class="ms-2 d-flex align-items-center">
+                                                                    <div class="ms-2 d-flex align-items-center w-100 w-sm-auto">
                                                                         <?php if (!empty($caste_filename)): ?>
                                                                             <a href="<?php echo htmlspecialchars($array['caste_document']); ?>" target="_blank"><?php echo htmlspecialchars($caste_filename); ?></a>
                                                                         <?php else: ?>
@@ -420,7 +420,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                     </div>
                                                                 </div>
                                                                 <!-- Help text below the input field -->
-                                                                <small id="caste-document-help" class="form-text text-muted">Upload your caste certificate (PDF, JPG, JPEG, or PNG).</small>
+                                                                <small id="caste-document-help" class="form-text text-muted">
+                                                                    Upload your caste certificate (PDF, JPG, JPEG, or PNG).
+                                                                </small>
                                                             </td>
                                                         </tr>
 
@@ -530,14 +532,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                 <label for="applicant-photo">Upload Applicant Photo:</label>
                                                             </td>
                                                             <td>
-                                                                <div class="d-flex align-items-center">
+                                                                <div class="d-flex flex-column flex-sm-row align-items-center">
                                                                     <!-- Left side: File input -->
-                                                                    <div>
+                                                                    <div class="mb-2 mb-sm-0">
                                                                         <input type="file" class="form-control" id="applicant-photo" name="applicant-photo" accept="image/*">
                                                                     </div>
 
                                                                     <!-- Right side: Uploaded file or message -->
-                                                                    <div class="ms-2 d-flex align-items-center">
+                                                                    <div class="ms-2 d-flex align-items-center w-100 w-sm-auto">
                                                                         <?php if (!empty($photo_filename)): ?>
                                                                             <a href="<?php echo htmlspecialchars($array['applicant_photo']); ?>" target="_blank"><?php echo htmlspecialchars($photo_filename); ?></a>
                                                                         <?php else: ?>
@@ -556,14 +558,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                 <label for="resume-upload">Upload Resume:</label>
                                                             </td>
                                                             <td>
-                                                                <div class="d-flex align-items-center">
+                                                                <div class="d-flex flex-column flex-sm-row align-items-center">
                                                                     <!-- Left side: File input -->
-                                                                    <div>
+                                                                    <div class="mb-2 mb-sm-0">
                                                                         <input type="file" class="form-control" id="resume-upload" name="resume-upload">
                                                                     </div>
 
                                                                     <!-- Right side: Uploaded file or message -->
-                                                                    <div class="ms-2 d-flex align-items-center">
+                                                                    <div class="ms-2 d-flex align-items-center w-100 w-sm-auto">
                                                                         <?php if (!empty($resume_filename)): ?>
                                                                             <a href="<?php echo htmlspecialchars($array['resume_upload']); ?>" target="_blank"><?php echo htmlspecialchars($resume_filename); ?></a>
                                                                         <?php else: ?>
