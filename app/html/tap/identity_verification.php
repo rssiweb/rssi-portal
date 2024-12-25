@@ -214,20 +214,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         <tr>
                                                             <td><label for="identifier">Choose any National Identifier from the below list.</label></td>
                                                             <td>
-
                                                                 <select class="form-select" id="identifier" name="identifier" required>
                                                                     <option value="" disabled <?php echo empty($array['identifier']) ? 'selected' : ''; ?>>-- Select an Identifier --</option>
-                                                                    <?php if (!empty($array['identifier'])) { ?>
-                                                                        <option value="<?php echo htmlspecialchars($array['identifier']); ?>" selected><?php echo htmlspecialchars($array['identifier']); ?></option>
-                                                                    <?php } ?>
-                                                                    <option value="Aadhaar">Aadhaar</option>
-                                                                    <option value="PAN (Permanent Account Number)">PAN (Permanent Account Number)</option>
-                                                                    <option value="Voter ID">Voter ID</option>
-                                                                    <option value="Passport">Passport</option>
-                                                                    <option value="Ration Card">Ration Card</option>
-                                                                    <option value="Driving License">Driving License</option>
-                                                                    <option value="National Population Register (NPR) Number">National Population Register (NPR) Number</option>
-                                                                    <option value="PR Card (Person of Indian Origin)">PR Card (Person of Indian Origin)</option>
+                                                                    <?php
+                                                                    $options = [
+                                                                        "Aadhaar" => "Aadhaar",
+                                                                        // "PAN (Permanent Account Number)" => "PAN (Permanent Account Number)",
+                                                                        // "Voter ID" => "Voter ID",
+                                                                        // "Passport" => "Passport",
+                                                                        // "Ration Card" => "Ration Card",
+                                                                        // "Driving License" => "Driving License",
+                                                                        // "National Population Register (NPR) Number" => "National Population Register (NPR) Number",
+                                                                        // "PR Card (Person of Indian Origin)" => "PR Card (Person of Indian Origin)"
+                                                                    ];
+                                                                    foreach ($options as $value => $label) {
+                                                                        $selected = ($array['identifier'] ?? '') === $value ? 'selected' : '';
+                                                                        echo "<option value=\"" . htmlspecialchars($value) . "\" $selected>" . htmlspecialchars($label) . "</option>";
+                                                                    }
+                                                                    ?>
                                                                 </select>
 
                                                             </td>

@@ -318,16 +318,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                             <td>
                                                                 <select class="form-select" id="education-qualification" name="education-qualification" required>
                                                                     <option value="" disabled <?php echo empty($array['education_qualification']) ? 'selected' : ''; ?>>Select your qualification</option>
-                                                                    <?php if (!empty($array['education_qualification'])) { ?>
-                                                                        <option value="<?php echo htmlspecialchars($array['education_qualification']); ?>" selected><?php echo htmlspecialchars($array['education_qualification']); ?></option>
-                                                                    <?php } ?>
-                                                                    <option value="Bachelor Degree Regular">Bachelor Degree Regular</option>
-                                                                    <option value="Bachelor Degree Correspondence">Bachelor Degree Correspondence</option>
-                                                                    <option value="Master Degree">Master Degree</option>
-                                                                    <option value="PhD (Doctorate Degree)">PhD (Doctorate Degree)</option>
-                                                                    <option value="Post Doctorate or 5 years experience">Post Doctorate or 5 years experience</option>
-                                                                    <option value="Culture, Art & Sports etc.">Culture, Art & Sports etc.</option>
-                                                                    <option value="Class 12th Pass">Class 12th Pass</option>
+                                                                    <?php
+                                                                    $options = [
+                                                                        "Bachelor Degree Regular" => "Bachelor Degree Regular",
+                                                                        "Bachelor Degree Correspondence" => "Bachelor Degree Correspondence",
+                                                                        "Master Degree" => "Master Degree",
+                                                                        "PhD (Doctorate Degree)" => "PhD (Doctorate Degree)",
+                                                                        "Post Doctorate or 5 years experience" => "Post Doctorate or 5 years experience",
+                                                                        "Culture, Art & Sports etc." => "Culture, Art & Sports etc.",
+                                                                        "Class 12th Pass" => "Class 12th Pass"
+                                                                    ];
+                                                                    foreach ($options as $value => $label) {
+                                                                        $selected = ($array['education_qualification'] ?? '') === $value ? 'selected' : '';
+                                                                        echo "<option value=\"" . htmlspecialchars($value) . "\" $selected>" . htmlspecialchars($label) . "</option>";
+                                                                    }
+                                                                    ?>
                                                                 </select>
                                                             </td>
                                                         </tr>
@@ -374,17 +379,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                             <td>
                                                                 <select class="form-select" id="caste" name="caste">
                                                                     <option value="" disabled <?php echo empty($array['caste']) ? 'selected' : ''; ?>>Select your caste</option>
-                                                                    <?php if (!empty($array['caste'])) { ?>
-                                                                        <option value="<?php echo htmlspecialchars($array['caste']); ?>" selected><?php echo htmlspecialchars($array['caste']); ?></option>
-                                                                    <?php } ?>
-
-                                                                    <option value="General">General</option>
-                                                                    <option value="SC">Scheduled Caste (SC)</option>
-                                                                    <option value="ST">Scheduled Tribe (ST)</option>
-                                                                    <option value="OBC">Other Backward Class (OBC)</option>
-                                                                    <option value="EWS">Economically Weaker Section (EWS)</option>
-                                                                    <option value="Prefer not to disclose">Prefer not to disclose</option>
-                                                                    <!-- Add additional options as necessary -->
+                                                                    <?php
+                                                                    $options = [
+                                                                        "General" => "General",
+                                                                        "SC" => "Scheduled Caste (SC)",
+                                                                        "ST" => "Scheduled Tribe (ST)",
+                                                                        "OBC" => "Other Backward Class (OBC)",
+                                                                        "EWS" => "Economically Weaker Section (EWS)",
+                                                                        "Prefer not to disclose" => "Prefer not to disclose"
+                                                                    ];
+                                                                    foreach ($options as $value => $label) {
+                                                                        $selected = ($array['caste'] ?? '') === $value ? 'selected' : '';
+                                                                        echo "<option value=\"" . htmlspecialchars($value) . "\" $selected>" . htmlspecialchars($label) . "</option>";
+                                                                    }
+                                                                    ?>
                                                                 </select>
                                                                 <small id="caste-help" class="form-text text-muted">Please select your caste category as per government records.</small>
                                                             </td>
