@@ -202,7 +202,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                 <label for="houseStay">How long does the family stay in the current
                                                     house?</label>
                                                 <select class="form-select" id="houseStay" name="houseStay" required>
-                                                    <option value="" disabled selected>Select duration</option>
+                                                    <option disabled selected>Select duration</option>
                                                     <option value="<1">Less than 1 year</option>
                                                     <option value="1">1 year</option>
                                                     <option value="2">2 years</option>
@@ -226,7 +226,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                     family:</label>
                                                 <select class="form-select" id="earningSource" name="earningSource"
                                                     onchange="checkOtherOption()" required>
-                                                    <option value="" selected disabled>Select an option</option>
+                                                    <option selected disabled>Select an option</option>
                                                     <option value="agriculture">Agriculture</option>
                                                     <option value="business">Business</option>
                                                     <option value="government_job">Government Job</option>
@@ -272,7 +272,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                             <select class="form-select" id="interestInAdmission"
                                                                 name="interestInAdmission"
                                                                 onchange="toggleStudentFields()" required>
-                                                                <option value="" selected disabled>Select an option
+                                                                <option selected disabled>Select an option
                                                                 </option>
                                                                 <option value="no">No</option>
                                                                 <option value="yes">Yes</option>
@@ -304,7 +304,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                             class="form-label">Gender</label>
                                                                         <select class="form-select" id="sgender"
                                                                             name="students[0][gender]">
-                                                                            <option value="" selected disabled>Select
+                                                                            <option selected disabled>Select
                                                                                 gender</option>
                                                                             <option value="Male">Male</option>
                                                                             <option value="Female">Female</option>
@@ -320,7 +320,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                     <label for="sgrade">Grade Eligibility</label>
                                                                     <select class="form-select" id="sgrade"
                                                                         name="students[0][grade]">
-                                                                        <option value="" selected disabled>Select Grade
+                                                                        <option selected disabled>Select Grade
                                                                         </option>
                                                                         <option value="Nursery">Nursery</option>
                                                                         <option value="LKG">LKG</option>
@@ -341,7 +341,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                         already going to school?</label>
                                                                     <select class="form-select" id="alreadyGoingSchool"
                                                                         name="students[0][already_going_school]">
-                                                                        <option value="" selected disabled>Select an
+                                                                        <option selected disabled>Select an
                                                                             option</option>
                                                                         <option value="yes">Yes</option>
                                                                         <option value="no">No</option>
@@ -354,7 +354,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                         attending:</label>
                                                                     <select class="form-select" id="schoolType"
                                                                         name="students[0][school_type]">
-                                                                        <option value="" selected disabled>Select an
+                                                                        <option selected disabled>Select an
                                                                             option</option>
                                                                         <option value="private">Private</option>
                                                                         <option value="government">Government</option>
@@ -367,7 +367,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                                                         attending any coaching classes?</label>
                                                                     <select class="form-select" id="alreadyCoaching"
                                                                         name="students[0][already_coaching]">
-                                                                        <option value="" selected disabled>Select an
+                                                                        <option selected disabled>Select an
                                                                             option</option>
                                                                         <option value="yes">Yes</option>
                                                                         <option value="no">No</option>

@@ -297,7 +297,7 @@ foreach ($accountNatures as $accountNature) {
                                             <div class="col-md-6 mb-3">
                                                 <label for="account_nature" class="form-label">Account Nature:</label>
                                                 <select class="form-select" id="account_nature" name="account_nature" required>
-                                                    <option value="" selected disabled>Select your account nature</option>
+                                                    <option selected disabled>Select your account nature</option>
                                                     <option value="reimbursement">Reimbursement Account</option>
                                                     <option value="savings">Savings Account</option>
                                                 </select>

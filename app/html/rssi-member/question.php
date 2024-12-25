@@ -200,7 +200,7 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                     <div class="col2" style="display: inline-block;">
                                         <select name="get_category" class="form-select" style="width:max-content; display:inline-block">
                                             <?php if ($category == null) { ?>
-                                                <option value="" disabled selected hidden>Select Category</option>
+                                                <option disabled selected hidden>Select Category</option>
                                             <?php } else { ?>
                                                 <option hidden selected><?php echo $category ?></option>
                                             <?php } ?>
@@ -217,7 +217,7 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                         </select>
                                         <select name="get_subject" class="form-select" style="width:max-content; display:inline-block">
                                             <?php if ($subject == null) { ?>
-                                                <option value="" disabled selected hidden>Select Subject</option>
+                                                <option disabled selected hidden>Select Subject</option>
                                             <?php } else { ?>
                                                 <option hidden selected><?php echo $subject ?></option>
                                             <?php } ?>
@@ -238,14 +238,14 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                         </select>
                                         <select name="get_year" id="get_year" class="form-select" style="width:max-content;display:inline-block">
                                             <?php if ($year == null) { ?>
-                                                <option value="" disabled selected hidden>Select Year</option>
+                                                <option disabled selected hidden>Select Year</option>
                                             <?php } else { ?>
                                                 <option hidden selected><?php echo $year ?></option>
                                             <?php } ?>
                                         </select>
                                         <select name="get_exam" class="form-select" style="width:max-content;display:inline-block">
                                             <?php if ($exam == null) { ?>
-                                                <option value="" disabled selected hidden>Select Exam</option>
+                                                <option disabled selected hidden>Select Exam</option>
                                             <?php } else { ?>
                                                 <option hidden selected><?php echo $exam ?></option>
                                             <?php } ?>

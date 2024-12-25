@@ -166,7 +166,7 @@ $resultArr = pg_fetch_all($result);
 
                                         <select name="lyear" id="lyear" class="form-select" style="width:max-content; display:inline-block" placeholder="Academic Year" required>
                                             <?php if ($lyear == null) { ?>
-                                                <option value="" disabled selected hidden>Academic Year</option>
+                                                <option disabled selected hidden>Academic Year</option>
                                             <?php } else { ?>
                                                 <option hidden selected><?php echo $lyear ?></option>
                                             <?php } ?>
@@ -387,10 +387,10 @@ $resultArr = pg_fetch_all($result);
                                             <form id="exceptionreviewform" name="exceptionreviewform" action="#" method="POST">
                                                 <input type="hidden" class="form-control" name="form-type" value="exceptionreviewform" readonly>
                                                 <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
-                                                <input type="hidden" class="form-control" name="exceptionid" id="exceptionid" value="" readonly>
+                                                <input type="hidden" class="form-control" name="exceptionid" id="exceptionid" readonly>
 
                                                 <select name="exception_status" id="exception_status" class="form-select" required>
-                                                    <option value="" disabled selected hidden>Status</option>
+                                                    <option disabled selected hidden>Status</option>
                                                     <option value="Approved">Approved</option>
                                                     <option value="Under review">Under review</option>
                                                     <option value="Rejected">Rejected</option>

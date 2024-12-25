@@ -158,7 +158,7 @@ $resultArrr = pg_fetch_all($result);
                                     <div class="col2" style="display: inline-block;">
                                         <select name="type" class="form-select" style="width:max-content; display:inline-block" required>
                                             <?php if ($type == null) { ?>
-                                                <option value="" disabled selected hidden>Association Type</option>
+                                                <option disabled selected hidden>Association Type</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $type ?></option>
@@ -168,8 +168,8 @@ $resultArrr = pg_fetch_all($result);
                                             <option>Student</option>
                                             <option>Applicant</option>
                                         </select>
-                                        <input type="text" name="userid" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="" required>
-                                        <input type="password" name="newpass" id="newpass" class="form-control" style="width:max-content; display:inline-block" placeholder="New password" value="" required>
+                                        <input type="text" name="userid" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" required>
+                                        <input type="password" name="newpass" id="newpass" class="form-control" style="width:max-content; display:inline-block" placeholder="New password" required>
                                     </div>
 
                                 </div>
@@ -191,7 +191,7 @@ $resultArrr = pg_fetch_all($result);
                                     <div class="col2" style="display: inline-block;">
                                         <select name="get_id" class="form-select" style="width:max-content; display:inline-block" required>
                                             <?php if ($get_id == null) { ?>
-                                                <option value="" disabled selected hidden>Association Type</option>
+                                                <option disabled selected hidden>Association Type</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $get_id ?></option>

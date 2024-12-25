@@ -144,7 +144,7 @@ $resultArr = pg_fetch_all($result);
                                     <div class="form-group" style="margin-right: 10px;">
                                         <select name="get_status" id="get_status" class="form-select">
                                             <?php if ($id == null) { ?>
-                                                <option value="" disabled selected hidden>Select Status</option>
+                                                <option disabled selected hidden>Select Status</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $id ?></option>
@@ -244,12 +244,12 @@ $resultArr = pg_fetch_all($result);
                                             <form id="archiveform" action="#" method="POST">
                                                 <input type="hidden" name="form-type" value="archiveapproval" readonly>
                                                 <input type="hidden" name="reviewer_id" id="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
-                                                <input type="hidden" name="doc_idd" id="doc_idd" value="" readonly>
+                                                <input type="hidden" name="doc_idd" id="doc_idd" readonly>
 
                                                 <div class="mb-3">
                                                     <label for="reviewer_status" class="form-label">Status</label>
                                                     <select name="reviewer_status" id="reviewer_status" class="form-select" required>
-                                                        <option value="" disabled selected hidden>Review Status</option>
+                                                        <option disabled selected hidden>Review Status</option>
                                                         <option value="Verified">Verified</option>
                                                         <option value="Rejected">Rejected</option>
                                                     </select>
@@ -257,7 +257,7 @@ $resultArr = pg_fetch_all($result);
                                                 <div class="mb-3">
                                                     <label for="field_status" class="form-label">Status</label>
                                                     <select name="field_status" id="field_status" class="form-select" required>
-                                                        <option value="" disabled selected hidden>Field Status</option>
+                                                        <option disabled selected hidden>Field Status</option>
                                                         <option value="disabled">disabled</option>
                                                         <option value="null">null</option>
                                                     </select>

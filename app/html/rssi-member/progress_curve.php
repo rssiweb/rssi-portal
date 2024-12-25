@@ -192,7 +192,7 @@ $classlist = [
                                             <label for="exam_type" class="form-label me-2">Exam Type:</label>
                                             <select name="exam_type" class="form-select" required>
                                                 <?php if ($exam_type_f == null) { ?>
-                                                    <option value="" disabled selected hidden>Select Exam Name</option>
+                                                    <option disabled selected hidden>Select Exam Name</option>
                                                 <?php } else { ?>
                                                     <option hidden selected><?php echo $exam_type_f ?></option>
                                                 <?php } ?>
@@ -207,7 +207,7 @@ $classlist = [
                                             <label for="academic_year" class="form-label me-2">Academic Year:</label>
                                             <select id="academic_year" name="academic_year" class="form-select" required>
                                                 <?php if ($academic_year == null) { ?>
-                                                    <option value="" disabled selected hidden>Select Year</option>
+                                                    <option disabled selected hidden>Select Year</option>
                                                 <?php } else { ?>
                                                     <option hidden selected><?php echo $academic_year ?></option>
                                                 <?php } ?>
@@ -219,7 +219,7 @@ $classlist = [
                                             <label for="get_class" class="form-label me-2">Class:</label>
                                             <select name="get_class[]" id="get_class" class="form-select" multiple>
                                                 <?php if ($class_filter == null) { ?>
-                                                    <option value="" disabled selected hidden>Select Class</option>
+                                                    <option disabled selected hidden>Select Class</option>
                                                     <?php foreach ($classlist as $cls) { ?>
                                                         <option><?php echo $cls ?></option>
                                                     <?php } ?>

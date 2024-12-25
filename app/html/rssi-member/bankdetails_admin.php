@@ -154,7 +154,7 @@ $resultArr = pg_fetch_all($result);
                                     <div class="form-group" style="margin-right: 10px;">
                                         <select name="get_status" id="get_status" class="form-select">
                                             <?php if ($id == null) { ?>
-                                                <option value="" disabled selected hidden>Select Status</option>
+                                                <option disabled selected hidden>Select Status</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $id ?></option>

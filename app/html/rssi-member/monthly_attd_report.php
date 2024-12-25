@@ -228,7 +228,7 @@ pg_close($con); ?>
                                             <div class="form-group">
                                                 <select name="get_aid" id="get_aid" class="form-select" style="display:inline-block" required>
                                                     <?php if ($id == null) { ?>
-                                                        <option value="" disabled selected hidden>Select Status</option>
+                                                        <option disabled selected hidden>Select Status</option>
                                                     <?php
                                                     } else { ?>
                                                         <option hidden selected><?php echo $id ?></option>

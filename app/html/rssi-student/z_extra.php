@@ -9,7 +9,7 @@
                 <br>
                 <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $studentname ?>" readonly>
                 <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $student_id ?>" readonly>
-                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                <input type="hidden" type="text" name="status2" id="count2" readonly required>
                 <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo strtok($studentname, ' ') ?>, Did you know that participating in the Annual Sports requires you to submit the mandatory health declaration form? If you haven't submitted it yet, let's do it now.
                     <br><br>
                     <span class="noticet"><a href="https://docs.google.com/forms/d/e/1FAIpQLSdvvoVln-vUAyZeAGkusvoAl4S4TSE4lldzVZTMdqFcZiw3Fg/viewform?usp=pp_url&entry.1609864868=<?php echo $student_id ?>/<?php echo $studentname ?>" target="_blank">Health declaration form</a></span>
@@ -116,7 +116,7 @@ if (($module == "National") && $filterstatus == 'Active') {
                 <br>
                 <input type="hidden" class="form-control" name="membername2" type="text" value="<?php echo $studentname ?>" readonly>
                 <input type="hidden" class="form-control" name="memberid2" type="text" value="<?php echo $student_id ?>" readonly>
-                <input type="hidden" type="text" name="status2" id="count2" value="" readonly required>
+                <input type="hidden" type="text" name="status2" id="count2" readonly required>
                 <p style="white-space:normal !important;word-wrap:break-word;">Hi&nbsp;<?php echo strtok($studentname, ' ') ?>, Your QT2/2021 report card has been published. For more details, please visit
                     <span class="noticet"><a href="result.php" target="_blank">Results</a> portal.</span>
                 </p>

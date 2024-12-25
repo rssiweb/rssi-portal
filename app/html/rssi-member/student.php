@@ -308,7 +308,7 @@ $classlist = [
                     <span class="input-help">
                       <select name="get_module" id="get_module" class="form-select" style="width:max-content; display:inline-block" required>
                         <?php if ($module == null) { ?>
-                          <option value="" disabled selected hidden>Select Module</option>
+                          <option disabled selected hidden>Select Module</option>
                         <?php
                         } else { ?>
                           <option hidden selected><?php echo $module ?></option>
@@ -322,7 +322,7 @@ $classlist = [
                     <span class="input-help">
                       <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" required>
                         <?php if ($id == null) { ?>
-                          <option value="" disabled selected hidden>Select Status</option>
+                          <option disabled selected hidden>Select Status</option>
                         <?php
                         } else { ?>
                           <option hidden selected><?php echo $id ?></option>
@@ -336,7 +336,7 @@ $classlist = [
                     <span class="input-help">
                       <select name="get_category" id="get_category" class="form-select" style="width:max-content;display:inline-block">
                         <?php if ($category == null) { ?>
-                          <option value="" disabled selected hidden>Select Category</option>
+                          <option disabled selected hidden>Select Category</option>
                         <?php
                         } else { ?>
                           <option hidden selected><?php echo $category ?></option>
@@ -359,7 +359,7 @@ $classlist = [
                     <span class="input-help">
                       <select name="get_class[]" id="get_class" class="form-control" style="width:max-content; display:inline-block" multiple>
                         <?php if ($class == null) { ?>
-                          <option value="" disabled selected hidden>Select Class</option>
+                          <option disabled selected hidden>Select Class</option>
 
                           <?php foreach ($classlist as $cls) { ?>
                             <option><?php echo $cls ?></option>

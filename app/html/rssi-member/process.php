@@ -171,10 +171,10 @@ if (@$_POST['form-type'] == "appraisee_response") {
                 <select class="form-select" name="role_search" required>
 
                     <?php if (@$_GET['role_search'] == null) { ?>
-                        <option value="" selected>--Select Role--</option>
+                        <option selected>--Select Role--</option>
                     <?php
                     } else { ?>
-                        <option value="" selected>--Select Role--</option>
+                        <option selected>--Select Role--</option>
                         <option hidden selected><?php echo @$_GET['role_search'] ?></option>
                     <?php }
                     ?>
@@ -267,7 +267,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
                             <div class="form-group mb-3">
                                 <label for="role" class="form-label">Role:</label>
                                 <select class="form-select" name="role" required>
-                                    <option value="" disabled selected>--Select Role--</option>
+                                    <option disabled selected>--Select Role--</option>
                                     <option value="Teacher">Teacher</option>
                                     <option value="Faculty">Faculty</option>
                                     <option value="Intern">Intern</option>
@@ -286,7 +286,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
                             <div class="form-group mb-3">
                                 <label for="appraisal_type" class="form-label">Appraisal Type:</label>
                                 <select class="form-select" name="appraisal_type" required>
-                                    <option value="" disabled selected>--Select an option--</option>
+                                    <option disabled selected>--Select an option--</option>
                                     <option value="Annual">Annual</option>
                                     <option value="Quarterly">Quarterly</option>
                                     <option value="Project End">Project End</option>
@@ -319,7 +319,7 @@ if (@$_POST['form-type'] == "appraisee_response") {
                                 <label for="appraisal_year" class="form-label">Appraisal Year:</label>
                                 <select class="form-select" name="appraisal_year" id="appraisal_year" required>
                                     <?php if ($appraisal_year == null) { ?>
-                                        <option value="" hidden selected>--Select Appraisal Year--</option>
+                                        <option hidden selected>--Select Appraisal Year--</option>
                                     <?php } else { ?>
                                         <option hidden selected><?php echo $appraisal_year ?></option>
                                     <?php } ?>

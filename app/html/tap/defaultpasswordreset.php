@@ -173,17 +173,17 @@ if (@$login_failed_dialog) { ?>
                             <form role="form" method="post" name="login" id="login" action="defaultpasswordreset.php">
                                 <fieldset>
                                     <div class="form-group">
-                                        <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required title="Enter your current password.">
+                                        <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" required title="Enter your current password.">
                                     </div>
                                     <div class="form-group">
-                                        <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required title="Enter a new password. Your password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.">
+                                        <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" required title="Enter a new password. Your password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.">
                                         <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
                                             <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
                                         </label>
                                         <div id="password-message"></div>
                                     </div>
                                     <div class="form-group">
-                                        <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required title="Enter the same password again to confirm.">
+                                        <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" required title="Enter the same password again to confirm.">
                                         <div id="password_message_conf"></div>
                                         <div id="password-message-success"></div>
                                     </div>

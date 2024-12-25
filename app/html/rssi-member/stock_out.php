@@ -228,7 +228,7 @@ while ($row = pg_fetch_assoc($recipient_result)) {
                                             <div class="mb-3">
                                                 <label for="unit" class="form-label">Unit</label>
                                                 <select id="unit" name="unit" class="form-control readonly-select" required>
-                                                    <option value="" disabled selected>Select Unit</option>
+                                                    <option disabled selected>Select Unit</option>
                                                     <?php foreach ($units as $unit): ?>
                                                         <option value="<?php echo htmlspecialchars($unit['id']); ?>"><?php echo htmlspecialchars($unit['text']); ?></option>
                                                     <?php endforeach; ?>

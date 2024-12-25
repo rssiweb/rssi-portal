@@ -349,7 +349,7 @@ if (!$result) {
                                             <select name="rating_obtained_1" id="rating_obtained_1" class="form-select">
 
                                                 <?php if ($array['rating_obtained_1'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_1'] ?></option>
@@ -375,7 +375,7 @@ if (!$result) {
                                             <select name="rating_obtained_2" id="rating_obtained_2" class="form-select">
 
                                                 <?php if ($array['rating_obtained_2'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_2'] ?></option>
@@ -400,7 +400,7 @@ if (!$result) {
                                             <select name="rating_obtained_3" id="rating_obtained_3" class="form-select">
 
                                                 <?php if ($array['rating_obtained_3'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_3'] ?></option>
@@ -425,7 +425,7 @@ if (!$result) {
                                             <select name="rating_obtained_4" id="rating_obtained_4" class="form-select">
 
                                                 <?php if ($array['rating_obtained_4'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_4'] ?></option>
@@ -450,7 +450,7 @@ if (!$result) {
                                             <select name="rating_obtained_5" id="rating_obtained_5" class="form-select">
 
                                                 <?php if ($array['rating_obtained_5'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_5'] ?></option>
@@ -475,7 +475,7 @@ if (!$result) {
                                             <select name="rating_obtained_6" id="rating_obtained_6" class="form-select">
 
                                                 <?php if ($array['rating_obtained_6'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_6'] ?></option>
@@ -500,7 +500,7 @@ if (!$result) {
                                             <select name="rating_obtained_7" id="rating_obtained_7" class="form-select">
 
                                                 <?php if ($array['rating_obtained_7'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_7'] ?></option>
@@ -525,7 +525,7 @@ if (!$result) {
                                             <select name="rating_obtained_8" id="rating_obtained_8" class="form-select">
 
                                                 <?php if ($array['rating_obtained_8'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_8'] ?></option>
@@ -550,7 +550,7 @@ if (!$result) {
                                             <select name="rating_obtained_9" id="rating_obtained_9" class="form-select">
 
                                                 <?php if ($array['rating_obtained_9'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_9'] ?></option>
@@ -575,7 +575,7 @@ if (!$result) {
                                             <select name="rating_obtained_10" id="rating_obtained_10" class="form-select">
 
                                                 <?php if ($array['rating_obtained_10'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_10'] ?></option>
@@ -618,7 +618,7 @@ if (!$result) {
                                             <select name="rating_obtained_11" id="rating_obtained_11" class="form-select">
 
                                                 <?php if ($array['rating_obtained_11'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_11'] ?></option>
@@ -643,7 +643,7 @@ if (!$result) {
                                             <select name="rating_obtained_12" id="rating_obtained_12" class="form-select">
 
                                                 <?php if ($array['rating_obtained_12'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_12'] ?></option>
@@ -668,7 +668,7 @@ if (!$result) {
                                             <select name="rating_obtained_13" id="rating_obtained_13" class="form-select">
 
                                                 <?php if ($array['rating_obtained_13'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_13'] ?></option>
@@ -693,7 +693,7 @@ if (!$result) {
                                             <select name="rating_obtained_14" id="rating_obtained_14" class="form-select">
 
                                                 <?php if ($array['rating_obtained_14'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_14'] ?></option>
@@ -718,7 +718,7 @@ if (!$result) {
                                             <select name="rating_obtained_15" id="rating_obtained_15" class="form-select">
 
                                                 <?php if ($array['rating_obtained_15'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_15'] ?></option>
@@ -743,7 +743,7 @@ if (!$result) {
                                             <select name="rating_obtained_16" id="rating_obtained_16" class="form-select">
 
                                                 <?php if ($array['rating_obtained_16'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_16'] ?></option>
@@ -768,7 +768,7 @@ if (!$result) {
                                             <select name="rating_obtained_17" id="rating_obtained_17" class="form-select">
 
                                                 <?php if ($array['rating_obtained_17'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_17'] ?></option>
@@ -793,7 +793,7 @@ if (!$result) {
                                             <select name="rating_obtained_18" id="rating_obtained_18" class="form-select">
 
                                                 <?php if ($array['rating_obtained_18'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_18'] ?></option>
@@ -818,7 +818,7 @@ if (!$result) {
                                             <select name="rating_obtained_19" id="rating_obtained_19" class="form-select">
 
                                                 <?php if ($array['rating_obtained_19'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_19'] ?></option>
@@ -843,7 +843,7 @@ if (!$result) {
                                             <select name="rating_obtained_20" id="rating_obtained_20" class="form-select">
 
                                                 <?php if ($array['rating_obtained_20'] == null) { ?>
-                                                    <option value="" disabled selected hidden>Select</option>
+                                                    <option disabled selected hidden>Select</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $array['rating_obtained_20'] ?></option>

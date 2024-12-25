@@ -169,17 +169,17 @@ if (isset($_POST['login'])) {
                                             <form role="form" method="post" name="login" id="login" action="resetpassword.php">
                                                 <fieldset>
                                                     <div class="form-group mb-3">
-                                                        <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
+                                                        <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" required>
                                                     </div>
                                                     <div class="form-group mb-3">
-                                                        <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required>
+                                                        <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" required>
                                                         <label for="show-password" class="form-check-label" style="margin-top: 5px; font-weight: unset;">
                                                             <input type="checkbox" class="form-check-input" id="show-password" style="display: inline-block;"> Show password
                                                         </label>
                                                         <div id="password-message"></div>
                                                     </div>
                                                     <div class="form-group mb-3">
-                                                        <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
+                                                        <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" required>
                                                         <div id="password_message_conf"></div>
                                                         <div id="password-message-success"></div>
                                                     </div>

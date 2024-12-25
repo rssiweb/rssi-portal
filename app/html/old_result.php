@@ -180,7 +180,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     <input name="get_stid" class="form-control" style="width: max-content; display: inline-block;" required placeholder="Student ID" value="<?php echo @$stid ?>">
                     <select name="get_id" class="form-control" style="width: max-content; display: inline-block;" required>
                         <?php if ($id == null) { ?>
-                            <option value="" disabled selected hidden>Select Exam Name</option>
+                            <option disabled selected hidden>Select Exam Name</option>
                         <?php } else { ?>
                             <option hidden selected><?php echo $id ?></option>
                         <?php } ?>
@@ -190,7 +190,7 @@ while ($roww = pg_fetch_array($runn)) //while look to fetch the result and store
                     </select>
                     <select name="get_year" id="get_year" class="form-control" style="width: max-content; display: inline-block;" required>
                         <?php if ($year == null) { ?>
-                            <option value="" disabled selected hidden>Select Year</option>
+                            <option disabled selected hidden>Select Year</option>
                         <?php } else { ?>
                             <option hidden selected><?php echo $year ?></option>
                         <?php } ?>

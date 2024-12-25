@@ -205,7 +205,7 @@ if ($searchField !== '' || $fyear !== '') {
                     <input name="searchField" class="form-control" style="width:max-content; display:inline-block" placeholder="Contact number" value="<?php echo $searchField ?>">
                     <select name="get_fyear" id="get_fyear" class="form-select" style="width:max-content;display:inline-block" required>
                       <?php if ($fyear == null) { ?>
-                        <option value="" disabled selected hidden>Select Year</option>
+                        <option disabled selected hidden>Select Year</option>
                       <?php
                       } else { ?>
                         <option hidden selected><?php echo $fyear ?></option>
@@ -368,12 +368,12 @@ if ($searchField !== '' || $fyear !== '') {
           <form id="donation_review" action="#" method="POST">
             <input type="hidden" name="form-type" value="donation_review" readonly>
             <input type="hidden" name="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
-            <input type="hidden" name="donationid" id="donationid" value="" readonly>
+            <input type="hidden" name="donationid" id="donationid" readonly>
 
             <div class="mb-3">
               <label for="reviewer_status" class="form-label">Status</label>
               <select name="reviewer_status" id="reviewer_status" class="form-select" required>
-                <option value="" disabled selected hidden>Status</option>
+                <option disabled selected hidden>Status</option>
                 <option value="Approved">Approved</option>
                 <option value="Under review">Under review</option>
                 <option value="Rejected">Rejected</option>

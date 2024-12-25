@@ -361,7 +361,7 @@ pg_free_result($result);
                                             <div class="col-md-4 mb-3">
                                                 <label for="exam_type" class="form-label">Exam Type</label>
                                                 <select class="form-select" id="exam_type" name="exam_type" required>
-                                                    <option value="" disabled selected>Select Exam Type</option>
+                                                    <option disabled selected>Select Exam Type</option>
                                                     <option value="First Term">First Term</option>
                                                     <option value="Half Yearly">Half Yearly</option>
                                                     <option value="Annual">Annual</option>
@@ -375,7 +375,7 @@ pg_free_result($result);
                                             <!-- <div class="col-md-4 mb-3">
                                                 <label for="teacher_id_viva">Select Teacher's ID:</label>
                                                 <select class="form-select" id="teacher_id_viva" name="teacher_id_viva" required>
-                                                    <option value="" disabled selected hidden>Select Teacher's ID</option>
+                                                    <option disabled selected hidden>Select Teacher's ID</option>
                                                     <?php foreach ($teachers as $teacher) { ?>
                                                         <option value="<?php echo $teacher['associatenumber']; ?>"><?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?></option>
                                                     <?php } ?>
@@ -387,7 +387,7 @@ pg_free_result($result);
                                             <div class="col-md-4 mb-3">
                                                 <label for="subject" class="form-label">Subject</label>
                                                 <select class="form-select" id="subject" name="subject" required>
-                                                    <option value="" disabled selected>Select a subject</option>
+                                                    <option disabled selected>Select a subject</option>
                                                     <option value="Hindi">Hindi</option>
                                                     <option value="English">English</option>
                                                     <option value="Mathematics">Mathematics</option>
@@ -414,7 +414,7 @@ pg_free_result($result);
                                                     <input type="date" class="form-control" id="exam_date_written" name="exam_date_written">
                                                     <label for="teacher_id_written">Assigned Written Teacher ID:</label>
                                                     <select class="form-select" id="teacher_id_written" name="teacher_id_written">
-                                                        <option value="" disabled selected hidden>Select Teacher's ID</option>
+                                                        <option disabled selected hidden>Select Teacher's ID</option>
                                                         <?php foreach ($teachers as $teacher) { ?>
                                                             <option value="<?php echo $teacher['associatenumber']; ?>"><?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?></option>
                                                         <?php } ?>
@@ -428,7 +428,7 @@ pg_free_result($result);
                                                     <input type="date" class="form-control" id="exam_date_viva" name="exam_date_viva">
                                                     <label for="teacher_id_viva">Assigned Viva Teacher ID:</label>
                                                     <select class="form-select" id="teacher_id_viva" name="teacher_id_viva">
-                                                        <option value="" disabled selected hidden>Select Teacher's ID</option>
+                                                        <option disabled selected hidden>Select Teacher's ID</option>
                                                         <?php foreach ($teachers as $teacher) { ?>
                                                             <option value="<?php echo $teacher['associatenumber']; ?>"><?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?></option>
                                                         <?php } ?>

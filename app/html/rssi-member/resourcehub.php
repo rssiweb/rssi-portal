@@ -158,7 +158,7 @@ validation(); ?>
                                             <span class="input-help">
                                                 <select name="policytype" class="form-select" style="width:max-content; display:inline-block" required>
                                                     <?php if ($category == null) { ?>
-                                                        <option value="" disabled selected hidden>Category</option>
+                                                        <option disabled selected hidden>Category</option>
                                                     <?php
                                                     } else { ?>
                                                         <option hidden selected><?php echo $category ?></option>
@@ -173,7 +173,7 @@ validation(); ?>
                                             </span>
 
                                             <span class="input-help">
-                                                <input type="text" name="policyname" class="form-control" style="width:max-content; display:inline-block" placeholder="Policy name" value="" required></input>
+                                                <input type="text" name="policyname" class="form-control" style="width:max-content; display:inline-block" placeholder="Policy name" required></input>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Policy name</small>
                                             </span>
 

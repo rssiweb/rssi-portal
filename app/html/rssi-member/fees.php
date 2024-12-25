@@ -232,7 +232,7 @@ $categories = [
 
                                         <select name="get_aid" id="get_aid" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
                                             <?php if ($id == null) { ?>
-                                                <option value="" hidden selected>Select year</option>
+                                                <option hidden selected>Select year</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $id ?></option>
@@ -242,7 +242,7 @@ $categories = [
 
                                         <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year">
                                             <?php if ($status == null) { ?>
-                                                <option value="" hidden selected>Select month</option>
+                                                <option hidden selected>Select month</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $status ?></option>
@@ -265,7 +265,7 @@ $categories = [
 
                                         <select name="get_category[]" id="get_category" class="form-control" style="width:max-content;display:inline-block" multiple>
                                             <?php if ($section == null) { ?>
-                                                <option value="" disabled selected hidden>Select Category</option>
+                                                <option disabled selected hidden>Select Category</option>
 
                                                 <?php foreach ($categories as $cat) { ?>
                                                     <option><?php echo $cat ?></option>
@@ -342,7 +342,7 @@ $categories = [
                                 <div class="text-end">
                                     <form name="transfer_all" action="payment-api.php" method="POST" style="display: -webkit-inline-box;">
                                         <input type="hidden" name="form-type" type="text" value="transfer_all">
-                                        <input type="hidden" name="pid" id="pid" value="" readonly>
+                                        <input type="hidden" name="pid" id="pid" readonly>
                                         <button type="submit" class="btn btn-primary" id="transferButton" disabled>Bulk
                                             Transfer (<span id="selectedCount">0</span>)</button>
                                     </form>

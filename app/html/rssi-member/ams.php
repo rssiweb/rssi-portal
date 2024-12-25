@@ -163,7 +163,7 @@ if ($role == 'Admin') {
                                             <span class="input-help">
                                                 <select name="category" class="form-select" style="width:max-content; display:inline-block" required>
                                                     <?php if ($category == null) { ?>
-                                                        <option value="" disabled selected hidden>Category</option>
+                                                        <option disabled selected hidden>Category</option>
                                                     <?php
                                                     } else { ?>
                                                         <option hidden selected><?php echo $category ?></option>

@@ -235,7 +235,7 @@ $resultArr = pg_fetch_all($result);
                                             </span>
                                             <span class="input-help">
                                                 <select name="allo_leavetype" id="allo_leavetype" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                    <option value="" disabled selected hidden>Types of Leave</option>
+                                                    <option disabled selected hidden>Types of Leave</option>
                                                     <option value="Sick Leave">Sick Leave</option>
                                                     <option value="Casual Leave">Casual Leave</option>
                                                 </select>
@@ -243,7 +243,7 @@ $resultArr = pg_fetch_all($result);
                                             </span>
                                             <span class="input-help">
                                                 <select name="allo_academicyear" id="allo_academicyear" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                    <option value="" disabled selected hidden>Academic Year</option>
+                                                    <option disabled selected hidden>Academic Year</option>
                                                 </select>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Academic Year</small>
                                             </span>
@@ -293,7 +293,7 @@ $resultArr = pg_fetch_all($result);
                                                             <?php } ?>
                                                             <select name="allo_academicyear_search" id="allo_academicyear_search" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
                                                                 <?php if ($allo_academicyear == null) { ?>
-                                                                    <option value="" disabled selected hidden>Academic Year</option>
+                                                                    <option disabled selected hidden>Academic Year</option>
                                                                 <?php
                                                                 } else { ?>
                                                                     <option hidden selected><?php echo $allo_academicyear ?></option>

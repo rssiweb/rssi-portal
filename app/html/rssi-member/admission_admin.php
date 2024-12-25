@@ -393,10 +393,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                     <td>
                                         <select class="form-select" id="type-of-admission" name="type-of-admission" required>
                                             <?php if ($array['type_of_admission'] == null) { ?>
-                                                <option value="" selected>--Select Type of Admission--</option>
+                                                <option selected>--Select Type of Admission--</option>
                                             <?php
                                             } else { ?>
-                                                <option value="" selected>--Select Type of Admission--</option>
+                                                <option selected>--Select Type of Admission--</option>
                                                 <option hidden selected><?php echo $array['type_of_admission'] ?></option>
                                             <?php }
                                             ?>
@@ -436,10 +436,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                     <td>
                                         <select class="form-select" id="gender" name="gender" required>
                                             <?php if ($array['gender'] == null) { ?>
-                                                <option value="" selected>--Select Gender--</option>
+                                                <option selected>--Select Gender--</option>
                                             <?php
                                             } else { ?>
-                                                <option value="" selected>--Select Gender--</option>
+                                                <option selected>--Select Gender--</option>
                                                 <option hidden selected><?php echo $array['gender'] ?></option>
                                             <?php }
                                             ?>
@@ -481,10 +481,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                     <td>
                                         <select class="form-select" id="aadhar-card" name="aadhar-card" required>
                                             <?php if ($array['aadhar_available'] == null) { ?>
-                                                <option value="" selected>--Select--</option>
+                                                <option selected>--Select--</option>
                                             <?php
                                             } else { ?>
-                                                <option value="" selected>--Select--</option>
+                                                <option selected>--Select--</option>
                                                 <option hidden selected><?php echo $array['aadhar_available'] ?></option>
                                             <?php }
                                             ?>
@@ -548,10 +548,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="relation" name="relation" required>
                                                 <?php if ($array['relationwithstudent'] == null) { ?>
-                                                    <option value="" selected>--Select Type of Relation--</option>
+                                                    <option selected>--Select Type of Relation--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select Type of Relation--</option>
+                                                    <option selected>--Select Type of Relation--</option>
                                                     <option hidden selected><?php echo $array['relationwithstudent'] ?></option>
                                                 <?php }
                                                 ?>
@@ -583,10 +583,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="state" name="state" required>
                                                 <?php if ($array['stateofdomicile'] == null) { ?>
-                                                    <option value="" selected>--Select State--</option>
+                                                    <option selected>--Select State--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select State--</option>
+                                                    <option selected>--Select State--</option>
                                                     <option hidden selected><?php echo $array['stateofdomicile'] ?></option>
                                                 <?php }
                                                 ?>
@@ -695,7 +695,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                             <select class="form-select" id="caste" name="caste" required>
                                                 <!-- Check if the caste value is null or empty -->
                                                 <?php if (empty($array['caste'])): ?>
-                                                    <option value="" hidden selected>Select your caste</option>
+                                                    <option hidden selected>Select your caste</option>
                                                 <?php else: ?>
                                                     <option hidden selected><?php echo htmlspecialchars($array['caste']); ?></option>
                                                 <?php endif; ?>
@@ -737,10 +737,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="branch" name="branch" required>
                                                 <?php if ($array['preferredbranch'] == null) { ?>
-                                                    <option value="" selected>--Select Branch--</option>
+                                                    <option selected>--Select Branch--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select Branch--</option>
+                                                    <option selected>--Select Branch--</option>
                                                     <option hidden selected><?php echo $array['preferredbranch'] ?></option>
                                                 <?php }
                                                 ?>
@@ -760,10 +760,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="class" name="class" required>
                                                 <?php if ($array['class'] == null) { ?>
-                                                    <option value="" selected>--Select Class--</option>
+                                                    <option selected>--Select Class--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select Class--</option>
+                                                    <option selected>--Select Class--</option>
                                                     <option hidden selected><?php echo $array['class'] ?></option>
                                                 <?php }
                                                 ?>
@@ -797,10 +797,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="subject-select" name="subject-select" required>
                                                 <?php if ($array['nameofthesubjects'] == null) { ?>
-                                                    <option value="" selected>--Select Subject--</option>
+                                                    <option selected>--Select Subject--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select Subject--</option>
+                                                    <option selected>--Select Subject--</option>
                                                     <option hidden selected><?php echo $array['nameofthesubjects'] ?></option>
                                                 <?php }
                                                 ?>
@@ -821,10 +821,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="school-required" name="school-required">
                                                 <?php if ($array['schooladmissionrequired'] == null) { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                     <option hidden selected><?php echo $array['schooladmissionrequired'] ?></option>
                                                 <?php }
                                                 ?>
@@ -858,10 +858,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="board-name" name="board-name">
                                                 <?php if ($array['nameoftheboard'] == null) { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                     <option hidden selected><?php echo $array['nameoftheboard'] ?></option>
                                                 <?php }
                                                 ?>
@@ -883,10 +883,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="medium" name="medium">
                                                 <?php if ($array['medium'] == null) { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                     <option hidden selected><?php echo $array['medium'] ?></option>
                                                 <?php }
                                                 ?>
@@ -928,10 +928,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="payment-mode" name="payment-mode" required>
                                                 <?php if ($array['payment_mode'] == null) { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                     <option hidden selected><?php echo $array['payment_mode'] ?></option>
                                                 <?php }
                                                 ?>
@@ -973,10 +973,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="payment_type" name="payment_type" required>
                                                 <?php if ($array['payment_type'] == null) { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                     <option hidden selected><?php echo $array['payment_type'] ?></option>
                                                 <?php }
                                                 ?>
@@ -993,10 +993,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="access_category" name="access_category" required>
                                                 <?php if ($array['access_category'] == null) { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select--</option>
+                                                    <option selected>--Select--</option>
                                                     <option hidden selected><?php echo $array['access_category'] ?></option>
                                                 <?php }
                                                 ?>
@@ -1012,10 +1012,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="module" name="module" required>
                                                 <?php if ($array['module'] == null) { ?>
-                                                    <option value="" selected>--Select Module--</option>
+                                                    <option selected>--Select Module--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select Module--</option>
+                                                    <option selected>--Select Module--</option>
                                                     <option hidden selected><?php echo $array['module'] ?></option>
                                                 <?php }
                                                 ?>
@@ -1031,10 +1031,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="category" name="category" required>
                                                 <?php if ($array['category'] == null) { ?>
-                                                    <option value="" selected>--Select Category--</option>
+                                                    <option selected>--Select Category--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select Category--</option>
+                                                    <option selected>--Select Category--</option>
                                                     <option hidden selected><?php echo $array['category'] ?></option>
                                                 <?php }
                                                 ?>
@@ -1072,10 +1072,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="id-card-issued" name="id-card-issued" required>
                                                 <?php if ($array['id_card_issued'] == null) { ?>
-                                                    <option value="" selected>--Select Option--</option>
+                                                    <option selected>--Select Option--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select Option--</option>
+                                                    <option selected>--Select Option--</option>
                                                     <option hidden selected><?php echo $array['id_card_issued'] ?></option>
                                                 <?php }
                                                 ?>
@@ -1092,10 +1092,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <td>
                                             <select class="form-select" id="status" name="status" required>
                                                 <?php if ($array['filterstatus'] == null) { ?>
-                                                    <option value="" selected>--Select Option--</option>
+                                                    <option selected>--Select Option--</option>
                                                 <?php
                                                 } else { ?>
-                                                    <option value="" selected>--Select Option--</option>
+                                                    <option selected>--Select Option--</option>
                                                     <option hidden selected><?php echo $array['filterstatus'] ?></option>
                                                 <?php }
                                                 ?>

@@ -29,8 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $reason = htmlspecialchars($_POST['reason'], ENT_QUOTES, 'UTF-8');
     $submittedBy = $associatenumber; // Replace with actual user information (e.g., session data)
 
-    $success = true;
-
     // Prepare SQL statement for insertion
     $sql = "INSERT INTO exception_requests (id, exception_type, sub_exception_type, start_date_time, end_date_time, reason, submitted_on, submitted_by) 
     VALUES ('$id', '$exceptionType', '$subExceptionType'," .
@@ -133,9 +131,9 @@ if ($result && pg_num_rows($result) > 0) {
                             <div class="container mt-4">
                                 <form name="exception" id="exception" method="post" action="">
                                     <div class="mb-3">
-                                        <label for="exceptionType" class="form-label">Exception Type <span class="text-danger">*</span></label>
+                                        <label for="exceptionType" class="form-label">Exception Type</label>
                                         <select class="form-select" id="exceptionType" name="exceptionType" required onchange="toggleDateTimeFields()">
-                                            <option value="" disabled selected>Select exception type</option>
+                                            <option disabled selected>Select exception type</option>
                                             <option value="entry">Entry</option>
                                             <option value="exit">Exit</option>
                                         </select>
@@ -143,7 +141,7 @@ if ($result && pg_num_rows($result) > 0) {
 
                                     <!-- Sub Exception Type Field -->
                                     <div class="mb-3" id="subExceptionTypeField" style="display: none;">
-                                        <label for="subExceptionType" class="form-label">Sub Exception Type <span class="text-danger">*</span></label>
+                                        <label for="subExceptionType" class="form-label">Sub Exception Type</label>
                                         <select class="form-select" id="subExceptionType" name="subExceptionType" required>
                                             <!-- Options will be populated dynamically -->
                                         </select>
@@ -151,18 +149,18 @@ if ($result && pg_num_rows($result) > 0) {
 
                                     <!-- Start Date-Time Field -->
                                     <div class="mb-3" id="startDateTimeField" style="display: none;">
-                                        <label for="startDateTime" class="form-label">Entry Date-Time <span class="text-danger">*</span></label>
+                                        <label for="startDateTime" class="form-label">Entry Date-Time</label>
                                         <input type="datetime-local" class="form-control" id="startDateTime" name="startDateTime" required>
                                     </div>
 
                                     <!-- End Date-Time Field -->
                                     <div class="mb-3" id="endDateTimeField" style="display: none;">
-                                        <label for="endDateTime" class="form-label">Exit Date-Time <span class="text-danger">*</span></label>
+                                        <label for="endDateTime" class="form-label">Exit Date-Time</label>
                                         <input type="datetime-local" class="form-control" id="endDateTime" name="endDateTime" required>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="reason" class="form-label">Reason <span class="text-danger">*</span></label>
+                                        <label for="reason" class="form-label">Reason</label>
                                         <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Enter reason for exception" required></textarea>
                                     </div>
                                     <button type="submit" id="submit_button" class="btn btn-primary">Submit</button>
@@ -204,7 +202,7 @@ if ($result && pg_num_rows($result) > 0) {
 
                 // Populate sub-exception type options for entry
                 subExceptionType.innerHTML = `
-                <option value="" disabled selected>Select sub exception type</option>
+                <option disabled selected>Select sub exception type</option>
                 <option value="late-entry">Late Entry</option>
                 <option value="missed-entry">Missed Entry (Missed Punch In)</option>
             `;
@@ -219,7 +217,7 @@ if ($result && pg_num_rows($result) > 0) {
 
                 // Populate sub-exception type options for exit
                 subExceptionType.innerHTML = `
-                <option value="" disabled selected>Select sub exception type</option>
+                <option disabled selected>Select sub exception type</option>
                 <option value="early-exit">Early Exit</option>
                 <option value="missed-exit">Missed Exit (Missed Punch Out)</option>
             `;
@@ -369,6 +367,15 @@ if ($result && pg_num_rows($result) > 0) {
         window.addEventListener('load', function() {
             // Hide loading modal
             hideLoadingModal();
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('input, select, textarea').each(function() {
+                if ($(this).prop('required')) { // Check if the element has the required attribute
+                    $(this).closest('.mb-3').find('label').append(' <span style="color: red">*</span>');
+                }
+            });
         });
     </script>
 </body>

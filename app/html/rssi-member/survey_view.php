@@ -274,7 +274,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 `<span class="regular-text status-text">${record.status}</span>` :
                                 `<span class="regular-text status-text" style="display: block;">${record.status}</span>
                              <select name="status[${record.id}]" class="edit-input status-dropdown form-select" style="display: none;">
-                                 <option value="" disabled selected>Select Status</option>
+                                 <option disabled selected>Select Status</option>
                                  <option value="No Show" ${record.status === 'No Show' ? 'selected' : ''}>No Show</option>
                                  <option value="Enrollment Completed" ${record.status === 'Enrollment Completed' ? 'selected' : ''}>Enrollment Completed</option>
                              </select>`;

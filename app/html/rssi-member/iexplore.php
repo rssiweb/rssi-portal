@@ -195,7 +195,7 @@ $resultArr1 = pg_fetch_all($result1);
                                                 <div class="row mb-3">
                                                     <div class="col">
                                                         <select name="language" class="form-select" required>
-                                                            <option value="" disabled selected>Select Language</option>
+                                                            <option disabled selected>Select Language</option>
                                                             <?php
                                                             $languages = array("English", "Hindi", "Bengali");
                                                             foreach ($languages as $language) {
@@ -207,7 +207,7 @@ $resultArr1 = pg_fetch_all($result1);
                                                     </div>
                                                     <div class="col">
                                                         <select name="type" class="form-select" required>
-                                                            <option value="" disabled selected>Select Type</option>
+                                                            <option disabled selected>Select Type</option>
                                                             <?php
                                                             $types = array("Internal", "External");
                                                             foreach ($types as $type) {
@@ -226,7 +226,7 @@ $resultArr1 = pg_fetch_all($result1);
                                                 </div>
                                                 <div class="mb-3">
                                                     <select name="validity" class="form-select" required>
-                                                        <option value="" disabled selected>Select Validity</option>
+                                                        <option disabled selected>Select Validity</option>
                                                         <?php
                                                         $validities = array("0.5", "1", "2", "3", "5", "Lifetime");
                                                         foreach ($validities as $validity) {
@@ -292,7 +292,7 @@ $resultArr1 = pg_fetch_all($result1);
                                             <div class="mb-3">
                                                 <label for="language1" class="form-label">Language</label>
                                                 <select name="language1" class="form-select" id="language1">
-                                                    <option value="" <?php if ($language1 === '') echo 'selected'; ?> disabled>Select Language</option>
+                                                    <option <?php if ($language1 === '') echo 'selected'; ?> disabled>Select Language</option>
                                                     <?php echo generateOptions($languageOptions, $language1); ?>
                                                 </select>
                                             </div>
@@ -301,7 +301,7 @@ $resultArr1 = pg_fetch_all($result1);
                                             <div class="mb-3">
                                                 <label for="type1" class="form-label">Type</label>
                                                 <select name="type1" class="form-select" id="type1">
-                                                    <option value="" <?php if ($type1 === '') echo 'selected'; ?> disabled>Select Type</option>
+                                                    <option <?php if ($type1 === '') echo 'selected'; ?> disabled>Select Type</option>
                                                     <?php echo generateOptions($typeOptions, $type1); ?>
                                                 </select>
                                             </div>

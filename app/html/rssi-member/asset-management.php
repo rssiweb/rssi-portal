@@ -109,7 +109,7 @@ $resultArr = pg_fetch_all($result);
                                 <div class="col2" style="display: inline-block;">
                                     <select name="get_statuse" required class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
                                         <?php if ($statuse == null) { ?>
-                                            <option value="" disabled selected hidden>Select Engagement</option>
+                                            <option disabled selected hidden>Select Engagement</option>
                                         <?php
                                         } else { ?>
                                             <option hidden selected><?php echo $statuse ?></option>
@@ -122,7 +122,7 @@ $resultArr = pg_fetch_all($result);
 
                                     <select name="get_statusee" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
                                         <?php if ($statusee == null) { ?>
-                                            <option value="" disabled selected hidden>Select Status</option>
+                                            <option disabled selected hidden>Select Status</option>
                                         <?php
                                         } else { ?>
                                             <option hidden selected><?php echo $statusee ?></option>

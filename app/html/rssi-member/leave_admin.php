@@ -245,16 +245,16 @@ if (!$result) {
                                             <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
                                         </span>
                                         <span class="input-help">
-                                            <input type="date" class="form-control" name="fromdate" id="fromdate" value="" max="" onchange="cal();" required>
+                                            <input type="date" class="form-control" name="fromdate" id="fromdate" max="" onchange="cal();" required>
                                             <small id="passwordHelpBlock" class="form-text text-muted">From</small>
                                         </span>
                                         <span class="input-help">
-                                            <input type="date" class="form-control" name="todate" id="todate" value="" min="" onchange="cal();" required>
+                                            <input type="date" class="form-control" name="todate" id="todate" min="" onchange="cal();" required>
                                             <small id="passwordHelpBlock" class="form-text text-muted">To</small>
                                         </span>
                                         <span class="input-help">
                                             <select name="typeofleave" id="typeofleave" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                <option value="" disabled selected hidden>Types of Leave</option>
+                                                <option disabled selected hidden>Types of Leave</option>
                                                 <option value="Sick Leave">Sick Leave</option>
                                                 <option value="Casual Leave">Casual Leave</option>
                                                 <option value="Leave Without Pay">Leave Without Pay</option>
@@ -364,7 +364,7 @@ if (!$result) {
 
                                                             <select name="lyear" id="lyear" class="form-select" style="width:max-content; display:inline-block" placeholder="Academic Year" required>
                                                                 <?php if ($lyear == null) { ?>
-                                                                    <option value="" disabled selected hidden>Academic Year</option>
+                                                                    <option disabled selected hidden>Academic Year</option>
                                                                 <?php
                                                                 } else { ?>
                                                                     <option hidden selected><?php echo $lyear ?></option>
@@ -607,7 +607,7 @@ if (!$result) {
                                                     <input type="hidden" class="form-control" name="form-type" type="text" value="leavereviewform" readonly>
                                                     <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
                                                     <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
-                                                    <input type="hidden" class="form-control" name="leaveidd" id="leaveidd" type="text" value="" readonly>
+                                                    <input type="hidden" class="form-control" name="leaveidd" id="leaveidd" type="text" readonly>
                                                     <span class="input-help">
                                                         <input type="date" class="form-control" name="fromdate" id="fromdated" type="text" value="">
                                                         <small id="passwordHelpBlock" class="form-text text-muted">From</small>
@@ -618,7 +618,7 @@ if (!$result) {
                                                     </span>
 
                                                     <select name="leave_status" id="leave_status" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                        <option value="" disabled selected hidden>Status</option>
+                                                        <option disabled selected hidden>Status</option>
                                                         <option value="Approved">Approved</option>
                                                         <option value="Under review">Under review</option>
                                                         <option value="Rejected">Rejected</option>
@@ -629,7 +629,7 @@ if (!$result) {
                                                         <small id="passwordHelpBlock" class="form-text text-muted">HR remarks</small>
                                                     </span>
                                                     <div id="filter-checkshr">
-                                                        <input type="checkbox" name="is_userhr" id="" value="" />
+                                                        <input type="checkbox" name="is_userhr" id="" />
                                                         <label for="is_userhr" style="font-weight: 400;">Half day</label>
                                                     </div>
                                                     <br>

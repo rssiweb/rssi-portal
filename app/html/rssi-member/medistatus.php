@@ -114,7 +114,7 @@ $resultArr = pg_fetch_all($result);
                 <?php } ?>
                 <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
                   <?php if ($status == null) { ?>
-                    <option value="" hidden selected>Select policy year</option>
+                    <option hidden selected>Select policy year</option>
                   <?php
                   } else { ?>
                     <option hidden selected><?php echo $status ?></option>

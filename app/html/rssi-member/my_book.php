@@ -143,7 +143,7 @@ $resultArr = pg_fetch_all($result);
                                             <?php } ?>
                                             <select name="get_status" class="form-select" style="width:max-content;display:inline-block" required>
                                                 <?php if ($status == null) { ?>
-                                                    <option value="" hidden selected>Select book status</option>
+                                                    <option hidden selected>Select book status</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $status ?></option>

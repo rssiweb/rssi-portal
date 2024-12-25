@@ -88,13 +88,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
     }
 
     if ($cmdtuples == 1) {
-        if ($applicant_email != "") {
-            // Adjust the parameters for your sendEmail function accordingly
-            sendEmail("tap_application_resubmitted", array(
-                "application_number" => $application_number,
-                "applicant_name" => $applicant_name,
-            ), $applicant_email);
-        }
+        // Adjust the parameters for your sendEmail function accordingly
+        sendEmail("tap_application_resubmitted", array(
+            "application_number" => $application_number,
+            "applicant_name" => $applicant_name,
+        ), 'info@rssi.in');
     }
 }
 
@@ -317,7 +315,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                             </td>
                                                             <td>
                                                                 <select class="form-select" id="education-qualification" name="education-qualification" required>
-                                                                    <option value="" disabled <?php echo empty($array['education_qualification']) ? 'selected' : ''; ?>>Select your qualification</option>
+                                                                    <option disabled <?php echo empty($array['education_qualification']) ? 'selected' : ''; ?>>Select your qualification</option>
                                                                     <?php
                                                                     $options = [
                                                                         "Bachelor Degree Regular" => "Bachelor Degree Regular",
@@ -378,7 +376,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                             </td>
                                                             <td>
                                                                 <select class="form-select" id="caste" name="caste">
-                                                                    <option value="" disabled <?php echo empty($array['caste']) ? 'selected' : ''; ?>>Select your caste</option>
+                                                                    <option disabled <?php echo empty($array['caste']) ? 'selected' : ''; ?>>Select your caste</option>
                                                                     <?php
                                                                     $options = [
                                                                         "General" => "General",

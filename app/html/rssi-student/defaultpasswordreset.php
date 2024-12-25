@@ -153,16 +153,16 @@ if (isset($_POST['login'])) {
                                 <form role="form" method="post" name="login" action="defaultpasswordreset.php">
                                     <fieldset>
                                         <div class="form-group">
-                                            <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" value="" required>
+                                            <input class="form-control" placeholder="Current password" name="currentpass" id="currentpass" type="password" required>
                                         </div>
                                         <div class="form-group">
-                                            <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" value="" required>
+                                            <input class="form-control" placeholder="New password" name="newpass" id="newpass" type="password" required>
                                             <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
                                                 <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
                                             </label>
                                         </div>
                                         <div class="form-group">
-                                            <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" value="" required>
+                                            <input class="form-control" placeholder="Confirm password" name="oldpass" id="oldpass" type="password" required>
                                         </div>
                                         <input style="font-family:'Google Sans'; float: right;" class="btn btn-primary btn-block" type="submit" value="Update" name="login">
 

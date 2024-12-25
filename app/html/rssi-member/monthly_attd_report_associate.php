@@ -468,7 +468,7 @@ pg_close($con);
                                                     <select name="get_aid" id="get_aid" class="form-select"
                                                         style="display:inline-block" required>
                                                         <?php if ($id == null) { ?>
-                                                            <option value="" disabled selected hidden>Select Status</option>
+                                                            <option disabled selected hidden>Select Status</option>
                                                         <?php
                                                         } else { ?>
                                                             <option hidden selected><?php echo $id ?></option>
@@ -484,7 +484,7 @@ pg_close($con);
                                             <div class="col-md-3">
                                                 <select class="form-select" id="teacher_id_viva" name="teacher_id_viva[]"
                                                     multiple>
-                                                    <option value="" disabled hidden>Select Teacher's ID</option>
+                                                    <option disabled hidden>Select Teacher's ID</option>
                                                     <?php foreach ($teachers as $teacher) { ?>
                                                         <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id_viva']) && in_array($teacher['associatenumber'], $_GET['teacher_id_viva'])) ? 'selected' : ''; ?>>
                                                             <?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?>

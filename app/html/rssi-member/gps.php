@@ -232,7 +232,7 @@ $resultArr = pg_fetch_all($result);
                                             <span class="input-help">
                                                 <select name="itemtype" class="form-select" style="width:max-content; display:inline-block" required>
                                                     <?php if ($itemtype == null) { ?>
-                                                        <option value="" disabled selected hidden>Asset type</option>
+                                                        <option disabled selected hidden>Asset type</option>
                                                     <?php
                                                     } else { ?>
                                                         <option hidden selected><?php echo $itemtype ?></option>
@@ -245,18 +245,18 @@ $resultArr = pg_fetch_all($result);
                                             </span>
 
                                             <span class="input-help">
-                                                <input type="text" name="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" value="" required>
+                                                <input type="text" name="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" required>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Asset name</small>
                                             </span>
 
                                             <span class="input-help">
-                                                <input type="number" name="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" value="" min="1" required>
+                                                <input type="number" name="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" min="1" required>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Quantity</small>
                                             </span>
                                             <span class="input-help">
                                                 <select name="asset_status" class="form-select" style="width:max-content; display:inline-block" required>
                                                     <?php if ($asset_status == null) { ?>
-                                                        <option value="" disabled selected hidden>Asset status</option>
+                                                        <option disabled selected hidden>Asset status</option>
                                                     <?php
                                                     } else { ?>
                                                         <option hidden selected><?php echo $asset_status ?></option>
@@ -291,7 +291,7 @@ $resultArr = pg_fetch_all($result);
 
                                             <select name="item_type" class="form-select" style="width:max-content; display:inline-block">
                                                 <?php if ($item_type == null) { ?>
-                                                    <option value="" disabled selected hidden>Asset type</option>
+                                                    <option disabled selected hidden>Asset type</option>
                                                 <?php
                                                 } else { ?>
                                                     <option hidden selected><?php echo $item_type ?></option>
@@ -304,7 +304,7 @@ $resultArr = pg_fetch_all($result);
                                             <span class="input-help">
                                                 <select name="assetstatus" class="form-select" style="width:max-content; display:inline-block" required>
                                                     <?php if ($assetstatus == null) { ?>
-                                                        <option value="" disabled selected hidden>Asset status</option>
+                                                        <option disabled selected hidden>Asset status</option>
                                                     <?php
                                                     } else { ?>
                                                         <option hidden selected><?php echo $assetstatus ?></option>
@@ -558,14 +558,14 @@ $resultArr = pg_fetch_all($result);
                                             <form id="gpsform" action="#" method="POST">
                                                 <div class="form-group">
                                                     <div class="col2" style="display: inline-block;">
-                                                        <input type="hidden" class="form-control" name="itemid1" id="itemid1" type="text" value="" readonly>
+                                                        <input type="hidden" class="form-control" name="itemid1" id="itemid1" type="text" readonly>
                                                         <input type="hidden" class="form-control" name="form-type" type="text" value="gpsedit" readonly>
                                                         <input type="hidden" class="form-control" name="updatedby" type="text" value="<?php echo $associatenumber ?>" readonly>
 
                                                         <span class="input-help">
                                                             <select name="itemtype" id="itemtype" class="form-select" style="width:max-content; display:inline-block" required>
                                                                 <?php if ($itemtype == null) { ?>
-                                                                    <option value="" disabled selected hidden>Item type</option>
+                                                                    <option disabled selected hidden>Item type</option>
                                                                 <?php } else { ?>
                                                                     <option hidden selected><?php echo $itemtype ?></option>
                                                                 <?php } ?>
@@ -576,19 +576,19 @@ $resultArr = pg_fetch_all($result);
                                                         </span>
 
                                                         <span class="input-help">
-                                                            <input type="text" name="itemname" id="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" value="" required>
+                                                            <input type="text" name="itemname" id="itemname" class="form-control" style="width:max-content; display:inline-block" placeholder="Item name" required>
                                                             <small id="passwordHelpBlock" class="form-text text-muted">Item name*</small>
                                                         </span>
 
                                                         <span class="input-help">
-                                                            <input type="number" name="quantity" id="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" value="" min="1" required>
+                                                            <input type="number" name="quantity" id="quantity" class="form-control" style="width:max-content; display:inline-block" placeholder="Quantity" min="1" required>
                                                             <small id="passwordHelpBlock" class="form-text text-muted">Quantity*</small>
                                                         </span>
 
                                                         <span class="input-help">
                                                             <select name="asset_status" id="asset_status" class="form-select" style="width:max-content; display:inline-block" required>
                                                                 <?php if ($asset_status == null) { ?>
-                                                                    <option value="" disabled selected hidden>Asset status</option>
+                                                                    <option disabled selected hidden>Asset status</option>
                                                                 <?php
                                                                 } else { ?>
                                                                     <option hidden selected><?php echo $asset_status ?></option>
@@ -606,7 +606,7 @@ $resultArr = pg_fetch_all($result);
                                                         </span>
 
                                                         <span class="input-help">
-                                                            <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" value="" required>
+                                                            <input type="text" name="collectedby" id="collectedby" class="form-control" style="width:max-content; display:inline-block" placeholder="Issued by" required>
                                                             <small id="passwordHelpBlock" class="form-text text-muted">Issued by*</small>
                                                         </span>
                                                     </div>

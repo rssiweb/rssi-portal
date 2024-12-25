@@ -9,11 +9,11 @@
   <input type="hidden" class="form-control" name="collectedby" id="collectedby" type="text" value="">
 
   <select name="year" id="year" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-    <!-- <option value="" disabled selected hidden>Select Year</option> -->
+    <!-- <option disabled selected hidden>Select Year</option> -->
   </select>
 
   <select name="ptype" id="ptype" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-    <option value="" disabled selected hidden>Select Type</option>
+    <option disabled selected hidden>Select Type</option>
     <option value="Fees" selected>Fees</option>
     <option value="Admission Fee">Admission Fee</option>
     <option value="Fine">Fine</option>
@@ -22,7 +22,7 @@
   </select>
 
   <select name="month" id="month" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-    <option value="" disabled selected hidden>Select Month</option>
+    <option disabled selected hidden>Select Month</option>
     <option value="1">January</option>
     <option value="2">February</option>
     <option value="3">March</option>
@@ -48,7 +48,7 @@
   <input type="hidden" class="form-control" name="distributedby" id="distributedby" value="">
   <div style="display: flex; flex-direction: row; align-items: center;">
     <select name="items" id="items" class="form-select" style="display: -webkit-inline-box; width:20vh;  margin-right: 10px;" required>
-      <option value="" disabled selected hidden>Select Item</option>
+      <option disabled selected hidden>Select Item</option>
       <option value="Uniform">Uniform</option>
       <option value="ID Card">ID Card</option>
       <option value="Notebook">Notebook</option>

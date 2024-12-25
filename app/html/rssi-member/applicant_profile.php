@@ -755,7 +755,7 @@ $isFormDisabled = null;
                                                             </td>
                                                             <td>
                                                                 <select class="form-select" id="photo_verification" name="photo_verification" <?php echo (($array['application_status'] == 'Application Submitted' || $array['application_status'] == 'Application Re-Submitted' || $array['application_status'] == 'Identity verification document submitted') && $array['photo_verification'] != 'Approved') ? '' : 'disabled'; ?>>
-                                                                    <option value="" disabled <?php echo empty($array['photo_verification']) ? 'selected' : ''; ?>>Select status</option>
+                                                                    <option disabled <?php echo empty($array['photo_verification']) ? 'selected' : ''; ?>>Select status</option>
                                                                     <option value="Approved" <?php echo ($array['photo_verification'] == 'Approved') ? 'selected' : ''; ?>>Approved</option>
                                                                     <option value="Rejected" <?php echo ($array['photo_verification'] == 'Rejected') ? 'selected' : ''; ?>>Rejected</option>
                                                                 </select>
@@ -775,7 +775,7 @@ $isFormDisabled = null;
                                                             </td>
                                                             <td>
                                                                 <select class="form-select" id="identity_verification" name="identity_verification" <?php echo ((empty($array['photo_verification']) || $array['photo_verification'] != 'Approved' || $array['identity_verification'] == 'Approved' || empty($array['supporting_document']) || ($array['identity_verification'] == 'Rejected' && !empty($array['supporting_document']) && $array['application_status'] != 'Identity verification document submitted'))) ? 'disabled' : ''; ?>>
-                                                                    <option value="" disabled <?php echo empty($array['identity_verification']) ? 'selected' : ''; ?>>Select status</option>
+                                                                    <option disabled <?php echo empty($array['identity_verification']) ? 'selected' : ''; ?>>Select status</option>
                                                                     <option value="Approved" <?php echo ($array['identity_verification'] == 'Approved') ? 'selected' : ''; ?>>Approved</option>
                                                                     <option value="Rejected" <?php echo ($array['identity_verification'] == 'Rejected') ? 'selected' : ''; ?>>Rejected</option>
                                                                 </select>
@@ -915,7 +915,7 @@ $isFormDisabled = null;
                                                             </td>
                                                             <td>
                                                                 <select class="form-select" id="offer_extended" name="offer_extended" <?php echo (!empty($array['offer_extended'])) || ($array['application_status'] != 'Recommended') ? 'disabled' : ''; ?>>
-                                                                    <option value="" disabled <?php echo empty($array['offer_extended']) ? 'selected' : ''; ?>>Select status</option>
+                                                                    <option disabled <?php echo empty($array['offer_extended']) ? 'selected' : ''; ?>>Select status</option>
                                                                     <option value="Yes" <?php echo ($array['offer_extended'] == 'Yes') ? 'selected' : ''; ?>>Yes</option>
                                                                     <option value="No" <?php echo ($array['offer_extended'] == 'No') ? 'selected' : ''; ?>>No</option>
                                                                 </select>

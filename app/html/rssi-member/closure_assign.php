@@ -187,7 +187,7 @@ echo "<script>var userRole = '$role';</script>";
                                                 <div class="mb-3">
                                                     <label for="associateId" class="form-label">Select Associate</label>
                                                     <select id="associateId" name="associateId" class="form-select">
-                                                        <option value="" disabled selected>Select Associate</option>
+                                                        <option disabled selected>Select Associate</option>
                                                         <!-- Dynamically populated -->
                                                     </select>
                                                 </div>
@@ -312,7 +312,7 @@ echo "<script>var userRole = '$role';</script>";
                 const assignmentForDate = assignments.find(assignment => assignment.date === date);
 
                 // Clear the dropdown and re-populate options
-                associateIdSelect.innerHTML = '<option value="" disabled selected>Select Associate</option>';
+                associateIdSelect.innerHTML = '<option disabled selected>Select Associate</option>';
 
                 // Check if there's no assignment for the selected date
                 if (!assignmentForDate) {

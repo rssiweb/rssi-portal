@@ -409,7 +409,7 @@ $resultArr = pg_fetch_all($result);
                             <div class="mb-3">
                                 <label for="statusDropdown" class="form-label">Document Status</label>
                                 <select id="statusDropdown" class="form-select">
-                                    <option value="" disabled ${!doc.verification_status ? 'selected' : ''}>Select Status</option>
+                                    <option disabled ${!doc.verification_status ? 'selected' : ''}>Select Status</option>
                                     <option value="Verified" ${doc.verification_status === 'Verified' ? 'selected' : ''}>Verified</option>
                                     <option value="Rejected" ${doc.verification_status === 'Rejected' ? 'selected' : ''}>Rejected</option>
                                 </select>

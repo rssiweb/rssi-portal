@@ -312,7 +312,7 @@ include("../../util/email.php");
                                         <div class="input-help">
                                             <select name="badge_name" class="form-select" style="width: max-content; display: inline-block" required>
                                                 <?php if ($badge_name == null) { ?>
-                                                    <option value="" disabled selected hidden>Badge name</option>
+                                                    <option disabled selected hidden>Badge name</option>
                                                 <?php } else { ?>
                                                     <option hidden selected><?php echo $badge_name ?></option>
                                                 <?php } ?>

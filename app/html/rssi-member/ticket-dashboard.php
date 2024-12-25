@@ -481,7 +481,7 @@ if (!function_exists('makeClickableLinks')) {
                                                 <!-- Assigned To -->
                                                 <div class="me-2">
                                                     <select id="assigned_to" name="assigned_to" class="form-select">
-                                                        <option value="" <?php echo empty($ticket['assigned_to']) ? 'selected' : ''; ?>>Clear Selection</option>
+                                                        <option <?php echo empty($ticket['assigned_to']) ? 'selected' : ''; ?>>Clear Selection</option>
                                                         <?php foreach ($results as $result): ?>
                                                             <option value="<?php echo htmlspecialchars($result['id']); ?>" <?php echo $result['id'] === $ticket['assigned_to'] ? 'selected' : ''; ?>>
                                                                 <?php echo htmlspecialchars($result['fullname']); ?> (<?php echo htmlspecialchars($result['id']); ?>)
@@ -493,7 +493,7 @@ if (!function_exists('makeClickableLinks')) {
                                                 <!-- Status -->
                                                 <div class="me-2">
                                                     <select id="status" name="status" class="form-select">
-                                                        <option value="" disabled>Select Status</option>
+                                                        <option disabled>Select Status</option>
                                                         <option value="In Progress" <?php echo $latest_status === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                         <option value="Resolved" <?php echo $latest_status === 'Resolved' ? 'selected' : ''; ?>>Resolved</option>
                                                         <option value="Closed" <?php echo $latest_status === 'Closed' ? 'selected' : ''; ?>>Closed</option>

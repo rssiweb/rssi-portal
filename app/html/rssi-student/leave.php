@@ -218,7 +218,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             </span>
                             <span class="input-help">
                                 <select name="typeofleave" id="typeofleave" class="form-control" style="display: -webkit-inline-box; width:20vh; font-size: small;" required>
-                                    <option value="" disabled selected hidden>Types of Leave</option>
+                                    <option disabled selected hidden>Types of Leave</option>
                                     <option value="Sick Leave">Sick Leave</option>
                                     <option value="Casual Leave">Casual Leave</option>
                                 </select>
@@ -324,7 +324,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                             <div class="col2" style="display: inline-block;">
                                 <select name="get_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
                                     <?php if ($id == null) { ?>
-                                        <option value="" disabled selected hidden>Select Year</option>
+                                        <option disabled selected hidden>Select Year</option>
                                     <?php
                                     } else { ?>
                                         <option hidden selected><?php echo $id ?></option>
@@ -336,7 +336,7 @@ $resultArrcl = pg_fetch_result($totalcl, 0, 0);
                                 </select>&nbsp;
                                 <select name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="Appraisal type">
                                     <?php if ($status == null) { ?>
-                                        <option value="" disabled selected hidden>Select Status</option>
+                                        <option disabled selected hidden>Select Status</option>
                                     <?php
                                     } else { ?>
                                         <option hidden selected><?php echo $status ?></option>

@@ -133,7 +133,7 @@ if ($_POST) {
                                     <input class="form-control" placeholder="Student ID" name="sid" type="text" autofocus required>
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Password" name="pass" id="pass" type="password" value="" required>
+                                    <input class="form-control" placeholder="Password" name="pass" id="pass" type="password" required>
                                     <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
                                         <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show
                                         password

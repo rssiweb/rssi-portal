@@ -182,7 +182,7 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                                         <select name="ayear" id="ayear" class="form-select"
                                             style="width:max-content; display:inline-block" placeholder="Academic Year">
                                             <?php if ($ayear == null) { ?>
-                                                <option value="" disabled selected hidden>Academic Year</option>
+                                                <option disabled selected hidden>Academic Year</option>
                                                 <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $ayear ?></option>
@@ -424,7 +424,7 @@ if (!empty($visitid) || !empty($contact) || !empty($visitdatefrom) || !empty($ay
                             <div class="col-md-3">
                                 <div class="input-help">
                                     <select name="visitstatus" id="visitstatus" class="form-select" required>
-                                        <option value="" disabled selected hidden>Status</option>
+                                        <option disabled selected hidden>Status</option>
                                         <option value="Approved">Approved</option>
                                         <option value="Rejected">Rejected</option>
                                         <option value="Visited">Visited</option>

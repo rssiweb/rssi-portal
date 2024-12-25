@@ -58,13 +58,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
         $cmdtuples = pg_affected_rows($result);
     }
     if ($cmdtuples == 1) {
-        if ($applicant_email != "") {
-            // Adjust the parameters for your sendEmail function accordingly
-            sendEmail("tap_identity_document_submitted", array(
-                "application_number" => $application_number,
-                "applicant_name" => $applicant_name,
-            ), $applicant_email);
-        }
+        // Adjust the parameters for your sendEmail function accordingly
+        sendEmail("tap_identity_document_submitted", array(
+            "application_number" => $application_number,
+            "applicant_name" => $applicant_name,
+        ), 'info@rssi.in');
     }
 }
 
@@ -215,7 +213,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                             <td><label for="identifier">Choose any National Identifier from the below list.</label></td>
                                                             <td>
                                                                 <select class="form-select" id="identifier" name="identifier" required>
-                                                                    <option value="" disabled <?php echo empty($array['identifier']) ? 'selected' : ''; ?>>-- Select an Identifier --</option>
+                                                                    <option disabled <?php echo empty($array['identifier']) ? 'selected' : ''; ?>>-- Select an Identifier --</option>
                                                                     <?php
                                                                     $options = [
                                                                         "Aadhaar" => "Aadhaar",

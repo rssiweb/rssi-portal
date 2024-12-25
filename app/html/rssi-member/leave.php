@@ -331,11 +331,11 @@ $resultArr = pg_fetch_all($result);
                                         <input type="hidden" name="form-type" value="leaveapply">
 
                                         <span class="input-help">
-                                            <input type="date" class="form-control" name="fromdate" id="fromdate" value="" max="" onchange="cal(); checkLeaveType();" required>
+                                            <input type="date" class="form-control" name="fromdate" id="fromdate" max="" onchange="cal(); checkLeaveType();" required>
                                             <small id="passwordHelpBlock" class="form-text text-muted">From<span style="color:red">*</span></small>
                                         </span>
                                         <span class="input-help">
-                                            <input type="date" class="form-control" name="todate" id="todate" value="" min="" onchange="cal(); checkLeaveType();" required>
+                                            <input type="date" class="form-control" name="todate" id="todate" min="" onchange="cal(); checkLeaveType();" required>
                                             <small id="passwordHelpBlock" class="form-text text-muted">To<span style="color:red">*</span></small>
                                         </span>
                                         <div id="filter-checksh">
@@ -343,7 +343,7 @@ $resultArr = pg_fetch_all($result);
                                             <label for="is_userh" style="font-weight: 400;">Half day</label>
                                         </div>
                                         <span class="input-help">
-                                            <input type="text" class="form-control" name="numdays2" id="numdays2" value="" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" size="10" readonly>
+                                            <input type="text" class="form-control" name="numdays2" id="numdays2" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" size="10" readonly>
                                             <small id="passwordHelpBlock" class="form-text text-muted">Days count</small>
                                         </span>
                                         <?php if ($job_type != 'Full-time') { ?>
@@ -555,7 +555,7 @@ $resultArr = pg_fetch_all($result);
                                     <div class="col2" style="display: inline-block;">
                                         <select name="get_status" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type">
                                             <?php if ($status == null) { ?>
-                                                <option value="" disabled selected hidden>Select Status</option>
+                                                <option disabled selected hidden>Select Status</option>
                                             <?php
                                             } else { ?>
                                                 <option hidden selected><?php echo $status ?></option>

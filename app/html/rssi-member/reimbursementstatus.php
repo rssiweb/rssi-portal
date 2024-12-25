@@ -269,7 +269,7 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                       <?php } ?>
                       <select name="get_id" id="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Select policy year" required>
                         <?php if ($status == null) { ?>
-                          <option value="" hidden selected>Select policy year</option>
+                          <option hidden selected>Select policy year</option>
                         <?php
                         } else { ?>
                           <option hidden selected><?php echo $status ?></option>
@@ -459,11 +459,11 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                                 <input type="hidden" class="form-control" name="form-type" type="text" value="claimreviewform" readonly>
                                 <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" type="text" value="<?php echo $associatenumber ?>" readonly>
                                 <input type="hidden" class="form-control" name="reviewer_name" id="reviewer_name" type="text" value="<?php echo $fullname ?>" readonly>
-                                <input type="hidden" class="form-control" name="reimbid" id="reimbid" type="text" value="" readonly>
+                                <input type="hidden" class="form-control" name="reimbid" id="reimbid" type="text" readonly>
 
                                 <span class="input-help">
                                   <select name="claimstatus" id="claimstatus" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                                    <option value="" disabled selected hidden>Status</option>
+                                    <option disabled selected hidden>Status</option>
                                     <option value="Approved">Approved</option>
                                     <option value="Claim settled">Claim settled</option>
                                     <option value="Under review">Under review</option>
@@ -473,15 +473,15 @@ $resultArrrr = pg_fetch_result($totalclaimedamount, 0, 0);
                                 </span>
 
                                 <span class="input-help">
-                                  <input type="number" class="form-control" name="approvedamount" id="approvedamount" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" value="" required>
+                                  <input type="number" class="form-control" name="approvedamount" id="approvedamount" placeholder="Amount" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" required>
                                   <small id="passwordHelpBlock" class="form-text text-muted">Approved amount<span style="color:red">*</span></small>
                                 </span>
                                 <span class="input-help">
-                                  <input type="text" name="transactionid" id="transactionid" class="form-control" placeholder="Transaction id" value="" required>
+                                  <input type="text" name="transactionid" id="transactionid" class="form-control" placeholder="Transaction id" required>
                                   <small id="passwordHelpBlock" class="form-text text-muted">Transaction id<span style="color:red">*</span></small>
                                 </span>
                                 <span class="input-help">
-                                  <input type="date" class="form-control" name="transfereddate" id="transfereddate" value="" required>
+                                  <input type="date" class="form-control" name="transfereddate" id="transfereddate" required>
                                   <small id="passwordHelpBlock" class="form-text text-muted">Transfer Date<span style="color:red">*</span></small>
                                 </span>
 

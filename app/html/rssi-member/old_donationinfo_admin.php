@@ -141,7 +141,7 @@ $resultArrr = pg_fetch_result($totaldonatedamount, 0, 0);
                     <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Invoice number" value="<?php echo $id ?>">
                     <select name="get_id" id="get_id" class="form-select" style="width:max-content;display:inline-block" required>
                       <?php if ($status == null) { ?>
-                        <option value="" disabled selected hidden>Select Year</option>
+                        <option disabled selected hidden>Select Year</option>
                       <?php
                       } else { ?>
                         <option hidden selected><?php echo $status ?></option>

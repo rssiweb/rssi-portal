@@ -161,7 +161,7 @@ $resultArr = pg_fetch_all($result);
                                     <div class="form-group">
                                         <select name="lyear" id="lyear" class="form-select" required>
                                             <?php if ($lyear == null) { ?>
-                                                <option value="" disabled selected hidden>Academic Year</option>
+                                                <option disabled selected hidden>Academic Year</option>
                                             <?php } else { ?>
                                                 <option hidden selected><?php echo $lyear ?></option>
                                             <?php } ?>

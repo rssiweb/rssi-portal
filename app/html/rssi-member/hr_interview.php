@@ -679,7 +679,7 @@ if (!empty($interviewData['submitted_by'])) {
                                                                 <div class="col-md-6">
                                                                     <label for="hr_interview_status" class="form-label">Status</label>
                                                                     <select id="hr_interview_status" name="hr_interview_status" class="form-select" required>
-                                                                        <option value="" disabled <?php echo !isset($interviewDataResponse['hr_interview_status']) ? 'selected' : ''; ?>>Select Status</option>
+                                                                        <option disabled <?php echo !isset($interviewDataResponse['hr_interview_status']) ? 'selected' : ''; ?>>Select Status</option>
                                                                         <option value="Recommended" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'Recommended') ? 'selected' : ''; ?>>Recommended</option>
                                                                         <option value="Not Recommended" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'Not Recommended') ? 'selected' : ''; ?>>Not Recommended</option>
                                                                         <option value="On Hold" <?php echo (isset($interviewDataResponse['hr_interview_status']) && $interviewDataResponse['hr_interview_status'] === 'On Hold') ? 'selected' : ''; ?>>On Hold</option>

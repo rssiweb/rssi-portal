@@ -256,11 +256,11 @@ $resultArr = pg_fetch_all($result);
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Applicant ID*</small>
                                             </span>
                                             <span class="input-help">
-                                                <input type="date" class="form-control" name="adj_fromdate" id="adj_fromdate" value="" max="" onchange="cal();" required>
+                                                <input type="date" class="form-control" name="adj_fromdate" id="adj_fromdate" max="" onchange="cal();" required>
                                                 <small id="passwordHelpBlock_from" class="form-text text-muted">From*</small>
                                             </span>
                                             <span class="input-help">
-                                                <input type="date" class="form-control" name="adj_todate" id="adj_todate" value="" min="" onchange="cal();" required>
+                                                <input type="date" class="form-control" name="adj_todate" id="adj_todate" min="" onchange="cal();" required>
                                                 <small id="passwordHelpBlock_to" class="form-text text-muted">To*</small>
                                             </span>
                                             <span class="input-help">
@@ -269,7 +269,7 @@ $resultArr = pg_fetch_all($result);
                                             </span>
                                             <span class="input-help">
                                                 <select name="adj_leavetype" id="adj_leavetype" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                    <option value="" disabled selected hidden>Types of Leave</option>
+                                                    <option disabled selected hidden>Types of Leave</option>
                                                     <option value="Sick Leave">Sick Leave</option>
                                                     <option value="Casual Leave">Casual Leave</option>
                                                     <option value="Leave Without Pay">Leave Without Pay</option>
@@ -278,7 +278,7 @@ $resultArr = pg_fetch_all($result);
                                             </span>
                                             <span class="input-help">
                                                 <select name="adj_academicyear" id="adj_academicyear" class="form-select" style="display: -webkit-inline-box; width:20vh; " required>
-                                                    <option value="" disabled selected hidden>Academic Year</option>
+                                                    <option disabled selected hidden>Academic Year</option>
                                                 </select>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Academic Year</small>
                                             </span>
@@ -393,7 +393,7 @@ $resultArr = pg_fetch_all($result);
                                                             <?php } ?>
                                                             <select name="adj_academicyear_search" id="adj_academicyear_search" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
                                                                 <?php if ($adj_academicyear_search == null) { ?>
-                                                                    <option value="" disabled selected hidden>Academic Year</option>
+                                                                    <option disabled selected hidden>Academic Year</option>
                                                                 <?php
                                                                 } else { ?>
                                                                     <option hidden selected><?php echo $adj_academicyear_search ?></option>

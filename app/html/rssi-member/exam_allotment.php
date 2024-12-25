@@ -220,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                         <div class="col-md-3">
                                             <label for="exam_type" class="form-label">Exam Type</label>
                                             <select class="form-select" id="exam_type" name="exam_type" required>
-                                                <option value="" disabled <?php echo !isset($_GET['exam_type']) ? 'selected' : ''; ?>>Select Exam Type</option>
+                                                <option disabled <?php echo !isset($_GET['exam_type']) ? 'selected' : ''; ?>>Select Exam Type</option>
                                                 <option value="First Term" <?php echo (isset($_GET['exam_type']) && $_GET['exam_type'] == 'First Term') ? 'selected' : ''; ?>>First Term</option>
                                                 <option value="Half Yearly" <?php echo (isset($_GET['exam_type']) && $_GET['exam_type'] == 'Half Yearly') ? 'selected' : ''; ?>>Half Yearly</option>
                                                 <option value="Annual" <?php echo (isset($_GET['exam_type']) && $_GET['exam_type'] == 'Annual') ? 'selected' : ''; ?>>Annual</option>
@@ -230,13 +230,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                             <label for="academic_year" class="form-label">Academic Year</label>
                                             <select class="form-select" id="academic_year" name="academic_year">
                                                 <!-- Populate academic years dynamically if needed -->
-                                                <option value="" disabled>Select Academic Year</option>
+                                                <option disabled>Select Academic Year</option>
                                             </select>
                                         </div>
                                         <div class="col-md-3">
                                             <label for="subject" class="form-label">Subject</label>
                                             <select class="form-select" id="subject" name="subject">
-                                                <option value="" disabled <?php echo !isset($_GET['subject']) ? 'selected' : ''; ?>>Select a subject</option>
+                                                <option disabled <?php echo !isset($_GET['subject']) ? 'selected' : ''; ?>>Select a subject</option>
                                                 <option value="Hindi" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Hindi') ? 'selected' : ''; ?>>Hindi</option>
                                                 <option value="English" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'English') ? 'selected' : ''; ?>>English</option>
                                                 <option value="Mathematics" <?php echo (isset($_GET['subject']) && $_GET['subject'] == 'Mathematics') ? 'selected' : ''; ?>>Mathematics</option>
@@ -252,13 +252,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                                             <div class="col-md-3">
                                                 <label for="teacher_id_viva" class="form-label">Teacher ID</label>
                                                 <select class="form-select" id="teacher_id_viva" name="teacher_id_viva">
-                                                    <option value="" disabled selected hidden>Select Teacher's ID</option>
+                                                    <option disabled selected hidden>Select Teacher's ID</option>
                                                     <?php foreach ($teachers as $teacher) { ?>
                                                         <option value="<?php echo $teacher['associatenumber']; ?>" <?php echo (isset($_GET['teacher_id_viva']) && $_GET['teacher_id_viva'] == $teacher['associatenumber']) ? 'selected' : ''; ?>>
                                                             <?php echo $teacher['associatenumber'] . ' - ' . $teacher['fullname']; ?>
                                                         </option>
                                                     <?php } ?>
-                                                    <option value="" disabled>---</option>
+                                                    <option disabled>---</option>
                                                     <option value="clear">Clear Selection</option>
                                                 </select>
                                             </div>

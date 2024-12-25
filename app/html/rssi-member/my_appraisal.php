@@ -307,7 +307,7 @@ function displayTDs($array)
                                                     <div class="col2" style="display: inline-block;">
                                                         <select name="get_id" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type" required>
                                                             <?php if ($type == null) { ?>
-                                                                <option value="" hidden selected>Select Appraisal type</option>
+                                                                <option hidden selected>Select Appraisal type</option>
                                                             <?php
                                                             } else { ?>
                                                                 <option hidden selected><?php echo $type ?></option>
@@ -321,7 +321,7 @@ function displayTDs($array)
 
                                                         <select name="get_year" id="get_year" class="form-select" style="width:max-content; display:inline-block" placeholder="Year" required>
                                                             <?php if ($year == null) { ?>
-                                                                <option value="" hidden selected>Select Year</option>
+                                                                <option hidden selected>Select Year</option>
                                                             <?php
                                                             } else { ?>
                                                                 <option hidden selected><?php echo $year ?></option>
@@ -413,7 +413,7 @@ function displayTDs($array)
 
                                                         <select name="get_yearm" id="get_yearm" class="form-select" style="width:max-content; display:inline-block" placeholder="Year" required>
                                                             <?php if ($yearm == null) { ?>
-                                                                <option value="" hidden selected>Select Year</option>
+                                                                <option hidden selected>Select Year</option>
                                                             <?php
                                                             } else { ?>
                                                                 <option hidden selected><?php echo $yearm ?></option>
@@ -507,7 +507,7 @@ function displayTDs($array)
 
                                                         <select name="get_yearr" id="get_yearr" class="form-select" style="width:max-content; display:inline-block" placeholder="Year" required>
                                                             <?php if ($yearr == null) { ?>
-                                                                <option value="" hidden selected>Select Year</option>
+                                                                <option hidden selected>Select Year</option>
                                                             <?php
                                                             } else { ?>
                                                                 <option hidden selected><?php echo $yearr ?></option>
@@ -599,7 +599,7 @@ function displayTDs($array)
                                         <form name="ipfsubmission" action="#" method="POST">
                                             <span id='close'>x</span>
                                             <input type="hidden" name="form-type" value="ipfsubmission">
-                                            <input type="hidden" name="status2" id="count2" value="" readonly required>
+                                            <input type="hidden" name="status2" id="count2" readonly required>
                                             <input type="hidden" name="ipf" id="ipf" value="<?php echo $array['ipf']; ?>" readonly required>
                                             <input type="hidden" name="ipfid" id="ipfid" value="<?php echo $array['goalsheetid']; ?>" readonly required>
                                             <input type="hidden" name="ipf_response_by" id="ipf_response_by" value="<?php echo $associatenumber; ?>" readonly required>
