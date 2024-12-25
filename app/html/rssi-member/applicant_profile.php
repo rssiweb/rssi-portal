@@ -177,7 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             WHERE application_number = '$application_number';
             ";
             // Execute the query (assuming you have a database connection $con)
-            $result = pg_query($con, $insert_query);
+            $result_insert_query = pg_query($con, $insert_query);
         }
     }
 
@@ -262,33 +262,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    if ($result && pg_affected_rows($result) > 0) {
+    if (isset($result_insert_query) && $result_insert_query && pg_affected_rows($result_insert_query) > 0) {
         // Insert was successful
         echo '<script>
-        var applicationNumber = "' . htmlspecialchars($_GET['application_number']) . '";
-        alert("Record successfully inserted into rssimyaccount_members.");
-        window.location.href = "applicant_profile.php?application_number=" + applicationNumber;  // Redirect to the applicant profile page
-    </script>';
+            var applicationNumber = "' . htmlspecialchars($_GET['application_number']) . '";
+            alert("Record successfully inserted into rssimyaccount_members.");
+            window.location.href = "applicant_profile.php?application_number=" + applicationNumber;  // Redirect to the applicant profile page
+        </script>';
+    } elseif ($cmdtuples == 1) {
+        // Profile was updated successfully
+        echo '<script>
+            var applicationNumber = "' . htmlspecialchars($_GET['application_number']) . '";
+            alert("Changes to the Applicant Profile have been saved successfully.");
+            window.location.href = "applicant_profile.php?application_number=" + applicationNumber;  // Reload the page
+        </script>';
     } else {
-        // Insert failed
+        // Handle error case (either insert or update failed)
         echo '<script>
-        alert("Error: Failed to insert record into rssimyaccount_members. ' . addslashes(pg_last_error($con)) . '");
-    </script>';
-    }
-
-    // Check if profile was updated
-    if ($cmdtuples == 1) {
-        // Success: Profile was updated
-        echo '<script>
-        var applicationNumber = "' . htmlspecialchars($_GET['application_number']) . '";
-        alert("Changes to the Applicant Profile have been saved successfully.");
-        window.location.href = "applicant_profile.php?application_number=" + applicationNumber;  // Reload the page
-    </script>';
-    } else {
-        // Failure: Profile was not updated
-        echo '<script>
-        alert("Error: We encountered an error while updating the record. Please try again.");
-    </script>';
+            alert("Error: Unable to complete the operation. ' . addslashes(pg_last_error($con)) . '");
+        </script>';
     }
 }
 
@@ -391,7 +383,7 @@ $isFormDisabled = null;
                                     $encoded_message = urlencode($message);
 
                                     // Generate and return the WhatsApp URL
-                                    return "https://api.whatsapp.com/send?phone=" . $array['telephone'] . "&text=" . $encoded_message;
+                                    return "https://api.whatsapp.com/send?phone=91" . $array['telephone'] . "&text=" . $encoded_message;
                                 }
 
                                 // Define different messages
@@ -409,7 +401,9 @@ $isFormDisabled = null;
                                     . "Please ensure that the scanned document is clearly legible, and re-upload the same.";
                                 $message4 = "Your document has been successfully verified. You will receive your interview schedule soon.";
                                 $message5 = "We are pleased to inform you that your interview slot for the Faculty position has been successfully booked. Please take note of the following details:\n\n"
-                                    . "Reporting Date & Time: " . !empty($array['tech_interview_schedule']) && $array['tech_interview_schedule'] !== null ? (new DateTime($array['tech_interview_schedule']))->format('d/m/Y h:i a') : 'No interview scheduled' . "\n"
+                                    . "Reporting Date & Time: " . (!empty($array['tech_interview_schedule']) && $array['tech_interview_schedule'] !== null
+                                        ? (new DateTime($array['tech_interview_schedule']))->format('d/m/Y h:i a')
+                                        : 'No interview scheduled') . "\n"
                                     . "Reporting Address: D/1/122, Vinamra Khand, Gomti Nagar, Lucknow, Uttar Pradesh 226010\n\n"
                                     . "To know more about the interview process and specific instructions, kindly check your registered email ID.\n\n"
                                     . "We appreciate your interest in joining RSSI NGO and look forward to your participation in the interview process.";
@@ -953,30 +947,9 @@ $isFormDisabled = null;
 
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script>
-        function checkTelephoneLength() {
-            var telephone = document.getElementById('telephone').value;
-
-            // Limit the input to 10 digits
-            if (telephone.length > 10) {
-                alert("You can only enter up to 10 digits.");
-                document.getElementById('telephone').value = telephone.slice(0, 10); // Truncate to 10 digits
-            }
-        }
-    </script>
-    <script>
-        $(document).ready(function() {
-            $('input, select, textarea').each(function() {
-                if ($(this).prop('required')) { // Check if the element has the required attribute
-                    $(this).closest('td').prev('td').find('label').append(' <span style="color: red">*</span>');
-                }
-            });
-        });
-    </script>
     <script>
         function copyAddress() {
             const currentAddress = document.getElementById('postal-address').value;
@@ -992,7 +965,70 @@ $isFormDisabled = null;
             }
         }
     </script>
+    <!-- Add this script at the end of the HTML body -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        // Add event listener to intercept Escape key press
+        document.body.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Prevent default behavior of Escape key
+                event.preventDefault();
+            }
+        });
+    </script>
+    <script>
+        // Function to show loading modal
+        function showLoadingModal() {
+            $('#myModal').modal('show');
+        }
 
+        // Function to hide loading modal
+        function hideLoadingModal() {
+            $('#myModal').modal('hide');
+        }
+
+        // Add event listener to form submission
+        document.getElementById('signup').addEventListener('submit', function(event) {
+            // Show loading modal when form is submitted
+            showLoadingModal();
+        });
+
+        // Optional: Close loading modal when the page is fully loaded
+        window.addEventListener('load', function() {
+            // Hide loading modal
+            hideLoadingModal();
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('input, select, textarea').each(function() {
+                if ($(this).prop('required')) { // Check if the element has the required attribute
+                    $(this).closest('td').prev('td').find('label').append(' <span style="color: red">*</span>');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
