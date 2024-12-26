@@ -216,7 +216,7 @@ $resultArr = pg_fetch_all($result);
                                             <th scope="col">Association</th>
                                             <th scope="col">Post</th>
                                             <th scope="col">Subject Preference</th>
-                                            <th scope="col">Identity Verification</th>
+                                            <!-- <th scope="col">Identity Verification</th> -->
                                             <th scope="col">Technical Interview Scheduled On</th>
                                             <th scope="col">HR Interview Scheduled On</th>
                                             <th scope="col">Status</th>
@@ -227,8 +227,8 @@ $resultArr = pg_fetch_all($result);
                                         <?php
                                         // Iterate through the fetched candidate information
                                         foreach ($resultArr as $array) {
-                                            $interviewTimestamp = empty($array['tech_interview_schedule']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['tech_interview_schedule']));
-                                            $hrTimestamp = empty($array['hr_interview_schedule']) ? 'Not scheduled yet' : @date("d/m/Y g:i a", strtotime($array['hr_interview_schedule']));
+                                            $interviewTimestamp = empty($array['tech_interview_schedule']) ? '' : @date("d/m/Y g:i a", strtotime($array['tech_interview_schedule']));
+                                            $hrTimestamp = empty($array['hr_interview_schedule']) ? '' : @date("d/m/Y g:i a", strtotime($array['hr_interview_schedule']));
                                             $linkToShow = '';
 
                                             $interviewStatus = empty($array['application_status']) ? '' : $array['application_status'];
@@ -240,7 +240,7 @@ $resultArr = pg_fetch_all($result);
                                                 <td><?php echo $array['association']; ?></td>
                                                 <td><?php echo $array['post_select']; ?></td>
                                                 <td><?php echo $array['subject1']; ?>,<?php echo $array['subject2']; ?>,<?php echo $array['subject3']; ?></td>
-                                                <td><?php echo $array['identifier']; ?></td>
+                                                <!-- <td><?php echo $array['identifier']; ?></td> -->
                                                 <td><?php echo $interviewTimestamp; ?></td>
                                                 <td><?php echo $hrTimestamp; ?></td>
                                                 <td><?php echo $interviewStatus; ?></td>

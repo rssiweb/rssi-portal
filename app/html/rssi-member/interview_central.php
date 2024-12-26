@@ -16,8 +16,9 @@ $filter_application_number = isset($_POST['filter_application_number']) ? trim($
 $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
 
 // Start building the query
-$query = "SELECT * FROM signup WHERE tech_interview_schedule IS NOT NULL AND application_status!='No-Show' order by tech_interview_schedule desc";
-
+$query = "SELECT * FROM signup 
+          WHERE application_status IN ('Technical Interview Scheduled', 'Technical Interview Completed', 'HR Interview Scheduled', 'HR Interview Completed') 
+          ORDER BY tech_interview_schedule DESC";
 // Add filters based on user input
 $conditions = [];
 if (!empty($filter_application_number)) {
