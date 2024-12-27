@@ -15,6 +15,92 @@ $interview_id = null;
 if (isset($_GET['applicationNumber_verify'])) {
     // Get the application number from the GET parameter
     $applicationNumber = $_GET['applicationNumber_verify'];
+    $applicationNumberEscaped = pg_escape_string($con, $applicationNumber);
+    $documentVerification = false;
+    // Fetch user's highest educational qualification
+    $getUserQualification = "SELECT education_qualification FROM signup WHERE application_number = '$applicationNumberEscaped'";
+    $qualificationResult = pg_query($con, $getUserQualification);
+
+    if ($qualificationResult && pg_num_rows($qualificationResult) > 0) {
+        $qualificationRow = pg_fetch_assoc($qualificationResult);
+        $educationQualification = $qualificationRow['education_qualification'];
+
+        // Determine required fields based on education qualification
+        $requiredFields = [
+            "11" => ["highschool"],
+            "12" => ["highschool", "intermediate"],
+            "Bachelor" => ["highschool", "intermediate", "graduation"],
+            "Master" => ["highschool", "intermediate", "graduation", "post_graduation"],
+            "Doctorate" => ["highschool", "intermediate", "graduation", "post_graduation"]
+        ];
+
+        $requiredFiles = [];
+        foreach ($requiredFields as $key => $fields) {
+            if (stripos($educationQualification, $key) !== false) {
+                $requiredFiles = $fields;
+                break;
+            }
+        }
+
+        // Get latest uploaded files for this user
+        $getLatestFiles = "
+            SELECT file_name, MAX(uploaded_on) AS latest_upload, verification_status
+            FROM archive
+            WHERE uploaded_by = '$applicationNumberEscaped'
+            GROUP BY file_name, verification_status";
+        $filesResult = pg_query($con, $getLatestFiles);
+
+
+        $uploadedFiles = [];
+        $allVerified = true;
+        if ($filesResult && pg_num_rows($filesResult) > 0) {
+            while ($fileRow = pg_fetch_assoc($filesResult)) {
+                $fileName = $fileRow['file_name'];
+                $verificationStatus = $fileRow['verification_status'];
+
+                $uploadedFiles[$fileName] = $verificationStatus;
+
+                if (empty($verificationStatus)) {
+                    $allVerified = false; // Some file is not verified
+                }
+            }
+
+            // Check which required files are missing or unverified
+            $missingFiles = array_diff($requiredFiles, array_keys($uploadedFiles));
+            $unverifiedFiles = [];
+
+            foreach ($requiredFiles as $file) {
+                if (isset($uploadedFiles[$file]) && $uploadedFiles[$file] !== 'Verified') {
+                    $unverifiedFiles[] = $file;
+                }
+            }
+
+            // Check if all required files are verified
+            $allRequiredVerified = empty($missingFiles) && empty($unverifiedFiles);
+
+            // Set documentVerification based on conditions
+            if ($allVerified && $allRequiredVerified) {
+                $documentVerification = true;
+            }
+            // Prepare response
+            $response = [
+                'application_number' => $applicationNumber,
+                'documentVerification' => $documentVerification,
+                'requiredFiles' => $requiredFiles,
+                'uploadedFiles' => $uploadedFiles,
+                'missingFiles' => $missingFiles,
+                'unverifiedFiles' => $unverifiedFiles
+            ];
+        } else {
+            // No matching record found in signup
+            $response = [
+                'status' => 'no_records',
+                'message' => 'No records found for the given application number.'
+            ];
+        }
+        // echo json_encode($response);
+    }
+
     $isFormDisabled = null;
 
     // Escape the application number to prevent SQL injection
@@ -275,6 +361,33 @@ if (!empty($interviewData['submitted_by'])) {
                 margin-left: 2%;
             }
         }
+
+        .notification-box {
+            background-color: #e0f7fa;
+            /* border: 1px solid #b2ebf2; */
+            border-left: 5px solid #9EEAF9;
+            /* Darker shade line */
+            padding: 15px;
+            margin: 20px auto;
+            width: 80%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            /* Optional box shadow */
+        }
+
+        .notification-box a {
+            color: #0277bd;
+            text-decoration: underline;
+        }
+
+        .highlight {
+            color: red;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .notification-box {
+                animation: none;
+            }
+        }
     </style>
     <!-- CSS Library Files -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
@@ -499,175 +612,185 @@ if (!empty($interviewData['submitted_by'])) {
                                                 return $currentAssociationType && in_array($fieldName, $associationRequirements[$currentAssociationType] ?? []);
                                             }
                                             ?>
-                                            <form id="applicationForm" action="#" method="POST">
-                                                <fieldset <?php echo $isFormDisabled; ?>>
-                                                    <div class="container my-5">
-                                                        <div class="row g-3 align-items-center">
+                                            <?php
+                                            // Check if documentVerification is false or if there are missing or unverified documents
+                                            if ($documentVerification != true) { ?>
+                                                <div class="notification-box">
+                                                    Please complete document verification before proceeding with the interview. If you have already completed it, please refresh the page.
+                                                    <a href="tap_doc_approval.php?application_number=<?php echo $responseData['application_number']; ?>">Centralized Document Verification System</a>
+                                                </div>
+                                            <?php } ?>
+                                            <?php if ($documentVerification === true): ?>
+                                                <form id="applicationForm" action="#" method="POST">
+                                                    <fieldset <?php echo $isFormDisabled; ?>>
+                                                        <div class="container my-5">
+                                                            <div class="row g-3 align-items-center">
 
-                                                            <!-- Subject Knowledge -->
-                                                            <div class="col-md-6">
-                                                                <label for="documents" class="form-label">Documents
-                                                                    Checklist</label>
-                                                            </div>
-                                                            <?php
-                                                            // Check if 'documentsList' exists and is not null, then split it; otherwise, use an empty array
-                                                            $documentsListArray = isset($interviewDataResponse['documentsList']) && $interviewDataResponse['documentsList'] !== null
-                                                                ? explode(',', $interviewDataResponse['documentsList'])
-                                                                : [];
-                                                            ?>
-
-                                                            <div class="col-md-6">
-                                                                <label for="documents" class="form-label">Verified Documents</label>
-                                                                <select id="documents" name="documents[]" class="form-control"
-                                                                    multiple="multiple" required>
-                                                                    <option value="highschool_marksheet" <?php echo in_array('highschool_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Highschool Marksheet</option>
-                                                                    <option value="intermediate_marksheet" <?php echo in_array('intermediate_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Intermediate Marksheet</option>
-                                                                    <option value="graduation_marksheet" <?php echo in_array('graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Graduation Marksheet</option>
-                                                                    <option value="post_graduation_marksheet" <?php echo in_array('post_graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Post-Graduation Marksheet</option>
-                                                                    <option value="additional_training_course_certificate" <?php echo in_array('additional_training_course_certificate', $documentsListArray) ? 'selected' : ''; ?>>Additional
-                                                                        training or course Certificate</option>
-                                                                    <option value="previous_employment_info" <?php echo in_array('previous_employment_info', $documentsListArray) ? 'selected' : ''; ?>>Previous employment information</option>
-                                                                    <option value="pan_card" <?php echo in_array('pan_card', $documentsListArray) ? 'selected' : ''; ?>>PAN Card</option>
-                                                                    <option value="aadhar_card" <?php echo in_array('aadhar_card', $documentsListArray) ? 'selected' : ''; ?>>Aadhar Card
-                                                                    </option>
-                                                                </select>
-                                                            </div>
-
-                                                            <?php
-                                                            $fields = [
-                                                                'subjectKnowledge' => 'Subject Knowledge',
-                                                                'computerKnowledge' => 'Computer Knowledge',
-                                                                'demoClass' => 'Demo Class Performance'
-                                                            ];
-
-                                                            foreach ($fields as $field => $label) {
-                                                            ?>
+                                                                <!-- Subject Knowledge -->
                                                                 <div class="col-md-6">
-                                                                    <label for="<?php echo $field; ?>" class="form-label"><?php echo $label; ?></label>
+                                                                    <label for="documents" class="form-label">Documents
+                                                                        Checklist</label>
+                                                                </div>
+                                                                <?php
+                                                                // Check if 'documentsList' exists and is not null, then split it; otherwise, use an empty array
+                                                                $documentsListArray = isset($interviewDataResponse['documentsList']) && $interviewDataResponse['documentsList'] !== null
+                                                                    ? explode(',', $interviewDataResponse['documentsList'])
+                                                                    : [];
+                                                                ?>
+
+                                                                <div class="col-md-6">
+                                                                    <label for="documents" class="form-label">Verified Documents</label>
+                                                                    <select id="documents" name="documents[]" class="form-control"
+                                                                        multiple="multiple" required>
+                                                                        <option value="highschool_marksheet" <?php echo in_array('highschool_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Highschool Marksheet</option>
+                                                                        <option value="intermediate_marksheet" <?php echo in_array('intermediate_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Intermediate Marksheet</option>
+                                                                        <option value="graduation_marksheet" <?php echo in_array('graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Graduation Marksheet</option>
+                                                                        <option value="post_graduation_marksheet" <?php echo in_array('post_graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Post-Graduation Marksheet</option>
+                                                                        <option value="additional_training_course_certificate" <?php echo in_array('additional_training_course_certificate', $documentsListArray) ? 'selected' : ''; ?>>Additional
+                                                                            training or course Certificate</option>
+                                                                        <option value="previous_employment_info" <?php echo in_array('previous_employment_info', $documentsListArray) ? 'selected' : ''; ?>>Previous employment information</option>
+                                                                        <option value="pan_card" <?php echo in_array('pan_card', $documentsListArray) ? 'selected' : ''; ?>>PAN Card</option>
+                                                                        <option value="aadhar_card" <?php echo in_array('aadhar_card', $documentsListArray) ? 'selected' : ''; ?>>Aadhar Card
+                                                                        </option>
+                                                                    </select>
+                                                                </div>
+
+                                                                <?php
+                                                                $fields = [
+                                                                    'subjectKnowledge' => 'Subject Knowledge',
+                                                                    'computerKnowledge' => 'Computer Knowledge',
+                                                                    'demoClass' => 'Demo Class Performance'
+                                                                ];
+
+                                                                foreach ($fields as $field => $label) {
+                                                                ?>
+                                                                    <div class="col-md-6">
+                                                                        <label for="<?php echo $field; ?>" class="form-label"><?php echo $label; ?></label>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <input
+                                                                            type="number"
+                                                                            class="form-control"
+                                                                            name="<?php echo $field; ?>"
+                                                                            id="<?php echo $field; ?>"
+                                                                            min="1"
+                                                                            max="10"
+                                                                            placeholder="Enter marks (1-10)"
+                                                                            value="<?php echo isset($interviewDataResponse[$field]) ? htmlspecialchars($interviewDataResponse[$field]) : ''; ?>"
+                                                                            <?php echo isRequired($field, $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
+                                                                    </div>
+                                                                <?php
+                                                                }
+                                                                ?>
+
+                                                                <!-- Written Test Marks -->
+                                                                <div class="col-md-6">
+                                                                    <label for="writtenTest" class="form-label">Written Test Marks (RTET)</label>
                                                                 </div>
                                                                 <div class="col-md-6">
-                                                                    <input
-                                                                        type="number"
-                                                                        class="form-control"
-                                                                        name="<?php echo $field; ?>"
-                                                                        id="<?php echo $field; ?>"
-                                                                        min="1"
-                                                                        max="10"
-                                                                        placeholder="Enter marks (1-10)"
-                                                                        value="<?php echo isset($interviewDataResponse[$field]) ? htmlspecialchars($interviewDataResponse[$field]) : ''; ?>"
-                                                                        <?php echo isRequired($field, $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
+                                                                    <div class="input-group">
+                                                                        <input type="number" class="form-control" name="writtenTest" id="writtenTest" placeholder="Enter marks"
+                                                                            value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>"
+                                                                            <?php echo isRequired('writtenTest', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
+                                                                        <button type="button" id="fetchWrittenTest" class="btn btn-primary">Fetch</button>
+                                                                    </div>
                                                                 </div>
-                                                            <?php
-                                                            }
-                                                            ?>
 
-                                                            <!-- Written Test Marks -->
-                                                            <div class="col-md-6">
-                                                                <label for="writtenTest" class="form-label">Written Test Marks (RTET)</label>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="input-group">
-                                                                    <input type="number" class="form-control" name="writtenTest" id="writtenTest" placeholder="Enter marks"
-                                                                        value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>"
-                                                                        <?php echo isRequired('writtenTest', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
-                                                                    <button type="button" id="fetchWrittenTest" class="btn btn-primary">Fetch</button>
+                                                                <!-- Experience and Qualifications -->
+                                                                <div class="col-md-6">
+                                                                    <label for="experience" class="form-label">Experience and
+                                                                        Qualifications</label>
                                                                 </div>
-                                                            </div>
-
-                                                            <!-- Experience and Qualifications -->
-                                                            <div class="col-md-6">
-                                                                <label for="experience" class="form-label">Experience and
-                                                                    Qualifications</label>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <textarea class="form-control" name="experience" id="experience"
-                                                                    rows="3" placeholder="Enter details"
-                                                                    required><?php echo isset($interviewDataResponse['experience']) ? htmlspecialchars($interviewDataResponse['experience']) : ''; ?></textarea>
-                                                            </div>
-
-                                                            <!-- Remarks -->
-                                                            <div class="col-md-6">
-                                                                <label for="remarks" class="form-label">Remarks</label>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <textarea class="form-control" name="remarks" id="remarks" rows="3"
-                                                                    placeholder="Enter remarks"
-                                                                    required><?php echo isset($interviewDataResponse['remarks']) ? htmlspecialchars($interviewDataResponse['remarks']) : ''; ?></textarea>
-                                                            </div>
-
-                                                            <!-- Interviewer Panel Section -->
-                                                            <div class="row border p-3 rounded mt-5">
-
-                                                                <div class="col-md-12 mt-3">
-                                                                    <table class="table table-bordered" id="interviewer_table">
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th>Employee No.</th>
-                                                                                <th>Name</th>
-                                                                                <th>Designation</th>
-                                                                                <th>Action</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            <!-- Dynamic rows will be added here -->
-                                                                        </tbody>
-                                                                    </table>
+                                                                <div class="col-md-6">
+                                                                    <textarea class="form-control" name="experience" id="experience"
+                                                                        rows="3" placeholder="Enter details"
+                                                                        required><?php echo isset($interviewDataResponse['experience']) ? htmlspecialchars($interviewDataResponse['experience']) : ''; ?></textarea>
                                                                 </div>
-                                                                <div class="col-md-12 mb-3">
-                                                                    <div class="row">
-                                                                        <div class="col-md-4">
-                                                                            <input type="text" id="employee_no" class="form-control"
-                                                                                placeholder="Enter Employee ID for multiple Interviewers">
-                                                                        </div>
-                                                                        <div class="col-md-4">
-                                                                            <button type="button" id="add_interviewer"
-                                                                                class="btn btn-primary">Add Interviewer</button>
+
+                                                                <!-- Remarks -->
+                                                                <div class="col-md-6">
+                                                                    <label for="remarks" class="form-label">Remarks</label>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <textarea class="form-control" name="remarks" id="remarks" rows="3"
+                                                                        placeholder="Enter remarks"
+                                                                        required><?php echo isset($interviewDataResponse['remarks']) ? htmlspecialchars($interviewDataResponse['remarks']) : ''; ?></textarea>
+                                                                </div>
+
+                                                                <!-- Interviewer Panel Section -->
+                                                                <div class="row border p-3 rounded mt-5">
+
+                                                                    <div class="col-md-12 mt-3">
+                                                                        <table class="table table-bordered" id="interviewer_table">
+                                                                            <thead>
+                                                                                <tr>
+                                                                                    <th>Employee No.</th>
+                                                                                    <th>Name</th>
+                                                                                    <th>Designation</th>
+                                                                                    <th>Action</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                <!-- Dynamic rows will be added here -->
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                    <div class="col-md-12 mb-3">
+                                                                        <div class="row">
+                                                                            <div class="col-md-4">
+                                                                                <input type="text" id="employee_no" class="form-control"
+                                                                                    placeholder="Enter Employee ID for multiple Interviewers">
+                                                                            </div>
+                                                                            <div class="col-md-4">
+                                                                                <button type="button" id="add_interviewer"
+                                                                                    class="btn btn-primary">Add Interviewer</button>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                            <input type="hidden" id="interviewer_ids" name="interviewer_ids">
-                                                            <div class="row mt-3">
-                                                                <div class="col-md-12">
-                                                                    <label class="form-label">Interview Assessment filled by: </label>
-                                                                    <span class="fw-normal">
-                                                                        <?php
-                                                                        // Display name and ID in the format "Name (ID)"
-                                                                        echo $submittedByName . '&nbsp;(' . $submittedById . ')';
-                                                                        ?>
-                                                                    </span>
+                                                                <input type="hidden" id="interviewer_ids" name="interviewer_ids">
+                                                                <div class="row mt-3">
+                                                                    <div class="col-md-12">
+                                                                        <label class="form-label">Interview Assessment filled by: </label>
+                                                                        <span class="fw-normal">
+                                                                            <?php
+                                                                            // Display name and ID in the format "Name (ID)"
+                                                                            echo $submittedByName . '&nbsp;(' . $submittedById . ')';
+                                                                            ?>
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                            <div class="row mt-3">
-                                                                <div class="col-md-6">
-                                                                    <label for="interview_duration" class="form-label">Interview
-                                                                        Duration:</label>
-                                                                    <input type="number" name="interview_duration"
-                                                                        id="interview_duration" class="form-control"
-                                                                        placeholder="Minutes"
-                                                                        value="<?php echo isset($interviewDataResponse['interview_duration']) ? htmlspecialchars($interviewDataResponse['interview_duration']) : ''; ?>" required>
+                                                                <div class="row mt-3">
+                                                                    <div class="col-md-6">
+                                                                        <label for="interview_duration" class="form-label">Interview
+                                                                            Duration:</label>
+                                                                        <input type="number" name="interview_duration"
+                                                                            id="interview_duration" class="form-control"
+                                                                            placeholder="Minutes"
+                                                                            value="<?php echo isset($interviewDataResponse['interview_duration']) ? htmlspecialchars($interviewDataResponse['interview_duration']) : ''; ?>" required>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
 
-                                                            <div class="mb-3 form-check">
-                                                                <input type="checkbox" class="form-check-input" id="declaration" name="declaration"
-                                                                    <?php
-                                                                    // Check if $interviewDataResponse is not null and contains the 'declaration' key before accessing it
-                                                                    echo (isset($interviewDataResponse['declaration']) && $interviewDataResponse['declaration'] == true) ? 'checked' : '';
-                                                                    ?>
-                                                                    required>
-                                                                <label class="form-check-label" for="declaration">
-                                                                    I accept that I have read the terms of agreement and agree to abide by the terms and conditions mentioned therein.
-                                                                </label>
+                                                                <div class="mb-3 form-check">
+                                                                    <input type="checkbox" class="form-check-input" id="declaration" name="declaration"
+                                                                        <?php
+                                                                        // Check if $interviewDataResponse is not null and contains the 'declaration' key before accessing it
+                                                                        echo (isset($interviewDataResponse['declaration']) && $interviewDataResponse['declaration'] == true) ? 'checked' : '';
+                                                                        ?>
+                                                                        required>
+                                                                    <label class="form-check-label" for="declaration">
+                                                                        I accept that I have read the terms of agreement and agree to abide by the terms and conditions mentioned therein.
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Submit Button -->
+                                                            <div class="text-center mt-4">
+                                                                <button type="submit" id="submit_form" class="btn btn-primary">Submit</button>
                                                             </div>
                                                         </div>
-                                                        <!-- Submit Button -->
-                                                        <div class="text-center mt-4">
-                                                            <button type="submit" id="submit_form" class="btn btn-primary">Submit</button>
-                                                        </div>
-                                                    </div>
-                                                </fieldset>
-                                            </form>
+                                                    </fieldset>
+                                                </form>
+                                            <?php endif; ?>
                                         </div>
                                 <?php }
                                 } else {
