@@ -29,9 +29,6 @@ if ($memberResult && pg_num_rows($memberResult) > 0) {
 
 
 if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
-    // Sanitize and validate user inputs
-
-    // Define uploaded files
     $uploadedFiles = [
         'highschool' => $_FILES['highschool'] ?? null,
         'intermediate' => $_FILES['intermediate'] ?? null,
@@ -40,44 +37,69 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
         'additional_certificate' => $_FILES['additional_certificate'] ?? null,
         'pan_card' => $_FILES['pan_card'] ?? null,
         'aadhar_card' => $_FILES['aadhar_card'] ?? null,
-        // 'offer_letter' => $_FILES['offer_letter'] ?? null,
         'previous_employment_information' => $_FILES['previous_employment_information'] ?? null,
         'additional_doc' => $_FILES['additional_doc'] ?? null,
     ];
 
-    // Get other form data
-    $uploadedfor = !empty($id) ? $id : $application_number ?? '';
-    $uploadedby = $application_number ?? ''; // Make sure you have the $application_number variable defined somewhere
+    $uploadedfor = $application_number ?? '';
+    $uploadedby = $application_number ?? '';
     $now = date('Y-m-d H:i:s');
     $transaction_id = time();
 
-    // Insert uploaded files into archive table
+    $alreadyVerified = [];
+    $successfullyUploaded = [];
+
     foreach ($uploadedFiles as $inputName => $uploadedFile) {
         if (!empty($uploadedFile['name'])) {
+            // Check if the file has already been verified
+            $checkQuery = "SELECT verification_status FROM archive WHERE file_name = $1 AND uploaded_for = $2 ORDER BY uploaded_on DESC LIMIT 1";
+            $checkResult = pg_query_params($con, $checkQuery, [$inputName, $uploadedfor]);
+
+            if ($checkResult && pg_num_rows($checkResult) > 0) {
+                $statusRow = pg_fetch_assoc($checkResult);
+                if ($statusRow['verification_status'] === 'Verified') {
+                    $alreadyVerified[] = $inputName;
+                    continue;
+                }
+            }
+
+            // Proceed to upload the file if not verified
             $filename = $uploadedfor . "_" . $inputName . "_" . time();
             $parent = '1PLipvcQ5qtyEHvmH9cRVM6usy2wuwDwq';
             $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
 
             if ($doclink !== null) {
-                // Determine the certificate name based on the input name
-                if ($inputName === 'additional_certificate') {
-                    $certificateName = $_POST['additional_certificate_name'] ?? null;
-                } elseif ($inputName === 'additional_doc') {
-                    $certificateName = $_POST['additional_doc_name'] ?? null;
-                } else {
-                    $certificateName = null;
-                }
+                $insertQuery = "INSERT INTO archive (file_name, file_path, uploaded_for, uploaded_by, uploaded_on, transaction_id)
+                                VALUES ($1, $2, $3, $4, $5, $6)";
+                $result = pg_query_params($con, $insertQuery, [$inputName, $doclink, $uploadedfor, $uploadedby, $now, $transaction_id]);
 
-                $insertQuery = "INSERT INTO archive (file_name, file_path, uploaded_for, uploaded_by, uploaded_on, transaction_id, certificate_name)
-                                VALUES ($1, $2, $3, $4, $5, $6, $7)";
-                $result = pg_query_params($con, $insertQuery, array($inputName, $doclink, $uploadedfor, $uploadedby, $now, $transaction_id, $certificateName));
-                $cmdtuples = pg_affected_rows($result);
-                if (!$result) {
-                    // Handle insert error
+                if ($result && pg_affected_rows($result) > 0) {
+                    $successfullyUploaded[] = $inputName;
                 }
             }
         }
     }
+
+    // Prepare a combined alert message
+    $message = '';
+    if (!empty($alreadyVerified)) {
+        $message .= "The following files are already verified and cannot be re-submitted: " . implode(", ", $alreadyVerified) . ". ";
+    }
+    if (!empty($successfullyUploaded)) {
+        $message .= "The following files have been uploaded successfully: " . implode(", ", $successfullyUploaded) . ".";
+    }
+    if (empty($message)) {
+        $message = "No files were uploaded.";
+    }
+
+    // Output the JavaScript alert and redirection with form clearing logic
+    echo '<script>
+        alert("' . $message . '");
+        // Clear form fields after submission and prevent resubmission on back navigation
+        window.history.replaceState(null, null, window.location.href);
+        window.location.href = "document_verification.php";
+    </script>';
+    exit;
 }
 
 // Map file names to their corresponding actual names
@@ -269,48 +291,6 @@ function generateRequiredAttribute($field)
 
                         <div class="card-body">
                             <br>
-                            <!-- <?php if ($role == 'Admin') : ?>
-                                <form action="" method="GET">
-                                    <div class="form-group" style="display: inline-block;">
-                                        <div class="col2" style="display: inline-block;">
-                                            <input name="get_aid" class="form-control" style="width:max-content; display:inline-block" placeholder="Associate number" value="<?= $id ?>">
-                                        </div>
-                                    </div>
-                                    <div class="col2 left" style="display: inline-block;">
-                                        <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                            <i class="bi bi-search"></i>&nbsp;Search
-                                        </button>
-                                    </div>
-                                </form>
-                                <br>
-                                <div class="row align-items-center">
-                                    <div class="col-6">
-                                        <?php if ($uploadedfor !== null) : ?>
-                                            You are viewing data for
-                                            <span class="blink-text"><?= $datafor ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            <?php endif; ?> -->
-
-                            <?php if (@$transaction_id != null && @$cmdtuples == 0) { ?>
-                                <div class="alert alert-danger alert-dismissible text-center" role="alert">
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                    <span>ERROR: Oops, something wasn't right.</span>
-                                </div>
-                            <?php } else if (@$cmdtuples == 1) { ?>
-                                <div class="alert alert-success alert-dismissible text-center" role="alert">
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-check2-circle" style="font-size: medium;"></i>
-                                    <span>Transaction id <?php echo @$transaction_id ?> has been submitted.</span>
-                                </div>
-                                <script>
-                                    if (window.history.replaceState) {
-                                        window.history.replaceState(null, null, window.location.href);
-                                    }
-                                </script>
-                            <?php } ?>
                             <div class="container">
                                 <form action="#" method="post" enctype="multipart/form-data" id="archive">
                                     <fieldset <?php echo $isFormDisabled; ?>>

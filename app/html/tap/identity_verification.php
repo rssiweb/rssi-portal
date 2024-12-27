@@ -36,6 +36,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
     $uploadedFile_identifier = $_FILES['supportingDocument'];
     $application_status = 'Identity verification document submitted';
 
+    // Check current identity verification status
+    $status_query = "SELECT identity_verification FROM signup WHERE application_number = '$application_number'";
+    $status_result = pg_query($con, $status_query);
+
+    if ($status_result && pg_num_rows($status_result) > 0) {
+        $status_row = pg_fetch_assoc($status_result);
+        if ($status_row['identity_verification'] === 'Approved') {
+            // Show a message to the user and stop form processing
+            echo '<script>
+                    alert("Identity verification is already approved. You cannot submit the form again.");
+                    window.location.href = "identity_verification.php";  // Redirect back to the form
+                  </script>';
+            exit; // Prevent further processing
+        }
+    } else {
+        // Handle the case where the application number doesn't exist
+        echo '<script>
+                alert("Error: Invalid application number.");
+                window.location.href = "identity_verification.php";
+              </script>';
+        exit; // Prevent further processing
+    }
+
+    // Handle file upload
     if (empty($_FILES['supportingDocument']['name'])) {
         $doclink_identifier = null;
     } else {
@@ -57,25 +81,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
         $result = pg_query($con, $update_query);
         $cmdtuples = pg_affected_rows($result);
     }
+
+    // Send email if update was successful
     if ($cmdtuples == 1) {
-        // Adjust the parameters for your sendEmail function accordingly
         sendEmail("tap_identity_document_submitted", array(
             "application_number" => $application_number,
             "applicant_name" => $applicant_name,
         ), 'info@rssi.in');
     }
-}
 
-// If update was successful or failed, show an alert
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // If update was successful or failed, show an alert
     if ($cmdtuples == 1) {
-        // Success: Profile was updated
         echo '<script>
                 alert("Verification record has been submitted successfully!");
-                window.location.href = "identity_verification.php";  // Reload the page
+                window.location.href = "identity_verification.php";
               </script>';
     } else {
-        // Failure: Record was not updated
         echo '<script>
                 alert("Error: We encountered an error while updating the record. Please try again.");
               </script>';
