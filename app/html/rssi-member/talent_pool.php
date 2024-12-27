@@ -11,10 +11,10 @@ if (!isLoggedIn("aid")) {
 
 validation();
 // Fetch POST values or set default dates
-$filter_application_number = isset($_GET['filter_application_number']) ? trim($_GET['filter_application_number']) : '';
-$filter_status = isset($_GET['status']) ? $_GET['status'] : [];
-$filter_from_date = isset($_GET['from_date']) ? $_GET['from_date'] : date('Y-m-d', strtotime('-1 month')); // Default: 1 month past date
-$filter_to_date = isset($_GET['to_date']) ? $_GET['to_date'] : date('Y-m-d'); // Default: Today's date
+$filter_application_number = isset($_POST['filter_application_number']) ? trim($_POST['filter_application_number']) : '';
+$filter_status = isset($_POST['status']) ? $_POST['status'] : [];
+$filter_from_date = isset($_POST['from_date']) ? $_POST['from_date'] : date('Y-m-d', strtotime('-1 month')); // Default: 1 month past date
+$filter_to_date = isset($_POST['to_date']) ? $_POST['to_date'] : date('Y-m-d'); // Default: Today's date
 
 // Start building the query
 $query = "SELECT *, 
@@ -199,7 +199,7 @@ $resultArr = pg_fetch_all($result);
                         <div class="card-body">
                             <br>
                             <div class="container">
-                                <form method="GET" class="filter-form d-flex flex-wrap" style="gap: 10px;">
+                                <form method="POST" class="filter-form d-flex flex-wrap" style="gap: 10px;">
                                     <div class="form-group">
                                         <input type="text" id="filter_application_number" name="filter_application_number" class="form-control" placeholder="Application Number" value="<?php echo htmlspecialchars($filter_application_number); ?>" style="max-width: 200px;">
                                     </div>
@@ -433,7 +433,7 @@ $resultArr = pg_fetch_all($result);
                                                             $previousSendDisplayed = true;
                                                         }
                                                         // Check if the "Interview Reminder" link should be displayed
-                                                        elseif ($status == "Interview Reminder" && !empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today) {
+                                                        elseif ($status == "Interview Reminder" && !empty($array['tech_interview_schedule']) && date('Y-m-d', strtotime($array['tech_interview_schedule'])) == $today && empty($array['no_show'])) {
                                                             // Add space if the previous link was "Send"
                                                             if ($previousSendDisplayed) {
                                                                 echo ' '; // Add a space between links
