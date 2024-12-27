@@ -640,18 +640,15 @@ if (!empty($interviewData['submitted_by'])) {
 
                                                                 <div class="col-md-6">
                                                                     <label for="documents" class="form-label">Verified Documents</label>
-                                                                    <select id="documents" name="documents[]" class="form-control"
-                                                                        multiple="multiple" required>
-                                                                        <option value="highschool_marksheet" <?php echo in_array('highschool_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Highschool Marksheet</option>
-                                                                        <option value="intermediate_marksheet" <?php echo in_array('intermediate_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Intermediate Marksheet</option>
-                                                                        <option value="graduation_marksheet" <?php echo in_array('graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Graduation Marksheet</option>
-                                                                        <option value="post_graduation_marksheet" <?php echo in_array('post_graduation_marksheet', $documentsListArray) ? 'selected' : ''; ?>>Post-Graduation Marksheet</option>
-                                                                        <option value="additional_training_course_certificate" <?php echo in_array('additional_training_course_certificate', $documentsListArray) ? 'selected' : ''; ?>>Additional
-                                                                            training or course Certificate</option>
-                                                                        <option value="previous_employment_info" <?php echo in_array('previous_employment_info', $documentsListArray) ? 'selected' : ''; ?>>Previous employment information</option>
-                                                                        <option value="pan_card" <?php echo in_array('pan_card', $documentsListArray) ? 'selected' : ''; ?>>PAN Card</option>
-                                                                        <option value="aadhar_card" <?php echo in_array('aadhar_card', $documentsListArray) ? 'selected' : ''; ?>>Aadhar Card
-                                                                        </option>
+                                                                    <select id="documents" name="documents[]" class="form-control" multiple="multiple" required>
+                                                                        <option value="highschool" <?php echo (isset($uploadedFiles['highschool']) && $uploadedFiles['highschool'] === 'Verified') ? 'selected' : ''; ?>>Highschool Marksheet</option>
+                                                                        <option value="intermediate" <?php echo (isset($uploadedFiles['intermediate']) && $uploadedFiles['intermediate'] === 'Verified') ? 'selected' : ''; ?>>Intermediate Marksheet</option>
+                                                                        <option value="graduation" <?php echo (isset($uploadedFiles['graduation']) && $uploadedFiles['graduation'] === 'Verified') ? 'selected' : ''; ?>>Graduation Marksheet</option>
+                                                                        <option value="post_graduation" <?php echo (isset($uploadedFiles['post_graduation']) && $uploadedFiles['post_graduation'] === 'Verified') ? 'selected' : ''; ?>>Post-Graduation Marksheet</option>
+                                                                        <option value="additional_certificate" <?php echo (isset($uploadedFiles['additional_certificate']) && $uploadedFiles['additional_certificate'] === 'Verified') ? 'selected' : ''; ?>>Additional training or course Certificate</option>
+                                                                        <option value="previous_employment_information" <?php echo (isset($uploadedFiles['previous_employment_information']) && $uploadedFiles['previous_employment_information'] === 'Verified') ? 'selected' : ''; ?>>Previous employment information</option>
+                                                                        <option value="pan_card" <?php echo (isset($uploadedFiles['pan_card']) && $uploadedFiles['pan_card'] === 'Verified') ? 'selected' : ''; ?>>PAN Card</option>
+                                                                        <option value="aadhar_card" <?php echo (isset($uploadedFiles['aadhar_card']) && $uploadedFiles['aadhar_card'] === 'Verified') ? 'selected' : ''; ?>>Aadhar Card</option>
                                                                     </select>
                                                                 </div>
 
