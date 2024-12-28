@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
 include("../../util/email.php");
 include("../../util/drive.php");
@@ -13,142 +12,193 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-if (date('m') == 1 || date('m') == 2 || date('m') == 3) { //Upto March
-    $academic_year = (date('Y') - 1) . '-' . date('Y');
-} else { //After MARCH
-    $academic_year = date('Y') . '-' . (date('Y') + 1);
-}
+// Determine the current academic year
+$academic_year = (date('m') <= 3)
+    ? (date('Y') - 1) . '-' . date('Y')
+    : date('Y') . '-' . (date('Y') + 1);
 
-@$now = date('Y-m-d H:i:s');
-@$currentAcademicYear = $academic_year;
+$now = date('Y-m-d H:i:s');
+$currentAcademicYear = $academic_year;
+$lyear = $_POST['adj_academicyear'] ?? $currentAcademicYear;
 
-@$lyear = $_POST['adj_academicyear'] ?? $currentAcademicYear;
+// Fetch leave balances
+$totalsl = pg_query($con, "SELECT COALESCE(SUM(days), 0) 
+                           FROM leavedb_leavedb 
+                           WHERE applicantid='$associatenumber' 
+                             AND typeofleave='Sick Leave' 
+                             AND lyear='$lyear' 
+                             AND (status='Approved' OR status IS NULL)");
+$totalcl = pg_query($con, "SELECT COALESCE(SUM(days), 0) 
+                           FROM leavedb_leavedb 
+                           WHERE applicantid='$associatenumber' 
+                             AND typeofleave='Casual Leave' 
+                             AND lyear='$lyear' 
+                             AND (status='Approved' OR status IS NULL)");
+$cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day), 0) 
+                         FROM leaveadjustment 
+                         WHERE adj_applicantid='$associatenumber' 
+                           AND adj_leavetype='Casual Leave' 
+                           AND adj_academicyear='$lyear'");
+$sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day), 0) 
+                         FROM leaveadjustment 
+                         WHERE adj_applicantid='$associatenumber' 
+                           AND adj_leavetype='Sick Leave' 
+                           AND adj_academicyear='$lyear'");
+$allocl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount), 0) 
+                          FROM leaveallocation 
+                          WHERE allo_applicantid='$associatenumber' 
+                            AND allo_leavetype='Casual Leave' 
+                            AND allo_academicyear='$lyear'");
+$allosl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount), 0) 
+                          FROM leaveallocation 
+                          WHERE allo_applicantid='$associatenumber' 
+                            AND allo_leavetype='Sick Leave' 
+                            AND allo_academicyear='$lyear'");
 
-$totalsl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved' OR status is null)");
-$totalcl = pg_query($con, "SELECT COALESCE(SUM(days),0) FROM leavedb_leavedb WHERE applicantid='$associatenumber' AND typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved' OR status is null)");
-$cladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber' AND adj_leavetype='Casual Leave' AND adj_academicyear='$lyear'");
-$sladj = pg_query($con, "SELECT COALESCE(SUM(adj_day),0) FROM leaveadjustment WHERE adj_applicantid='$associatenumber'AND adj_leavetype='Sick Leave' AND adj_academicyear='$lyear'");
-
-$allocl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$associatenumber' AND allo_leavetype='Casual Leave' AND allo_academicyear='$lyear'");
-$allosl = pg_query($con, "SELECT COALESCE(SUM(allo_daycount),0) FROM leaveallocation WHERE allo_applicantid='$associatenumber' AND allo_leavetype='Sick Leave' AND allo_academicyear='$lyear'");
-
+// Calculate balances
 $resultArrsl = pg_fetch_result($totalsl, 0, 0);
 $resultArrcl = pg_fetch_result($totalcl, 0, 0);
-@$resultArr_cladj = pg_fetch_result($cladj, 0, 0);
-@$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
-@$resultArrrcl = pg_fetch_result($allocl, 0, 0);
-@$resultArrrsl = pg_fetch_result($allosl, 0, 0);
+$resultArr_cladj = pg_fetch_result($cladj, 0, 0);
+$resultArr_sladj = pg_fetch_result($sladj, 0, 0);
+$resultArrrcl = pg_fetch_result($allocl, 0, 0);
+$resultArrrsl = pg_fetch_result($allosl, 0, 0);
 
-@$slbalance = ($resultArrrsl + $resultArr_sladj) - $resultArrsl;
-@$clbalance = ($resultArrrcl + $resultArr_cladj) - $resultArrcl;
+$slbalance = ($resultArrrsl + $resultArr_sladj) - $resultArrsl;
+$clbalance = ($resultArrrcl + $resultArr_cladj) - $resultArrcl;
 
-if (@$_POST['form-type'] == "leaveapply") {
-    @$leaveid = 'RSL' . time();
-    @$applicantid = $associatenumber;
-    @$fromdate = $_POST['fromdate'];
-    @$todate = $_POST['todate'];
-    //echo json_encode($_FILES);
-    @$uploadedFile = $_FILES['medicalcertificate'];
-    @$typeofleave = $_POST['typeofleave'];
-    @$creason = $_POST['creason'];
-    @$comment = $_POST['comment'];
-    @$appliedby = $_POST['appliedby'];
-    @$shift = $_POST['shift'];
-    @$applicantcomment = htmlspecialchars($_POST['applicantcomment'], ENT_QUOTES, 'UTF-8');
-    @$ack = $_POST['ack'] ?? 0;
-    @$halfday = $_POST['is_userh'] ?? 0;
-    @$email = $email;
+// Handle leave application
+if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
+    $leaveid = 'RSL' . time();
+    $applicantid = $associatenumber;
+    $fromdate = $_POST['fromdate'];
+    $todate = $_POST['todate'];
+    $uploadedFile = $_FILES['medicalcertificate'];
+    $typeofleave = $_POST['typeofleave'];
+    $creason = $_POST['creason'];
+    $appliedby = $_POST['appliedby'];
+    $shift = $_POST['shift'];
+    $applicantcomment = htmlspecialchars($_POST['applicantcomment'], ENT_QUOTES, 'UTF-8');
+    $ack = $_POST['ack'] ?? 0;
+    $halfday = $_POST['is_userh'] ?? 0;
 
-    // send $file to google =======> google (rssi.in) // robotic service account credential.json
+    // Check for half-day leave overlap
+    if ($halfday == 1) {
+        $query = "SELECT typeofleave 
+                  FROM leavedb_leavedb 
+                  WHERE applicantid='$applicantid' 
+                    AND fromdate='$fromdate' 
+                    AND halfday=1";
+        $result = pg_query($con, $query);
+        $existingLeave = pg_fetch_assoc($result);
 
-    if ($leaveid != "") {
-        if ($halfday == 1) {
-            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1) / 2;
+        if ($existingLeave) {
+            $existingType = $existingLeave['typeofleave'];
+
+            // Restrict mixing SL and CL but allow LWP
+            if (
+                in_array($existingType, ['Sick Leave', 'Casual Leave']) &&
+                in_array($typeofleave, ['Sick Leave', 'Casual Leave']) &&
+                $existingType !== $typeofleave
+            ) {
+                echo "<script>
+                        alert('You have already applied for a half-day {$existingType} leave on this date. Mixing Sick Leave and Casual Leave is not allowed. Please apply for the same type of leave or use Leave Without Pay.');
+                        window.history.back();
+                      </script>";
+                exit;
+            }
+        }
+    }
+
+    // Calculate leave days
+    $day = ($halfday == 1) ?
+        round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2 :
+        round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1);
+
+    // Validate leave balance and process application
+    if (($slbalance >= $day && $typeofleave === "Sick Leave") ||
+        ($clbalance >= $day && $typeofleave === "Casual Leave") ||
+        $typeofleave === "Leave Without Pay"
+    ) {
+
+        $doclink = !empty($uploadedFile['name'])
+            ? uploadeToDrive($uploadedFile, '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0', "doc_{$leaveid}_{$applicantid}_" . time())
+            : null;
+
+        $leaveQuery = "INSERT INTO leavedb_leavedb 
+                       (timestamp, leaveid, applicantid, fromdate, todate, typeofleave, creason, appliedby, lyear, applicantcomment, days, halfday, doc, ack, shift) 
+                       VALUES ('$now', '$leaveid', '$applicantid', '$fromdate', '$todate', '$typeofleave', '$creason', '$appliedby', '$currentAcademicYear', '$applicantcomment', '$day', $halfday, '$doclink', '$ack', '$shift')";
+
+        // Execute the query
+        $queryResult = pg_query($con, $leaveQuery);
+
+        // Check if the query was successful
+        if ($queryResult) {
+            // Send email notification if the query is successful
+            if (!empty($email)) {
+                sendEmail("leaveapply", [
+                    "leaveid" => $leaveid,
+                    "applicantid" => $applicantid,
+                    "applicantname" => $fullname,
+                    "fromdate" => date("d/m/Y", strtotime($fromdate)),
+                    "todate" => date("d/m/Y", strtotime($todate)),
+                    "typeofleave" => $typeofleave,
+                    "category" => $creason,
+                    "day" => $day,
+                    "now" => date("d/m/Y g:i a", strtotime($now)),
+                ], $email);
+            }
+
+            // Update balance
+            if ($typeofleave === "Sick Leave") {
+                $slbalance -= $day;
+            } elseif ($typeofleave === "Casual Leave") {
+                $clbalance -= $day;
+            }
+
+            // Show success message
+            echo "<script>
+                    alert('Your request has been submitted. Leave id {$leaveid}.');
+                    if (window.history.replaceState) {
+                        // Update the URL without causing a page reload or resubmission
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                    window.location.reload(); // Trigger a page reload to reflect changes
+                </script>";
         } else {
-            @$day = round((strtotime($_POST['todate']) - strtotime($_POST['fromdate'])) / (60 * 60 * 24) + 1);
+            // Handle query failure (optional)
+            echo "<script>
+                    alert('ERROR: Failed to submit leave request.');
+                    window.history.back();
+                  </script>";
         }
-    }
-    if (($slbalance >= $day && $typeofleave == "Sick Leave") || ($clbalance >= $day && $typeofleave == "Casual Leave")) {
-
-        // send uploaded file to drive
-        // get the drive link
-        if (empty($_FILES['medicalcertificate']['name'])) {
-            $doclink = null;
-        } else {
-            $filename = "doc_" . $leaveid . "_" . $applicantid . "_" . time();
-            $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
-            $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
+    } else {
+        // Show error message if leave balance is insufficient
+        if ($slbalance < $day && $typeofleave === "Sick Leave") {
+            echo "<script>
+                    alert('ERROR: Your SL request has not been submitted because you have applied for more than the leave balance.');
+                    window.history.back();
+                  </script>";
+        } elseif ($clbalance < $day && $typeofleave === "Casual Leave") {
+            echo "<script>
+                    alert('ERROR: Your CL request has not been submitted because you have applied for more than the leave balance.');
+                    window.history.back();
+                  </script>";
         }
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc,ack,shift) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink','$ack','$shift')";
-
-        $result = pg_query($con, $leave);
-        $cmdtuples = pg_affected_rows($result);
-
-        if ($typeofleave == "Sick Leave") {
-            @$slbalance = $slbalance - $day;
-        } else if ($typeofleave == "Casual Leave") {
-            @$clbalance = $clbalance - $day;
-        }
-    }
-    if ($typeofleave == "Leave Without Pay") {
-
-        // send uploaded file to drive
-        // get the drive link
-        if (empty($_FILES['medicalcertificate']['name'])) {
-            $doclink = null;
-        } else {
-            $filename = "doc_" . $leaveid . "_" . $applicantid . "_" . time();
-            $parent = '1zbevlcQJg2sZcldp23ix1uGqy5cy5Un-Sy8x8cwz0L15GRhSSdFy0k7HjMjraVwefgB6TfL0';
-            $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
-        }
-        $leave = "INSERT INTO leavedb_leavedb (timestamp,leaveid,applicantid,fromdate,todate,typeofleave,creason,comment,appliedby,lyear,applicantcomment,days,halfday,doc,ack,shift) VALUES ('$now','$leaveid','$applicantid','$fromdate','$todate','$typeofleave','$creason','$comment','$appliedby','$currentAcademicYear','$applicantcomment','$day',$halfday,'$doclink','$ack','$shift')";
-
-        $result = pg_query($con, $leave);
-        $cmdtuples = pg_affected_rows($result);
-
-        if ($typeofleave == "Sick Leave") {
-            @$slbalance = $slbalance - $day;
-        } else if ($typeofleave == "Casual Leave") {
-            @$clbalance = $clbalance - $day;
-        }
-    }
-    $emaildaycount = "undefined";
-    if (@$cmdtuples == 1 && $halfday != 1) {
-
-        $emaildaycount = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1);
-    }
-    if (@$cmdtuples == 1 && $halfday == 1) {
-
-        $emaildaycount = round((strtotime($todate) - strtotime($fromdate)) / (60 * 60 * 24) + 1) / 2;
-    }
-
-    if (@$cmdtuples == 1 && $email != "") {
-        sendEmail("leaveapply", array(
-            "leaveid" => $leaveid,
-            "applicantid" => $applicantid,
-            "applicantname" => @$fullname,
-            "fromdate" => @date("d/m/Y", strtotime($fromdate)),
-            "todate" => @date("d/m/Y", strtotime($todate)),
-            "typeofleave" => $typeofleave,
-            "category" => $creason,
-            "day" => $emaildaycount,
-            "now" => @date("d/m/Y g:i a", strtotime($now))
-        ), $email);
     }
 }
-
-
-@$status = $_POST['get_status'];
-
-if (($lyear > 0 && $lyear != 'ALL') && ($status == null || $status == 'ALL')) {
-    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb WHERE applicantid='$associatenumber' AND lyear='$lyear' order by timestamp desc");
-} else if (($status > 0 && $status != 'ALL') && ($lyear == null || $lyear == 'ALL')) {
-    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb WHERE applicantid='$associatenumber' AND status='$status' order by timestamp desc");
-} else if (($status > 0 && $status != 'ALL') && ($lyear > 0 || $lyear != 'ALL')) {
-    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb WHERE applicantid='$associatenumber' AND status='$status' AND lyear='$lyear' order by timestamp desc");
-} else {
-    $result = pg_query($con, "select *, REPLACE (doc, 'view', 'preview') docp from leavedb_leavedb WHERE applicantid='$associatenumber' order by timestamp desc");
-}
+// Fetch leave history
+$status = $_POST['get_status'] ?? 'ALL';
+$queryConditions = [
+    ($lyear !== 'ALL') ? "lyear = '$lyear'" : null,
+    ($status !== 'ALL') ? "status = '$status'" : null,
+    "applicantid = '$associatenumber'",
+];
+$whereClause = implode(" AND ", array_filter($queryConditions));
+$historyQuery = "SELECT *, REPLACE(doc, 'view', 'preview') docp 
+                 FROM leavedb_leavedb 
+                 WHERE $whereClause 
+                 ORDER BY timestamp DESC";
+$result = pg_query($con, $historyQuery);
 
 if (!$result) {
     echo "An error occurred.\n";
@@ -157,6 +207,7 @@ if (!$result) {
 
 $resultArr = pg_fetch_all($result);
 ?>
+
 
 <!doctype html>
 <html lang="en">
@@ -237,428 +288,384 @@ $resultArr = pg_fetch_all($result);
                     <div class="card">
 
                         <div class="card-body">
-                            <br>
-                            <div class="row">
-                                <?php if (@$leaveid != null && @$cmdtuples == 0 && @$typeofleave == "Sick Leave") { ?>
-                                    <div class="alert alert-danger alert-dismissible text-center" role="alert">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-x-lg"></i>
-                                        <span>ERROR: Your SL request has not been submitted because you have applied for more than the leave balance.</span>
+                            <div class="container">
+
+                                <br>
+                                <div class="row">
+                                    <!-- Warning message for leave eligibility -->
+                                    <span id="leaveWarning" style="color: red;"></span>
+                                    <div class="text-end">
+                                        <span class="link-secondary"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span>
+                                        <span class="separator"> | </span>
+                                        <span class="link-secondary"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
                                     </div>
-                                <?php } else if (@$leaveid != null && @$cmdtuples == 0 && @$typeofleave == "Casual Leave") { ?>
-                                    <div class="alert alert-danger alert-dismissible text-center" role="alert">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-x-lg"></i>
-                                        <span>ERROR: Your CL request has not been submitted because you have applied for more than the leave balance.</span>
-                                    </div>
-                                <?php } else if (@$cmdtuples == 1) { ?>
-                                    <div class="alert alert-success alert-dismissible text-center" role="alert">
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        <i class="bi bi-check2-circle"></i>
-                                        <span>Your request has been submitted. Leave id <?php echo $leaveid ?>.</span>
-                                    </div>
-                                    <script>
-                                        if (window.history.replaceState) {
-                                            window.history.replaceState(null, null, window.location.href);
-                                        }
-                                    </script>
-                                <?php } ?>
-
-                                <?php
-                                if (($clbalance == 0 || @$clbalance < 0) && ($slbalance == 0 || $slbalance < 0) && $filterstatus == 'Active' && $lyear != null) {
-                                ?>
-                                    <div class="alert alert-danger text-center" role="alert">
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                        <span>Inadequate SL and CL balance. You are not eligible to take leave.
-                                            Please take a makeup class to enable the apply leave option.</span>
-                                    </div>
-                                <?php } else if ((@$clbalance == 0 || @$clbalance < 0) && $filterstatus == 'Active' && $lyear != null) { ?>
-                                    <div class="alert alert-warning text-center" role="alert">
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                        <span>Insufficient CL balance. You are not eligible for casual leave.
-                                            Please take a makeup class to increase CL balance.</span>
-                                    </div>
-                                <?php } else if ((@$slbalance == 0 || @$slbalance < 0) && $filterstatus == 'Active' && $lyear != null) { ?>
-                                    <div class="alert alert-warning text-center" role="alert">
-                                        <i class="bi bi-exclamation-triangle"></i>
-                                        <span>Insufficient SL balance. You are not eligible for sick leave.
-                                            Please take a makeup class to increase SL balance.</span>
-                                    </div>
-                                <?php } ?>
-                                <!-- Warning message for leave eligibility -->
-                                <span id="leaveWarning" style="color: red;"></span>
-                                <div class="text-end">
-                                    <span class="link-secondary"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span>
-                                    <span class="separator"> | </span>
-                                    <span class="link-secondary"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
-                                </div>
 
 
-                                <form autocomplete="off" name="academicyear" id="academicyear" action="leave.php" method="POST">
-                                    <div class="text-start">
-                                        Academic year:
-                                        <select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-select" style="width: 20vh;" required>
-                                            <?php if ($lyear != null) { ?>
-                                                <option hidden selected><?php echo $lyear ?></option>
-                                            <?php } ?>
-                                        </select>
-                                    </div>
-                                </form>
-
-                            </div><br>
-
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Apply Leave</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-
-                                        <td style="line-height: 2;">
-                                            Sick Leave - <?php echo $slbalance ?>
-                                            <br>Casual Leave - <?php echo $clbalance ?>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave.php" method="POST" enctype="multipart/form-data">
-                                <fieldset <?php echo ($filterstatus != 'Active') ? 'disabled' : ''; ?>>
-                                    <div class="form-group" style="display: inline-block;">
-
-                                        <input type="hidden" name="form-type" value="leaveapply">
-
-                                        <span class="input-help">
-                                            <input type="date" class="form-control" name="fromdate" id="fromdate" max="" onchange="cal(); checkLeaveType();" required>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">From<span style="color:red">*</span></small>
-                                        </span>
-                                        <span class="input-help">
-                                            <input type="date" class="form-control" name="todate" id="todate" min="" onchange="cal(); checkLeaveType();" required>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">To<span style="color:red">*</span></small>
-                                        </span>
-                                        <div id="filter-checksh">
-                                            <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal(); toggleShiftField()" disabled />
-                                            <label for="is_userh" style="font-weight: 400;">Half day</label>
-                                        </div>
-                                        <span class="input-help">
-                                            <input type="text" class="form-control" name="numdays2" id="numdays2" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" size="10" readonly>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">Days count</small>
-                                        </span>
-                                        <?php if ($job_type != 'Full-time') { ?>
-                                            <span id="shiftField" class="input-help" style="display: none;">
-                                                <select name="shift" id="shift" class="form-select">
-                                                    <option disabled selected hidden value="">Select</option>
-                                                    <option value="MFH">Morning First Half</option>
-                                                    <option value="MSH">Morning Second Half</option>
-                                                    <option value="AFH">Afternoon First Half</option>
-                                                    <option value="ASH">Afternoon Second Half</option>
-                                                </select>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Shift<span style="color:red">*</span></small>
-                                            </span>
-                                        <?php } else { ?>
-                                            <span id="shiftField" class="input-help" style="display: none;">
-                                                <select name="shift" id="shift" class="form-select">
-                                                    <option disabled selected hidden value="">Select</option>
-                                                    <option value="MOR">Morning</option>
-                                                    <option value="AFN">Afternoon</option>
-                                                </select>
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Shift<span style="color:red">*</span></small>
-                                            </span>
-                                        <?php } ?>
-                                        <span class="input-help">
-                                            <select name="typeofleave" id="typeofleave" class="typeofleave form-select" required>
-                                                <option disabled selected hidden value="">Select</option>
-                                                <option value="Sick Leave">Sick Leave</option>
-                                                <option value="Casual Leave">Casual Leave</option>
-                                                <option value="Leave Without Pay">Leave Without Pay</option>
-                                                <!-- <option value="uk">United Kingdom</option> -->
+                                    <form autocomplete="off" name="academicyear" id="academicyear" action="leave.php" method="POST">
+                                        <div class="text-start">
+                                            Academic year:
+                                            <select name="adj_academicyear" id="adj_academicyear" onchange="this.form.submit()" class="form-select" style="width: 20vh;" required>
+                                                <?php if ($lyear != null) { ?>
+                                                    <option hidden selected><?php echo $lyear ?></option>
+                                                <?php } ?>
                                             </select>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">Types of Leave<span style="color:red">*</span></small>
-                                        </span>
-                                        <span name="hidden-panel_creason" id="hidden-panel_creason">
-                                            <span id="response"></span>
-                                        </span>
+                                        </div>
+                                    </form>
 
-                                        <span name="hidden-panel" id="hidden-panel">
-                                            <span class="input-help">
-                                                <input type="file" name="medicalcertificate" class="form-control" />
-                                                <small id="passwordHelpBlock" class="form-text text-muted">Documents</small>
-                                            </span>
-                                        </span>
+                                </div><br>
 
-                                        <span class="input-help">
-                                            <textarea type="text" name="applicantcomment" class="form-control" placeholder="Remarks" value=""></textarea>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
-                                        </span>
-
-                                        <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by" value="<?php echo $associatenumber ?>" required readonly>
-
-                                        <span name="hidden-panel_ack" id="hidden-panel_ack">
-                                            <div id="filter-checksh">
-                                                <input type="checkbox" name="ack" id="ack" value="1" />
-                                                <label for="ack" style="font-weight: 400;"> I hereby confirm submitting the relevant supporting medical documents if the leave duration is more than 2 days.</label>
-                                            </div>
-                                        </span>
-                                        <br>
-                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
-
-                                    </div>
-                                </fieldset>
-                            </form><br>
-
-                            <script>
-                                function checkLeaveType() {
-                                    var fromdate = new Date(document.getElementById("fromdate").value);
-                                    var todate = new Date(document.getElementById("todate").value);
-                                    var today = new Date();
-
-                                    // Reset typeofleave if fromdate or todate changes
-                                    document.getElementById("typeofleave").value = ""; // Reset the selected value
-
-                                    // Disable Casual Leave if fromdate or todate is today or in the past
-                                    if (fromdate <= today || todate <= today) {
-                                        document.getElementById("typeofleave").options[2].disabled = true; // Disable Casual Leave
-                                        document.getElementById("leaveWarning").innerText = "You have selected current or past date. You are not eligible to apply for Casual Leave.";
-                                    } else {
-                                        document.getElementById("typeofleave").options[2].disabled = false; // Enable Casual Leave
-                                        document.getElementById("leaveWarning").innerText = ""; // Clear warning message
-                                    }
-                                }
-                            </script>
-
-                            <script>
-                                if (<?php echo $slbalance ?> <= 0) {
-                                    document.getElementById("typeofleave").options[1].disabled = true;
-                                } else {
-                                    document.getElementById("typeofleave").options[1].disabled = false;
-                                }
-
-                                if (<?php echo $clbalance ?> <= 0) {
-                                    document.getElementById("typeofleave").options[2].disabled = true;
-                                } else {
-                                    document.getElementById("typeofleave").options[2].disabled = false;
-                                }
-                            </script>
-                            <script>
-                                function toggleShiftField() {
-                                    var isHalfDay = document.getElementById('is_userh').checked;
-                                    var shiftField = document.getElementById('shiftField');
-                                    var shiftSelect = document.getElementById('shift');
-
-                                    if (isHalfDay && !document.getElementById('is_userh').disabled) {
-                                        shiftField.style.display = 'inline-block';
-                                        shiftSelect.setAttribute('required', 'required');
-                                    } else {
-                                        shiftField.style.display = 'none';
-                                        shiftSelect.removeAttribute('required');
-                                        shiftSelect.value = '';
-                                    }
-                                }
-
-                                function cal() {
-                                    if (document.getElementById("todate") || document.getElementById("fromdate")) {
-                                        function GetDays() {
-                                            var todate = new Date(document.getElementById("todate").value);
-                                            var fromdate = new Date(document.getElementById("fromdate").value);
-                                            var diffDays = (todate - fromdate) / (24 * 3600 * 1000) + 1;
-
-                                            var todatecheck = document.forms["leaveapply"]["todate"].value;
-                                            var fromdatecheck = document.forms["leaveapply"]["fromdate"].value;
-
-                                            if ((todatecheck == null || fromdatecheck == null) || diffDays !== 1) {
-                                                document.getElementById("is_userh").disabled = true;
-                                                document.getElementById("is_userh").checked = false;
-                                                toggleShiftField(); // Call to hide shift field if needed
-                                            } else {
-                                                document.getElementById("is_userh").disabled = false;
-                                            }
-                                            if ($('#is_userh').not(':checked').length > 0) {
-                                                return (diffDays);
-
-                                            } else if (event.target.checked) {
-                                                return (diffDays / 2);
-                                            }
-                                            const checkbox = document.getElementById('is_userh');
-                                            checkbox.addEventListener('change', (event) => {
-                                                if (event.target.checked) {
-                                                    return (diffDays / 2);
-                                                } else if ($('#is_userh').not(':checked').length > 0) {
-                                                    return (diffDays);
-                                                }
-                                            })
-                                        }
-                                        document.getElementById("numdays2").value = GetDays();
-
-                                        document.getElementById("todate").min = document.getElementById("fromdate").value;
-                                        document.getElementById("fromdate").max = document.getElementById("todate").value;
-                                    }
-                                }
-
-                                //Showing document upload for sick leave only 
-                                $(document).ready(function() {
-                                    $("#typeofleave").change(function() {
-                                        if ($("#typeofleave").val() == "Sick Leave") {
-                                            $("#hidden-panel").show()
-                                            $("#hidden-panel_ack").show()
-                                            $("#hidden-panel_creason").show()
-                                        } else if ($("#typeofleave").val() == "Casual Leave") {
-                                            $("#hidden-panel").hide()
-                                            $("#hidden-panel_ack").hide()
-                                            $("#hidden-panel_creason").show()
-                                        } else if ($("#typeofleave").val() == "Leave Without Pay") {
-                                            $("#hidden-panel").hide()
-                                            $("#hidden-panel_ack").hide()
-                                            $("#hidden-panel_creason").hide()
-                                        } else {
-                                            $("#hidden-panel").hide()
-                                            $("#hidden-panel_ack").hide()
-                                            $("#hidden-panel_creason").hide()
-                                        }
-                                    })
-                                });
-                            </script>
-                            <!--To make a filed (acknowledgement) required based on a dropdown value (sick leave)-->
-                            <script>
-                                if (document.getElementById('typeofleave').value == "Leave Without Pay" && document.getElementById('typeofleave').value == "Casual Leave") {
-
-                                    document.getElementById("ack").required = false;
-                                } else {
-
-                                    document.getElementById("ack").required = true;
-                                }
-
-                                const randvar = document.getElementById('typeofleave');
-
-                                randvar.addEventListener('change', (event) => {
-                                    if (document.getElementById('typeofleave').value == "Sick Leave") {
-
-                                        document.getElementById("ack").required = true;
-
-                                    } else {
-
-                                        document.getElementById("ack").required = false;
-                                    }
-                                })
-                            </script>
-
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Leave Details</th>
-                                    </tr>
-                                </thead>
-                            </table>
-                            <form action="" method="POST">
-                                <div class="form-group" style="display: inline-block;">
-                                    <div class="col2" style="display: inline-block;">
-                                        <select name="get_status" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type">
-                                            <?php if ($status == null) { ?>
-                                                <option disabled selected hidden>Select Status</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $status ?></option>
-                                            <?php }
-                                            ?>
-                                            <option>Approved</option>
-                                            <option>Rejected</option>
-                                            <option>ALL</option>
-                                        </select>
-
-                                        <select name="adj_academicyear" id="adj_academicyear_A" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                                            <?php if ($lyear != null) { ?>
-                                                <option hidden selected><?php echo $lyear ?></option>
-                                            <?php }
-                                            ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col2 left" style="display: inline-block;">
-                                    <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                        <i class="bi bi-search"></i>&nbsp;Search</button>
-                                </div>
-                            </form>
-                            <div class="col" style="display: inline-block; width:99%; text-align:right">
-                                Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table" id="table-id">
+                                <table class="table">
                                     <thead>
                                         <tr>
-                                            <th scope="col">Leave ID</th>
-                                            <th scope="col">Applied on</th>
-                                            <th scope="col">From-To</th>
-                                            <th scope="col">Day(s) count</th>
-                                            <th scope="col">Type of Leave</th>
-                                            <th scope="col">Status</th>
-                                            <th scope="col">HR remarks</th>
+                                            <th scope="col">Apply Leave</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php if (sizeof($resultArr) > 0) : ?>
-                                            <?php foreach ($resultArr as $array) : ?>
-                                                <tr>
-                                                    <?php if ($array['doc'] != null) : ?>
-                                                        <td>
-                                                            <a href="javascript:void(0)" onclick="showpdf('<?php echo htmlspecialchars($array['leaveid'] ?? ''); ?>')">
-                                                                <?php echo htmlspecialchars($array['leaveid'] ?? ''); ?>
-                                                            </a>
-                                                        </td>
-                                                    <?php else : ?>
-                                                        <td><?php echo htmlspecialchars($array['leaveid'] ?? ''); ?></td>
-                                                    <?php endif; ?>
+                                        <tr>
 
-                                                    <td><?php echo date("d/m/Y g:i a", strtotime($array['timestamp'] ?? '')); ?></td>
-                                                    <td><?php echo date("d/m/Y", strtotime($array['fromdate'] ?? '')) . ' — ' . date("d/m/Y", strtotime($array['todate'] ?? '')); ?></td>
-                                                    <td><?php echo htmlspecialchars($array['days'] ?? ''); ?></td>
-                                                    <td>
-                                                        <?php
-                                                        // Prepare type of leave with optional shift value
-                                                        $typeofLeave = htmlspecialchars($array['typeofleave'] ?? '');
-                                                        $shift = htmlspecialchars($array['shift'] ?? '');
-                                                        echo $typeofLeave . ($shift ? '-' . $shift : '');
-                                                        ?><br>
-                                                        <?php echo htmlspecialchars($array['creason'] ?? ''); ?><br>
-
-                                                        <?php
-                                                        // Ensure the comment is a string and handle null values
-                                                        $applicantComment = $array['applicantcomment'] ?? '';
-                                                        // Shorten the applicant comment
-                                                        $shortComment = strlen($applicantComment) > 30 ? substr($applicantComment, 0, 30) . "..." : $applicantComment;
-                                                        ?>
-
-                                                        <span class="short-comment"><?php echo htmlspecialchars($shortComment); ?></span>
-                                                        <span class="full-comment" style="display: none;"><?php echo htmlspecialchars($applicantComment); ?></span>
-
-                                                        <?php if (strlen($applicantComment) > 30) : ?>
-                                                            <a href="#" class="more-link">more</a>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td><?php echo htmlspecialchars($array['status'] ?? ''); ?></td>
-                                                    <td>
-                                                        <?php echo htmlspecialchars($array['comment'] ?? ''); ?><br>
-                                                        <?php echo htmlspecialchars($array['reviewer_id'] ?? ''); ?><br>
-                                                        <?php echo htmlspecialchars($array['reviewer_name'] ?? ''); ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php else : ?>
-                                            <tr>
-                                                <td colspan="7">
-                                                    <?php if ($lyear == null && $status == null) : ?>
-                                                        Please select Filter value.
-                                                    <?php else : ?>
-                                                        No record was found for the selected filter value.
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                        <?php endif; ?>
+                                            <td style="line-height: 2;">
+                                                Sick Leave - <?php echo $slbalance ?>
+                                                <br>Casual Leave - <?php echo $clbalance ?>
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
-                            </div>
 
+                                <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave.php" method="POST" enctype="multipart/form-data">
+                                    <fieldset <?php echo ($filterstatus != 'Active') ? 'disabled' : ''; ?>>
+                                        <div class="form-group" style="display: inline-block;">
+
+                                            <input type="hidden" name="form-type" value="leaveapply">
+
+                                            <span class="input-help">
+                                                <input type="date" class="form-control" name="fromdate" id="fromdate" max="" onchange="cal(); checkLeaveType();" required>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">From<span style="color:red">*</span></small>
+                                            </span>
+                                            <span class="input-help">
+                                                <input type="date" class="form-control" name="todate" id="todate" min="" onchange="cal(); checkLeaveType();" required>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">To<span style="color:red">*</span></small>
+                                            </span>
+                                            <div id="filter-checksh">
+                                                <input type="checkbox" name="is_userh" id="is_userh" value="1" onchange="cal(); toggleShiftField()" disabled />
+                                                <label for="is_userh" style="font-weight: 400;">Half day</label>
+                                            </div>
+                                            <span class="input-help">
+                                                <input type="text" class="form-control" name="numdays2" id="numdays2" placeholder="Day count" placeholder="Day count" step="0.01" pattern="^\d+(?:\.\d{1,2})?$" size="10" readonly>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Days count</small>
+                                            </span>
+                                            <?php if ($job_type != 'Full-time') { ?>
+                                                <span id="shiftField" class="input-help" style="display: none;">
+                                                    <select name="shift" id="shift" class="form-select">
+                                                        <option disabled selected hidden value="">Select</option>
+                                                        <option value="MFH">Morning First Half</option>
+                                                        <option value="MSH">Morning Second Half</option>
+                                                        <option value="AFH">Afternoon First Half</option>
+                                                        <option value="ASH">Afternoon Second Half</option>
+                                                    </select>
+                                                    <small id="passwordHelpBlock" class="form-text text-muted">Shift<span style="color:red">*</span></small>
+                                                </span>
+                                            <?php } else { ?>
+                                                <span id="shiftField" class="input-help" style="display: none;">
+                                                    <select name="shift" id="shift" class="form-select">
+                                                        <option disabled selected hidden value="">Select</option>
+                                                        <option value="MOR">Morning</option>
+                                                        <option value="AFN">Afternoon</option>
+                                                    </select>
+                                                    <small id="passwordHelpBlock" class="form-text text-muted">Shift<span style="color:red">*</span></small>
+                                                </span>
+                                            <?php } ?>
+                                            <span class="input-help">
+                                                <select name="typeofleave" id="typeofleave" class="typeofleave form-select" required>
+                                                    <option disabled selected hidden value="">Select</option>
+                                                    <option value="Sick Leave">Sick Leave</option>
+                                                    <option value="Casual Leave">Casual Leave</option>
+                                                    <option value="Leave Without Pay">Leave Without Pay</option>
+                                                    <!-- <option value="uk">United Kingdom</option> -->
+                                                </select>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Types of Leave<span style="color:red">*</span></small>
+                                            </span>
+                                            <span name="hidden-panel_creason" id="hidden-panel_creason">
+                                                <span id="response"></span>
+                                            </span>
+
+                                            <span name="hidden-panel" id="hidden-panel">
+                                                <span class="input-help">
+                                                    <input type="file" name="medicalcertificate" class="form-control" />
+                                                    <small id="passwordHelpBlock" class="form-text text-muted">Documents</small>
+                                                </span>
+                                            </span>
+
+                                            <span class="input-help">
+                                                <textarea type="text" name="applicantcomment" class="form-control" placeholder="Remarks" value=""></textarea>
+                                                <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
+                                            </span>
+
+                                            <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by" value="<?php echo $associatenumber ?>" required readonly>
+
+                                            <span name="hidden-panel_ack" id="hidden-panel_ack">
+                                                <div id="filter-checksh">
+                                                    <input type="checkbox" name="ack" id="ack" value="1" />
+                                                    <label for="ack" style="font-weight: 400;"> I hereby confirm submitting the relevant supporting medical documents if the leave duration is more than 2 days.</label>
+                                                </div>
+                                            </span>
+                                            <br>
+                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">Apply</button>
+
+                                        </div>
+                                    </fieldset>
+                                </form><br>
+
+                                <script>
+                                    function checkLeaveType() {
+                                        var fromdate = new Date(document.getElementById("fromdate").value);
+                                        var todate = new Date(document.getElementById("todate").value);
+                                        var today = new Date();
+
+                                        // Reset typeofleave if fromdate or todate changes
+                                        document.getElementById("typeofleave").value = ""; // Reset the selected value
+
+                                        // Disable Casual Leave if fromdate or todate is today or in the past
+                                        if (fromdate <= today || todate <= today) {
+                                            document.getElementById("typeofleave").options[2].disabled = true; // Disable Casual Leave
+                                            document.getElementById("leaveWarning").innerText = "You have selected current or past date. You are not eligible to apply for Casual Leave.";
+                                        } else {
+                                            document.getElementById("typeofleave").options[2].disabled = false; // Enable Casual Leave
+                                            document.getElementById("leaveWarning").innerText = ""; // Clear warning message
+                                        }
+                                    }
+                                </script>
+
+                                <script>
+                                    if (<?php echo $slbalance ?> <= 0) {
+                                        document.getElementById("typeofleave").options[1].disabled = true;
+                                    } else {
+                                        document.getElementById("typeofleave").options[1].disabled = false;
+                                    }
+
+                                    if (<?php echo $clbalance ?> <= 0) {
+                                        document.getElementById("typeofleave").options[2].disabled = true;
+                                    } else {
+                                        document.getElementById("typeofleave").options[2].disabled = false;
+                                    }
+                                </script>
+                                <script>
+                                    function toggleShiftField() {
+                                        var isHalfDay = document.getElementById('is_userh').checked;
+                                        var shiftField = document.getElementById('shiftField');
+                                        var shiftSelect = document.getElementById('shift');
+
+                                        if (isHalfDay && !document.getElementById('is_userh').disabled) {
+                                            shiftField.style.display = 'inline-block';
+                                            shiftSelect.setAttribute('required', 'required');
+                                        } else {
+                                            shiftField.style.display = 'none';
+                                            shiftSelect.removeAttribute('required');
+                                            shiftSelect.value = '';
+                                        }
+                                    }
+
+                                    function cal() {
+                                        if (document.getElementById("todate") || document.getElementById("fromdate")) {
+                                            function GetDays() {
+                                                var todate = new Date(document.getElementById("todate").value);
+                                                var fromdate = new Date(document.getElementById("fromdate").value);
+                                                var diffDays = (todate - fromdate) / (24 * 3600 * 1000) + 1;
+
+                                                var todatecheck = document.forms["leaveapply"]["todate"].value;
+                                                var fromdatecheck = document.forms["leaveapply"]["fromdate"].value;
+
+                                                if ((todatecheck == null || fromdatecheck == null) || diffDays !== 1) {
+                                                    document.getElementById("is_userh").disabled = true;
+                                                    document.getElementById("is_userh").checked = false;
+                                                    toggleShiftField(); // Call to hide shift field if needed
+                                                } else {
+                                                    document.getElementById("is_userh").disabled = false;
+                                                }
+                                                if ($('#is_userh').not(':checked').length > 0) {
+                                                    return (diffDays);
+
+                                                } else if (event.target.checked) {
+                                                    return (diffDays / 2);
+                                                }
+                                                const checkbox = document.getElementById('is_userh');
+                                                checkbox.addEventListener('change', (event) => {
+                                                    if (event.target.checked) {
+                                                        return (diffDays / 2);
+                                                    } else if ($('#is_userh').not(':checked').length > 0) {
+                                                        return (diffDays);
+                                                    }
+                                                })
+                                            }
+                                            document.getElementById("numdays2").value = GetDays();
+
+                                            document.getElementById("todate").min = document.getElementById("fromdate").value;
+                                            document.getElementById("fromdate").max = document.getElementById("todate").value;
+                                        }
+                                    }
+
+                                    //Showing document upload for sick leave only 
+                                    $(document).ready(function() {
+                                        $("#typeofleave").change(function() {
+                                            if ($("#typeofleave").val() == "Sick Leave") {
+                                                $("#hidden-panel").show()
+                                                $("#hidden-panel_ack").show()
+                                                $("#hidden-panel_creason").show()
+                                            } else if ($("#typeofleave").val() == "Casual Leave") {
+                                                $("#hidden-panel").hide()
+                                                $("#hidden-panel_ack").hide()
+                                                $("#hidden-panel_creason").show()
+                                            } else if ($("#typeofleave").val() == "Leave Without Pay") {
+                                                $("#hidden-panel").hide()
+                                                $("#hidden-panel_ack").hide()
+                                                $("#hidden-panel_creason").hide()
+                                            } else {
+                                                $("#hidden-panel").hide()
+                                                $("#hidden-panel_ack").hide()
+                                                $("#hidden-panel_creason").hide()
+                                            }
+                                        })
+                                    });
+                                </script>
+                                <!--To make a filed (acknowledgement) required based on a dropdown value (sick leave)-->
+                                <script>
+                                    if (document.getElementById('typeofleave').value == "Leave Without Pay" && document.getElementById('typeofleave').value == "Casual Leave") {
+
+                                        document.getElementById("ack").required = false;
+                                    } else {
+
+                                        document.getElementById("ack").required = true;
+                                    }
+
+                                    const randvar = document.getElementById('typeofleave');
+
+                                    randvar.addEventListener('change', (event) => {
+                                        if (document.getElementById('typeofleave').value == "Sick Leave") {
+
+                                            document.getElementById("ack").required = true;
+
+                                        } else {
+
+                                            document.getElementById("ack").required = false;
+                                        }
+                                    })
+                                </script>
+
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Leave Details</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                                <form action="" method="POST">
+                                    <div class="form-group" style="display: inline-block;">
+                                        <div class="col2" style="display: inline-block;">
+                                            <select name="get_status" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type">
+                                                <?php if ($status == null) { ?>
+                                                    <option disabled selected hidden>Select Status</option>
+                                                <?php
+                                                } else { ?>
+                                                    <option hidden selected><?php echo $status ?></option>
+                                                <?php }
+                                                ?>
+                                                <option>Approved</option>
+                                                <option>Rejected</option>
+                                                <option>ALL</option>
+                                            </select>
+
+                                            <select name="adj_academicyear" id="adj_academicyear_A" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
+                                                <?php if ($lyear != null) { ?>
+                                                    <option hidden selected><?php echo $lyear ?></option>
+                                                <?php }
+                                                ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col2 left" style="display: inline-block;">
+                                        <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
+                                            <i class="bi bi-search"></i>&nbsp;Search</button>
+                                    </div>
+                                </form>
+                                <div class="col" style="display: inline-block; width:99%; text-align:right">
+                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table" id="table-id">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Leave ID</th>
+                                                <th scope="col">Applied on</th>
+                                                <th scope="col">From-To</th>
+                                                <th scope="col">Day(s) count</th>
+                                                <th scope="col">Type of Leave</th>
+                                                <th scope="col">Status</th>
+                                                <th scope="col">HR remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (sizeof($resultArr) > 0) : ?>
+                                                <?php foreach ($resultArr as $array) : ?>
+                                                    <tr>
+                                                        <?php if ($array['doc'] != null) : ?>
+                                                            <td>
+                                                                <a href="javascript:void(0)" onclick="showpdf('<?php echo htmlspecialchars($array['leaveid'] ?? ''); ?>')">
+                                                                    <?php echo htmlspecialchars($array['leaveid'] ?? ''); ?>
+                                                                </a>
+                                                            </td>
+                                                        <?php else : ?>
+                                                            <td><?php echo htmlspecialchars($array['leaveid'] ?? ''); ?></td>
+                                                        <?php endif; ?>
+
+                                                        <td><?php echo date("d/m/Y g:i a", strtotime($array['timestamp'] ?? '')); ?></td>
+                                                        <td><?php echo date("d/m/Y", strtotime($array['fromdate'] ?? '')) . ' — ' . date("d/m/Y", strtotime($array['todate'] ?? '')); ?></td>
+                                                        <td><?php echo htmlspecialchars($array['days'] ?? ''); ?></td>
+                                                        <td>
+                                                            <?php
+                                                            // Prepare type of leave with optional shift value
+                                                            $typeofLeave = htmlspecialchars($array['typeofleave'] ?? '');
+                                                            $shift = htmlspecialchars($array['shift'] ?? '');
+                                                            echo $typeofLeave . ($shift ? '-' . $shift : '');
+                                                            ?><br>
+                                                            <?php echo htmlspecialchars($array['creason'] ?? ''); ?><br>
+
+                                                            <?php
+                                                            // Ensure the comment is a string and handle null values
+                                                            $applicantComment = $array['applicantcomment'] ?? '';
+                                                            // Shorten the applicant comment
+                                                            $shortComment = strlen($applicantComment) > 30 ? substr($applicantComment, 0, 30) . "..." : $applicantComment;
+                                                            ?>
+
+                                                            <span class="short-comment"><?php echo htmlspecialchars($shortComment); ?></span>
+                                                            <span class="full-comment" style="display: none;"><?php echo htmlspecialchars($applicantComment); ?></span>
+
+                                                            <?php if (strlen($applicantComment) > 30) : ?>
+                                                                <a href="#" class="more-link">more</a>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td><?php echo htmlspecialchars($array['status'] ?? ''); ?></td>
+                                                        <td>
+                                                            <?php echo htmlspecialchars($array['comment'] ?? ''); ?><br>
+                                                            <?php echo htmlspecialchars($array['reviewer_id'] ?? ''); ?><br>
+                                                            <?php echo htmlspecialchars($array['reviewer_name'] ?? ''); ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            <?php else : ?>
+                                                <tr>
+                                                    <td colspan="7">
+                                                        <?php if ($lyear == null && $status == null) : ?>
+                                                            Please select Filter value.
+                                                        <?php else : ?>
+                                                            No record was found for the selected filter value.
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                             <!--------------- POP-UP BOX ------------
                             -------------------------------------->
                             <style>
@@ -823,6 +830,61 @@ $resultArr = pg_fetch_all($result);
                     // other options...
                 });
             <?php endif; ?>
+        });
+    </script>
+    <!-- Add this script at the end of the HTML body -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> -->
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        // Add event listener to intercept Escape key press
+        document.body.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Prevent default behavior of Escape key
+                event.preventDefault();
+            }
+        });
+    </script>
+    <script>
+        // Function to show loading modal
+        function showLoadingModal() {
+            $('#myModal').modal('show');
+        }
+
+        // Function to hide loading modal
+        function hideLoadingModal() {
+            $('#myModal').modal('hide');
+        }
+
+        // Add event listener to form submission
+        document.getElementById('leaveapply').addEventListener('submit', function(event) {
+            // Show loading modal when form is submitted
+            showLoadingModal();
+        });
+
+        // Optional: Close loading modal when the page is fully loaded
+        window.addEventListener('load', function() {
+            // Hide loading modal
+            hideLoadingModal();
         });
     </script>
 </body>
