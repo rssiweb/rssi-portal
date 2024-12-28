@@ -74,9 +74,9 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
     $todate = $_POST['todate'];
     $uploadedFile = $_FILES['medicalcertificate'];
     $typeofleave = $_POST['typeofleave'];
-    $creason = $_POST['creason'];
+    $creason = isset($_POST['creason']) ? $_POST['creason'] : null;
     $appliedby = $_POST['appliedby'];
-    $shift = $_POST['shift'];
+    $shift = isset($_POST['shift']) ? $_POST['shift'] : null;
     $applicantcomment = htmlspecialchars($_POST['applicantcomment'], ENT_QUOTES, 'UTF-8');
     $ack = $_POST['ack'] ?? 0;
     $halfday = $_POST['is_userh'] ?? 0;
