@@ -21,92 +21,60 @@ $associatenumber = isset($_GET['associatenumber']) ? $_GET['associatenumber'] : 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Initialize an array to store the parts of the UPDATE query
     $update_fields = [];
+    $updated_fields = []; // To track which fields were updated
 
-    // Check if each field is set and add to the update query
-    if (isset($_POST['doj']) && !empty($_POST['doj'])) {
-        $doj = pg_escape_string($con, $_POST['doj']); // Pass connection $con
-        $update_fields[] = "doj = '$doj'";
-    }
-    if (isset($_POST['basebranch']) && !empty($_POST['basebranch'])) {
-        $basebranch = pg_escape_string($con, $_POST['basebranch']); // Pass connection $con
-        $update_fields[] = "basebranch = '$basebranch'";
-    }
-    if (isset($_POST['depb']) && !empty($_POST['depb'])) {
-        $depb = pg_escape_string($con, $_POST['depb']); // Pass connection $con
-        $update_fields[] = "depb = '$depb'";
-    }
-    if (isset($_POST['engagement']) && !empty($_POST['engagement'])) {
-        $engagement = pg_escape_string($con, $_POST['engagement']); // Pass connection $con
-        $update_fields[] = "engagement = '$engagement'";
-    }
-    if (isset($_POST['job_type']) && !empty($_POST['job_type'])) {
-        $job_type = pg_escape_string($con, $_POST['job_type']); // Pass connection $con
-        $update_fields[] = "job_type = '$job_type'";
-    }
-    if (isset($_POST['position']) && !empty($_POST['position'])) {
-        $position = pg_escape_string($con, $_POST['position']); // Pass connection $con
-        $update_fields[] = "position = '$position'";
-    }
-    if (isset($_POST['class']) && !empty($_POST['class'])) {
-        $class = pg_escape_string($con, $_POST['class']); // Pass connection $con
-        $update_fields[] = "class = '$class'";
-    }
-    // Check if 'position' is set in the POST data
-    if (isset($_POST['position']) && !empty($_POST['position'])) {
-        // Get the position value from POST
-        $position = $_POST['position'];
+    // Fetch existing values for the associatenumber
+    $query = "SELECT * FROM rssimyaccount_members WHERE associatenumber = $1";
+    $result = pg_query_params($con, $query, [$associatenumber]);
 
-        // Query the database to get the grade for the selected position
-        $query = "SELECT grade FROM designation WHERE designation = $1 AND is_inactive = FALSE";
-        $result = pg_query_params($con, $query, array($position));
+    if ($result && pg_num_rows($result) > 0) {
+        $current_data = pg_fetch_assoc($result);
 
-        // Check if a result was returned
-        if ($result && pg_num_rows($result) > 0) {
-            // Fetch the grade for the position
-            $row = pg_fetch_assoc($result);
-            $grade = $row['grade'];
-        } else {
-            // If no grade is found, set grade to empty
-            $grade = '';
+        // List of fields to check and update
+        $fields_to_check = [
+            'doj',
+            'basebranch',
+            'depb',
+            'engagement',
+            'job_type',
+            'position',
+            'class',
+            'role',
+            'immediate_manager',
+            'filterstatus',
+            'scode',
+            'salary',
+            'absconding'
+        ];
+
+        foreach ($fields_to_check as $field) {
+            if (isset($_POST[$field])) {
+                $new_value = pg_escape_string($con, $_POST[$field]);
+                $current_value = $current_data[$field];
+
+                // Compare new value with current value
+                if ($new_value !== $current_value) {
+                    $update_fields[] = "$field = '$new_value'";
+                    $updated_fields[] = $field; // Track updated fields
+                }
+            }
         }
 
-        // Now, you can use the grade value in your update query
-        if (!empty($grade)) {
-            $grade = pg_escape_string($con, $grade); // Escape the grade to prevent SQL injection
-            $update_fields[] = "grade = '$grade'"; // Add grade to update fields array
-        }
-    }
-    if (isset($_POST['role']) && !empty($_POST['role'])) {
-        $role = pg_escape_string($con, $_POST['role']); // Pass connection $con
-        $update_fields[] = "role = '$role'";
-    }
-    if (isset($_POST['immediate_manager']) && !empty($_POST['immediate_manager'])) {
-        $immediate_manager = pg_escape_string($con, $_POST['immediate_manager']); // Pass connection $con
+        // Special handling for 'position' to get and compare the grade
+        if (isset($_POST['position'])) {
+            $position = pg_escape_string($con, $_POST['position']);
+            $query = "SELECT grade FROM designation WHERE designation = $1 AND is_inactive = FALSE";
+            $result = pg_query_params($con, $query, [$position]);
 
-        // Check if immediate_manager is same as associatenumber
-        if ($immediate_manager == $associatenumber) {
-            // If the immediate manager is the same as the associate, show an alert
-            echo "<script>alert('An associate cannot be their own immediate supervisor. Please choose another manager from the list.');</script>";
-        } else {
-            // If valid, add to update fields array
-            $update_fields[] = "immediate_manager = '$immediate_manager'";
+            if ($result && pg_num_rows($result) > 0) {
+                $row = pg_fetch_assoc($result);
+                $grade = $row['grade'];
+                if ($grade !== $current_data['grade']) {
+                    $update_fields[] = "grade = '$grade'";
+                    $updated_fields[] = "grade"; // Track updated fields
+                }
+            }
         }
-    }
-    if (isset($_POST['filterstatus']) && !empty($_POST['filterstatus'])) {
-        $filterstatus = pg_escape_string($con, $_POST['filterstatus']); // Pass connection $con
-        $update_fields[] = "filterstatus = '$filterstatus'";
-    }
-    if (isset($_POST['scode']) && !empty($_POST['scode'])) {
-        $scode = pg_escape_string($con, $_POST['scode']); // Pass connection $con
-        $update_fields[] = "scode = '$scode'";
-    }
-    if (isset($_POST['salary']) && !empty($_POST['salary'])) {
-        $salary = pg_escape_string($con, $_POST['salary']); // Pass connection $con
-        $update_fields[] = "salary = '$salary'";
-    }
-    if (isset($_POST['abscond'])) {
-        $absconds = pg_escape_string($con, $_POST['abscond']); // Escape value for SQL safety
-        $update_fields[] = "absconding = '$absconds'";
     }
 
     // If there are fields to update, build the query and execute it
@@ -117,14 +85,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update_result = pg_query($con, $update_sql);
 
         if ($update_result) {
-            // If the update was successful, show an alert and then redirect
+            // Inform the user about the updated fields
+            $updated_fields_list = implode(", ", $updated_fields);
             echo "<script>
-                alert('Information updated successfully.');
+                alert('The following fields were updated: $updated_fields_list');
                 if (window.history.replaceState) {
-                        // Update the URL without causing a page reload or resubmission
-                        window.history.replaceState(null, null, window.location.href);
-                    }
-                    window.location.reload(); // Trigger a page reload to reflect changes
+                    window.history.replaceState(null, null, window.location.href);
+                }
+                window.location.reload();
             </script>";
             exit;
         } else {
@@ -135,9 +103,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </script>";
             exit;
         }
+    } else {
+        // No fields to update
+        echo "<script>
+            alert('No changes were made.');
+            window.history.back();
+        </script>";
+        exit;
     }
 }
-
 // End output buffering and send the output
 ob_end_flush();
 ?>
