@@ -132,9 +132,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 iddoc,
                 eduq,
                 mjorsub,
-                password,
-                default_pass_updated_by,
-                default_pass_updated_on,
                 associatenumber
             )
             SELECT 
@@ -156,9 +153,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 supporting_document AS iddoc,
                 education_qualification AS eduq,
                 specialization AS mjorsub,
-                LEFT(MD5(RANDOM()::text), 6) AS password, -- Generate a default 6-character password
-                'System' AS default_pass_updated_by,
-                CURRENT_TIMESTAMP AS default_pass_updated_on, -- Use the current timestamp for the update time
                 CONCAT(
                         CASE 
                             WHEN association = 'Employee' THEN 'E'

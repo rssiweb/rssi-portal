@@ -505,7 +505,7 @@ $resultArr = pg_fetch_all($result);
                                         document.getElementById("certificate_view").href = "/rssi-member/my_certificate.php?get_nomineeid=" + mydata.associatenumber;
                                         document.getElementById("experience_letter").href = "/rssi-member/expletter.php?get_id=" + mydata.associatenumber;
                                         document.getElementById("joining_letter").href = "/rssi-member/joiningletter.php?get_id=" + mydata.associatenumber;
-                                        document.getElementById("profile").href = "/rssi-member/myprofile.php?get_id=" + mydata.associatenumber;
+                                        document.getElementById("profile").href = "/rssi-member/people_manage.php?associatenumber=" + mydata.associatenumber;
                                     }
                                 }
 
