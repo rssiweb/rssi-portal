@@ -187,17 +187,18 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
     }
 }
 // Fetch leave history
-$status = $_POST['get_status'] ?? 'ALL';
 $queryConditions = [
-    ($lyear !== 'ALL') ? "lyear = '$lyear'" : null,
-    ($status !== 'ALL') ? "status = '$status'" : null,
-    "applicantid = '$associatenumber'",
+    "lyear = '$lyear'", // Use the lyear value directly from the post data
+    "applicantid = '$associatenumber'", // Always filter by applicant ID
 ];
-$whereClause = implode(" AND ", array_filter($queryConditions));
+
+$whereClause = implode(" AND ", $queryConditions);
+
 $historyQuery = "SELECT *, REPLACE(doc, 'view', 'preview') docp 
                  FROM leavedb_leavedb 
                  WHERE $whereClause 
                  ORDER BY timestamp DESC";
+
 $result = pg_query($con, $historyQuery);
 
 if (!$result) {
@@ -207,8 +208,6 @@ if (!$result) {
 
 $resultArr = pg_fetch_all($result);
 ?>
-
-
 <!doctype html>
 <html lang="en">
 
@@ -294,12 +293,6 @@ $resultArr = pg_fetch_all($result);
                                 <div class="row">
                                     <!-- Warning message for leave eligibility -->
                                     <span id="leaveWarning" style="color: red;"></span>
-                                    <div class="text-end">
-                                        <span class="link-secondary"><a href="leaveadjustment.php?adj_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check Adjusted Leave Record">Leave Adjustment</a></span>
-                                        <span class="separator"> | </span>
-                                        <span class="link-secondary"><a href="leaveallo.php?allo_academicyear_search=<?php echo $lyear ?>" target="_blank" title="Check allotted leave record">Leave Allocation</a></span>
-                                    </div>
-
 
                                     <form autocomplete="off" name="academicyear" id="academicyear" action="leave.php" method="POST">
                                         <div class="text-start">
@@ -557,38 +550,6 @@ $resultArr = pg_fetch_all($result);
                                         </tr>
                                     </thead>
                                 </table>
-                                <form action="" method="POST">
-                                    <div class="form-group" style="display: inline-block;">
-                                        <div class="col2" style="display: inline-block;">
-                                            <select name="get_status" class="form-select" style="width:max-content; display:inline-block" placeholder="Appraisal type">
-                                                <?php if ($status == null) { ?>
-                                                    <option disabled selected hidden>Select Status</option>
-                                                <?php
-                                                } else { ?>
-                                                    <option hidden selected><?php echo $status ?></option>
-                                                <?php }
-                                                ?>
-                                                <option>Approved</option>
-                                                <option>Rejected</option>
-                                                <option>ALL</option>
-                                            </select>
-
-                                            <select name="adj_academicyear" id="adj_academicyear_A" class="form-select" style="display: -webkit-inline-box; width:20vh;" required>
-                                                <?php if ($lyear != null) { ?>
-                                                    <option hidden selected><?php echo $lyear ?></option>
-                                                <?php }
-                                                ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col2 left" style="display: inline-block;">
-                                        <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">
-                                            <i class="bi bi-search"></i>&nbsp;Search</button>
-                                    </div>
-                                </form>
-                                <div class="col" style="display: inline-block; width:99%; text-align:right">
-                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                                </div>
 
                                 <div class="table-responsive">
                                     <table class="table" id="table-id">
