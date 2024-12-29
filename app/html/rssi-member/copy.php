@@ -44,7 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'filterstatus',
             'scode',
             'salary',
-            'absconding'
+            'absconding',
+            'shift'
         ];
 
         foreach ($fields_to_check as $field) {
@@ -137,6 +138,32 @@ if ($result_managers && pg_num_rows($result_managers) > 0) {
 pg_free_result($result);
 pg_free_result($result_managers);
 ?>
+<?php
+// SQL query to fetch active roles and grades
+$sql = "SELECT designation, grade FROM designation WHERE is_inactive = FALSE ORDER BY designation ASC";
+$result = pg_query($con, $sql);
+
+// Check if the query was successful
+if ($result) {
+    $roles = pg_fetch_all($result);
+} else {
+    echo "An error occurred while fetching roles.";
+    exit;
+}
+?>
+<?php
+// Query the database to get the available roles (excluding inactive roles)
+$query = "SELECT role_name FROM roles WHERE is_inactive = FALSE";
+$result = pg_query($con, $query);
+
+// Generate the role options
+$role_options = [];
+if ($result && pg_num_rows($result) > 0) {
+    while ($row = pg_fetch_assoc($result)) {
+        $role_options[] = $row['role_name'];
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -192,19 +219,12 @@ pg_free_result($result_managers);
             flex-grow: 1;
         }
 
-        .primary-details h4 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-
         .primary-details p {
             margin: 5px 0;
-            font-size: 0.9rem;
         }
 
         .contact-info {
             text-align: right;
-            font-size: 0.9rem;
         }
 
         .contact-info p {
@@ -254,12 +274,6 @@ pg_free_result($result_managers);
             align-items: center;
         }
 
-        .edit-icon {
-            color: #31536C;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
         .tab-pane {
             display: none;
         }
@@ -268,7 +282,8 @@ pg_free_result($result_managers);
             display: block;
         }
 
-        .edit-icon {
+        .edit-icon,
+        .save-icon {
             color: #d3d3d3;
             /* Light flat gray color */
             cursor: pointer;
@@ -276,13 +291,10 @@ pg_free_result($result_managers);
             transition: color 0.3s ease;
         }
 
-        .edit-icon:hover {
+        .edit-icon:hover,
+        .save-icon:hover {
             color: #a0a0a0;
             /* Darker gray on hover for a subtle effect */
-        }
-
-        .save-icon {
-            cursor: pointer;
         }
 
         /* Media Queries */
@@ -300,17 +312,8 @@ pg_free_result($result_managers);
                 margin-right: 10px;
             }
 
-            .primary-details h4 {
-                font-size: 1.25rem;
-            }
-
-            .primary-details p {
-                font-size: 0.85rem;
-            }
-
             .contact-info {
                 text-align: left;
-                font-size: 0.85rem;
             }
 
             .menu-icon {
@@ -416,7 +419,7 @@ pg_free_result($result_managers);
                                         </div>
 
                                         <div class="primary-details">
-                                            <p style="font-size: medium;"><?php echo $array["fullname"] ?></p>
+                                            <p style="font-size: large;"><?php echo $array["fullname"] ?></p>
                                             <p><?php echo $array["associatenumber"] ?><br><?php echo $array["engagement"] ?><br>Designation: <?php echo $array["position"] ?></p>
                                         </div>
                                         <div class="contact-info">
@@ -474,13 +477,13 @@ pg_free_result($result_managers);
                                                 <fieldset>
                                                     <!-- Employee Details Tab -->
                                                     <div id="employee-details" class="tab-pane active" role="tabpanel">
-                                                        <div class="card">
+                                                        <div class="card" id="address_details">
                                                             <div class="card-header">
                                                                 Address Details
-                                                                <span class="edit-icon" onclick="toggleEdit('employee-details')"><i class="bi bi-pencil"></i></span>
+                                                                <!-- <span class="edit-icon" onclick="toggleEdit('address_details')"><i class="bi bi-pencil"></i></span>
                                                                 <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
                                                                     <i class="bi bi-save"></i>
-                                                                </span>
+                                                                </span> -->
                                                             </div>
                                                             <div class="card-body">
                                                                 <div class="table-responsive">
@@ -519,14 +522,48 @@ pg_free_result($result_managers);
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        <div class="card" id="national_identifier">
+                                                            <div class="card-header">
+                                                                National Identifier
+                                                                <!-- <span class="edit-icon" onclick="toggleEdit('national_identifier')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span> -->
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td><label for="nationalidentifier">National Identifier Number:</label></td>
+                                                                                <td>
+                                                                                    <?php echo $array["nationalidentifier"] ?><br>
+                                                                                    <?php echo $array["identifier"] ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- PAN Number -->
+                                                                            <tr>
+                                                                                <td><label for="panno">PAN Number:</label></td>
+                                                                                <td>
+                                                                                    <?php echo $array["panno"] ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
 
                                                     <!-- Work Details Tab -->
                                                     <div id="work-details" class="tab-pane" role="tabpanel">
-                                                        <div class="card">
+                                                        <div class="card" id="current-location">
                                                             <div class="card-header">
                                                                 Current Location
-                                                                <span class="edit-icon" onclick="toggleEdit('work-details')">
+                                                                <span class="edit-icon" onclick="toggleEdit('current-location')">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </span>
                                                                 <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
@@ -572,6 +609,276 @@ pg_free_result($result_managers);
                                                                                         }
                                                                                         ?>
                                                                                     </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card" id="experience">
+                                                            <div class="card-header">
+                                                                Employment Details
+                                                                <span class="edit-icon" onclick="toggleEdit('experience')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <!-- Date of Join -->
+                                                                            <tr>
+                                                                                <td><label for="doj">Date of Join:</label></td>
+                                                                                <td class="d-flex align-items-center">
+                                                                                    <span id="doj"><?php echo htmlspecialchars((new DateTime($array["doj"]))->format("d/m/Y"), ENT_QUOTES, 'UTF-8'); ?></span>
+                                                                                    <input type="date" name="doj" id="doj" value="<?php echo $array["doj"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- Work Mode -->
+                                                                            <tr>
+                                                                                <td><label for="class">Work Mode:</label></td>
+                                                                                <td class="d-flex align-items-center">
+                                                                                    <span id="class"><?php echo $array['class']; ?></span>
+                                                                                    <!-- Work Mode Dropdown -->
+                                                                                    <select name="class" id="class" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Work Mode</option>
+                                                                                        <?php
+                                                                                        // List of Work Mode Options
+                                                                                        $work_modes = [
+                                                                                            "Online",
+                                                                                            "Offline",
+                                                                                            "Hybrid"
+                                                                                        ];
+
+                                                                                        // Generate <option> elements dynamically
+                                                                                        foreach ($work_modes as $mode) {
+                                                                                            $selected = ($array["class"] == $mode) ? "selected" : "";
+                                                                                            echo "<option value=\"$mode\" $selected>$mode</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- Shift -->
+                                                                            <tr>
+                                                                                <td><label for="shift">Shift:</label></td>
+                                                                                <td class="d-flex align-items-center">
+                                                                                    <span id="shift"><?php echo $array['shift']; ?></span>
+                                                                                    <!-- Shift Dropdown -->
+                                                                                    <select name="shift" id="shift" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Shift</option>
+                                                                                        <?php
+                                                                                        // List of Shift
+                                                                                        $shift = [
+                                                                                            "Morning",
+                                                                                            "Afternoon",
+                                                                                        ];
+                                                                                        // Generate <option> elements dynamically
+                                                                                        foreach ($shift as $type) {
+                                                                                            $selected = ($array["shift"] == $type) ? "selected" : "";
+                                                                                            echo "<option value=\"$type\" $selected>$type</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- Work Experience -->
+                                                                            <tr>
+                                                                                <td><label for="workexperience">Work Experience:</label></td>
+                                                                                <td>
+                                                                                    <?php
+                                                                                    // Example input dates
+                                                                                    $doj = $array["doj"]; // Date of Joining
+                                                                                    $effectiveFrom = $array["effectivedate"]; // Effective End Date, could be null
+
+                                                                                    // Parse dates
+                                                                                    $dojDate = new DateTime($doj);
+                                                                                    $currentDate = new DateTime(); // Current date
+                                                                                    $endDate = $effectiveFrom ? new DateTime($effectiveFrom) : $currentDate; // Use effective date if set, otherwise use today
+
+                                                                                    // Check if DOJ is in the future
+                                                                                    if ($dojDate > $currentDate) {
+                                                                                        // If the DOJ is in the future, display a message
+                                                                                        echo "Not yet commenced";
+                                                                                    } else {
+                                                                                        // Calculate the difference
+                                                                                        $interval = $dojDate->diff($endDate);
+
+                                                                                        // Extract years, months, and days
+                                                                                        $years = $interval->y;
+                                                                                        $months = $interval->m;
+                                                                                        $days = $interval->d;
+
+                                                                                        // Determine the format to display
+                                                                                        if ($years > 0) {
+                                                                                            $experience = number_format($years + ($months / 12), 2) . " year(s)";
+                                                                                        } elseif ($months > 0) {
+                                                                                            $experience = number_format($months + ($days / 30), 2) . " month(s)";
+                                                                                        } else {
+                                                                                            $experience = number_format($days, 2) . " day(s)";
+                                                                                        }
+
+                                                                                        // Output the result
+                                                                                        echo (new DateTime($doj))->format("d M, Y") . " to " . ($effectiveFrom ? (new DateTime($effectiveFrom))->format("d M, Y") : "Today") . ": " . $experience;
+                                                                                    }
+                                                                                    ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card" id="roles">
+                                                            <div class="card-header">
+                                                                Roles
+                                                                <span class="edit-icon" onclick="toggleEdit('roles')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <!-- Type of Association -->
+                                                                            <tr>
+                                                                                <td><label for="engagement">Type of Association:</label></td>
+                                                                                <td class="d-flex align-items-center">
+                                                                                    <span id="engagement"><?php echo $array['engagement']; ?></span>
+                                                                                    <!-- Type of Association Dropdown -->
+                                                                                    <select name="engagement" id="engagement" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Type of Association</option>
+                                                                                        <?php
+                                                                                        // List of Engagement Types
+                                                                                        $engagement_types = [
+                                                                                            "Employee",
+                                                                                            "Volunteer",
+                                                                                            "Intern",
+                                                                                            "Member"
+                                                                                        ];
+
+                                                                                        // Generate <option> elements dynamically
+                                                                                        foreach ($engagement_types as $type) {
+                                                                                            $selected = ($array["engagement"] == $type) ? "selected" : "";
+                                                                                            echo "<option value=\"$type\" $selected>$type</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <!-- Job Type -->
+                                                                            <tr>
+                                                                                <td><label for="job_type">Job Type:</label></td>
+                                                                                <td class="d-flex align-items-center">
+                                                                                    <span id="job_type"><?php echo $array['job_type']; ?></span>
+                                                                                    <!-- Job Type Dropdown -->
+                                                                                    <select name="job_type" id="job_type" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Job Type</option>
+                                                                                        <?php
+                                                                                        // List of Job Types
+                                                                                        $job_types = [
+                                                                                            "Full-time",
+                                                                                            "Part-time",
+                                                                                            "Contractual",
+                                                                                            "Voluntary"
+                                                                                        ];
+
+                                                                                        // Generate <option> elements dynamically
+                                                                                        foreach ($job_types as $type) {
+                                                                                            $selected = ($array["job_type"] == $type) ? "selected" : "";
+                                                                                            echo "<option value=\"$type\" $selected>$type</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <!-- Designation and Grade -->
+                                                                            <tr>
+                                                                                <td><label for="position">Designation:</label></td>
+                                                                                <td class="d-flex align-items-center">
+                                                                                    <!-- Position Dropdown -->
+                                                                                    <span id="position"><?php echo $array['position']; ?></span>
+                                                                                    <select name="position" id="position" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Designation</option>
+                                                                                        <?php
+                                                                                        if ($roles) {
+                                                                                            foreach ($roles as $role) {
+                                                                                                $selected = ($array["position"] == $role['designation']) ? "selected" : "";
+                                                                                                echo "<option value=\"{$role['designation']}\" $selected>{$role['designation']}</option>";
+                                                                                            }
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- Grade -->
+                                                                            <tr>
+                                                                                <td><label for="panno">Grade:</label></td>
+                                                                                <td>
+                                                                                    <?php echo $array["grade"] ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- Access Role -->
+                                                                            <tr>
+                                                                                <td><label for="role">Access Role:</label></td>
+                                                                                <td class="d-flex align-items-center">
+                                                                                    <!-- Access Role Dropdown -->
+                                                                                    <span id="role"><?php echo $array['role']; ?></span>
+                                                                                    <select name="role" id="role" disabled style="display:none;" class="form-select">
+                                                                                        <option disabled selected>Select Access Role</option>
+                                                                                        <?php
+                                                                                        // Generate <option> elements dynamically from the roles fetched from the database
+                                                                                        foreach ($role_options as $role) {
+                                                                                            $selected = ($array["role"] == $role) ? "selected" : "";
+                                                                                            echo "<option value=\"$role\" $selected>$role</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Learnings Tab -->
+                                                    <div id="learnings" class="tab-pane" role="tabpanel">
+                                                        <div class="card" id="qualification">
+                                                            <div class="card-header">
+                                                                Qualification Details
+                                                                <span class="edit-icon" onclick="toggleEdit('qualification')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td><label for="eduq">Educational Qualification:</label></td>
+                                                                                <td>
+                                                                                    <?php echo $array["eduq"] ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- Area of Specialization -->
+                                                                            <tr>
+                                                                                <td><label for="mjorsub">Area of Specialization:</label></td>
+                                                                                <td>
+                                                                                    <?php echo $array["mjorsub"] ?>
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
