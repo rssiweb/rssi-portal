@@ -281,7 +281,13 @@ pg_free_result($result_managers);
             /* Darker gray on hover for a subtle effect */
         }
 
-        /* Media Queries for Mobile Devices */
+        .save-icon {
+            cursor: pointer;
+        }
+
+        /* Media Queries */
+
+        /* Mobile View */
         @media (max-width: 768px) {
             .header_two {
                 flex-direction: column;
@@ -307,15 +313,11 @@ pg_free_result($result_managers);
                 font-size: 0.85rem;
             }
 
-            .sidebar_two {
-                width: 100%;
-                min-width: 0;
-                border-right: none;
-                padding-top: 10px;
-            }
-
-            #sidebar_two .nav-link {
-                padding: 8px 15px;
+            .menu-icon {
+                display: block;
+                font-size: 1.5rem;
+                color: #005b96;
+                cursor: pointer;
             }
 
             .content {
@@ -326,29 +328,25 @@ pg_free_result($result_managers);
                 flex-direction: column;
                 align-items: flex-start;
             }
-        }
 
-        @media (max-width: 480px) {
-            .profile-img {
-                width: 50px;
-                height: 50px;
-                margin-right: 8px;
+            /* Hide sidebar and display menu button on mobile */
+            .sidebar_two {
+                display: none;
             }
 
-            .primary-details h4 {
-                font-size: 1.1rem;
+            .offcanvas {
+                width: 75%;
             }
 
-            .primary-details p {
-                font-size: 0.8rem;
+            .btn-link {
+                text-decoration: none;
+                margin: 10px;
             }
 
-            .contact-info {
-                font-size: 0.75rem;
-            }
-
-            .card {
-                margin-bottom: 15px;
+            .offcanvas-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }
         }
     </style>
@@ -398,6 +396,10 @@ pg_free_result($result_managers);
                             <?php endif; ?>
                             <?php foreach ($resultArr as $array) { ?>
                                 <div class="container-fluid">
+                                    <!-- Menu Icon for Mobile (Trigger for Offcanvas) -->
+                                    <button class="btn btn-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
+                                        <i class="bi bi-list" style="font-size: 1.5rem; color: #31536C;"></i>
+                                    </button>
                                     <!-- Header -->
                                     <div class="header_two">
                                         <div class="profile-img">
@@ -427,59 +429,160 @@ pg_free_result($result_managers);
                                     <!-- Main Layout -->
                                     <div class="d-flex">
                                         <!-- sidebar_two -->
-                                        <div class="sidebar_two" id="sidebar_two">
-                                            <ul class="nav flex-column">
-                                                <li class="nav-item">
-                                                    <a class="nav-link active" href="#employee-details" data-bs-toggle="tab">Employee Details</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#work-details" data-bs-toggle="tab">Work Details</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#learnings" data-bs-toggle="tab">Learnings</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#published-documents" data-bs-toggle="tab">Published Documents</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link" href="#social" data-bs-toggle="tab">Social</a>
-                                                </li>
+                                        <!-- Container for Menu Items (Written Only Once) -->
+                                        <ul id="menu-items" class="d-none">
+                                            <li class="nav-item">
+                                                <a class="nav-link active" href="#employee-details" data-bs-toggle="tab">Employee Details</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="#work-details" data-bs-toggle="tab">Work Details</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="#learnings" data-bs-toggle="tab">Learnings</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="#published-documents" data-bs-toggle="tab">Published Documents</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="#social" data-bs-toggle="tab">Social</a>
+                                            </li>
+                                        </ul>
+
+                                        <!-- Sidebar for Desktop (Visible Only on Medium and Larger Screens) -->
+                                        <div class="sidebar_two d-none d-md-block" id="sidebar_two">
+                                            <ul class="nav flex-column" id="sidebar-menu">
+                                                <!-- Menu items will be inserted here by JavaScript -->
                                             </ul>
                                         </div>
 
-                                        <!-- Content Area -->
-                                        <div class="content tab-content">
-                                            <div id="employee-details" class="tab-pane active">
-                                                <div class="card">
-                                                    <div class="card-header">
-                                                        Address Details
-                                                        <span class="edit-icon" onclick="toggleEdit(this)"><i class="bi bi-pencil"></i></span>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <p contenteditable="false">40/702, EMAAR PALM HILLS, Sector 77<br>Gurugram, Haryana, India 122004</p>
-                                                    </div>
-                                                </div>
-                                                <div class="card">
-                                                    <div class="card-header">
-                                                        Emergency Contacts
-                                                        <span class="edit-icon" onclick="toggleEdit(this)"><i class="bi bi-pencil"></i></span>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <p contenteditable="false">Saha, MR. Sourav (Brother) - 8697274669<br>Saha, MS. Rina (Mother) - 9674867184</p>
-                                                    </div>
-                                                </div>
-                                                <div class="card">
-                                                    <div class="card-header">
-                                                        Visa Details
-                                                        <span class="edit-icon" onclick="toggleEdit(this)"><i class="bi bi-pencil"></i></span>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <p contenteditable="false">Visa details not available</p>
-                                                    </div>
-                                                </div>
+                                        <!-- Offcanvas Menu for Mobile (Visible Only on Small Screens) -->
+                                        <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel">
+                                            <div class="offcanvas-header">
+                                                <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Menu</h5>
+                                                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                                             </div>
-                                            <!-- Other Tabs -->
-                                            <!-- Work Details, Learnings, Published Documents, and Social Tabs go here -->
+                                            <div class="offcanvas-body">
+                                                <ul class="nav flex-column" id="offcanvas-menu">
+                                                    <!-- Menu items will be inserted here by JavaScript -->
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <!-- Content Area -->
+
+                                        <div class="content tab-content container-fluid">
+                                            <form name="signup" id="signup" action="#" method="post" enctype="multipart/form-data">
+                                                <fieldset>
+                                                    <!-- Employee Details Tab -->
+                                                    <div id="employee-details" class="tab-pane active" role="tabpanel">
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                Address Details
+                                                                <span class="edit-icon" onclick="toggleEdit('employee-details')"><i class="bi bi-pencil"></i></span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td>Telephone Number:</td>
+                                                                                <td>
+                                                                                    <span id="phoneText"><?php echo $array['phone']; ?></span>
+                                                                                    <!-- <input type="text" name="phone" id="phone" value="<?php echo $array['phone']; ?>" disabled style="display:none;"> -->
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>Email Address:</td>
+                                                                                <td>
+                                                                                    <span id="emailText"><?php echo $array['email']; ?></span>
+                                                                                    <!-- <input type="email" name="email" id="email" value="<?php echo $array['email']; ?>" disabled style="display:none;"> -->
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>Current Address:</td>
+                                                                                <td>
+                                                                                    <span id="currentAddressText"><?php echo $array['currentaddress']; ?></span>
+                                                                                    <!-- <input type="text" name="currentaddress" id="currentaddress" value="<?php echo $array['currentaddress']; ?>" disabled style="display:none;"> -->
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>Permanent Address:</td>
+                                                                                <td>
+                                                                                    <span id="permanentAddressText"><?php echo $array['permanentaddress']; ?></span>
+                                                                                    <!-- <input type="text" name="permanentaddress" id="permanentaddress" value="<?php echo $array['permanentaddress']; ?>" disabled style="display:none;"> -->
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Work Details Tab -->
+                                                    <div id="work-details" class="tab-pane" role="tabpanel">
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                Current Location
+                                                                <span class="edit-icon" onclick="toggleEdit('work-details')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td><label for="basebranch">Base Branch:</label></td>
+                                                                                <td>
+                                                                                    <span id="baseBranchText"><?php echo $array['basebranch']; ?></span>
+                                                                                    <select name="basebranch" id="basebranch" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Base Branch</option>
+                                                                                        <?php
+                                                                                        // List of Base Branches
+                                                                                        $base_branches = ["Lucknow", "West Bengal"];
+                                                                                        // Generate <option> elements dynamically for Base Branch
+                                                                                        foreach ($base_branches as $branch) {
+                                                                                            $selected = ($array["basebranch"] == $branch) ? "selected" : "";
+                                                                                            echo "<option value=\"$branch\" $selected>$branch</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <td><label for="depb">Deputed Branch:</label></td>
+                                                                                <td>
+                                                                                    <span id="deputedBranchText"><?php echo $array['depb']; ?></span>
+                                                                                    <select name="depb" id="depb" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Deputed Branch</option>
+                                                                                        <?php
+                                                                                        // List of Deputed Branches
+                                                                                        $deputed_branches = ["Lucknow", "West Bengal"];
+                                                                                        // Generate <option> elements dynamically for Deputed Branch
+                                                                                        foreach ($deputed_branches as $branch) {
+                                                                                            $selected = ($array["depb"] == $branch) ? "selected" : "";
+                                                                                            echo "<option value=\"$branch\" $selected>$branch</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </fieldset>
+                                            </form>
+
                                         </div>
                                     </div>
                                 </div>
@@ -500,12 +603,52 @@ pg_free_result($result_managers);
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
-        function toggleEdit(icon) {
-            const parent = icon.closest('.card');
-            const content = parent.querySelector('.card-body p');
-            const isEditable = content.getAttribute('contenteditable') === "true";
-            content.setAttribute('contenteditable', !isEditable);
-            content.focus();
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get the menu items
+            const menuItems = document.querySelector("#menu-items").innerHTML;
+
+            // Insert the same menu items into the sidebar and offcanvas
+            document.querySelector("#sidebar-menu").innerHTML = menuItems;
+            document.querySelector("#offcanvas-menu").innerHTML = menuItems;
+        });
+    </script>
+    <script>
+        function toggleEdit(sectionId) {
+            // Get the section based on the provided sectionId
+            const section = document.getElementById(sectionId);
+
+            // Get all input and select elements in the section
+            const inputs = section.querySelectorAll('input, select');
+
+            // Only proceed if there are input fields (input, select) in the section
+            if (inputs.length > 0) {
+                // Toggle edit mode for input elements in the section
+                const textElements = section.querySelectorAll('span');
+
+                // Toggle visibility of inputs (edit mode) and text (view mode)
+                inputs.forEach(input => {
+                    input.disabled = !input.disabled; // Toggle the disabled state
+                    input.style.display = input.disabled ? 'none' : 'inline'; // Toggle input visibility
+                });
+
+                textElements.forEach(text => {
+                    text.style.display = text.style.display === 'none' ? 'inline' : 'none'; // Toggle text visibility
+                });
+
+                // Toggle icons (replace pencil with save)
+                const editIcon = section.querySelector('.edit-icon');
+                const saveIcon = section.querySelector('.save-icon');
+
+                if (editIcon && saveIcon) {
+                    editIcon.style.display = 'none'; // Hide pencil icon
+                    saveIcon.style.display = 'inline'; // Show save icon
+                }
+            }
+        }
+
+        function saveChanges() {
+            // Submit the form when the save button is clicked
+            document.getElementById('signup').submit();
         }
     </script>
 </body>
