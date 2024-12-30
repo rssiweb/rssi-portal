@@ -399,10 +399,25 @@ if ($result && pg_num_rows($result) > 0) {
                             <?php endif; ?>
                             <?php foreach ($resultArr as $array) { ?>
                                 <div class="container-fluid">
-                                    <!-- Menu Icon for Mobile (Trigger for Offcanvas) -->
-                                    <button class="btn btn-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
-                                        <i class="bi bi-list" style="font-size: 1.5rem; color: #31536C;"></i>
-                                    </button>
+
+                                    <!-- Accordion for Mobile (Visible Only on Small Screens) -->
+                                    <div class="d-md-none accordion" id="mobileAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingMenu">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuCollapse" aria-expanded="false" aria-controls="menuCollapse">
+                                                    Menu
+                                                </button>
+                                            </h2>
+                                            <div id="menuCollapse" class="accordion-collapse collapse" aria-labelledby="headingMenu" data-bs-parent="#mobileAccordion">
+                                                <div class="accordion-body">
+                                                    <ul id="mobile-menu-items" class="nav flex-column">
+                                                        <!-- Menu items will be injected here dynamically -->
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <!-- Header -->
                                     <div class="header_two">
                                         <div class="profile-img">
@@ -458,18 +473,6 @@ if ($result && pg_num_rows($result) > 0) {
                                             </ul>
                                         </div>
 
-                                        <!-- Offcanvas Menu for Mobile (Visible Only on Small Screens) -->
-                                        <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel">
-                                            <div class="offcanvas-header">
-                                                <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Menu</h5>
-                                                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                                            </div>
-                                            <div class="offcanvas-body">
-                                                <ul class="nav flex-column" id="offcanvas-menu">
-                                                    <!-- Menu items will be inserted here by JavaScript -->
-                                                </ul>
-                                            </div>
-                                        </div>
                                         <!-- Content Area -->
 
                                         <div class="content tab-content container-fluid">
@@ -910,13 +913,44 @@ if ($result && pg_num_rows($result) > 0) {
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Get the menu items
-            const menuItems = document.querySelector("#menu-items").innerHTML;
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuItems = document.querySelector('#menu-items');
+            const desktopMenu = document.querySelector('#sidebar-menu');
+            const mobileMenu = document.querySelector('#mobile-menu-items');
+            const accordionButton = document.querySelector('#headingMenu button');
 
-            // Insert the same menu items into the sidebar and offcanvas
-            document.querySelector("#sidebar-menu").innerHTML = menuItems;
-            document.querySelector("#offcanvas-menu").innerHTML = menuItems;
+            // Clone menu items for desktop and mobile
+            menuItems.querySelectorAll('.nav-item').forEach(item => {
+                // Clone the item for desktop sidebar
+                const desktopItem = item.cloneNode(true);
+                desktopMenu.appendChild(desktopItem);
+
+                // Clone the item for mobile accordion
+                const mobileItem = item.cloneNode(true);
+                mobileMenu.appendChild(mobileItem);
+
+                // Add click event listener to activate the respective tab and change button text
+                mobileItem.querySelector('a').addEventListener('click', event => {
+                    event.preventDefault();
+                    const tabTarget = event.target.getAttribute('href'); // e.g., "#employee-details"
+
+                    // Activate the tab using Bootstrap's default behavior
+                    const tabElement = document.querySelector(`[href="${tabTarget}"]`);
+                    if (tabElement) {
+                        const tab = new bootstrap.Tab(tabElement);
+                        tab.show();
+                    }
+
+                    // Update the accordion button text to reflect the selected menu
+                    accordionButton.innerHTML = `Menu: ${event.target.innerText}`;
+
+                    // Collapse the accordion after selection
+                    const accordion = document.querySelector('#menuCollapse');
+                    const bootstrapCollapse = new bootstrap.Collapse(accordion, {
+                        toggle: true,
+                    });
+                });
+            });
         });
     </script>
     <script>
