@@ -45,7 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'scode',
             'salary',
             'absconding',
-            'shift'
+            'shift',
+            'remarks'
         ];
 
         foreach ($fields_to_check as $field) {
@@ -449,6 +450,9 @@ if ($result && pg_num_rows($result) > 0) {
                                             </li>
                                             <li class="nav-item">
                                                 <a class="nav-link" href="#published-documents" data-bs-toggle="tab">Published Documents</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="#status_compensation" data-bs-toggle="tab">Status & Compensation</a>
                                             </li>
                                             <li class="nav-item">
                                                 <a class="nav-link" href="#social" data-bs-toggle="tab">Social</a>
@@ -879,6 +883,100 @@ if ($result && pg_num_rows($result) > 0) {
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    <!-- Work Details Tab -->
+                                                    <div id="status_compensation" class="tab-pane" role="tabpanel">
+                                                        <div class="card" id="compensation">
+                                                            <div class="card-header">
+                                                                Compensation
+                                                                <span class="edit-icon" onclick="toggleEdit('compensation')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td><label for="salary">CTC per Annum:</label></td>
+                                                                                <td>
+                                                                                    <span id="salary"><?php echo $array['salary']; ?></span>
+                                                                                    <input type="number" name="salary" id="salary" value="<?php echo $array["salary"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card" id="employee_status">
+                                                            <div class="card-header">
+                                                                Employee Status
+                                                                <span class="edit-icon" onclick="toggleEdit('employee_status')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td><label for="filterstatus">Status:</label></td>
+                                                                                <td>
+                                                                                    <span id="filterstatus"><?php echo $array['filterstatus']; ?></span>
+                                                                                    <select name="filterstatus" id="filterstatus" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Status</option>
+                                                                                        <?php
+                                                                                        // List of Status Options
+                                                                                        $status_options = [
+                                                                                            "Active",
+                                                                                            "Inactive",
+                                                                                            "In Progress"
+                                                                                        ];
+
+                                                                                        // Generate <option> elements dynamically
+                                                                                        foreach ($status_options as $status) {
+                                                                                            $selected = ($array["filterstatus"] == $status) ? "selected" : "";
+                                                                                            echo "<option value=\"$status\" $selected>$status</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="remarks">Remarks:</label></td>
+                                                                                <td>
+                                                                                    <span id="remarks"><?php echo $array['remarks']; ?></span>
+                                                                                    <textarea name="remarks" id="remarks" class="form-control" rows="3" disabled style="display: none;"><?php echo !empty($array['remarks']) ? $array['remarks'] : ''; ?></textarea>
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <td><label for="absconding">Abscond:</label></td>
+                                                                                <td>
+                                                                                    <span id="abscondingText"><?php echo $array['absconding']; ?></span>
+
+                                                                                    <!-- Container for checkbox and label -->
+                                                                                    <div id="absconding-container" style="display: none;">
+                                                                                        <input type="checkbox" name="absconding" id="absconding" value="Yes"
+                                                                                            <?php echo ($array["absconding"] == "Yes") ? "checked" : ""; ?>
+                                                                                            disabled class="form-check-input">
+                                                                                        <label class="form-check-label ms-2" for="absconding">Yes</label>
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </fieldset>
                                             </form>
 
@@ -943,24 +1041,73 @@ if ($result && pg_num_rows($result) > 0) {
         });
     </script>
     <script>
+        // function toggleEdit(sectionId) {
+        //     // Get the section based on the provided sectionId
+        //     const section = document.getElementById(sectionId);
+
+        //     // Get all input and select elements in the section
+        //     const inputs = section.querySelectorAll('input, select, textarea, input[type="checkbox"]');
+
+        //     // Only proceed if there are input fields (input, select) in the section
+        //     if (inputs.length > 0) {
+        //         // Toggle edit mode for input elements in the section
+        //         const textElements = section.querySelectorAll('span');
+
+        //         // Toggle visibility of inputs (edit mode) and text (view mode)
+        //         inputs.forEach(input => {
+        //             input.disabled = !input.disabled; // Toggle the disabled state
+        //             input.style.display = input.disabled ? 'none' : 'inline'; // Toggle input visibility
+        //         });
+
+        //         textElements.forEach(text => {
+        //             text.style.display = text.style.display === 'none' ? 'inline' : 'none'; // Toggle text visibility
+        //         });
+
+        //         // Toggle icons (replace pencil with save)
+        //         const editIcon = section.querySelector('.edit-icon');
+        //         const saveIcon = section.querySelector('.save-icon');
+
+        //         if (editIcon && saveIcon) {
+        //             editIcon.style.display = 'none'; // Hide pencil icon
+        //             saveIcon.style.display = 'inline'; // Show save icon
+        //         }
+        //     }
+        // }
         function toggleEdit(sectionId) {
             // Get the section based on the provided sectionId
             const section = document.getElementById(sectionId);
 
-            // Get all input and select elements in the section
-            const inputs = section.querySelectorAll('input, select');
+            // Get all input, select, textarea, and checkbox elements in the section
+            const inputs = section.querySelectorAll('input, select, textarea, input[type="checkbox"]');
 
-            // Only proceed if there are input fields (input, select) in the section
+            // Only proceed if there are input fields (input, select, textarea, checkbox) in the section
             if (inputs.length > 0) {
                 // Toggle edit mode for input elements in the section
                 const textElements = section.querySelectorAll('span');
 
                 // Toggle visibility of inputs (edit mode) and text (view mode)
                 inputs.forEach(input => {
-                    input.disabled = !input.disabled; // Toggle the disabled state
-                    input.style.display = input.disabled ? 'none' : 'inline'; // Toggle input visibility
+                    if (input.tagName.toLowerCase() === "textarea" || input.type === "checkbox") {
+                        if (input.type === "checkbox") {
+                            // For checkboxes, toggle the 'disabled' state and visibility of its container
+                            const container = input.closest('div'); // Get the parent container (e.g., absconding-container)
+                            if (container) {
+                                container.style.display = container.style.display === 'none' ? 'block' : 'none'; // Toggle visibility of checkbox container
+                                input.disabled = !input.disabled; // Toggle the disabled state of the checkbox
+                            }
+                        } else if (input.tagName.toLowerCase() === "textarea") {
+                            // For textarea, toggle visibility and disabled state
+                            input.disabled = !input.disabled;
+                            input.style.display = input.disabled ? 'none' : 'block'; // Toggle textarea visibility
+                        }
+                    } else {
+                        // For other inputs (e.g., select, text input), toggle the 'disabled' state and visibility
+                        input.disabled = !input.disabled;
+                        input.style.display = input.disabled ? 'none' : 'inline'; // Toggle input visibility
+                    }
                 });
 
+                // Toggle visibility of text elements (span elements)
                 textElements.forEach(text => {
                     text.style.display = text.style.display === 'none' ? 'inline' : 'none'; // Toggle text visibility
                 });

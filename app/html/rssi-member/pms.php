@@ -14,66 +14,112 @@ validation();
 
 date_default_timezone_set('Asia/Kolkata');
 
-if ($_POST) {
-    @$type = $_POST['type'];
-    @$user_id = ($type === "Applicant") ? $_POST['userid'] : strtoupper($_POST['userid']);
-    @$password = $_POST['newpass'];
-    @$newpass_hash = password_hash($password, PASSWORD_DEFAULT);
-    $now = date('Y-m-d H:i:s');    
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Sanitize inputs
+    $type = isset($_POST['type']) ? htmlspecialchars(trim($_POST['type'])) : null;
+    $user_id = isset($_POST['userid']) ? htmlspecialchars(trim($_POST['userid'])) : null;
+    $password = isset($_POST['newpass']) ? htmlspecialchars(trim($_POST['newpass'])) : null;
+    $now = date('Y-m-d H:i:s');
 
-    if ($type == "Associate") {
-        $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', default_pass_updated_by='$user_check', default_pass_updated_on='$now' where associatenumber='$user_id'";
-    } if ($type == "Applicant") {
-        $change_password_query = "UPDATE signup SET password='$newpass_hash', default_pass_updated_by='$user_check', default_pass_updated_on='$now' where application_number='$user_id'";
-    } else {
-        $change_password_query = "UPDATE rssimyprofile_student SET password='$newpass_hash', default_pass_updated_by='$user_check', default_pass_updated_on='$now' where student_id='$user_id'";
+    if ($type && $user_id && $password) {
+        // Format user_id based on type
+        $user_id = ($type === "Applicant") ? $user_id : strtoupper($user_id);
+
+        // Hash the password
+        $newpass_hash = password_hash($password, PASSWORD_DEFAULT);
+
+        // Prepare SQL query
+        $queries = [
+            "Associate" => "UPDATE rssimyaccount_members SET password = $1, default_pass_updated_by = $2, default_pass_updated_on = $3 WHERE associatenumber = $4",
+            "Applicant" => "UPDATE signup SET password = $1, default_pass_updated_by = $2, default_pass_updated_on = $3 WHERE application_number = $4",
+            "Student"   => "UPDATE rssimyprofile_student SET password = $1, default_pass_updated_by = $2, default_pass_updated_on = $3 WHERE student_id = $4",
+        ];
+
+        $change_password_query = $queries[$type] ?? null;
+
+        if ($change_password_query) {
+            // Execute the query using prepared statements
+            $result = pg_query_params($con, $change_password_query, [$newpass_hash, $user_check, $now, $user_id]);
+
+            if (!$result) {
+                // If the query fails, show an error
+                echo "<script type='text/javascript'>
+                        alert('Error: Failed to update the password. Please try again.');
+                      </script>";
+                exit;
+            } else {
+                // If the query succeeds, show success message
+                echo "<script type='text/javascript'>
+                        alert('Password has been updated successfully for $user_id.');
+                        if (window.history.replaceState) {
+                        // Update the URL without causing a page reload or resubmission
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                    window.location.reload(); // Trigger a page reload to reflect changes
+                      </script>";
+            }
+        }
     }
-    $result = pg_query($con, $change_password_query);
-    $cmdtuples = pg_affected_rows($result);
 }
+// Initialize $resultArrr as an empty array if it hasn't been set before
+$resultArrr = [];
 
-@$get_id = $_POST['get_id'];
-@$get_status = ($get_id === "Applicant") ? $_POST['get_status'] : strtoupper($_POST['get_status']);
+// Fetch details from the form if POST is made
+$get_id = isset($_POST['get_id']) ? htmlspecialchars(trim($_POST['get_id'])) : null;
+$get_status = isset($_POST['get_status']) ? htmlspecialchars(trim($_POST['get_status'])) : null;
 
-if ($get_id == "Associate" && $get_status != null) {
-    $change_details = "SELECT * from rssimyaccount_members where associatenumber='$get_status'";
-} else if ($get_id == "Associate" && $get_status == null) {
-    $change_details = "SELECT * from rssimyaccount_members where filterstatus='Active' AND default_pass_updated_on is not null";
-} else if ($get_id == "Student" && $get_status != null) {
-    $change_details = "SELECT * from rssimyprofile_student where student_id='$get_status'";
-} else if ($get_id == "Student" && $get_status == null) {
-    $change_details = "SELECT * from rssimyprofile_student where filterstatus='Active' AND default_pass_updated_on is not null";
-} else if ($get_id == "Applicant" && $get_status != null) {
-    $change_details = "SELECT * from signup where application_number='$get_status'";
-} else if ($get_id == "Applicant" && $get_status == null) {
-    $change_details = "SELECT * from signup where default_pass_updated_on is not null";
-} else {
-    $change_details = "SELECT * from rssimyprofile_student where student_id=''";
+if ($get_id) {
+    // Define queries for fetching details based on $get_id and $get_status
+    $detail_queries = [
+        "Associate" => $get_status
+            ? "SELECT * FROM rssimyaccount_members WHERE associatenumber = $1"
+            : "SELECT * FROM rssimyaccount_members WHERE filterstatus = 'Active' AND default_pass_updated_on IS NOT NULL",
+        "Student" => $get_status
+            ? "SELECT * FROM rssimyprofile_student WHERE student_id = $1"
+            : "SELECT * FROM rssimyprofile_student WHERE filterstatus = 'Active' AND default_pass_updated_on IS NOT NULL",
+        "Applicant" => $get_status
+            ? "SELECT * FROM signup WHERE application_number = $1"
+            : "SELECT * FROM signup WHERE default_pass_updated_on IS NOT NULL",
+    ];
+
+    // Choose the query based on $get_id
+    $change_details_query = isset($detail_queries[$get_id]) ? $detail_queries[$get_id] : "SELECT * FROM rssimyprofile_student WHERE student_id = ''";
+
+    // Execute query with or without $get_status as a parameter
+    if ($get_status) {
+        $result = pg_query_params($con, $change_details_query, [$get_status]);
+    } else {
+        $result = pg_query($con, $change_details_query);
+    }
+
+    // Check if the query execution was successful
+    if (!$result) {
+        echo "An error occurred while fetching details.\n";
+        exit;
+    }
+
+    // Fetch all the results into $resultArrr
+    $resultArrr = pg_fetch_all($result);
+    // Handle $resultArrr as needed, for example, display the results in a table
 }
-
-$result = pg_query($con, $change_details);
-
-if (!$result) {
-    echo "An error occurred.\n";
-    exit;
-}
-
-$resultArrr = pg_fetch_all($result);
 ?>
 
 <!doctype html>
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -106,6 +152,12 @@ $resultArrr = pg_fetch_all($result);
             outline: none;
         }
     </style>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 </head>
 
 <!-- =========================
@@ -113,7 +165,7 @@ $resultArrr = pg_fetch_all($result);
 ============================== -->
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
 
     <main id="main" class="main">
@@ -138,20 +190,6 @@ $resultArrr = pg_fetch_all($result);
 
                         <div class="card-body">
                             <br>
-
-                            <?php if (@$type != null && @$cmdtuples == 0) { ?>
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                    <span>ERROR: The association type and user ID you entered is incorrect.</span>
-                                </div>
-                            <?php } else if (@$cmdtuples == 1) { ?>
-                                <div class="alert alert-success alert-dismissible fade show" role="alert" style="text-align: -webkit-center;">
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    <i class="bi bi-check2-circle"></i>
-                                    <span>Password has been updated successfully for <?php echo @$user_id ?>.</span>
-                                </div>
-                            <?php } ?>
 
                             <form autocomplete="off" name="pms" id="pms" action="pms.php" method="POST">
                                 <div class="form-group" style="display: inline-block;">
@@ -185,23 +223,20 @@ $resultArrr = pg_fetch_all($result);
                             </form>
 
                             <br><b><span class="underline">Password change details</span></b><br><br>
-
                             <form name="changedetails" id="changedetails" action="" method="POST">
                                 <div class="form-group" style="display: inline-block;">
                                     <div class="col2" style="display: inline-block;">
                                         <select name="get_id" class="form-select" style="width:max-content; display:inline-block" required>
                                             <?php if ($get_id == null) { ?>
                                                 <option disabled selected hidden>Association Type</option>
-                                            <?php
-                                            } else { ?>
-                                                <option hidden selected><?php echo $get_id ?></option>
-                                            <?php }
-                                            ?>
+                                            <?php } else { ?>
+                                                <option hidden selected><?php echo $get_id; ?></option>
+                                            <?php } ?>
                                             <option>Associate</option>
                                             <option>Student</option>
                                             <option>Applicant</option>
                                         </select>&nbsp;
-                                        <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="<?php echo $get_status ?>">
+                                        <input type="text" name="get_status" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" value="<?php echo $get_status; ?>">
                                     </div>
                                 </div>
                                 <div class="col2 left" style="display: inline-block;">
@@ -209,97 +244,67 @@ $resultArrr = pg_fetch_all($result);
                                         <i class="bi bi-search"></i>&nbsp;Search</button>
                                 </div>
                             </form>
-                            <div class="col" style="display: inline-block; width:99%; text-align:right">
-                                Record count:&nbsp;<?php echo sizeof($resultArrr) ?>
-                            </div>
 
-                            <?php echo '
-                        <div class="table-responsive">
-                       <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">User ID</th>
-                                <th scope="col">Set on</th>
-                                <th scope="col">Set by</th>
-                                <th scope="col">Changed on</th>
-                                <th scope="col">Changed by</th>
-                                
-                            </tr>
-                        </thead>' ?>
-                            <?php if (sizeof($resultArrr) > 0) { ?>
-                                <?php
-                                echo '<tbody>';
-                                foreach ($resultArrr as $array) {
-                                    echo '<tr>
-                                <td>' . @$array['associatenumber'] . @$array['student_id']. @$array['application_number'] ?>
+                            <?php
+                            // Start of PHP block for alerts
+                            echo "<script type='text/javascript'>";
+                            if ($cmdtuples == 0) {
+                                echo "alert('Error: The association type and user ID you entered is incorrect.');";
+                            } elseif ($cmdtuples == 1) {
+                                echo "alert('Password has been updated successfully for $user_id.');";
+                            }
+                            echo "</script>";
+                            ?>
 
-                                    <?php if ($array['password_updated_by'] == null || $array['password_updated_on'] < $array['default_pass_updated_on']) { ?>
-                                        <?php echo '<p class="badge bg-warning">defaulter</p>' ?><?php } ?>
-
-                                        <?php
-                                        echo '</td>' ?>
-
-                                        <?php if ($array['default_pass_updated_on'] != null) { ?>
-
-                                            <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['default_pass_updated_on'])) . '</td>' ?>
-                                        <?php } else { ?>
-                                            <?php echo '<td></td>' ?>
-                                        <?php } ?>
-
-
-                                        <?php echo '<td>' . ($array['default_pass_updated_by'] ?? 'System') . '</td>'; ?>
-
-                                        <?php if ($array['password_updated_on'] != null) { ?>
-
-                                            <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['password_updated_on'])) . '</td>' ?>
-                                        <?php } else { ?>
-                                            <?php echo '<td></td>' ?>
-                                        <?php } ?>
-                                    <?php echo '<td>' . $array['password_updated_by'] . '</td></tr>';
-                                } ?>
-                                <?php
-                            } else if ($get_id == null && $get_status == null) {
-                                ?>
-                                    <tr>
-                                        <td colspan="5">Please select Filter value.</td>
-                                    </tr>
-                                <?php
-                            } else {
-                                ?>
-                                    <tr>
-                                        <td colspan="5">No record was found for the selected filter value.</td>
-                                    </tr>
-                                <?php }
-
-                            echo '</tbody>
-                                    </table>
-                                    </div>';
-                                ?>
-                                <script>
-                                    if (window.history.replaceState) {
-                                        window.history.replaceState(null, null, window.location.href);
-                                    }
-                                    var password = document.querySelector("#newpass");
-                                    var toggle = document.querySelector("#show-password");
-                                    // I'm using the "(click)" event to make this works cross-browser.
-                                    toggle.addEventListener("click", handleToggleClick, false);
-                                    // I handle the toggle click, changing the TYPE of password input.
-                                    function handleToggleClick(event) {
-
-                                        if (this.checked) {
-
-                                            console.warn("Change input 'type' to: text");
-                                            password.type = "text";
-
+                            <div class="table-responsive">
+                                <table id="userDetailsTable" class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>User ID</th>
+                                            <th>Set on</th>
+                                            <th>Set by</th>
+                                            <th>Changed on</th>
+                                            <th>Changed by</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (sizeof($resultArrr) > 0) {
+                                            foreach ($resultArrr as $array) { ?>
+                                                <tr>
+                                                    <td>
+                                                        <?php echo @$array['associatenumber'] . @$array['student_id'] . @$array['application_number']; ?>
+                                                        <?php if ($array['password_updated_by'] == null || $array['password_updated_on'] < $array['default_pass_updated_on']) { ?>
+                                                            <p class="badge bg-warning">defaulter</p>
+                                                        <?php } ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo ($array['default_pass_updated_on'] != null) ? date("d/m/Y g:i a", strtotime($array['default_pass_updated_on'])) : ''; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo ($array['default_pass_updated_by'] ?? 'System'); ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo ($array['password_updated_on'] != null) ? date("d/m/Y g:i a", strtotime($array['password_updated_on'])) : ''; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php echo $array['password_updated_by']; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php }
                                         } else {
-
-                                            console.warn("Change input 'type' to: password");
-                                            password.type = "password";
-
-                                        }
-
-                                    }
-                                </script>
+                                            if ($get_id == null && $get_status == null) { ?>
+                                                <tr>
+                                                    <td colspan="5">Please select Filter value.</td>
+                                                </tr>
+                                            <?php } else { ?>
+                                                <tr>
+                                                    <td colspan="5">No record was found for the selected filter value.</td>
+                                                </tr>
+                                        <?php }
+                                        } ?>
+                                    </tbody>
+                                </table>
+                            </div>
 
 
                         </div>
@@ -317,7 +322,44 @@ $resultArrr = pg_fetch_all($result);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+        var password = document.querySelector("#newpass");
+        var toggle = document.querySelector("#show-password");
+        // I'm using the "(click)" event to make this works cross-browser.
+        toggle.addEventListener("click", handleToggleClick, false);
+        // I handle the toggle click, changing the TYPE of password input.
+        function handleToggleClick(event) {
 
+            if (this.checked) {
+
+                console.warn("Change input 'type' to: text");
+                password.type = "text";
+
+            } else {
+
+                console.warn("Change input 'type' to: password");
+                password.type = "password";
+
+            }
+
+        }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($resultArrr)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#userDetailsTable').DataTable({
+                    // paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
 </body>
 
 </html>
