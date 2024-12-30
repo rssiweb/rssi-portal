@@ -337,19 +337,9 @@ if ($result && pg_num_rows($result) > 0) {
                 display: none;
             }
 
-            .offcanvas {
-                width: 75%;
-            }
-
             .btn-link {
                 text-decoration: none;
                 margin: 10px;
-            }
-
-            .offcanvas-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
             }
         }
     </style>
@@ -400,24 +390,6 @@ if ($result && pg_num_rows($result) > 0) {
                             <?php foreach ($resultArr as $array) { ?>
                                 <div class="container-fluid">
 
-                                    <!-- Accordion for Mobile (Visible Only on Small Screens) -->
-                                    <div class="d-md-none accordion" id="mobileAccordion">
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header" id="headingMenu">
-                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuCollapse" aria-expanded="false" aria-controls="menuCollapse">
-                                                    Menu
-                                                </button>
-                                            </h2>
-                                            <div id="menuCollapse" class="accordion-collapse collapse" aria-labelledby="headingMenu" data-bs-parent="#mobileAccordion">
-                                                <div class="accordion-body">
-                                                    <ul id="mobile-menu-items" class="nav flex-column">
-                                                        <!-- Menu items will be injected here dynamically -->
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <!-- Header -->
                                     <div class="header_two">
                                         <div class="profile-img">
@@ -445,6 +417,23 @@ if ($result && pg_num_rows($result) > 0) {
                                     </div>
 
                                     <!-- Main Layout -->
+                                    <!-- Accordion for Mobile (Visible Only on Small Screens) -->
+                                    <div class="d-md-none accordion" id="mobileAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingMenu">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuCollapse" aria-expanded="false" aria-controls="menuCollapse">
+                                                    Menu
+                                                </button>
+                                            </h2>
+                                            <div id="menuCollapse" class="accordion-collapse collapse" aria-labelledby="headingMenu" data-bs-parent="#mobileAccordion">
+                                                <div class="accordion-body">
+                                                    <ul id="mobile-menu-items" class="nav flex-column">
+                                                        <!-- Menu items will be injected here dynamically -->
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="d-flex">
                                         <!-- sidebar_two -->
                                         <!-- Container for Menu Items (Written Only Once) -->
