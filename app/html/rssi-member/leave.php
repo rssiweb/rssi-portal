@@ -533,9 +533,22 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
     </script>
     <script>
         function checkLeaveType() {
-            var fromdate = new Date(document.getElementById("fromdate").value);
-            var todate = new Date(document.getElementById("todate").value);
-            var today = new Date();
+            // Get today's date from the server (IST timezone) and normalize it to midnight
+            const today = new Date('<?php echo date("Y-m-d"); ?>T00:00:00');
+            today.setHours(0, 0, 0, 0); // Normalize to midnight
+
+            console.log("Today's normalized date (from server):", today); // Log the normalized today value
+
+            // Get fromdate and todate values from input fields
+            const fromdate = new Date(document.getElementById("fromdate").value);
+            const todate = new Date(document.getElementById("todate").value);
+
+            // Normalize fromdate and todate to midnight
+            fromdate.setHours(0, 0, 0, 0);
+            todate.setHours(0, 0, 0, 0);
+
+            console.log("Normalized fromdate:", fromdate); // Log the normalized fromdate
+            console.log("Normalized todate:", todate); // Log the normalized todate
 
             // Reset typeofleave if fromdate or todate changes
             document.getElementById("typeofleave").value = ""; // Reset the selected value
@@ -550,7 +563,6 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
             }
         }
     </script>
-
     <script>
         if (<?php echo $slbalance ?> <= 0) {
             document.getElementById("typeofleave").options[1].disabled = true;
