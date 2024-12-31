@@ -299,9 +299,10 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                                     <div class="col-md-3 notification-box mb-3">
                                         <!-- Section Title -->
                                         <p class="fs-5 fw-bold mb-3">Leave Information</p>
+                                        <span class="text-muted">Data reflects the current month. Leave credits are updated by the 5th of each month.</span>
 
                                         <!-- Current Leave Balance -->
-                                        <div class="current-balance mb-3">
+                                        <div class="current-balance mt-3 mb-3">
                                             <p class="fs-6 mb-1">Current Leave Balance:</p>
                                             <ul class="list-unstyled ms-3">
                                                 <li>Sick Leave: <?php echo $slbalance; ?></li>

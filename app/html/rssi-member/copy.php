@@ -40,13 +40,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'position',
             'class',
             'role',
-            'immediate_manager',
+            'supervisor',
             'filterstatus',
             'scode',
             'salary',
             'absconding',
             'shift',
-            'remarks'
+            'remarks',
+            'workexperience',
+            'eduq',
+            'majorsub'
         ];
 
         foreach ($fields_to_check as $field) {
@@ -123,6 +126,15 @@ $sql = "SELECT * FROM rssimyaccount_members WHERE associatenumber='$associatenum
 $result = pg_query($con, $sql);
 $resultArr = pg_fetch_all($result);
 
+// Ensure data is fetched correctly
+if ($resultArr && count($resultArr) > 0) {
+    $currentAssociate = $resultArr[0]; // Assuming we fetch one record
+    $supervisorID = $currentAssociate['supervisor']; // Fetch the supervisor ID
+} else {
+    echo "No associate data found.";
+    exit;
+}
+
 // Step 2: Fetch active managers data
 $sql_managers = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active'";
 $result_managers = pg_query($con, $sql_managers);
@@ -135,9 +147,23 @@ if ($result_managers && pg_num_rows($result_managers) > 0) {
     exit;
 }
 
-// Close the result resource
+// Step 3: Fetch the supervisor's full name (can be inactive)
+if (!empty($supervisorID)) {
+    $sql_supervisor = "SELECT fullname FROM rssimyaccount_members WHERE associatenumber = '$supervisorID'";
+    $result_supervisor = pg_query($con, $sql_supervisor);
+
+    if ($result_supervisor && pg_num_rows($result_supervisor) > 0) {
+        $supervisor = pg_fetch_assoc($result_supervisor);
+        $supervisorFullName = $supervisor['fullname'];
+    }
+}
+
+// Close the result resources
 pg_free_result($result);
 pg_free_result($result_managers);
+if (isset($result_supervisor)) {
+    pg_free_result($result_supervisor);
+}
 ?>
 <?php
 // SQL query to fetch active roles and grades
@@ -612,10 +638,10 @@ if ($result && pg_num_rows($result) > 0) {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="card" id="experience">
+                                                        <div class="card" id="current_project">
                                                             <div class="card-header">
-                                                                Employment Details
-                                                                <span class="edit-icon" onclick="toggleEdit('experience')">
+                                                                Current Project
+                                                                <span class="edit-icon" onclick="toggleEdit('current_project')">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </span>
                                                                 <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
@@ -677,6 +703,23 @@ if ($result && pg_num_rows($result) > 0) {
                                                                                         foreach ($shift as $type) {
                                                                                             $selected = ($array["shift"] == $type) ? "selected" : "";
                                                                                             echo "<option value=\"$type\" $selected>$type</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- HTML for Supervisor -->
+                                                                            <tr>
+                                                                                <td><label for="immediate_manager">Supervisor:</label></td>
+                                                                                <td class="d-flex align-items-center">
+                                                                                    <span id="supervisorText"><?php echo !empty($array['supervisor']) ? (!empty($supervisorFullName) ? "$supervisorFullName ($array[supervisor])" : $array['supervisor']) : "Supervisor not assigned"; ?></span>
+                                                                                    <select name="supervisor" id="supervisor" class="form-select" disabled style="display:none;">
+                                                                                        <option disabled selected>Select Supervisor</option>
+                                                                                        <?php
+                                                                                        // Populate dropdown with active managers
+                                                                                        foreach ($managersArr as $manager) {
+                                                                                            $selected = ($manager['associatenumber'] == @$array['supervisor']) ? "selected" : "";
+                                                                                            echo "<option value=\"{$manager['associatenumber']}\" $selected>{$manager['fullname']} - {$manager['associatenumber']}</option>";
                                                                                         }
                                                                                         ?>
                                                                                     </select>
@@ -866,7 +909,28 @@ if ($result && pg_num_rows($result) > 0) {
                                                                             <tr>
                                                                                 <td><label for="eduq">Educational Qualification:</label></td>
                                                                                 <td>
-                                                                                    <?php echo $array["eduq"] ?>
+                                                                                    <span id="eduqText"><?php echo $array['eduq']; ?></span>
+                                                                                    <select name="eduq" id="eduq" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Status</option>
+                                                                                        <?php
+                                                                                        // List of Status Options
+                                                                                        $eduq_options = [
+                                                                                            "Bachelor Degree Regular",
+                                                                                            "Bachelor Degree Correspondence",
+                                                                                            "Master Degree",
+                                                                                            "PhD (Doctorate Degree)",
+                                                                                            "Post Doctorate or 5 years experience",
+                                                                                            "Culture, Art & Sports etc.",
+                                                                                            "Class 12th Pass"
+                                                                                        ];
+
+                                                                                        // Generate <option> elements dynamically
+                                                                                        foreach ($eduq_options as $status) {
+                                                                                            $selected = ($array["eduq"] == $status) ? "selected" : "";
+                                                                                            echo "<option value=\"$status\" $selected>$status</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
                                                                                     </select>
                                                                                 </td>
                                                                             </tr>
@@ -874,9 +938,44 @@ if ($result && pg_num_rows($result) > 0) {
                                                                             <tr>
                                                                                 <td><label for="mjorsub">Area of Specialization:</label></td>
                                                                                 <td>
-                                                                                    <?php echo $array["mjorsub"] ?>
+                                                                                    <span id="mjorsubText"><?php echo $array['mjorsub']; ?></span>
+                                                                                    <input type="text" name="mjorsub" id="mjorsub" value="<?php echo $array["mjorsub"]; ?>" placeholder="e.g., Computer Science, Physics, Fine Arts" disabled class="form-control" style="display:none;">
                                                                                 </td>
                                                                             </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card" id="experience">
+                                                            <div class="card-header">
+                                                                Experience
+                                                                <span class="edit-icon" onclick="toggleEdit('experience')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td><label for="workexperience">Relevant Previous Experience:</label></td>
+                                                                                <td>
+                                                                                    <span id="workexperienceText"><?php echo $array['workexperience']; ?></span>
+                                                                                    <textarea name="workexperience" id="workexperience" class="form-control" rows="3" disabled style="display: none;"><?php echo !empty($array['workexperience']) ? $array['workexperience'] : ''; ?></textarea>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- Area of Specialization -->
+                                                                            <!-- <tr>
+                                                                                <td><label for="mjorsub">Area of Specialization:</label></td>
+                                                                                <td>
+                                                                                    <?php echo $array["mjorsub"] ?>
+                                                                                </td>
+                                                                            </tr> -->
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -946,6 +1045,13 @@ if ($result && pg_num_rows($result) > 0) {
                                                                                         }
                                                                                         ?>
                                                                                     </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="scode">S-code:</label></td>
+                                                                                <td>
+                                                                                    <span id="scodeText"><?php echo $array['scode']; ?></span>
+                                                                                    <input type="text" name="scode" id="scode" value="<?php echo $array["scode"]; ?>" disabled class="form-control" style="display:none;">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
