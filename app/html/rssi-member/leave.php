@@ -75,7 +75,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
     $uploadedFile = $_FILES['medicalcertificate'];
     $typeofleave = $_POST['typeofleave'];
     $creason = isset($_POST['creason']) ? $_POST['creason'] : null;
-    $appliedby = $_POST['appliedby'];
+    $appliedby = $associatenumber;
     $shift = isset($_POST['shift']) ? $_POST['shift'] : null;
     $applicantcomment = htmlspecialchars($_POST['applicantcomment'], ENT_QUOTES, 'UTF-8');
     $ack = $_POST['ack'] ?? 0;
@@ -296,7 +296,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                                 <br>
                                 <div class="row">
                                     <!-- Left Column (Leave Information) -->
-                                    <div class="col-md-3 notification-box">
+                                    <div class="col-md-3 notification-box mb-3">
                                         <!-- Section Title -->
                                         <p class="fs-5 fw-bold mb-3">Leave Information</p>
 
@@ -413,13 +413,12 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                                                     </div>
 
                                                     <!-- Remarks Section -->
-                                                    <div class="form-group mb-2">
+                                                    <div class="form-floating mb-2">
+                                                        <textarea name="applicantcomment" class="form-control" class="form-control" placeholder="Leave a comment here"></textarea>
                                                         <label for="applicantcomment" class="form-label">Remarks</label>
-                                                        <textarea name="applicantcomment" class="form-control" placeholder="Remarks"></textarea>
-                                                        <small id="passwordHelpBlock" class="form-text text-muted">Any additional comments or details</small>
+                                                        <!-- <small id="passwordHelpBlock" class="form-text text-muted">Any additional comments or details</small> -->
                                                     </div>
 
-                                                    <input type="hidden" name="appliedby" class="form-control" placeholder="Applied by" value="<?php echo $associatenumber ?>" required readonly>
                                                     <span name="hidden-panel_ack" id="hidden-panel_ack">
                                                         <div class="form-group mb-2">
                                                             <div id="filter-checksh">
@@ -428,7 +427,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
                                                             </div>
                                                         </div>
                                                     </span>
-                                                    <button type="submit" name="search_by_id" class="btn btn-primary btn-sm" style="outline: none;">Submit</button>
+                                                    <button type="submit" name="search_by_id" class="btn btn-primary">Submit</button>
                                                 </div>
                                             </fieldset>
                                         </form>
@@ -442,42 +441,13 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
     </main><!-- End #main -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-    <!--Here .typeofleave is a class and has been assigned to the input filed id=typeofleave-->
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("select.typeofleave").change(function() {
-                var selectedtypeofleave = $(".typeofleave option:selected").val();
-                $.ajax({
-                    type: "POST",
-                    url: "process-request.php",
-                    data: {
-                        typeofleave: selectedtypeofleave
-                    }
-                }).done(function(data) {
-                    $("#response").html(data);
-                });
-            });
-        });
-    </script>
 
     <!-- Vendor JS Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Check if resultArr is empty
-            <?php if (!empty($resultArr)) : ?>
-                // Initialize DataTables only if resultArr is not empty
-                $('#table-id').DataTable({
-                    // paging: false,
-                    "order": [] // Disable initial sorting
-                    // other options...
-                });
-            <?php endif; ?>
-        });
-    </script>
+
     <!-- Bootstrap Modal -->
     <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -655,23 +625,6 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
             }
         })
     </script>
-
-    <script>
-        <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
-            var currentYear = new Date().getFullYear() - 1;
-        <?php } else { ?>
-            var currentYear = new Date().getFullYear();
-        <?php } ?>
-
-        for (var i = 0; i < 5; i++) {
-            var next = currentYear + 1;
-            var year = currentYear + '-' + next;
-            //next.toString().slice(-2) 
-            $('#adj_academicyear').append(new Option(year, year));
-            $('#adj_academicyear_A').append(new Option(year, year));
-            currentYear--;
-        }
-    </script>
     <script>
         $(document).ready(function() {
             // Function to add the red asterisk next to required fields
@@ -687,6 +640,23 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
             // Loop through all select, input, and textarea fields to add asterisks where required
             $('select, input, textarea').each(function() {
                 addAsteriskToRequiredFields(this);
+            });
+        });
+    </script>
+    <!--Here .typeofleave is a class and has been assigned to the input filed id=typeofleave-->
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("select.typeofleave").change(function() {
+                var selectedtypeofleave = $(".typeofleave option:selected").val();
+                $.ajax({
+                    type: "POST",
+                    url: "process-request.php",
+                    data: {
+                        typeofleave: selectedtypeofleave
+                    }
+                }).done(function(data) {
+                    $("#response").html(data);
+                });
             });
         });
     </script>
