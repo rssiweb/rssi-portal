@@ -312,7 +312,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "leaveapply") {
 
                                         <!-- Total Allocated Leave -->
                                         <div class="total-allocated mb-3">
-                                            <p class="fs-6 mb-1">Total Allocated Leave:</p>
+                                            <p class="fs-6 mb-1">Total Leave Credits (up to current month):</p>
                                             <ul class="list-unstyled ms-3">
                                                 <li>Sick Leave: <?php echo $resultArrrsl + $resultArr_sladj; ?></li>
                                                 <li>Casual Leave: <?php echo $resultArrrcl + $resultArr_cladj; ?></li>
