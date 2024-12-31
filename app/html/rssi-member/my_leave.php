@@ -151,6 +151,7 @@ $resultArr = pg_fetch_all($result);
                                                 <th scope="col">From-To</th>
                                                 <th scope="col">Day(s) count</th>
                                                 <th scope="col">Type of Leave</th>
+                                                <th scope="col">Applied by</th>
                                                 <th scope="col">Status</th>
                                                 <th scope="col">HR remarks</th>
                                             </tr>
@@ -195,6 +196,9 @@ $resultArr = pg_fetch_all($result);
                                                                 <a href="#" class="more-link">more</a>
                                                             <?php endif; ?>
                                                         </td>
+                                                        <td>
+                                                            <?php echo ($array['appliedby'] === $array['applicantid']) ? 'Self' : 'System';  ?>
+                                                        </td>
                                                         <td><?php echo htmlspecialchars($array['status'] ?? ''); ?></td>
                                                         <td>
                                                             <?php echo htmlspecialchars($array['comment'] ?? ''); ?><br>
@@ -205,7 +209,7 @@ $resultArr = pg_fetch_all($result);
                                                 <?php endforeach; ?>
                                             <?php else : ?>
                                                 <tr>
-                                                    <td colspan="7">
+                                                    <td colspan="8">
                                                         <?php if ($lyear == null) : ?>
                                                             Please select Filter value.
                                                         <?php else : ?>

@@ -231,8 +231,16 @@ if (!$result) {
                                         }
                                     </script>
                                 <?php } ?>
-                                <div class="col" style="display: inline-block; width:47%; text-align:right">
-                                    <span class="noticea"><a href="leaveadjustment.php" target="_blank" title="Click to adjust leave">Leave Adjustment</a></span> | <span class="noticea"><a href="leaveallo.php" target="_blank" title="Click to allocate leave">Leave Allocation</a></span>
+                                <div class="row">
+                                    <div class="col text-end">
+                                        <span class="noticea">
+                                            <a href="leaveadjustment.php" target="_blank" title="Click to adjust leave">Leave Adjustment</a>
+                                        </span>
+                                        |
+                                        <span class="noticea">
+                                            <a href="leaveallo.php" target="_blank" title="Click to allocate leave">Leave Allocation</a>
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <form autocomplete="off" name="leaveapply" id="leaveapply" action="leave_admin.php" method="POST">
@@ -454,10 +462,6 @@ if (!$result) {
                                     </tbody>
                                 </table>
 
-                                <div class="col" style="display: inline-block; width:100%; text-align:right;">
-                                    Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                                </div>
-
                                 <div class="table-responsive">
                                     <table class="table" id="table-id">
                                         <thead>
@@ -468,6 +472,7 @@ if (!$result) {
                                                 <th scope="col">From-To</th>
                                                 <th scope="col">Day(s) count</th>
                                                 <th scope="col">Leave Details</th>
+                                                <th scope="col">Applied by</th>
                                                 <th scope="col">Status</th>
                                                 <th scope="col">Reviewer</th>
                                                 <th scope="col" width="15%">Remarks</th>
@@ -516,6 +521,9 @@ if (!$result) {
                                                             ?>
                                                         </td>
                                                         <td>
+                                                            <?php echo ($array['appliedby'] === $array['applicantid']) ? 'Self' : 'System';  ?>
+                                                        </td>
+                                                        <td>
                                                             <?php echo $array['status']; ?>
                                                         </td>
                                                         <td>
@@ -526,13 +534,13 @@ if (!$result) {
                                                         </td>
                                                         <td>
                                                             <?php echo '<button type="button" onclick="showDetails(\'' . $array['leaveid'] . '\')" style="display: inline-block; width:fit-content; word-wrap:break-word; outline: none; background: none; padding: 0; border: none;" title="Details">
-                                <i class="bi bi-box-arrow-up-right" style="font-size: 14px; color:#777777;" title="Show Details"></i>
-                            </button>'; ?>
+                                                            <i class="bi bi-box-arrow-up-right" style="font-size: 14px; color:#777777;" title="Show Details"></i>
+                                                            </button>'; ?>
 
                                                             <?php if ($array['phone'] != null || $array['contact'] != null) { ?>
                                                                 <?php echo '<a href="https://api.whatsapp.com/send?phone=91' . $array['phone'] . $array['contact'] . '&text=Dear ' . $array['fullname'] . $array['studentname'] . ' (' . $array['applicantid'] . '),%0A%0ABased on your timesheet data, system-enforced leave has been initiated for ' . @date("d/m/Y", strtotime($array['fromdate'])) . '—' . @date("d/m/Y", strtotime($array['todate'])) . ' (' . $array['days'] . ' day(s)) in the system.%0A%0AIf you think this is done by mistake, please call on 7980168159 or write to us at info@rssi.in.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank">
-                                    <i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i>
-                                </a>'; ?>
+                                                                <i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . $array['phone'] . $array['contact'] . '"></i>
+                                                                </a>'; ?>
                                                             <?php } else { ?>
                                                                 <i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>
                                                             <?php } ?>
