@@ -448,7 +448,7 @@
       <li class="nav-heading">Pages</li>
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="myprofile.php" target="_blank">
+        <a class="nav-link collapsed" id="people_manageLink" href="people_manage.php">
           <i class="bi bi-person"></i>
           <span>Profile</span>
         </a>
@@ -823,6 +823,6 @@
     }
 
     // Call the function for 'home.php' and 'profile.php'
-    toggleCollapsedClass('home.php', 'homeLink');
-    // toggleCollapsedClass('profile.php', 'profileLink');
+  toggleCollapsedClass('home.php', 'homeLink');
+  toggleCollapsedClass('people_manage.php', 'people_manageLink');
   </script>
