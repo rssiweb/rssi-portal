@@ -456,6 +456,7 @@ if ($associatenumber === $user_check) {
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item">Profile</li>
+                    <li class="breadcrumb-item">People Manage</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
