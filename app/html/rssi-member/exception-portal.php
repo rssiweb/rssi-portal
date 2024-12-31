@@ -15,6 +15,7 @@ validation();
 
 // Get current timestamp
 $now = date('Y-m-d H:i:s');
+$success = true;
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

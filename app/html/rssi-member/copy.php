@@ -130,9 +130,6 @@ $resultArr = pg_fetch_all($result);
 if ($resultArr && count($resultArr) > 0) {
     $currentAssociate = $resultArr[0]; // Assuming we fetch one record
     $supervisorID = $currentAssociate['supervisor']; // Fetch the supervisor ID
-} else {
-    echo "No associate data found.";
-    exit;
 }
 
 // Step 2: Fetch active managers data
