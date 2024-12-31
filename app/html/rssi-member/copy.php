@@ -15,112 +15,9 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-
-$associatenumber = isset($_GET['associatenumber']) ? $_GET['associatenumber'] : null;
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Initialize an array to store the parts of the UPDATE query
-    $update_fields = [];
-    $updated_fields = []; // To track which fields were updated
-
-    // Fetch existing values for the associatenumber
-    $query = "SELECT * FROM rssimyaccount_members WHERE associatenumber = $1";
-    $result = pg_query_params($con, $query, [$associatenumber]);
-
-    if ($result && pg_num_rows($result) > 0) {
-        $current_data = pg_fetch_assoc($result);
-
-        // List of fields to check and update
-        $fields_to_check = [
-            'doj',
-            'basebranch',
-            'depb',
-            'engagement',
-            'job_type',
-            'position',
-            'class',
-            'role',
-            'supervisor',
-            'filterstatus',
-            'scode',
-            'salary',
-            'absconding',
-            'shift',
-            'remarks',
-            'workexperience',
-            'eduq',
-            'majorsub'
-        ];
-
-        foreach ($fields_to_check as $field) {
-            if (isset($_POST[$field])) {
-                $new_value = pg_escape_string($con, $_POST[$field]);
-                $current_value = $current_data[$field];
-
-                // Compare new value with current value
-                if ($new_value !== $current_value) {
-                    $update_fields[] = "$field = '$new_value'";
-                    $updated_fields[] = $field; // Track updated fields
-                }
-            }
-        }
-
-        // Special handling for 'position' to get and compare the grade
-        if (isset($_POST['position'])) {
-            $position = pg_escape_string($con, $_POST['position']);
-            $query = "SELECT grade FROM designation WHERE designation = $1 AND is_inactive = FALSE";
-            $result = pg_query_params($con, $query, [$position]);
-
-            if ($result && pg_num_rows($result) > 0) {
-                $row = pg_fetch_assoc($result);
-                $grade = $row['grade'];
-                if ($grade !== $current_data['grade']) {
-                    $update_fields[] = "grade = '$grade'";
-                    $updated_fields[] = "grade"; // Track updated fields
-                }
-            }
-        }
-    }
-
-    // If there are fields to update, build the query and execute it
-    if (!empty($update_fields)) {
-        $update_sql = "UPDATE rssimyaccount_members SET " . implode(", ", $update_fields) . " WHERE associatenumber = '$associatenumber'";
-
-        // Execute the update query
-        $update_result = pg_query($con, $update_sql);
-
-        if ($update_result) {
-            // Inform the user about the updated fields
-            $updated_fields_list = implode(", ", $updated_fields);
-            echo "<script>
-                alert('The following fields were updated: $updated_fields_list');
-                if (window.history.replaceState) {
-                    window.history.replaceState(null, null, window.location.href);
-                }
-                window.location.reload();
-            </script>";
-            exit;
-        } else {
-            // If there's an error during the update, show an alert
-            echo "<script>
-                alert('An error occurred while updating the data.');
-                window.history.back();
-            </script>";
-            exit;
-        }
-    } else {
-        // No fields to update
-        echo "<script>
-            alert('No changes were made.');
-            window.history.back();
-        </script>";
-        exit;
-    }
-}
-// End output buffering and send the output
-ob_end_flush();
 ?>
 <?php
+$associatenumber = isset($_GET['associatenumber']) ? $_GET['associatenumber'] : null;
 // Step 1: Fetch current associate data (this part remains the same)
 $sql = "SELECT * FROM rssimyaccount_members WHERE associatenumber='$associatenumber'";
 $result = pg_query($con, $sql);
@@ -188,6 +85,138 @@ if ($result && pg_num_rows($result) > 0) {
     }
 }
 ?>
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Initialize an array to store the parts of the UPDATE query
+    $update_fields = [];
+    $updated_fields = []; // To track which fields were updated
+
+    // Fetch existing values for the associatenumber
+    $query = "SELECT * FROM rssimyaccount_members WHERE associatenumber = $1";
+    $result = pg_query_params($con, $query, [$associatenumber]);
+
+    if ($result && pg_num_rows($result) > 0) {
+        $current_data = pg_fetch_assoc($result);
+
+        // List of fields to check and update
+        $fields_to_check = [
+            'doj',
+            'basebranch',
+            'depb',
+            'engagement',
+            'job_type',
+            'position',
+            'class',
+            'role',
+            'supervisor',
+            'filterstatus',
+            'scode',
+            'salary',
+            'absconding', // Special handling for this field
+            'shift',
+            'effectivedate',
+            'remarks',
+            'workexperience',
+            'eduq',
+            'mjorsub',
+            'phone',
+            'email',
+            'currentaddress',
+            'permanentaddress',
+            'panno',
+            'linkedin',
+            'religion',
+            'caste'
+        ];
+
+        foreach ($fields_to_check as $field) {
+            // Special handling for the 'absconding' field
+            if ($field === 'absconding') {
+                // If 'absconding' is unchecked, set it to NULL
+                $new_value = isset($_POST['absconding']) && $_POST['absconding'] === "Yes" ? "Yes" : null;
+                $current_value = $current_data[$field];
+
+                // If the value has changed, add it to the update query
+                if ($new_value !== $current_value) {
+                    $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
+                    $updated_fields[] = $field; // Track updated fields
+                }
+            } elseif (isset($_POST[$field])) {
+                // Handle date fields separately (for example: effectivedate, doj)
+                if (in_array($field, ['effectivedate', 'doj']) && $_POST[$field] === "") {
+                    // Set empty date fields to NULL
+                    $new_value = null;
+                } else {
+                    // For other fields, escape the value and use it
+                    $new_value = pg_escape_string($con, $_POST[$field]);
+                }
+
+                $current_value = $current_data[$field];
+
+                // If the value has changed and is not null, add it to the update query
+                if ($new_value !== $current_value) {
+                    $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
+                    $updated_fields[] = $field; // Track updated fields
+                }
+            }
+        }
+
+        // Special handling for 'position' to get and compare the grade
+        if (isset($_POST['position'])) {
+            $position = pg_escape_string($con, $_POST['position']);
+            $query = "SELECT grade FROM designation WHERE designation = $1 AND is_inactive = FALSE";
+            $result = pg_query_params($con, $query, [$position]);
+
+            if ($result && pg_num_rows($result) > 0) {
+                $row = pg_fetch_assoc($result);
+                $grade = $row['grade'];
+                if ($grade !== $current_data['grade']) {
+                    $update_fields[] = "grade = '$grade'";
+                    $updated_fields[] = "grade"; // Track updated fields
+                }
+            }
+        }
+    }
+
+    // If there are fields to update, build the query and execute it
+    if (!empty($update_fields)) {
+        $update_sql = "UPDATE rssimyaccount_members SET " . implode(", ", $update_fields) . " WHERE associatenumber = '$associatenumber'";
+
+        // Execute the update query
+        $update_result = pg_query($con, $update_sql);
+
+        if ($update_result) {
+            // Inform the user about the updated fields
+            $updated_fields_list = implode(", ", $updated_fields);
+            echo "<script>
+                alert('The following fields were updated: $updated_fields_list');
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, null, window.location.href);
+                }
+                window.location.reload();
+            </script>";
+            exit;
+        } else {
+            // If there's an error during the update, show an alert
+            echo "<script>
+                alert('An error occurred while updating the data.');
+                window.history.back();
+            </script>";
+            exit;
+        }
+    } else {
+        // No fields to update
+        echo "<script>
+            alert('No changes were made.');
+            window.history.back();
+        </script>";
+        exit;
+    }
+}
+// End output buffering and send the output
+ob_end_flush();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -498,11 +527,11 @@ if ($result && pg_num_rows($result) > 0) {
                                                     <div id="employee-details" class="tab-pane active" role="tabpanel">
                                                         <div class="card" id="address_details">
                                                             <div class="card-header">
-                                                                Address Details
-                                                                <!-- <span class="edit-icon" onclick="toggleEdit('address_details')"><i class="bi bi-pencil"></i></span>
+                                                                Communication Details
+                                                                <span class="edit-icon" onclick="toggleEdit('address_details')"><i class="bi bi-pencil"></i></span>
                                                                 <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
                                                                     <i class="bi bi-save"></i>
-                                                                </span> -->
+                                                                </span>
                                                             </div>
                                                             <div class="card-body">
                                                                 <div class="table-responsive">
@@ -512,28 +541,28 @@ if ($result && pg_num_rows($result) > 0) {
                                                                                 <td>Telephone Number:</td>
                                                                                 <td>
                                                                                     <span id="phoneText"><?php echo $array['phone']; ?></span>
-                                                                                    <!-- <input type="text" name="phone" id="phone" value="<?php echo $array['phone']; ?>" disabled style="display:none;"> -->
+                                                                                    <input class="form-control" type="number" name="phone" id="phone" value="<?php echo $array['phone']; ?>" disabled style="display:none;">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td>Email Address:</td>
                                                                                 <td>
                                                                                     <span id="emailText"><?php echo $array['email']; ?></span>
-                                                                                    <!-- <input type="email" name="email" id="email" value="<?php echo $array['email']; ?>" disabled style="display:none;"> -->
+                                                                                    <input class="form-control" type="email" name="email" id="email" value="<?php echo $array['email']; ?>" disabled style="display:none;">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td>Current Address:</td>
                                                                                 <td>
                                                                                     <span id="currentAddressText"><?php echo $array['currentaddress']; ?></span>
-                                                                                    <!-- <input type="text" name="currentaddress" id="currentaddress" value="<?php echo $array['currentaddress']; ?>" disabled style="display:none;"> -->
+                                                                                    <textarea name="currentaddress" id="currentaddress" class="form-control" rows="3" disabled style="display: none;"><?php echo !empty($array['currentaddress']) ? $array['currentaddress'] : ''; ?></textarea>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td>Permanent Address:</td>
                                                                                 <td>
                                                                                     <span id="permanentAddressText"><?php echo $array['permanentaddress']; ?></span>
-                                                                                    <!-- <input type="text" name="permanentaddress" id="permanentaddress" value="<?php echo $array['permanentaddress']; ?>" disabled style="display:none;"> -->
+                                                                                    <textarea name="permanentaddress" id="permanentaddress" class="form-control" rows="3" disabled style="display: none;"><?php echo !empty($array['permanentaddress']) ? $array['permanentaddress'] : ''; ?></textarea>
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
@@ -544,12 +573,12 @@ if ($result && pg_num_rows($result) > 0) {
                                                         <div class="card" id="national_identifier">
                                                             <div class="card-header">
                                                                 National Identifier
-                                                                <!-- <span class="edit-icon" onclick="toggleEdit('national_identifier')">
+                                                                <span class="edit-icon" onclick="toggleEdit('national_identifier')">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </span>
                                                                 <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
                                                                     <i class="bi bi-save"></i>
-                                                                </span> -->
+                                                                </span>
                                                             </div>
                                                             <div class="card-body">
                                                                 <div class="table-responsive">
@@ -567,7 +596,83 @@ if ($result && pg_num_rows($result) > 0) {
                                                                             <tr>
                                                                                 <td><label for="panno">PAN Number:</label></td>
                                                                                 <td>
-                                                                                    <?php echo $array["panno"] ?>
+                                                                                    <span id="pannoText"><?php echo $array['panno']; ?></span>
+                                                                                    <input type="text" name="panno" id="panno" placeholder="Enter your PAN number" value="<?php echo $array["panno"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card" id="current-location">
+                                                            <div class="card-header">
+                                                                Religion and Caste Details
+                                                                <span class="edit-icon" onclick="toggleEdit('current-location')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td><label for="religion">Religion:</label></td>
+                                                                                <td>
+                                                                                    <span id="religionText"><?php echo $array['religion']; ?></span>
+                                                                                    <select name="religion" id="religion" disabled class="form-select" style="display:none;">
+                                                                                        <option disabled selected>Select Religion</option>
+                                                                                        <?php
+                                                                                        // List of Base Branches
+                                                                                        $religion_select = [
+                                                                                            "Hinduism",
+                                                                                            "Islam",
+                                                                                            "Christianity",
+                                                                                            "Sikhism",
+                                                                                            "Buddhism",
+                                                                                            "Jainism",
+                                                                                            "Zoroastrianism",
+                                                                                            "Judaism",
+                                                                                            "Bahá'í Faith",
+                                                                                            "Others"
+                                                                                        ];
+                                                                                        // Generate <option> elements dynamically for Base Branch
+                                                                                        foreach ($religion_select as $religion) {
+                                                                                            $selected = ($array["religion"] == $branch) ? "selected" : "";
+                                                                                            echo "<option value=\"$religion\" $selected>$religion</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <td><label for="caste">Caste:</label></td>
+                                                                                <td>
+                                                                                    <span id="casteText"><?php echo $array['caste']; ?></span>
+                                                                                    <select name="caste" id="caste" disabled class="form-select" style="display:none;">
+                                                                                        <option value="" disabled selected>Select Caste</option>
+                                                                                        <?php
+                                                                                        // List of castes with value as key and display name as value
+                                                                                        $caste_select = [
+                                                                                            "General" => "General",
+                                                                                            "SC" => "Scheduled Caste (SC)",
+                                                                                            "ST" => "Scheduled Tribe (ST)",
+                                                                                            "OBC" => "Other Backward Class (OBC)",
+                                                                                            "EWS" => "Economically Weaker Section (EWS)",
+                                                                                            "Prefer not to disclose" => "Prefer not to disclose"
+                                                                                        ];
+
+                                                                                        // Generate <option> elements dynamically
+                                                                                        foreach ($caste_select as $value => $display) {
+                                                                                            $selected = (isset($array["caste"]) && $array["caste"] == $value) ? "selected" : "";
+                                                                                            echo "<option value=\"$value\" $selected>$display</option>";
+                                                                                        }
+                                                                                        ?>
+                                                                                    </select>
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
@@ -576,7 +681,6 @@ if ($result && pg_num_rows($result) > 0) {
                                                             </div>
                                                         </div>
                                                     </div>
-
                                                     <!-- Work Details Tab -->
                                                     <div id="work-details" class="tab-pane" role="tabpanel">
                                                         <div class="card" id="current-location">
@@ -653,7 +757,7 @@ if ($result && pg_num_rows($result) > 0) {
                                                                             <tr>
                                                                                 <td><label for="doj">Date of Join:</label></td>
                                                                                 <td class="d-flex align-items-center">
-                                                                                    <span id="doj"><?php echo htmlspecialchars((new DateTime($array["doj"]))->format("d/m/Y"), ENT_QUOTES, 'UTF-8'); ?></span>
+                                                                                    <span id="doj"><?php echo !empty($array["doj"]) ? (new DateTime($array["doj"]))->format("d/m/Y") : ''; ?></span>
                                                                                     <input type="date" name="doj" id="doj" value="<?php echo $array["doj"]; ?>" disabled class="form-control" style="display:none;">
                                                                                 </td>
                                                                             </tr>
@@ -979,7 +1083,7 @@ if ($result && pg_num_rows($result) > 0) {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <!-- Work Details Tab -->
+                                                    <!-- Status & Compensation -->
                                                     <div id="status_compensation" class="tab-pane" role="tabpanel">
                                                         <div class="card" id="compensation">
                                                             <div class="card-header">
@@ -1044,11 +1148,14 @@ if ($result && pg_num_rows($result) > 0) {
                                                                                     </select>
                                                                                 </td>
                                                                             </tr>
+                                                                            <!-- Last Working Day -->
                                                                             <tr>
-                                                                                <td><label for="scode">S-code:</label></td>
-                                                                                <td>
-                                                                                    <span id="scodeText"><?php echo $array['scode']; ?></span>
-                                                                                    <input type="text" name="scode" id="scode" value="<?php echo $array["scode"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                <td><label for="effectivedate">Last Working Day:</label></td>
+                                                                                <td class="d-flex align-items-center">
+                                                                                    <span id="effectivedateText"><?php echo !empty($array["effectivedate"]) ? (new DateTime($array["effectivedate"]))->format("d/m/Y") : ''; ?></span>
+                                                                                    <input type="date" name="effectivedate" id="effectivedate"
+                                                                                        value="<?php echo $array["effectivedate"]; ?>"
+                                                                                        disabled class="form-control" style="display:none;">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
@@ -1058,14 +1165,23 @@ if ($result && pg_num_rows($result) > 0) {
                                                                                     <textarea name="remarks" id="remarks" class="form-control" rows="3" disabled style="display: none;"><?php echo !empty($array['remarks']) ? $array['remarks'] : ''; ?></textarea>
                                                                                 </td>
                                                                             </tr>
-
+                                                                            <tr>
+                                                                                <td><label for="scode">S-code:</label></td>
+                                                                                <td>
+                                                                                    <span id="scodeText"><?php echo $array['scode']; ?></span>
+                                                                                    <input type="text" name="scode" id="scode" value="<?php echo $array["scode"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
                                                                             <tr>
                                                                                 <td><label for="absconding">Abscond:</label></td>
                                                                                 <td>
-                                                                                    <span id="abscondingText"><?php echo $array['absconding']; ?></span>
+                                                                                    <span id="abscondingText"><?php echo htmlspecialchars($array['absconding'] ?? ''); ?></span>
 
                                                                                     <!-- Container for checkbox and label -->
                                                                                     <div id="absconding-container" style="display: none;">
+                                                                                        <!-- Hidden field to send NULL if checkbox is unchecked -->
+                                                                                        <input type="hidden" name="absconding" value="NULL">
+
                                                                                         <input type="checkbox" name="absconding" id="absconding" value="Yes"
                                                                                             <?php echo ($array["absconding"] == "Yes") ? "checked" : ""; ?>
                                                                                             disabled class="form-check-input">
@@ -1073,7 +1189,35 @@ if ($result && pg_num_rows($result) > 0) {
                                                                                     </div>
                                                                                 </td>
                                                                             </tr>
-
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Social -->
+                                                    <div id="social" class="tab-pane" role="tabpanel">
+                                                        <div class="card" id="compensation">
+                                                            <div class="card-header">
+                                                                Social
+                                                                <span class="edit-icon" onclick="toggleEdit('social')">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </span>
+                                                                <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                    <i class="bi bi-save"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-borderless">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td><label for="linkedin">LinkedIn:</label></td>
+                                                                                <td>
+                                                                                    <span id="linkedinText"><a href="<?php echo $array['linkedin']; ?>" id="linkedinText" target="_blank"><?php echo $array['linkedin']; ?></a></span>
+                                                                                    <input type="url" name="linkedin" id="linkedin" value="<?php echo $array["linkedin"]; ?>" disabled class="form-control" style="display:none;" placeholder="Enter LinkedIn profile URL">
+                                                                                </td>
+                                                                            </tr>
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
