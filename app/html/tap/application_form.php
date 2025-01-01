@@ -16,13 +16,16 @@ validation();
 $sql = "SELECT * FROM signup WHERE application_number='$application_number'";
 $result = pg_query($con, $sql);
 $resultArr = pg_fetch_all($result);
+
 // Check if there are any results
 if ($resultArr && count($resultArr) > 0) {
     // Accessing specific column values from the first result (assuming there is only one row)
     $applicant_email = $resultArr[0]['email'];
     $applicant_name = $resultArr[0]['applicant_name'];
     $application_number = $resultArr[0]['application_number'];
+    $photo_verification_status = $resultArr[0]['photo_verification']; // Add photo verification status
 }
+
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -30,90 +33,136 @@ if (!$result) {
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST["form-type"] == "signup") {
-    // Sanitize and fetch form data
-    $telephone = !empty($_POST['telephone']) ? pg_escape_string($con, $_POST['telephone']) : null;
-    $postal_address = !empty($_POST['postal-address']) ? pg_escape_string($con, $_POST['postal-address']) : null;
-    $permanent_address = !empty($_POST['permanent-address']) ? pg_escape_string($con, $_POST['permanent-address']) : null;
-    $education_qualification = !empty($_POST['education-qualification']) ? pg_escape_string($con, $_POST['education-qualification']) : null;
-    $specialization = !empty($_POST['specialization']) ? pg_escape_string($con, $_POST['specialization']) : null;
-    $work_experience = !empty($_POST['work-experience']) ? pg_escape_string($con, $_POST['work-experience']) : null;
-    $caste = !empty($_POST['caste']) ? pg_escape_string($con, $_POST['caste']) : null;
-    $uploadedFile_caste = $_FILES['caste-document'];
-    $uploadedFile_photo = $_FILES['applicant-photo'];
-    $uploadedFile_resume = $_FILES['resume-upload'];
+    // Initialize variables
+    $telephone = isset($_POST['telephone']) ? pg_escape_string($con, $_POST['telephone']) : null;
+    $postal_address = isset($_POST['postal_address']) ? pg_escape_string($con, $_POST['postal_address']) : null;
+    $permanent_address = isset($_POST['permanent_address']) ? pg_escape_string($con, $_POST['permanent_address']) : null;
+    $education_qualification = isset($_POST['education_qualification']) ? pg_escape_string($con, $_POST['education_qualification']) : null;
+    $specialization = isset($_POST['specialization']) ? pg_escape_string($con, $_POST['specialization']) : null;
+    $work_experience = isset($_POST['work_experience']) ? pg_escape_string($con, $_POST['work_experience']) : null;
+    $caste = isset($_POST['caste']) ? pg_escape_string($con, $_POST['caste']) : null;
+    $uploadedFile_caste = isset($_FILES['caste_document']) ? $_FILES['caste_document'] : null;
+    $uploadedFile_photo = isset($_FILES['applicant_photo']) ? $_FILES['applicant_photo'] : null;
+    $uploadedFile_resume = isset($_FILES['resume_upload']) ? $_FILES['resume_upload'] : null;
     $application_status = 'Application Re-Submitted';
 
-    if (empty($_FILES['caste-document']['name'])) {
-        $doclink_caste_document = null;
-    } else {
+    // Initialize file links to null
+    $doclink_caste_document = null;
+    $doclink_applicant_photo = null;
+    $doclink_resume = null;
+
+    // Handle caste document upload
+    if (!empty($uploadedFile_caste['name'])) {
         $filename_caste_document = "caste_" . "$application_number" . "_" . time();
         $parent_caste_document = '1SGPfr_1b85s4KAuvt8n098VXIrvkBGY9';
         $doclink_caste_document = uploadeToDrive($uploadedFile_caste, $parent_caste_document, $filename_caste_document);
     }
-    if (empty($_FILES['applicant-photo']['name'])) {
-        $doclink_applicant_photo = null;
-    } else {
+
+    // Server-side validation for the applicant photo (only if the photo is being resubmitted)
+    if (!empty($uploadedFile_photo['name'])) {
+        // Check if the photo verification is approved, if so, prevent resubmission
+        if ($photo_verification_status === "Approved") {
+            echo '<script>alert("Photo has already been approved. You cannot resubmit it.");</script>';
+            exit;
+        }
+
+        // Check file type and size
+        $photo_file = $uploadedFile_photo;
+        $allowed_types = ['image/jpeg', 'image/png'];
+        if (!in_array($photo_file['type'], $allowed_types)) {
+            echo '<script>alert("Invalid file type for applicant photo. Only JPEG and PNG are allowed.");</script>';
+            exit;
+        }
+        if ($photo_file['size'] > 300000) { // 300KB limit (300000 bytes)
+            echo '<script>alert("Applicant photo is too large. Maximum allowed size is 300KB.");</script>';
+            exit;
+        }
+
+        // Upload the photo
         $filename_applicant_photo = "photo_" . "$application_number" . "_" . time();
         $parent_applicant_photo = '1CgXW0M1ClTLRFrJjOCh490GVAq0IVAlM5OmAcfTtXVWxmnR9cx_I_Io7uD_iYE7-5rWDND82';
-        $doclink_applicant_photo = uploadeToDrive($uploadedFile_photo, $parent_applicant_photo, $filename_applicant_photo);
+        $doclink_applicant_photo = uploadeToDrive($photo_file, $parent_applicant_photo, $filename_applicant_photo);
     }
 
-    if (empty($_FILES['resume-upload']['name'])) {
-        $doclink_resume = null;
-    } else {
+    // Handle resume upload
+    if (!empty($uploadedFile_resume['name'])) {
         $filename_resume = "resume_" . "$application_number" . "_" . time();
         $parent_resume = '1YyJLwbXQqNJeESSfPINjTW2OVFOh5IGD53Aaf1ZNqsnDeWAFdh6ECr3TnbNXM95yWdS5si-z';
         $doclink_resume = uploadeToDrive($uploadedFile_resume, $parent_resume, $filename_resume);
     }
 
-    // Build the update query dynamically
-    $update_fields = [];
-    if ($telephone) $update_fields[] = "telephone = '$telephone'";
-    if ($postal_address) $update_fields[] = "postal_address = '$postal_address'";
-    if ($permanent_address) $update_fields[] = "permanent_address = '$permanent_address'";
-    if ($education_qualification) $update_fields[] = "education_qualification = '$education_qualification'";
-    if ($specialization) $update_fields[] = "specialization = '$specialization'";
-    if ($work_experience) $update_fields[] = "work_experience = '$work_experience'";
-    if ($caste) $update_fields[] = "caste = '$caste'";
-    if ($doclink_caste_document) $update_fields[] = "caste_document = '$doclink_caste_document'";
-    if ($doclink_applicant_photo) $update_fields[] = "applicant_photo = '$doclink_applicant_photo'";
-    if ($doclink_resume) $update_fields[] = "resume_upload = '$doclink_resume'";
-    if ($application_status) $update_fields[] = "application_status = '$application_status'";
+    // Define the list of fields to compare
+    $fields_to_compare = [
+        'postal_address',
+        'permanent_address',
+        'education_qualification',
+        'specialization',
+        'work_experience',
+        'caste'
+        // Add more fields here as needed
+    ];
 
-    // If there are fields to update, execute the update query
+    // Initialize arrays for the updated fields and changed fields
+    $update_fields = [];
+    $changed_fields = [];
+
+    // Loop through the fields to compare
+    foreach ($fields_to_compare as $field) {
+        // Get the current and submitted values for the field, sanitizing them with htmlspecialchars and trimming spaces
+        $current_value = isset($resultArr[0][$field]) ? htmlspecialchars(trim($resultArr[0][$field]), ENT_QUOTES, 'UTF-8') : null;
+        $submitted_value = isset($_POST[$field]) ? htmlspecialchars(trim($_POST[$field]), ENT_QUOTES, 'UTF-8') : null;
+
+        // Only proceed if the submitted value is different from the current value
+        if ($submitted_value !== $current_value) {
+            // Add the field to the update query and changed fields list
+            $update_fields[] = "$field = '$submitted_value'";
+            $changed_fields[] = $field;
+        }
+    }
+
+    // If there are any fields to update, proceed with the update query
     if (count($update_fields) > 0) {
+        // Build and execute the update query dynamically
         $update_query = "UPDATE signup SET " . implode(", ", $update_fields) . " WHERE application_number = '$application_number'";
         $result = pg_query($con, $update_query);
         $cmdtuples = pg_affected_rows($result);
     }
 
-    if ($cmdtuples == 1) {
-        // Adjust the parameters for your sendEmail function accordingly
+    // Send email with only the changed fields
+    if (isset($cmdtuples) && $cmdtuples == 1 && count($changed_fields) > 0) {
         sendEmail("tap_application_resubmitted", array(
             "application_number" => $application_number,
             "applicant_name" => $applicant_name,
+            "changed_fields" => implode(", ", $changed_fields) // Send only changed fields in the email
         ), 'info@rssi.in');
     }
 }
 
-// If update was successful or failed, show an alert
+// If the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if ($cmdtuples == 1) {
-        // Success: Profile was updated
-        echo '<script>
-                alert("Your profile has been updated successfully!");
-                window.location.href = "application_form.php";  // Reload the page
-              </script>';
+    // Check if update was successful
+    if (isset($cmdtuples) && $cmdtuples == 1) {
+        // If any fields were changed
+        if (count($changed_fields) > 0) {
+            echo '<script>
+                    alert("The following fields were updated: ' . implode(', ', $changed_fields) . '");
+                    window.location.href = "application_form.php";  // Reload the page
+                  </script>';
+        } else {
+            // No changes made
+            echo '<script>
+                    alert("Error: We encountered an error while updating the record. Please try again.");
+                  </script>';
+        }
     } else {
-        // Failure: Record was not updated
+        // Failure: Error occurred
         echo '<script>
-                alert("Error: We encountered an error while updating the record. Please try again.");
+                alert("No changes were made to your profile.");
               </script>';
     }
 }
+
 ?>
-
-
 <!doctype html>
 <html lang="en">
 
@@ -288,20 +337,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         </tr>
                                                         <tr>
                                                             <td>
-                                                                <label for="postal-address">Current Address:</label>
+                                                                <label for="postal_address">Current Address:</label>
                                                             </td>
                                                             <td>
-                                                                <textarea class="form-control" id="postal-address" name="postal-address" rows="3" placeholder="Enter current address" required><?php echo $array['postal_address'] ?? '' ?></textarea>
-                                                                <small id="postal-address-help" class="form-text text-muted">Please enter the complete current address of the student.</small>
+                                                                <textarea class="form-control" id="postal_address" name="postal_address" rows="3" placeholder="Enter current address" required><?php echo $array['postal_address'] ?? '' ?></textarea>
+                                                                <small id="postal_address-help" class="form-text text-muted">Please enter the complete current address of the student.</small>
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td>
-                                                                <label for="permanent-address">Permanent Address:</label>
+                                                                <label for="permanent_address">Permanent Address:</label>
                                                             </td>
                                                             <td>
-                                                                <textarea class="form-control" id="permanent-address" name="permanent-address" rows="3" placeholder="Enter permanent address" required><?php echo $array['permanent_address'] ?? '' ?></textarea>
-                                                                <small id="permanent-address-help" class="form-text text-muted">Please enter the complete permanent address of the student.</small>
+                                                                <textarea class="form-control" id="permanent_address" name="permanent_address" rows="3" placeholder="Enter permanent address" required><?php echo $array['permanent_address'] ?? '' ?></textarea>
+                                                                <small id="permanent_address-help" class="form-text text-muted">Please enter the complete permanent address of the student.</small>
                                                                 <div>
                                                                     <input type="checkbox" id="same-address" onclick="copyAddress()">
                                                                     <label for="same-address">Same as current address</label>
@@ -311,10 +360,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                                                         <tr>
                                                             <td>
-                                                                <label for="education-qualification" class="form-label">Educational Qualification:</label>
+                                                                <label for="education_qualification" class="form-label">Educational Qualification:</label>
                                                             </td>
                                                             <td>
-                                                                <select class="form-select" id="education-qualification" name="education-qualification" required>
+                                                                <select class="form-select" id="education_qualification" name="education_qualification" required>
                                                                     <option disabled <?php echo empty($array['education_qualification']) ? 'selected' : ''; ?>>Select your qualification</option>
                                                                     <?php
                                                                     $options = [
@@ -354,17 +403,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         </tr>
                                                         <tr>
                                                             <td>
-                                                                <label for="work-experience" class="form-label">Work Experience:</label>
+                                                                <label for="work_experience" class="form-label">Work Experience:</label>
                                                             </td>
                                                             <td>
                                                                 <input
                                                                     type="text"
                                                                     class="form-control"
-                                                                    id="work-experience"
-                                                                    name="work-experience"
+                                                                    id="work_experience"
+                                                                    name="work_experience"
                                                                     placeholder="e.g., 3 years in Teaching, 2 years in Marketing"
                                                                     value="<?php echo htmlspecialchars($array['work_experience'], ENT_QUOTES, 'UTF-8'); ?>">
-                                                                <small id="work-experience-help" class="form-text text-muted">
+                                                                <small id="work_experience-help" class="form-text text-muted">
                                                                     Specify your work experience, including job title and duration, if applicable.
                                                                 </small>
                                                             </td>
@@ -399,13 +448,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         <!-- Supporting Document Upload Field -->
                                                         <tr>
                                                             <td>
-                                                                <label for="caste-document">Caste Certificate:</label>
+                                                                <label for="caste_document">Caste Certificate:</label>
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex flex-column flex-sm-row align-items-center">
                                                                     <!-- Left side: File input -->
                                                                     <div class="mb-2 mb-sm-0">
-                                                                        <input type="file" class="form-control" id="caste-document" name="caste-document" accept=".pdf,.jpg,.jpeg,.png">
+                                                                        <input type="file" class="form-control" id="caste_document" name="caste_document" accept=".pdf,.jpg,.jpeg,.png">
                                                                     </div>
 
                                                                     <!-- Right side: Uploaded file or message -->
@@ -418,7 +467,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                     </div>
                                                                 </div>
                                                                 <!-- Help text below the input field -->
-                                                                <small id="caste-document-help" class="form-text text-muted">
+                                                                <small id="caste_document-help" class="form-text text-muted">
                                                                     Upload your caste certificate (PDF, JPG, JPEG, or PNG).
                                                                 </small>
                                                             </td>
@@ -527,13 +576,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         </tr>
                                                         <tr>
                                                             <td>
-                                                                <label for="applicant-photo">Upload Applicant Photo:</label>
+                                                                <label for="applicant_photo">Upload Applicant Photo:</label>
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex flex-column flex-sm-row align-items-center">
                                                                     <!-- Left side: File input -->
                                                                     <div class="mb-2 mb-sm-0">
-                                                                        <input type="file" class="form-control" id="applicant-photo" name="applicant-photo" accept=".jpg,.jpeg,.png" onchange="validatePhotoFile(this)">
+                                                                        <input type="file" class="form-control" id="applicant_photo" name="applicant_photo" accept=".jpg,.jpeg,.png" onchange="validatePhotoFile(this)"
+                                                                            <?php echo ($array["photo_verification"] === "Approved") ? 'disabled' : ''; ?>>
                                                                     </div>
 
                                                                     <!-- Right side: Uploaded file or message -->
@@ -546,20 +596,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                     </div>
                                                                 </div>
                                                                 <!-- Help text below the input field -->
-                                                                <small id="applicant-photo-help" class="form-text text-muted">
+                                                                <small id="applicant_photo-help" class="form-text text-muted">
                                                                     Please upload a recent passport size photograph of the applicant.
                                                                 </small>
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td>
-                                                                <label for="resume-upload">Upload Resume:</label>
+                                                                <label for="resume_upload">Upload Resume:</label>
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex flex-column flex-sm-row align-items-center">
                                                                     <!-- Left side: File input -->
                                                                     <div class="mb-2 mb-sm-0">
-                                                                        <input type="file" class="form-control" id="resume-upload" name="resume-upload">
+                                                                        <input type="file" class="form-control" id="resume_upload" name="resume_upload">
                                                                     </div>
 
                                                                     <!-- Right side: Uploaded file or message -->
@@ -572,7 +622,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                     </div>
                                                                 </div>
                                                                 <!-- Help text below the input field -->
-                                                                <small id="resume-upload-help" class="form-text text-muted">
+                                                                <small id="resume_upload-help" class="form-text text-muted">
                                                                     Please upload a scanned copy of the Resume.
                                                                 </small>
                                                             </td>
@@ -622,8 +672,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </script>
     <script>
         function copyAddress() {
-            const currentAddress = document.getElementById('postal-address').value;
-            const permanentAddressField = document.getElementById('permanent-address');
+            const currentAddress = document.getElementById('postal_address').value;
+            const permanentAddressField = document.getElementById('permanent_address');
             const sameAddressCheckbox = document.getElementById('same-address');
 
             if (sameAddressCheckbox.checked) {
