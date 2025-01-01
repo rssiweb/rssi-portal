@@ -104,6 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $update_fields = [];
     $updated_fields = []; // To track which fields were updated
     $unauthorized_updates = []; // To track unauthorized update attempts
+    $pending_approval_fields = []; // Initialize to track fields for pending approval
 
     // Fetch existing values for the associatenumber
     $query = "SELECT * FROM rssimyaccount_members WHERE associatenumber = $1";
@@ -145,6 +146,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'caste'
         ];
 
+        $fields_requiring_approval = [
+            'workexperience',
+            'eduq',
+            'mjorsub',
+            'phone',
+            'email',
+            'panno'
+        ];
+
+        // Process each field once
         foreach (array_merge($admin_only_fields, $user_editable_fields) as $field) {
             // Special handling for 'absconding'
             if ($field === 'absconding') {
@@ -152,52 +163,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $current_value = $current_data[$field];
 
                 if ($new_value !== $current_value) {
-                    // Additional condition to prevent Admin from updating their own data
                     if ($role === 'Admin' && $associatenumber === $user_check) {
-                        $unauthorized_updates[] = $field; // Mark as unauthorized
+                        $unauthorized_updates[] = $field;
                     } elseif ($role === 'Admin' || $associatenumber === $user_check) {
                         $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
-                        $updated_fields[] = $field; // Track updated fields
+                        $updated_fields[] = $field;
                     } else {
-                        $unauthorized_updates[] = $field; // Mark as unauthorized
+                        $unauthorized_updates[] = $field;
                     }
                 }
             } elseif (isset($_POST[$field])) {
-                // Handle date fields and other fields
                 $new_value = in_array($field, ['effectivedate', 'doj']) && $_POST[$field] === "" ? null : pg_escape_string($con, $_POST[$field]);
                 $current_value = $current_data[$field];
 
                 if ($new_value !== $current_value) {
-                    // Check role-based access with additional condition for Admin's own data
                     if ($role === 'Admin' && in_array($field, $admin_only_fields)) {
                         if ($associatenumber === $user_check) {
                             $unauthorized_updates[] = $field; // Admin cannot update their own data
                         } else {
                             $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
-                            $updated_fields[] = $field; // Track updated fields
+                            $updated_fields[] = $field;
                         }
                     } elseif ($associatenumber === $user_check && in_array($field, $user_editable_fields)) {
-                        $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
-                        $updated_fields[] = $field; // Track updated fields
+                        if (in_array($field, $fields_requiring_approval)) {
+                            // Track pending approval fields
+                            $pending_approval_fields[] = $field;
+                        } else {
+                            $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
+                            $updated_fields[] = $field;
+                        }
                     } else {
-                        $unauthorized_updates[] = $field; // Mark as unauthorized
+                        $unauthorized_updates[] = $field;
                     }
-                }
-            }
-        }
-
-        // Special handling for 'position' to get and compare the grade
-        if (isset($_POST['position']) && $role === 'Admin') {
-            $position = pg_escape_string($con, $_POST['position']);
-            $query = "SELECT grade FROM designation WHERE designation = $1 AND is_inactive = FALSE";
-            $result = pg_query_params($con, $query, [$position]);
-
-            if ($result && pg_num_rows($result) > 0) {
-                $row = pg_fetch_assoc($result);
-                $grade = $row['grade'];
-                if ($grade !== $current_data['grade']) {
-                    $update_fields[] = "grade = '$grade'";
-                    $updated_fields[] = "grade";
                 }
             }
         }
@@ -211,18 +208,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </script>";
             exit;
         }
-    }
 
-    // If there are fields to update, build the query and execute it
-    if (!empty($update_fields)) {
-        $update_sql = "UPDATE rssimyaccount_members SET " . implode(", ", $update_fields) . " WHERE associatenumber = '$associatenumber'";
+        // If there are fields to update, build the query and execute it
+        if (!empty($update_fields)) {
+            $update_sql = "UPDATE rssimyaccount_members SET " . implode(", ", $update_fields) . " WHERE associatenumber = '$associatenumber'";
 
-        $update_result = pg_query($con, $update_sql);
+            $update_result = pg_query($con, $update_sql);
+        }
 
-        if ($update_result) {
-            $updated_fields_list = implode(", ", $updated_fields);
+        // Insert pending approval fields into the workflow table
+        foreach ($pending_approval_fields as $field) {
+            $new_value = pg_escape_string($con, $_POST[$field]);
+            $workflow_query = "INSERT INTO hrms_profile_approval_workflow (associatenumber, fieldname, submitted_value, submission_timestamp, reviewer_status) VALUES ($1, $2, $3, NOW(), 'Pending')";
+            $workflow_result = pg_query_params($con, $workflow_query, [$associatenumber, $field, $new_value]);
+
+            if (!$workflow_result) {
+                echo "<script>
+                    alert('An error occurred while submitting the change request for the field: $field.');
+                    window.history.back();
+                </script>";
+                exit;
+            }
+        }
+
+        // Show the alert for pending approval fields outside the $update_result check
+        if (!empty($pending_approval_fields)) {
+            $pending_fields_list = implode(", ", $pending_approval_fields);
             echo "<script>
-                alert('The following fields were updated: $updated_fields_list');
+                alert('Change request has been successfully submitted for the following fields: $pending_fields_list. These fields are under review for approval.');
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, null, window.location.href);
+                }
+                window.location.reload();
+            </script>";
+            exit;
+        }
+
+        // Handle the success or failure of the update operation
+        if ($update_result) {
+            echo "<script>
+                alert('The following fields were updated: " . implode(", ", $updated_fields) . "');
                 if (window.history.replaceState) {
                     window.history.replaceState(null, null, window.location.href);
                 }
@@ -236,16 +261,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </script>";
             exit;
         }
-    } else {
-        echo "<script>
-            alert('No changes were made.');
-            window.history.back();
-        </script>";
-        exit;
     }
 }
 ob_end_flush();
 ?>
+
 <?php
 // Define card access based on role
 $card_access = [
