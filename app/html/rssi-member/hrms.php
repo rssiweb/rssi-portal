@@ -25,7 +25,7 @@ $associatenumber = ($role === 'Admin')
 if ($role !== 'Admin' && isset($_GET['associatenumber']) && $_GET['associatenumber'] !== $user_check) {
     echo "<script>
     alert('You are not authorized to view this data.');
-    window.location.href = 'people_manage.php?associatenumber=$user_check';
+    window.location.href = 'hrms.php?associatenumber=$user_check';
 </script>";
     exit;
 }
@@ -266,7 +266,7 @@ if ($associatenumber === $user_check) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>People Manage</title>
+    <title>Profile</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <!-- Vendor CSS Files -->
@@ -451,12 +451,11 @@ if ($associatenumber === $user_check) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>People Manage</h1>
+            <h1>Profile</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item">Profile</li>
-                    <li class="breadcrumb-item">People Manage</li>
+                    <li class="breadcrumb-item active">Profile</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -474,10 +473,10 @@ if ($associatenumber === $user_check) {
                             // If no application number is provided, show the input form
                             if (!$associatenumber): ?>
                                 <div class="container mt-5">
-                                    <h4 class="mb-3">Enter Application Number</h4>
+                                    <h4 class="mb-3">Enter Associate Number</h4>
                                     <form method="GET" action="">
                                         <div class="input-group mb-3">
-                                            <input type="text" name="associatenumber" class="form-control" placeholder="Enter Application Number" required>
+                                            <input type="text" name="associatenumber" class="form-control" placeholder="Enter Associate Number" required>
                                             <button class="btn btn-primary" type="submit">Submit</button>
                                         </div>
                                     </form>
