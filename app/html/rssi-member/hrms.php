@@ -157,45 +157,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Process each field once
         foreach (array_merge($admin_only_fields, $user_editable_fields) as $field) {
-            // Special handling for 'absconding'
+            // Special handling for textarea fields and absconding
             if ($field === 'absconding') {
                 $new_value = isset($_POST['absconding']) && $_POST['absconding'] === "Yes" ? "Yes" : null;
                 $current_value = $current_data[$field];
-
-                if ($new_value !== $current_value) {
-                    if ($role === 'Admin' && $associatenumber === $user_check) {
-                        $unauthorized_updates[] = $field;
-                    } elseif ($role === 'Admin' || $associatenumber === $user_check) {
-                        $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
-                        $updated_fields[] = $field;
-                    } else {
-                        $unauthorized_updates[] = $field;
-                    }
-                }
             } elseif (isset($_POST[$field])) {
-                $new_value = in_array($field, ['effectivedate', 'doj']) && $_POST[$field] === "" ? null : pg_escape_string($con, $_POST[$field]);
+                $new_value = trim($_POST[$field]) === "" ? null : pg_escape_string($con, trim($_POST[$field]));
                 $current_value = $current_data[$field];
+            } else {
+                continue; // Skip fields not included in the form
+            }
 
-                if ($new_value !== $current_value) {
-                    if ($role === 'Admin' && in_array($field, $admin_only_fields)) {
-                        if ($associatenumber === $user_check) {
-                            $unauthorized_updates[] = $field; // Admin cannot update their own data
-                        } else {
-                            $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
-                            $updated_fields[] = $field;
-                        }
-                    } elseif ($associatenumber === $user_check && in_array($field, $user_editable_fields)) {
-                        if (in_array($field, $fields_requiring_approval)) {
-                            // Track pending approval fields
-                            $pending_approval_fields[] = $field;
-                        } else {
-                            $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
-                            $updated_fields[] = $field;
-                        }
-                    } else {
-                        $unauthorized_updates[] = $field;
-                    }
+            // Skip updates if the value hasn't changed
+            if ($new_value === $current_value) {
+                continue;
+            }
+
+            // Admin and user role validation as before
+            if ($role === 'Admin' && in_array($field, $admin_only_fields)) {
+                if ($associatenumber === $user_check) {
+                    $unauthorized_updates[] = $field; // Admin cannot update their own data
+                } else {
+                    $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
+                    $updated_fields[] = $field;
                 }
+            } elseif ($associatenumber === $user_check && in_array($field, $user_editable_fields)) {
+                if (in_array($field, $fields_requiring_approval)) {
+                    // Track pending approval fields
+                    $pending_approval_fields[] = $field;
+                } else {
+                    $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
+                    $updated_fields[] = $field;
+                }
+            } else {
+                $unauthorized_updates[] = $field;
             }
         }
 
