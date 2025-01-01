@@ -11,7 +11,8 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-
+?>
+<?php
 // SQL query to fetch current data
 $sql = "SELECT * FROM signup WHERE application_number='$application_number'";
 $result = pg_query($con, $sql);
@@ -62,7 +63,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
     if (!empty($uploadedFile_photo['name'])) {
         // Check if the photo verification is approved, if so, prevent resubmission
         if ($photo_verification_status === "Approved") {
-            echo '<script>alert("Photo has already been approved. You cannot resubmit it.");</script>';
+            echo '<script>
+                    alert("Your photo has already been approved and cannot be resubmitted.");
+                    if (window.history.replaceState) {
+                        // Update the URL without causing a page reload or resubmission
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                    window.location.reload(); // Trigger a page reload to reflect changes
+                </script>';
             exit;
         }
 
@@ -108,16 +116,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
 
     // Loop through the fields to compare
     foreach ($fields_to_compare as $field) {
-        // Get the current and submitted values for the field, sanitizing them with htmlspecialchars and trimming spaces
-        $current_value = isset($resultArr[0][$field]) ? htmlspecialchars(trim($resultArr[0][$field]), ENT_QUOTES, 'UTF-8') : null;
-        $submitted_value = isset($_POST[$field]) ? htmlspecialchars(trim($_POST[$field]), ENT_QUOTES, 'UTF-8') : null;
+        // Get the current and submitted values for the field, sanitizing them with trim only
+        $current_value = isset($resultArr[0][$field]) ? trim($resultArr[0][$field]) : null;
+        $submitted_value = isset($_POST[$field]) ? trim($_POST[$field]) : null;
 
-        // Only proceed if the submitted value is different from the current value
-        if ($submitted_value !== $current_value) {
+        // Only proceed if the submitted value is not null, not disabled, and different from the current value
+        if ($submitted_value !== null && $submitted_value !== "" && $submitted_value !== $current_value) {
             // Add the field to the update query and changed fields list
-            $update_fields[] = "$field = '$submitted_value'";
+            $update_fields[] = "$field = '" . pg_escape_string($con, $submitted_value) . "'";
             $changed_fields[] = $field;
         }
+    }
+    // Add file fields to the update query if the file was uploaded
+    if ($doclink_caste_document) {
+        $update_fields[] = "caste_document = '$doclink_caste_document'";
+        $changed_fields[] = 'caste_document';
+    }
+
+    if ($doclink_applicant_photo) {
+        $update_fields[] = "applicant_photo = '$doclink_applicant_photo'";
+        $changed_fields[] = 'applicant_photo';
+    }
+
+    if ($doclink_resume) {
+        $update_fields[] = "resume_upload = '$doclink_resume'";
+        $changed_fields[] = 'resume_upload';
     }
 
     // If there are any fields to update, proceed with the update query
@@ -146,7 +169,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (count($changed_fields) > 0) {
             echo '<script>
                     alert("The following fields were updated: ' . implode(', ', $changed_fields) . '");
-                    window.location.href = "application_form.php";  // Reload the page
+                    if (window.history.replaceState) {
+                        // Update the URL without causing a page reload or resubmission
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                    window.location.reload(); // Trigger a page reload to reflect changes
                   </script>';
         } else {
             // No changes made
@@ -161,8 +188,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               </script>';
     }
 }
-
 ?>
+
 <!doctype html>
 <html lang="en">
 
