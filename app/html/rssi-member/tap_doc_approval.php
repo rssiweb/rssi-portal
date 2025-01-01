@@ -172,7 +172,9 @@ $resultArr = pg_fetch_all($result);
 
 <body>
     <?php include 'inactive_session_expire_check.php'; ?>
+
     <div class="container">
+
         <!-- Sidebar with Document List -->
         <div class="sidebar">
             <h4>Documents Pending Approval</h4>
@@ -195,6 +197,10 @@ $resultArr = pg_fetch_all($result);
 
         <!-- Document Preview & Approval -->
         <div class="preview-panel">
+            <!-- Top-right positioned link -->
+            <div class="d-flex justify-content-end mt-3 ">
+                <a href="technical_interview.php?applicationNumber_verify=<?php echo $application_number?>">Go to previous link</a>
+            </div>
             <h4>Document Preview</h4>
             <div id="documentPreview">
                 <!-- Document content will be displayed here -->

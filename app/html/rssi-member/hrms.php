@@ -280,6 +280,45 @@ if ($associatenumber === $user_check) {
     $accessible_cards = ['address_details', 'national_identifier', 'religion-caste', 'qualification', 'experience', 'social']; // Non-Admin can edit these cards only for their own data
 }
 ?>
+<?php
+// Query to get the latest submission status for each fieldname per associatenumber, excluding older 'Pending' requests
+$query = "
+    SELECT workflow.associatenumber, 
+           workflow.fieldname, 
+           workflow.reviewer_status
+    FROM hrms_workflow AS workflow
+    WHERE workflow.reviewer_status = 'Pending'
+    AND workflow.workflow_id = (
+        SELECT workflow_id
+        FROM hrms_workflow
+        WHERE associatenumber = workflow.associatenumber 
+          AND fieldname = workflow.fieldname
+        ORDER BY submission_timestamp DESC
+        LIMIT 1
+    )
+    ORDER BY workflow.associatenumber, workflow.fieldname
+";
+
+$result = pg_query($con, $query);
+
+// Store pending fields in an array
+$pendingFields = [];
+if ($result) {
+    while ($row = pg_fetch_assoc($result)) {
+        $pendingFields[] = [
+            'associatenumber' => $row['associatenumber'],
+            'fieldname' => $row['fieldname'],
+            'status' => $row['reviewer_status']
+        ]; // Add necessary data to the array
+    }
+}
+?>
+
+<script>
+    // Pass the PHP array of pending fields to JavaScript
+    var pendingFields = <?php echo json_encode($pendingFields); ?>;
+</script>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -602,28 +641,28 @@ if ($associatenumber === $user_check) {
                                                                     <table class="table table-borderless">
                                                                         <tbody>
                                                                             <tr>
-                                                                                <td>Telephone Number:</td>
+                                                                                <td><label for="phone">Telephone Number:</label></td>
                                                                                 <td>
                                                                                     <span id="phoneText"><?php echo $array['phone']; ?></span>
                                                                                     <input class="form-control" type="number" name="phone" id="phone" value="<?php echo $array['phone']; ?>" disabled style="display:none;">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
-                                                                                <td>Email Address:</td>
+                                                                                <td><label for="email">Email Address:</label></td>
                                                                                 <td>
                                                                                     <span id="emailText"><?php echo $array['email']; ?></span>
                                                                                     <input class="form-control" type="email" name="email" id="email" value="<?php echo $array['email']; ?>" disabled style="display:none;">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
-                                                                                <td>Current Address:</td>
+                                                                                <td><label for="currentaddress">Current Address:</label></td>
                                                                                 <td>
                                                                                     <span id="currentAddressText"><?php echo $array['currentaddress']; ?></span>
                                                                                     <textarea name="currentaddress" id="currentaddress" class="form-control" rows="3" disabled style="display: none;"><?php echo !empty($array['currentaddress']) ? $array['currentaddress'] : ''; ?></textarea>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
-                                                                                <td>Permanent Address:</td>
+                                                                                <td><label for="permanentaddress">Permanent Address:</label></td>
                                                                                 <td>
                                                                                     <span id="permanentAddressText"><?php echo $array['permanentaddress']; ?></span>
                                                                                     <textarea name="permanentaddress" id="permanentaddress" class="form-control" rows="3" disabled style="display: none;"><?php echo !empty($array['permanentaddress']) ? $array['permanentaddress'] : ''; ?></textarea>
@@ -1036,7 +1075,7 @@ if ($associatenumber === $user_check) {
                                                                             </tr>
                                                                             <!-- Grade -->
                                                                             <tr>
-                                                                                <td><label for="panno">Grade:</label></td>
+                                                                                <td><label for="grade">Grade:</label></td>
                                                                                 <td>
                                                                                     <?php echo $array["grade"] ?>
                                                                                 </td>
@@ -1365,38 +1404,6 @@ if ($associatenumber === $user_check) {
         });
     </script>
     <script>
-        // function toggleEdit(sectionId) {
-        //     // Get the section based on the provided sectionId
-        //     const section = document.getElementById(sectionId);
-
-        //     // Get all input and select elements in the section
-        //     const inputs = section.querySelectorAll('input, select, textarea, input[type="checkbox"]');
-
-        //     // Only proceed if there are input fields (input, select) in the section
-        //     if (inputs.length > 0) {
-        //         // Toggle edit mode for input elements in the section
-        //         const textElements = section.querySelectorAll('span');
-
-        //         // Toggle visibility of inputs (edit mode) and text (view mode)
-        //         inputs.forEach(input => {
-        //             input.disabled = !input.disabled; // Toggle the disabled state
-        //             input.style.display = input.disabled ? 'none' : 'inline'; // Toggle input visibility
-        //         });
-
-        //         textElements.forEach(text => {
-        //             text.style.display = text.style.display === 'none' ? 'inline' : 'none'; // Toggle text visibility
-        //         });
-
-        //         // Toggle icons (replace pencil with save)
-        //         const editIcon = section.querySelector('.edit-icon');
-        //         const saveIcon = section.querySelector('.save-icon');
-
-        //         if (editIcon && saveIcon) {
-        //             editIcon.style.display = 'none'; // Hide pencil icon
-        //             saveIcon.style.display = 'inline'; // Show save icon
-        //         }
-        //     }
-        // }
         function toggleEdit(sectionId) {
             // Get the section based on the provided sectionId
             const section = document.getElementById(sectionId);
@@ -1452,6 +1459,26 @@ if ($associatenumber === $user_check) {
             document.getElementById('signup').submit();
         }
     </script>
+    <script>
+        // Loop through the pendingFields array and check which fields have 'Pending' status
+        pendingFields.forEach(function(field) {
+            var fieldname = field.fieldname;
+
+            // Find the label element for the field (assuming the label 'for' attribute matches fieldname)
+            var label = document.querySelector('label[for="' + fieldname + '"]');
+
+            if (label) {
+                // Create a warning icon element
+                var warningIcon = document.createElement('i');
+                warningIcon.classList.add('bi', 'bi-clock', 'text-warning');
+                warningIcon.setAttribute('title', 'Under Review');
+
+                // Append the warning icon next to the label
+                label.appendChild(warningIcon);
+            }
+        });
+    </script>
+
 </body>
 
 </html>
