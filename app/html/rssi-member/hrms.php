@@ -219,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Insert pending approval fields into the workflow table
         foreach ($pending_approval_fields as $field) {
             $new_value = pg_escape_string($con, $_POST[$field]);
-            $workflow_query = "INSERT INTO hrms_profile_approval_workflow (associatenumber, fieldname, submitted_value, submission_timestamp, reviewer_status) VALUES ($1, $2, $3, NOW(), 'Pending')";
+            $workflow_query = "INSERT INTO hrms_workflow (associatenumber, fieldname, submitted_value, submission_timestamp, reviewer_status) VALUES ($1, $2, $3, NOW(), 'Pending')";
             $workflow_result = pg_query_params($con, $workflow_query, [$associatenumber, $field, $new_value]);
 
             if (!$workflow_result) {

@@ -751,7 +751,7 @@ $isFormDisabled = null;
                                                                         echo ($array['no_show'] == true) ? 'checked' : '';
                                                                     } else {
                                                                         // Disable for all other statuses
-                                                                        echo ($array['no_show'] == true) ? 'checked disabled' : '';
+                                                                        echo ($array['no_show'] == true) ? 'checked disabled' : 'disabled';
                                                                     }
                                                                     ?>>
                                                                 <small id="no-show-help" class="form-text text-muted">Check if the candidate is marked as No-Show.</small>

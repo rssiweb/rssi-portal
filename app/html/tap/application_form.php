@@ -533,7 +533,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                                 <div class="d-flex flex-column flex-sm-row align-items-center">
                                                                     <!-- Left side: File input -->
                                                                     <div class="mb-2 mb-sm-0">
-                                                                        <input type="file" class="form-control" id="applicant-photo" name="applicant-photo" accept="image/*">
+                                                                        <input type="file" class="form-control" id="applicant-photo" name="applicant-photo" accept=".jpg,.jpeg,.png" onchange="validatePhotoFile(this)">
                                                                     </div>
 
                                                                     <!-- Right side: Uploaded file or message -->
@@ -632,6 +632,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else {
                 permanentAddressField.value = ''; // Clear permanent address when checkbox is unchecked
                 permanentAddressField.readOnly = false; // Make it editable again
+            }
+        }
+    </script>
+    <script>
+        function validatePhotoFile(input) {
+            const file = input.files[0]; // Get the uploaded file
+
+            if (file) {
+                // Allowed file types
+                const validImageTypes = ['image/jpeg', 'image/png'];
+                if (!validImageTypes.includes(file.type)) {
+                    alert('Only image files (JPG, JPEG, PNG) are allowed.');
+                    input.value = ''; // Clear the file input
+                    return;
+                }
+
+                // Check file size (max 300 KB)
+                const maxSize = 300 * 1024; // 300 KB in bytes
+                if (file.size > maxSize) {
+                    alert('The uploaded file exceeds the maximum size of 300 KB. Please upload a smaller image.');
+                    input.value = ''; // Clear the file input
+                    return;
+                }
+
+                // File is valid; no further actions required.
             }
         }
     </script>
