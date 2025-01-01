@@ -285,35 +285,37 @@ if ($associatenumber === $user_check) {
 <?php
 // Query to get the latest submission status for each fieldname per associatenumber, excluding older 'Pending' requests
 $query = "
-    SELECT workflow.associatenumber, 
-           workflow.fieldname, 
-           workflow.reviewer_status
+    SELECT workflow.fieldname, workflow.reviewer_status
     FROM hrms_workflow AS workflow
     WHERE workflow.reviewer_status = 'Pending'
-    AND workflow.workflow_id = (
-        SELECT workflow_id
-        FROM hrms_workflow
-        WHERE associatenumber = workflow.associatenumber 
-          AND fieldname = workflow.fieldname
-        ORDER BY submission_timestamp DESC
-        LIMIT 1
-    )
-    ORDER BY workflow.associatenumber, workflow.fieldname
+      AND workflow.associatenumber = $1
+      AND workflow.workflow_id = (
+          SELECT workflow_id
+          FROM hrms_workflow
+          WHERE associatenumber = workflow.associatenumber 
+            AND fieldname = workflow.fieldname
+          ORDER BY submission_timestamp DESC
+          LIMIT 1
+      )
+    ORDER BY workflow.fieldname
 ";
 
-$result = pg_query($con, $query);
+$result = pg_query_params($con, $query, [$associatenumber]);
 
-// Store pending fields in an array
 $pendingFields = [];
 if ($result) {
     while ($row = pg_fetch_assoc($result)) {
         $pendingFields[] = [
-            'associatenumber' => $row['associatenumber'],
             'fieldname' => $row['fieldname'],
             'status' => $row['reviewer_status']
-        ]; // Add necessary data to the array
+        ];
     }
 }
+
+// Pass filtered pendingFields to JavaScript
+echo "<script>
+    var pendingFields = " . json_encode($pendingFields) . ";
+</script>";
 ?>
 
 <script>
@@ -1462,22 +1464,24 @@ if ($result) {
         }
     </script>
     <script>
-        // Loop through the pendingFields array and check which fields have 'Pending' status
-        pendingFields.forEach(function(field) {
-            var fieldname = field.fieldname;
+        document.addEventListener("DOMContentLoaded", function() {
+            // Loop through the pendingFields array and check which fields have 'Pending' status
+            pendingFields.forEach(function(field) {
+                var fieldname = field.fieldname;
 
-            // Find the label element for the field (assuming the label 'for' attribute matches fieldname)
-            var label = document.querySelector('label[for="' + fieldname + '"]');
+                // Find the label element for the field (assuming the label 'for' attribute matches fieldname)
+                var label = document.querySelector('label[for="' + fieldname + '"]');
 
-            if (label) {
-                // Create a warning icon element
-                var warningIcon = document.createElement('i');
-                warningIcon.classList.add('bi', 'bi-clock', 'text-warning');
-                warningIcon.setAttribute('title', 'Under Review');
+                if (label) {
+                    // Create a warning icon element
+                    var warningIcon = document.createElement("i");
+                    warningIcon.classList.add("bi", "bi-clock", "text-warning");
+                    warningIcon.setAttribute("title", "Under Review");
 
-                // Append the warning icon next to the label
-                label.appendChild(warningIcon);
-            }
+                    // Append the warning icon next to the label
+                    label.appendChild(warningIcon);
+                }
+            });
         });
     </script>
 
