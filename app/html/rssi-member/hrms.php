@@ -214,6 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update_sql = "UPDATE rssimyaccount_members SET " . implode(", ", $update_fields) . " WHERE associatenumber = '$associatenumber'";
 
             $update_result = pg_query($con, $update_sql);
+            $cmdtuples = pg_affected_rows($update_result);
         }
 
         // Insert pending approval fields into the workflow table
@@ -245,21 +246,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Handle the success or failure of the update operation
-        if ($update_result) {
-            echo "<script>
+        if (!empty($update_fields)) {
+            if (isset($cmdtuples) && $cmdtuples == 1) {
+                echo "<script>
                 alert('The following fields were updated: " . implode(", ", $updated_fields) . "');
                 if (window.history.replaceState) {
                     window.history.replaceState(null, null, window.location.href);
                 }
                 window.location.reload();
             </script>";
-            exit;
+            } else {
+                // No changes made
+                echo '<script>
+                    alert("Error: We encountered an error while updating the record. Please try again.");
+                  </script>';
+            }
         } else {
+            // Failure: Error occurred
             echo "<script>
-                alert('An error occurred while updating the data.');
+                alert('No changes were made to your profile.');
                 window.history.back();
             </script>";
-            exit;
         }
     }
 }
