@@ -42,14 +42,18 @@ if (isset($_GET['applicationNumber_verify'])) {
             }
         }
 
-        // Get latest uploaded files for this user
+        // Get the latest uploaded files and their corresponding verification status
         $getLatestFiles = "
-            SELECT file_name, MAX(uploaded_on) AS latest_upload, verification_status
+            SELECT file_name, uploaded_on AS latest_upload, verification_status
             FROM archive
             WHERE uploaded_by = '$applicationNumberEscaped'
-            GROUP BY file_name, verification_status";
+            AND uploaded_on = (
+                SELECT MAX(uploaded_on)
+                FROM archive AS a2
+                WHERE a2.file_name = archive.file_name
+                AND a2.uploaded_by = '$applicationNumberEscaped'
+            )";
         $filesResult = pg_query($con, $getLatestFiles);
-
 
         $uploadedFiles = [];
         $allVerified = true;
