@@ -222,7 +222,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
                             <br>
 
                             <?php foreach ($resultArr as $array) { ?>
-                                <?php $isFormDisabled = ($array["identity_verification"] === 'Approved') ? 'disabled' : null; ?>
+                                <?php
+                                $isFormDisabled = (empty($array["supporting_document"]) ||
+                                    ($array["identity_verification"] === 'Rejected' && !empty($array["supporting_document"])))
+                                    ? null
+                                    : 'disabled';
+                                ?>
                                 <div class="container">
                                     <form name="verification" id="verification" action="#" method="post" enctype="multipart/form-data">
                                         <fieldset <?php echo $isFormDisabled; ?>>
