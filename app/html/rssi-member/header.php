@@ -388,6 +388,11 @@
             </a>
           </li>
           <li>
+            <a id="hrms_workflow" href="hrms_workflow.php">
+              <span>HRMS Workflow</span>
+            </a>
+          </li>
+          <li>
             <a id="leave_adminLink" href="leave_admin.php">
               <span>Leave Management</span>
             </a>
@@ -612,6 +617,10 @@
         id: 'work',
         linkId: 'facultyLink',
         url: 'faculty.php'
+      }, {
+        id: 'work',
+        linkId: 'hrms_workflow',
+        url: 'hrms_workflow.php'
       },
       {
         id: 'work',
@@ -823,6 +832,6 @@
     }
 
     // Call the function for 'home.php' and 'profile.php'
-  toggleCollapsedClass('home.php', 'homeLink');
-  toggleCollapsedClass('hrms.php', 'hrmsLink');
+    toggleCollapsedClass('home.php', 'homeLink');
+    toggleCollapsedClass('hrms.php', 'hrmsLink');
   </script>
