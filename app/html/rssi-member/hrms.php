@@ -610,10 +610,24 @@ echo "<script>
                                         <div class="primary-details">
                                             <p style="font-size: large;"><?php echo $array["fullname"] ?></p>
                                             <p><?php echo $array["associatenumber"] ?><br><?php echo $array["engagement"] ?><br>Designation: <?php echo $array["position"] ?></p>
-                                            <button id="viewHierarchyBtn" data-associate="<?php echo $array['associatenumber']; ?>">View Hierarchy</button>
+                                            <!-- View Hierarchy clickable text with down arrow -->
+                                            <span id="viewHierarchyBtn" data-associate="<?php echo $array['associatenumber']; ?>" style="cursor: pointer;">
+                                                View Hierarchy
+                                                <span class="down-arrow" style="font-size: 16px; margin-left: 5px;"><i class="bi bi-chevron-down"></i></span> <!-- Down arrow -->
+                                            </span>
 
                                             <div id="hierarchyDropdown" class="floating-dropdown" style="display: none;">
                                                 <!-- Hierarchy will be dynamically populated here -->
+                                            </div>&nbsp;
+
+                                            <!-- View Reportees clickable text with down arrow -->
+                                            <span id="viewReporteesBtn" data-associate="<?php echo $array['associatenumber']; ?>" style="cursor: pointer;">
+                                                View Reportees
+                                                <span class="down-arrow" style="font-size: 16px; margin-left: 5px;"><i class="bi bi-chevron-down"></i></span> <!-- Down arrow -->
+                                            </span>
+
+                                            <div id="reporteesDropdown" class="floating-dropdown" style="display: none;">
+                                                <!-- Reportees will be dynamically populated here -->
                                             </div>
 
                                         </div>
@@ -1542,53 +1556,182 @@ echo "<script>
                 .map(name => name.charAt(0).toUpperCase())
                 .join('');
         }
+        // Function to extract initials from the full name
+        function getInitials(fullname) {
+            return fullname
+                .split(' ')
+                .map(name => name.charAt(0).toUpperCase())
+                .join('');
+        }
+
         document.getElementById('viewHierarchyBtn').addEventListener('click', function() {
             const associatenumber = this.getAttribute('data-associate');
             const dropdown = document.getElementById('hierarchyDropdown');
+            const arrowIcon = this.querySelector('i'); // Get the icon element
 
-            // Show loading state
-            dropdown.innerHTML = 'Loading...';
-            dropdown.style.display = 'block';
+            // Check if the dropdown is already visible
+            const isVisible = dropdown.style.display === 'block';
 
-            // Fetch hierarchy via AJAX
-            fetch('payment-api.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({
-                        'form-type': 'hierarchy',
-                        'associatenumber': associatenumber
+            // Toggle the dropdown visibility
+            if (isVisible) {
+                dropdown.style.display = 'none';
+                // Change the icon to down chevron when closed
+                arrowIcon.classList.remove('bi-chevron-up');
+                arrowIcon.classList.add('bi-chevron-down');
+            } else {
+                dropdown.style.display = 'block';
+                // Change the icon to up chevron when expanded
+                arrowIcon.classList.remove('bi-chevron-down');
+                arrowIcon.classList.add('bi-chevron-up');
+
+                // Show loading state
+                dropdown.innerHTML = 'Loading...';
+
+                // Fetch hierarchy via AJAX
+                fetch('payment-api.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({
+                            'form-type': 'hierarchy',
+                            'associatenumber': associatenumber
+                        })
                     })
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.length > 0) {
-                        dropdown.innerHTML = data.map(item => {
-                            const profilePic = item.photo ?
-                                `<div class="icon-container">
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.length > 0) {
+                            dropdown.innerHTML = data.map(item => {
+                                const profilePic = item.photo ?
+                                    `<div class="icon-container">
                           <img src="${item.photo}" class="rounded-circle me-2" alt="${item.fullname}" width="40" height="40" />
                       </div>` :
-                                `<div class="profile-pic initials">${getInitials(item.fullname)}</div>`;
+                                    `<div class="profile-pic initials">${getInitials(item.fullname)}</div>`;
 
-                            return `
+                                return `
                     <div class="hierarchy-item">
                         ${profilePic}
                         <span>${item.fullname} (${item.associatenumber}) - ${item.position}</span>
                     </div>
                 `;
-                        }).join('');
-                    } else {
-                        dropdown.innerHTML = 'No hierarchy data found.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching hierarchy:', error);
-                    dropdown.innerHTML = 'An error occurred. Please try again.';
-                });
+                            }).join('');
+                        } else {
+                            dropdown.innerHTML = 'No hierarchy data found.';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching hierarchy:', error);
+                        dropdown.innerHTML = 'An error occurred. Please try again.';
+                    });
+            }
+        });
+
+        // Close the dropdown when clicked outside of it
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('hierarchyDropdown');
+            const viewHierarchyBtn = document.getElementById('viewHierarchyBtn');
+
+            // If the click is outside the dropdown and the button, close the dropdown
+            if (!viewHierarchyBtn.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+                // Change the icon to down chevron when closed
+                const arrowIcon = viewHierarchyBtn.querySelector('i');
+                arrowIcon.classList.remove('bi-chevron-up');
+                arrowIcon.classList.add('bi-chevron-down');
+            }
+        });
+    </script>
+    <script>
+        // Function to extract initials from the full name
+        function getInitials(fullname) {
+            return fullname
+                .split(' ')
+                .map(name => name.charAt(0).toUpperCase())
+                .join('');
+        }
+
+        // Handle the "View Reportees" button click
+        document.getElementById('viewReporteesBtn').addEventListener('click', function() {
+            const associatenumber = this.getAttribute('data-associate');
+            const dropdown = document.getElementById('reporteesDropdown');
+            const arrowIcon = this.querySelector('i'); // Get the icon element
+
+            // Check if the dropdown is already visible
+            const isVisible = dropdown.style.display === 'block';
+
+            // Toggle the dropdown visibility
+            if (isVisible) {
+                dropdown.style.display = 'none';
+                // Change the icon to down chevron when closed
+                arrowIcon.classList.remove('bi-chevron-up');
+                arrowIcon.classList.add('bi-chevron-down');
+            } else {
+                dropdown.style.display = 'block';
+                // Change the icon to up chevron when expanded
+                arrowIcon.classList.remove('bi-chevron-down');
+                arrowIcon.classList.add('bi-chevron-up');
+
+                // Show loading state
+                dropdown.innerHTML = 'Loading...';
+
+                // Fetch reportees via AJAX
+                fetch('payment-api.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({
+                            'form-type': 'reportees',
+                            'associatenumber': associatenumber
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.length > 0) {
+                            dropdown.innerHTML = data.map(item => {
+                                const profilePic = item.photo ?
+                                    `<div class="icon-container">
+                          <img src="${item.photo}" class="rounded-circle me-2" alt="${item.fullname}" width="40" height="40" />
+                      </div>` :
+                                    `<div class="profile-pic initials">${getInitials(item.fullname)}</div>`;
+
+                                return `
+                    <div class="hierarchy-item">
+                        ${profilePic}
+                        <span>${item.fullname} (${item.associatenumber}) - ${item.position}</span>
+                    </div>
+                `;
+                            }).join('');
+                        } else {
+                            dropdown.innerHTML = 'No reportees found.';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching reportees:', error);
+                        dropdown.innerHTML = 'An error occurred. Please try again.';
+                    });
+            }
+        });
+
+        // Close the dropdown when clicked outside of it
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('reporteesDropdown');
+            const viewReporteesBtn = document.getElementById('viewReporteesBtn');
+
+            // If the click is outside the dropdown and the button, close the dropdown
+            if (!viewReporteesBtn.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+                // Change the icon to down chevron when closed
+                const arrowIcon = viewReporteesBtn.querySelector('i');
+                arrowIcon.classList.remove('bi-chevron-up');
+                arrowIcon.classList.add('bi-chevron-down');
+            }
         });
     </script>
 

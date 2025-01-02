@@ -1492,3 +1492,27 @@ if (@$_POST['form-type'] == "hierarchy") {
   echo json_encode($hierarchy);
   exit;
 }
+if (@$_POST['form-type'] == "reportees") {
+  function fetchReportees($associatenumber, $con)
+  {
+    $reportees = [];
+
+    // SQL query to get associates where their supervisor matches the passed associatenumber
+    $sql = "SELECT fullname, associatenumber, position, supervisor, photo FROM rssimyaccount_members WHERE supervisor = '$associatenumber'";
+    $result = pg_query($con, $sql);
+
+    if ($result && pg_num_rows($result) > 0) {
+      while ($row = pg_fetch_assoc($result)) {
+        $reportees[] = $row;
+      }
+    }
+
+    return $reportees;
+  }
+
+  header('Content-Type: application/json');
+  $associatenumber = htmlspecialchars($_POST['associatenumber'], ENT_QUOTES, 'UTF-8');
+  $reportees = fetchReportees($associatenumber, $con);
+  echo json_encode($reportees);
+  exit;
+}
