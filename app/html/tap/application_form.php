@@ -45,7 +45,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
     $uploadedFile_caste = isset($_FILES['caste_document']) ? $_FILES['caste_document'] : null;
     $uploadedFile_photo = isset($_FILES['applicant_photo']) ? $_FILES['applicant_photo'] : null;
     $uploadedFile_resume = isset($_FILES['resume_upload']) ? $_FILES['resume_upload'] : null;
-    $application_status = 'Application Re-Submitted';
 
     // Initialize file links to null
     $doclink_caste_document = null;
@@ -145,6 +144,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["form-type"]) && $_POST
 
     // If there are any fields to update, proceed with the update query
     if (count($update_fields) > 0) {
+        // Automatically set application_status to 'Application Re-Submitted'
+        $update_fields['application_status'] = "application_status = 'Application Re-Submitted'";
+
         // Build and execute the update query dynamically
         $update_query = "UPDATE signup SET " . implode(", ", $update_fields) . " WHERE application_number = '$application_number'";
         $result = pg_query($con, $update_query);
