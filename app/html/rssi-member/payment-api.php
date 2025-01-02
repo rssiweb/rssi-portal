@@ -1461,3 +1461,34 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'holiday') {
     echo json_encode(["error" => "Error executing the query."]);
   }
 }
+
+if (@$_POST['form-type'] == "hierarchy") {
+  function fetchHierarchy($associatenumber, $con)
+  {
+    $hierarchy = [];
+    $seen = []; // To track visited nodes and prevent infinite loops
+
+    while (!in_array($associatenumber, $seen)) {
+      $seen[] = $associatenumber;
+
+      $sql = "SELECT fullname, associatenumber, position, supervisor, photo FROM rssimyaccount_members WHERE associatenumber = '$associatenumber'";
+      $result = pg_query($con, $sql);
+      if ($result && pg_num_rows($result) > 0) {
+        $currentAssociate = pg_fetch_assoc($result);
+        $hierarchy[] = $currentAssociate;
+
+        $associatenumber = $currentAssociate['supervisor'];
+      } else {
+        break; // Stop if no supervisor is found
+      }
+    }
+
+    return array_reverse($hierarchy); // Reverse the hierarchy for the desired order
+  }
+
+  header('Content-Type: application/json');
+  $associatenumber = htmlspecialchars($_POST['associatenumber'], ENT_QUOTES, 'UTF-8');
+  $hierarchy = fetchHierarchy($associatenumber, $con);
+  echo json_encode($hierarchy);
+  exit;
+}

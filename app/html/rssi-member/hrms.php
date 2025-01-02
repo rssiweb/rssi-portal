@@ -501,6 +501,50 @@ echo "<script>
                 margin: 10px;
             }
         }
+
+        .floating-dropdown {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            max-width: 300px;
+            z-index: 1000;
+            overflow-y: auto;
+            max-height: 400px;
+            font-size: 0.85em;
+            /* Slightly smaller than the default system font */
+        }
+
+        .hierarchy-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .icon-container img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            /* Ensures the image is circular */
+        }
+
+        .hierarchy-item .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            /* Circular shape for initials */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ddd;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #555;
+            margin-right: 10px;
+        }
     </style>
 
     <!-- Template Main CSS File -->
@@ -566,6 +610,12 @@ echo "<script>
                                         <div class="primary-details">
                                             <p style="font-size: large;"><?php echo $array["fullname"] ?></p>
                                             <p><?php echo $array["associatenumber"] ?><br><?php echo $array["engagement"] ?><br>Designation: <?php echo $array["position"] ?></p>
+                                            <button id="viewHierarchyBtn" data-associate="<?php echo $array['associatenumber']; ?>">View Hierarchy</button>
+
+                                            <div id="hierarchyDropdown" class="floating-dropdown" style="display: none;">
+                                                <!-- Hierarchy will be dynamically populated here -->
+                                            </div>
+
                                         </div>
                                         <div class="contact-info">
                                             <p><?php echo $array["phone"] ?></p>
@@ -1482,6 +1532,63 @@ echo "<script>
                     label.appendChild(warningIcon);
                 }
             });
+        });
+    </script>
+    <script>
+        // Function to extract initials from the full name
+        function getInitials(fullname) {
+            return fullname
+                .split(' ')
+                .map(name => name.charAt(0).toUpperCase())
+                .join('');
+        }
+        document.getElementById('viewHierarchyBtn').addEventListener('click', function() {
+            const associatenumber = this.getAttribute('data-associate');
+            const dropdown = document.getElementById('hierarchyDropdown');
+
+            // Show loading state
+            dropdown.innerHTML = 'Loading...';
+            dropdown.style.display = 'block';
+
+            // Fetch hierarchy via AJAX
+            fetch('payment-api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        'form-type': 'hierarchy',
+                        'associatenumber': associatenumber
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.length > 0) {
+                        dropdown.innerHTML = data.map(item => {
+                            const profilePic = item.photo ?
+                                `<div class="icon-container">
+                          <img src="${item.photo}" class="rounded-circle me-2" alt="${item.fullname}" width="40" height="40" />
+                      </div>` :
+                                `<div class="profile-pic initials">${getInitials(item.fullname)}</div>`;
+
+                            return `
+                    <div class="hierarchy-item">
+                        ${profilePic}
+                        <span>${item.fullname} (${item.associatenumber}) - ${item.position}</span>
+                    </div>
+                `;
+                        }).join('');
+                    } else {
+                        dropdown.innerHTML = 'No hierarchy data found.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching hierarchy:', error);
+                    dropdown.innerHTML = 'An error occurred. Please try again.';
+                });
         });
     </script>
 
