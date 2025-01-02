@@ -610,25 +610,37 @@ echo "<script>
                                         <div class="primary-details">
                                             <p style="font-size: large;"><?php echo $array["fullname"] ?></p>
                                             <p><?php echo $array["associatenumber"] ?><br><?php echo $array["engagement"] ?><br>Designation: <?php echo $array["position"] ?></p>
-                                            <!-- View Hierarchy clickable text with down arrow -->
-                                            <span id="viewHierarchyBtn" data-associate="<?php echo $array['associatenumber']; ?>" style="cursor: pointer;">
-                                                View Hierarchy
-                                                <span class="down-arrow" style="font-size: 16px; margin-left: 5px;"><i class="bi bi-chevron-down"></i></span> <!-- Down arrow -->
-                                            </span>
+                                            <!-- Wrapper for both dropdowns -->
+                                            <div class="dropdowns-container d-flex gap-3">
+                                                <!-- View Hierarchy clickable text with down arrow -->
+                                                <div class="dropdown-container" id="viewHierarchyContainer">
+                                                    <span id="viewHierarchyBtn" data-associate="<?php echo $array['associatenumber']; ?>" style="cursor: pointer;">
+                                                        View Hierarchy
+                                                        <span class="down-arrow" style="font-size: 16px; margin-left: 5px;">
+                                                            <i class="bi bi-chevron-down"></i>
+                                                        </span> <!-- Down arrow -->
+                                                    </span>
 
-                                            <div id="hierarchyDropdown" class="floating-dropdown" style="display: none;">
-                                                <!-- Hierarchy will be dynamically populated here -->
-                                            </div>&nbsp;
+                                                    <div id="hierarchyDropdown" class="floating-dropdown" style="display: none;">
+                                                        <!-- Hierarchy will be dynamically populated here -->
+                                                    </div>
+                                                </div>
 
-                                            <!-- View Reportees clickable text with down arrow -->
-                                            <span id="viewReporteesBtn" data-associate="<?php echo $array['associatenumber']; ?>" style="cursor: pointer;">
-                                                View Reportees
-                                                <span class="down-arrow" style="font-size: 16px; margin-left: 5px;"><i class="bi bi-chevron-down"></i></span> <!-- Down arrow -->
-                                            </span>
+                                                <!-- View Reportees clickable text with down arrow -->
+                                                <div class="dropdown-container" id="viewReporteesContainer">
+                                                    <span id="viewReporteesBtn" data-associate="<?php echo $array['associatenumber']; ?>" style="cursor: pointer;">
+                                                        View Reportees
+                                                        <span class="down-arrow" style="font-size: 16px; margin-left: 5px;">
+                                                            <i class="bi bi-chevron-down"></i>
+                                                        </span> <!-- Down arrow -->
+                                                    </span>
 
-                                            <div id="reporteesDropdown" class="floating-dropdown" style="display: none;">
-                                                <!-- Reportees will be dynamically populated here -->
+                                                    <div id="reporteesDropdown" class="floating-dropdown" style="display: none;">
+                                                        <!-- Reportees will be dynamically populated here -->
+                                                    </div>
+                                                </div>
                                             </div>
+
 
                                         </div>
                                         <div class="contact-info">
