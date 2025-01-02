@@ -216,8 +216,7 @@ if (@$cmdtuples == 1) {
 
                             <div class="mb-3">
                                 <label for="reason-for-leaving" class="form-label">Reason for Leaving:</label>
-                                <textarea class="form-control" rows="5" name="reason-for-leaving" id="reason-for-leaving" required><?php echo $array['exit_remarks'] == null ? $array['reason_remarks'] : $array['exit_remarks']; ?>
-                                </textarea>
+                                <textarea class="form-control" rows="5" name="reason-for-leaving" id="reason-for-leaving" required><?php echo $array['exit_remarks'] == null ? $array['reason_remarks'] : $array['exit_remarks']; ?></textarea>
                                 <div class="form-text">Enter the reason for the associate leaving the company.</div>
                             </div>
 
@@ -586,24 +585,24 @@ if (@$cmdtuples == 1) {
         });
     </script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const style = document.createElement('style');
-        style.textContent = '.required-asterisk { color: red; font-size: 1.2em; margin-left: 0.2em; }';
-        document.head.appendChild(style);
+        document.addEventListener('DOMContentLoaded', function() {
+            const style = document.createElement('style');
+            style.textContent = '.required-asterisk { color: red; font-size: 1.2em; margin-left: 0.2em; }';
+            document.head.appendChild(style);
 
-        document.querySelectorAll('input[required], textarea[required], select[required]').forEach(function (input) {
-            if (!input.closest('.form-check')) {
-                const label = input.closest('.mb-3').querySelector('label[for="' + input.id + '"]');
-                if (label) {
-                    const asterisk = document.createElement('span');
-                    asterisk.className = 'required-asterisk';
-                    asterisk.textContent = '*';
-                    label.appendChild(asterisk);
+            document.querySelectorAll('input[required], textarea[required], select[required]').forEach(function(input) {
+                if (!input.closest('.form-check')) {
+                    const label = input.closest('.mb-3').querySelector('label[for="' + input.id + '"]');
+                    if (label) {
+                        const asterisk = document.createElement('span');
+                        asterisk.className = 'required-asterisk';
+                        asterisk.textContent = '*';
+                        label.appendChild(asterisk);
+                    }
                 }
-            }
+            });
         });
-    });
-</script>
+    </script>
 
 
 </body>
