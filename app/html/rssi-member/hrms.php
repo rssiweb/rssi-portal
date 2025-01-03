@@ -561,6 +561,19 @@ echo "<script>
             margin-right: 10px;
         }
     </style>
+    <style>
+        /* Button initially hidden but layout reserved */
+        #generateButton {
+            visibility: hidden;
+            /* Invisible but layout preserved */
+        }
+
+        /* Button visible */
+        #generateButton.visible {
+            visibility: visible;
+            /* Show button */
+        }
+    </style>
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
@@ -1385,7 +1398,14 @@ echo "<script>
                                                                                 <td><label for="scode">Scode:</label></td>
                                                                                 <td>
                                                                                     <span id="scodeText"><?php echo $array['scode']; ?></span>
-                                                                                    <input type="text" name="scode" id="scode" value="<?php echo $array["scode"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                    <div class="form-group">
+                                                                                        <fieldset <?php echo !empty($array['scode']) ? 'disabled' : ''; ?>>
+                                                                                            <div class="input-group">
+                                                                                                <input type="text" name="scode" id="scode" value="<?php echo $array['scode']; ?>" disabled class="form-control" style="display:none;">
+                                                                                                <button type="button" id="generateButton" class="btn btn-primary">Generate Code</button>
+                                                                                            </div>
+                                                                                        </fieldset>
+                                                                                    </div>
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
@@ -1769,6 +1789,16 @@ echo "<script>
         });
     </script>
     <script>
+        function syncVisibility() {
+            const scodeInput = document.getElementById('scode');
+            const generateButton = document.getElementById('generateButton');
+
+            // If the input field is hidden, hide the button; otherwise, show it
+            const isVisible = scodeInput.style.display !== 'none';
+            generateButton.style.visibility = isVisible ? 'visible' : 'hidden';
+        }
+
+        // Generate code logic and visibility toggle
         document.getElementById('generateButton').addEventListener('click', function() {
             // Generate a random 20-character string
             const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -1778,9 +1808,25 @@ echo "<script>
                 characters.charAt(Math.floor(Math.random() * characters.length))
             ).join('');
 
-            // Set the generated string in the #scode input
-            document.getElementById('scode').value = randomString;
+            // Set the generated string in the input and show the input field
+            const scodeInput = document.getElementById('scode');
+            scodeInput.value = randomString;
+            scodeInput.style.display = 'block';
+
+            // Sync visibility after showing the input
+            syncVisibility();
         });
+
+        // Monitor changes to the input field's style and sync visibility
+        const scodeInput = document.getElementById('scode');
+        const observer = new MutationObserver(syncVisibility);
+        observer.observe(scodeInput, {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+
+        // Initial sync to ensure visibility consistency
+        syncVisibility();
     </script>
 </body>
 

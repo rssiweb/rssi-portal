@@ -1498,7 +1498,7 @@ if (@$_POST['form-type'] == "reportees") {
     $reportees = [];
 
     // SQL query to get associates where their supervisor matches the passed associatenumber
-    $sql = "SELECT fullname, associatenumber, position, supervisor, photo FROM rssimyaccount_members WHERE supervisor = '$associatenumber'";
+    $sql = "SELECT fullname, associatenumber, position, supervisor, photo FROM rssimyaccount_members WHERE supervisor = '$associatenumber' AND filterstatus='Active'";
     $result = pg_query($con, $sql);
 
     if ($result && pg_num_rows($result) > 0) {
