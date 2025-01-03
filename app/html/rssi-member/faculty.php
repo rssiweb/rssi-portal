@@ -339,8 +339,8 @@ $resultArr = pg_fetch_all($result);
                                                         </div>
                                                     </td>
                                                     <td>
-                                                        <?php echo 'Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
-                                                        <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['doj'])) . '<br>' . $experience . '</td>
+                                                        <?php echo 'Name - ' . $array['fullname'] . '<br>Associate ID - ' . $array['associatenumber'] . '
+                                                        <br>' . $array['gender'] . '&nbsp;(' . (new DateTime($array['dateofbirth']))->diff(new DateTime())->y . ')<br><br>DOJ - ' . date('d/m/y', strtotime($array['doj'])) . '<br>' . $experience . '</td>
                                                         <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
                                                         <td>' . $array['position'] . '</td>
                                                         <td>' . $array['supervisor'] ?>
