@@ -129,7 +129,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'absconding',
             'shift',
             'effectivedate',
-            'remarks'
+            'remarks',
+            'scode'
         ];
 
         $user_editable_fields = [
@@ -1378,6 +1379,13 @@ echo "<script>
                                                                                 <td>
                                                                                     <span id="remarks"><?php echo $array['remarks']; ?></span>
                                                                                     <textarea name="remarks" id="remarks" class="form-control" rows="3" disabled style="display: none;"><?php echo !empty($array['remarks']) ? $array['remarks'] : ''; ?></textarea>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><label for="scode">Scode:</label></td>
+                                                                                <td>
+                                                                                    <span id="scodeText"><?php echo $array['scode']; ?></span>
+                                                                                    <input type="text" name="scode" id="scode" value="<?php echo $array["scode"]; ?>" disabled class="form-control" style="display:none;">
                                                                                 </td>
                                                                             </tr>
                                                                             <tr>
