@@ -285,44 +285,53 @@ $resultArr = pg_fetch_all($result);
                                                 // Example input dates
                                                 $doj = $array["doj"]; // Date of Joining
                                                 $effectiveFrom = $array["effectivedate"]; // Effective End Date, could be null
-
-                                                // Parse dates
-                                                $dojDate = new DateTime($doj);
-                                                $currentDate = new DateTime(); // Current date
-                                                $endDate = $effectiveFrom ? new DateTime($effectiveFrom) : $currentDate; // Use effective date if set, otherwise use today
-
-                                                // Check if DOJ is in the future
-                                                if ($dojDate > $currentDate) {
-                                                    // If the DOJ is in the future, display a message
-                                                    $experience = "Not yet commenced";
+                                                // Check if DOJ is available and valid
+                                                if (empty($doj) || !strtotime($doj)) {
+                                                    $experience = "DOJ not available or invalid";
                                                 } else {
-                                                    // Calculate the difference
-                                                    $interval = $dojDate->diff($endDate);
+                                                    // Parse dates
+                                                    $dojDate = new DateTime($doj);
+                                                    $currentDate = new DateTime(); // Current date
+                                                    $endDate = $effectiveFrom ? new DateTime($effectiveFrom) : $currentDate; // Use effective date if set, otherwise use today
 
-                                                    // Extract years, months, and days
-                                                    $years = $interval->y;
-                                                    $months = $interval->m;
-                                                    $days = $interval->d;
-
-                                                    // Determine the format to display
-                                                    if ($years > 0) {
-                                                        $experience = number_format($years + ($months / 12), 2) . " year(s)";
-                                                    } elseif ($months > 0) {
-                                                        $experience = number_format($months + ($days / 30), 2) . " month(s)";
+                                                    // Check if DOJ is in the future
+                                                    if ($dojDate > $currentDate) {
+                                                        // If the DOJ is in the future, display a message
+                                                        $experience = "Not yet commenced";
                                                     } else {
-                                                        $experience = number_format($days, 2) . " day(s)";
+                                                        // Calculate the difference
+                                                        $interval = $dojDate->diff($endDate);
+
+                                                        // Extract years, months, and days
+                                                        $years = $interval->y;
+                                                        $months = $interval->m;
+                                                        $days = $interval->d;
+
+                                                        // Determine the format to display
+                                                        if ($years > 0) {
+                                                            $experience = number_format($years + ($months / 12), 2) . " year(s)";
+                                                        } elseif ($months > 0) {
+                                                            $experience = number_format($months + ($days / 30), 2) . " month(s)";
+                                                        } else {
+                                                            $experience = number_format($days, 2) . " day(s)";
+                                                        }
                                                     }
                                                 }
                                                 ?>
                                                 <tr>
                                                     <td>
+
                                                         <?php if ($array['photo'] != null) { ?>
                                                             <div class="icon-container">
                                                                 <img src="<?php echo $array['photo']; ?>" class="rounded-circle me-2" alt="User Photo" width="50" height="50" />
                                                             </div>
-                                                        <?php } else { ?>
-                                                            <div class="icon-container">
-                                                                <img src="https://res.cloudinary.com/hs4stt5kg/image/upload/v1609410219/faculties/blank.jpg" class="rounded-circle me-2" alt="Blank User Photo" width="50" height="50" />
+                                                        <?php } else {
+                                                            // Extract initials from the full name
+                                                            $nameParts = explode(" ", $array['fullname']);
+                                                            $initials = strtoupper($nameParts[0][0] . (isset($nameParts[1]) ? $nameParts[1][0] : ''));
+                                                        ?>
+                                                            <div class="icon-container" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background-color: #ccc; border-radius: 50%;">
+                                                                <span style="font-size: 20px; color: white;"><?php echo $initials; ?></span>
                                                             </div>
                                                         <?php } ?>
 
@@ -340,7 +349,7 @@ $resultArr = pg_fetch_all($result);
                                                     </td>
                                                     <td>
                                                         <?php echo 'Name - ' . $array['fullname'] . '<br>Associate ID - ' . $array['associatenumber'] . '
-                                                        <br>' . $array['gender'] . '&nbsp;(' . (new DateTime($array['dateofbirth']))->diff(new DateTime())->y . ')<br><br>DOJ - ' . date('d/m/y', strtotime($array['doj'])) . '<br>' . $experience . '</td>
+                                                        <br>' . $array['gender'] . '&nbsp;(' . @(new DateTime($array['dateofbirth']))->diff(new DateTime())->y . ')<br><br>DOJ - ' . @date('d/m/y', strtotime($array['doj'])) . '<br>' . $experience . '</td>
                                                         <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
                                                         <td>' . $array['position'] . '</td>
                                                         <td>' . $array['supervisor'] ?>
