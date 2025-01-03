@@ -14,8 +14,8 @@ validation();
 
 <?php
 
-@$id = $_POST['get_id'];
-$result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' order by filterstatus asc,today desc");
+$id = 'Active';
+$result = pg_query($con, "SELECT * FROM rssimyaccount_members WHERE filterstatus='$id' AND grade!='D' order by fullname");
 if (!$result) {
     echo "An error occurred.\n";
     exit;
@@ -126,8 +126,8 @@ $resultArr = pg_fetch_all($result);
                             <div class="col" style="display: inline-block;">
                                 Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                             </div>
-
-                            <form action="" method="POST">
+                            <div class="container">
+                                <!-- <form action="" method="POST">
                                 <div class="form-group" style="display: inline-block;">
                                     <div class="col2" style="display: inline-block;">
                                         <select name="get_id" class="form-select" style="width:max-content;" placeholder="Appraisal type" required>
@@ -139,7 +139,6 @@ $resultArr = pg_fetch_all($result);
                                             <?php }
                                             ?>
                                             <option>Active</option>
-                                            <!--<option>Inactive</option>-->
                                         </select>
                                     </div>
                                 </div>
@@ -147,9 +146,9 @@ $resultArr = pg_fetch_all($result);
                                     <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                         <i class="bi bi-search"></i>&nbsp;Search</button>
                                 </div>
-                            </form>
-                            <?php
-                            echo '
+                            </form> -->
+                                <?php
+                                echo '
                             <div class="table-responsive">
                             <table class="table">
                             <thead>
@@ -161,38 +160,39 @@ $resultArr = pg_fetch_all($result);
                             <th scope="col">Work Experience</th>
                             </tr>
                             </thead>' ?>
-                            <?php if (sizeof($resultArr) > 0) { ?>
-                                <?php
-                                echo '<tbody>';
-                                foreach ($resultArr as $array) {
-                                    echo '<tr>' ?>
-                                    <?php echo '<td><img src="' . $array['photo'] . '" width=50px/></td>' ?>
-                                    <?php echo '<td>' . $array['fullname']  ?>
-                                <?php
-                                    echo '
+                                <?php if (sizeof($resultArr) > 0) { ?>
+                                    <?php
+                                    echo '<tbody>';
+                                    foreach ($resultArr as $array) {
+                                        echo '<tr>' ?>
+                                        <?php echo '<td><img src="' . $array['photo'] . '" width=50px/></td>' ?>
+                                        <?php echo '<td>' . $array['fullname']  ?>
+                                    <?php
+                                        echo '
                                     </td><td>' . $array['eduq'] . '</td>
                                     <td>' . $array['mjorsub'] . '</td>
                                     <td>' . $array['workexperience'] . '</td>
                                     </tr>';
-                                } ?>
-                            <?php
-                            } else if ($id == "") {
-                            ?>
-                                <tr>
-                                    <td colspan="5">Please select Status.</td>
-                                </tr>
-                            <?php
-                            } else {
-                            ?>
-                                <tr>
-                                    <td colspan="5">No record found for <?php echo $id ?></td>
-                                </tr>
-                            <?php }
+                                    } ?>
+                                <?php
+                                } else if ($id == "") {
+                                ?>
+                                    <tr>
+                                        <td colspan="5">Please select Status.</td>
+                                    </tr>
+                                <?php
+                                } else {
+                                ?>
+                                    <tr>
+                                        <td colspan="5">No record found for <?php echo $id ?></td>
+                                    </tr>
+                                <?php }
 
-                            echo '</tbody>
+                                echo '</tbody>
                         </table>
                         </div>';
-                            ?>
+                                ?>
+                            </div>
                         </div>
                     </div>
                 </div><!-- End Reports -->
