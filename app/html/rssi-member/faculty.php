@@ -16,81 +16,50 @@ validation();
 <?php
 $date = date('Y-m-d H:i:s');
 
-@$id = $_POST['get_id'];
-@$aaid = strtoupper($_POST['get_aaid']);
-@$lyear = $_POST['adj_academicyear'];
-@$is_user = $_POST['is_user'];
+// Retrieve POST values safely
+$id = isset($_POST['get_id']) ? $_POST['get_id'] : null;
+$aaid = isset($_POST['get_aaid']) ? strtoupper($_POST['get_aaid']) : null;
+$lyear = isset($_POST['adj_academicyear']) ? $_POST['adj_academicyear'] : null;
+$is_user = isset($_POST['is_user']) ? $_POST['is_user'] : null;
 
-if ($id != null) {
-    $result = pg_query($con, "SELECT distinct * FROM rssimyaccount_members 
-    left join (SELECT status,userid FROM asset) asset ON asset.userid=rssimyaccount_members.associatenumber 
-    left join (SELECT distinct username, max(logintime) as logintime FROM userlog_member GROUP BY username) userlog_member ON rssimyaccount_members.associatenumber=userlog_member.username
-    left join (SELECT taggedto FROM gps) gps ON rssimyaccount_members.associatenumber=gps.taggedto
+// Define reusable SQL components
+$commonJoins = "
+    LEFT JOIN (SELECT status, userid FROM asset) asset ON asset.userid = rssimyaccount_members.associatenumber
+    LEFT JOIN (SELECT DISTINCT username, MAX(logintime) AS logintime FROM userlog_member GROUP BY username) userlog_member ON rssimyaccount_members.associatenumber = userlog_member.username
+    LEFT JOIN (SELECT taggedto FROM gps) gps ON rssimyaccount_members.associatenumber = gps.taggedto
+    LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS sltd FROM leavedb_leavedb WHERE typeofleave = 'Sick Leave' AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) sltaken ON rssimyaccount_members.associatenumber = sltaken.applicantid
+    LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS cltd FROM leavedb_leavedb WHERE typeofleave = 'Casual Leave' AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber = cltaken.applicantid
+    LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS lwptd FROM leavedb_leavedb WHERE typeofleave = 'Leave Without Pay' AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) lwptaken ON rssimyaccount_members.associatenumber = lwptaken.applicantid
+    LEFT JOIN (SELECT applicantid, 1 AS onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear = '$lyear' AND status = 'Approved') onleave ON rssimyaccount_members.associatenumber = onleave.applicantid
+    LEFT JOIN (SELECT allo_applicantid, COALESCE(SUM(allo_daycount), 0) AS slad FROM leaveallocation WHERE allo_leavetype = 'Sick Leave' AND allo_academicyear = '$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber = slallo.allo_applicantid
+    LEFT JOIN (SELECT allo_applicantid, COALESCE(SUM(allo_daycount), 0) AS clad FROM leaveallocation WHERE allo_leavetype = 'Casual Leave' AND allo_academicyear = '$lyear' GROUP BY allo_applicantid) clallo ON rssimyaccount_members.associatenumber = clallo.allo_applicantid
+    LEFT JOIN (SELECT adj_applicantid, COALESCE(SUM(adj_day), 0) AS sladd FROM leaveadjustment WHERE adj_leavetype = 'Sick Leave' AND adj_academicyear = '$lyear' GROUP BY adj_applicantid) sladj ON rssimyaccount_members.associatenumber = sladj.adj_applicantid
+    LEFT JOIN (SELECT adj_applicantid, COALESCE(SUM(adj_day), 0) AS cladd FROM leaveadjustment WHERE adj_leavetype = 'Casual Leave' AND adj_academicyear = '$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber = cladj.adj_applicantid
+    LEFT JOIN (SELECT adj_applicantid, COALESCE(SUM(adj_day), 0) AS lwpadd FROM leaveadjustment WHERE adj_leavetype = 'Leave Without Pay' AND adj_academicyear = '$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber = lwpadj.adj_applicantid
+    LEFT JOIN (SELECT onboarding_associate_id, onboard_initiated_by, onboard_initiated_on FROM onboarding) onboarding ON rssimyaccount_members.associatenumber = onboarding.onboarding_associate_id
+    LEFT JOIN (SELECT exit_associate_id, exit_initiated_by, exit_initiated_on FROM associate_exit) associate_exit ON rssimyaccount_members.associatenumber = associate_exit.exit_associate_id
+";
 
-    left join (SELECT applicantid, COALESCE(SUM(days),0) as sltd  FROM leavedb_leavedb WHERE typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) sltaken ON rssimyaccount_members.associatenumber=sltaken.applicantid
-
-    left join (SELECT applicantid, COALESCE(SUM(days),0) as cltd FROM leavedb_leavedb WHERE typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber=cltaken.applicantid
-
-    left join (SELECT applicantid, COALESCE(SUM(days),0) as lwptd FROM leavedb_leavedb WHERE typeofleave='Leave Without Pay' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) lwptaken ON rssimyaccount_members.associatenumber=lwptaken.applicantid
-
-    left join (SELECT applicantid, 1 as onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved') onleave ON rssimyaccount_members.associatenumber=onleave.applicantid
-
-    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as slad FROM leaveallocation WHERE allo_leavetype='Sick Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber=slallo.allo_applicantid
-
-    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as clad FROM leaveallocation WHERE allo_leavetype='Casual Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) clallo ON rssimyaccount_members.associatenumber=clallo.allo_applicantid
-
-    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as sladd FROM leaveadjustment WHERE adj_leavetype='Sick Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) sladj ON rssimyaccount_members.associatenumber=sladj.adj_applicantid
-
-    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as cladd FROM leaveadjustment WHERE adj_leavetype='Casual Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber=cladj.adj_applicantid
-
-    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
-
-    left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM onboarding) onboarding ON rssimyaccount_members.associatenumber=onboarding.onboarding_associate_id
-
-    left join (SELECT exit_associate_id,exit_initiated_by,exit_initiated_on FROM associate_exit) associate_exit ON rssimyaccount_members.associatenumber=associate_exit.exit_associate_id
-
-    WHERE filterstatus='$id' order by filterstatus asc,today desc");
-} else if ($aaid != null) {
-    $result = pg_query($con, "SELECT distinct * FROM rssimyaccount_members 
-    left join (SELECT status,userid FROM asset) asset ON asset.userid=rssimyaccount_members.associatenumber 
-    left join (SELECT distinct username, max(logintime) as logintime FROM userlog_member GROUP BY username) userlog_member ON rssimyaccount_members.associatenumber=userlog_member.username
-    left join (SELECT taggedto FROM gps) gps ON rssimyaccount_members.associatenumber=gps.taggedto
-
-    left join (SELECT applicantid, COALESCE(SUM(days),0) as sltd  FROM leavedb_leavedb WHERE typeofleave='Sick Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) sltaken ON rssimyaccount_members.associatenumber=sltaken.applicantid
-
-    left join (SELECT applicantid, COALESCE(SUM(days),0) as cltd FROM leavedb_leavedb WHERE typeofleave='Casual Leave' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber=cltaken.applicantid
-
-    left join (SELECT applicantid, COALESCE(SUM(days),0) as lwptd FROM leavedb_leavedb WHERE typeofleave='Leave Without Pay' AND lyear='$lyear' AND (status='Approved') GROUP BY applicantid) lwptaken ON rssimyaccount_members.associatenumber=lwptaken.applicantid
-
-    left join (SELECT applicantid, 1 as onleave FROM leavedb_leavedb WHERE CURRENT_DATE BETWEEN fromdate AND todate AND lyear='$lyear' AND status='Approved') onleave ON rssimyaccount_members.associatenumber=onleave.applicantid
-
-    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as slad FROM leaveallocation WHERE allo_leavetype='Sick Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) slallo ON rssimyaccount_members.associatenumber=slallo.allo_applicantid
-
-    left join (SELECT allo_applicantid, COALESCE(SUM(allo_daycount),0) as clad FROM leaveallocation WHERE allo_leavetype='Casual Leave' AND allo_academicyear='$lyear' GROUP BY allo_applicantid) clallo ON rssimyaccount_members.associatenumber=clallo.allo_applicantid
-
-    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as sladd FROM leaveadjustment WHERE adj_leavetype='Sick Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) sladj ON rssimyaccount_members.associatenumber=sladj.adj_applicantid
-
-    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as cladd FROM leaveadjustment WHERE adj_leavetype='Casual Leave' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) cladj ON rssimyaccount_members.associatenumber=cladj.adj_applicantid
-
-    left join (SELECT adj_applicantid, COALESCE(SUM(adj_day),0) as lwpadd FROM leaveadjustment WHERE adj_leavetype='Leave Without Pay' AND adj_academicyear='$lyear' GROUP BY adj_applicantid) lwpadj ON rssimyaccount_members.associatenumber=lwpadj.adj_applicantid
-
-    left join (SELECT onboarding_associate_id,onboard_initiated_by,onboard_initiated_on FROM onboarding) onboarding ON rssimyaccount_members.associatenumber=onboarding.onboarding_associate_id
-
-    left join (SELECT exit_associate_id,exit_initiated_by,exit_initiated_on FROM associate_exit) associate_exit ON rssimyaccount_members.associatenumber=associate_exit.exit_associate_id
-    
-    WHERE associatenumber='$aaid' order by filterstatus asc,today desc");
+// Build query based on input
+if (!empty($id)) {
+    $query = "SELECT DISTINCT * FROM rssimyaccount_members $commonJoins WHERE filterstatus = '$id' ORDER BY filterstatus ASC, today DESC";
+} elseif (!empty($aaid)) {
+    $query = "SELECT DISTINCT * FROM rssimyaccount_members $commonJoins WHERE associatenumber = '$aaid' ORDER BY filterstatus ASC, today DESC";
 } else {
-    $result = pg_query($con, "SELECT * from rssimyaccount_members where associatenumber is null");
+    $query = "SELECT * FROM rssimyaccount_members WHERE associatenumber IS NULL";
 }
+
+// Execute query
+$result = pg_query($con, $query);
 
 if (!$result) {
     echo "An error occurred.\n";
     exit;
 }
 
+// Fetch results
 $resultArr = pg_fetch_all($result);
 ?>
-
 <!doctype html>
 <html lang="en">
 
@@ -299,19 +268,52 @@ $resultArr = pg_fetch_all($result);
                                     <thead>
                                         <tr>
                                             <th id="cw">Photo</th>
-                                            <th id="cw1">Volunteer Details</th>
-                                            <th>Contact</th>
-                                            <th>Designation</th>
-                                            <!--<th>Class URL</th>-->
+                                            <th id="cw1">Volunteer Name & Details</th>
+                                            <th>Contact Information</th>
+                                            <th>Designation/Role</th>
+                                            <th>Supervisor/Manager</th>
                                             <th id="cw2">Association Status</th>
-                                            <th>Productivity</th>
-                                            <th>Worklist</th>
+                                            <th>Leave Balance (Days)</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
 
                                     <tbody>
                                         <?php if (sizeof($resultArr) > 0) { ?>
                                             <?php foreach ($resultArr as $array) { ?>
+                                                <?php
+                                                // Example input dates
+                                                $doj = $array["doj"]; // Date of Joining
+                                                $effectiveFrom = $array["effectivedate"]; // Effective End Date, could be null
+
+                                                // Parse dates
+                                                $dojDate = new DateTime($doj);
+                                                $currentDate = new DateTime(); // Current date
+                                                $endDate = $effectiveFrom ? new DateTime($effectiveFrom) : $currentDate; // Use effective date if set, otherwise use today
+
+                                                // Check if DOJ is in the future
+                                                if ($dojDate > $currentDate) {
+                                                    // If the DOJ is in the future, display a message
+                                                    $experience = "Not yet commenced";
+                                                } else {
+                                                    // Calculate the difference
+                                                    $interval = $dojDate->diff($endDate);
+
+                                                    // Extract years, months, and days
+                                                    $years = $interval->y;
+                                                    $months = $interval->m;
+                                                    $days = $interval->d;
+
+                                                    // Determine the format to display
+                                                    if ($years > 0) {
+                                                        $experience = number_format($years + ($months / 12), 2) . " year(s)";
+                                                    } elseif ($months > 0) {
+                                                        $experience = number_format($months + ($days / 30), 2) . " month(s)";
+                                                    } else {
+                                                        $experience = number_format($days, 2) . " day(s)";
+                                                    }
+                                                }
+                                                ?>
                                                 <tr>
                                                     <td>
                                                         <?php if ($array['photo'] != null) { ?>
@@ -338,9 +340,10 @@ $resultArr = pg_fetch_all($result);
                                                     </td>
                                                     <td>
                                                         <?php echo 'Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b>
-                                                        <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['doj'])) . '<br>' . $array['yos'] . '</td>
+                                                        <br><b>' . $array['gender'] . '&nbsp;(' . $array['age'] . ')</b><br><br>DOJ - ' . date('d/m/y', strtotime($array['doj'])) . '<br>' . $experience . '</td>
                                                         <td>' . $array['phone'] . '<br>' . $array['email'] . '</td>
-                                                        <td>' . substr($array['position'], 0, strrpos($array['position'], "-")) ?>
+                                                        <td>' . $array['position'] . '</td>
+                                                        <td>' . $array['supervisor'] ?>
                                                     </td>
                                                     <td style="white-space:unset">
 
@@ -350,9 +353,9 @@ $resultArr = pg_fetch_all($result);
                                                             echo '<br><p class="badge bg-danger">on leave</p>';
                                                         }
 
-                                                        if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') {
-                                                            echo '<br><p class="badge bg-warning">Attd. pending</p>';
-                                                        }
+                                                        // if ($array['today'] != 0 && $array['today'] != null && $array['filterstatus'] != 'Inactive') {
+                                                        //     echo '<br><p class="badge bg-warning">Attd. pending</p>';
+                                                        // }
 
                                                         if ($array['userid'] != null && $array['status'] != 'Closed') {
                                                             echo '<br><a href="asset-management.php?get_statuse=Associate&get_appid=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="badge bg-warning">agreement</p></a>';
@@ -362,11 +365,11 @@ $resultArr = pg_fetch_all($result);
                                                             echo '<br><a href="gps.php?taggedto=' . $array['associatenumber'] . '" target="_blank" style="text-decoration:none" title="click here"><p class="badge bg-danger">asset</p></a>';
                                                         }
 
-                                                        echo '<br><br>' . (($array['effectivedate'] !== '') ? $array['effectivedate'] . '&nbsp;' : '') . $array['remarks'] ?>
+                                                        echo '<br><br>' . (!empty($array['effectivedate']) ? $array['effectivedate'] . '&nbsp;' : '') . $array['remarks']; ?>
                                                     </td>
 
                                                     <td>
-                                                        <?php echo $array['classtaken'] . '/' . $array['maxclass'] . '&nbsp' . $array['ctp'] . '<br><br>LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?>
+                                                        <?php echo 'LWP&nbsp;(' . ($array['lwptd'] - $array['lwpadd']) . ')&nbsp;s&nbsp;(' . ($array['slad'] + $array['sladd']) - $array['sltd'] . '),&nbsp;c&nbsp;(' . ($array['clad'] + $array['cladd']) - $array['cltd'] . ')' ?>
                                                     </td>
                                                     <td style="white-space: unset;">
 
@@ -424,14 +427,9 @@ $resultArr = pg_fetch_all($result);
                                                 <span id="status" class="fullname badge"></span>
                                             </div>
                                             <div class="row">
-                                                <div class="col-md-6">
-                                                    <p>WBT Completed: <span class="attd"></span></p>
-                                                </div>
-                                                <div class="col-md-6 text-end">
-                                                    <a id="wbt_details" href="#" target="_blank">
-                                                        <i class="bi bi-eye" style="font-size: 20px; color:#777777" title="WBT Details"></i>
-                                                    </a>
-                                                </div>
+                                                <a id="wbt_details" href="#" target="_blank">
+                                                    iExplore Defaulters
+                                                </a>
                                             </div>
                                             <hr>
                                             <div class="row">
@@ -448,6 +446,7 @@ $resultArr = pg_fetch_all($result);
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <a id="experience_letter" href="" target="_blank">Generate Experience Letter</a><br>
+                                                    <a id="pdf_completion_certificate" href="" target="_blank">Download Completion Certificate</a>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <a id="profile" href="" target="_blank">Profile</a>
@@ -499,13 +498,14 @@ $resultArr = pg_fetch_all($result);
                                             status.classList.add("bg-danger");
                                         }
 
-                                        document.getElementById("wbt_details").href = "/rssi-member/my_learning.php?get_aid=" + mydata.associatenumber;
+                                        document.getElementById("wbt_details").href = "/rssi-member/iexplore_defaulters.php?associateId=" + mydata.associatenumber;
                                         document.getElementById("offer_letter").href = "/rssi-member/offerletter.php?get_id=" + mydata.associatenumber;
                                         document.getElementById("certificate_issue").href = "/rssi-member/my_certificate.php?awarded_to_id=" + mydata.associatenumber + "&awarded_to_name=" + mydata.fullname;
                                         document.getElementById("certificate_view").href = "/rssi-member/my_certificate.php?get_nomineeid=" + mydata.associatenumber;
                                         document.getElementById("experience_letter").href = "/rssi-member/expletter.php?get_id=" + mydata.associatenumber;
+                                        document.getElementById("pdf_completion_certificate").href = "/rssi-member/pdf_completion_certificate.php?scode=" + mydata.scode;
                                         document.getElementById("joining_letter").href = "/rssi-member/joiningletter.php?get_id=" + mydata.associatenumber;
-                                        document.getElementById("profile").href = "/rssi-member/people_manage.php?associatenumber=" + mydata.associatenumber;
+                                        document.getElementById("profile").href = "/rssi-member/hrms.php?associatenumber=" + mydata.associatenumber;
                                     }
                                 }
 

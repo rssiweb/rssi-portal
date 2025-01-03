@@ -193,7 +193,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $unauthorized_updates[] = $field;
             }
         }
+        // Special handling for 'position' to get and compare the grade
+        if (isset($_POST['position']) && $role === 'Admin') {
+            $position = pg_escape_string($con, $_POST['position']);
+            $query = "SELECT grade FROM designation WHERE designation = $1 AND is_inactive = FALSE";
+            $result = pg_query_params($con, $query, [$position]);
 
+            if ($result && pg_num_rows($result) > 0) {
+                $row = pg_fetch_assoc($result);
+                $grade = $row['grade'];
+                if ($grade !== $current_data['grade']) {
+                    $update_fields[] = "grade = '$grade'";
+                    $updated_fields[] = "grade";
+                }
+            }
+        }
         // Handle unauthorized updates
         if (!empty($unauthorized_updates)) {
             $unauthorized_list = implode(", ", $unauthorized_updates);

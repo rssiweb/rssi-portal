@@ -29,17 +29,16 @@ if ($role == "Admin") {
         $allo_daycount = isset($_POST['allo_daycount']) ? $_POST['allo_daycount'] : null;
         $allo_leavetype = isset($_POST['allo_leavetype']) ? $_POST['allo_leavetype'] : null;
         $allo_remarks = isset($_POST['allo_remarks']) ? $_POST['allo_remarks'] : null;
-        $allocatedbyid = isset($_POST['associatenumber']) ? $_POST['associatenumber'] : null;
+        $allocatedbyid = $user_check;
         $allo_academicyear = isset($_POST['allo_academicyear']) ? $_POST['allo_academicyear'] : null;
-        $allocatedbyname = isset($fullname) ? $fullname : null;
 
         // Check if the leave allocation ID is set
         if ($leaveallocationid != "") {
 
             // Insert into the leaveallocation table
             $leaveallocation = "
-                INSERT INTO leaveallocation (leaveallocationid, allo_applicantid, allo_daycount, allo_leavetype, allo_remarks, allocatedbyid, allo_date, allocatedbyname, allo_academicyear) 
-                VALUES ('$leaveallocationid', '$allo_applicantid', '$allo_daycount', '$allo_leavetype', '$allo_remarks', '$allocatedbyid', '$now', '$allocatedbyname', '$allo_academicyear')
+                INSERT INTO leaveallocation (leaveallocationid, allo_applicantid, allo_daycount, allo_leavetype, allo_remarks, allocatedbyid, allo_date, allo_academicyear) 
+                VALUES ('$leaveallocationid', '$allo_applicantid', '$allo_daycount', '$allo_leavetype', '$allo_remarks', '$allocatedbyid', '$now', '$allo_academicyear')
             ";
 
             // Execute the query
@@ -330,7 +329,6 @@ $resultArr = pg_fetch_all($result);
                                                 <th scope="col">Applied on</th>
                                                 <th scope="col">Allocated day(s)</th>
                                                 <th scope="col">Allocated Leave Type</th>
-                                                <th scope="col">Allocated by</th>
                                                 <th scope="col" width="15%">Remarks</th>
                                                 <?php if ($role == "Admin" && $filterstatus == 'Active'): ?>
                                                     <th scope="col"></th>
@@ -346,7 +344,6 @@ $resultArr = pg_fetch_all($result);
                                                         <td><?php echo date("d/m/Y g:i a", strtotime($array['allo_date'])); ?></td>
                                                         <td><?php echo $array['allo_daycount']; ?></td>
                                                         <td><?php echo $array['allo_leavetype'] . '/' . $array['allo_academicyear']; ?></td>
-                                                        <td><?php echo $array['allocatedbyid']; ?><br><?php echo $array['allocatedbyname']; ?></td>
                                                         <td><?php echo $array['allo_remarks']; ?></td>
 
                                                         <?php if ($role == "Admin" && $filterstatus == 'Active'): ?>

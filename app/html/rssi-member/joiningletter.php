@@ -205,9 +205,9 @@ if (!$result) {
                 $reporting_time = "";
 
                 // Check the job type
-                if ($array['job_type'] === "Part-time") {
+                if ($array['shift'] === "Afternoon") {
                     $reporting_time = "2:45 pm";
-                } elseif ($array['job_type'] === "Full-time") {
+                } elseif ($array['shift'] === null) {
                     $reporting_time = "10:45 am";
                 } else {
                     // Handle the case where job type is neither Part-time nor Full-time
@@ -265,16 +265,16 @@ if (!$result) {
                                 <?php
                                 echo '<p>Please find the details below:</p><br>';
                                 echo '<ul style="list-style-type: none; padding: 0;">';
-                                echo '<li><strong>Position:</strong> ' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ')</li>';
+                                echo '<li><strong>Position:</strong> ' . $array['position'] . ' (' . $array['job_type'] . ')</li>';
                                 echo '<li><strong>Division:</strong> ' . $array['depb'] . '</li>';
-                                echo '<li><strong>Appointment Date:</strong> ' . date('d/F/Y', strtotime($array['doj'])) . '</li>';
+                                echo '<li><strong>Date of Join:</strong> ' . date('d/F/Y', strtotime($array['doj'])) . '</li>';
                                 echo '</ul>';
                                 ?>
                                 <br>
                                 <p><b>Onboarding Checklist</b></p>
                                 <ol>
                                     <li>
-                                        <p>Please upload scanned copies of all documents at the following URL:
+                                        <p>Please upload scanned copies of all required documents at the following URL if you did not upload them during the interview:
                                             https://login.rssi.in/rssi-member/document.php (Digital Archive and My Bank details)</p>
                                         <ol type="A">
                                             <li>Highschool Marksheet</li>
@@ -371,10 +371,10 @@ if (!$result) {
                                 <br><br>
                                 <p style="line-height: 2;"><?php echo $fullname ?><br>
 
-                                    <?php if (str_contains($position, "Talent")) { ?>
+                                    <?php if (str_contains($position, "Director")) { ?>
                                         <?php echo 'Talent Acquisition & Academic Interface Program (AIP)' ?>
                                     <?php } else { ?>
-                                        <?php echo $engagement ?>
+                                        <?php echo $position ?>
                                     <?php } ?>
 
                                 </p>

@@ -44,15 +44,18 @@ if (!$result) {
 <html>
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta name="description" content="">
     <meta name="author" content="">
     <meta charset="UTF-8">
@@ -127,7 +130,7 @@ if (!$result) {
 </head>
 
 <body>
-<?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'inactive_session_expire_check.php'; ?>
     <div class="col-md-12">
         <?php if ($role == 'Admin') { ?>
             <form action="" method="GET" class="no-print">
@@ -161,26 +164,26 @@ if (!$result) {
                     <thead>
                         <tr>
                             <td>
-                                <div class="row">
-                                    <div class="col" style="display: inline-block; width:65%;">
+                                <div class="col" style="display: inline-block; width:63%;">
 
-                                        <p><b>Rina Shiksha Sahayak Foundation (RSSI)</b></p>
-                                        <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p>
-                                        <p style="font-size: small;">CIN— U80101WB2020NPL237900</p>
-                                    </div>
-                                    <div class="col" style="display: inline-block; width:34%; vertical-align: top;">
-                                        Scan QR code to check authenticity
-                                        <?php
+                                    <p><b>Rina Shiksha Sahayak Foundation</b></p>
+                                    <p style="font-size: small;">(Comprising RSSI NGO and Kalpana Buds School)</p>
+                                    <!-- <p style="font-size: small;">1074/801, Jhapetapur, Backside of Municipality, West Midnapore, West Bengal 721301</p> -->
+                                    <p style="font-size: small;">NGO-DARPAN Id: WB/2021/0282726, CIN: U80101WB2020NPL237900</p>
+                                    <p style="font-size: small;">Email: info@rssi.in, Website: www.rssi.in</p>
+                                </div>
+                                <div class="col" style="display: inline-block; width:35%; vertical-align: top; text-align:right;">
+                                    <p>Scan QR code to check authenticity</p>
+                                    <?php
 
-                                        $a = 'https://login.rssi.in/rssi-member/getdetails.php?scode=';
-                                        $b = $array['scode'];
-                                        $c = $array['photo'];
+                                    $a = 'https://login.rssi.in/rssi-member/getdetails.php?scode=';
+                                    $b = $array['scode'];
+                                    $c = $array['photo'];
 
-                                        $url = $a . $b;
-                                        $url = urlencode($url); ?>
-                                        <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url ?>" width="100px" />
-                                        <img src=<?php echo $c ?> width=80px height=80px />
-                                    </div>
+                                    $url = $a . $b;
+                                    $url = urlencode($url); ?>
+                                    <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=<?php echo $url ?>" width="100px" />
+                                    <img src=<?php echo $c ?> width=80px height=80px />
                                 </div>
                             </td>
                         </tr>
@@ -190,16 +193,49 @@ if (!$result) {
 
                         <tr>
                             <td>
+                                <?php
+                                // Example input dates
+                                $doj = $array["doj"]; // Date of Joining
+                                $effectiveFrom = $array["effectivedate"]; // Effective End Date, could be null
+
+                                // Parse dates
+                                $dojDate = new DateTime($doj);
+                                $currentDate = new DateTime(); // Current date
+                                $endDate = $effectiveFrom ? new DateTime($effectiveFrom) : $currentDate; // Use effective date if set, otherwise use today
+
+                                // Check if DOJ is in the future
+                                if ($dojDate > $currentDate) {
+                                    // If the DOJ is in the future, display a message
+                                    $experience = "Not yet commenced";
+                                } else {
+                                    // Calculate the difference
+                                    $interval = $dojDate->diff($endDate);
+
+                                    // Extract years, months, and days
+                                    $years = $interval->y;
+                                    $months = $interval->m;
+                                    $days = $interval->d;
+
+                                    // Determine the format to display
+                                    if ($years > 0) {
+                                        $experience = number_format($years + ($months / 12), 2) . " year(s)";
+                                    } elseif ($months > 0) {
+                                        $experience = number_format($months + ($days / 30), 2) . " month(s)";
+                                    } else {
+                                        $experience = number_format($days, 2) . " day(s)";
+                                    }
+                                }
+                                ?>
                                 <p><b><?php echo $array['fullname'] ?></b><br><?php echo $array['currentaddress'] ?><br>Contact Number:&nbsp;<?php echo $array['phone'] ?>
                                     <br>Email:&nbsp;<?php echo $array['email'] ?><br>Date:&nbsp;<?php echo @date("d/m/Y g:i a", strtotime($date)) ?>
                                 </p><br>
 
                                 <p style="text-align: center;"><b><u>TO WHOMSOEVER IT MAY CONCERN</u></b></p><br>
 
-                                <p>This is to certify that <?php echo $array['fullname'] ?> has worked with us for the tenure of <?php echo $array['yos'] ?>.
+                                <p>This is to certify that <?php echo $array['fullname'] ?> has worked with us for the tenure of <?php echo $experience ?>.
                                     <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?>
 
-                                    has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of <?php echo substr($array['position'], 0, strrpos($array['position'], "-")) ?> from <?php echo date('d/m/Y', strtotime($array['doj'])) ?> to <?php if ($array['associationstatus'] != null) { ?>
+                                    has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of <?php echo $array['position'] ?> from <?php echo date('d/m/Y', strtotime($array['doj'])) ?> to <?php if ($array['associationstatus'] != null) { ?>
                                         <?php echo date('d/m/Y', strtotime($array['effectivedate'])) ?>
                                     <?php } else { ?> <?php echo 'Present' ?>
                                         <?php } ?>(date in dd/mm/yyyy).<br><br>
@@ -211,11 +247,8 @@ if (!$result) {
                                         Sincerely,<br><br><br><br>
 
                                         <?php echo $fullname ?><br>
-                                        <?php echo explode('-', $position)[1] ?><br>
+                                        <?php echo $position ?><br>
                                         Rina Shiksha Sahayak Foundation (RSSI)
-
-
-
                             </td>
                         </tr>
 

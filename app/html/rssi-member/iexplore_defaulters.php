@@ -11,7 +11,10 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-// Fetching data from the database (you can modify the database connection as per your configuration)
+// Get the associate ID from the GET parameter (if passed)
+$associateId = isset($_GET['associateId']) ? htmlspecialchars($_GET['associateId'], ENT_QUOTES, 'UTF-8') : null;
+
+// Base query
 $query = "
 WITH MandatoryCourses AS (
     SELECT 
@@ -54,6 +57,15 @@ ExpiredCourses AS (
         AND ws.timestamp + (w.validity || ' years')::INTERVAL < NOW()
         AND rm.filterstatus = 'Active'
         AND rm.engagement IN ('Employee', 'Intern')
+        -- Exclude records where a more recent attempt exists that passes
+        AND NOT EXISTS (
+            SELECT 1
+            FROM wbt_status ws2
+            WHERE ws2.associatenumber = ws.associatenumber
+              AND ws2.courseid = ws.courseid
+              AND ws2.timestamp > ws.timestamp
+              AND ROUND(ws2.f_score * 100, 2) >= w.passingmarks
+        )
 ),
 LatestAssociateCourses AS (
     SELECT
@@ -86,27 +98,31 @@ MissingCourses AS (
     LEFT JOIN LatestAssociateCourses lac 
         ON rm.associatenumber = lac.associatenumber 
         AND mc.courseid = lac.courseid
-    LEFT JOIN wbt w ON mc.courseid = w.courseid -- joining to get the passing mark for each course
+    LEFT JOIN wbt w ON mc.courseid = w.courseid
     WHERE 
         rm.filterstatus = 'Active'
         AND rm.engagement IN ('Employee', 'Intern')
         AND (
-            lac.associatenumber IS NULL  -- not taken
-            OR lac.score < w.passingmarks  -- failed (score < passing mark)
+            lac.associatenumber IS NULL  
+            OR lac.score < w.passingmarks  
         )
 )
--- Now, we combine the expired courses and the missing mandatory courses
+";
+
+// Main SELECT with the filter condition applied individually
+$query .= "
 SELECT 
     mc.associatenumber,
     rm.fullname,
     mc.courseid,
     mc.coursename,
     'Pending' AS status,
-    NULL AS expired_on  -- Adding NULL for the expired_on column for Pending courses
+    NULL AS expired_on  
 FROM 
     MissingCourses mc
 JOIN 
     rssimyaccount_members rm ON mc.associatenumber = rm.associatenumber
+" . ($associateId ? "WHERE mc.associatenumber = '$associateId'" : "") . "
 
 UNION ALL
 
@@ -116,11 +132,12 @@ SELECT
     ec.courseid,
     ec.coursename,
     'Expired' AS status,
-    ec.expired_on  -- Including the expired_on for Expired courses
+    ec.expired_on  
 FROM 
     ExpiredCourses ec
-ORDER BY 
-    associatenumber, courseid;
+" . ($associateId ? "WHERE ec.associatenumber = '$associateId'" : "") . "
+
+ORDER BY associatenumber, courseid;
 ";
 
 $result = pg_query($con, $query); // Assuming $con is your PostgreSQL connection

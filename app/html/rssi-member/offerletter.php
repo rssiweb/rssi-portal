@@ -198,7 +198,7 @@ if (!$result) {
 
                                         <p>Thank you for exploring career opportunities with Rina Shiksha Sahayak Foundation (RSSI). You have successfully completed our initial selection process and we are pleased to make you an offer.</p>
 
-                                        <p>This offer is based on your profile and performance in the selection process. You have been selected for the position of <b>' . substr($array['position'], 0, strrpos($array['position'], "-")) . ' (' . $array['job_type'] . ').</b> Your gross salary including all benefits will be <b>₹' . $array['salary'] . '/- per annum</b>, as per the terms and conditions set out herein.</p>'
+                                        <p>This offer is based on your profile and performance in the selection process. You have been selected for the position of <b>' . $array['position']. ' (' . $array['job_type'] . ')</b>. Your gross salary including all benefits will be <b>₹' . $array['salary'] . '/- per annum</b>, as per the terms and conditions set out herein.</p>'
                                 ?>
 
                                 <p>Please sign the offer letter and email the scanned copy to us at info@rssi.in as a token of your acceptance. If not accepted within 3 calendar days, it will be construed that you are not interested in this employment and this offer will be automatically withdrawn.</p>
@@ -350,10 +350,10 @@ if (!$result) {
                                 <!-- <img src="../img/<?php echo $associatenumber ?>.png" width="65px" style="margin-bottom:-5px">-->
                                 <br><br>
                                 <p><?php echo $fullname ?><br>
-                                    <?php if (str_contains($position, "Talent")) { ?>
+                                    <?php if (str_contains($position, "Director")) { ?>
                                         <?php echo 'Talent Acquisition & Academic Interface Program (AIP)' ?>
                                     <?php } else { ?>
-                                        <?php echo $engagement ?>
+                                        <?php echo $position ?>
                                     <?php } ?>
 
                                 </p>
