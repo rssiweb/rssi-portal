@@ -42,9 +42,9 @@ $commonJoins = "
 
 // Build query based on input
 if (!empty($id)) {
-    $query = "SELECT DISTINCT * FROM rssimyaccount_members $commonJoins WHERE filterstatus = '$id' ORDER BY filterstatus ASC, today DESC";
+    $query = "SELECT DISTINCT * FROM rssimyaccount_members $commonJoins WHERE filterstatus = '$id' ORDER BY fullname";
 } elseif (!empty($aaid)) {
-    $query = "SELECT DISTINCT * FROM rssimyaccount_members $commonJoins WHERE associatenumber = '$aaid' ORDER BY filterstatus ASC, today DESC";
+    $query = "SELECT DISTINCT * FROM rssimyaccount_members $commonJoins WHERE associatenumber = '$aaid' ORDER BY fullname";
 } else {
     $query = "SELECT * FROM rssimyaccount_members WHERE associatenumber IS NULL";
 }
