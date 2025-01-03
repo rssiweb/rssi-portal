@@ -1768,7 +1768,20 @@ echo "<script>
             }
         });
     </script>
+    <script>
+        document.getElementById('generateButton').addEventListener('click', function() {
+            // Generate a random 20-character string
+            const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const randomString = Array.from({
+                    length: 20
+                }, () =>
+                characters.charAt(Math.floor(Math.random() * characters.length))
+            ).join('');
 
+            // Set the generated string in the #scode input
+            document.getElementById('scode').value = randomString;
+        });
+    </script>
 </body>
 
 </html>
