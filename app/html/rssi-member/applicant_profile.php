@@ -133,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 position,
                 phone,
                 identifier,
-                photo,
+                raw_photo,
                 filterstatus,
                 iddoc,
                 eduq,
@@ -155,26 +155,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 post_select AS position,
                 telephone AS phone,
                 identifier,
-                applicant_photo AS photo,
+                applicant_photo AS raw_photo,
                 'In Progress' AS filterstatus,
                 supporting_document AS iddoc,
                 education_qualification AS eduq,
                 specialization AS mjorsub,
                 '$user_check' AS approvedby,
                 CONCAT(
-                        CASE 
-                            WHEN association = 'Employee' THEN 'E'
-                            WHEN association = 'Volunteer' THEN 'V'
-                            WHEN association = 'Intern' THEN 'I'
-                            WHEN association = 'Membership' THEN 'M'
-                        END,
-                        CASE
-                            WHEN branch = 'Lucknow' THEN 'LKO'
-                            WHEN branch = 'West Bengal' THEN 'KGP'
-                        END,
-                        RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),
-                        LPAD((SELECT COUNT(associatenumber) + 6 FROM rssimyaccount_members)::text, 3, '0')
-                    ) AS associatenumber
+                RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),   -- Current Year (2 digits)
+                LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::text, 2, '0'), -- Current Month (2 digits)
+                LPAD(
+                    (SELECT COUNT(*) + 1 
+                    FROM rssimyaccount_members
+                    )::text, 3, '0' -- Adding +1 to the total count
+                )
+            ) AS associatenumber
             FROM signup 
             WHERE application_number = '$application_number';
             ";

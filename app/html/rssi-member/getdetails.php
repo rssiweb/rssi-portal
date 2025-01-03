@@ -1,135 +1,150 @@
-<?php require_once __DIR__ . "/../../bootstrap.php"; ?>
-<!DOCTYPE html>
-<html>
-
-<head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'AW-11316670180');
-</script>
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Experience Report</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
-    <!-- Main css -->
-    <link rel="stylesheet" href="/css/style.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/58c4cdb942.js" crossorigin="anonymous"></script>
-
-    <!------ Include the above in your HEAD tag ---------->
-
-    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
-    <!-- Glow Cookies v3.0.1 -->
-    <script>
-        glowCookies.start('en', {
-            analytics: 'G-S25QWTFJ2S',
-            //facebookPixel: '',
-            policyLink: 'https://www.rssi.in/disclaimer'
-        });
-    </script>
-    <style>
-        @media (max-width:767px) {
-            td {
-                width: 100%
-            }
-
-            .page-topbar .logo-area {
-                width: 240px !important;
-                margin-top: 2.5%;
-            }
-        }
-
-        .page-topbar,
-        .logo-area {
-            -webkit-transition: 0ms;
-            -moz-transition: 0ms;
-            -o-transition: 0ms;
-            transition: 0ms;
-        }
-    </style>
-
-</head>
-<div class="page-topbar">
-    <div class="logo-area"> </div>
-</div>
 <?php
+require_once __DIR__ . "/../../bootstrap.php";
 
+// Fetch data based on the given ID
 @$id = $_GET['scode'];
-$result = pg_query($con, "SELECT * FROM rssimyaccount_members 
-LEFT JOIN (SELECT max(goalsheet_created_on),appraisee_associatenumber,ipf FROM appraisee_response GROUP BY appraisee_associatenumber,ipf) apprisal ON apprisal.appraisee_associatenumber = rssimyaccount_members.associatenumber
-WHERE scode='$id'");
+$query = "
+    SELECT 
+        m.fullname,
+        m.associatenumber,
+        m.photo,
+        m.engagement,
+        m.position,
+        m.doj,
+        m.effectivedate,
+        m.filterstatus,
+        m.exitinterview,
+        a.ipf
+    FROM rssimyaccount_members m
+    LEFT JOIN (
+        SELECT 
+            sub1.appraisee_associatenumber,
+            sub1.ipf
+        FROM appraisee_response sub1
+        WHERE sub1.goalsheet_created_on = (
+            SELECT MAX(sub2.goalsheet_created_on)
+            FROM appraisee_response sub2
+            WHERE sub2.appraisee_associatenumber = sub1.appraisee_associatenumber
+            AND sub2.ipf IS NOT NULL
+        )
+    ) a ON a.appraisee_associatenumber = m.associatenumber
+    WHERE m.scode = '$id'
+";
+
+$result = pg_query($con, $query);
 
 if (!$result) {
-    echo "An error occurred.\n";
-    exit;
+    $error = "An error occurred while fetching data.";
+    $data = null;
+} else {
+    $data = pg_fetch_assoc($result);
 }
 
-$resultArr = pg_fetch_all($result);
-//print_r($resultArr);
-
-echo '
-<section>
-        <section class="wrapper main-wrapper row">
-            <div class="col-md-12">
-            <div style="font-family:Poppins; text-align:Center;font-size:20px;">Rina Shiksha Sahayak Foundation (RSSI)</div>
-            <div style="font-family:Roboto; text-align:Center;font-size:20px; line-height:2">Associate Details</div>
-                
-<table class="table">
-<thead>
-    <tr>
-         <th>Photo</th>
-         <th>Volunteer Details</th>
-         <th>Role</th>
-         <th>Designation</th>
-         <th>Service Period</th>
-         <th>IPF<br>(Individual Performance Factor)/5</th>
-         <th>Current Status</th>
-         <th>Certificate Date</th>
-         <th>Certifying Authority</th>
-        </tr>
-        </thead>' ?>
-
-<?php if (@$id > 0) {
-
-    foreach ($resultArr as $array) {
-        echo '<tbody><tr>
-            <td><img src="' . $array['photo'] . '" width=100px/></td>
-            <td style="line-height:2">Name - <b>' . $array['fullname'] . '</b><br>Associate ID - <b>' . $array['associatenumber'] . '</b></td>
-            <td>' . $array['engagement'] . '</td>
-            <td>' . substr($array['position'], 0, strrpos($array['position'], '-')) . '</td>
-            <td style="line-height:2">' . $array['originaldoj'] . '&nbsp;to&nbsp;' ?>
-
-        <?php if ($array['associationstatus'] != null) { ?>
-            <?php echo $array['effectivedate'] ?>
-        <?php } else { ?> <?php echo 'Present' ?>
-        <?php } ?>
-
-
-
-        <?php echo  '<br>' . $array['yos'] . '</td>
-            <td>' . $array['ipf'] . '</td>
-            <td>' . $array['filterstatus'] . '</td>' ?>
-
-        <?php if ($array['associationstatus'] != null) { ?>
-            <?php echo '<td>' . $array['effectivedate'] . '</td>' ?>
-        <?php } else { ?> <?php echo '<td>' . $today = date('d/m/Y') . '</td>' ?>
-        <?php } ?>
-
-<?php echo '<td>' . $array['exitinterview'] . '</td>
-            </tr>';
+function calculateExperience($doj, $effectivedate = null)
+{
+    if (empty($doj) || !strtotime($doj)) {
+        return "DOJ not available or invalid";
     }
-} ?>
-</section>
-</div>
-</section>
-</section>
+
+    $dojDate = new DateTime($doj);
+    $currentDate = new DateTime();
+    $endDate = $effectivedate ? new DateTime($effectivedate) : $currentDate;
+
+    if ($dojDate > $currentDate) {
+        return "Not yet commenced";
+    }
+
+    $interval = $dojDate->diff($endDate);
+    $years = $interval->y;
+    $months = $interval->m;
+    $days = $interval->d;
+
+    if ($years > 0) {
+        return number_format($years + ($months / 12), 2) . " year(s)";
+    } elseif ($months > 0) {
+        return number_format($months + ($days / 30), 2) . " month(s)";
+    } else {
+        return number_format($days, 2) . " day(s)";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experience Report</title>
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <header class="text-center py-3">
+        <h1 class="h4">Rina Shiksha Sahayak Foundation</h1>
+        <h2 class="h5">Associate Details</h2>
+    </header>
+
+    <div class="container my-4">
+        <?php if (isset($error)): ?>
+            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+        <?php elseif ($data): ?>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th>Photo</th>
+                        <td><img src="<?= htmlspecialchars($data['photo']) ?>" class="img-fluid" alt="Photo" width="100"></td>
+                    </tr>
+                    <tr>
+                        <th>Name</th>
+                        <td><?= htmlspecialchars($data['fullname']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Associate ID</th>
+                        <td><?= htmlspecialchars($data['associatenumber']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Role</th>
+                        <td><?= htmlspecialchars($data['engagement']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Designation</th>
+                        <td><?= htmlspecialchars($data['position']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Service Period</th>
+                        <td><?= htmlspecialchars($data['doj']) ?> to <?= htmlspecialchars($data['effectivedate'] ?? 'Present') ?></td>
+                    </tr>
+                    <tr>
+                        <th>Years of Service</th>
+                        <td><?= htmlspecialchars(calculateExperience($data['doj'], $data['effectivedate'])) ?></td>
+                    </tr>
+                    <tr>
+                        <th>IPF (Individual Performance Factor)</th>
+                        <td><?= $data['ipf'] !== null ? htmlspecialchars($data['ipf']) . " / 5" : "N/A" ?></td>
+                    </tr>
+                    <tr>
+                        <th>Current Status</th>
+                        <td><?= htmlspecialchars($data['filterstatus']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Certificate Date</th>
+                        <td><?= htmlspecialchars($data['effectivedate'] ?? date('d/m/Y')) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Certifying Authority</th>
+                        <td><?= htmlspecialchars($data['exitinterview']) ?></td>
+                    </tr>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <div class="alert alert-info">No data found for the specified ID.</div>
+        <?php endif; ?>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

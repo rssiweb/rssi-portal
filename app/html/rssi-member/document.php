@@ -94,10 +94,6 @@ validation();
 
                                 <div class="tab-content mt-4">
                                     <div class="tab-pane fade show active" id="official-tab">
-                                        <!-- <?php if ($profile != '') { ?>
-                                            <p><a href="<?php echo $profile ?>" target="_blank" title="<?php echo $filename ?>">Letter of Offer</a></p>
-                                        <?php } ?> -->
-
                                         <p><a href="digital_archive.php">Digital Archive</a></p>
                                         <p><a href="bankdetails.php">My Bank details</a></p>
                                         <p><a href="my_certificate.php">My Certificate</a></p>
@@ -109,15 +105,10 @@ validation();
 
                                     <div class="tab-pane fade" id="misc-tab">
                                         <p><a href="idcard.php" target="_blank">RSSI Identity Card</a></p>
-                                        <!-- <p><a href="gps.php" target="_self">GPS (Global Procurement System)</a></p> -->
                                     </div>
                                 </div>
                             </div>
-
-
-
                         </div>
-
                     </div>
                 </div><!-- End Reports -->
             </div>

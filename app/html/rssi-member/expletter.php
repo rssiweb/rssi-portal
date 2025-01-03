@@ -235,7 +235,7 @@ if (!$result) {
                                 <p>This is to certify that <?php echo $array['fullname'] ?> has worked with us for the tenure of <?php echo $experience ?>.
                                     <?php if ($array['gender'] == 'Male') { ?><?php echo 'He' ?><?php } else { ?> <?php echo 'She' ?><?php } ?>
 
-                                    has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of <?php echo $array['position'] ?> from <?php echo date('d/m/Y', strtotime($array['doj'])) ?> to <?php if ($array['associationstatus'] != null) { ?>
+                                    has worked with Rina Shiksha Sahayak Foundation (RSSI) for the position of <?php echo $array['position'] ?> from <?php echo date('d/m/Y', strtotime($array['doj'])) ?> to <?php if ($array['effectivedate'] != null) { ?>
                                         <?php echo date('d/m/Y', strtotime($array['effectivedate'])) ?>
                                     <?php } else { ?> <?php echo 'Present' ?>
                                         <?php } ?>(date in dd/mm/yyyy).<br><br>
