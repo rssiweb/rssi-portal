@@ -36,6 +36,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Initialize an array to store field updates
     $updates = [];
 
+    // Check if remarks is set and add it to the updates array
+    if (isset($_POST['remarks'])) {
+        $remarks = pg_escape_string($con, $_POST['remarks']);
+        $updates[] = "remarks = '$remarks'";
+    }
+
     // Check each possible field and add it to the updates array if it exists in $_POST
     if (isset($_POST['photo_verification'])) {
         $photo_verification = pg_escape_string($con, $_POST['photo_verification']);
@@ -132,6 +138,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 iddoc,
                 eduq,
                 mjorsub,
+                approvedby,
                 associatenumber
             )
             SELECT 
@@ -145,7 +152,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 work_experience AS workexperience,
                 identifier_number AS nationalidentifier,
                 application_number AS applicationnumber,
-                CONCAT(association, '-', post_select) AS position,
+                post_select AS position,
                 telephone AS phone,
                 identifier,
                 applicant_photo AS photo,
@@ -153,6 +160,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 supporting_document AS iddoc,
                 education_qualification AS eduq,
                 specialization AS mjorsub,
+                '$user_check' AS approvedby,
                 CONCAT(
                         CASE 
                             WHEN association = 'Employee' THEN 'E'
@@ -811,11 +819,17 @@ $isFormDisabled = null;
                                                                     <option value="No" <?php echo ($array['offer_extended'] == 'No') ? 'selected' : ''; ?>>No</option>
                                                                 </select>
                                                                 <small id="offer-help" class="form-text text-muted">Confirm if the offer has been extended or not.</small>
-                                                                <?php
-                                                                if ($array['application_status'] == "Offer Extended") {
-                                                                    echo '<a href="' . $link7 . '" target="_blank">Offer Extended</a>';
-                                                                }
-                                                                ?>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <label for="remarks">Remarks:</label>
+                                                            </td>
+                                                            <td>
+                                                                <div class="form-floating mb-2">
+                                                                    <textarea name="remarks" class="form-control" class="form-control" placeholder="Leave a comment here"><?php echo $array['remarks'] ?></textarea>
+                                                                    <label for="remarks" class="form-label">Remarks</label>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     </tbody>

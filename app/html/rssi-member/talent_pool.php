@@ -411,7 +411,8 @@ $resultArr = pg_fetch_all($result);
                                                         "Technical Interview Scheduled" => ["link" => $link5, "title" => "Interview Scheduled"],
                                                         "Technical Interview Completed" => ["link" => $link8, "title" => "Interview Feedback"],
                                                         "HR Interview Scheduled" => ["link" => $link6, "title" => "HR Interview Scheduled"],
-                                                        "Interview Reminder" => ["link" => $link9, "title" => "Interview Reminder"]
+                                                        "Interview Reminder" => ["link" => $link9, "title" => "Interview Reminder"],
+                                                        "Offer Extended" => ["link" => $link7, "title" => "Offer Extended"]
                                                     ];
 
                                                     // Get today's date for comparison

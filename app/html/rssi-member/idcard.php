@@ -186,7 +186,7 @@ validation();
                     <img class="cornerimage" src=<?php echo $photo ?> width="110px" />
                     <p class="first-txt"><?php echo $fullname ?></p>
                     <p class="second-txt"><?php echo $associatenumber ?></p>
-                    <p class="third-txt"><?php echo ($engagement == "Intern") ? $engagement : explode('-', $position)[1]; ?></p>
+                    <p class="third-txt"><?php echo $position ?></p>
                     <img class="qrimage" src="https://qrcode.tec-it.com/API/QRCode?data=https://login.rssi.in/rssi-member/verification.php?get_id=<?php echo $associatenumber ?>" width="100" />
                     <div class="vertical-text">
                         rssi.in

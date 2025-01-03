@@ -1351,7 +1351,7 @@ if (@$_POST['form-type'] == "signup") {
     $length = strlen($chars);
 
     for ($i = 0; $i < 6; $i++) {
-      $password .= $chars[rand(0, $length - 1)];
+      $password .= $chars[random_int(0, $length - 1)];
     }
 
     return $password;
