@@ -1053,36 +1053,40 @@ echo "<script>
                                                                                     // Example input dates
                                                                                     $doj = $array["doj"]; // Date of Joining
                                                                                     $effectiveFrom = $array["effectivedate"]; // Effective End Date, could be null
-
-                                                                                    // Parse dates
-                                                                                    $dojDate = new DateTime($doj);
-                                                                                    $currentDate = new DateTime(); // Current date
-                                                                                    $endDate = $effectiveFrom ? new DateTime($effectiveFrom) : $currentDate; // Use effective date if set, otherwise use today
-
-                                                                                    // Check if DOJ is in the future
-                                                                                    if ($dojDate > $currentDate) {
-                                                                                        // If the DOJ is in the future, display a message
-                                                                                        echo "Not yet commenced";
+                                                                                    // Check if DOJ is available and valid
+                                                                                    if (empty($doj) || !strtotime($doj)) {
+                                                                                        echo "DOJ not available or invalid";
                                                                                     } else {
-                                                                                        // Calculate the difference
-                                                                                        $interval = $dojDate->diff($endDate);
+                                                                                        // Parse dates
+                                                                                        $dojDate = new DateTime($doj);
+                                                                                        $currentDate = new DateTime(); // Current date
+                                                                                        $endDate = $effectiveFrom ? new DateTime($effectiveFrom) : $currentDate; // Use effective date if set, otherwise use today
 
-                                                                                        // Extract years, months, and days
-                                                                                        $years = $interval->y;
-                                                                                        $months = $interval->m;
-                                                                                        $days = $interval->d;
-
-                                                                                        // Determine the format to display
-                                                                                        if ($years > 0) {
-                                                                                            $experience = number_format($years + ($months / 12), 2) . " year(s)";
-                                                                                        } elseif ($months > 0) {
-                                                                                            $experience = number_format($months + ($days / 30), 2) . " month(s)";
+                                                                                        // Check if DOJ is in the future
+                                                                                        if ($dojDate > $currentDate) {
+                                                                                            // If the DOJ is in the future, display a message
+                                                                                            echo "Not yet commenced";
                                                                                         } else {
-                                                                                            $experience = number_format($days, 2) . " day(s)";
-                                                                                        }
+                                                                                            // Calculate the difference
+                                                                                            $interval = $dojDate->diff($endDate);
 
-                                                                                        // Output the result
-                                                                                        echo (new DateTime($doj))->format("d M, Y") . " to " . ($effectiveFrom ? (new DateTime($effectiveFrom))->format("d M, Y") : "Today") . ": " . $experience;
+                                                                                            // Extract years, months, and days
+                                                                                            $years = $interval->y;
+                                                                                            $months = $interval->m;
+                                                                                            $days = $interval->d;
+
+                                                                                            // Determine the format to display
+                                                                                            if ($years > 0) {
+                                                                                                $experience = number_format($years + ($months / 12), 2) . " year(s)";
+                                                                                            } elseif ($months > 0) {
+                                                                                                $experience = number_format($months + ($days / 30), 2) . " month(s)";
+                                                                                            } else {
+                                                                                                $experience = number_format($days, 2) . " day(s)";
+                                                                                            }
+
+                                                                                            // Output the result
+                                                                                            echo (new DateTime($doj))->format("d M, Y") . " to " . ($effectiveFrom ? (new DateTime($effectiveFrom))->format("d M, Y") : "Today") . ": " . $experience;
+                                                                                        }
                                                                                     }
                                                                                     ?>
                                                                                 </td>
