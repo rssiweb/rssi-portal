@@ -264,7 +264,7 @@ if (!$result) {
                                     <li>
                                         <p>Working Hours:</p>
                                         The work schedule comprises <?php echo $workday; ?> days per week, with each day requiring a <?php echo $workinghours; ?> commitment, inclusive of essential administrative tasks as required.
-                                        <?php if ($array['filename'] == "upes") { ?>
+                                        <?php if ($array['college_name'] == "upes") { ?>
                                             For the two-month internship program,
                                             you will be assigned to one month in the morning shift and one month in the afternoon shift,
                                             based on business requirements.

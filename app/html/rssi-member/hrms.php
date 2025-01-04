@@ -73,7 +73,7 @@ if (isset($result_supervisor)) {
 }
 ?>
 <?php
-// SQL query to fetch active roles and grades
+// SQL query to fetch active designation
 $sql = "SELECT designation, grade FROM designation WHERE is_inactive = FALSE ORDER BY designation ASC";
 $result = pg_query($con, $sql);
 
@@ -130,7 +130,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'shift',
             'effectivedate',
             'remarks',
-            'scode'
+            'scode',
+            'photo',
+            'security_deposit',
+            'college_name'
         ];
 
         $user_editable_fields = [
@@ -153,7 +156,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'mjorsub',
             'phone',
             'email',
-            'panno'
+            'panno',
+            'raw_photo'
         ];
 
         // Process each field once
@@ -286,7 +290,7 @@ ob_end_flush();
 <?php
 // Define card access based on role
 $card_access = [
-    'Admin' => ['current-location', 'current_project', 'roles', 'compensation', 'employee_status'], // Admin can edit these cards
+    'Admin' => ['current-location', 'current_project', 'roles', 'compensation', 'employee_status', 'admin_console', 'miscellaneous'], // Admin can edit these cards
 ];
 
 // Determine accessible cards for Admin
@@ -718,6 +722,11 @@ echo "<script>
                                             <li class="nav-item">
                                                 <a class="nav-link" href="#social" data-bs-toggle="tab">Social</a>
                                             </li>
+                                            <?php if ($role === 'Admin'): ?>
+                                                <li class="nav-item">
+                                                    <a class="nav-link" href="#admin_console" data-bs-toggle="tab">Admin console</a>
+                                                </li>
+                                            <?php endif; ?>
                                         </ul>
 
                                         <!-- Sidebar for Desktop (Visible Only on Medium and Larger Screens) -->
@@ -1176,9 +1185,9 @@ echo "<script>
                                                                                         <option disabled selected>Select Designation</option>
                                                                                         <?php
                                                                                         if ($roles) {
-                                                                                            foreach ($roles as $role) {
-                                                                                                $selected = ($array["position"] == $role['designation']) ? "selected" : "";
-                                                                                                echo "<option value=\"{$role['designation']}\" $selected>{$role['designation']}</option>";
+                                                                                            foreach ($roles as $position_list) {
+                                                                                                $selected = ($array["position"] == $position_list['designation']) ? "selected" : "";
+                                                                                                echo "<option value=\"{$position_list['designation']}\" $selected>{$position_list['designation']}</option>";
                                                                                             }
                                                                                         }
                                                                                         ?>
@@ -1202,9 +1211,9 @@ echo "<script>
                                                                                         <option disabled selected>Select Access Role</option>
                                                                                         <?php
                                                                                         // Generate <option> elements dynamically from the roles fetched from the database
-                                                                                        foreach ($role_options as $role) {
-                                                                                            $selected = ($array["role"] == $role) ? "selected" : "";
-                                                                                            echo "<option value=\"$role\" $selected>$role</option>";
+                                                                                        foreach ($role_options as $access_role) {
+                                                                                            $selected = ($array["role"] == $access_role) ? "selected" : "";
+                                                                                            echo "<option value=\"$access_role\" $selected>$access_role</option>";
                                                                                         }
                                                                                         ?>
                                                                                     </select>
@@ -1466,6 +1475,80 @@ echo "<script>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    <!-- Admin -->
+                                                    <?php if ($role === 'Admin'): ?>
+                                                        <div id="admin_console" class="tab-pane" role="tabpanel">
+                                                            <div class="card" id="admin_console">
+                                                                <div class="card-header">
+                                                                    Photo Approval
+                                                                    <?php if (in_array('admin_console', $accessible_cards)) : ?>
+                                                                        <span class="edit-icon" onclick="toggleEdit('admin_console')">
+                                                                            <i class="bi bi-pencil"></i>
+                                                                        </span>
+                                                                        <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                            <i class="bi bi-save"></i>
+                                                                        </span>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-borderless">
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td><label for="raw_photo">Uploaded photo:</label></td>
+                                                                                    <td>
+                                                                                        <?php echo !empty($array['raw_photo']) ? '<a href="' . htmlspecialchars($array['raw_photo'], ENT_QUOTES, 'UTF-8') . '" target="_blank">View</a>' : 'Photo not uploaded yet'; ?>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td><label for="photo">Photo:</label></td>
+                                                                                    <td>
+                                                                                        <span id="photoText"><a href="<?php echo $array['photo']; ?>" id="photoText" target="_blank"><?php echo $array['photo']; ?></a></span>
+                                                                                        <input type="url" name="photo" id="photo" value="<?php echo $array["photo"]; ?>" disabled class="form-control" style="display:none;" placeholder="Enter Photo URL">
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card" id="miscellaneous">
+                                                                <div class="card-header">
+                                                                    Miscellaneous
+                                                                    <?php if (in_array('miscellaneous', $accessible_cards)) : ?>
+                                                                        <span class="edit-icon" onclick="toggleEdit('miscellaneous')">
+                                                                            <i class="bi bi-pencil"></i>
+                                                                        </span>
+                                                                        <span class="save-icon" id="saveIcon" style="display:none;" onclick="saveChanges()">
+                                                                            <i class="bi bi-save"></i>
+                                                                        </span>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-borderless">
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td><label for="college_name">College name:</label></td>
+                                                                                    <td>
+                                                                                        <span id="college_nameText"><?php echo is_null($array['college_name']) ? 'N/A' : $array['college_name']; ?></span>
+                                                                                        <input type="number" name="college_name" id="college_name" value="<?php echo $array["college_name"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                    </td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td><label for="security_deposit">Security deposit:</label></td>
+                                                                                    <td>
+                                                                                        <span id="security_depositText"><?php echo is_null($array['security_deposit']) ? 'No security deposit has been made.' : $array['security_deposit']; ?></span>
+                                                                                        <input type="number" name="security_deposit" id="security_deposit" value="<?php echo $array["security_deposit"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </fieldset>
                                             </form>
 

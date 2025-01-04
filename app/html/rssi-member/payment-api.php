@@ -1336,7 +1336,27 @@ if (@$_POST['form-type'] == "signup") {
   $specialization = pg_escape_string($con, trim($_POST['specialization']));
   $work_experience = pg_escape_string($con, trim($_POST['work-experience']));
   $consent = !empty($_POST['consent']) ? 1 : 0;
-  $application_number = uniqid();
+  // SQL query to generate the application number
+  $sql = "
+    SELECT CONCAT(
+    RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),          -- Year (2 digits)
+    LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::text, 2, '0'),     -- Month (2 digits)
+    (SELECT COUNT(application_number) + 1 FROM signup)::text, -- Dynamic length for application count
+    LPAD(
+        FLOOR(RANDOM() * POWER(10, GREATEST(0, 12 - (2 + 2 + LENGTH((SELECT COUNT(application_number) + 1 FROM signup)::text)))))::text,
+        GREATEST(0, 12 - (2 + 2 + LENGTH((SELECT COUNT(application_number) + 1 FROM signup)::text))), 
+        '0'
+    )
+  ) AS application_number;
+  ";
+
+  // Execute the query
+  $result = pg_query($con, $sql);
+
+  if ($result) {
+    $row = pg_fetch_assoc($result); // Use pg_fetch_assoc to fetch a single row
+    $application_number = $row['application_number'];
+  }
   $timestamp = date('Y-m-d H:i:s');
   $uploadedFile_payment = $_FILES['payment-photo'];
   $uploadedFile_photo = $_FILES['applicant-photo'];
