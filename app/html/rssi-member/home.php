@@ -81,20 +81,18 @@ if (!$result_event) {
   </script>
   <style>
     /* Default desktop view */
-.responsive-iframe {
-    width: 800px;
-    height: 400px;
-}
-
-/* Mobile view */
-@media (max-width: 768px) {
     .responsive-iframe {
+      width: 800px;
+      height: 400px;
+    }
+
+    /* Mobile view */
+    @media (max-width: 768px) {
+      .responsive-iframe {
         width: 100%;
         height: auto;
+      }
     }
-}
-
-
   </style>
 </head>
 
@@ -199,7 +197,7 @@ if (!$result_event) {
                                     $photoID = $matches[1]; // Extracted file ID
                                     // Generate the preview URL for embedding in an iframe
                                     $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
-                                    echo '<iframe src="' . $previewUrl . '" class="responsive-iframe" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
+                                    echo '<iframe src="' . $previewUrl . '" class="responsive-iframe img-fluid rounded mb-3" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>';
                                   } else {
                                     // If no valid file ID is found, display an error
                                     echo "Invalid Google Drive photo URL.";
@@ -225,12 +223,6 @@ if (!$result_event) {
                         <?php
                         }
                         ?>
-
-
-
-
-
-
                       </div>
                     </div>
                   </div>
