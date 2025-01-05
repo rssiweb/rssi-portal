@@ -17,26 +17,29 @@ $filter_status = isset($_POST['status']) ? $_POST['status'] : [];
 
 // Start building the query
 $query = "SELECT * FROM signup 
-          WHERE application_status IN ('Technical Interview Scheduled', 'Technical Interview Completed', 'HR Interview Scheduled', 'HR Interview Completed') 
-          ORDER BY tech_interview_schedule DESC";
+          WHERE application_status IN ('Technical Interview Scheduled', 'Technical Interview Completed', 'HR Interview Scheduled', 'HR Interview Completed')";
+          
 // Add filters based on user input
 $conditions = [];
+
 if (!empty($filter_application_number)) {
     $conditions[] = "application_number = '" . pg_escape_string($con, $filter_application_number) . "'";
 }
 
 if (!empty($filter_status)) {
-    // Escape each status value using the connection
     $statuses = array_map(function ($status) use ($con) {
         return pg_escape_string($con, $status);
     }, $filter_status);
     $conditions[] = "application_status IN ('" . implode("', '", $statuses) . "')";
 }
 
-// Append conditions to the query
+// Append conditions dynamically
 if (!empty($conditions)) {
     $query .= " AND " . implode(" AND ", $conditions);
 }
+
+// Add the ORDER BY clause
+$query .= " ORDER BY tech_interview_schedule DESC";
 
 // Add a limit of 100 if no filters are applied
 if (empty($filter_application_number) && empty($filter_status)) {
@@ -152,12 +155,12 @@ $resultArr = pg_fetch_all($result);
                                             <option value="Technical Interview Scheduled" <?php echo in_array('Technical Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>Technical Interview Scheduled</option>
                                             <option value="Technical Interview Completed" <?php echo in_array('Technical Interview Completed', $filter_status ?? []) ? 'selected' : ''; ?>>Technical Interview Completed</option>
                                             <option value="HR Interview Scheduled" <?php echo in_array('HR Interview Scheduled', $filter_status ?? []) ? 'selected' : ''; ?>>HR Interview Scheduled</option>
-                                            <option value="Recommended" <?php echo in_array('Recommended', $filter_status ?? []) ? 'selected' : ''; ?>>Recommended</option>
+                                            <!-- <option value="Recommended" <?php echo in_array('Recommended', $filter_status ?? []) ? 'selected' : ''; ?>>Recommended</option>
                                             <option value="Not Recommended" <?php echo in_array('Not Recommended', $filter_status ?? []) ? 'selected' : ''; ?>>Not Recommended</option>
                                             <option value="On Hold" <?php echo in_array('On Hold', $filter_status ?? []) ? 'selected' : ''; ?>>On Hold</option>
                                             <option value="No-Show" <?php echo in_array('No-Show', $filter_status ?? []) ? 'selected' : ''; ?>>No-Show</option>
                                             <option value="Offer Extended" <?php echo in_array('Offer Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Extended</option>
-                                            <option value="Offer Not Extended" <?php echo in_array('Offer Not Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Not Extended</option>
+                                            <option value="Offer Not Extended" <?php echo in_array('Offer Not Extended', $filter_status ?? []) ? 'selected' : ''; ?>>Offer Not Extended</option> -->
                                         </select>
 
                                     </div>
