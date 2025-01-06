@@ -126,7 +126,11 @@ if ($result && pg_num_rows($result) > 0) {
                                 <script>
                                     // Show success message with ID in a JavaScript alert
                                     alert("Exception request submitted successfully. ID: <?php echo @$id ?>");
-                                    window.location.href = window.location.href; // Redirects to the same page after success
+                                    if (window.history.replaceState) {
+                                        // Update the URL without causing a page reload or resubmission
+                                        window.history.replaceState(null, null, window.location.href);
+                                    }
+                                    window.location.reload(); // Trigger a page reload to reflect changes
                                 </script>
                             <?php } ?>
                             <div class="container mt-4">
