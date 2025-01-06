@@ -93,9 +93,31 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" id="homeLink" href="home.php">
-          <span>Class details</span>
+          <span>Home</span>
         </a>
       </li><!-- End Contact Page Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#class" data-bs-toggle="collapse" href="#">
+          <span>Classroom Essentials</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="class" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="attendX" href="attendx.php">
+              <span>Attendance Portal</span>
+            </a>
+          </li>
+          <li>
+            <a id="scheduleLink" href="https://drive.google.com/drive/u/0/folders/14FVzPdcCP-w1Oy22Xwrexn7_XWSFqTaI" target="_blank">
+              <span>Class Schedule</span>
+            </a>
+          </li>
+          <li>
+            <a id="bookLink" href="https://ncert.nic.in/textbook.php" target="_blank">
+              <span>NCERT Textbooks PDF (I-XII)</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#acadamis" data-bs-toggle="collapse" href="#">
@@ -487,6 +509,10 @@
         url: 'exam.php'
       },
       {
+        id: 'class',
+        linkId: 'attendX',
+        url: 'attendx.php'
+      },{
         id: 'acadamis',
         linkId: 'createExam',
         url: 'exam_create.php'
