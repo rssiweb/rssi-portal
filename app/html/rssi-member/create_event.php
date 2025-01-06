@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // This requires JavaScript and client-side logic (covered below in HTML)
 
         $filename = $event_name . "_image_" . time(); // Unique filename
-        $parent_folder_id = '1S6uLPt5G7hX4Iacgzx73gqdXsO-uKA4R'; // Replace with your Google Drive folder ID
+        $parent_folder_id = '1UXkDUMIVcr_XxNKimhFQTNuhlu_ek_AE'; // Replace with your Google Drive folder ID
         try {
             $event_image_url = uploadeToDrive($event_image, $parent_folder_id, $filename);
         } catch (Exception $e) {
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($result) {
         echo "<script>
-                alert('Event successfully created.');
+                alert('Event successfully created. The post is currently under review and will be published on the home page after approval.');
                 if (window.history.replaceState) {
                         // Update the URL without causing a page reload or resubmission
                         window.history.replaceState(null, null, window.location.href);
@@ -76,6 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Event</title>
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <!-- Template Main CSS File -->
@@ -134,8 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                     <div class="mb-3">
                                         <label for="event_description" class="form-label">Event Description</label>
-                                        <textarea class="form-control" id="event_description" name="event_description" rows="3"></textarea>
+                                        <textarea class="form-control" id="event_description" name="event_description" rows="3" required maxlength="1000" oninput="updateCharacterCount()"></textarea>
+                                        <small id="charCount" class="form-text text-muted">0/1000 characters used</small>
                                     </div>
+
                                     <div class="mb-3">
                                         <label for="event_date" class="form-label required-field">Event Date</label>
                                         <input type="datetime-local" class="form-control" id="event_date" name="event_date" required>
@@ -222,6 +226,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
         });
+    </script>
+    <script>
+        function updateCharacterCount() {
+            const textArea = document.getElementById('event_description');
+            const charCount = document.getElementById('charCount');
+            const remainingChars = 1000 - textArea.value.length;
+            charCount.textContent = `${textArea.value.length}/1000 characters used`;
+        }
     </script>
 </body>
 

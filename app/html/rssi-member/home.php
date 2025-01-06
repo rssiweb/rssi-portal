@@ -59,7 +59,7 @@ if (!$result || !$result_event) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Class details</title>
+  <title>Home</title>
 
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
@@ -151,6 +151,10 @@ if (!$result || !$result_event) {
                     <div class="card shadow-sm mb-3">
                       <div class="card-body">
                         <h5 class="card-title">Latest Updates</h5>
+                        <!-- Button to create a new post as clickable text, aligned to the right -->
+                        <div class="d-flex justify-content-end mb-3">
+                          <a href="create_event.php" class="text-muted small">Create New Post</a>
+                        </div>
                         <?php if ($result_event && pg_num_rows($result_event) > 0): ?>
                           <?php while ($event = pg_fetch_assoc($result_event)): ?>
                             <div class="mb-4">
@@ -199,6 +203,10 @@ if (!$result || !$result_event) {
                         <?php else: ?>
                           <p>No events available to display.</p>
                         <?php endif; ?>
+                        <!-- Button to see more post as clickable text, aligned to the right -->
+                      <div class="d-flex justify-content-end mb-3">
+                          <a href="#" class="text-muted small">See More <i class="bi bi-box-arrow-up-right"></i></a>
+                        </div>
                       </div>
                     </div>
                   </div>
