@@ -93,6 +93,21 @@ if (!$result || !$result_event) {
         height: auto;
       }
     }
+
+    .create-post-icon i {
+      font-size: 1.5rem;
+      /* Adjust icon size */
+      opacity: 0.8;
+      /* Slight fade */
+      transition: opacity 0.3s ease, transform 0.2s ease;
+    }
+
+    .create-post-icon:hover i {
+      opacity: 1;
+      /* Fully visible on hover */
+      transform: scale(1.1);
+      /* Slightly enlarge */
+    }
   </style>
 </head>
 
@@ -153,7 +168,9 @@ if (!$result || !$result_event) {
                         <h5 class="card-title">Latest Updates</h5>
                         <!-- Button to create a new post as clickable text, aligned to the right -->
                         <div class="d-flex justify-content-end mb-3">
-                          <a href="create_event.php" class="text-muted small">Create New Post</a>
+                          <a href="create_event.php" class="text-muted create-post-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Write a Post">
+                            <i class="bi bi-pencil-square"></i>
+                          </a>
                         </div>
                         <?php if ($result_event && pg_num_rows($result_event) > 0): ?>
                           <?php while ($event = pg_fetch_assoc($result_event)): ?>
@@ -179,6 +196,9 @@ if (!$result || !$result_event) {
                                     </div>
                                   </div>
 
+                                  <!-- Event Details -->
+                                  <!-- <h6 class="mb-1"><?= htmlspecialchars($event['event_name'], ENT_QUOTES, 'UTF-8') ?></h6> -->
+                                  <p class="text-muted"><?= htmlspecialchars($event['event_description'], ENT_QUOTES, 'UTF-8') ?></p>
                                   <!-- Event Image (Only show if URL is valid) -->
                                   <?php if (!empty($event['event_image_url'])): ?>
                                     <?php
@@ -193,9 +213,19 @@ if (!$result || !$result_event) {
                                     <?php endif; ?>
                                   <?php endif; ?>
 
-                                  <!-- Event Details -->
-                                  <h6 class="mb-1"><?= htmlspecialchars($event['event_name'], ENT_QUOTES, 'UTF-8') ?></h6>
-                                  <p class="text-muted"><?= htmlspecialchars($event['event_description'], ENT_QUOTES, 'UTF-8') ?></p>
+                                  <!-- Like, Comment, and Share Actions -->
+                                  <div class="d-flex align-items-center mt-3 text-muted">
+                                    <div class="d-flex align-items-center">
+                                      <i class="bi bi-hand-thumbs-up me-1"></i> <span>Like</span>
+                                    </div>
+                                    <!-- <div class="d-flex align-items-center">
+                                      <i class="bi bi-chat-left me-1"></i> <span>Comment</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                      <i class="bi bi-share me-1"></i> <span>Share</span>
+                                    </div> -->
+                                  </div>
+
                                 </div>
                               </div>
                             </div>
@@ -204,7 +234,7 @@ if (!$result || !$result_event) {
                           <p>No events available to display.</p>
                         <?php endif; ?>
                         <!-- Button to see more post as clickable text, aligned to the right -->
-                      <div class="d-flex justify-content-end mb-3">
+                        <div class="d-flex justify-content-end mb-3">
                           <a href="#" class="text-muted small">See More <i class="bi bi-box-arrow-up-right"></i></a>
                         </div>
                       </div>
@@ -288,6 +318,14 @@ if (!$result || !$result_event) {
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    });
+  </script>
 
 </body>
 
