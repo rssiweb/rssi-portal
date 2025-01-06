@@ -33,9 +33,10 @@ $query_event = "
     LIMIT 3";
 $result_event = pg_query($con, $query_event);
 
-if (!$result_event) {
-    echo "<script>alert('Failed to fetch events');</script>";
-    exit;
+// Check if both queries are successful
+if (!$result || !$result_event) {
+  echo "<script>alert('Failed to fetch certificates or events');</script>";
+  exit;
 }
 ?>
 
@@ -151,54 +152,56 @@ if (!$result_event) {
                       <div class="card-body">
                         <h5 class="card-title">Latest Updates</h5>
                         <?php if ($result_event && pg_num_rows($result_event) > 0): ?>
-    <?php while ($event = pg_fetch_assoc($result_event)): ?>
-        <div class="mb-4">
-            <div class="card shadow-sm mb-3">
-                <div class="card-body">
-                    <!-- Profile Header -->
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="profile-photo" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; margin-right: 10px;">
-                            <img src="<?= htmlspecialchars($event['photo'] ?: 'https://via.placeholder.com/50', ENT_QUOTES, 'UTF-8') ?>" 
-                                 alt="Profile Photo" 
-                                 class="img-fluid">
-                        </div>
-                        <div>
-                            <h6 class="mb-1"><?= htmlspecialchars($event['fullname'], ENT_QUOTES, 'UTF-8') ?></h6>
-                            <small class="text-muted"><?= date('d/m/Y h:i A', strtotime($event['created_at'])) ?></small>
-                        </div>
-                    </div>
+                          <?php while ($event = pg_fetch_assoc($result_event)): ?>
+                            <div class="mb-4">
+                              <div class="card shadow-sm mb-3">
+                                <div class="card-body">
+                                  <!-- Profile Header -->
+                                  <div class="d-flex align-items-center mb-3">
+                                    <!-- Profile photo or initials -->
+                                    <div class="profile-photo" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; margin-right: 10px;">
+                                      <?php if (!empty($event['photo'])): ?>
+                                        <img src="<?= htmlspecialchars($event['photo'], ENT_QUOTES, 'UTF-8') ?>" alt="Profile Photo" class="img-fluid">
+                                      <?php else: ?>
+                                        <!-- Use name initials if photo is not available -->
+                                        <div class="profile-initials d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background-color: #ccc; font-size: 18px; color: #fff;">
+                                          <?= strtoupper(substr($event['fullname'], 0, 1)) . strtoupper(substr(explode(" ", $event['fullname'])[1], 0, 1)) ?>
+                                        </div>
+                                      <?php endif; ?>
+                                    </div>
+                                    <div>
+                                      <h6 class="mb-1"><?= htmlspecialchars($event['fullname'], ENT_QUOTES, 'UTF-8') ?></h6>
+                                      <small class="text-muted"><?= date('d/m/Y h:i A', strtotime($event['created_at'])) ?></small>
+                                    </div>
+                                  </div>
 
-                    <!-- Event Image -->
-                    <?php if (!empty($event['event_image_url'])): ?>
-                        <?php
-                        $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
-                        if (preg_match($pattern, $event['event_image_url'], $matches)):
-                            $photoID = $matches[1];
-                            $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
-                        ?>
-                            <iframe src="<?= $previewUrl ?>" class="responsive-iframe img-fluid rounded mb-3" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>
+                                  <!-- Event Image (Only show if URL is valid) -->
+                                  <?php if (!empty($event['event_image_url'])): ?>
+                                    <?php
+                                    $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
+                                    if (preg_match($pattern, $event['event_image_url'], $matches)):
+                                      $photoID = $matches[1];
+                                      $previewUrl = "https://drive.google.com/file/d/{$photoID}/preview";
+                                    ?>
+                                      <iframe src="<?= $previewUrl ?>" class="responsive-iframe img-fluid rounded mb-3" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>
+                                    <?php else: ?>
+                                      <p>Invalid Google Drive photo URL.</p>
+                                    <?php endif; ?>
+                                  <?php endif; ?>
+
+                                  <!-- Event Details -->
+                                  <h6 class="mb-1"><?= htmlspecialchars($event['event_name'], ENT_QUOTES, 'UTF-8') ?></h6>
+                                  <p class="text-muted"><?= htmlspecialchars($event['event_description'], ENT_QUOTES, 'UTF-8') ?></p>
+                                </div>
+                              </div>
+                            </div>
+                          <?php endwhile; ?>
                         <?php else: ?>
-                            <p>Invalid Google Drive photo URL.</p>
+                          <p>No events available to display.</p>
                         <?php endif; ?>
-                    <?php else: ?>
-                        <p>No photo available.</p>
-                    <?php endif; ?>
-
-                    <!-- Event Details -->
-                    <h6 class="mb-1"><?= htmlspecialchars($event['event_name'], ENT_QUOTES, 'UTF-8') ?></h6>
-                    <p class="text-muted"><?= htmlspecialchars($event['event_description'], ENT_QUOTES, 'UTF-8') ?></p>
-                </div>
-            </div>
-        </div>
-    <?php endwhile; ?>
-<?php else: ?>
-    <p>No events available to display.</p>
-<?php endif; ?>
-
                       </div>
                     </div>
                   </div>
-
                   <!-- Right Sidebar (Poll, Wall of Fame, etc.) -->
                   <div class="col-md-4 mb-4">
                     <div class="card shadow-sm mb-4">
@@ -231,14 +234,23 @@ if (!$result_event) {
                             <?php while ($row = pg_fetch_assoc($result)): ?>
                               <li class="mb-3">
                                 <div class="d-flex align-items-center">
-                                  <img src="<?php echo $row['photo'] ?: 'https://via.placeholder.com/50'; ?>"
-                                    class="rounded-circle"
-                                    alt="<?php echo htmlspecialchars($row['fullname']); ?>"
-                                    style="width: 50px; height: 50px; object-fit: cover;">
+                                  <!-- Profile photo or initials -->
+                                  <div class="profile-photo" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; margin-right: 10px;">
+                                    <?php if (!empty($row['photo'])): ?>
+                                      <img src="<?= htmlspecialchars($row['photo'], ENT_QUOTES, 'UTF-8') ?>"
+                                        class="rounded-circle" alt="<?= htmlspecialchars($row['fullname'], ENT_QUOTES, 'UTF-8') ?>"
+                                        style="width: 50px; height: 50px; object-fit: cover;">
+                                    <?php else: ?>
+                                      <!-- Use name initials if photo is not available -->
+                                      <div class="profile-initials d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background-color: #ccc; font-size: 18px; color: #fff;">
+                                        <?= strtoupper(substr($row['fullname'], 0, 1)) . strtoupper(substr(explode(" ", $row['fullname'])[1], 0, 1)) ?>
+                                      </div>
+                                    <?php endif; ?>
+                                  </div>
                                   <div class="ms-3">
-                                    <span><strong><?php echo htmlspecialchars($row['fullname']); ?></strong></span><br>
-                                    <span class="text-muted"><?php echo htmlspecialchars($row['badge_name']); ?></span><br>
-                                    <small class="text-muted">Received on: <?php echo date('d/m/Y', strtotime($row['issuedon'])); ?></small>
+                                    <span><strong><?= htmlspecialchars($row['fullname'], ENT_QUOTES, 'UTF-8') ?></strong></span><br>
+                                    <span class="text-muted"><?= htmlspecialchars($row['badge_name'], ENT_QUOTES, 'UTF-8') ?></span><br>
+                                    <small class="text-muted">Received on: <?= date('d/m/Y', strtotime($row['issuedon'])) ?></small>
                                   </div>
                                 </div>
                               </li>
@@ -249,7 +261,6 @@ if (!$result_event) {
                         </ul>
                       </div>
                     </div>
-
                     <!-- Add other blocks here if needed (e.g., latest news, updates, etc.) -->
                   </div>
                 </div>
