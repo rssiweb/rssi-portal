@@ -166,9 +166,9 @@ if (!$result || !$result_event) {
                     <div class="card shadow-sm mb-3">
                       <div class="card-body">
                         <h5 class="card-title">Latest Updates</h5>
-                        <!-- Button to create a new post as clickable text, aligned to the right -->
+                        <!-- Icon to Trigger Modal -->
                         <div class="d-flex justify-content-end mb-3">
-                          <a href="create_event.php" class="text-muted create-post-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Write a Post">
+                          <a href="#" class="text-muted create-post-icon" data-bs-toggle="modal" data-bs-target="#editEventModal" title="Write a Post">
                             <i class="bi bi-pencil-square"></i>
                           </a>
                         </div>
@@ -234,9 +234,9 @@ if (!$result || !$result_event) {
                           <p>No events available to display.</p>
                         <?php endif; ?>
                         <!-- Button to see more post as clickable text, aligned to the right -->
-                        <div class="d-flex justify-content-end mb-3">
+                        <!-- <div class="d-flex justify-content-end mb-3">
                           <a href="#" class="text-muted small">See More <i class="bi bi-box-arrow-up-right"></i></a>
-                        </div>
+                        </div> -->
                       </div>
                     </div>
                   </div>
@@ -315,6 +315,8 @@ if (!$result || !$result_event) {
 
   <!-- Vendor JS Files -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+  <!-- JavaScript Library Files -->
+  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
 
   <!-- Template Main JS File -->
   <script src="../assets_new/js/main.js"></script>
@@ -324,6 +326,111 @@ if (!$result || !$result_event) {
       tooltipTriggerList.forEach(function(tooltipTriggerEl) {
         new bootstrap.Tooltip(tooltipTriggerEl);
       });
+    });
+  </script>
+
+  <!-- Bootstrap Modal -->
+  <div class="modal fade" id="editEventModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="editEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editEventModalLabel">Write a Post</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" action="create_event.php" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="event_name" class="form-label required-field">Event Name</label>
+              <input type="text" class="form-control" id="event_name" name="event_name" required>
+            </div>
+            <div class="mb-3">
+              <label for="event_description" class="form-label">Event Description</label>
+              <textarea class="form-control" id="event_description" name="event_description" rows="3" required maxlength="1000" oninput="updateCharacterCount()"></textarea>
+              <small id="charCount" class="form-text text-muted">0/1000 characters used</small>
+            </div>
+            <div class="mb-3">
+              <label for="event_date" class="form-label required-field">Event Date</label>
+              <input type="datetime-local" class="form-control" id="event_date" name="event_date" required>
+            </div>
+            <div class="mb-3">
+              <label for="event_location" class="form-label required-field">Event Location</label>
+              <select class="form-select" id="event_location" name="event_location" required>
+                <option>Lucknow</option>
+                <option>West Bengal</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="event_image" class="form-label required-field">Event Image</label>
+              <input type="file" class="form-control" id="event_image" name="event_image" accept="image/*">
+              <img id="imagePreview" src="#" alt="Image Preview" class="mt-3" style="max-width: 50%; height: auto;">
+            </div>
+            <button type="submit" class="btn btn-primary">Create Post</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    $(document).ready(function() {
+      // Add red asterisk to required fields
+      $('form')
+        .find('input[required], select[required], textarea[required]')
+        .each(function() {
+          const label = $(this).closest('div').find('label'); // Ensure proper label selection
+          if ($(this).prop('required') && label.length && !label.find('span').length) {
+            label.append(' <span style="color: red">*</span>');
+          }
+        });
+
+      // Image preview and validation
+      $('#event_image').on('change', function(event) {
+        const file = event.target.files[0];
+        const imagePreview = $('#imagePreview');
+        if (file) {
+          // Check image size (300 KB limit)
+          if (file.size > 300 * 1024) {
+            alert('Image size should not exceed 300 KB.');
+            $('#event_image').val(''); // Clear the input
+            imagePreview.hide(); // Hide preview
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
+
+            img.onload = function() {
+              // Check dimensions (800x400)
+              if (img.width !== 800 || img.height !== 400) {
+                alert('Image should be resized to 800x400.');
+                $('#event_image').val(''); // Clear the input
+                imagePreview.hide(); // Hide preview
+                return;
+              }
+
+              // Valid image: show preview
+              imagePreview.attr('src', e.target.result).show();
+            };
+          };
+
+          reader.readAsDataURL(file);
+        } else {
+          // No file selected: hide preview
+          imagePreview.hide();
+        }
+      });
+
+      // Character count update
+      $('#event_description').on('input', function() {
+        const charCount = $('#charCount');
+        charCount.text(`${this.value.length}/1000 characters used`);
+      });
+
+      // Initially hide the image preview
+      $('#imagePreview').hide();
     });
   </script>
 
