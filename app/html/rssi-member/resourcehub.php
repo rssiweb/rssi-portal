@@ -199,7 +199,7 @@ validation(); ?>
                             <?php } ?>
                             <?php
 
-                            $result = pg_query($con, "SELECT * FROM policy order by issuedon desc");
+                            $result = pg_query($con, "SELECT * FROM policy where is_inactive is null order by issuedon desc");
                             if (!$result) {
                                 echo "An error occurred.\n";
                                 exit;
