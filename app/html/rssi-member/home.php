@@ -24,7 +24,7 @@ $result = pg_query($con, $query);
 
 // Query for events
 $query_event = "
-    SELECT e.event_name, e.event_description, e.event_date, e.event_location, e.event_image_url, 
+    SELECT e.event_name, e.event_id, e.event_description, e.event_date, e.event_location, e.event_image_url, 
            e.created_at, m.fullname, m.photo 
     FROM events e
     JOIN rssimyaccount_members m ON e.created_by = m.associatenumber
@@ -39,6 +39,42 @@ if (!$result || !$result_event) {
   exit;
 }
 ?>
+<?php
+// Assuming you have a database connection in $con and $associatenumber holds the current user ID.
+
+function getLikeCount($event_id, $con)
+{
+  $query = "SELECT COUNT(*) FROM likes WHERE event_id = $1";
+  $result = pg_query_params($con, $query, array($event_id));
+  return pg_fetch_result($result, 0, 0);
+}
+
+function hasUserLiked($event_id, $user_id, $con)
+{
+  $query = "SELECT COUNT(*) FROM likes WHERE event_id = $1 AND user_id = $2";
+  $result = pg_query_params($con, $query, array($event_id, $user_id));
+  return pg_fetch_result($result, 0, 0) > 0;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $event_id = $_POST['event_id'];
+  $user_id = $_POST['user_id'];
+
+  if (hasUserLiked($event_id, $user_id, $con)) {
+    // User already liked, so remove the like (unlike)
+    $query = "DELETE FROM likes WHERE event_id = $1 AND user_id = $2";
+    pg_query_params($con, $query, array($event_id, $user_id));
+    echo json_encode(['success' => true, 'liked' => false, 'like_count' => getLikeCount($event_id, $con)]);
+  } else {
+    // User has not liked, so add the like
+    $query = "INSERT INTO likes (event_id, user_id) VALUES ($1, $2)";
+    pg_query_params($con, $query, array($event_id, $user_id));
+    echo json_encode(['success' => true, 'liked' => true, 'like_count' => getLikeCount($event_id, $con)]);
+  }
+  exit;
+}
+?>
+
 
 <!doctype html>
 <html lang="en">
@@ -108,6 +144,19 @@ if (!$result || !$result_event) {
       transform: scale(1.1);
       /* Slightly enlarge */
     }
+
+    .liked {
+      cursor: pointer;
+      color: #007bff;
+    }
+
+    .bi-hand-thumbs-up {
+      cursor: pointer;
+    }
+
+    .text-primary {
+      color: #007bff !important;
+    }
   </style>
 </head>
 
@@ -166,7 +215,6 @@ if (!$result || !$result_event) {
                     <div class="card shadow-sm mb-3">
                       <div class="card-body">
                         <h5 class="card-title">Latest Updates</h5>
-                        <!-- Icon to Trigger Modal -->
                         <div class="d-flex justify-content-end mb-3">
                           <a href="#" class="text-muted create-post-icon" data-bs-toggle="modal" data-bs-target="#editEventModal" title="Write a Post">
                             <i class="bi bi-pencil-square"></i>
@@ -179,12 +227,10 @@ if (!$result || !$result_event) {
                                 <div class="card-body">
                                   <!-- Profile Header -->
                                   <div class="d-flex align-items-center mb-3">
-                                    <!-- Profile photo or initials -->
                                     <div class="profile-photo" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; margin-right: 10px;">
                                       <?php if (!empty($event['photo'])): ?>
                                         <img src="<?= htmlspecialchars($event['photo'], ENT_QUOTES, 'UTF-8') ?>" alt="Profile Photo" class="img-fluid">
                                       <?php else: ?>
-                                        <!-- Use name initials if photo is not available -->
                                         <div class="profile-initials d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background-color: #ccc; font-size: 18px; color: #fff;">
                                           <?= strtoupper(substr($event['fullname'], 0, 1)) . strtoupper(substr(explode(" ", $event['fullname'])[1], 0, 1)) ?>
                                         </div>
@@ -196,9 +242,9 @@ if (!$result || !$result_event) {
                                     </div>
                                   </div>
 
-                                  <!-- Event Details -->
-                                  <!-- <h6 class="mb-1"><?= htmlspecialchars($event['event_name'], ENT_QUOTES, 'UTF-8') ?></h6> -->
+                                  <!-- Event Description -->
                                   <p class="text-muted"><?= htmlspecialchars($event['event_description'], ENT_QUOTES, 'UTF-8') ?></p>
+
                                   <!-- Event Image (Only show if URL is valid) -->
                                   <?php if (!empty($event['event_image_url'])): ?>
                                     <?php
@@ -213,19 +259,22 @@ if (!$result || !$result_event) {
                                     <?php endif; ?>
                                   <?php endif; ?>
 
-                                  <!-- Like, Comment, and Share Actions -->
-                                  <div class="d-flex align-items-center mt-3 text-muted">
-                                    <div class="d-flex align-items-center">
-                                      <i class="bi bi-hand-thumbs-up me-1"></i> <span>Like</span>
-                                    </div>
-                                    <!-- <div class="d-flex align-items-center">
-                                      <i class="bi bi-chat-left me-1"></i> <span>Comment</span>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                      <i class="bi bi-share me-1"></i> <span>Share</span>
-                                    </div> -->
-                                  </div>
+                                  <!-- Like Button -->
+                                  <?php
+                                  // Get like count and check if user has liked the post
+                                  $event_id = $event['event_id'];
+                                  $likeCountQuery = "SELECT COUNT(*) FROM likes WHERE event_id = $1";
+                                  $likeCountResult = pg_query_params($con, $likeCountQuery, array($event_id));
+                                  $likeCount = pg_fetch_result($likeCountResult, 0, 0);
 
+                                  // Check if the user has already liked the post
+                                  $liked = hasUserLiked($event_id, $associatenumber, $con);
+                                  ?>
+                                  <div class="d-flex align-items-center mt-3 text-muted" id="like-button-<?= $event['event_id'] ?>" data-user-id="<?= $associatenumber ?>" onclick="toggleLike(<?= $event['event_id'] ?>)">
+                                    <i id="thumbs-up-icon-<?= $event['event_id'] ?>" class="bi bi-hand-thumbs-up me-1 <?= $liked ? 'text-primary' : '' ?>"></i>
+                                    <span id="like-text-<?= $event['event_id'] ?>"><?= $liked ? 'Liked' : 'Like' ?></span>
+                                    <span class="ms-2" id="like-count-<?= $event['event_id'] ?>"><?= $likeCount ?></span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -233,13 +282,10 @@ if (!$result || !$result_event) {
                         <?php else: ?>
                           <p>No events available to display.</p>
                         <?php endif; ?>
-                        <!-- Button to see more post as clickable text, aligned to the right -->
-                        <!-- <div class="d-flex justify-content-end mb-3">
-                          <a href="#" class="text-muted small">See More <i class="bi bi-box-arrow-up-right"></i></a>
-                        </div> -->
                       </div>
                     </div>
                   </div>
+
                   <!-- Right Sidebar (Poll, Wall of Fame, etc.) -->
                   <div class="col-md-4 mb-4">
                     <div class="card shadow-sm mb-4">
@@ -432,6 +478,104 @@ if (!$result || !$result_event) {
       // Initially hide the image preview
       $('#imagePreview').hide();
     });
+  </script>
+  <!-- <script>
+    // Function to handle like/unlike toggling
+    function toggleLike(eventId) {
+      const userId = document.getElementById(`like-button-${eventId}`).getAttribute('data-user-id');
+      const likeButton = document.getElementById(`like-button-${eventId}`);
+      const likeCountSpan = document.getElementById(`like-count-${eventId}`);
+      const likeIcon = document.getElementById(`thumbs-up-icon-${eventId}`);
+      const likeText = document.getElementById(`like-text-${eventId}`);
+
+      // Prepare the data for the AJAX request
+      const data = new FormData();
+      data.append('event_id', eventId);
+      data.append('user_id', userId);
+
+      // Perform AJAX request to submit like/unlike
+      fetch('home.php', {
+          method: 'POST',
+          body: data
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Toggle the UI based on like/unlike
+            if (data.liked) {
+              // User has liked the event
+              likeIcon.classList.add('text-primary'); // Turn the icon color blue
+              likeText.textContent = 'Liked';
+              likeCountSpan.textContent = parseInt(likeCountSpan.textContent) + 1; // Increment the like count
+            } else {
+              // User has unliked the event
+              likeIcon.classList.remove('text-primary'); // Reset the icon color
+              likeText.textContent = 'Like';
+              likeCountSpan.textContent = parseInt(likeCountSpan.textContent) - 1; // Decrement the like count
+            }
+          } else {
+            console.error('Error: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+
+    // Function to check if the user has already liked the event when the page loads
+    function checkAlreadyLiked(eventId, liked) {
+      const likeButton = document.getElementById(`like-button-${eventId}`);
+      const likeIcon = document.getElementById(`thumbs-up-icon-${eventId}`);
+      const likeText = document.getElementById(`like-text-${eventId}`);
+
+      // If the user has already liked the event, mark the button as liked
+      if (liked) {
+        likeIcon.classList.add('text-muted'); // Set icon to gray to indicate it's already liked
+        likeText.textContent = 'You Already Liked'; // Change text to reflect the state
+      }
+    }
+  </script> -->
+  <script>
+    function toggleLike(eventId) {
+      const userId = document.getElementById(`like-button-${eventId}`).getAttribute('data-user-id');
+      const likeButton = document.getElementById(`like-button-${eventId}`);
+      const likeIcon = document.getElementById(`thumbs-up-icon-${eventId}`);
+      const likeText = document.getElementById(`like-text-${eventId}`);
+      const likeCountSpan = document.getElementById(`like-count-${eventId}`);
+
+      // Prepare the data for the AJAX request
+      const data = new FormData();
+      data.append('event_id', eventId);
+      data.append('user_id', userId);
+
+      // Perform AJAX request to submit like/unlike
+      fetch('home.php', {
+          method: 'POST',
+          body: data
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Toggle the UI based on like/unlike
+            if (data.liked) {
+              // User has liked the event
+              likeIcon.classList.add('text-primary'); // Turn the icon color blue
+              likeText.textContent = 'Liked';
+              likeCountSpan.textContent = data.like_count; // Update the like count
+            } else {
+              // User has unliked the event
+              likeIcon.classList.remove('text-primary'); // Reset the icon color
+              likeText.textContent = 'Like';
+              likeCountSpan.textContent = data.like_count; // Update the like count
+            }
+          } else {
+            console.error('Error: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
   </script>
 
 </body>
