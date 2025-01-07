@@ -277,25 +277,20 @@ if (@$_POST['form-type'] == "gms") {
 
                                         <input type="hidden" name="issuedby" class="form-control" placeholder="Issued by" value="<?php echo $fullname ?>" required readonly>
 
-                                        <?php if (($role == 'Admin' && $filterstatus == 'Active') && ($resultArrrr_admin - $resultArrr_admin) == null) { ?>
-                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;" disabled>
-                                                <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
-                                        <?Php } ?>
-                                        <?php if (($role == 'Admin' && $filterstatus == 'Active') && ($resultArrrr_admin - $resultArrr_admin) != null) { ?>
-                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
-                                                <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
-                                        <?Php } ?>
+                                        <?php
+                                        // Logic for enabling or disabling the button
+                                        if ($role == 'Admin' && $filterstatus == 'Active') {
+                                            $canRedeem = ($resultArrrr_admin - $resultArrr_admin) >= 1000;
+                                        } else {
+                                            $canRedeem = ($resultArrrr - $resultArrr) >= 1000;
+                                        }
 
-
-                                        <?php if (($role != 'Admin' || $filterstatus != 'Active') && ($resultArrrr - $resultArrr) == null) { ?>
-                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;" disabled>
-                                                <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
-                                        <?Php } ?>
-                                        <?php if (($role != 'Admin' || $filterstatus != 'Active') && ($resultArrrr - $resultArrr) != null) { ?>
-                                            <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
-                                                <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem</button>
-                                        <?Php } ?>
-
+                                        // Determine the disabled attribute
+                                        $disabled = $canRedeem ? '' : 'disabled';
+                                        ?>
+                                        <button type="Submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;" <?php echo $disabled; ?>>
+                                            <i class="bi bi-dash-lg"></i>&nbsp;&nbsp;Redeem
+                                        </button>
                                     </div>
                                 </fieldset>
                             </form>
