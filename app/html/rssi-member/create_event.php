@@ -3,6 +3,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
 include("../../util/drive.php");
+include("../../util/email.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -56,6 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = pg_query_params($con, $sql, array($event_name, $event_description, $event_date, $event_location, $event_image_url, $created_by));
 
     if ($result) {
+        // Send email notification if the query is successful
+        sendEmail("new_post", [
+            "posttitle" => $event_name,
+            "author" => $created_by,
+            "now" => date("d/m/Y g:i a"),
+        ], 'info@rssi.in');
         echo "<script>
     alert('Event successfully created. The post is currently under review and will be published on the home page after approval.');
     
