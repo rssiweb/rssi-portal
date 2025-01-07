@@ -325,9 +325,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                     <div class="ms-2" id="liked-users-<?= $event['event_id'] ?>"><?= $displayText ?></div> <!-- Liked Users -->
                                   </div>
-
-
-
                                 </div>
                               </div>
                             </div>
@@ -341,6 +338,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                   <!-- Right Sidebar (Poll, Wall of Fame, etc.) -->
                   <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm mb-4">
+                      <div class="card-body">
+                        <h5 class="card-title">Quick Links</h5>
+                        <a href="https://drive.google.com/drive/u/0/folders/14FVzPdcCP-w1Oy22Xwrexn7_XWSFqTaI" target="_blank" class="d-flex align-items-center text-muted text-decoration-none mb-2" title="Class Schedule (Google Drive)">
+                          <i class="bi bi-box-arrow-up-right me-2"></i>
+                          Class Schedule (Google Drive)
+                        </a>
+                        <a href="https://docs.google.com/spreadsheets/d/1ufn8vcA5tcpoVvbTgGBO9NsXmiYgjmz54Qqg_L2GZxI/edit#gid=1909211630" target="_blank" class="d-flex align-items-center text-muted text-decoration-none mb-2" title="Offline Attendance (Google Sheet)">
+                          <i class="bi bi-box-arrow-up-right me-2"></i>
+                          Offline Attendance (Google Sheet)
+                        </a>
+                        <a href="https://ncert.nic.in/textbook.php" target="_blank" class="d-flex align-items-center text-muted text-decoration-none" title="NCERT Textbooks PDF (I-XII)">
+                          <i class="bi bi-box-arrow-up-right me-2"></i>
+                          NCERT Textbooks PDF (I-XII)
+                        </a>
+                      </div>
+                    </div>
                     <div class="card shadow-sm mb-4">
                       <div class="card-body">
                         <h5 class="card-title">Opinion Poll</h5>
