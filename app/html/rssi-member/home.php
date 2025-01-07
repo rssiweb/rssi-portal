@@ -49,6 +49,28 @@ function getLikeCount($event_id, $con)
   return pg_fetch_result($result, 0, 0);
 }
 
+function getLikedUsers($event_id, $con)
+{
+  // Fetch user names of people who liked the event
+  $query = "
+    SELECT m.fullname
+    FROM likes l
+    JOIN rssimyaccount_members m ON l.user_id = m.associatenumber
+    WHERE l.event_id = $1
+  ";
+  $result = pg_query_params($con, $query, array($event_id));
+
+  $likedUsers = [];
+  while ($row = pg_fetch_assoc($result)) {
+    $likedUsers[] = $row['fullname'];
+  }
+
+  // Shuffle the array to randomize the order of liked users
+  shuffle($likedUsers);
+
+  return $likedUsers;
+}
+
 function hasUserLiked($event_id, $user_id, $con)
 {
   $query = "SELECT COUNT(*) FROM likes WHERE event_id = $1 AND user_id = $2";
@@ -64,17 +86,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // User already liked, so remove the like (unlike)
     $query = "DELETE FROM likes WHERE event_id = $1 AND user_id = $2";
     pg_query_params($con, $query, array($event_id, $user_id));
-    echo json_encode(['success' => true, 'liked' => false, 'like_count' => getLikeCount($event_id, $con)]);
+
+    // Get the updated list of liked users after unliking
+    $likedUsers = getLikedUsers($event_id, $con);
+
+    echo json_encode([
+      'success' => true,
+      'liked' => false,
+      'like_count' => getLikeCount($event_id, $con),
+      'liked_users' => $likedUsers
+    ]);
   } else {
     // User has not liked, so add the like
     $query = "INSERT INTO likes (event_id, user_id) VALUES ($1, $2)";
     pg_query_params($con, $query, array($event_id, $user_id));
-    echo json_encode(['success' => true, 'liked' => true, 'like_count' => getLikeCount($event_id, $con)]);
+
+    // Get the updated list of liked users after liking
+    $likedUsers = getLikedUsers($event_id, $con);
+
+    echo json_encode([
+      'success' => true,
+      'liked' => true,
+      'like_count' => getLikeCount($event_id, $con),
+      'liked_users' => $likedUsers
+    ]);
   }
   exit;
 }
 ?>
-
 
 <!doctype html>
 <html lang="en">
@@ -259,24 +298,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <?php endif; ?>
                                   <?php endif; ?>
 
-                                  <!-- Like Button -->
                                   <?php
-                                  // Get like count and check if user has liked the post
                                   $event_id = $event['event_id'];
-                                  $likeCountQuery = "SELECT COUNT(*) FROM likes WHERE event_id = $1";
-                                  $likeCountResult = pg_query_params($con, $likeCountQuery, array($event_id));
-                                  $likeCount = pg_fetch_result($likeCountResult, 0, 0);
-
-                                  // Check if the user has already liked the post
+                                  $likeCount = getLikeCount($event_id, $con);
                                   $liked = hasUserLiked($event_id, $associatenumber, $con);
+
+                                  // Get the list of liked users
+                                  $likedUsers = getLikedUsers($event_id, $con);
+
+                                  // Format the display text for the liked users
+                                  $displayText = '';
+                                  if (count($likedUsers) > 0) {
+                                    $displayText = implode(', ', array_slice($likedUsers, 0, 2)); // Add first 2 names
+                                    if (count($likedUsers) > 2) {
+                                      $displayText .= ' and ' . (count($likedUsers) - 2) . ' others'; // Add "X others" if more than 2
+                                    }
+                                  }
                                   ?>
+
+                                  <!-- Like Button -->
                                   <div class="d-flex align-items-center mt-3 text-muted" id="like-button-<?= $event['event_id'] ?>" data-user-id="<?= $associatenumber ?>">
                                     <div class="pointer" onclick="toggleLike(<?= $event['event_id'] ?>)">
                                       <i id="thumbs-up-icon-<?= $event['event_id'] ?>" class="bi bi-hand-thumbs-up me-1 <?= $liked ? 'text-primary' : '' ?>"></i>
                                       <span id="like-text-<?= $event['event_id'] ?>"><?= $liked ? 'Liked' : 'Like' ?></span>
                                       <span class="ms-2" id="like-count-<?= $event['event_id'] ?>"><?= $likeCount ?></span>
                                     </div>
+                                    <div class="ms-2" id="liked-users-<?= $event['event_id'] ?>"><?= $displayText ?></div> <!-- Liked Users -->
                                   </div>
+
+
+
                                 </div>
                               </div>
                             </div>
@@ -481,62 +532,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $('#imagePreview').hide();
     });
   </script>
-  <!-- <script>
-    // Function to handle like/unlike toggling
-    function toggleLike(eventId) {
-      const userId = document.getElementById(`like-button-${eventId}`).getAttribute('data-user-id');
-      const likeButton = document.getElementById(`like-button-${eventId}`);
-      const likeCountSpan = document.getElementById(`like-count-${eventId}`);
-      const likeIcon = document.getElementById(`thumbs-up-icon-${eventId}`);
-      const likeText = document.getElementById(`like-text-${eventId}`);
-
-      // Prepare the data for the AJAX request
-      const data = new FormData();
-      data.append('event_id', eventId);
-      data.append('user_id', userId);
-
-      // Perform AJAX request to submit like/unlike
-      fetch('home.php', {
-          method: 'POST',
-          body: data
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            // Toggle the UI based on like/unlike
-            if (data.liked) {
-              // User has liked the event
-              likeIcon.classList.add('text-primary'); // Turn the icon color blue
-              likeText.textContent = 'Liked';
-              likeCountSpan.textContent = parseInt(likeCountSpan.textContent) + 1; // Increment the like count
-            } else {
-              // User has unliked the event
-              likeIcon.classList.remove('text-primary'); // Reset the icon color
-              likeText.textContent = 'Like';
-              likeCountSpan.textContent = parseInt(likeCountSpan.textContent) - 1; // Decrement the like count
-            }
-          } else {
-            console.error('Error: ' + data.message);
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
-    }
-
-    // Function to check if the user has already liked the event when the page loads
-    function checkAlreadyLiked(eventId, liked) {
-      const likeButton = document.getElementById(`like-button-${eventId}`);
-      const likeIcon = document.getElementById(`thumbs-up-icon-${eventId}`);
-      const likeText = document.getElementById(`like-text-${eventId}`);
-
-      // If the user has already liked the event, mark the button as liked
-      if (liked) {
-        likeIcon.classList.add('text-muted'); // Set icon to gray to indicate it's already liked
-        likeText.textContent = 'You Already Liked'; // Change text to reflect the state
-      }
-    }
-  </script> -->
   <script>
     function toggleLike(eventId) {
       const userId = document.getElementById(`like-button-${eventId}`).getAttribute('data-user-id');
@@ -544,41 +539,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       const likeIcon = document.getElementById(`thumbs-up-icon-${eventId}`);
       const likeText = document.getElementById(`like-text-${eventId}`);
       const likeCountSpan = document.getElementById(`like-count-${eventId}`);
+      const likedUsersSpan = document.getElementById(`liked-users-${eventId}`);
 
       // Prepare the data for the AJAX request
       const data = new FormData();
       data.append('event_id', eventId);
       data.append('user_id', userId);
 
-      // Perform AJAX request to submit like/unlike
       fetch('home.php', {
           method: 'POST',
           body: data
         })
         .then(response => response.json())
         .then(data => {
+          console.log('Response:', data); // Log the response to check liked_users
+
           if (data.success) {
+            const likedUsers = data.liked_users; // The list of users who liked
+            const likeCount = data.like_count;
+
             // Toggle the UI based on like/unlike
             if (data.liked) {
-              // User has liked the event
-              likeIcon.classList.add('text-primary'); // Turn the icon color blue
+              likeIcon.classList.add('text-primary');
               likeText.textContent = 'Liked';
-              likeCountSpan.textContent = data.like_count; // Update the like count
             } else {
-              // User has unliked the event
-              likeIcon.classList.remove('text-primary'); // Reset the icon color
+              likeIcon.classList.remove('text-primary');
               likeText.textContent = 'Like';
-              likeCountSpan.textContent = data.like_count; // Update the like count
             }
-          } else {
-            console.error('Error: ' + data.message);
+
+            likeCountSpan.textContent = likeCount; // Update like count
+            updateLikedUsers(eventId, likedUsers); // Update liked users
           }
         })
         .catch(error => {
           console.error('Error:', error);
         });
+
+      // Update the liked users text
+      function updateLikedUsers(eventId, likedUsers) {
+        const likedUsersSpan = document.getElementById(`liked-users-${eventId}`);
+        let displayText = '';
+
+        // Add the first 2 users to display
+        if (likedUsers.length > 0) {
+          displayText = likedUsers.slice(0, 2).join(', '); // Add first 2 names
+          if (likedUsers.length > 2) {
+            displayText += ' and ' + (likedUsers.length - 2) + ' others'; // Add "X others" if more than 2
+          }
+        }
+
+        likedUsersSpan.textContent = displayText;
+      }
     }
   </script>
+
+
 
 </body>
 
