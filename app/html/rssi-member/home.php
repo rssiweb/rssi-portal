@@ -282,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                   </div>
 
                                   <!-- Event Description -->
-                                  <p class="text-muted"><?= htmlspecialchars($event['event_description'], ENT_QUOTES, 'UTF-8') ?></p>
+                                  <p class="text-muted"><?= $event['event_description'] ?></p>
 
                                   <!-- Event Image (Only show if URL is valid) -->
                                   <?php if (!empty($event['event_image_url'])): ?>
