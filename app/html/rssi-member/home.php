@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       color: #007bff;
     }
 
-    .bi-hand-thumbs-up {
+    .pointer {
       cursor: pointer;
     }
 
@@ -270,10 +270,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                   // Check if the user has already liked the post
                                   $liked = hasUserLiked($event_id, $associatenumber, $con);
                                   ?>
-                                  <div class="d-flex align-items-center mt-3 text-muted" id="like-button-<?= $event['event_id'] ?>" data-user-id="<?= $associatenumber ?>" onclick="toggleLike(<?= $event['event_id'] ?>)">
-                                    <i id="thumbs-up-icon-<?= $event['event_id'] ?>" class="bi bi-hand-thumbs-up me-1 <?= $liked ? 'text-primary' : '' ?>"></i>
-                                    <span id="like-text-<?= $event['event_id'] ?>"><?= $liked ? 'Liked' : 'Like' ?></span>
-                                    <span class="ms-2" id="like-count-<?= $event['event_id'] ?>"><?= $likeCount ?></span>
+                                  <div class="d-flex align-items-center mt-3 text-muted" id="like-button-<?= $event['event_id'] ?>" data-user-id="<?= $associatenumber ?>">
+                                    <div class="pointer" onclick="toggleLike(<?= $event['event_id'] ?>)">
+                                      <i id="thumbs-up-icon-<?= $event['event_id'] ?>" class="bi bi-hand-thumbs-up me-1 <?= $liked ? 'text-primary' : '' ?>"></i>
+                                      <span id="like-text-<?= $event['event_id'] ?>"><?= $liked ? 'Liked' : 'Like' ?></span>
+                                      <span class="ms-2" id="like-count-<?= $event['event_id'] ?>"><?= $likeCount ?></span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
