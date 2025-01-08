@@ -33,6 +33,7 @@ include("../../util/email.php");
         @$out_scode = $_POST['out_scode'];
         @$out_flag = $_POST['is_users'] ?? 0;
         @$uploadedFile = $_FILES['certificate_url'];
+        $pdf_certificate = isset($_POST['pdf_certificate']) ? true : null;
 
         @$now = date('Y-m-d H:i:s');
 
@@ -55,7 +56,7 @@ include("../../util/email.php");
                 }
                 $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
             }
-            $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby,awarded_to_name,out_phone,out_email,out_scode,out_flag) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$doclink','$issuedby','$awarded_to_name','$out_phone','$out_email','$out_scode','$out_flag')";
+            $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby,awarded_to_name,out_phone,out_email,out_scode,out_flag,pdf_certificate) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$doclink','$issuedby','$awarded_to_name','$out_phone','$out_email','$out_scode','$out_flag','$pdf_certificate')";
             $result = pg_query($con, $certificate);
             $cmdtuples = pg_affected_rows($result);
 
@@ -333,8 +334,8 @@ include("../../util/email.php");
                                             <small id="passwordHelpBlock" class="form-text text-muted">Badge name*</small>
                                         </div>
                                         <div class="input-help">
-                                            <textarea type="text" name="comment" class="form-control" placeholder="Remarks" value=""></textarea>
-                                            <small id="passwordHelpBlock" class="form-text text-muted">Remarks</small>
+                                            <textarea type="text" name="comment" id="comment" class="form-control" placeholder="Remarks" maxlength="500" oninput="updateCharacterCount()"></textarea>
+                                            <small id="charCount" class="form-text text-muted">0/500 characters used</small>
                                         </div>
                                         <div class="input-help">
                                             <input type="number" name="gems" class="form-control" placeholder="Gems" min="1">
@@ -348,9 +349,13 @@ include("../../util/email.php");
                                             <i class="bi bi-plus-lg"></i>&nbsp;&nbsp;Add
                                         </button>
                                     </div>
-                                    <div id="filter-checkss">
-                                        <input type="checkbox" name="is_users" id="is_users" value="1" <?php if (isset($_GET['is_users'])) echo "checked='checked'"; ?> />
-                                        <label for="is_users" style="font-weight: 400;">Non-registered candidate</label>
+                                    <div class="form-check" id="filter-checkss">
+                                        <input type="checkbox" name="is_users" id="is_users" class="form-check-input" value="1" <?php if (isset($_GET['is_users'])) echo "checked='checked'"; ?> />
+                                        <label for="is_users" class="form-check-label">Non-registered candidate</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" name="pdf_certificate" id="pdf_certificate" class="form-check-input" value="true">
+                                        <label for="pdf_certificate" class="form-check-label">Include PDF Certificate</label>
                                     </div>
                                 </form>
 
@@ -562,11 +567,11 @@ include("../../util/email.php");
 
                                     <?php echo '<td>' . $array['issuedby'] . '</td>' ?>
 
-                                    <?php if ($array['certificate_url'] == null) { ?>
+                                    <?php if ($array['certificate_url'] == null && $array['pdf_certificate'] == true) { ?>
+                                        <?php echo '<td><a href="pdf_certificate_of_appreciation.php?certificate_no=' . $array['certificate_no'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
+                                    <?php } elseif ($array['certificate_url'] == null) { ?>
                                         <?php echo '<td></td>' ?>
-
                                     <?php } else { ?>
-
                                         <?php echo '<td><a href="' . $array['certificate_url'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>
                                     <?php } ?>
 
@@ -693,7 +698,16 @@ include("../../util/email.php");
             }
         }
     </script>
+    <script>
+        $(document).ready(function() {
 
+            // Character count update
+            $('#comment').on('input', function() {
+                const charCount = $('#charCount');
+                charCount.text(`${this.value.length}/500 characters used`);
+            });
+        });
+    </script>
 </body>
 
 </html>
