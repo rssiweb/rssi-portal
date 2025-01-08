@@ -21,7 +21,8 @@ $query = "
     ORDER BY c.issuedon DESC
     LIMIT 3";
 $result = pg_query($con, $query);
-
+?>
+<?php
 // Query for events
 $query_event = "
     SELECT e.event_name, e.event_id, e.event_description, e.event_date, e.event_location, e.event_image_url, 
@@ -33,8 +34,7 @@ $query_event = "
     LIMIT 3";
 $result_event = pg_query($con, $query_event);
 
-// Check if both queries are successful
-if (!$result || !$result_event) {
+if (!$result_event) {
   echo "<script>alert('Failed to fetch certificates or events');</script>";
   exit;
 }
@@ -51,7 +51,6 @@ function getLikeCount($event_id, $con)
 
 function getLikedUsers($event_id, $con)
 {
-  // Fetch user names of people who liked the event
   $query = "
     SELECT m.fullname
     FROM likes l
@@ -65,7 +64,6 @@ function getLikedUsers($event_id, $con)
     $likedUsers[] = $row['fullname'];
   }
 
-  // Shuffle the array to randomize the order of liked users
   shuffle($likedUsers);
 
   return $likedUsers;
@@ -83,11 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $user_id = $_POST['user_id'];
 
   if (hasUserLiked($event_id, $user_id, $con)) {
-    // User already liked, so remove the like (unlike)
     $query = "DELETE FROM likes WHERE event_id = $1 AND user_id = $2";
     pg_query_params($con, $query, array($event_id, $user_id));
 
-    // Get the updated list of liked users after unliking
     $likedUsers = getLikedUsers($event_id, $con);
 
     echo json_encode([
@@ -97,11 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       'liked_users' => $likedUsers
     ]);
   } else {
-    // User has not liked, so add the like
     $query = "INSERT INTO likes (event_id, user_id) VALUES ($1, $2)";
     pg_query_params($con, $query, array($event_id, $user_id));
 
-    // Get the updated list of liked users after liking
     $likedUsers = getLikedUsers($event_id, $con);
 
     echo json_encode([
@@ -261,10 +255,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <?php if ($result_event && pg_num_rows($result_event) > 0): ?>
                           <?php while ($event = pg_fetch_assoc($result_event)): ?>
-                            <div class="mb-4">
+                            <div class="mb-4 event-container" data-event-id="<?= $event['event_id'] ?>">
                               <div class="card shadow-sm mb-3">
                                 <div class="card-body">
-                                  <!-- Profile Header -->
                                   <div class="d-flex align-items-center mb-3">
                                     <div class="profile-photo" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; margin-right: 10px;">
                                       <?php if (!empty($event['photo'])): ?>
@@ -281,10 +274,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                   </div>
 
-                                  <!-- Event Description -->
                                   <p class="text-muted"><?= $event['event_description'] ?></p>
 
-                                  <!-- Event Image (Only show if URL is valid) -->
                                   <?php if (!empty($event['event_image_url'])): ?>
                                     <?php
                                     $pattern = '/\/d\/([a-zA-Z0-9_-]+)/';
@@ -302,28 +293,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                   $event_id = $event['event_id'];
                                   $likeCount = getLikeCount($event_id, $con);
                                   $liked = hasUserLiked($event_id, $associatenumber, $con);
-
-                                  // Get the list of liked users
                                   $likedUsers = getLikedUsers($event_id, $con);
-
-                                  // Format the display text for the liked users
                                   $displayText = '';
                                   if (count($likedUsers) > 0) {
-                                    $displayText = implode(', ', array_slice($likedUsers, 0, 2)); // Add first 2 names
+                                    $displayText = implode(', ', array_slice($likedUsers, 0, 2));
                                     if (count($likedUsers) > 2) {
-                                      $displayText .= ' and ' . (count($likedUsers) - 2) . ' others'; // Add "X others" if more than 2
+                                      $displayText .= ' and ' . (count($likedUsers) - 2) . ' others';
                                     }
                                   }
                                   ?>
 
-                                  <!-- Like Button -->
                                   <div class="d-flex align-items-center mt-3 text-muted" id="like-button-<?= $event['event_id'] ?>" data-user-id="<?= $associatenumber ?>">
                                     <div class="pointer" onclick="toggleLike(<?= $event['event_id'] ?>)">
                                       <i id="thumbs-up-icon-<?= $event['event_id'] ?>" class="bi bi-hand-thumbs-up me-1 <?= $liked ? 'text-primary' : '' ?>"></i>
                                       <span id="like-text-<?= $event['event_id'] ?>"><?= $liked ? 'Liked' : 'Like' ?></span>
                                       <span class="ms-2" id="like-count-<?= $event['event_id'] ?>"><?= $likeCount ?></span>
                                     </div>
-                                    <div class="ms-2" id="liked-users-<?= $event['event_id'] ?>"><?= $displayText ?></div> <!-- Liked Users -->
+                                    <div class="ms-2" id="liked-users-<?= $event['event_id'] ?>"><?= $displayText ?></div>
                                   </div>
                                 </div>
                               </div>
@@ -332,8 +318,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php else: ?>
                           <p>No events available to display.</p>
                         <?php endif; ?>
+                        <div id="load_more"></div>
+                        <div class="d-flex justify-content-center mt-4">
+                          <button id="loadMoreBtn" class="btn btn-primary">Load More</button>
+                        </div>
                       </div>
                     </div>
+
                   </div>
 
                   <!-- Right Sidebar (Poll, Wall of Fame, etc.) -->
@@ -555,7 +546,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       const likeCountSpan = document.getElementById(`like-count-${eventId}`);
       const likedUsersSpan = document.getElementById(`liked-users-${eventId}`);
 
-      // Prepare the data for the AJAX request
       const data = new FormData();
       data.append('event_id', eventId);
       data.append('user_id', userId);
@@ -566,13 +556,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })
         .then(response => response.json())
         .then(data => {
-          console.log('Response:', data); // Log the response to check liked_users
-
           if (data.success) {
-            const likedUsers = data.liked_users; // The list of users who liked
+            const likedUsers = data.liked_users;
             const likeCount = data.like_count;
 
-            // Toggle the UI based on like/unlike
             if (data.liked) {
               likeIcon.classList.add('text-primary');
               likeText.textContent = 'Liked';
@@ -581,34 +568,119 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               likeText.textContent = 'Like';
             }
 
-            likeCountSpan.textContent = likeCount; // Update like count
-            updateLikedUsers(eventId, likedUsers); // Update liked users
+            likeCountSpan.textContent = likeCount;
+            updateLikedUsers(eventId, likedUsers);
           }
         })
         .catch(error => {
           console.error('Error:', error);
         });
 
-      // Update the liked users text
       function updateLikedUsers(eventId, likedUsers) {
         const likedUsersSpan = document.getElementById(`liked-users-${eventId}`);
         let displayText = '';
 
-        // Add the first 2 users to display
         if (likedUsers.length > 0) {
-          displayText = likedUsers.slice(0, 2).join(', '); // Add first 2 names
+          displayText = likedUsers.slice(0, 2).join(', ');
           if (likedUsers.length > 2) {
-            displayText += ' and ' + (likedUsers.length - 2) + ' others'; // Add "X others" if more than 2
+            displayText += ' and ' + (likedUsers.length - 2) + ' others';
           }
         }
 
         likedUsersSpan.textContent = displayText;
       }
     }
+
+    let offset = 4; // Start after the initial batch of 3
+    const limit = 3; // Number of events per batch
+
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const eventsContainer = document.getElementById('load_more');
+
+    loadMoreBtn.addEventListener('click', function() {
+      // Disable the button and show "Loading..."
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = 'Loading...';
+
+      fetch(`load_more.php?offset=${offset}&limit=${limit}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success && data.events.length > 0) {
+            // Append new events to the container
+            data.events.forEach((event) => {
+              const likedUsersText = event.liked_users.length > 0 ?
+                `${event.liked_users.slice(0, 2).join(', ')}${
+                              event.liked_users.length > 2 ? ` and ${event.liked_users.length - 2} others` : ''
+                          }` :
+                '';
+
+              const eventHtml = `
+                        <div class="mb-4 event-container" data-event-id="${event.event_id}">
+                            <div class="card shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="profile-photo" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; margin-right: 10px;">
+                                            <img src="${event.photo}" alt="Profile Photo" class="img-fluid">
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">${event.fullname}</h6>
+                                            <small class="text-muted">${new Date(event.created_at).toLocaleString()}</small>
+                                        </div>
+                                    </div>
+
+                                    <p class="text-muted">${event.event_description}</p>
+
+                                    ${
+                                        event.event_image_url
+                                            ? (() => {
+                                                  const pattern = /\/d\/([a-zA-Z0-9_-]+)/;
+                                                  const match = event.event_image_url.match(pattern);
+                                                  if (match) {
+                                                      const photoID = match[1];
+                                                      return `<iframe src="https://drive.google.com/file/d/${photoID}/preview" class="responsive-iframe img-fluid rounded mb-3" frameborder="0" allow="autoplay" sandbox="allow-scripts allow-same-origin"></iframe>`;
+                                                  }
+                                                  return '<p>Invalid Google Drive photo URL.</p>';
+                                              })()
+                                            : ''
+                                    }
+
+                                    <div class="d-flex align-items-center mt-3 text-muted" id="like-button-${event.event_id}" data-user-id="<?php echo $associatenumber; ?>">
+                                        <div class="pointer" onclick="toggleLike(${event.event_id})">
+                                            <i id="thumbs-up-icon-${event.event_id}" class="bi bi-hand-thumbs-up me-1 ${
+                        event.liked ? 'text-primary' : ''
+                    }"></i>
+                                            <span id="like-text-${event.event_id}">${event.liked ? 'Liked' : 'Like'}</span>
+                                            <span class="ms-2" id="like-count-${event.event_id}">${event.like_count}</span>
+                                        </div>
+                                        <div class="ms-2" id="liked-users-${event.event_id}">${likedUsersText}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+              eventsContainer.insertAdjacentHTML('beforeend', eventHtml);
+            });
+
+            // Increment the offset to load the next batch
+            offset += data.events.length;
+
+            // Re-enable the button
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.textContent = 'Load More';
+          } else {
+            // No more events available, replace button with a message
+            loadMoreBtn.remove();
+            const noMoreMessage = `<p class="text-muted text-center mt-4">That's all we have for you now.</p>`;
+            eventsContainer.insertAdjacentHTML('beforeend', noMoreMessage);
+          }
+        })
+        .catch((error) => {
+          console.error('Error loading more events:', error);
+          // Reset the button on error
+          loadMoreBtn.disabled = false;
+          loadMoreBtn.textContent = 'Load More';
+        });
+    });
   </script>
-
-
-
 </body>
 
 </html>
