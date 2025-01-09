@@ -87,7 +87,7 @@ foreach ($data as $associateNumber => &$entries) {
 
     if ($lastEntryIndex >= 0) {
         $lastEntry = &$entries[$lastEntryIndex];
-        if ($lastEntry['filterstatus'] === 'Inactive') {
+        if (isset($lastEntry['effectivedate'])) {
             // Use effective date for end_date
             $lastEntry['end_date'] = $lastEntry['effectivedate'];
         } else {
