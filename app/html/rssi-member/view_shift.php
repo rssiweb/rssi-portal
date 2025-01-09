@@ -221,7 +221,7 @@ pg_close($con); // Close the connection
                                                 <tr>
                                                     <td><?php echo htmlspecialchars($row['fullname']); ?> (<?php echo htmlspecialchars($row['associate_number']); ?>)</td>
                                                     <td><?php echo date("d/m/Y", strtotime($row['start_date'])); ?></td>
-                                                    <td><?php echo date("d/m/Y", strtotime($row['end_date'])); ?></td>
+                                                    <td><?php echo (date("d/m/Y", strtotime($row['end_date'])) === date("d/m/Y")) ? null : date("d/m/Y", strtotime($row['end_date'])); ?></td>
                                                     <td><?php echo htmlspecialchars($row['reporting_time']); ?></td>
                                                     <td><?php echo htmlspecialchars($row['exit_time']); ?></td>
                                                     <td><?php echo date("d/m/Y H:i:s", strtotime($row['timestamp'])); ?></td>

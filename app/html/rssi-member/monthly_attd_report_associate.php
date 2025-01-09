@@ -299,8 +299,8 @@ attendance_data AS (
         AND d.attendance_date BETWEEN ds.start_date AND ds.end_date
     WHERE
         (
-            (m.filterstatus = 'Active')
-            OR DATE_TRUNC('month', m.effectivedate)::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+            (m.filterstatus = 'Active') OR
+            (m.filterstatus = 'Inactive' AND DATE_TRUNC('month', m.effectivedate)::DATE >= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE)
         )
         AND DATE_TRUNC('month', m.doj)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
         $idCondition
