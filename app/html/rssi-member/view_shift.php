@@ -12,52 +12,89 @@ if (!isLoggedIn("aid")) {
 validation();
 // Fetch all records from the associate_schedule table
 $query = "
-    SELECT s.*, m.fullname 
+    SELECT s.*, m.fullname, m.filterstatus, m.effectivedate
     FROM associate_schedule s
     INNER JOIN rssimyaccount_members m ON s.associate_number = m.associatenumber
-    ORDER BY s.associate_number, s.start_date, s.end_date, s.timestamp DESC
+    ORDER BY s.associate_number, s.start_date, s.timestamp DESC
 ";
+
 $result = pg_query($con, $query);
-
-$data = [];
-while ($row = pg_fetch_assoc($result)) {
-    $associateNumber = $row['associate_number'];
-    $reportingTime = $row['reporting_time'];
-    $exitTime = $row['exit_time'];
-
-    if (!isset($data[$associateNumber])) {
-        $data[$associateNumber] = [];
-    }
-
-    $merged = false;
-
-    foreach ($data[$associateNumber] as &$entry) {
-        // Check if reporting_time and exit_time match
-        if (
-            $entry['reporting_time'] === $reportingTime &&
-            $entry['exit_time'] === $exitTime
-        ) {
-            // Merge rows: update start_date, end_date, timestamp, and submittedby
-            $entry['start_date'] = min($entry['start_date'], $row['start_date']);
-            $entry['end_date'] = max($entry['end_date'], $row['end_date']);
-            $entry['timestamp'] = max($entry['timestamp'], $row['timestamp']);
-            $entry['submittedby'] = $row['submittedby'];
-            $merged = true;
-            break;
-        }
-    }
-
-    if (!$merged) {
-        // Add as a new entry
-        $data[$associateNumber][] = $row;
-    }
-}
 
 if (!$result) {
     die("Error executing query: " . pg_last_error($con));
 }
 
-pg_close($con); // Close the connection when done
+$data = [];
+$currentDate = date('Y-m-d');
+
+while ($row = pg_fetch_assoc($result)) {
+    $associateNumber = $row['associate_number'];
+    $startDate = $row['start_date'];
+    $reportingTime = $row['reporting_time'];
+    $exitTime = $row['exit_time'];
+    $filterStatus = $row['filterstatus'];
+    $effectiveDate = $row['effectivedate'];
+
+    if (!isset($data[$associateNumber])) {
+        $data[$associateNumber] = [];
+    }
+
+    $entry = [
+        'associate_number' => $associateNumber,
+        'fullname' => $row['fullname'],
+        'start_date' => $startDate,
+        'end_date' => null, // Will be set dynamically
+        'reporting_time' => $reportingTime,
+        'exit_time' => $exitTime,
+        'timestamp' => $row['timestamp'],
+        'submittedby' => $row['submittedby'],
+        'filterstatus' => $filterStatus,
+        'effectivedate' => $effectiveDate,
+    ];
+
+    // Get the previous entry for comparison
+    $previousEntryIndex = count($data[$associateNumber]) - 1;
+    if ($previousEntryIndex >= 0) {
+        $previousEntry = &$data[$associateNumber][$previousEntryIndex];
+
+        // Check if the timing changes
+        if (
+            $previousEntry['reporting_time'] === $reportingTime &&
+            $previousEntry['exit_time'] === $exitTime
+        ) {
+            // Extend the previous entry's end_date
+            $previousEntry['end_date'] = $startDate;
+            continue;
+        } else {
+            // Finalize the previous entry's end_date as the day before the new start_date
+            $previousEntry['end_date'] = date('Y-m-d', strtotime("$startDate -1 day"));
+        }
+    }
+
+    // Add the new entry
+    $data[$associateNumber][] = $entry;
+}
+
+// Finalize end_date for the last entry in each group
+foreach ($data as $associateNumber => &$entries) {
+    $lastEntryIndex = count($entries) - 1;
+
+    if ($lastEntryIndex >= 0) {
+        $lastEntry = &$entries[$lastEntryIndex];
+        if ($lastEntry['filterstatus'] === 'Inactive') {
+            // Use effective date for end_date
+            $lastEntry['end_date'] = $lastEntry['effectivedate'];
+        } else {
+            // Extend to current date
+            $lastEntry['end_date'] = $currentDate;
+        }
+    }
+}
+
+pg_close($con); // Close the connection
+
+// Processed data with dynamic end_date is now available in $data
+
 ?>
 
 <!doctype html>

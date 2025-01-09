@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Retrieve and sanitize form data
     $associate_number = $_POST['associate_number'];
     $start_date = $_POST['start_date'];
-    $end_date = $_POST['end_date'];
+    // $end_date = $_POST['end_date'];
     $reporting_time = $_POST['reporting_time'];
     $exit_time = $_POST['exit_time_s'];
     $timestamp = date('Y-m-d H:i:s');
@@ -23,15 +23,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $submittedBy = $user_check; // Use the logged-in user's identifier for submission tracking
 
     // Prepare SQL query
-    $query = "INSERT INTO associate_schedule (id, associate_number, start_date, end_date, reporting_time, exit_time, timestamp, submittedby)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)";
+    $query = "INSERT INTO associate_schedule (id, associate_number, start_date, reporting_time, exit_time, timestamp, submittedby)
+              VALUES ($1, $2, $3, $4, $5, $6, $7)";
 
     // Execute the query
     $result = pg_query_params($con, $query, [
         $id,
         $associate_number,
         $start_date,
-        $end_date,
+        // $end_date,
         $reporting_time,
         $exit_time,
         $timestamp,
@@ -148,12 +148,12 @@ pg_close($con);
                                     </div>
 
                                     <!-- End Date -->
-                                    <div class="row mb-3">
+                                    <!-- <div class="row mb-3">
                                         <label for="end_date" class="col-sm-3 col-form-label">End Date</label>
                                         <div class="col-sm-9">
-                                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                                            <input type="date" class="form-control" id="end_date" name="end_date">
                                         </div>
-                                    </div>
+                                    </div> -->
 
                                     <!-- Reporting Time -->
                                     <div class="row mb-3">

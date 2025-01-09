@@ -61,6 +61,23 @@ WITH date_range AS (
         '1 day'::interval
     ) AS attendance_date
 ),
+DynamicSchedule AS (
+    SELECT
+        s.associate_number,
+        s.start_date,
+        s.reporting_time,
+        s.exit_time,
+        m.filterstatus,
+        m.effectivedate,
+        COALESCE(
+            LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
+            CURRENT_DATE
+        ) AS end_date
+    FROM associate_schedule s
+    INNER JOIN rssimyaccount_members m
+        ON s.associate_number = m.associatenumber
+    ORDER BY s.associate_number, s.start_date, s.timestamp DESC
+),
 PunchInOut AS (
     SELECT
         a.user_id,
@@ -122,7 +139,8 @@ attendance_data AS (
             ELSE 'A'
         END AS attendance_status,
 
-        s.reporting_time,
+        ds.reporting_time,
+        ds.exit_time,
 
         -- Updated Late status logic based on the overridden punch_in
         CASE
@@ -204,7 +222,7 @@ attendance_data AS (
                             AND e.sub_exception_type = 'missed-entry'
                             AND d.attendance_date = DATE(e.start_date_time)
                             LIMIT 1
-                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
+                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
                     -- If the overridden punch_in is within 10 mins of reporting time, it should be 'W'
                     WHEN EXTRACT(EPOCH FROM COALESCE(
                         (
@@ -216,7 +234,7 @@ attendance_data AS (
                             AND e.sub_exception_type = 'missed-entry'
                             AND d.attendance_date = DATE(e.start_date_time)
                             LIMIT 1
-                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM s.reporting_time)
+                        ), p.punch_in)::time) > EXTRACT(EPOCH FROM ds.reporting_time)
                         AND EXTRACT(EPOCH FROM COALESCE(
                             (
                                 SELECT e.start_date_time
@@ -227,16 +245,16 @@ attendance_data AS (
                                 AND e.sub_exception_type = 'missed-entry'
                                 AND d.attendance_date = DATE(e.start_date_time)
                                 LIMIT 1
-                            ), p.punch_in)::time) <= EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'W'
+                            ), p.punch_in)::time) <= EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'W'
                     -- If it's on time (or earlier), status should be NULL (not late)
                     ELSE NULL
                 END
             -- For regular punch-ins, apply standard lateness logic
             WHEN p.punch_in IS NOT NULL THEN
                 CASE
-                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time + INTERVAL '1 minute')
-                        AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM s.reporting_time + INTERVAL '1 minute') + 600 THEN 'W'
-                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM s.reporting_time) + 600 THEN 'L'
+                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute')
+                        AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute') + 600 THEN 'W'
+                    WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
                     ELSE NULL
                 END
             ELSE NULL
@@ -276,9 +294,9 @@ attendance_data AS (
         PunchInOut p
         ON m.associatenumber = p.user_id AND p.punch_date = DATE_TRUNC('day', d.attendance_date)
     LEFT JOIN
-        associate_schedule s
-        ON m.associatenumber = s.associate_number
-        AND d.attendance_date BETWEEN s.start_date AND s.end_date
+        DynamicSchedule ds
+        ON m.associatenumber = ds.associate_number
+        AND d.attendance_date BETWEEN ds.start_date AND ds.end_date
     WHERE
         (
             (m.filterstatus = 'Active')
