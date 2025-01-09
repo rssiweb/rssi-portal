@@ -10,11 +10,19 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-// Fetch all records from the associate_schedule table
+
+$currentDate = date('Y-m-d');
+
+// Get filters from GET data
+$filterStatus = isset($_GET['filter_status']) ? $_GET['filter_status'] : ['active'];
+$associateNumber = isset($_GET['associate_number']) ? trim($_GET['associate_number']) : null;
+
+// Base query to fetch data
 $query = "
     SELECT s.*, m.fullname, m.filterstatus, m.effectivedate
     FROM associate_schedule s
     INNER JOIN rssimyaccount_members m ON s.associate_number = m.associatenumber
+    WHERE (COALESCE('$associateNumber', '') = '' OR s.associate_number = '$associateNumber')
     ORDER BY s.associate_number, s.start_date, s.timestamp DESC
 ";
 
@@ -25,14 +33,12 @@ if (!$result) {
 }
 
 $data = [];
-$currentDate = date('Y-m-d');
-
 while ($row = pg_fetch_assoc($result)) {
     $associateNumber = $row['associate_number'];
     $startDate = $row['start_date'];
     $reportingTime = $row['reporting_time'];
     $exitTime = $row['exit_time'];
-    $filterStatus = $row['filterstatus'];
+    $filterStatusDB = $row['filterstatus'];
     $effectiveDate = $row['effectivedate'];
 
     if (!isset($data[$associateNumber])) {
@@ -48,7 +54,7 @@ while ($row = pg_fetch_assoc($result)) {
         'exit_time' => $exitTime,
         'timestamp' => $row['timestamp'],
         'submittedby' => $row['submittedby'],
-        'filterstatus' => $filterStatus,
+        'filterstatus' => $filterStatusDB,
         'effectivedate' => $effectiveDate,
     ];
 
@@ -91,10 +97,19 @@ foreach ($data as $associateNumber => &$entries) {
     }
 }
 
+// Filter the results based on selected statuses
+if (!empty($filterStatus)) {
+    foreach ($data as $associateNumber => &$entries) {
+        $entries = array_filter($entries, function ($entry) use ($filterStatus, $currentDate) {
+            $status = ($entry['end_date'] === $currentDate) ? 'active' : 'history';
+            return in_array($status, $filterStatus);
+        });
+    }
+    // Remove associates with no matching entries
+    $data = array_filter($data);
+}
+
 pg_close($con); // Close the connection
-
-// Processed data with dynamic end_date is now available in $data
-
 ?>
 
 <!doctype html>
@@ -160,6 +175,33 @@ pg_close($con); // Close the connection
 
                         <div class="card-body">
                             <br>
+                            <div class="container">
+                                <form method="GET" action="" class="filter-form d-flex flex-wrap" style="gap: 10px;">
+                                    <!-- Associate Number Input -->
+                                    <div class="form-group">
+                                        <!-- <label for="associate_number" class="form-label">Associate Number</label> -->
+                                        <input type="text" class="form-control" id="associate_number" name="associate_number"
+                                            placeholder="Enter Associate Number" value="<?php echo htmlspecialchars($_GET['associate_number'] ?? ''); ?>">
+                                    </div>
+
+                                    <!-- Status Multiselect Dropdown -->
+                                    <div class="form-group">
+                                        <!-- <label for="filter_status" class="form-label">Status</label> -->
+                                        <select class="form-select" style="min-width: 200px;" id="filter_status" name="filter_status[]" multiple>
+                                            <option value="active" <?php echo in_array('active', $_GET['filter_status'] ?? ['active']) ? 'selected' : ''; ?>>Active</option>
+                                            <option value="history" <?php echo in_array('history', $_GET['filter_status'] ?? []) ? 'selected' : ''; ?>>History</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-primary btn-sm" style="outline: none;">
+                                            <i class="bi bi-search"></i>&nbsp;Filter
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
                             <div class="table-responsive">
                                 <table id="scheduleTable" class="table">
                                     <thead>
