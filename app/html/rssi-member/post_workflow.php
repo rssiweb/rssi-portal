@@ -13,7 +13,15 @@ if (!isLoggedIn("aid")) {
 }
 
 validation();
-// SQL query with placeholders
+// Adjust dates for same-day filtering
+if (!empty($_GET['start_date']) && !empty($_GET['end_date']) && $_GET['start_date'] === $_GET['end_date']) {
+    $start_date = $_GET['start_date'] . " 00:00:00";
+    $end_date = $_GET['end_date'] . " 23:59:59";
+} else {
+    $start_date = !empty($_GET['start_date']) ? $_GET['start_date'] : NULL;
+    $end_date = !empty($_GET['end_date']) ? $_GET['end_date'] : NULL;
+}
+
 // SQL query with placeholders
 $query = "
     SELECT 
@@ -32,10 +40,6 @@ $query = "
     )
     ORDER BY events.created_at DESC;
 ";
-
-// Extract filter values from the GET request
-$start_date = !empty($_GET['start_date']) ? $_GET['start_date'] : NULL;
-$end_date = !empty($_GET['end_date']) ? $_GET['end_date'] : NULL;
 
 // Prepare statement
 $prep_result = pg_prepare($con, "filter_events", $query);
@@ -98,10 +102,10 @@ if (!$result) {
                             <br>
                             <form method="GET" action="#">
                                 <label for="start_date">Start Date:</label>
-                                <input type="date" id="start_date" name="start_date">
+                                <input type="date" id="start_date" name="start_date" value="<?php echo isset($_GET['start_date']) ? htmlspecialchars($_GET['start_date']) : ''; ?>">
 
                                 <label for="end_date">End Date:</label>
-                                <input type="date" id="end_date" name="end_date">
+                                <input type="date" id="end_date" name="end_date" value="<?php echo isset($_GET['end_date']) ? htmlspecialchars($_GET['end_date']) : ''; ?>">
 
                                 <button type="submit">Filter</button>
                             </form>

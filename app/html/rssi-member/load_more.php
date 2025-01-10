@@ -35,6 +35,7 @@ $query = "
         ) AS liked_users
     FROM events e
     JOIN rssimyaccount_members m ON e.created_by = m.associatenumber
+    WHERE review_status='Approved'
     ORDER BY e.created_at DESC
     OFFSET $2 LIMIT $3
 ";

@@ -29,7 +29,7 @@ $query_event = "
            e.created_at, m.fullname, m.photo 
     FROM events e
     JOIN rssimyaccount_members m ON e.created_by = m.associatenumber
-    WHERE e.review_status = 'approved'
+    WHERE e.review_status = 'Approved'
     ORDER BY e.created_at DESC
     LIMIT 3";
 $result_event = pg_query($con, $query_event);
@@ -315,13 +315,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               </div>
                             </div>
                           <?php endwhile; ?>
+                          <div id="load_more"></div>
+                          <div class="d-flex justify-content-center mt-4">
+                            <button id="loadMoreBtn" class="btn btn-primary">Load More</button>
+                          </div>
                         <?php else: ?>
                           <p>No events available to display.</p>
                         <?php endif; ?>
-                        <div id="load_more"></div>
-                        <div class="d-flex justify-content-center mt-4">
-                          <button id="loadMoreBtn" class="btn btn-primary">Load More</button>
-                        </div>
                       </div>
                     </div>
 
