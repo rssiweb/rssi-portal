@@ -70,9 +70,12 @@ DynamicSchedule AS (
         m.filterstatus,
         m.effectivedate,
         COALESCE(
-            LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
-            CURRENT_DATE
-        ) AS end_date
+    LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
+    CASE
+        WHEN m.effectivedate IS NOT NULL THEN m.effectivedate
+        ELSE CURRENT_DATE
+    END
+) AS end_date
     FROM associate_schedule s
     INNER JOIN rssimyaccount_members m
         ON s.associate_number = m.associatenumber
@@ -252,6 +255,7 @@ attendance_data AS (
             -- For regular punch-ins, apply standard lateness logic
             WHEN p.punch_in IS NOT NULL THEN
                 CASE
+                    WHEN ds.reporting_time IS NULL THEN 'NA'
                     WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute')
                         AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute') + 600 THEN 'W'
                     WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
@@ -275,17 +279,23 @@ attendance_data AS (
 
         -- Status 'Exc.' for overridden punch-in time from exception
         CASE
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND e.sub_exception_type = 'missed-entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-            ) THEN 'Exc.'
-            ELSE NULL
-        END AS exception_status
+    -- Show 'Exc.' if approved exception exists
+    WHEN EXISTS (
+        SELECT 1
+        FROM exception_requests e
+        WHERE e.submitted_by = m.associatenumber
+        AND e.status = 'Approved'
+        AND e.exception_type = 'entry'
+        AND e.sub_exception_type = 'missed-entry'
+        AND d.attendance_date = DATE(e.start_date_time)
+    ) THEN 
+        -- Check if ds.reporting_time is NULL, then add 'NA'
+        CASE 
+            WHEN ds.reporting_time IS NULL THEN 'Exc.NA'
+            ELSE 'Exc.'
+        END
+    ELSE NULL
+END AS exception_status
     FROM
         date_range d
     CROSS JOIN
@@ -453,24 +463,25 @@ pg_close($con);
 
                         <div class="card-body">
                             <br>
-                            <div
-                                class="d-flex justify-content-between align-items-center position-absolute top-5 end-0 p-3">
+                            <div class="d-flex justify-content-between align-items-center position-absolute top-5 end-0 p-3">
+                                <!-- Export Button -->
                                 <form method="POST" action="export_function.php">
                                     <input type="hidden" value="monthly_attd_associate" name="export_type" />
                                     <input type="hidden" value="<?php echo $id ?>" name="id" />
                                     <input type="hidden" value="<?php echo $month ?>" name="month" />
-                                    <input type="hidden" value="<?php echo $associatenumber ?>"
-                                        name="associateNumber" />
+                                    <input type="hidden" value="<?php echo $associatenumber ?>" name="associateNumber" />
                                     <input type="hidden" value="<?php echo $role ?>" name="role" />
-                                    <input type="hidden" value="<?php echo implode(',', $selectedTeachers) ?>"
-                                        name="selectedTeachers" />
+                                    <input type="hidden" value="<?php echo implode(',', $selectedTeachers) ?>" name="selectedTeachers" />
 
                                     <button type="submit" id="export" name="export" style="display: -webkit-inline-box; width:fit-content; word-wrap:break-word;outline: none;background: none;
-                        padding: 0px;
-                        border: none;" title="Export CSV">
+            padding: 0px;
+            border: none;" title="Export CSV">
                                         <i class="bi bi-file-earmark-excel" style="font-size:large;"></i>
                                     </button>
                                 </form>
+                                |&nbsp;
+                                <!-- Modal Trigger Link -->
+                                <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#statusModal">View Explanation</a>
                             </div>
                             <br>
                             <div class="row">
@@ -642,6 +653,143 @@ pg_close($con);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+
+    <!-- Modal -->
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="statusModalLabel">Detailed Explanation with Examples</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="accordion" id="statusAccordion">
+
+                        <!-- L (Late) -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingL">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseL" aria-expanded="true" aria-controls="collapseL">
+                                    L (Late)
+                                </button>
+                            </h2>
+                            <div id="collapseL" class="accordion-collapse collapse show" aria-labelledby="headingL" data-bs-parent="#statusAccordion">
+                                <div class="accordion-body">
+                                    <p>
+                                        Definition:
+                                    <ol>
+                                        <li>The associate's punch-in time exceeds the reporting time by more than 10 minutes.</li>
+                                        <li>There is no approved exception request for the entry on that day.</li>
+                                    </ol>
+                                    </p>
+                                    <p>Example:</p>
+                                    <ul>
+                                        <li>Reporting time: 10:30 AM</li>
+                                        <li>Punch-in time: 10:50 AM (20 minutes late).</li>
+                                        <li>No exception approved: Status is L.</li>
+                                    </ul>
+                                    <p>Result: <strong>L</strong> (Late)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- W (On Time) -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingW">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseW" aria-expanded="false" aria-controls="collapseW">
+                                    W (Grace entry)
+                                </button>
+                            </h2>
+                            <div id="collapseW" class="accordion-collapse collapse" aria-labelledby="headingW" data-bs-parent="#statusAccordion">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li>The associate's punch-in time is recorded within 10 minutes of the reporting time.</li>
+                                        <li>There is no approved exception request for the entry on that day.</li>
+                                    </ol>
+                                    </p>
+                                    <p>Example:</p>
+                                    <ul>
+                                        <li>Reporting time: 10:30 AM</li>
+                                        <li>Punch-in time: 10:37 AM (7 minutes late, within 10-minute tolerance).</li>
+                                        <li>No exception approved: Status is W.</li>
+                                    </ul>
+                                    <p>Result: <strong>W</strong> (Warning)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exc. (Exception) -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingExc">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExc" aria-expanded="false" aria-controls="collapseExc">
+                                    Exc. (Exception)
+                                </button>
+                            </h2>
+                            <div id="collapseExc" class="accordion-collapse collapse" aria-labelledby="headingExc" data-bs-parent="#statusAccordion">
+                                <div class="accordion-body">
+                                    <ol>
+                                        <li>There is an approved entry exception request for the day.</li>
+                                        <li>The entry time is overridden by the time specified in the exception request.</li>
+                                        <li>The punch-in is recorded as per the exception database.</li>
+                                    </ol>
+                                    </p>
+                                    <p>Example:</p>
+                                    <ul>
+                                        <li>Exception request: Missed-entry at 10:38 AM, approved.</li>
+                                        <li>Reporting time: 10:30 AM</li>
+                                        <li>Actual punch-in: 10:47 AM.</li>
+                                        <li>Overridden time: 10:38 AM (from exception request).</li>
+                                        <li>Status is Exc. because it comes from the exception.</li>
+                                    </ul>
+                                    <p>Result: <strong>Exc.</strong> (Exception)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exc.L (Late with Exception) -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingExcL">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExcL" aria-expanded="false" aria-controls="collapseExcL">
+                                    Exc.L (Late with Exception)
+                                </button>
+                            </h2>
+                            <div id="collapseExcL" class="accordion-collapse collapse" aria-labelledby="headingExcL" data-bs-parent="#statusAccordion">
+                                <div class="accordion-body">
+                                    <p>Definition: Indicates that the associate has a late punch-in with an approved exception like a missed-entry.</p>
+                                    <p>Example:</p>
+                                    <ul>
+                                        <li>Scheduled Reporting Time: 10:00 AM</li>
+                                        <li>Approved Exception Start Time: 10:30 AM</li>
+                                        <li>Punch-in Time: 10:45 AM</li>
+                                    </ul>
+                                    <p>Result: <strong>Exc.L</strong> (Late with Exception)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- NA (No Allocation) -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingNA">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNA" aria-expanded="false" aria-controls="collapseNA">
+                                    NA (No Allocation)
+                                </button>
+                            </h2>
+                            <div id="collapseNA" class="accordion-collapse collapse" aria-labelledby="headingNA" data-bs-parent="#statusAccordion">
+                                <div class="accordion-body">
+                                    <p>Definition: Indicates that there is no work or reporting allocated for the day.</p>
+                                    <p>Result: <strong>NA</strong> (No Allocation)</p>
+                                    <p>If 'NA' is marked, please contact your immediate supervisor or manager to ensure proper allocation is updated in the system.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 

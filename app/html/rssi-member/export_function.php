@@ -919,9 +919,12 @@ DynamicSchedule AS (
         m.filterstatus,
         m.effectivedate,
         COALESCE(
-            LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
-            CURRENT_DATE
-        ) AS end_date
+    LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
+    CASE
+        WHEN m.effectivedate IS NOT NULL THEN m.effectivedate
+        ELSE CURRENT_DATE
+    END
+) AS end_date
     FROM associate_schedule s
     INNER JOIN rssimyaccount_members m
         ON s.associate_number = m.associatenumber
@@ -1101,6 +1104,7 @@ attendance_data AS (
             -- For regular punch-ins, apply standard lateness logic
             WHEN p.punch_in IS NOT NULL THEN
                 CASE
+                    WHEN ds.reporting_time IS NULL THEN 'NA'
                     WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute')
                         AND EXTRACT(EPOCH FROM p.punch_in::time) <= EXTRACT(EPOCH FROM ds.reporting_time + INTERVAL '1 minute') + 600 THEN 'W'
                     WHEN EXTRACT(EPOCH FROM p.punch_in::time) > EXTRACT(EPOCH FROM ds.reporting_time) + 600 THEN 'L'
@@ -1124,17 +1128,23 @@ attendance_data AS (
 
         -- Status 'Exc.' for overridden punch-in time from exception
         CASE
-            WHEN EXISTS (
-                SELECT 1
-                FROM exception_requests e
-                WHERE e.submitted_by = m.associatenumber
-                AND e.status = 'Approved'
-                AND e.exception_type = 'entry'
-                AND e.sub_exception_type = 'missed-entry'
-                AND d.attendance_date = DATE(e.start_date_time)
-            ) THEN 'Exc.'
-            ELSE NULL
-        END AS exception_status
+    -- Show 'Exc.' if approved exception exists
+    WHEN EXISTS (
+        SELECT 1
+        FROM exception_requests e
+        WHERE e.submitted_by = m.associatenumber
+        AND e.status = 'Approved'
+        AND e.exception_type = 'entry'
+        AND e.sub_exception_type = 'missed-entry'
+        AND d.attendance_date = DATE(e.start_date_time)
+    ) THEN 
+        -- Check if ds.reporting_time is NULL, then add 'NA'
+        CASE 
+            WHEN ds.reporting_time IS NULL THEN 'Exc.NA'
+            ELSE 'Exc.'
+        END
+    ELSE NULL
+END AS exception_status
     FROM
         date_range d
     CROSS JOIN
