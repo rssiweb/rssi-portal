@@ -1536,3 +1536,25 @@ if (@$_POST['form-type'] == "reportees") {
   echo json_encode($reportees);
   exit;
 }
+if (isset($_POST['form-type']) && $_POST['form-type'] == 'post_review') {
+  $event_id = $_POST['event_id'] ?? null;
+  $review_status = $_POST['review_status'] ?? null;
+
+  if ($event_id && $review_status) {
+    $query = "UPDATE events SET review_status = $1, reviewed_by = $2, reviewed_at = NOW() WHERE event_id = $3";
+    $reviewed_by = $_POST['reviewed_by']; // Use the logged-in user's ID here
+
+    $result = pg_query_params(
+      $con,
+      $query,
+      [$review_status, $reviewed_by, $event_id]
+    );
+    $cmdtuples = pg_affected_rows($result);
+
+    if ($cmdtuples === 1) {
+      echo json_encode(['success' => true, 'message' => 'The event has been reviewed successfully.']);
+    } else {
+      echo json_encode(['success' => false, 'message' => 'ERROR: There was an error while reviewing the event. Please try again.']);
+    }
+  }
+}

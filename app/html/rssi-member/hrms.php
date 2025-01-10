@@ -1532,7 +1532,7 @@ echo "<script>
                                                                                     <td><label for="college_name">College name:</label></td>
                                                                                     <td>
                                                                                         <span id="college_nameText"><?php echo is_null($array['college_name']) ? 'N/A' : $array['college_name']; ?></span>
-                                                                                        <input type="number" name="college_name" id="college_name" value="<?php echo $array["college_name"]; ?>" disabled class="form-control" style="display:none;">
+                                                                                        <input type="text" name="college_name" id="college_name" value="<?php echo $array["college_name"]; ?>" disabled class="form-control" style="display:none;">
                                                                                     </td>
                                                                                 </tr>
                                                                                 <tr>
