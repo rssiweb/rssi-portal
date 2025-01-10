@@ -557,41 +557,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            const likedUsers = data.liked_users;
-            const likeCount = data.like_count;
-
-            if (data.liked) {
-              likeIcon.classList.add('text-primary');
-              likeText.textContent = 'Liked';
-            } else {
-              likeIcon.classList.remove('text-primary');
-              likeText.textContent = 'Like';
-            }
-
-            likeCountSpan.textContent = likeCount;
-            updateLikedUsers(eventId, likedUsers);
+            updateLikeUI(eventId, data); // Update UI using the new function
           }
         })
         .catch(error => {
           console.error('Error:', error);
         });
-
-      function updateLikedUsers(eventId, likedUsers) {
-        const likedUsersSpan = document.getElementById(`liked-users-${eventId}`);
-        let displayText = '';
-
-        if (likedUsers.length > 0) {
-          displayText = likedUsers.slice(0, 2).join(', ');
-          if (likedUsers.length > 2) {
-            displayText += ' and ' + (likedUsers.length - 2) + ' others';
-          }
-        }
-
-        likedUsersSpan.textContent = displayText;
-      }
     }
 
-    let offset = 4; // Start after the initial batch of 3
+    function updateLikeUI(eventId, data) {
+      const likeIcon = document.getElementById(`thumbs-up-icon-${eventId}`);
+      const likeText = document.getElementById(`like-text-${eventId}`);
+      const likeCountSpan = document.getElementById(`like-count-${eventId}`);
+      const likedUsersSpan = document.getElementById(`liked-users-${eventId}`);
+
+      if (data.liked) {
+        likeIcon.classList.add('text-primary');
+        likeText.textContent = 'Liked';
+      } else {
+        likeIcon.classList.remove('text-primary');
+        likeText.textContent = 'Like';
+      }
+
+      likeCountSpan.textContent = data.like_count;
+
+      // Update liked users if needed
+      updateLikedUsers(eventId, data.liked_users);
+    }
+
+    function updateLikedUsers(eventId, likedUsers) {
+      const likedUsersSpan = document.getElementById(`liked-users-${eventId}`);
+      let displayText = '';
+
+      if (likedUsers.length > 0) {
+        displayText = likedUsers.slice(0, 2).join(', ');
+        if (likedUsers.length > 2) {
+          displayText += ' and ' + (likedUsers.length - 2) + ' others';
+        }
+      }
+
+      likedUsersSpan.textContent = displayText;
+    }
+
+    let offset = 3; // Start after the initial batch of 3
     const limit = 3; // Number of events per batch
 
     const loadMoreBtn = document.getElementById('loadMoreBtn');
@@ -646,10 +654,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                     <div class="d-flex align-items-center mt-3 text-muted" id="like-button-${event.event_id}" data-user-id="<?php echo $associatenumber; ?>">
                                         <div class="pointer" onclick="toggleLike(${event.event_id})">
-                                            <i id="thumbs-up-icon-${event.event_id}" class="bi bi-hand-thumbs-up me-1 ${
-                        event.liked ? 'text-primary' : ''
-                    }"></i>
-                                            <span id="like-text-${event.event_id}">${event.liked ? 'Liked' : 'Like'}</span>
+                                            <i id="thumbs-up-icon-${event.event_id}" class="bi bi-hand-thumbs-up me-1 ${event.liked === 't' ? 'text-primary' : ''}"></i>
+                                            <span id="like-text-${event.event_id}">${event.liked === 't' ? 'Liked' : 'Like'}</span>
                                             <span class="ms-2" id="like-count-${event.event_id}">${event.like_count}</span>
                                         </div>
                                         <div class="ms-2" id="liked-users-${event.event_id}">${likedUsersText}</div>
