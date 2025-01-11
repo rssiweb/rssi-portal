@@ -112,6 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($result && pg_num_rows($result) > 0) {
         $current_data = pg_fetch_assoc($result);
+        $fullname = $current_data['fullname'];
 
         // Define field groups
         $admin_only_fields = [
@@ -249,6 +250,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Show the alert for pending approval fields outside the $update_result check
         if (!empty($pending_approval_fields)) {
             $pending_fields_list = implode(", ", $pending_approval_fields);
+            sendEmail("hrms_workflow", [
+                "associatenumber" => $associatenumber,
+                "fullname" => $fullname,
+                "pending_fields_list" => $pending_fields_list,
+                "now" => date("d/m/Y g:i a"),
+            ], 'info@rssi.in');
             echo "<script>
                 alert('Change request has been successfully submitted for the following fields: $pending_fields_list. These fields are under review for approval.');
                 if (window.history.replaceState) {

@@ -397,6 +397,11 @@
             </a>
           </li>
           <li>
+            <a id="post_workflow" href="post_workflow.php">
+              <span>Post Workflow</span>
+            </a>
+          </li>
+          <li>
             <a id="leave_adminLink" href="leave_admin.php">
               <span>Leave Management</span>
             </a>
@@ -624,6 +629,10 @@
         id: 'work',
         linkId: 'hrms_workflow',
         url: 'hrms_workflow.php'
+      }, {
+        id: 'work',
+        linkId: 'post_workflow',
+        url: 'post_workflow.php'
       },
       {
         id: 'work',
