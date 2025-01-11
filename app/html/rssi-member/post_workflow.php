@@ -34,7 +34,7 @@ $query = "
     LEFT JOIN rssimyaccount_members AS reviewer 
         ON events.reviewed_by = reviewer.associatenumber
     WHERE (
-        ($1::timestamp IS NOT NULL AND $2::timestamp IS NOT NULL AND events.created_at BETWEEN $1::timestamp AND $2::timestamp)
+        ($1::timestamp IS NOT NULL AND $2::timestamp IS NOT NULL AND events.created_at BETWEEN $1::timestamp AND ($2::timestamp + interval '1 day' - interval '1 microsecond'))
         OR
         ($1::timestamp IS NULL AND $2::timestamp IS NULL AND review_status IS NULL)
     )
@@ -237,7 +237,36 @@ if (!$result) {
             });
         });
     </script>
+    <script>
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
 
+        // Disable invalid dates based on start date selection
+        startDateInput.addEventListener('change', () => {
+            const startDateValue = startDateInput.value;
+            if (startDateValue) {
+                endDateInput.min = startDateValue; // Set minimum end date
+            }
+        });
+
+        // Disable invalid dates based on end date selection
+        endDateInput.addEventListener('change', () => {
+            const endDateValue = endDateInput.value;
+            if (endDateValue) {
+                startDateInput.max = endDateValue; // Set maximum start date
+            }
+        });
+
+        // Initialize constraints if values are pre-filled
+        window.addEventListener('DOMContentLoaded', () => {
+            if (startDateInput.value) {
+                endDateInput.min = startDateInput.value;
+            }
+            if (endDateInput.value) {
+                startDateInput.max = endDateInput.value;
+            }
+        });
+    </script>
 </body>
 
 </html>

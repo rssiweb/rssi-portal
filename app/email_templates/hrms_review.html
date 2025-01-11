@@ -1,8 +1,20 @@
-New Change Request Submitted on HRMS Portal
+HRMS Change Request Status Update
 
 <html>
 
 <head>
+    <style>
+        .custom-table {
+            border: 1px solid black;
+            border-collapse: collapse;
+            width: 100%;
+            text-align: left;
+        }
+        .custom-table th, .custom-table td {
+            border: 1px solid black;
+            /* padding: 8px; */
+        }
+    </style>
 </head>
 
 <body>
@@ -73,13 +85,27 @@ New Change Request Submitted on HRMS Portal
                                                                                             <td
                                                                                                 style="vertical-align: middle; padding-left: 12px;">
                                                                                                 <div>
-                                                                                                    <p>Dear {{fullname}},</p>
-
-    <p>A change request has been submitted on {{now}} via the HRMS portal to update the following:</p>
-
-        <p>CR raised for: {{pending_fields_list}}</p>
-
-    <p>If this change request was not initiated by you, please contact the support team immediately to report this incident.</p>
+                                                                                                    <p>Dear {{requested_by_name}},</p>
+                                                                                                    <p>This is to inform you of the status of your change request submitted on {{requested_on}} via the HRMS portal.</p>
+                                                                                                    <p>Status:
+                                                                                                        {{reviewer_status}}
+                                                                                                    </p>
+                                                                                                    <p {{hide_approve}}>CR raised for:
+                                                                                                        {{fieldname}}
+                                                                                                    </p>
+                                                                                                    <p {{hide_reject}}>Change Details:</p>
+                                                                                                        <table class="custom-table" {{hide_reject}}>
+                                                                                                        <tr>
+                                                                                                            <td>Field Name</td>
+                                                                                                            <td>Old Value</td>
+                                                                                                            <td>New Value</td>
+                                                                                                        </tr>
+                                                                                                        <tr>
+                                                                                                            <td>{{fieldname}}</td>
+                                                                                                            <td>{{oldvalue}}</td>
+                                                                                                            <td>{{newvalue}}</td>
+                                                                                                        </tr>
+                                                                                                    </table>
                                                                                                 </div>
                                                                                             </td>
                                                                                         </tr>

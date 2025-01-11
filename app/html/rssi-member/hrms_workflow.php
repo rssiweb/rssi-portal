@@ -23,6 +23,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fieldname = $_POST['fieldname'];
     $workflow_id = $_POST['workflow_id']; // Assuming the workflow ID is passed with the request
 
+    // Fetch the details for email notification
+    // Fetch the details for email notification along with current and submitted values
+    $details_query = "SELECT 
+    members.fullname, 
+    members.email,
+    members.$fieldname AS current_value,
+    workflow.submission_timestamp,
+    workflow.submitted_value,
+    workflow.workflow_id
+ FROM hrms_workflow AS workflow
+ JOIN rssimyaccount_members AS members 
+    ON workflow.associatenumber = members.associatenumber
+ WHERE workflow.workflow_id = $1";
+    $details_result = pg_query_params($con, $details_query, [$workflow_id]);
+    $details_row = pg_fetch_assoc($details_result);
+
+    if ($details_row) {
+        $requestedby_email = $details_row['email'];
+        $requestedby_name = $details_row['fullname'];
+        $requested_on = date('d/m/Y h:i A', strtotime($details_row['submission_timestamp']));
+        $oldvalue = $details_row['current_value'];
+        $newvalue = $details_row['submitted_value'];
+    }
+
     // Approve Process
     if ($action === 'approve') {
         $value = $_POST['value'];
@@ -51,6 +75,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($update_result) {
                 // Commit the transaction if both updates were successful
                 pg_query($con, "COMMIT");
+
+                if (!empty($requestedby_email)) {
+                    sendEmail("hrms_review", [
+                        "requested_by_name" => $requestedby_name,
+                        "requested_on" => $requested_on,
+                        "reviewer_status" => $action === 'approve' ? 'Approved' : 'Rejected',
+                        "fieldname" => $fieldname,
+                        "oldvalue" => $oldvalue,
+                        "newvalue" => $newvalue,
+                        "hide_approve" => 'style="display: none;"'
+                    ], $requestedby_email,false);
+                }
                 echo "Field '$fieldname' has been approved and updated successfully.";
                 exit;
             } else {
@@ -80,6 +116,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = pg_query_params($con, $query, array($user_check, $workflow_id));
 
         if ($result) {
+            if (!empty($requestedby_email)) {
+                sendEmail("hrms_review", [
+                    "requested_by_name" => $requestedby_name,
+                    "requested_on" => $requested_on,
+                    "reviewer_status" => $action === 'approve' ? 'Approved' : 'Rejected',
+                    "fieldname" => $fieldname,
+                    "hide_reject" => 'style="display: none;"'
+                ], $requestedby_email,false);
+            }
             echo "Field '$fieldname' has been rejected.";
             exit;
         } else {
