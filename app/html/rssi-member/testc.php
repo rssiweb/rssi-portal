@@ -52,6 +52,7 @@ if (!empty($selectedTeachers)) {
 }
 
 $query = "
+-- Query with updated logic for calculating scheduled workdays, considering DOJ and effective date
 WITH date_range AS (
     SELECT generate_series(
         '$startDate'::date,
@@ -65,7 +66,7 @@ holidays_excluded AS (
     FROM 
         date_range
     WHERE 
-        attendance_date NOT IN (SELECT holiday_date FROM holidays where is_flexi=false) -- Exclude holidays
+        attendance_date NOT IN (SELECT holiday_date FROM holidays WHERE is_flexi = false) -- Exclude holidays
 ),
 sunday_count AS (
     SELECT 
@@ -77,11 +78,23 @@ sunday_count AS (
 ),
 employee_workdays AS (
     SELECT 
-        COUNT(*) AS workdays_employee
+        m.associatenumber,
+        COUNT(h.attendance_date) AS workdays_employee
     FROM 
-        holidays_excluded
+        holidays_excluded h
+    INNER JOIN 
+        rssimyaccount_members m
+        ON h.attendance_date BETWEEN 
+            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj) -- From the later of the month's start or the associate's DOJ
+            AND 
+            LEAST(
+                DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day', 
+                COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
+            ) -- To the earlier of the month's end or the associate's effective date
     WHERE 
-        DATE_PART('dow', attendance_date) != 0 -- Exclude Sundays
+        DATE_PART('dow', h.attendance_date) != 0 -- Exclude Sundays
+    GROUP BY 
+        m.associatenumber
 ),
 others_workdays AS (
     SELECT 
@@ -98,7 +111,7 @@ holiday_dates AS (
         holidays
     WHERE 
         holiday_date BETWEEN '$startDate'::date AND '$endDate'::date -- Holidays in the current month
-        AND is_flexi=false
+        AND is_flexi = false
 ),
 DynamicSchedule AS (
     SELECT
@@ -109,12 +122,12 @@ DynamicSchedule AS (
         m.filterstatus,
         m.effectivedate,
         COALESCE(
-    LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
-    CASE
-        WHEN m.effectivedate IS NOT NULL THEN m.effectivedate
-        ELSE CURRENT_DATE
-    END
-) AS end_date
+            LEAD(s.start_date) OVER (PARTITION BY s.associate_number ORDER BY s.start_date) - INTERVAL '1 day',
+            CASE
+                WHEN m.effectivedate IS NOT NULL THEN m.effectivedate
+                ELSE CURRENT_DATE
+            END
+        ) AS end_date
     FROM associate_schedule s
     INNER JOIN rssimyaccount_members m
         ON s.associate_number = m.associatenumber
@@ -361,8 +374,7 @@ SELECT
     m.fullname,
     m.engagement,
     CASE 
-        WHEN m.engagement = 'Employee' THEN (SELECT workdays_employee FROM employee_workdays)
-        WHEN m.engagement = 'Member' THEN 0
+        WHEN m.engagement = 'Employee' THEN (SELECT workdays_employee FROM employee_workdays WHERE employee_workdays.associatenumber = m.associatenumber)
         ELSE (SELECT workdays_others FROM others_workdays)
     END AS work_schedule,
     (SELECT holiday_dates FROM holiday_dates) AS holiday_dates,
@@ -389,7 +401,7 @@ JOIN
     ON attendance_data.associatenumber = m.associatenumber
 WHERE 
     mode = 'Offline'
-    AND DATE_TRUNC('month', m.doj)::date <= DATE_TRUNC('month', '$startDate'::date)::date
+    AND DATE_TRUNC('month', m.doj) <= DATE_TRUNC('month', '$startDate'::date)
 GROUP BY 
     m.associatenumber, m.fullname, m.engagement
 ORDER BY 
@@ -641,7 +653,7 @@ pg_close($con);
                                                     <td><?php echo $row['associatenumber']; ?></td>
                                                     <td><?php echo $row['fullname']; ?></td>
                                                     <td><?php echo $row['work_schedule'] ?></td>
-                                                   <td></td>
+                                                    <td></td>
                                                     <td><?php echo $row['leave_count']; ?></td>
                                                     <td><?php echo $row['halfday_count']; ?></td>
                                                     <td><?php echo $row['leave_count'] + ($row['halfday_count'] / 2); ?></td>
@@ -666,7 +678,7 @@ pg_close($con);
                                                     <td><?php echo !empty($row['exception_dates']) ? implode(', ', array_map(function ($date) {
                                                             return date('d', strtotime($date));
                                                         }, explode(', ', $row['exception_dates']))) : ''; ?></td>
-                                                         <td><?php echo !empty($row['holiday_dates']) ? implode(', ', array_map(function ($date) {
+                                                    <td><?php echo !empty($row['holiday_dates']) ? implode(', ', array_map(function ($date) {
                                                             return date('d', strtotime($date));
                                                         }, explode(', ', $row['holiday_dates']))) : ''; ?></td>
                                                 </tr>
