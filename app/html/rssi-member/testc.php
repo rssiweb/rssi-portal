@@ -406,6 +406,7 @@ SELECT
 END AS work_schedule,
     h.holiday_dates, -- Corrected line
     (SELECT total_sundays FROM sunday_count) AS total_sundays,
+    COUNT(*) FILTER (WHERE punch_in IS NOT NULL AND punch_out IS NOT NULL) AS days_worked,
     COUNT(*) FILTER (WHERE late_status = 'L') AS late_count,
     STRING_AGG(CASE WHEN late_status = 'L' THEN attendance_date::text ELSE NULL END, ', ') AS late_dates,
     COUNT(*) FILTER (WHERE late_status = 'W') AS warning_count,
@@ -683,7 +684,7 @@ pg_close($con);
                                                     <td><?php echo $row['associatenumber']; ?></td>
                                                     <td><?php echo $row['fullname']; ?></td>
                                                     <td><?php echo $row['work_schedule'] ?></td>
-                                                    <td></td>
+                                                    <td><?php echo $row['days_worked']-$row['halfday_count']/2 ?></td>
                                                     <td><?php echo $row['leave_count']; ?></td>
                                                     <td><?php echo $row['halfday_count']; ?></td>
                                                     <td><?php echo $row['leave_count'] + ($row['halfday_count'] / 2); ?></td>
