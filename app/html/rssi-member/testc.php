@@ -88,9 +88,13 @@ employee_workdays AS (
             GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj) -- From the later of the month's start or the associate's DOJ
             AND 
             LEAST(
-                DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day', 
+                CASE 
+                    -- If today is in the same month as attendance_date, use today
+                    WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
+                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day' -- Use month's end otherwise
+                END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
-            ) -- To the earlier of the month's end or the associate's effective date
+            ) -- To the earlier of today's date (if in the same month) or the associate's effective date
     WHERE 
         DATE_PART('dow', h.attendance_date) != 0 -- Exclude Sundays
     GROUP BY 
@@ -108,9 +112,13 @@ others_workdays AS (
             GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj) -- From the later of the month's start or the associate's DOJ
             AND 
             LEAST(
-                DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day', 
+                CASE 
+                    -- If today is in the same month as attendance_date, use today
+                    WHEN DATE_TRUNC('month', h.attendance_date) = DATE_TRUNC('month', CURRENT_DATE) THEN CURRENT_DATE
+                    ELSE DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day' -- Use month's end otherwise
+                END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
-            ) -- To the earlier of the month's end or the associate's effectivedate
+            ) -- To the earlier of today's date (if in the same month) or the associate's effectivedate
     WHERE 
         DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 4 -- Monday to Thursday
     GROUP BY 
