@@ -118,12 +118,20 @@ others_workdays AS (
 ),
 holiday_dates AS (
     SELECT 
-        STRING_AGG(holiday_date::text, ', ') AS holiday_dates
+        m.associatenumber,
+        STRING_AGG(h.holiday_date::text, ', ') AS holiday_dates
     FROM 
-        holidays
+        holidays h
+    INNER JOIN 
+        rssimyaccount_members m 
+        ON h.holiday_date BETWEEN 
+            GREATEST(m.doj, '$startDate'::date) 
+        AND 
+            LEAST(COALESCE(m.effectivedate, '$endDate'::date), '$endDate'::date)
     WHERE 
-        holiday_date BETWEEN '$startDate'::date AND '$endDate'::date -- Holidays in the current month
-        AND is_flexi = false
+        h.is_flexi = false
+    GROUP BY 
+        m.associatenumber
 ),
 DynamicSchedule AS (
     SELECT
@@ -396,7 +404,7 @@ SELECT
          FROM others_workdays  
          WHERE others_workdays.associatenumber = m.associatenumber)
 END AS work_schedule,
-    (SELECT holiday_dates FROM holiday_dates) AS holiday_dates,
+    h.holiday_dates, -- Corrected line
     (SELECT total_sundays FROM sunday_count) AS total_sundays,
     COUNT(*) FILTER (WHERE late_status = 'L') AS late_count,
     STRING_AGG(CASE WHEN late_status = 'L' THEN attendance_date::text ELSE NULL END, ', ') AS late_dates,
@@ -414,15 +422,18 @@ END AS work_schedule,
         exit_status ILIKE '%Exc%' OR 
         late_status ILIKE '%Exc%' THEN attendance_date::text ELSE NULL END, ', ') AS exception_dates
 FROM 
-    attendance_data
+    attendance_data ad
 JOIN 
     rssimyaccount_members m
-    ON attendance_data.associatenumber = m.associatenumber
+    ON ad.associatenumber = m.associatenumber
+LEFT JOIN 
+    holiday_dates h
+    ON ad.associatenumber = h.associatenumber -- Correcting the join condition
 WHERE 
     mode = 'Offline'
     AND DATE_TRUNC('month', m.doj) <= DATE_TRUNC('month', '$startDate'::date)
 GROUP BY 
-    m.associatenumber, m.fullname, m.engagement
+    m.associatenumber, m.fullname, m.engagement, h.holiday_dates
 ORDER BY 
     m.associatenumber;
 ";
