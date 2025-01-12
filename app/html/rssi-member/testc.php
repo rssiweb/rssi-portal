@@ -98,11 +98,23 @@ employee_workdays AS (
 ),
 others_workdays AS (
     SELECT 
-        COUNT(*) AS workdays_others
+        m.associatenumber,
+        COUNT(h.attendance_date) AS workdays_others
     FROM 
-        holidays_excluded
+        holidays_excluded h
+    INNER JOIN 
+        rssimyaccount_members m
+        ON h.attendance_date BETWEEN 
+            GREATEST(DATE_TRUNC('month', h.attendance_date), m.doj) -- From the later of the month's start or the associate's DOJ
+            AND 
+            LEAST(
+                DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day', 
+                COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
+            ) -- To the earlier of the month's end or the associate's effectivedate
     WHERE 
-        DATE_PART('dow', attendance_date) BETWEEN 1 AND 4 -- Monday to Thursday
+        DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 4 -- Monday to Thursday
+    GROUP BY 
+        m.associatenumber
 ),
 holiday_dates AS (
     SELECT 
@@ -374,9 +386,16 @@ SELECT
     m.fullname,
     m.engagement,
     CASE 
-        WHEN m.engagement = 'Employee' THEN (SELECT workdays_employee FROM employee_workdays WHERE employee_workdays.associatenumber = m.associatenumber)
-        ELSE (SELECT workdays_others FROM others_workdays)
-    END AS work_schedule,
+    WHEN m.engagement = 'Employee' THEN 
+        (SELECT workdays_employee 
+         FROM employee_workdays 
+         WHERE employee_workdays.associatenumber = m.associatenumber)
+    WHEN m.engagement = 'Member' THEN 0
+    ELSE 
+        (SELECT workdays_others  
+         FROM others_workdays  
+         WHERE others_workdays.associatenumber = m.associatenumber)
+END AS work_schedule,
     (SELECT holiday_dates FROM holiday_dates) AS holiday_dates,
     (SELECT total_sundays FROM sunday_count) AS total_sundays,
     COUNT(*) FILTER (WHERE late_status = 'L') AS late_count,
