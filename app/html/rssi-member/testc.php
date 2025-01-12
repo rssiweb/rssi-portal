@@ -8,23 +8,23 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
-if ($role == 'Admin') {
-    // Fetching the data and populating the $teachers array
-    $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active' AND COALESCE(substring(class FROM '^[^-]+'), NULL)='Offline'";
-    $result = pg_query($con, $query);
+// if ($role == 'Admin') {
+//     // Fetching the data and populating the $teachers array
+//     $query = "SELECT associatenumber, fullname FROM rssimyaccount_members WHERE filterstatus = 'Active' AND COALESCE(substring(class FROM '^[^-]+'), NULL)='Offline'";
+//     $result = pg_query($con, $query);
 
-    if (!$result) {
-        die("Error in SQL query: " . pg_last_error());
-    }
+//     if (!$result) {
+//         die("Error in SQL query: " . pg_last_error());
+//     }
 
-    $teachers = array();
-    while ($row = pg_fetch_assoc($result)) {
-        $teachers[] = $row;
-    }
+//     $teachers = array();
+//     while ($row = pg_fetch_assoc($result)) {
+//         $teachers[] = $row;
+//     }
 
-    // Free resultset
-    pg_free_result($result);
-}
+//     // Free resultset
+//     pg_free_result($result);
+// }
 
 // Get filter values from GET parameters
 $id = isset($_GET['get_aid']) ? $_GET['get_aid'] : 'Active';
@@ -58,6 +58,47 @@ WITH date_range AS (
         '$endDate'::date,
         '1 day'::interval
     ) AS attendance_date
+),
+holidays_excluded AS (
+    SELECT 
+        attendance_date
+    FROM 
+        date_range
+    WHERE 
+        attendance_date NOT IN (SELECT holiday_date FROM holidays where is_flexi=false) -- Exclude holidays
+),
+sunday_count AS (
+    SELECT 
+        COUNT(*) AS total_sundays
+    FROM 
+        date_range
+    WHERE 
+        DATE_PART('dow', attendance_date) = 0 -- Sundays only
+),
+employee_workdays AS (
+    SELECT 
+        COUNT(*) AS workdays_employee
+    FROM 
+        holidays_excluded
+    WHERE 
+        DATE_PART('dow', attendance_date) != 0 -- Exclude Sundays
+),
+others_workdays AS (
+    SELECT 
+        COUNT(*) AS workdays_others
+    FROM 
+        holidays_excluded
+    WHERE 
+        DATE_PART('dow', attendance_date) BETWEEN 1 AND 4 -- Monday to Thursday
+),
+holiday_dates AS (
+    SELECT 
+        STRING_AGG(holiday_date::text, ', ') AS holiday_dates
+    FROM 
+        holidays
+    WHERE 
+        holiday_date BETWEEN '$startDate'::date AND '$endDate'::date -- Holidays in the current month
+        AND is_flexi=false
 ),
 DynamicSchedule AS (
     SELECT
@@ -311,13 +352,21 @@ END AS exception_status
             (m.filterstatus = 'Inactive' AND DATE_TRUNC('month', m.effectivedate)::DATE >= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE)
         )
         AND DATE_TRUNC('month', m.doj)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-        $idCondition
-        $teacherCondition
+        -- $idCondition
+        -- $teacherCondition
         " . ($role !== 'Admin' ? "AND m.associatenumber = '$associatenumber'" : "") . "
 )
-SELECT
-    associatenumber,
-    fullname,
+SELECT 
+    m.associatenumber,
+    m.fullname,
+    m.engagement,
+    CASE 
+        WHEN m.engagement = 'Employee' THEN (SELECT workdays_employee FROM employee_workdays)
+        WHEN m.engagement = 'Member' THEN 0
+        ELSE (SELECT workdays_others FROM others_workdays)
+    END AS work_schedule,
+    (SELECT holiday_dates FROM holiday_dates) AS holiday_dates,
+    (SELECT total_sundays FROM sunday_count) AS total_sundays,
     COUNT(*) FILTER (WHERE late_status = 'L') AS late_count,
     STRING_AGG(CASE WHEN late_status = 'L' THEN attendance_date::text ELSE NULL END, ', ') AS late_dates,
     COUNT(*) FILTER (WHERE late_status = 'W') AS warning_count,
@@ -327,16 +376,24 @@ SELECT
     COUNT(*) FILTER (WHERE late_status = 'HF') AS halfday_count,
     STRING_AGG(CASE WHEN late_status = 'HF' THEN attendance_date::text ELSE NULL END, ', ') AS halfday_dates,
     COUNT(*) FILTER (WHERE 
-            exception_status ILIKE '%Exc%' OR 
-            exit_status ILIKE '%Exc%' OR 
-            late_status ILIKE '%Exc%') AS exception_count,
+        exception_status ILIKE '%Exc%' OR 
+        exit_status ILIKE '%Exc%' OR 
+        late_status ILIKE '%Exc%') AS exception_count,
     STRING_AGG(CASE WHEN exception_status ILIKE '%Exc%' OR 
-            exit_status ILIKE '%Exc%' OR 
-            late_status ILIKE '%Exc%' THEN attendance_date::text ELSE NULL END, ', ') AS exception_dates
-FROM attendance_data
-WHERE mode = 'Offline'
-GROUP BY associatenumber, fullname
-ORDER BY associatenumber;
+        exit_status ILIKE '%Exc%' OR 
+        late_status ILIKE '%Exc%' THEN attendance_date::text ELSE NULL END, ', ') AS exception_dates
+FROM 
+    attendance_data
+JOIN 
+    rssimyaccount_members m
+    ON attendance_data.associatenumber = m.associatenumber
+WHERE 
+    mode = 'Offline'
+    AND DATE_TRUNC('month', m.doj)::date <= DATE_TRUNC('month', '$startDate'::date)::date
+GROUP BY 
+    m.associatenumber, m.fullname, m.engagement
+ORDER BY 
+    m.associatenumber;
 ";
 $result = pg_query($con, $query);
 
@@ -451,7 +508,7 @@ pg_close($con);
                                 </div>
                                 <form action="" method="GET" class="row g-2 align-items-center">
                                     <div class="row">
-                                        <?php if ($role == 'Admin') { ?>
+                                        <!-- <?php if ($role == 'Admin') { ?>
                                             <div class="col-12 col-sm-2">
                                                 <div class="form-group">
                                                     <select name="get_aid" id="get_aid" class="form-select"
@@ -482,11 +539,11 @@ pg_close($con);
                                                 </select>
                                                 <small class="form-text text-muted">Teacher ID</small>
                                             </div>
-                                        <?php } ?>
+                                        <?php } ?> -->
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <input type="text" name="get_month" id="get_month" class="form-control"
+                                                <input type="text" name="get_month" id="get_month" class="form-select"
                                                     placeholder="Month"
                                                     value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
                                                 <small class="form-text text-muted">Select Month</small>
@@ -556,7 +613,7 @@ pg_close($con);
                                                 <td></td>
                                                 <th colspan="3">Section A</th>
                                                 <th colspan="3">Section B</th>
-                                                <th colspan="5">Date(s)</th>
+                                                <th colspan="6">Date(s)</th>
                                             </tr>
                                             <tr>
                                                 <th>Associate Number</th>
@@ -574,6 +631,7 @@ pg_close($con);
                                                 <th>Late Dates</th>
                                                 <th>Grace entry (W) Dates</th>
                                                 <th>Exc Dates</th>
+                                                <th>Holiday</th>
                                             </tr>
 
                                         </thead>
@@ -582,11 +640,11 @@ pg_close($con);
                                                 <tr>
                                                     <td><?php echo $row['associatenumber']; ?></td>
                                                     <td><?php echo $row['fullname']; ?></td>
-                                                    <td></td>
-                                                    <td></td>
+                                                    <td><?php echo $row['work_schedule'] ?></td>
+                                                   <td></td>
                                                     <td><?php echo $row['leave_count']; ?></td>
                                                     <td><?php echo $row['halfday_count']; ?></td>
-                                                    <td><?php echo $row['leave_count']+($row['halfday_count']/2); ?></td>
+                                                    <td><?php echo $row['leave_count'] + ($row['halfday_count'] / 2); ?></td>
                                                     <td><?php echo $row['late_count']; ?></td>
                                                     <td><?php echo $row['warning_count']; ?></td>
                                                     <td><?php echo $row['exception_count']; ?></td>
@@ -608,6 +666,9 @@ pg_close($con);
                                                     <td><?php echo !empty($row['exception_dates']) ? implode(', ', array_map(function ($date) {
                                                             return date('d', strtotime($date));
                                                         }, explode(', ', $row['exception_dates']))) : ''; ?></td>
+                                                         <td><?php echo !empty($row['holiday_dates']) ? implode(', ', array_map(function ($date) {
+                                                            return date('d', strtotime($date));
+                                                        }, explode(', ', $row['holiday_dates']))) : ''; ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
