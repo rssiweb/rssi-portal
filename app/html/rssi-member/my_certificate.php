@@ -56,9 +56,61 @@ include("../../util/email.php");
                 }
                 $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
             }
-            $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby,awarded_to_name,out_phone,out_email,out_scode,out_flag,pdf_certificate) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$doclink','$issuedby','$awarded_to_name','$out_phone','$out_email','$out_scode','$out_flag','$pdf_certificate')";
-            $result = pg_query($con, $certificate);
-            $cmdtuples = pg_affected_rows($result);
+            // $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby,awarded_to_name,out_phone,out_email,out_scode,out_flag,pdf_certificate) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$doclink','$issuedby','$awarded_to_name','$out_phone','$out_email','$out_scode','$out_flag','$pdf_certificate')";
+            // $result = pg_query($con, $certificate);
+            // $cmdtuples = pg_affected_rows($result);
+
+            // Define all possible fields and their corresponding variables
+            $data = [
+                "certificate_no" => $certificate_no,
+                "issuedon" => $now,
+                "awarded_to_id" => $awarded_to_id,
+                "badge_name" => $badge_name,
+                "comment" => $comment,
+                "gems" => $gems,
+                "certificate_url" => $doclink,
+                "issuedby" => $issuedby,
+                "awarded_to_name" => $awarded_to_name,
+                "out_phone" => $out_phone,
+                "out_email" => $out_email,
+                "out_scode" => $out_scode,
+                "out_flag" => $out_flag,
+                "pdf_certificate" => $pdf_certificate,
+            ];
+
+            // Initialize arrays for dynamic query construction
+            $fields = [];
+            $values = [];
+            $params = [];
+            $index = 1; // Placeholder index for parameterized query
+
+            foreach ($data as $field => $value) {
+                if (!empty($value) || $value === "0") { // Include "0" to account for valid numeric zero
+                    $fields[] = $field;
+                    $values[] = '$' . $index;
+                    $params[] = $value;
+                    $index++;
+                }
+            }
+
+            // Construct the query
+            if (!empty($fields)) {
+                $field_list = implode(", ", $fields);
+                $value_placeholders = implode(", ", $values);
+
+                $query = "INSERT INTO certificate ($field_list) VALUES ($value_placeholders)";
+                $result = pg_query_params($con, $query, $params);
+
+                if ($result) {
+                    $cmdtuples = pg_affected_rows($result);
+                    // echo "$cmdtuples rows affected.";
+                } else {
+                    error_log("Query failed: " . pg_last_error($con));
+                    die("An error occurred while processing your request.");
+                }
+            } else {
+                die("No valid data to insert.");
+            }
 
             $resultt = pg_query($con, "Select fullname,email from rssimyaccount_members where associatenumber='$awarded_to_id'");
             @$nameassociate = pg_fetch_result($resultt, 0, 0);
@@ -542,7 +594,7 @@ include("../../util/email.php");
 
                                     <div id="comment-container-<?php echo $certificateNo; ?>">
                                         <p>
-                                            <?php if (strlen($comment) > 90) { ?>
+                                            <?php if (isset($comment) && strlen($comment) > 90) { ?>
                                                 <span id="full-comment-<?php echo $certificateNo; ?>" class="d-inline">
                                                     <?php echo substr($comment, 0, 90); ?>
                                                     <span id="more-text-<?php echo $certificateNo; ?>" class="d-none">

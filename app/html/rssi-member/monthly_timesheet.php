@@ -401,6 +401,7 @@ SELECT
     m.associatenumber,
     m.fullname,
     m.engagement,
+    m.phone,
     CASE 
     WHEN m.engagement = 'Employee' THEN 
         (SELECT workdays_employee 
@@ -524,6 +525,7 @@ pg_close($con);
                 opacity: 1;
             }
         }
+
         .status-indicator {
             width: 10px;
             height: 10px;
@@ -537,6 +539,7 @@ pg_close($con);
             background-color: #FFBF00;
             /* Yellow color */
         }
+
         .status-indicator.green {
             background-color: #28a745;
             /* Green color */
@@ -545,6 +548,28 @@ pg_close($con);
         .status-indicator.red {
             background-color: #dc3545;
             /* Red color */
+        }
+
+        .send-link {
+            color: #888;
+            /* Light gray color for the text */
+            text-decoration: none;
+            /* Remove underline */
+            font-weight: normal;
+            /* Normal weight for text appearance */
+            cursor: pointer;
+            /* Pointer cursor to indicate clickable */
+            opacity: 0.6;
+            /* Slightly faded for inactive state */
+            transition: opacity 0.3s;
+            /* Smooth transition on hover */
+        }
+
+        .send-link:hover {
+            color: #555;
+            /* Darker gray when hovered */
+            opacity: 1;
+            /* Full opacity on hover */
         }
     </style>
 </head>
@@ -660,7 +685,7 @@ pg_close($con);
                                             $dateTime = null;
                                         }
                                         ?>
-                                <div class="row align-items-center">
+                                <!-- <div class="row align-items-center">
                                     <div class="col-6">
                                         <?php if ($dateTime !== null): ?>
                                             You are viewing data for
@@ -671,9 +696,30 @@ pg_close($con);
                                             Invalid month format
                                         <?php endif; ?>
                                     </div>
+                                </div> -->
+                                <br>
+                                <br>
+                                <div class="timesheet-header" style="text-align: center; margin-bottom: 20px;">
+                                    <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Monthly Timesheet</h1>
+                                    <p style="margin: 5px 0; font-size: 16px; color: #555;">
+                                        Month: <strong><?= $dateTime->format('F') ?></strong> | Year: <strong><?= $dateTime->format('Y') ?></strong>
+                                    </p>
+                                    <?php
+                                    $dateTime = new DateTime('01-' . $dateTime->format('m-Y')); // Start of the current month
+                                    $firstDate = $dateTime->format('01-m-Y'); // First date of the month
+                                    // Check if today's month matches the month of the provided $dateTime
+                                    if ($dateTime->format('m-Y') === date('m-Y')) {
+                                        $lastDate = date('d-m-Y'); // Current date
+                                    } else {
+                                        // If not in the same month, calculate last date dynamically
+                                        $lastDate = $dateTime->modify('last day of this month')->format('d-m-Y'); // Last date of the month
+                                    }
+                                    ?>
+                                    <p style="margin: 5px 0; font-size: 16px; color: #555;">
+                                        Reporting Period: <strong><?= $firstDate ?></strong> to <strong><?= $lastDate ?></strong>
+                                    </p>
+                                    <hr style="border: none; border-top: 1px solid #ccc; margin: 15px 0;">
                                 </div>
-                                <br>
-                                <br>
                                 <div class="table-responsive">
                                     <table class="table table-bordered">
                                         <thead>
@@ -683,6 +729,7 @@ pg_close($con);
                                                 <th colspan="3">Section A</th>
                                                 <th colspan="3">Section B</th>
                                                 <th colspan="6">Section C</th>
+                                                <td></td>
                                             </tr>
                                             <tr>
                                                 <th>Associate Number</th>
@@ -694,28 +741,55 @@ pg_close($con);
                                                 <th>Leave Taken</th>
                                                 <th>Late Count</th>
                                                 <th>Grace entry (W) Count</th>
-                                                <th>Exc Count</th>
+                                                <th>Exception Count</th>
                                                 <th>Leave Dates</th>
                                                 <th>Half day Dates</th>
                                                 <th>Late Dates</th>
                                                 <th>Grace entry (W) Dates</th>
-                                                <th>Exc Dates</th>
+                                                <th>Exception Dates</th>
                                                 <th>Holiday</th>
+                                                <th></th>
                                             </tr>
 
                                         </thead>
                                         <tbody>
+                                            <?php
+                                            // Function to generate the WhatsApp message link
+                                            function getWhatsAppLink($row, $custom_message)
+                                            {
+                                                // Construct the message
+                                                $message = "Dear " . $row['fullname'] . " (" . $row['associatenumber'] . "),\n\n"
+                                                    . $custom_message . "\n\n"
+                                                    . "--RSSI\n\n"
+                                                    . "**This is a system generated message.";
+
+                                                // Encode the message to make it URL-safe
+                                                $encoded_message = urlencode($message);
+
+                                                // Generate and return the WhatsApp URL
+                                                return "https://api.whatsapp.com/send?phone=91" . $row['phone'] . "&text=" . $encoded_message;
+                                            }
+
+                                            // Define the custom message
+                                            $message = "You have been marked as a timesheet defaulter in the system due to one or more of the following reasons:\n\n"
+                                                . "1) Missed punch-in or punch-out.\n"
+                                                . "2) Leave taken but not applied.\n\n"
+                                                . "Please check your timesheet and ensure the following:\n"
+                                                . "- Any missed entry/exit, late entry, or early exit is updated.\n"
+                                                . "- Any leave taken is applied appropriately.\n\n"
+                                                . "Failure to make these adjustments may result in system-enforced leave as per the leave policy.";
+                                            ?>
                                             <?php foreach ($attendanceData as $row): ?>
                                                 <tr>
                                                     <td><?php echo $row['associatenumber'];
-                                                    if ((($row['days_worked']-$row['halfday_count']/2)+($row['leave_count'] + ($row['halfday_count'] / 2)))!=$row['work_schedule']) { // Or any other status you want to check
-                                                        echo '&nbsp;<span class="status-indicator yellow"></span>';
-                                                    }
-                                                    ?>
-                                                </td>
+                                                        if ((($row['days_worked'] - $row['halfday_count'] / 2) + ($row['leave_count'] + ($row['halfday_count'] / 2))) != $row['work_schedule']) { // Or any other status you want to check
+                                                            echo '&nbsp;<span class="status-indicator yellow"></span>';
+                                                        }
+                                                        ?>
+                                                    </td>
                                                     <td><?php echo $row['fullname']; ?></td>
                                                     <td><?php echo $row['work_schedule'] ?></td>
-                                                    <td><?php echo $row['days_worked']-$row['halfday_count']/2 ?></td>
+                                                    <td><?php echo $row['days_worked'] - $row['halfday_count'] / 2 ?></td>
                                                     <!-- <td><?php echo $row['leave_count']; ?></td>
                                                     <td><?php echo $row['halfday_count']; ?></td> -->
                                                     <td><?php echo $row['leave_count'] + ($row['halfday_count'] / 2); ?></td>
@@ -743,6 +817,17 @@ pg_close($con);
                                                     <td><?php echo !empty($row['holiday_dates']) ? implode(', ', array_map(function ($date) {
                                                             return date('d', strtotime($date));
                                                         }, explode(', ', $row['holiday_dates']))) : ''; ?></td>
+                                                    <td>
+                                                        <?php
+                                                        $link = getWhatsAppLink($row, $message);
+                                                        // Set the title text dynamically
+                                                        $title = "Send WhatsApp message to " . $row['fullname'] . " (" . $row['associatenumber'] . ")";
+                                                        // Check if the "Reminder" link should be displayed
+                                                        if ((($row['days_worked'] - $row['halfday_count'] / 2) + ($row['leave_count'] + ($row['halfday_count'] / 2))) != $row['work_schedule']) {
+                                                            echo '<a href="' . $link . '" target="_blank" title="' . htmlspecialchars($title) . '" class="send-link">Send</a>';
+                                                        }
+                                                        ?>
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
