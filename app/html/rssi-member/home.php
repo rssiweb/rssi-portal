@@ -464,7 +464,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </select>
             </div>
             <div class="mb-3">
-              <label for="event_image" class="form-label required-field">Event Image</label>
+              <label for="event_image" class="form-label required-field">Event Image (The maximum file size allowed is 300KB, with any height and width.)</label>
               <input type="file" class="form-control" id="event_image" name="event_image" accept="image/*">
               <img id="imagePreview" src="#" alt="Image Preview" class="mt-3" style="max-width: 50%; height: auto;">
             </div>
@@ -508,12 +508,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             img.onload = function() {
               // Check dimensions (800x400)
-              if (img.width !== 800 || img.height !== 400) {
-                alert('Image should be resized to 800x400.');
-                $('#event_image').val(''); // Clear the input
-                imagePreview.hide(); // Hide preview
-                return;
-              }
+              // if (img.width !== 800 || img.height !== 400) {
+              //   alert('Image should be resized to 800x400.');
+              //   $('#event_image').val(''); // Clear the input
+              //   imagePreview.hide(); // Hide preview
+              //   return;
+              // }
 
               // Valid image: show preview
               imagePreview.attr('src', e.target.result).show();
