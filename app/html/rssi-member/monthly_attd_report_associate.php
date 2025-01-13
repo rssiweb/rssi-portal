@@ -526,13 +526,13 @@ pg_close($con);
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <input type="text" name="get_month" id="get_month" class="form-control"
+                                            <input type="month" name="get_month" id="get_month" class="form-control"
                                                     placeholder="Month"
                                                     value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
                                                 <small class="form-text text-muted">Select Month</small>
                                             </div>
                                         </div>
-                                        <script>
+                                        <!-- <script>
                                             $(function() {
                                                 $("#get_month").datepicker({
                                                     dateFormat: "yy-mm", // Format to show in the input
@@ -546,10 +546,7 @@ pg_close($con);
                                                     }
                                                 });
                                             });
-                                        </script>
-
-
-
+                                        </script> -->
                                         <div class="col-12 col-sm-2">
                                             <button type="submit" name="search_by_id" class="btn btn-success"
                                                 style="outline: none;">

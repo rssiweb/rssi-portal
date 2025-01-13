@@ -440,6 +440,7 @@ LEFT JOIN
     ON ad.associatenumber = h.associatenumber -- Correcting the join condition
 WHERE 
     mode = 'Offline'
+    AND grade!='D'
     AND DATE_TRUNC('month', m.doj) <= DATE_TRUNC('month', '$startDate'::date)
 GROUP BY 
     m.associatenumber, m.fullname, m.engagement, h.holiday_dates
@@ -523,6 +524,28 @@ pg_close($con);
                 opacity: 1;
             }
         }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            /* Space between the indicator and text */
+        }
+
+        .status-indicator.yellow {
+            background-color: #FFBF00;
+            /* Yellow color */
+        }
+        .status-indicator.green {
+            background-color: #28a745;
+            /* Green color */
+        }
+
+        .status-indicator.red {
+            background-color: #dc3545;
+            /* Red color */
+        }
     </style>
 </head>
 
@@ -536,8 +559,7 @@ pg_close($con);
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Class details</a></li>
-                    <li class="breadcrumb-item"><a href="attendx.php">AttendX</a></li>
+                    <li class="breadcrumb-item"><a href="#">Work</a></li>
                     <li class="breadcrumb-item active">Monthly Timesheet</li>
                 </ol>
             </nav>
@@ -555,7 +577,7 @@ pg_close($con);
                             <div class="row">
                                 <div class="col-md-8 mb-3">
                                     Record count:&nbsp;<?php echo $associateNumberCount ?>
-                                    <p>To customize the view result, please select a filter value.</p>
+                                    <!-- <p>To customize the view result, please select a filter value.</p> -->
                                 </div>
                                 <form action="" method="GET" class="row g-2 align-items-center">
                                     <div class="row">
@@ -594,13 +616,13 @@ pg_close($con);
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <input type="text" name="get_month" id="get_month" class="form-select"
+                                                <input type="month" name="get_month" id="get_month" class="form-control"
                                                     placeholder="Month"
                                                     value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
                                                 <small class="form-text text-muted">Select Month</small>
                                             </div>
                                         </div>
-                                        <script>
+                                        <!-- <script>
                                             $(function() {
                                                 $("#get_month").datepicker({
                                                     dateFormat: "yy-mm", // Format to show in the input
@@ -614,9 +636,7 @@ pg_close($con);
                                                     }
                                                 });
                                             });
-                                        </script>
-
-
+                                        </script> -->
 
                                         <div class="col-12 col-sm-2">
                                             <button type="submit" name="search_by_id" class="btn btn-success"
@@ -660,20 +680,18 @@ pg_close($con);
                                             <tr>
                                                 <td></td>
                                                 <td></td>
-                                                <td></td>
-                                                <td></td>
                                                 <th colspan="3">Section A</th>
                                                 <th colspan="3">Section B</th>
-                                                <th colspan="6">Date(s)</th>
+                                                <th colspan="6">Section C</th>
                                             </tr>
                                             <tr>
                                                 <th>Associate Number</th>
                                                 <th>Full Name</th>
                                                 <th>Scheduled Workdays</th>
                                                 <th>Days Worked</th>
+                                                <!-- <th>Leave Taken</th>
+                                                <th>Half day Taken</th> -->
                                                 <th>Leave Taken</th>
-                                                <th>Half day Taken</th>
-                                                <th>Total Leave Taken</th>
                                                 <th>Late Count</th>
                                                 <th>Grace entry (W) Count</th>
                                                 <th>Exc Count</th>
@@ -689,12 +707,17 @@ pg_close($con);
                                         <tbody>
                                             <?php foreach ($attendanceData as $row): ?>
                                                 <tr>
-                                                    <td><?php echo $row['associatenumber']; ?></td>
+                                                    <td><?php echo $row['associatenumber'];
+                                                    if ((($row['days_worked']-$row['halfday_count']/2)+($row['leave_count'] + ($row['halfday_count'] / 2)))!=$row['work_schedule']) { // Or any other status you want to check
+                                                        echo '&nbsp;<span class="status-indicator yellow"></span>';
+                                                    }
+                                                    ?>
+                                                </td>
                                                     <td><?php echo $row['fullname']; ?></td>
                                                     <td><?php echo $row['work_schedule'] ?></td>
                                                     <td><?php echo $row['days_worked']-$row['halfday_count']/2 ?></td>
-                                                    <td><?php echo $row['leave_count']; ?></td>
-                                                    <td><?php echo $row['halfday_count']; ?></td>
+                                                    <!-- <td><?php echo $row['leave_count']; ?></td>
+                                                    <td><?php echo $row['halfday_count']; ?></td> -->
                                                     <td><?php echo $row['leave_count'] + ($row['halfday_count'] / 2); ?></td>
                                                     <td><?php echo $row['late_count']; ?></td>
                                                     <td><?php echo $row['warning_count']; ?></td>

@@ -407,6 +407,11 @@
             </a>
           </li>
           <li>
+            <a id="monthly_timesheet" href="monthly_timesheet.php">
+              <span>Monthly Timesheet</span>
+            </a>
+          </li>
+          <li>
             <a id="my_bookLink" href="my_book.php">
               <span>Libary Status</span>
             </a>
@@ -653,6 +658,11 @@
         id: 'work',
         linkId: 'leave_adminLink',
         url: 'leaveadjustment.php'
+      },
+      {
+        id: 'work',
+        linkId: 'monthly_timesheet',
+        url: 'monthly_timesheet.php'
       },
       {
         id: 'work',
