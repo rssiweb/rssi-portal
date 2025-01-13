@@ -266,7 +266,7 @@ attendance_data AS (
 
         -- Exit status logic remains unchanged
         CASE
-            WHEN p.punch_out IS NULL AND EXISTS (
+            WHEN EXISTS (
                 SELECT 1
                 FROM exception_requests e
                 WHERE e.submitted_by = m.associatenumber
