@@ -252,7 +252,7 @@ if (!$result) {
                                         <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
                                     <?php } ?>
 
-                                    <li>Leaves will be granted in accordance with the Organization's Leave Policy, which will be provided to you upon your engagement with the Organization. This policy outlines leave types, eligibility criteria, and application procedures.</li>
+                                    <li>Leaves will be governed by the Organization's Leave Policy. The Organization reserves the right to amend, modify, or replace the Leave Policy at any time. Any updates to the Leave Policy will be communicated to associates through the Organization's internal communication channels.</li>
 
                                     <li>Leaves without notice are not acceptable and may result in disciplinary action, up to and including termination of your engagement with the Organization. The Organization reserves the right to take appropriate action in such instances.</li>
 
