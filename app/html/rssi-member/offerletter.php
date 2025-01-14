@@ -295,7 +295,7 @@ if (!$result) {
                                                 ]
                                             ];
 
-                                            $position_associate = $array['position'];
+                                            $position_associate = $array['engagement'];
                                             foreach ($links as $key => $items) {
                                                 if (str_contains($position_associate, $key)) {
                                                     foreach ($items as $text => $url) {
