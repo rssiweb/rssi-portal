@@ -198,7 +198,7 @@ if (!$result) {
 
                                         <p>Thank you for exploring career opportunities with Rina Shiksha Sahayak Foundation (RSSI). You have successfully completed our initial selection process and we are pleased to make you an offer.</p>
 
-                                        <p>This offer is based on your profile and performance in the selection process. You have been selected for the position of <b>' . $array['position']. ' (' . $array['job_type'] . ')</b>. Your gross salary including all benefits will be <b>₹' . $array['salary'] . '/- per annum</b>, as per the terms and conditions set out herein.</p>'
+                                        <p>This offer is based on your profile and performance in the selection process. You have been selected for the position of <b>' . $array['position'] . ' (' . $array['job_type'] . ')</b>. Your gross salary including all benefits will be <b>₹' . $array['salary'] . '/- per annum</b>, as per the terms and conditions set out herein.</p>'
                                 ?>
 
                                 <p>Please sign the offer letter and email the scanned copy to us at info@rssi.in as a token of your acceptance. If not accepted within 3 calendar days, it will be construed that you are not interested in this employment and this offer will be automatically withdrawn.</p>
@@ -252,7 +252,9 @@ if (!$result) {
                                         <li>During the notice period, the associate is not eligible to take leave, except in exceptional cases with HR approval. If the associate takes leave, the notice period will be extended accordingly.</li>
                                     <?php } ?>
 
-                                    <li>You are not eligible to take more than 1 leave without notice during your tenure, in case of more than 1 leave without notice, the organization may decide for dismissal.</li>
+                                    <li>Leaves will be granted in accordance with the Organization's Leave Policy, which will be provided to you upon your engagement with the Organization. This policy outlines leave types, eligibility criteria, and application procedures.</li>
+
+                                    <li>Leaves without notice are not acceptable and may result in disciplinary action, up to and including termination of your engagement with the Organization. The Organization reserves the right to take appropriate action in such instances.</li>
 
                                     <?php if ($array['job_type'] != "Contractual") { ?>
                                         <li>
