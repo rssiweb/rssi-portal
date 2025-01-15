@@ -1,3 +1,35 @@
+<?php
+require_once __DIR__ . "/../../bootstrap.php";
+include("../../util/login_util.php");
+
+if (!isLoggedIn("aid")) {
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+
+    header("Location: index.php");
+    exit;
+}
+validation();
+?>
+<?php
+// Fetch products from the database
+$products = [];
+$query = "SELECT id, name, price, image_url, sold_out FROM products";
+$result = pg_query($con, $query);
+
+if ($result) {
+    while ($row = pg_fetch_assoc($result)) {
+        $products[] = [
+            'id' => (int)$row['id'],
+            'name' => $row['name'],
+            'price' => (int)$row['price'],
+            'image' => $row['image_url'],
+            'soldOut' => $row['sold_out'] === 't' ? true : false, // Convert 't'/'f' to boolean
+        ];
+    }
+}
+
+pg_close($con);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -54,42 +86,7 @@
                 <div id="productList">
                     <!-- Product Template -->
                     <script>
-                        const products = [{
-                                id: 1,
-                                name: "Amazon India E-Gift Voucher",
-                                price: 100,
-                                image: "https://fulfilmentstorage.blob.core.windows.net/images/3e43eff3-b235-4087-8477-173fb9acbbc2_ASV.jpg",
-                                soldOut: false
-                            },
-                            {
-                                id: 2,
-                                name: "Big Basket Gift Voucher",
-                                price: 100,
-                                image: "https://5.imimg.com/data5/SELLER/Default/2024/3/396938205/YY/CT/RK/211087561/big-basket-gift-voucher.png",
-                                soldOut: false
-                            },
-                            {
-                                id: 3,
-                                name: "Amazon India E-Gift Voucher",
-                                price: 1000,
-                                image: "https://vouchervia.com/wp-content/uploads/2024/04/gift_voucher-3.png",
-                                soldOut: true
-                            },
-                            {
-                                id: 4,
-                                name: "Nykaa Gift Card",
-                                price: 100,
-                                image: "https://res.cloudinary.com/dcm/image/upload/v1700040552/prod/n/nykaa.webp",
-                                soldOut: false
-                            },
-                            {
-                                id: 5,
-                                name: "Zomato E-Gift Voucher",
-                                price: 100,
-                                image: "https://m.media-amazon.com/images/I/41aLwzw85iL.jpg",
-                                soldOut: true
-                            }
-                        ];
+                        const products = <?php echo json_encode($products); ?>;
 
                         function renderProducts() {
                             const productList = document.getElementById('productList');
