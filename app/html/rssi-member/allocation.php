@@ -616,12 +616,12 @@ pg_close($con);
                                     Record count:&nbsp;<?php echo $associateNumberCount ?>
                                     <!-- <p>To customize the view result, please select a filter value.</p> -->
                                 </div>
-                                <form action="" method="POST" class="row g-2 align-items-center">
+                                <form action="" method="POST" class="row g-2 align-items-center" id="search_form">
                                     <div class="row">
                                         <!-- Start Month Input -->
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <label for="start_month">Start Month</label>
+                                                <!-- <label for="start_month">Start Month</label> -->
                                                 <input type="month" name="start_month" id="start_month" class="form-control"
                                                     value="<?php echo $startMonth; ?>">
                                                 <small class="form-text text-muted">Select Start Month</small>
@@ -631,7 +631,7 @@ pg_close($con);
                                         <!-- End Month Input -->
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <label for="end_month">End Month</label>
+                                                <!-- <label for="end_month">End Month</label> -->
                                                 <input type="month" name="end_month" id="end_month" class="form-control"
                                                     value="<?php echo $endMonth; ?>">
                                                 <small class="form-text text-muted">Select End Month</small>
@@ -640,8 +640,8 @@ pg_close($con);
 
                                         <!-- Submit Button -->
                                         <div class="col-12 col-sm-2">
-                                            <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
-                                                <i class="bi bi-search"></i> Search
+                                            <button type="submit" name="search_by_id" id="search_by_id" class="btn btn-primary" style="outline: none;">
+                                                <i class="bi bi-search"></i> <span id="button_text">Search</span>
                                             </button>
                                         </div>
                                     </div>
@@ -772,6 +772,18 @@ pg_close($con);
         endMonthInput.addEventListener('change', function() {
             const selectedEndMonth = this.value;
             startMonthInput.setAttribute('max', selectedEndMonth);
+        });
+    </script>
+    <script>
+        const searchForm = document.getElementById('search_form');
+        const searchButton = document.getElementById('search_by_id');
+        const buttonText = document.getElementById('button_text');
+
+        searchForm.addEventListener('submit', function() {
+            // Change the button text to "Loading..."
+            buttonText.textContent = 'Loading...';
+            // Disable the button to prevent multiple submissions
+            searchButton.setAttribute('disabled', true);
         });
     </script>
 </body>

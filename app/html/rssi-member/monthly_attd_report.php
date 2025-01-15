@@ -42,7 +42,7 @@ attendance_data AS (
             CASE
                 WHEN a.user_id IS NOT NULL THEN 'P'
                 WHEN a.user_id IS NULL AND d.attendance_date NOT IN (SELECT date FROM attendance) THEN NULL
-                WHEN TO_DATE(s.doa, 'YYYY-MM-DD hh24:mi:ss') > d.attendance_date THEN NULL
+                WHEN s.doa > d.attendance_date THEN NULL
                 ELSE 'A'
             END
         ) AS attendance_status
@@ -55,13 +55,14 @@ attendance_data AS (
         ON s.student_id = a.user_id AND a.date = d.attendance_date
     WHERE
         (
-        (s.effectivefrom IS NULL OR s.effectivefrom='') OR
-        DATE_TRUNC('month', TO_DATE(s.effectivefrom, 'YYYY-MM-DD hh24:mi:ss'))::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-        )
-        AND DATE_TRUNC('month', TO_DATE(s.doa, 'YYYY-MM-DD hh24:mi:ss'))::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
-        AND 
-        s.category != 'LG4'
-        $idCondition
+    s.effectivefrom IS NULL OR 
+    DATE_TRUNC('month', s.effectivefrom)::DATE = DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+)
+AND 
+DATE_TRUNC('month', s.doa)::DATE <= DATE_TRUNC('month', TO_DATE('$month', 'YYYY-MM'))::DATE
+AND 
+s.category != 'LG4'
+$idCondition
 )
 SELECT
     student_id,
@@ -119,15 +120,18 @@ pg_close($con); ?>
 <html lang="en">
 
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-  gtag('config', 'AW-11316670180');
-</script>
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -243,28 +247,10 @@ pg_close($con); ?>
 
                                         <div class="col-12 col-sm-2">
                                             <div class="form-group">
-                                                <input type="text" name="get_month" id="get_month" class="form-control" placeholder="Month" value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
+                                                <input type="month" name="get_month" id="get_month" class="form-control" placeholder="Month" value="<?php echo $getMonth = isset($_GET['get_month']) ? htmlspecialchars($_GET['get_month']) : date('Y-m'); ?>">
                                                 <small class="form-text text-muted">Select Month</small>
                                             </div>
                                         </div>
-                                        <script>
-                                            $(function() {
-                                                $("#get_month").datepicker({
-                                                    dateFormat: "yy-mm", // Format to show in the input
-                                                    changeMonth: true,
-                                                    changeYear: true,
-                                                    showButtonPanel: true,
-                                                    onClose: function(dateText, inst) {
-                                                        var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
-                                                        var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
-                                                        $(this).val(year + '-' + (parseInt(month) + 1)); // Adjust month by adding 1
-                                                    }
-                                                });
-                                            });
-                                        </script>
-
-
-
                                         <div class="col-12 col-sm-2">
                                             <button type="submit" name="search_by_id" class="btn btn-success" style="outline: none;">
                                                 <i class="bi bi-search"></i> Search
