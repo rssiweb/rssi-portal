@@ -15,15 +15,15 @@ $currentMonth = date('m');
 $currentYear = date('Y');
 
 // Default values for start_date and end_date
-$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01'); // First day of the current month
-$endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');       // Last day of the current month
+$startDate = isset($_POST['start_date']) ? $_POST['start_date'] : date('Y-m-01'); // First day of the current month
+$endDate = isset($_POST['end_date']) ? $_POST['end_date'] : date('Y-m-t');       // Last day of the current month
 
 // Get the user-provided or default month
-$month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
+$month = isset($_POST['month']) ? $_POST['month'] : date('Y-m');
 
 // Check if the user provided a start and end month
-$startMonth = isset($_GET['start_month']) ? $_GET['start_month'] : null;
-$endMonth = isset($_GET['end_month']) ? $_GET['end_month'] : null;
+$startMonth = isset($_POST['start_month']) ? $_POST['start_month'] : null;
+$endMonth = isset($_POST['end_month']) ? $_POST['end_month'] : null;
 
 // Define the quarter ranges
 if (!$startMonth || !$endMonth) {
@@ -616,7 +616,7 @@ pg_close($con);
                                     Record count:&nbsp;<?php echo $associateNumberCount ?>
                                     <!-- <p>To customize the view result, please select a filter value.</p> -->
                                 </div>
-                                <form action="" method="GET" class="row g-2 align-items-center">
+                                <form action="" method="POST" class="row g-2 align-items-center">
                                     <div class="row">
                                         <!-- Start Month Input -->
                                         <div class="col-12 col-sm-2">
