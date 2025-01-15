@@ -647,7 +647,7 @@ pg_close($con);
                                     </div>
                                 </form>
 
-                                <div class="table-responsive mt-5">
+                                <div class="table-responsive mt-5 mb-3">
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>
@@ -667,7 +667,7 @@ pg_close($con);
                                                 <th>Scheduled Workdays</th>
                                                 <th>Days Worked</th>
                                                 <th>Leave Taken</th>
-                                                <th colspan="2">Allocation Utilization</th>
+                                                <th colspan="2">Allocation Index</th>
                                                 <th>Late Count</th>
                                                 <th>Grace entry (W) Count</th>
                                                 <th>Exception Count</th>
@@ -696,7 +696,9 @@ pg_close($con);
                                                     <td>
                                                         <?php
                                                         echo isset($row['schedule_end_date']) && !empty($row['schedule_end_date'])
-                                                            ? date('d/m/Y', strtotime($row['schedule_end_date']))
+                                                            ? (date('Y-m-d', strtotime($row['schedule_end_date'])) === date('Y-m-d')
+                                                                ? ''
+                                                                : date('d/m/Y', strtotime($row['schedule_end_date'])))
                                                             : '';
                                                         ?>
                                                     </td>
