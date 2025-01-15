@@ -742,6 +742,38 @@ pg_close($con);
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        const today = new Date();
+        const maxMonth = today.toISOString().slice(0, 7);
+
+        const startMonthInput = document.getElementById('start_month');
+        const endMonthInput = document.getElementById('end_month');
+
+        // Set the max attribute for both inputs
+        startMonthInput.setAttribute('max', maxMonth);
+        endMonthInput.setAttribute('max', maxMonth);
+
+        // Initialize min/max attributes if values are pre-selected
+        if (startMonthInput.value) {
+            endMonthInput.setAttribute('min', startMonthInput.value);
+        }
+
+        if (endMonthInput.value) {
+            startMonthInput.setAttribute('max', endMonthInput.value);
+        }
+
+        // Update the min and max attributes based on selected start_month
+        startMonthInput.addEventListener('change', function() {
+            const selectedStartMonth = this.value;
+            endMonthInput.setAttribute('min', selectedStartMonth);
+        });
+
+        // Update the min and max attributes based on selected end_month
+        endMonthInput.addEventListener('change', function() {
+            const selectedEndMonth = this.value;
+            startMonthInput.setAttribute('max', selectedEndMonth);
+        });
+    </script>
 </body>
 
 </html>
