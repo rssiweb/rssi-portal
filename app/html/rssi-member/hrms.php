@@ -802,7 +802,7 @@ echo "<script>
                                                         </div>
                                                         <div class="card" id="national_identifier">
                                                             <div class="card-header">
-                                                                National Identifier
+                                                                Personal Details
                                                                 <?php if (in_array('national_identifier', $accessible_cards)) : ?>
                                                                     <span class="edit-icon" onclick="toggleEdit('national_identifier')">
                                                                         <i class="bi bi-pencil"></i>
@@ -816,6 +816,13 @@ echo "<script>
                                                                 <div class="table-responsive">
                                                                     <table class="table table-borderless">
                                                                         <tbody>
+                                                                            <tr>
+                                                                                <td><label for="dateofbirth">Date of Birth:</label></td>
+                                                                                <td>
+                                                                                    <?php echo !empty($array["dateofbirth"]) ? (new DateTime($array["dateofbirth"]))->format("d/m/Y") : ''; ?>
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
                                                                             <tr>
                                                                                 <td><label for="nationalidentifier">National Identifier Number:</label></td>
                                                                                 <td>

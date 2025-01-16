@@ -1599,6 +1599,4 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
   }
 
   echo json_encode(['status' => 'success', 'message' => 'Order placed successfully!']);
-} else {
-  echo json_encode(['status' => 'error', 'message' => 'Invalid form type.']);
 }
