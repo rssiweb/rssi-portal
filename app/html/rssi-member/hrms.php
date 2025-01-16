@@ -560,7 +560,7 @@ echo "<script>
         }
 
         .hierarchy-item .profile-pic {
-            width: 40px;
+            width: 65px;
             height: 40px;
             border-radius: 50%;
             /* Circular shape for initials */
