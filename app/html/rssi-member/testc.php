@@ -9,7 +9,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
-$associatenumber = 'ILKO22063';
+// $associatenumber = 'ILKO22063';
 ?>
 <?php
 // Fetch products from the database
