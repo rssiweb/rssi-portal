@@ -1558,3 +1558,40 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'post_review') {
     }
   }
 }
+if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
+  // Validate and sanitize inputs
+  $totalPoints = isset($_POST['totalPoints']) ? (int)$_POST['totalPoints'] : null;
+  $cart = isset($_POST['cart']) ? json_decode($_POST['cart'], true) : null;
+  $orderBy = isset($_POST['associatenumber']) ? pg_escape_string($con, $_POST['associatenumber']) : null;
+
+  if ($totalPoints === null || $cart === null || $orderBy === null) {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid input data.']);
+    exit;
+  }
+
+  // Insert into orders table
+  $query = "INSERT INTO orders (total_points, order_by) VALUES ($totalPoints, '$orderBy') RETURNING id";
+  $result = pg_query($con, $query);
+
+  if (!$result) {
+    echo json_encode(['status' => 'error', 'message' => 'Failed to insert order.']);
+    exit;
+  }
+
+  $orderId = pg_fetch_result($result, 0, 'id');
+
+  // Insert into order_items table
+  foreach ($cart as $item) {
+    $productId = (int)$item['productId'];
+    $quantity = (int)$item['count'];
+    $itemQuery = "INSERT INTO order_items (order_id, product_id, quantity) VALUES ($orderId, $productId, $quantity)";
+    if (!pg_query($con, $itemQuery)) {
+      echo json_encode(['status' => 'error', 'message' => 'Failed to insert order item.']);
+      exit;
+    }
+  }
+
+  echo json_encode(['status' => 'success']);
+} else {
+  echo json_encode(['status' => 'error', 'message' => 'Invalid form type.']);
+}

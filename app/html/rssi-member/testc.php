@@ -27,9 +27,28 @@ if ($result) {
         ];
     }
 }
-
-pg_close($con);
 ?>
+<!-- <?php
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $orderData = json_decode(file_get_contents('php://input'), true);
+
+            // Insert into orders table
+            $totalPoints = $orderData['totalPoints'];
+            $query = "INSERT INTO orders (total_points) VALUES ($totalPoints) RETURNING id";
+            $result = pg_query($con, $query);
+            $orderId = pg_fetch_result($result, 0, 'id');
+
+            // Insert into order_items table
+            foreach ($orderData['cart'] as $item) {
+                $productId = $item['productId'];
+                $quantity = $item['count'];
+                pg_query($con, "INSERT INTO order_items (order_id, product_id, quantity) VALUES ($orderId, $productId, $quantity)");
+            }
+
+            echo json_encode(['status' => 'success']);
+        }
+        ?> -->
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -134,18 +153,31 @@ pg_close($con);
 
     <script>
         let totalPoints = 1000;
-        let cart = {};
+        let cart = [];
 
         function updateCart(productId, productName, price, count) {
+            const existingIndex = cart.findIndex(item => item.id === productId);
+
             if (count > 0) {
-                cart[productId] = {
+                const cartItem = {
+                    id: productId,
                     name: productName,
                     price: price,
                     count: count
                 };
-            } else {
-                delete cart[productId];
+
+                if (existingIndex >= 0) {
+                    // Update existing item
+                    cart[existingIndex] = cartItem;
+                } else {
+                    // Add new item
+                    cart.push(cartItem);
+                }
+            } else if (existingIndex >= 0) {
+                // Remove item from cart if count is 0
+                cart.splice(existingIndex, 1);
             }
+
             renderCart();
         }
 
@@ -155,7 +187,7 @@ pg_close($con);
             cartList.innerHTML = '';
             let total = 0;
 
-            for (const [productId, item] of Object.entries(cart)) {
+            cart.forEach(item => {
                 const listItem = document.createElement('li');
                 listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
                 listItem.textContent = `${item.name} x ${item.count}`;
@@ -163,7 +195,8 @@ pg_close($con);
                 total += itemTotal;
                 listItem.innerHTML += `<span>${itemTotal} Points</span>`;
                 cartList.appendChild(listItem);
-            }
+            });
+
             cartTotal.textContent = `${total} Points`;
         }
 
@@ -190,13 +223,48 @@ pg_close($con);
         }
 
         function placeOrder() {
-            if (Object.keys(cart).length === 0) {
+            if (cart.length === 0) {
                 alert('Your cart is empty!');
-            } else {
-                alert('Order placed successfully!');
-                cart = {};
-                renderCart();
+                return;
             }
+
+            const totalPoints = cart.reduce((sum, item) => sum + item.price * item.count, 0);
+
+            // Prepare the cart data as a JSON string
+            const cartData = cart.map(item => ({
+                productId: item.id,
+                count: item.count
+            }));
+
+            // Prepare the order data as URLSearchParams
+            const orderData = new URLSearchParams({
+                'form-type': 'orders', // Form type
+                'associatenumber': "<?php echo $associatenumber; ?>", // Associate number
+                'totalPoints': totalPoints, // Total points
+                'cart': JSON.stringify(cartData) // Cart data as a string
+            });
+
+            // Send the data to the server
+            fetch('payment-api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: orderData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Order placed successfully!');
+                        location.reload(); // Reload the page to prevent multiple submissions
+                    } else {
+                        alert('Failed to place the order. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while placing the order.');
+                });
         }
     </script>
 </body>
