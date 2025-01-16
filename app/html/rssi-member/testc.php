@@ -9,6 +9,7 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
+$associatenumber = 'ILKO22063';
 ?>
 <?php
 // Fetch products from the database
@@ -28,7 +29,15 @@ if ($result) {
     }
 }
 ?>
+<?php
+// Get total gems redeemed and received for a specific user ($associatenumber)
+$query_totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point), 0) FROM gems WHERE user_id = '$associatenumber' AND (reviewer_status IS NULL OR reviewer_status != 'Rejected')");
+$query_totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems), 0) FROM certificate WHERE awarded_to_id = '$associatenumber'");
 
+// Fetch results
+$totalgemsredeem = pg_fetch_result($query_totalgemsredeem, 0, 0);
+$totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
+?>
 <!doctype html>
 <html lang="en">
 
@@ -109,12 +118,12 @@ if ($result) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>User log</h1>
+            <h1>Shopping Cart</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Work</a></li>
-                    <li class="breadcrumb-item active">User log</li>
+                    <li class="breadcrumb-item"><a href="#">Rewards & Recognition</a></li>
+                    <li class="breadcrumb-item active">Shopping Cart</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -134,7 +143,7 @@ if ($result) {
                                     <div class="col-md-3">
                                         <div class="left-section text-center">
                                             <h4>Total Points</h4>
-                                            <div id="totalPoints" class="display-4 text-primary">1000</div>
+                                            <div id="totalPoints" class="display-4 text-primary"><?php echo ($totalgemsreceived - $totalgemsredeem) ?></div>
                                         </div>
                                     </div>
 
@@ -296,6 +305,7 @@ if ($result) {
             const orderData = new URLSearchParams({
                 'form-type': 'orders', // Form type
                 'associatenumber': "<?php echo $associatenumber; ?>", // Associate number
+                'maxlimit': "<?php echo ($totalgemsreceived - $totalgemsredeem); ?>", // Associate number
                 'totalPoints': totalPoints, // Total points
                 'cart': JSON.stringify(cartData) // Cart data as a string
             });
@@ -311,10 +321,10 @@ if ($result) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        alert('Order placed successfully!');
+                        alert(data.message); // Show success message from PHP response
                         location.reload(); // Reload the page to prevent multiple submissions
                     } else {
-                        alert('Failed to place the order. Please try again.');
+                        alert(data.message); // Show error message from PHP response
                         placeOrderButton.disabled = false; // Re-enable the button
                     }
                 })

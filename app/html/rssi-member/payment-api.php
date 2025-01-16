@@ -1558,14 +1558,21 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'post_review') {
     }
   }
 }
-if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
+if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') { 
   // Validate and sanitize inputs
   $totalPoints = isset($_POST['totalPoints']) ? (int)$_POST['totalPoints'] : null;
   $cart = isset($_POST['cart']) ? json_decode($_POST['cart'], true) : null;
   $orderBy = isset($_POST['associatenumber']) ? pg_escape_string($con, $_POST['associatenumber']) : null;
+  $maxLimit = isset($_POST['maxlimit']) ? pg_escape_string($con, $_POST['maxlimit']) : 0;
 
   if ($totalPoints === null || $cart === null || $orderBy === null) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid input data.']);
+    exit;
+  }
+
+  // Check if totalPoints exceed maxLimit
+  if ($totalPoints > $maxLimit) {
+    echo json_encode(['status' => 'error', 'message' => 'Total points exceed the maximum limit.']);
     exit;
   }
 
@@ -1591,7 +1598,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
     }
   }
 
-  echo json_encode(['status' => 'success']);
+  echo json_encode(['status' => 'success', 'message' => 'Order placed successfully!']);
 } else {
   echo json_encode(['status' => 'error', 'message' => 'Invalid form type.']);
 }
