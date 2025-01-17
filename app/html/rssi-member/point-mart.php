@@ -9,7 +9,6 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 validation();
-// $associatenumber = 'ILKO22063';
 ?>
 <?php
 // Fetch products from the database
@@ -31,7 +30,14 @@ if ($result) {
 ?>
 <?php
 // Get total gems redeemed and received for a specific user ($associatenumber)
-$query_totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point), 0) FROM gems WHERE user_id = '$associatenumber' AND (reviewer_status IS NULL OR reviewer_status != 'Rejected')");
+$query_totalgemsredeem = pg_query_params(
+    $con,
+    "SELECT COALESCE(SUM(product_points), 0) 
+     FROM order_items 
+     JOIN orders ON orders.id = order_items.order_id 
+     WHERE order_by = $1 AND (status IS NULL OR status != 'Refunded')",
+    [$associatenumber]
+);
 $query_totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems), 0) FROM certificate WHERE awarded_to_id = '$associatenumber'");
 
 // Fetch results
@@ -298,13 +304,15 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
             // Prepare the cart data as a JSON string
             const cartData = cart.map(item => ({
                 productId: item.id,
-                count: item.count
+                count: item.count,
+                productPoints: item.price
             }));
 
             // Prepare the order data as URLSearchParams
             const orderData = new URLSearchParams({
                 'form-type': 'orders', // Form type
                 'associatenumber': "<?php echo $associatenumber; ?>", // Associate number
+                'doj': "<?php echo $doj; ?>", // Associate number
                 'maxlimit': "<?php echo ($totalgemsreceived - $totalgemsredeem); ?>", // Associate number
                 'totalPoints': totalPoints, // Total points
                 'cart': JSON.stringify(cartData) // Cart data as a string

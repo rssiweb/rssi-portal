@@ -1558,21 +1558,38 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'post_review') {
     }
   }
 }
-if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') { 
+if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
   // Validate and sanitize inputs
   $totalPoints = isset($_POST['totalPoints']) ? (int)$_POST['totalPoints'] : null;
   $cart = isset($_POST['cart']) ? json_decode($_POST['cart'], true) : null;
   $orderBy = isset($_POST['associatenumber']) ? pg_escape_string($con, $_POST['associatenumber']) : null;
   $maxLimit = isset($_POST['maxlimit']) ? pg_escape_string($con, $_POST['maxlimit']) : 0;
+  $doj = ($_POST['doj']);
 
   if ($totalPoints === null || $cart === null || $orderBy === null) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid input data.']);
     exit;
   }
 
+  // First check: Validate if totalPoints are 1000 or more
+  if ($maxLimit < 999) {
+    echo json_encode(['status' => 'error', 'message' => 'You can only redeem gems if you have 1000 or more points.']);
+    exit;
+  }
+
   // Check if totalPoints exceed maxLimit
   if ($totalPoints > $maxLimit) {
     echo json_encode(['status' => 'error', 'message' => 'Total points exceed the maximum limit.']);
+    exit;
+  }
+
+  // Check if DOJ duration is less than 1 year
+  $dojDate = new DateTime($doj);
+  $currentDate = new DateTime();
+  $diff = $currentDate->diff($dojDate);
+
+  if ($diff->y < 1) {
+    echo json_encode(['status' => 'error', 'message' => 'You are not yet eligible to redeem gems, as your Date of Joining is less than 1 year.']);
     exit;
   }
 
@@ -1591,7 +1608,8 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
   foreach ($cart as $item) {
     $productId = (int)$item['productId'];
     $quantity = (int)$item['count'];
-    $itemQuery = "INSERT INTO order_items (order_id, product_id, quantity) VALUES ($orderId, $productId, $quantity)";
+    $productPoints = (int)$item['productPoints'];
+    $itemQuery = "INSERT INTO order_items (order_id, product_id, quantity,product_points) VALUES ($orderId, $productId, $quantity,$productPoints)";
     if (!pg_query($con, $itemQuery)) {
       echo json_encode(['status' => 'error', 'message' => 'Failed to insert order item.']);
       exit;

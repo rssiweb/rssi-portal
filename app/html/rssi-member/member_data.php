@@ -35,4 +35,5 @@ while ($row = pg_fetch_assoc($run)) {
         $password_updated_on = $row['password_updated_on'];
         $default_pass_updated_by = $row['default_pass_updated_by'];
         $default_pass_updated_on = $row['default_pass_updated_on'];
+        $doj = $row['doj']; //used in point-mart
 }
