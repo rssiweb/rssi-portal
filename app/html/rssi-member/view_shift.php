@@ -19,7 +19,7 @@ $associateNumber = isset($_GET['associate_number']) ? trim($_GET['associate_numb
 
 // Base query to fetch data
 $query = "
-    SELECT s.*, m.fullname, m.filterstatus, m.effectivedate
+    SELECT s.*, m.fullname, m.filterstatus, m.effectivedate, m.job_type,m.engagement
     FROM associate_schedule s
     INNER JOIN rssimyaccount_members m ON s.associate_number = m.associatenumber
     WHERE (COALESCE('$associateNumber', '') = '' OR s.associate_number = '$associateNumber')
@@ -48,6 +48,8 @@ while ($row = pg_fetch_assoc($result)) {
     $entry = [
         'associate_number' => $associateNumber,
         'fullname' => $row['fullname'],
+        'job_type' => $row['job_type'],
+        'engagement' => $row['engagement'],
         'start_date' => $startDate,
         'end_date' => null, // Will be set dynamically
         'reporting_time' => $reportingTime,
@@ -95,13 +97,16 @@ foreach ($data as $associateNumber => &$entries) {
             $lastEntry['end_date'] = $currentDate;
         }
     }
+
+    // Reverse entries for each associate to show latest first
+    $entries = array_reverse($entries);
 }
 
 // Filter the results based on selected statuses
 if (!empty($filterStatus)) {
     foreach ($data as $associateNumber => &$entries) {
         $entries = array_filter($entries, function ($entry) use ($filterStatus, $currentDate) {
-            $status = ($entry['end_date'] === $currentDate) ? 'active' : 'history';
+            $status = (strtotime($entry['end_date']) >= strtotime($currentDate)) ? 'active' : 'history';
             return in_array($status, $filterStatus);
         });
     }
@@ -207,25 +212,68 @@ pg_close($con); // Close the connection
                                     <thead>
                                         <tr>
                                             <th>Associate Number</th>
+                                            <th>Associate Name</th>
+                                            <th>Association Type</th>
                                             <th>Start Date</th>
                                             <th>End Date</th>
                                             <th>Reporting Time</th>
                                             <th>Exit Time</th>
-                                            <th>Timestamp</th>
-                                            <th>Submitted By</th>
+                                            <th>Working Hours</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($data as $associateRows): ?>
                                             <?php foreach ($associateRows as $row): ?>
                                                 <tr>
-                                                    <td><?php echo htmlspecialchars($row['fullname']); ?> (<?php echo htmlspecialchars($row['associate_number']); ?>)</td>
+                                                    <td><?php echo htmlspecialchars($row['associate_number']); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['fullname']); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['job_type']); ?> -<?php echo htmlspecialchars($row['engagement']); ?></td>
                                                     <td><?php echo date("d/m/Y", strtotime($row['start_date'])); ?></td>
                                                     <td><?php echo (date("d/m/Y", strtotime($row['end_date'])) === date("d/m/Y")) ? null : date("d/m/Y", strtotime($row['end_date'])); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['reporting_time']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['exit_time']); ?></td>
-                                                    <td><?php echo date("d/m/Y H:i:s", strtotime($row['timestamp'])); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['submittedby']); ?></td>
+                                                    <td>
+                                                        <?php
+                                                        echo date("h:i A", strtotime($row['reporting_time'])); // Format as HH:MM AM/PM
+                                                        ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        echo date("h:i A", strtotime($row['exit_time'])); // Format as HH:MM AM/PM
+                                                        ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        $exit_time = $row['exit_time']; // e.g., "18:30:00"
+                                                        $reporting_time = $row['reporting_time']; // e.g., "10:45:00"
+
+                                                        // Convert time strings to seconds since the start of the day
+                                                        $exit_seconds = strtotime($exit_time);
+                                                        $reporting_seconds = strtotime($reporting_time);
+
+                                                        // Calculate the duration in seconds
+                                                        if ($exit_seconds !== false && $reporting_seconds !== false) {
+                                                            $duration = $exit_seconds - $reporting_seconds;
+
+                                                            // Convert the duration to a human-readable format
+                                                            if ($duration < 60) {
+                                                                // Less than 60 seconds
+                                                                echo htmlspecialchars($duration . ' seconds');
+                                                            } elseif ($duration < 3600) {
+                                                                // Less than 60 minutes
+                                                                $minutes = floor($duration / 60);
+                                                                $seconds = $duration % 60;
+                                                                echo htmlspecialchars($minutes . ' minutes ' . $seconds . ' seconds');
+                                                            } else {
+                                                                // 60 minutes or more
+                                                                $hours = floor($duration / 3600);
+                                                                $minutes = floor(($duration % 3600) / 60);
+                                                                echo htmlspecialchars($hours . ' hours ' . $minutes . ' minutes');
+                                                            }
+                                                        } else {
+                                                            echo 'Invalid time format';
+                                                        }
+                                                        ?>
+                                                    </td>
+
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php endforeach; ?>
