@@ -63,7 +63,7 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>PointMart</title>
+    <title>Gems Mart</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -124,12 +124,12 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>PointMart</h1>
+            <h1>Gems Mart</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Rewards & Recognition</a></li>
-                    <li class="breadcrumb-item active">PointMart</li>
+                    <li class="breadcrumb-item active">Gems Mart</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -305,7 +305,7 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
             const cartData = cart.map(item => ({
                 productId: item.id,
                 count: item.count,
-                productPoints: item.price
+                productPoints: item.price * item.count
             }));
 
             // Prepare the order data as URLSearchParams

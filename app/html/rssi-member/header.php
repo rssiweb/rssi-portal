@@ -228,8 +228,13 @@
         </a>
         <ul id="rewards" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="redeem_gemsLink" href="redeem_gems.php">
-              <span>Gems</span>
+            <a id="gems-mart" href="gems-mart.php">
+              <span>Gems Mart</span>
+            </a>
+          </li>
+          <li>
+            <a id="my-orders" href="my-orders.php">
+              <span>My Orders</span>
             </a>
           </li>
         </ul>
@@ -583,8 +588,12 @@
       },
       {
         id: 'rewards',
-        linkId: 'redeem_gemsLink',
-        url: 'redeem_gems.php'
+        linkId: 'my-orders',
+        url: 'my-orders.php'
+      }, {
+        id: 'rewards',
+        linkId: 'gems-mart',
+        url: 'gems-mart.php'
       },
       {
         id: 'claims',
