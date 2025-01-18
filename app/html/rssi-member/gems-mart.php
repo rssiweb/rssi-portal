@@ -330,7 +330,7 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
                 .then(data => {
                     if (data.status === 'success') {
                         alert(data.message); // Show success message from PHP response
-                        location.reload(); // Reload the page to prevent multiple submissions
+                        window.location.href = 'my-orders.php'; // Redirect to the my-orders.php page
                     } else {
                         alert(data.message); // Show error message from PHP response
                         placeOrderButton.disabled = false; // Re-enable the button
