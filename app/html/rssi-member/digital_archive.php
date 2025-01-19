@@ -16,7 +16,7 @@ validation();
 // }
 $uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
 
-$selectMemberQuery = "SELECT fullname,eduq FROM rssimyaccount_members WHERE associatenumber = '$uploadedfor'";
+$selectMemberQuery = "SELECT fullname,eduq,applicationnumber FROM rssimyaccount_members WHERE associatenumber = '$uploadedfor'";
 $memberResult = pg_query($con, $selectMemberQuery);
 
 if ($memberResult && pg_num_rows($memberResult) > 0) {
@@ -24,6 +24,7 @@ if ($memberResult && pg_num_rows($memberResult) > 0) {
     $memberData = pg_fetch_assoc($memberResult);
     $datafor = $memberData['fullname'];
     $eduq = $memberData['eduq'];
+    $applicationnumber = $memberData['applicationnumber'];
 }
 
 
@@ -101,7 +102,7 @@ foreach ($fileNamesMapping as $dbName => $humanName) {
     } else {
         $selectLatestQuery .= "DISTINCT ON (file_name) file_name, file_path, uploaded_by, uploaded_on, transaction_id, verification_status, field_status,certificate_name,remarks,reviewed_by,reviewed_on ";
     }
-    $selectLatestQuery .= "FROM archive WHERE uploaded_for = '$uploadedfor' AND file_name = '$dbName' ";
+    $selectLatestQuery .= "FROM archive WHERE (uploaded_for = '$uploadedfor' OR uploaded_for = '$applicationnumber') AND file_name = '$dbName' ";
     if (!($dbName === 'additional_certificate' || $dbName === 'previous_employment_information')) {
         $selectLatestQuery .= "ORDER BY file_name, uploaded_on DESC ";
     } else {
