@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/email.php");
 
 
 if (!isLoggedIn("aid")) {
@@ -18,8 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize inputs
     $type = isset($_POST['type']) ? htmlspecialchars(trim($_POST['type'])) : null;
     $user_id = isset($_POST['userid']) ? htmlspecialchars(trim($_POST['userid'])) : null;
-    $password = isset($_POST['newpass']) ? htmlspecialchars(trim($_POST['newpass'])) : null;
+    $password = bin2hex(random_bytes(3)); // Generates a random 6-character alphanumeric password
     $now = date('Y-m-d H:i:s');
+    $acc_setup = isset($_POST['acc_setup']) ? true : null;
 
     if ($type && $user_id && $password) {
         // Format user_id based on type
@@ -48,6 +50,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       </script>";
                 exit;
             } else {
+                // Query to fetch fullname, email, and phone
+                if ($type === 'Associate') {
+                    $query = "SELECT fullname, email, phone FROM rssimyaccount_members WHERE associatenumber = '$user_id'";
+                } elseif ($type === 'Applicant') {
+                    $query = "SELECT applicant_name AS fullname, email, telephone AS phone 
+                              FROM signup 
+                              WHERE application_number = '$user_id'";
+                } elseif ($type === 'Student') {
+                    $query = "SELECT studentname AS fullname, emailaddress AS email, contact AS phone 
+                              FROM rssimyprofile_students 
+                              WHERE student_id = '$user_id'";
+                } else {
+                    // Handle invalid $type or throw an error
+                    $query = null;
+                    // Optionally log or throw an exception
+                    error_log("Invalid type provided: $type");
+                }
+
+                // Execute the query
+                $result = pg_query($con, $query);
+
+                if ($result && pg_num_rows($result) > 0) {
+                    // Fetch the result
+                    $row = pg_fetch_assoc($result);
+
+                    // Extract values
+                    $fullname = $row['fullname'];
+                    $email = $row['email'];
+                    $phone = $row['phone'];
+                }
+                $template = ($acc_setup === true) ? 'new_acc_setup' : 'reg_pass_change';
+
+                sendEmail(
+                    $template,
+                    [
+                        "fullname" => $fullname,
+                        "associatenumber" => $user_id,
+                        "password" => $password,
+                    ],
+                    $email,
+                    false
+                );
                 // If the query succeeds, show success message
                 echo "<script type='text/javascript'>
                         alert('Password has been updated successfully for $user_id.');
@@ -207,7 +251,7 @@ if ($get_id) {
                                             <option>Applicant</option>
                                         </select>
                                         <input type="text" name="userid" class="form-control" style="width:max-content; display:inline-block" placeholder="User ID" required>
-                                        <input type="password" name="newpass" id="newpass" class="form-control" style="width:max-content; display:inline-block" placeholder="New password" required>
+                                        <!-- <input type="password" name="newpass" id="newpass" class="form-control" style="width:max-content; display:inline-block" placeholder="New password" required> -->
                                     </div>
 
                                 </div>
@@ -217,9 +261,15 @@ if ($get_id) {
                                         Update</button>
                                 </div>
                                 <br>
-                                <label for="show-password" class="field__toggle" style="margin-top: 5px;font-weight: unset;">
-                                    <input type="checkbox" class="checkbox" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
-                                </label>
+                                <div class="form-check mt-3">
+                                    <input type="checkbox" name="acc_setup" id="acc_setup" class="form-check-input" value="true">
+                                    <label for="acc_setup" class="form-check-label">Account Configuration</label>
+                                </div>
+                                <!-- <div class="form-check">
+                                    <label for="show-password" class="field__toggle">
+                                        <input type="checkbox" class="form-check-input" id="show-password" class="field__toggle-input" style="display: inline-block;" />&nbsp;Show password
+                                    </label>
+                                </div> -->
                             </form>
 
                             <br><b><span class="underline">Password change details</span></b><br><br>
@@ -322,7 +372,7 @@ if ($get_id) {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
-    <script>
+    <!-- <script>
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
         }
@@ -346,7 +396,7 @@ if ($get_id) {
             }
 
         }
-    </script>
+    </script> -->
     <script>
         $(document).ready(function() {
             // Check if resultArr is empty
