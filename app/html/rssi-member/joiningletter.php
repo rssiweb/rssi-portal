@@ -277,6 +277,7 @@ if (!$result) {
                                         <p>Please upload scanned copies of all required documents at the following URL if you did not upload them during the interview:
                                             https://login.rssi.in/rssi-member/document.php (Digital Archive and My Bank details)</p>
                                         <ol type="A">
+                                            <li>Offer Letter (Signed Copy)</li>
                                             <li>Highschool Marksheet</li>
                                             <li>Intermediate Marksheet</li>
                                             <li>Graduation Marksheet / Certificate OR Any supporting document with college ID.</li>

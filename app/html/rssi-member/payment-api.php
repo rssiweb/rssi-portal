@@ -1565,6 +1565,8 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
   $orderBy = isset($_POST['associatenumber']) ? pg_escape_string($con, $_POST['associatenumber']) : null;
   $maxLimit = isset($_POST['maxlimit']) ? pg_escape_string($con, $_POST['maxlimit']) : 0;
   $doj = ($_POST['doj']);
+  $email = ($_POST['email']);
+  $fullname = ($_POST['fullname']);
 
   if ($totalPoints === null || $cart === null || $orderBy === null) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid input data.']);
@@ -1594,7 +1596,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
   }
 
   // Insert into orders table
-  $query = "INSERT INTO orders (total_points, order_by) VALUES ($totalPoints, '$orderBy') RETURNING id";
+  $query = "INSERT INTO orders (total_points, order_by) VALUES ($totalPoints, '$orderBy') RETURNING id, order_date";
   $result = pg_query($con, $query);
 
   if (!$result) {
@@ -1603,6 +1605,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
   }
 
   $orderId = pg_fetch_result($result, 0, 'id');
+  $orderDate = pg_fetch_result($result, 0, 'order_date');
 
   // Insert into order_items table
   foreach ($cart as $item) {
@@ -1615,6 +1618,12 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
       exit;
     }
   }
-
+  // Call sendEmail to notify the user
+  sendEmail("redeem_apply", array(
+    "fullname" => $fullname,
+    "totalPoints" => $totalPoints,
+    "orderId" => $orderId,
+    "now" => date("d/m/Y g:i a", strtotime($orderDate))
+  ), $email);
   echo json_encode(['status' => 'success', 'message' => 'Order placed successfully!']);
 }

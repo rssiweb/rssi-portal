@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/email.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -20,6 +21,8 @@ SELECT
     o.order_date AS order_date,
     o.order_by AS associate_number,
     m.fullname AS associate_name,
+    m.email,
+    m.phone,
     oi.product_id,
     oi.id,
     oi.quantity,
@@ -69,11 +72,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['entry_id'])) {
         updated_on = $5
     WHERE 
         id = $3
-    ";
+    RETURNING order_id, id, status, remarks";
 
     $updateResult = pg_query_params($con, $updateQuery, [$status, $remarks, $entryId, $updated_by, $updated_on]);
 
+    $order_id = pg_fetch_result($updateResult, 0, 'order_id');
+    $entry_id = pg_fetch_result($updateResult, 0, 'id');
+    $status = pg_fetch_result($updateResult, 0, 'status');
+    $remarks = pg_fetch_result($updateResult, 0, 'remarks');
+
+    // Fetch order details from the orders table
+    $queryOrderDetails = "SELECT order_by, order_date FROM orders WHERE id = $order_id";
+    $orderDetailsResult = pg_query($con, $queryOrderDetails);
+
+    if ($orderDetailsResult) {
+        $order_by = pg_fetch_result($orderDetailsResult, 0, 'order_by');
+        $order_date = pg_fetch_result($orderDetailsResult, 0, 'order_date');
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Failed to fetch order details.']);
+        exit;
+    }
+
+    // Fetch associate details from rssimyaccount_members
+    $queryAssociateDetails = "SELECT fullname, email, phone 
+                          FROM rssimyaccount_members 
+                          WHERE associatenumber = '$order_by'";
+    $associateDetailsResult = pg_query($con, $queryAssociateDetails);
+
+    if ($associateDetailsResult) {
+        $fullname = pg_fetch_result($associateDetailsResult, 0, 'fullname');
+        $email = pg_fetch_result($associateDetailsResult, 0, 'email');
+        $phone = pg_fetch_result($associateDetailsResult, 0, 'phone');
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Failed to fetch associate details.']);
+        exit;
+    }
+
     if ($updateResult) {
+        sendEmail("redeem_update", array(
+            "fullname" => $fullname,
+            "orderId" => $order_id . '/' . $entry_id,
+            "status" => $status,
+            "remarks" => $remarks,
+            "orderDate" => date("d/m/Y g:i a", strtotime($order_date))
+        ), $email);
         echo "<script>alert('Order updated successfully.');
         if (window.history.replaceState) {
                         // Update the URL without causing a page reload or resubmission

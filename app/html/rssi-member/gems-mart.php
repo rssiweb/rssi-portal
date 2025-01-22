@@ -311,9 +311,11 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
             // Prepare the order data as URLSearchParams
             const orderData = new URLSearchParams({
                 'form-type': 'orders', // Form type
-                'associatenumber': "<?php echo $associatenumber; ?>", // Associate number
-                'doj': "<?php echo $doj; ?>", // Associate number
-                'maxlimit': "<?php echo ($totalgemsreceived - $totalgemsredeem); ?>", // Associate number
+                'associatenumber': "<?php echo $associatenumber; ?>",
+                'fullname': "<?php echo $fullname; ?>",
+                'doj': "<?php echo $doj; ?>",
+                'email': "<?php echo $email; ?>",
+                'maxlimit': "<?php echo ($totalgemsreceived - $totalgemsredeem); ?>", // current point
                 'totalPoints': totalPoints, // Total points
                 'cart': JSON.stringify(cartData) // Cart data as a string
             });

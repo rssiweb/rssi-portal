@@ -1,11 +1,21 @@
-[{{reviewer_status}}] Redeem id: {{redeem_id}}
+[{{status}}] Order ID: {{orderId}}
 <html>
 
 <body>
-    <p>Dear {{fullname}} ({{user_id}}),<br><br>Redeem id {{redeem_id}} against the policy issued by the organization has been settled at Rs.{{redeem_gems_point}} on {{reviewer_status_updated_on}}.<br><br>The amount has been credited to your account. It may
-        take standard time for it to reflect in your account.<br><br>You can track the status of your request in real-time from https://login.rssi.in/rssi-member/redeem_gems.php. For more information, please contact your HR or immediate supervisor.<br><br>Regards,<br>RSSI
-        Gems
-        <br><br> This is a system generated email.
+    <p>Dear {{fullname}},</p>
+
+    <p>This is to notify you about the status of your order:</p>
+
+    <ul style="list-style-type: none;">
+        <li>Order ID: {{orderId}}</li>
+        <li>Order Date: {{orderDate}}</li>
+        <li>Current Status: {{status}}</li>
+        <li>Remarks: {{remarks}}</li>
+    </ul>
+    <br>You can track the status of your request in real-time from https://login.rssi.in/rssi-member/my-orders.php.
+    For more information, please contact your HR or immediate supervisor.<br><br>Regards,<br>RSSI
+    Gems
+    <br><br> This is a system generated email.
     </p>
 </body>
 
