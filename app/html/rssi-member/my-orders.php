@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['entry_id'])) {
         updated_on = $5
     WHERE 
         id = $3
-    RETURNING order_id, id, status, remarks";
+    RETURNING order_id, id, status, remarks, product_id, quantity";
 
     $updateResult = pg_query_params($con, $updateQuery, [$status, $remarks, $entryId, $updated_by, $updated_on]);
 
@@ -80,6 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['entry_id'])) {
     $entry_id = pg_fetch_result($updateResult, 0, 'id');
     $status = pg_fetch_result($updateResult, 0, 'status');
     $remarks = pg_fetch_result($updateResult, 0, 'remarks');
+    $product_id = pg_fetch_result($updateResult, 0, 'product_id');
+    $quantity = pg_fetch_result($updateResult, 0, 'quantity');
 
     // Fetch order details from the orders table
     $queryOrderDetails = "SELECT order_by, order_date FROM orders WHERE id = $order_id";
@@ -107,6 +109,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['entry_id'])) {
         echo json_encode(['status' => 'error', 'message' => 'Failed to fetch associate details.']);
         exit;
     }
+    // Fetch product name
+    $queryProductDetails = "SELECT name, price 
+FROM products 
+WHERE id = '$product_id'";
+    $queryProductDetailsResult = pg_query($con, $queryProductDetails);
+
+    if ($queryProductDetailsResult) {
+        $name = pg_fetch_result($queryProductDetailsResult, 0, 'name'); // Corrected variable
+        $price = pg_fetch_result($queryProductDetailsResult, 0, 'price'); // Corrected variable
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Failed to fetch product details.']);
+        exit;
+    }
 
     if ($updateResult) {
         sendEmail("redeem_update", array(
@@ -114,7 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['entry_id'])) {
             "orderId" => $order_id . '/' . $entry_id,
             "status" => $status,
             "remarks" => $remarks,
-            "orderDate" => date("d/m/Y g:i a", strtotime($order_date))
+            "quantity" => $quantity,
+            "price" => $price,
+            "name" => $name,
+            "orderDate" => date("d/m/Y g:i a", strtotime($order_date)),
+            "updated_on" => date("d/m/Y g:i a", strtotime($updated_on))
         ), $email);
         echo "<script>alert('Order updated successfully.');
         if (window.history.replaceState) {

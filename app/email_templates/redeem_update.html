@@ -1,22 +1,293 @@
 [{{status}}] Order ID: {{orderId}}
 <html>
 
+<head>
+    <style>
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #ffffff;
+            color: #333;
+        }
+        .header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 15px;
+            /* text-align: center; */
+        }
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .info-section div {
+            font-size: 14px;
+        }
+        .line {
+            border-top: 1px solid #ddd;
+            margin: 15px 0;
+        }
+        .details-section,
+        .status-section {
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .details-section p,
+        .status-section p {
+            margin: 5px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #28a745;
+            color: #ffffff;
+            border-radius: 4px;
+            text-decoration: none;
+            text-align: center;
+            margin: 10px auto;
+            display: block;
+        }
+        .promotion {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+        }
+        .promotion a {
+            color: #003366;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
 <body>
-    <p>Dear {{fullname}},</p>
+    <div dir="ltr"></div>
+    <div class="gmail_quote">
+        <!-- <blockquote class="gmail_quote"
+            style="margin: 0px 0px 0px 0.8ex; border-left: 1px solid #cccccc; padding-left: 1ex;"> -->
+        <div class="msg6312980533726595412">
+            <div style="word-spacing: normal;">
+                <div dir="auto" lang="und">
+                    <div style="margin: 0px auto; max-width: 600px;">
+                        <table style="width: 100%;" role="presentation" border="0" cellspacing="0" cellpadding="0"
+                            align="center">
+                            <tbody>
+                                <tr>
+                                    <td style="direction: ltr; font-size: 0px; padding: 16px; text-align: center;">
+                                        <div class="mj-column-per-100"
+                                            style="font-size: 0px; text-align: left; direction: ltr; display: inline-block; vertical-align: top; width: 100%;">
+                                            <table role="presentation" border="0" width="100%" cellspacing="0"
+                                                cellpadding="0">
+                                                <tbody>
+                                                    <tr>
+                                                        <td style="font-size: 0px; padding: 0px; word-break: break-word;"
+                                                            align="left">
+                                                            <div
+                                                                style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif; font-size: 16px; line-height: 1.6; text-align: left; color: #131517;">
+                                                                <div style="font-weight: normal; color: #b3b5b7;">
+                                                                    Rina Shiksha Sahayak Foundation</div>
+                                                                <h1
+                                                                    style="margin-top: 0px; margin-bottom: 4px; font-size: 24px; line-height: 32px;">
+                                                                    <!-- <strong>Your RSSI account is ready to
+                                                                        explore!</strong> -->
+                                                                </h1>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size: 0px; padding: 16px 0px; word-break: break-word;"
+                                                            align="center">
+                                                            <p
+                                                                style="border-top: 1px solid #ebeced; font-size: 1px; margin: 0px auto; width: 100%;">
+                                                                &nbsp;</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size: 0px; padding: 0px; word-break: break-word;"
+                                                            align="left">
+                                                            <div
+                                                                style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif; font-size: 16px; line-height: 1.6; text-align: left; color: #131517;">
+                                                                <table>
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td style="padding-bottom: 8px;">
+                                                                                <table style="border-spacing: 0px;"
+                                                                                    border="0">
+                                                                                    <tbody>
+                                                                                        <tr>
+                                                                                            <td
+                                                                                                style="vertical-align: middle; width: 40px; height: 40px; padding: 0px;">
+                                                                                                <table
+                                                                                                    style="border-spacing: 0px; border-collapse: separate;"
+                                                                                                    border="0"
+                                                                                                    width="40"
+                                                                                                    cellspacing="0"
+                                                                                                    cellpadding="0">
+                                                                                                </table>
+                                                                                            </td>
+                                                                                            <td
+                                                                                                style="vertical-align: middle; padding-left: 12px;">
+                                                                                                <div>
+                                                                                                    <div class="container">
+                                                                                                        <div class="header">Order ID: {{orderId}}</div>
+                                                                                                        <div class="info-section">
+                                                                                                            <div>
+                                                                                                                <p><strong>Order Date:</strong> {{orderDate}}</p>
+                                                                                                                <!-- <p><strong>Associate:</strong> {{fullname}}</p> -->
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                <p><strong>Status:</strong> {{status}}</p>
+                                                                                                                <p><strong>Updated On:</strong> {{updated_on}}</p>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="line"></div>
+                                                                                                        <div class="details-section">
+                                                                                                            <p><strong>Product:</strong> {{name}}</p>
+                                                                                                            <p><strong>Quantity:</strong> {{quantity}}</p>
+                                                                                                            <p><strong>Price:</strong> ₹{{price}}</p>
+                                                                                                        </div>
+                                                                                                        <div class="status-section">
+                                                                                                            <p><strong>Remarks:</strong> {{remarks}}</p>
+                                                                                                        </div>
+                                                                                                        <div class="line"></div>
+                                                                                                        <div class="promotion">
+                                                                                                            <p>Shop for more exciting products on <strong>Gems Mart</strong> and redeem your points!</p>
+                                                                                                            <a href="https://login.rssi.in/rssi-member/gems-mart.php" target="_blank">Go to Gems Mart</a>
+                                                                                                        </div>
+                                                                                                </div>
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td></td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size: 0px; padding: 16px 0px; word-break: break-word;"
+                                                            align="center">
+                                                            <p
+                                                                style="border-top: 1px solid #ebeced; font-size: 1px; margin: 0px auto; width: 100%;">
+                                                                &nbsp;</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size: 0px; padding: 24px 0px 0px; word-break: break-word;"
+                                                            align="left">
+                                                            <div
+                                                                style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif; font-size: 14px; line-height: 1.6; text-align: left; color: #737577;">
+                                                                Have questions? We've got answers! Call +91 7980168159
+                                                                or email info@rssi.in</div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size: 0px; padding: 32px 0px 0px; word-break: break-word;"
+                                                            align="left">
+                                                            <div
+                                                                style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif; font-size: 12px; font-weight: 500; line-height: 1.6; text-align: left; color: #b3b5b7;">
+                                                                Get the latest updates! Follow us on</div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size: 0px; padding: 0px 0px 8px; word-break: break-word;"
+                                                            align="left">
+                                                            <table style="display: inline-block;" role="presentation"
+                                                                border="0" cellspacing="0" cellpadding="0" align="left">
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td
+                                                                            style="padding: 12px 0px 12px 0px; vertical-align: middle;">
+                                                                            <a href="https://www.facebook.com/rssi.in"
+                                                                                target="_blank" rel="noopener">
+                                                                                <img style="border-radius: 3px; display: block; margin-right: 8px;"
+                                                                                    src="https://cdn.lu.ma/email/facebook.png"
+                                                                                    alt="" width="20" height="20">
+                                                                            </a>
+                                                                        </td>
+                                                                        <td
+                                                                            style="padding: 12px 0px 12px 0px; vertical-align: middle;">
+                                                                            <a href="https://www.instagram.com/rssi.in/"
+                                                                                target="_blank" rel="noopener">
+                                                                                <img style="border-radius: 3px; display: block; margin-right: 8px;"
+                                                                                    src="https://cdn.lu.ma/email/instagram.png"
+                                                                                    alt="" width="20" height="20">
+                                                                            </a>
+                                                                        </td>
+                                                                        <td
+                                                                            style="padding: 12px 0px 12px 0px; vertical-align: middle;">
+                                                                            <a href="https://www.linkedin.com/company/rssingo/"
+                                                                                target="_blank" rel="noopener">
+                                                                                <img style="border-radius: 3px; display: block; margin-right: 8px;"
+                                                                                    src="https://cdn.lu.ma/email/linkedin.png"
+                                                                                    alt="" width="20" height="20">
+                                                                            </a>
+                                                                        </td>
+                                                                        <td
+                                                                            style="padding: 12px 0px 12px 0px; vertical-align: middle;">
+                                                                            <a href="https://api.whatsapp.com/send/?phone=917980168159"
+                                                                                target="_blank" rel="noopener">
+                                                                                <img style="border-radius: 3px; display: block; margin-right: 8px;"
+                                                                                    src="https://cdn.lu.ma/email/whatsapp.png"
+                                                                                    alt="" width="20" height="20">
+                                                                            </a>
+                                                                        </td>
+                                                                        <!-- <td
+                                                                            style="padding: 12px 0px 12px 0px; vertical-align: middle;">
+                                                                            <a href="https://www.instagram.com/rssi.in"
+                                                                                target="_blank" rel="noopener">
+                                                                                <img style="border-radius: 3px; display: block; margin-right: 8px;"
+                                                                                    src="https://cdn.lu.ma/email/messenger.png"
+                                                                                    alt="" width="20" height="20">
+                                                                            </a>
+                                                                        </td> -->
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
 
-    <p>This is to notify you about the status of your order:</p>
-
-    <ul style="list-style-type: none;">
-        <li>Order ID: {{orderId}}</li>
-        <li>Order Date: {{orderDate}}</li>
-        <li>Current Status: {{status}}</li>
-        <li>Remarks: {{remarks}}</li>
-    </ul>
-    <br>You can track the status of your request in real-time from https://login.rssi.in/rssi-member/my-orders.php.
-    For more information, please contact your HR or immediate supervisor.<br><br>Regards,<br>RSSI
-    Gems
-    <br><br> This is a system generated email.
-    </p>
+                                                    <tr>
+                                                        <td style="font-size: 0px; padding: 32px 0px 0px; word-break: break-word;"
+                                                            align="center">
+                                                            <p
+                                                                style="border-top: 1px solid #ebeced; font-size: 1px; margin: 0px auto; width: 100%;">
+                                                                &nbsp;</p>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- </blockquote> -->
+    </div>
 </body>
 
 </html>
