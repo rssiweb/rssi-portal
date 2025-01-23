@@ -1462,6 +1462,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'holiday') {
   $query = "SELECT holiday_date, TO_CHAR(holiday_date, 'Day') AS day, holiday_name 
           FROM holidays 
           WHERE EXTRACT(YEAR FROM holiday_date) = $1
+          AND is_public=true
           ORDER BY holiday_date ASC";
   // Prepare the query
   $result = pg_prepare($con, "holiday_query", $query);

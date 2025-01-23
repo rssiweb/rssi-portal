@@ -13,7 +13,7 @@ validation();
 <?php
 // Fetch products from the database
 $products = [];
-$query = "SELECT id, name, price, image_url, sold_out FROM products";
+$query = "SELECT id, name, price, image_url, sold_out FROM products WHERE is_active=true";
 $result = pg_query($con, $query);
 
 if ($result) {
