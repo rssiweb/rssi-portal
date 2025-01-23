@@ -1,4 +1,4 @@
-[{{status}}] Order ID: {{orderId}}
+Your rssi.in Order ({{orderId}}) has been {{status}}
 <html>
 
 <head>
@@ -13,6 +13,7 @@
             background-color: #ffffff;
             color: #333;
         }
+
         .header {
             font-size: 20px;
             font-weight: bold;
@@ -20,33 +21,44 @@
             margin-bottom: 15px;
             /* text-align: center; */
         }
+
         .info-section {
             display: flex;
             justify-content: space-between;
             margin-bottom: 15px;
         }
+
         .info-section div {
             font-size: 14px;
         }
+
+        #second-block {
+            margin-left: auto;
+        }
+
         .line {
             border-top: 1px solid #ddd;
             margin: 15px 0;
         }
+
         .details-section,
         .status-section {
             font-size: 14px;
             margin-bottom: 15px;
         }
+
         .details-section p,
         .status-section p {
             margin: 5px 0;
         }
+
         .footer {
             font-size: 12px;
             color: #999;
             text-align: center;
             margin-top: 15px;
         }
+
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -59,6 +71,7 @@
             margin: 10px auto;
             display: block;
         }
+
         .promotion {
             background-color: #f9f9f9;
             padding: 10px;
@@ -68,6 +81,7 @@
             font-size: 14px;
             color: #555;
         }
+
         .promotion a {
             color: #003366;
             text-decoration: underline;
@@ -143,32 +157,76 @@
                                                                                             <td
                                                                                                 style="vertical-align: middle; padding-left: 12px;">
                                                                                                 <div>
-                                                                                                    <div class="container">
-                                                                                                        <div class="header">Order ID: {{orderId}}</div>
-                                                                                                        <div class="info-section">
-                                                                                                            <div>
-                                                                                                                <p><strong>Order Date:</strong> {{orderDate}}</p>
-                                                                                                                <!-- <p><strong>Associate:</strong> {{fullname}}</p> -->
-                                                                                                            </div>
-                                                                                                            <div>
-                                                                                                                <p><strong>Status:</strong> {{status}}</p>
-                                                                                                                <p><strong>Updated On:</strong> {{updated_on}}</p>
-                                                                                                            </div>
+                                                                                                    <p>Dear
+                                                                                                        {{fullname}},
+                                                                                                    </p>
+                                                                                                    <p>This email is to
+                                                                                                        inform you that
+                                                                                                        your order
+                                                                                                        ({{orderId}})
+                                                                                                        has been
+                                                                                                        {{status}}.</p>
+                                                                                                    <!-- <div class="container"> -->
+                                                                                                    <div class="header">
+                                                                                                        Order Summary
+                                                                                                    </div>
+                                                                                                    <div
+                                                                                                        class="info-section">
+                                                                                                        <div
+                                                                                                            id="first-block">
+                                                                                                            <p><strong>Order
+                                                                                                                    Date:</strong>
+                                                                                                                {{orderDate}}
+                                                                                                            </p>
+                                                                                                            <!-- <p><strong>Associate:</strong> {{fullname}}</p> -->
                                                                                                         </div>
-                                                                                                        <div class="line"></div>
-                                                                                                        <div class="details-section">
-                                                                                                            <p><strong>Product:</strong> {{name}}</p>
-                                                                                                            <p><strong>Quantity:</strong> {{quantity}}</p>
-                                                                                                            <p><strong>Price:</strong> ₹{{price}}</p>
+                                                                                                        <div
+                                                                                                            id="second-block">
+                                                                                                            <p><strong>Status:</strong>
+                                                                                                                {{status}}
+                                                                                                            </p>
+                                                                                                            <p><strong>Updated
+                                                                                                                    On:</strong>
+                                                                                                                {{updated_on}}
+                                                                                                            </p>
                                                                                                         </div>
-                                                                                                        <div class="status-section">
-                                                                                                            <p><strong>Remarks:</strong> {{remarks}}</p>
-                                                                                                        </div>
-                                                                                                        <div class="line"></div>
-                                                                                                        <div class="promotion">
-                                                                                                            <p>Shop for more exciting products on <strong>Gems Mart</strong> and redeem your points!</p>
-                                                                                                            <a href="https://login.rssi.in/rssi-member/gems-mart.php" target="_blank">Go to Gems Mart</a>
-                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div class="line">
+                                                                                                    </div>
+                                                                                                    <div
+                                                                                                        class="details-section">
+                                                                                                        <p><strong>Product:</strong>
+                                                                                                            {{name}}</p>
+                                                                                                        <p><strong>Quantity:</strong>
+                                                                                                            {{quantity}}
+                                                                                                        </p>
+                                                                                                        <p><strong>Price:</strong>
+                                                                                                            ₹{{price}}
+                                                                                                        </p>
+                                                                                                    </div>
+                                                                                                    <div
+                                                                                                        class="status-section">
+                                                                                                        <p><strong>Remarks:</strong>
+                                                                                                            {{remarks}}
+                                                                                                        </p>
+                                                                                                    </div>
+                                                                                                    <div class="line">
+                                                                                                    </div>
+                                                                                                    <div
+                                                                                                        class="promotion">
+                                                                                                        <p>Shop for more
+                                                                                                            exciting
+                                                                                                            products on
+                                                                                                            <strong>Gems
+                                                                                                                Mart</strong>
+                                                                                                            and redeem
+                                                                                                            your points!
+                                                                                                        </p>
+                                                                                                        <a href="https://login.rssi.in/rssi-member/gems-mart.php"
+                                                                                                            target="_blank">Go
+                                                                                                            to Gems
+                                                                                                            Mart</a>
+                                                                                                    </div>
                                                                                                 </div>
                                                                                             </td>
                                                                                         </tr>
