@@ -262,7 +262,6 @@ $resultArr = pg_fetch_all($result);
                                     }
                                 })
                             </script>
-
                             <div class="table-responsive">
                                 <table class="table" id="table-id">
                                     <thead>
@@ -275,12 +274,42 @@ $resultArr = pg_fetch_all($result);
                                             <th id="cw2">Association Status</th>
                                             <th>Leave Balance (Days)</th>
                                             <th>Actions</th>
+                                            <th>Select Message</th>
+                                            <th>Send WhatsApp Message</th>
                                         </tr>
                                     </thead>
 
                                     <tbody>
                                         <?php if (sizeof($resultArr) > 0) { ?>
                                             <?php foreach ($resultArr as $array) { ?>
+                                                <?php
+                                                $messages = [
+                                                    'Internship Completion' => "This is a system-generated message regarding the completion of your internship with RSSI NGO, scheduled to end on " . (!empty($array['effectivedate']) ? date('d/m/Y', strtotime($array['effectivedate'])) : 'N/A') . ". To ensure a smooth transition, please complete the following activities:\n\n"
+                                                        . "Goal Sheet Submission and IPF Review:\n"
+                                                        . "- Submit your goal sheet.\n"
+                                                        . "- Review the issued Individual Performance Factor (IPF).\n"
+                                                        . "- Accept the IPF in the system.\n\n"
+                                                        . "Internship Report Signing and Submission:\n"
+                                                        . "- Obtain the necessary signatures and seals on your internship report from the centre in charge.\n"
+                                                        . "- Send a scanned copy to info@rssi.in.\n\n"
+                                                        . "Feedback and Rating:\n"
+                                                        . "- Share your brief internship experience and rate RSSI NGO through the following link:\n"
+                                                        . "  - RSSI NGO: https://g.page/r/CQkWqmErGMS7EAg/review\n"
+                                                        . "  - Kalpana Buds School: https://g.page/r/Car-7dCsy9HuEAI/review\n\n"
+                                                        . "Separation Process and ID Card Submission:\n"
+                                                        . "- Coordinate with the centre in charge on your last working day to complete the separation process in the system.\n"
+                                                        . "- Submit your ID card.\n\n"
+                                                        . "Upon successful completion of these activities, your work experience letter and relevant certificates will be issued through the system, serving as official proof of your internship with RSSI NGO.",
+                                                    'NGO Darpan' => "You are informed that your details have been added to NGO Darpan, NITI Aayog, Government of India.",
+                                                    'Google Chat' => "Please join the Google space for any internal communication purposes.\n\n"
+                                                        . "https://mail.google.com/chat/u/0/#chat/space/AAAAO7ViKO4\n\n"
+                                                        . "This is a one-way internal communication channel, for any personal query/query related to the information shared in this group, you are requested to initiate a one-on-one chat with RSSI NGO.\n\n"
+                                                        . "How to join: https://youtube.com/shorts/ftA0TokZ28g",
+                                                    'Offer letter reminder' => "As per system records, you have not yet replied to the email with the subject “RSSI Offer Letter - " . $array['associatenumber'] . "_" . $array['fullname'] . "”.\n\n"
+                                                        . "If you do not see the email, please check your “junk mail” folder or “spam” folder.\n\n"
+                                                        . "In both the cases, i.e., acceptance or rejection of the offer letter, please let us know by replying at the top of the email."
+                                                ];
+                                                ?>
                                                 <?php
                                                 // Example input dates
                                                 $doj = $array["doj"]; // Date of Joining
@@ -411,6 +440,19 @@ $resultArr = pg_fetch_all($result);
                                                             echo date('d/m/y h:i:s a', strtotime($array['exit_initiated_on'])) . ' by ' . $array['exit_initiated_by'];
                                                         }
                                                         echo '</form>' ?>
+                                                    </td>
+                                                    <td>
+                                                        <!-- Message Title Dropdown -->
+                                                        <select id="message-title-<?php echo $array['associatenumber']; ?>" class="form-select">
+                                                            <option value="">Select Message</option>
+                                                            <?php foreach ($messages as $title => $message) { ?>
+                                                                <option value="<?php echo $message; ?>"><?php echo $title; ?></option>
+                                                            <?php } ?>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <!-- Send WhatsApp Button -->
+                                                        <button type="button" onclick="sendMessage('<?php echo $array['associatenumber']; ?>', '<?php echo $array['phone']; ?>','<?php echo $array['fullname']; ?>')" class="btn btn-primary">Send</button>
                                                     </td>
                                                 </tr>
                                             <?php }
@@ -623,6 +665,22 @@ $resultArr = pg_fetch_all($result);
                 });
             <?php endif; ?>
         });
+    </script>
+    <script>
+        // JavaScript to handle WhatsApp link generation based on dropdown selection
+        function sendMessage(associatenumber, phone, fullname) {
+            var messageTitle = document.getElementById('message-title-' + associatenumber).value;
+            if (messageTitle) {
+                // Construct the message with PHP data passed into JavaScript
+                var message = "Dear " + fullname + " (" + associatenumber + "),\n\n" + messageTitle + "\n\n--RSSI\n\n**This is a system-generated message.";
+
+                // Encode the message for WhatsApp URL
+                var url = "https://api.whatsapp.com/send?phone=91" + phone + "&text=" + encodeURIComponent(message);
+                window.open(url, '_blank');
+            } else {
+                alert("Please select a message title.");
+            }
+        }
     </script>
 </body>
 
