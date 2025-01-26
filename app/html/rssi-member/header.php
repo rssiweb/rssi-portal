@@ -206,7 +206,33 @@
           </li>
         </ul>
       </li><!-- End Components Nav -->
-
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#iexploreedge" data-bs-toggle="collapse" href="#">
+          <span>iExplore Edge</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="iexploreedge" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="add_category" href="add_category.php">
+              <span>Add Category</span>
+            </a>
+          </li>
+          <li>
+            <a id="create_exam" href="create_exam.php">
+              <span>Create Exam</span>
+            </a>
+          </li>
+          <li>
+            <a id="add_question" href="add_question.php">
+              <span>Add Question</span>
+            </a>
+          </li>
+          <li>
+            <a id="question_dashboard" href="question_dashboard.php">
+              <span>Question Dashboard</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#performance" data-bs-toggle="collapse" href="#">
@@ -833,6 +859,22 @@
         id: 'work',
         linkId: 'access_panel',
         url: 'access_panel.php'
+      }, {
+        id: 'iexploreedge',
+        linkId: 'add_question',
+        url: 'add_question.php'
+      }, {
+        id: 'iexploreedge',
+        linkId: 'question_dashboard',
+        url: 'question_dashboard.php'
+      }, {
+        id: 'iexploreedge',
+        linkId: 'add_category',
+        url: 'add_category.php'
+      }, {
+        id: 'iexploreedge',
+        linkId: 'create_exam',
+        url: 'create_exam.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
