@@ -11,7 +11,7 @@ if (!isLoggedIn("aid")) {
 ?>
 <?php
 // Fetch categories from the database
-$query = "SELECT id, name FROM test_categories ORDER BY name";
+$query = "SELECT id, name FROM test_categories WHERE is_active=true ORDER BY name";
 $result = pg_query($con, $query);
 
 // Check for errors

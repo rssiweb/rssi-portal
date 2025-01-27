@@ -217,6 +217,11 @@
             </a>
           </li>
           <li>
+            <a id="manage_category" href="manage_category.php">
+              <span>Manage Category</span>
+            </a>
+          </li>
+          <li>
             <a id="create_exam" href="create_exam.php">
               <span>Create Exam</span>
             </a>
@@ -875,6 +880,10 @@
         id: 'iexploreedge',
         linkId: 'create_exam',
         url: 'create_exam.php'
+      }, {
+        id: 'iexploreedge',
+        linkId: 'manage_category',
+        url: 'manage_category.php'
       }
       // Add more menu items in the same format
       // { id: 'menuItemId', linkId: 'menuItemLinkId', url: 'menuItemURL' },
