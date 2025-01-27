@@ -314,7 +314,6 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
                 'fullname': "<?php echo $fullname; ?>",
                 'doj': "<?php echo $doj; ?>",
                 'email': "<?php echo $email; ?>",
-                'maxlimit': "<?php echo ($totalgemsreceived - $totalgemsredeem); ?>", // current point
                 'totalPoints': totalPoints, // Total points
                 'cart': JSON.stringify(cartData) // Cart data as a string
             });

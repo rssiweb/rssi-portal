@@ -1564,10 +1564,31 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
   $totalPoints = isset($_POST['totalPoints']) ? (int)$_POST['totalPoints'] : null;
   $cart = isset($_POST['cart']) ? json_decode($_POST['cart'], true) : null;
   $orderBy = isset($_POST['associatenumber']) ? pg_escape_string($con, $_POST['associatenumber']) : null;
-  $maxLimit = isset($_POST['maxlimit']) ? pg_escape_string($con, $_POST['maxlimit']) : 0;
   $doj = ($_POST['doj']);
   $email = ($_POST['email']);
   $fullname = ($_POST['fullname']);
+  // Fetch total gems redeemed and received for the user
+  $query_totalgemsredeem = pg_query_params(
+    $con,
+    "SELECT COALESCE(SUM(product_points), 0) 
+     FROM order_items 
+     JOIN orders ON orders.id = order_items.order_id 
+     WHERE order_by = $1 AND (status IS NULL OR status != 'Refunded')",
+    [$orderBy]
+  );
+  $query_totalgemsreceived = pg_query(
+    $con,
+    "SELECT COALESCE(SUM(gems), 0) 
+     FROM certificate 
+     WHERE awarded_to_id = '$orderBy'"
+  );
+
+  // Fetch results
+  $totalgemsredeem = pg_fetch_result($query_totalgemsredeem, 0, 0);
+  $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
+
+  // Calculate max limit (total gems received - total gems redeemed)
+  $maxLimit = $totalgemsreceived - $totalgemsredeem;
 
   if ($totalPoints === null || $cart === null || $orderBy === null) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid input data.']);
