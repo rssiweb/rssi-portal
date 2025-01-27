@@ -119,7 +119,11 @@ if (!$result) {
         // Define cell dimensions and text wrapping properties
         $cellWidth = 175; // Width of the cell
         $lineHeight = 5; // Line height
-        $wrappedText = html_entity_decode($array['comment']);
+        // Decode HTML entities and replace typographic apostrophes with standard ones
+        $wrappedText = html_entity_decode($array['comment'], ENT_QUOTES, 'UTF-8');
+
+        // Replace typographic apostrophes with standard apostrophes
+        $wrappedText = str_replace('’', "'", $wrappedText);
 
         // Set the initial position for the cell (X and Y coordinates)
         $pdf->SetXY(50, 110); // Adjust the X and Y position as required
