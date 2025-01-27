@@ -219,7 +219,6 @@ $totalgemsreceived = pg_fetch_result($query_totalgemsreceived, 0, 0);
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
-        let totalPoints = 1000;
         let cart = [];
 
         function updateCart(productId, productName, price, count) {

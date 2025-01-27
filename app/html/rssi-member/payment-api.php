@@ -1575,7 +1575,7 @@ if (isset($_POST['form-type']) && $_POST['form-type'] == 'orders') {
   }
 
   // First check: Validate if totalPoints are 1000 or more
-  if ($maxLimit < 999) {
+  if ($maxLimit < 1000) {
     echo json_encode(['status' => 'error', 'message' => 'You can only redeem gems if you have 1000 or more points.']);
     exit;
   }
