@@ -8,6 +8,7 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
+validation();
 ?>
 <?php
 // Fetch categories from the database

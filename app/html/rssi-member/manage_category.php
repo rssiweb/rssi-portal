@@ -47,7 +47,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $query = "SELECT * FROM test_categories order by id desc";
 $result = pg_query($con, $query);
 ?>
+<?php
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['addCategory'])) {
+        // Handle the add functionality
+        $newCategoryName = !empty(trim($_POST['newCategoryName'])) ? trim($_POST['newCategoryName']) : null;
+        $newCategoryDescription = !empty(trim($_POST['newCategoryDescription'])) ? trim($_POST['newCategoryDescription']) : null;
 
+        $insertQuery = "INSERT INTO test_categories (name, category_description, is_active) VALUES ($1, $2, $3)";
+        if ($stmt = pg_prepare($con, "insert_category", $insertQuery)) {
+            $result = pg_execute($con, "insert_category", [$newCategoryName, $newCategoryDescription, 'true']); // Set default as active
+            $message = $result ? 'Category added successfully!' : 'Error adding category!';
+            echo "<script>alert('$message'); if (window.history.replaceState) {
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                    window.location.reload();</script>";
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -113,6 +131,10 @@ $result = pg_query($con, $query);
                     <div class="card">
                         <div class="card-body">
                             <br>
+                            <!-- Add New Category Button -->
+                            <div class="text-end mb-3">
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">Add New Category</button>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table" id="table-id">
                                     <thead>
@@ -207,6 +229,31 @@ $result = pg_query($con, $query);
             <?php endif; ?>
         });
     </script>
+    <!-- Add New Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="newCategoryName" class="form-label">Category Name</label>
+                            <input type="text" class="form-control" id="newCategoryName" name="newCategoryName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newCategoryDescription" class="form-label">Category Description</label>
+                            <textarea class="form-control" id="newCategoryDescription" name="newCategoryDescription" rows="3"></textarea>
+                        </div>
+                        <button type="submit" name="addCategory" class="btn btn-primary">Add Category</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

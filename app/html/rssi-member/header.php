@@ -212,18 +212,8 @@
         </a>
         <ul id="iexploreedge" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="add_category" href="add_category.php">
-              <span>Add Category</span>
-            </a>
-          </li>
-          <li>
-            <a id="manage_category" href="manage_category.php">
-              <span>Manage Category</span>
-            </a>
-          </li>
-          <li>
-            <a id="create_exam" href="create_exam.php">
-              <span>Create Exam</span>
+            <a id="exam_management" href="exam_management.php">
+              <span>Exam Management</span>
             </a>
           </li>
           <li>
@@ -234,6 +224,11 @@
           <li>
             <a id="question_dashboard" href="question_dashboard.php">
               <span>Question Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a id="manage_category" href="manage_category.php">
+              <span>Manage Category</span>
             </a>
           </li>
         </ul>
@@ -874,12 +869,8 @@
         url: 'question_dashboard.php'
       }, {
         id: 'iexploreedge',
-        linkId: 'add_category',
-        url: 'add_category.php'
-      }, {
-        id: 'iexploreedge',
-        linkId: 'create_exam',
-        url: 'create_exam.php'
+        linkId: 'exam_management',
+        url: 'exam_management.php'
       }, {
         id: 'iexploreedge',
         linkId: 'manage_category',

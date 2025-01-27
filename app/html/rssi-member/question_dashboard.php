@@ -9,9 +9,9 @@ if (!isLoggedIn("aid")) {
     header("Location: index.php");
     exit;
 }
-
+validation();
 // Fetch categories for the filter dropdown
-$categoryQuery = "SELECT id, name FROM test_categories ORDER BY name";
+$categoryQuery = "SELECT id, name FROM test_categories WHERE is_active=true ORDER BY name";
 $categoryResult = pg_query($con, $categoryQuery);
 $categories = pg_fetch_all($categoryResult);
 
@@ -22,14 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
     $categoryId = $_POST['category'];
     $correctOption = $_POST['correct_option'];
     $options = $_POST['options']; // Options array
+    $modifiedAt = date('Y-m-d H:i:s');
 
     // Update the question text
     $updateQuery = "
         UPDATE test_questions
-        SET question_text = $1, category_id = $2, correct_option = $3
+        SET question_text = $1, category_id = $2, correct_option = $3, created_at=$5, created_by=$6
         WHERE id = $4
     ";
-    $result = pg_query_params($con, $updateQuery, array($questionText, $categoryId, $correctOption, $questionId));
+    $result = pg_query_params($con, $updateQuery, array($questionText, $categoryId, $correctOption, $questionId, $modifiedAt, $user_check));
 
     if ($result) {
         // Update the options
@@ -231,7 +232,7 @@ $result = pg_query($con, $query);
                                                 <th>Category</th>
                                                 <th>Correct Option</th>
                                                 <th>Options</th>
-                                                <th>Created At</th>
+                                                <th>Last Updated</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -260,7 +261,8 @@ $result = pg_query($con, $query);
                                                         <td><?= $optionsDisplay ?></td>
                                                         <td><?= (new DateTime($row['created_at']))->format('d/m/Y h:i A') ?> by <?= $row['created_by'] ?></td>
                                                         <td>
-                                                            <?php if ($row['created_by'] === $user_check): ?>
+                                                            <?php if ($role === 'Admin' || $row['created_by'] === $user_check): ?>
+                                                                <!-- Edit button -->
                                                                 <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal"
                                                                     data-id="<?= $row['id'] ?>" data-question="<?= htmlspecialchars($row['question_text']) ?>"
                                                                     data-category="<?= $row['category_id'] ?>" data-correct="<?= $row['correct_option'] ?>"
@@ -268,8 +270,10 @@ $result = pg_query($con, $query);
                                                                     Edit
                                                                 </button>
                                                             <?php endif; ?>
+
                                                             <?php if ($role === 'Admin'): ?>
-                                                                <a href="?delete_id=<?= $row['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</a>
+                                                                <!-- Delete button for Admin only -->
+                                                                <a href="?delete_id=<?= $row['id'] ?>" class="btn btn-danger btn-sm mt-2" onclick="return confirm('Are you sure?')">Delete</a>
                                                             <?php endif; ?>
                                                         </td>
                                                     </tr>
