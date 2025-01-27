@@ -267,15 +267,15 @@ $result = pg_query($con, $query);
                                                                     data-options='<?= json_encode($options) ?>'>
                                                                     Edit
                                                                 </button>
+                                                            <?php endif; ?>
+                                                            <?php if ($role === 'Admin'): ?>
                                                                 <a href="?delete_id=<?= $row['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</a>
                                                             <?php endif; ?>
                                                         </td>
                                                     </tr>
                                                 <?php endwhile; ?>
                                             <?php else: ?>
-                                                <tr>
-                                                    <td colspan="7" class="text-center">No questions found.</td>
-                                                </tr>
+                                                <p>No questions found.</p>
                                             <?php endif; ?>
                                         </tbody>
                                     </table>
