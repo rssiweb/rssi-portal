@@ -20,17 +20,41 @@ if ($role == 'Admin') {
     @$user_id = strtoupper($_GET['user_id']);
 
     if ($user_id > 0) {
-        $result = pg_query($con, "SELECT archive.remarks as aremarks, archive.*,rssimyaccount_members.fullname
-            FROM archive
-            JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber
-            WHERE archive.uploaded_for='$user_id' AND rssimyaccount_members.filterstatus='$id'");
+        $result = pg_query($con, "
+            SELECT a.remarks AS aremarks, a.*, rm.fullname, rm.associatenumber
+            FROM archive a
+            JOIN rssimyaccount_members rm
+            ON a.uploaded_for = rm.associatenumber 
+            OR a.uploaded_for = rm.applicationnumber
+            INNER JOIN (
+                SELECT uploaded_for, file_name, MAX(uploaded_on) AS latest_upload
+                FROM archive
+                GROUP BY uploaded_for, file_name
+            ) latest_archive 
+            ON a.uploaded_for = latest_archive.uploaded_for 
+            AND a.file_name = latest_archive.file_name 
+            AND a.uploaded_on = latest_archive.latest_upload
+            WHERE a.uploaded_for = '$user_id' AND rm.filterstatus = '$id'
+        ");
     } else {
-        $result = pg_query($con, "SELECT archive.remarks as aremarks, archive.*, rssimyaccount_members.fullname
-            FROM archive
-            JOIN rssimyaccount_members ON archive.uploaded_for = rssimyaccount_members.associatenumber
-            WHERE rssimyaccount_members.filterstatus='$id'
-            ORDER BY archive.doc_id DESC"); // Select query for viewing users.
-    }
+        $result = pg_query($con, "
+            SELECT a.remarks AS aremarks, a.*, rm.fullname, rm.associatenumber
+            FROM archive a
+            JOIN rssimyaccount_members rm
+            ON a.uploaded_for = rm.associatenumber 
+            OR a.uploaded_for = rm.applicationnumber
+            INNER JOIN (
+                SELECT uploaded_for, file_name, MAX(uploaded_on) AS latest_upload
+                FROM archive
+                GROUP BY uploaded_for, file_name
+            ) latest_archive 
+            ON a.uploaded_for = latest_archive.uploaded_for 
+            AND a.file_name = latest_archive.file_name 
+            AND a.uploaded_on = latest_archive.latest_upload
+            WHERE rm.filterstatus = '$id'
+            ORDER BY a.doc_id DESC
+        ");
+    }    
 }
 
 if (!$result) {
@@ -190,7 +214,7 @@ $resultArr = pg_fetch_all($result);
                                             <?php foreach ($resultArr as $array) : ?>
                                                 <tr>
                                                     <td><?= $array['doc_id'] ?></td>
-                                                    <td><?= $array['fullname'] . '&nbsp;(' . $array['uploaded_for'] . ')' ?></td>
+                                                    <td><?= $array['fullname'] . '&nbsp;(' . $array['associatenumber'] . ')' ?></td>
                                                     <td><?= $array['file_name'] ?></td>
                                                     <td><a href="<?= $array['file_path'] ?>" target="_blank">Document</a></td>
                                                     <td><?= $array['uploaded_by'] ?></td>
