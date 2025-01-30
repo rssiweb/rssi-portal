@@ -14,7 +14,7 @@ validation();
 
 // Fetch exams with related categories
 $query = "
-    SELECT te.id AS exam_id, te.name AS exam_name, te.total_questions, te.total_duration, te.created_at,
+    SELECT te.id AS exam_id, te.name AS exam_name, te.total_questions, te.total_duration, te.is_active, te.created_at,
            STRING_AGG(tc.name, ', ') AS categories, STRING_AGG(tc.id::text, ', ') AS category_ids -- Fetch category IDs as a comma-separated string
     FROM test_exams te
     LEFT JOIN test_exam_categories tec ON te.id = tec.exam_id
@@ -65,16 +65,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
     $total_questions = intval($_POST['total_questions']);
     $total_duration = intval($_POST['total_duration']);
     $categories = $_POST['categories']; // Array of category IDs
+    $status = $_POST['status'];
 
     if ($id) {
         // Update existing exam
         $updateExamQuery = "
             UPDATE test_exams
-            SET name = $1, total_questions = $2, total_duration = $3, created_at = CURRENT_TIMESTAMP
+            SET name = $1, total_questions = $2, total_duration = $3, is_active = $5, created_at = CURRENT_TIMESTAMP
             WHERE id = $4
         ";
 
-        $updateExamResult = pg_query_params($con, $updateExamQuery, [$name, $total_questions, $total_duration, $id]);
+        $updateExamResult = pg_query_params($con, $updateExamQuery, [$name, $total_questions, $total_duration, $id, $status]);
 
         if (!$updateExamResult) {
             die("Error updating exam: " . pg_last_error($con));
@@ -86,12 +87,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
     } else {
         // Insert new exam
         $insertExamQuery = "
-            INSERT INTO test_exams (name, total_questions, total_duration, created_at)
-            VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+            INSERT INTO test_exams (name, total_questions, total_duration, created_at,is_active)
+            VALUES ($1, $2, $3, CURRENT_TIMESTAMP,$4)
             RETURNING id
         ";
 
-        $insertExamResult = pg_query_params($con, $insertExamQuery, [$name, $total_questions, $total_duration]);
+        $insertExamResult = pg_query_params($con, $insertExamQuery, [$name, $total_questions, $total_duration, $status]);
 
         if (!$insertExamResult) {
             die("Error inserting exam: " . pg_last_error($con));
@@ -204,6 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                 <th>Total Questions</th>
                                                 <th>Categories</th>
                                                 <th>Total Duration (min)</th>
+                                                <th>Status</th>
                                                 <th>Created At</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -216,6 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                     <td><?= $row['total_questions'] ?></td>
                                                     <td><?= $row['categories'] ?></td>
                                                     <td><?= $row['total_duration'] ?></td>
+                                                    <td><?= $row['is_active'] === 't' ? 'Active' : 'Inactive' ?></td>
                                                     <td><?= $row['created_at'] ?></td>
                                                     <td>
                                                         <button class="btn btn-warning btn-sm me-2 edit-exam"
@@ -223,7 +226,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                             data-name="<?= $row['exam_name'] ?>"
                                                             data-total-questions="<?= $row['total_questions'] ?>"
                                                             data-total-duration="<?= $row['total_duration'] ?>"
-                                                            data-categories="<?= $row['category_ids'] ?>"> <!-- Pass category_ids as data -->
+                                                            data-categories="<?= $row['category_ids'] ?>"
+                                                            data-status="<?= $row['is_active'] === 't' ? 'true' : 'false' ?>">
                                                             Edit
                                                         </button>
                                                         <!-- Delete Form -->
@@ -274,6 +278,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                         <?php endwhile; ?>
                                                     </select>
                                                 </div>
+                                                <div class="mb-3">
+                                                    <label for="status" class="form-label">Status</label>
+                                                    <select class="form-select" id="status" name="status" required>
+                                                        <option value="true">Active</option>
+                                                        <option value="false">Inactive</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -320,6 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                 const examName = this.dataset.name;
                 const totalQuestions = this.dataset.totalQuestions;
                 const totalDuration = this.dataset.totalDuration;
+                const status = this.dataset.status;
                 // Get the categories as a comma-separated string (e.g., '1,3')
                 const selectedCategories = this.dataset.categories.split(',').map(category => category.trim());
 
@@ -327,6 +339,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                 document.getElementById('examName').value = examName;
                 document.getElementById('totalQuestions').value = totalQuestions;
                 document.getElementById('totalDuration').value = totalDuration;
+                // Set the status dropdown value based on is_active
+                document.getElementById('status').value = status === 'true' ? 'true' : 'false';
 
                 // Pre-select the categories in the dropdown
                 const categoriesSelect = document.getElementById('categories');

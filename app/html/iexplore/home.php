@@ -41,9 +41,6 @@ if (!$result) {
 <!doctype html>
 <html lang="en">
 
-<!doctype html>
-<html lang="en">
-
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
