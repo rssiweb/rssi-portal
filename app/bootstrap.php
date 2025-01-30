@@ -10,6 +10,8 @@ if (strpos($_SERVER['REQUEST_URI'], '/rssi-student/') !== false) {
     $sessionName = 'rssi_member_session';
 } elseif (strpos($_SERVER['REQUEST_URI'], '/tap/') !== false) {
     $sessionName = 'tap_session';
+}elseif (strpos($_SERVER['REQUEST_URI'], '/iexplore/') !== false) {
+    $sessionName = 'iexplore_session';
 }
 
 // Set the session name

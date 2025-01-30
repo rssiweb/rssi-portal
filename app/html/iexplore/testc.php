@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-include("../../util/login_util.php");
+include("../../util/login_util_iexplore.php");
 
 // Ensure the user is logged in
 if (!isLoggedIn("aid")) {
@@ -161,7 +161,7 @@ if (!$show_form) {
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const examId = <?php echo $exam_id; ?>; // Use PHP to inject the exam ID
-            const userId = "<?php echo $user_check; ?>"; // Use PHP to inject the logged-in user's ID as a string
+            const userId = "<?php echo $id; ?>"; // Use PHP to inject the logged-in user's ID as a string
 
             // Handle Exam Submission
             document.getElementById('submit-exam').addEventListener('click', () => {

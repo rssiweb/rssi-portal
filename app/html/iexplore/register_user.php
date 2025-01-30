@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
+include("../../util/email.php");
 
 // Function to generate a 12-digit random user ID
 function generateUserId()
@@ -14,10 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $contact = trim($_POST['contact']);
-    $password = password_hash(trim($_POST['password']), PASSWORD_DEFAULT);
+    $random_password = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6);
+    // Hash the generated password securely
+    $password = password_hash(trim($random_password), PASSWORD_DEFAULT);
 
     // Input validation
-    if (empty($name) || empty($email) || empty($contact) || empty($_POST['password'])) {
+    if (empty($name) || empty($email) || empty($contact)) {
         $message = "All fields are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Invalid email address.";
@@ -29,6 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = pg_query_params($con, $query, array($userId, $name, $email, $password));
 
         if ($result) {
+            sendEmail("register_user", [
+                "applicant_name" => $name,
+                "email" => $email,
+                "password" => $random_password,
+            ], $email);
             // Success message
             $message = "User registered successfully!";
         } else {
@@ -99,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" class="form-control" id="contact" name="contact" placeholder="Enter your contact number" required maxlength="10" pattern="\d{10}">
                 </div>
 
-                <div class="mb-3">
+                <!-- <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
                     <div class="input-group">
                         <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
@@ -107,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <i class="bi bi-eye"></i>
                         </span>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary">Register</button>
@@ -116,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <script>
+    <!-- <script>
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordField = document.getElementById('password');
             const icon = this.querySelector('i');
@@ -131,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 icon.classList.add('bi-eye');
             }
         });
-    </script>
+    </script> -->
 </body>
 
 </html>

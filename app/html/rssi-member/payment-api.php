@@ -1364,20 +1364,8 @@ if (@$_POST['form-type'] == "signup") {
   $duration = $_POST['duration'] ?? null;
   $availability = !empty($_POST['availability']) ? implode(",", $_POST['availability']) : null;
   $medium = !empty($_POST['medium']) ? implode(",", $_POST['medium']) : null;
-  function generateRandomPassword()
-  {
-    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
-    $password = '';
-    $length = strlen($chars);
 
-    for ($i = 0; $i < 6; $i++) {
-      $password .= $chars[random_int(0, $length - 1)];
-    }
-
-    return $password;
-  }
-
-  $randomPassword = generateRandomPassword();
+  $randomPassword = bin2hex(random_bytes(3)); // Generates a random 6-character alphanumeric password
   $newpass_hash = password_hash($randomPassword, PASSWORD_DEFAULT);
 
   if (empty($_FILES['payment-photo']['name'])) {
