@@ -200,5 +200,19 @@ if (!$result) {
       });
     });
   </script>
+  <script>
+    $(document).ready(function() {
+      // Check if resultArr is empty
+      <?php if (!empty($result)) : ?>
+        // Initialize DataTables only if resultArr is not empty
+        $('#table-id').DataTable({
+          // paging: false,
+          "order": [] // Disable initial sorting
+          // other options...
+        });
+      <?php endif; ?>
+    });
+  </script>
+
 </body>
 </html>
