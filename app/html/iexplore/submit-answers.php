@@ -53,6 +53,13 @@ foreach ($answers as $answer) {
     // Check if the selected option is correct
     $is_correct = ($selected_option === $correct_answer);
 
+    // Insert the answer into the database
+    $query = "
+        INSERT INTO test_user_answers (user_exam_id, question_id, selected_option)
+        VALUES ($1, $2, $3)
+    ";
+    pg_query_params($con, $query, array($user_exam_id, $question_id, $selected_option));
+
     // Increment the score if the answer is correct
     if ($is_correct) {
         $score++;
@@ -77,4 +84,3 @@ pg_query_params($con, $query, array($user_exam_id));
 
 // Return the result as JSON
 echo json_encode(['score' => $score]);
-?>

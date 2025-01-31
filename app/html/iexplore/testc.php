@@ -53,7 +53,7 @@ if (!$show_form) {
 
     // Step 3: Fetch the total_questions for the exam
     $query = "
-    SELECT total_questions
+    SELECT total_questions, total_duration
     FROM test_exams
     WHERE id = $1
     ";
@@ -62,6 +62,7 @@ if (!$show_form) {
     // If the exam doesn't exist, handle the error
     if ($exam_row = pg_fetch_assoc($exam_result)) {
         $total_questions = $exam_row['total_questions'];
+        $total_duration = $exam_row['total_duration'];
     } else {
         echo "Error: Exam not found.";
         exit;
@@ -160,6 +161,8 @@ if (!$show_form) {
                 <p class="text-muted">Answer the questions below and submit to see your result.</p>
             </div>
             <p>Your exam ID: <?= htmlspecialchars($exam_id) ?></p>
+            <!-- Timer Display Container -->
+            <div id="timer-container"></div>
             <!-- Additional exam content goes here -->
 
             <form id="exam-form">
@@ -197,9 +200,39 @@ if (!$show_form) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const user_exam_id = document.getElementById('user_exam_id').value; // Get the hidden user_exam_id
+            const totalDurationInMinutes = <?php echo $total_duration; ?>; // Fetch total_duration from PHP
+            let countdown = totalDurationInMinutes * 60; // Convert minutes to seconds
 
-            document.getElementById('submit-exam').addEventListener('click', () => {
+            // Display the timer on the page
+            const countdownMessage = document.createElement('p');
+            countdownMessage.id = 'timer';
+            countdownMessage.textContent = `Time remaining: ${formatTime(countdown)}`;
+            document.getElementById('timer-container').appendChild(countdownMessage); // Show timer at the top
+
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                countdownMessage.textContent = `Time remaining: ${formatTime(countdown)}`;
+
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    // Alert when time is up
+                    alert('Time is up! The exam will now be submitted automatically.');
+
+                    // Trigger the same fetch request as when the "Submit" button is clicked
+                    submitExam();
+                }
+            }, 1000);
+
+            // Format the time as minutes and seconds
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+            }
+
+            // Function to submit the exam using the same flow as the "Submit" button
+            function submitExam() {
+                const user_exam_id = document.getElementById('user_exam_id').value; // Get the hidden user_exam_id
                 const formData = new FormData(document.getElementById('exam-form'));
 
                 // Collect answers
@@ -233,14 +266,31 @@ if (!$show_form) {
                             document.getElementById('exam-form').classList.add('d-none');
                             document.getElementById('result-container').classList.remove('d-none');
                             document.getElementById('score').textContent = `Your score is: ${result.score}`;
+
+                            // Show countdown and redirect after 10 seconds
+                            let countdown = 10;
+                            const countdownMessage = document.createElement('p');
+                            countdownMessage.id = 'countdown';
+                            countdownMessage.textContent = `You will be redirected to My Exams in ${countdown} seconds...`;
+                            document.getElementById('result-container').appendChild(countdownMessage);
+
+                            const countdownInterval = setInterval(() => {
+                                countdown--;
+                                countdownMessage.textContent = `You will be redirected to My Exams in ${countdown} seconds...`;
+                                if (countdown === 0) {
+                                    clearInterval(countdownInterval);
+                                    window.location.href = 'my_exam.php'; // Redirect after countdown
+                                }
+                            }, 1000);
                         }
                     })
                     .catch(error => {
                         console.error('Error submitting answers:', error);
                     });
-            });
+            }
         });
     </script>
+
 </body>
 
 </html>
