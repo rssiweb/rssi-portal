@@ -62,11 +62,19 @@ WITH date_range AS (
 ),
 holidays_excluded AS (
     SELECT 
-        attendance_date
+        d.attendance_date
     FROM 
-        date_range
+        date_range d
+    LEFT JOIN 
+        workday_exceptions w 
+        ON d.attendance_date = w.exception_date AND w.is_workday = TRUE
     WHERE 
-        attendance_date NOT IN (SELECT holiday_date FROM holidays WHERE is_flexi = false) -- Exclude holidays
+        d.attendance_date NOT IN (
+            SELECT holiday_date 
+            FROM holidays 
+            WHERE is_flexi = false
+        ) 
+        OR w.is_workday IS NOT NULL -- Include workday exceptions even if it's a holiday
 ),
 sunday_count AS (
     SELECT 
@@ -95,8 +103,11 @@ employee_workdays AS (
                 END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
             ) -- To the earlier of today's date (if in the same month) or the associate's effective date
+             LEFT JOIN 
+        workday_exceptions w
+        ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
     WHERE 
-        DATE_PART('dow', h.attendance_date) != 0 -- Exclude Sundays
+        (DATE_PART('dow', h.attendance_date) != 0 OR w.is_workday IS NOT NULL) -- Exclude Sundays unless they are marked as workdays
     GROUP BY 
         m.associatenumber
 ),
@@ -119,8 +130,11 @@ others_workdays AS (
                 END,
                 COALESCE(m.effectivedate, DATE_TRUNC('month', h.attendance_date) + INTERVAL '1 month - 1 day')
             ) -- To the earlier of today's date (if in the same month) or the associate's effectivedate
+             LEFT JOIN 
+        workday_exceptions w
+        ON h.attendance_date = w.exception_date AND w.is_workday = TRUE
     WHERE 
-        DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 4 -- Monday to Thursday
+        (DATE_PART('dow', h.attendance_date) BETWEEN 1 AND 4 OR w.is_workday IS NOT NULL)-- Monday to Thursday
     GROUP BY 
         m.associatenumber
 ),
