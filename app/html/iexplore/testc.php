@@ -168,19 +168,22 @@ if (!$show_form) {
             <form id="exam-form">
                 <div id="questions-container" class="mb-4">
                     <?php
-                    $questionNumber = 1; // This is used for displaying the question number to the user, not for the question_id.
+                    $questionNumber = 1; // For user-friendly numbering
                     foreach ($questions as $questionId => $question) {
                         echo "<div class='mb-4'>";
                         echo "<p>" . $questionNumber . ". " . $question['question_text'] . "</p>";
-                        foreach ($question['options'] as $option) {
-                            // Use questionId from the database for name and value, not the question number.
+
+                        foreach ($question['options'] as $index => $option) {
+                            $inputId = "question-" . $questionId . "-option-" . $index;
+
                             echo "<div class='form-check'>";
-                            echo "<input type='radio' class='form-check-input' name='question-" . $questionId . "' value='" . $option['option_key'] . "'>";
-                            echo "<label class='form-check-label'>" . $option['option_text'] . "</label>";
+                            echo "<input type='radio' class='form-check-input' id='" . $inputId . "' name='question-" . $questionId . "' value='" . $option['option_key'] . "'>";
+                            echo "<label class='form-check-label' for='" . $inputId . "'>" . $option['option_text'] . "</label>";
                             echo "</div>";
                         }
+
                         echo "</div>";
-                        $questionNumber++; // This is only for user-friendly numbering
+                        $questionNumber++;
                     }
                     ?>
                 </div>
