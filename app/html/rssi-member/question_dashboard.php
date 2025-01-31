@@ -59,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
 }
 
 // Handle the delete request for a question
-if (isset($_GET['delete_id'])) {
-    $deleteId = $_GET['delete_id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $deleteId = $_POST['delete_id'];
     $deleteQuery = "DELETE FROM test_questions WHERE id = $1";
     $deleteResult = pg_query_params($con, $deleteQuery, array($deleteId));
 
@@ -68,9 +68,9 @@ if (isset($_GET['delete_id'])) {
         echo "<script>
                 alert('Question deleted successfully!');
                 if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
-        window.location.reload();
+                    window.history.replaceState(null, null, window.location.href);
+                }
+                window.location.reload();
               </script>";
     } else {
         echo "<script>
@@ -273,7 +273,10 @@ $result = pg_query($con, $query);
 
                                                             <?php if ($role === 'Admin'): ?>
                                                                 <!-- Delete button for Admin only -->
-                                                                <a href="?delete_id=<?= $row['id'] ?>" class="btn btn-danger btn-sm mt-2" onclick="return confirm('Are you sure?')">Delete</a>
+                                                                <form action="" method="POST" onsubmit="return confirm('Are you sure you want to delete this question?');" style="display:inline;">
+                                                                    <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
+                                                                    <button type="submit" class="btn btn-danger btn-sm mt-2">Delete</button>
+                                                                </form>
                                                             <?php endif; ?>
                                                         </td>
                                                     </tr>

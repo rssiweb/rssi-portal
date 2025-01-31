@@ -57,7 +57,7 @@ if (!$result) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>iExplore Edge-Home</title>
+  <title>Exam List</title>
 
   <!-- Favicons -->
   <link href="../img/favicon.ico" rel="icon">
@@ -93,9 +93,15 @@ if (!$result) {
   <?php include 'inactive_session_expire_check.php'; ?>
 
   <main id="main" class="main">
-    <div class="pagetitle">
-      <h1>Home</h1>
-    </div>
+  <div class="pagetitle">
+            <h1>Exam List</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item active">Exam List</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
 
     <section class="section dashboard">
       <div class="row">

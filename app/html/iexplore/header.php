@@ -129,15 +129,15 @@
 
     <li class="nav-item">
       <a class="nav-link collapsed" id="homeLink" href="home.php">
-        <span>Home</span>
-      </a>
-    </li>
-    <!-- <li class="nav-item">
-      <a class="nav-link collapsed" id="applicationForm" href="application_form.php">
-        <span>Application Form</span>
+        <span>Exam List</span>
       </a>
     </li>
     <li class="nav-item">
+      <a class="nav-link collapsed" id="my_exam" href="my_exam.php">
+        <span>My Exam</span>
+      </a>
+    </li>
+   <!--<li class="nav-item">
       <a class="nav-link collapsed" id="indentityVerification" href="identity_verification.php">
         <span>Identity Verification</span>
       </a>
@@ -218,7 +218,7 @@
 
   // Call the function for 'home.php' and 'profile.php'
   toggleCollapsedClass('home.php', 'homeLink');
-  toggleCollapsedClass('application_form.php', 'applicationForm');
-  toggleCollapsedClass('identity_verification.php', 'indentityVerification');
-  toggleCollapsedClass('document_verification.php', 'documentVerification');
+  toggleCollapsedClass('my_exam.php', 'my_exam');
+  // toggleCollapsedClass('identity_verification.php', 'indentityVerification');
+  // toggleCollapsedClass('document_verification.php', 'documentVerification');
 </script>
