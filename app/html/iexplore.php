@@ -394,7 +394,7 @@ $exams = pg_fetch_all($result);
             document.querySelectorAll(".proceed-btn").forEach(function(button) {
                 button.addEventListener("click", function() {
                     const examId = this.dataset.examId;
-                    window.location.href = "testc.php?exam_id=" + examId;
+                    window.location.href = "iexplore/testc.php?exam_id=" + examId;
                 });
             });
         });
