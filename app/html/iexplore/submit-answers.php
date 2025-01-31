@@ -77,7 +77,7 @@ pg_query_params($con, $query, array($score, $user_exam_id));
 // Update the test_user_sessions table (end session and set status to inactive)
 $query = "
     UPDATE test_user_sessions
-    SET session_end = CURRENT_TIMESTAMP, status = 'inactive'
+    SET session_end = CURRENT_TIMESTAMP, status = 'submitted'
     WHERE user_exam_id = $1 AND status = 'active'
 ";
 pg_query_params($con, $query, array($user_exam_id));

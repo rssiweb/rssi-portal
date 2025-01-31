@@ -152,6 +152,37 @@ while ($rank_data = pg_fetch_assoc($rank_result)) {
 
 }
 ?>
+<?php
+// Fetch session start and end time for the exam user
+$query = "
+    SELECT session_start, session_end
+    FROM test_user_sessions
+    WHERE user_exam_id = $1 AND status = 'submitted'
+";
+$result = pg_query_params($con, $query, array($user_exam_id));
+
+if ($session_data = pg_fetch_assoc($result)) {
+    $session_start = new DateTime($session_data['session_start']);
+    $session_end = new DateTime($session_data['session_end']);
+    
+    // Calculate the difference
+    $interval = $session_start->diff($session_end);
+    
+    // Check if the time difference is more than an hour
+    if ($interval->h > 0) {
+        // More than an hour
+        $time_spent = $interval->h . ' hour' . ($interval->h > 1 ? 's' : '') . ' ' . $interval->i . ' minute' . ($interval->i > 1 ? 's' : '');
+    } elseif ($interval->i > 0) {
+        // More than a minute but less than an hour
+        $time_spent = $interval->i . ' minute' . ($interval->i > 1 ? 's' : '');
+    } else {
+        // Less than a minute (seconds)
+        $time_spent = $interval->s . ' second' . ($interval->s > 1 ? 's' : '');
+    }
+} else {
+    $time_spent = 'Not available'; // Handle case where session is not found
+}
+?>
 
 <!doctype html>
 <html lang="en">
@@ -350,7 +381,7 @@ while ($rank_data = pg_fetch_assoc($rank_result)) {
                                                             <div class="card text-center">
                                                                 <div class="card-body">
                                                                     <h6 class="card-title">Time Spent</h6>
-                                                                    <h3 class="text-primary"><?= $exam_details['total_duration'] ?> mins</h3>
+                                                                    <h3 class="text-primary"><?= $time_spent ?></h3>
                                                                 </div>
                                                             </div>
                                                         </div>

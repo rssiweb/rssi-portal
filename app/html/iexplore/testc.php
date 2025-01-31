@@ -198,6 +198,62 @@ if (!$show_form) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Add this script at the end of the HTML body -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        // Add event listener to intercept Escape key press
+        document.body.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Prevent default behavior of Escape key
+                event.preventDefault();
+            }
+        });
+    </script>
+    <script>
+        // Function to show loading modal
+        function showLoadingModal() {
+            $('#myModal').modal('show');
+        }
+
+        // Function to hide loading modal
+        function hideLoadingModal() {
+            $('#myModal').modal('hide');
+        }
+
+        // Add event listener to form submission
+        document.getElementById('exception').addEventListener('submit', function(event) {
+            // Show loading modal when form is submitted
+            showLoadingModal();
+        });
+
+        // Optional: Close loading modal when the page is fully loaded
+        window.addEventListener('load', function() {
+            // Hide loading modal
+            hideLoadingModal();
+        });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const totalDurationInMinutes = <?php echo $total_duration; ?>; // Fetch total_duration from PHP
@@ -215,10 +271,7 @@ if (!$show_form) {
 
                 if (countdown <= 0) {
                     clearInterval(countdownInterval);
-                    // Alert when time is up
-                    alert('Time is up! The exam will now be submitted automatically.');
-
-                    // Trigger the same fetch request as when the "Submit" button is clicked
+                    // Immediately submit the form without showing alert
                     submitExam();
                 }
             }, 1000);
@@ -245,6 +298,9 @@ if (!$show_form) {
                     });
                 });
 
+                // Show the loading modal before submitting the form
+                showLoadingModal();
+
                 // Send answers to the server with user_exam_id included
                 fetch('submit-answers.php', {
                         method: 'POST',
@@ -261,6 +317,9 @@ if (!$show_form) {
                     })
                     .then(response => response.json())
                     .then(result => {
+                        // Hide the loading modal once the submission is complete
+                        hideLoadingModal();
+
                         if (result.score !== undefined) {
                             // Show score
                             document.getElementById('exam-form').classList.add('d-none');
@@ -268,7 +327,7 @@ if (!$show_form) {
                             document.getElementById('score').textContent = `Your score is: ${result.score}`;
 
                             // Show countdown and redirect after 10 seconds
-                            let countdown = 10;
+                            let countdown = 5;
                             const countdownMessage = document.createElement('p');
                             countdownMessage.id = 'countdown';
                             countdownMessage.textContent = `You will be redirected to My Exams in ${countdown} seconds...`;
@@ -285,12 +344,16 @@ if (!$show_form) {
                         }
                     })
                     .catch(error => {
+                        // Hide the loading modal in case of an error as well
+                        hideLoadingModal();
                         console.error('Error submitting answers:', error);
                     });
             }
+
+            // Attach submit button listener outside the DOMContentLoaded block
+            document.getElementById('submit-exam').addEventListener('click', submitExam);
         });
     </script>
-
 </body>
 
 </html>
