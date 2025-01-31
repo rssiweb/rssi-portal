@@ -14,14 +14,49 @@ $exam_id = isset($_GET['exam_id']) ? $_GET['exam_id'] : null;
 
 // If no exam_id is provided, set a flag to show the form
 $show_form = !$exam_id;
+
 // If exam_id is provided, proceed with fetching exam details
 if (!$show_form) {
-    // Step 1: Fetch the total_questions for the exam
+    // Step 1: Insert a new row in the test_user_exams table to track the user's exam participation
+    $user_exam_query = "
+    INSERT INTO test_user_exams (user_id, exam_id)
+    VALUES ($1, $2)
+    RETURNING id";  // Get the user_exam_id for further use
+    $user_exam_result = pg_query_params($con, $user_exam_query, array($id, $exam_id));
+
+    if (!$user_exam_result) {
+        // Handle query failure
+        echo "Error inserting user exam: " . pg_last_error($con);
+        exit;
+    }
+
+    // Retrieve the user_exam_id
+    $user_exam_row = pg_fetch_assoc($user_exam_result);
+    $user_exam_id = $user_exam_row['id'];
+
+    // Step 2: Insert a new row in the test_user_sessions table to track the session
+    $session_query = "
+    INSERT INTO test_user_sessions (user_exam_id, session_start, status)
+    VALUES ($1, NOW(), 'active')
+    RETURNING id";  // Get the session ID
+    $session_result = pg_query_params($con, $session_query, array($user_exam_id));
+
+    if (!$session_result) {
+        // Handle query failure
+        echo "Error inserting session: " . pg_last_error($con);
+        exit;
+    }
+
+    // Retrieve the session ID
+    $session_row = pg_fetch_assoc($session_result);
+    $session_id = $session_row['id'];
+
+    // Step 3: Fetch the total_questions for the exam
     $query = "
     SELECT total_questions
     FROM test_exams
     WHERE id = $1
-";
+    ";
     $exam_result = pg_query_params($con, $query, array($exam_id));
 
     // If the exam doesn't exist, handle the error
@@ -32,12 +67,12 @@ if (!$show_form) {
         exit;
     }
 
-    // Step 2: Fetch the categories associated with the exam
+    // Step 4: Fetch the categories associated with the exam
     $query = "
     SELECT category_id
     FROM test_exam_categories
     WHERE exam_id = $1
-";
+    ";
     $exam_categories_result = pg_query_params($con, $query, array($exam_id));
 
     // Initialize an array to store the category IDs
@@ -52,7 +87,7 @@ if (!$show_form) {
         exit;
     }
 
-    // Step 3: Fetch random questions based on the categories and total_questions
+    // Step 5: Fetch random questions based on the categories and total_questions
     $category_ids_str = implode(",", $category_ids);
 
     $question_query = "
@@ -68,7 +103,7 @@ if (!$show_form) {
     FROM random_questions rq
     JOIN test_options o ON rq.question_id = o.question_id
     ORDER BY rq.question_id, o.option_key
-";
+    ";
 
     $result = pg_query_params($con, $question_query, array($total_questions));
 
@@ -92,6 +127,7 @@ if (!$show_form) {
 }
 // HTML output starts here
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -145,6 +181,7 @@ if (!$show_form) {
                     }
                     ?>
                 </div>
+                <input type="hidden" id="user_exam_id" value="<?php echo $user_exam_id; ?>" />
                 <div class="text-center">
                     <button type="button" id="submit-exam" class="btn btn-primary">Submit Exam</button>
                 </div>
@@ -160,10 +197,8 @@ if (!$show_form) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const examId = <?php echo $exam_id; ?>; // Use PHP to inject the exam ID
-            const userId = "<?php echo $id; ?>"; // Use PHP to inject the logged-in user's ID as a string
+            const user_exam_id = document.getElementById('user_exam_id').value; // Get the hidden user_exam_id
 
-            // Handle Exam Submission
             document.getElementById('submit-exam').addEventListener('click', () => {
                 const formData = new FormData(document.getElementById('exam-form'));
 
@@ -177,15 +212,16 @@ if (!$show_form) {
                     });
                 });
 
-                // Send answers to the server
+                // Send answers to the server with user_exam_id included
                 fetch('submit-answers.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            user_id: userId,
-                            exam_id: examId,
+                            user_id: "<?php echo $id; ?>", // Inject the logged-in user ID
+                            exam_id: <?php echo $exam_id; ?>, // Inject the exam ID
+                            user_exam_id: user_exam_id, // Include user_exam_id
                             answers: answers,
                             form_type: 'exam'
                         })
