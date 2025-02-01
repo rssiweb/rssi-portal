@@ -10,6 +10,6 @@ unset($_SESSION['aid']);  // Unset the session variable specific to the member p
 session_destroy();
 
 // Redirect to the login page or home page after logout
-header("Location: index.php");  // Change this to the appropriate redirection URL
+header("Location: home.php");  // Change this to the appropriate redirection URL
 exit;
 ?>

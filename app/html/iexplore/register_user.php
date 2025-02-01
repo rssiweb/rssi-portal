@@ -107,39 +107,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" class="form-control" id="contact" name="contact" placeholder="Enter your contact number" required maxlength="10" pattern="\d{10}">
                 </div>
 
-                <!-- <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
-                        <span class="input-group-text" id="togglePassword">
-                            <i class="bi bi-eye"></i>
-                        </span>
-                    </div>
-                </div> -->
-
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary">Register</button>
                 </div>
             </form>
         </div>
     </div>
-
-    <!-- <script>
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordField = document.getElementById('password');
-            const icon = this.querySelector('i');
-
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
-            } else {
-                passwordField.type = 'password';
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
-            }
-        });
-    </script> -->
 </body>
 
 </html>
