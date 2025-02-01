@@ -4,7 +4,7 @@
   <div class="d-flex align-items-center justify-content-between">
     <a href="index.php" class="logo d-flex align-items-center">
       <!-- <img src="../img/phoenix-36-logo-png-transparent.png" alt=""> -->
-      <span class="d-none d-lg-block">iExplore Edge</span>
+      <span class="d-none d-lg-block">iExplore</span>
     </a>
     <i class="bi bi-list toggle-sidebar-btn"></i>
   </div><!-- End Logo -->
@@ -129,7 +129,7 @@
 
     <li class="nav-item">
       <a class="nav-link collapsed" id="homeLink" href="home.php">
-        <span>Exam List</span>
+        <span>Home</span>
       </a>
     </li>
     <li class="nav-item">
