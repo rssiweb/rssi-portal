@@ -395,9 +395,10 @@ $exams = pg_fetch_all($result);
                     </div>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="#" class="text-muted me-3"><i class="bi bi-twitter"></i></a>
-                    <a href="#" class="text-muted me-3"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="text-muted"><i class="bi bi-linkedin"></i></a>
+                    <a href="https://www.instagram.com/rssi.in/" class="text-muted  me-3"><i class="bi bi-instagram"></i></a>
+                    <a href="https://www.linkedin.com/company/rssingo/" class="text-muted  me-3"><i class="bi bi-linkedin"></i></a>
+                    <a href="https://www.instagram.com/rssi.in/" class="text-muted me-3"><i class="bi bi-twitter"></i></a>
+                    <a href="https://www.facebook.com/rssi.in" class="text-muted me-3"><i class="bi bi-facebook"></i></a>
                 </div>
             </div>
         </div>
