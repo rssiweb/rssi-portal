@@ -12,6 +12,7 @@ if (!isLoggedIn("aid")) {
 
 validation();
 // Initialize $ref from GET parameter
+
 @$ref = $_GET['ref'];
 
 // Initialize variables
@@ -60,26 +61,23 @@ if ($role == 'Admin') {
                                                                    AND components = 'Deduction'", array($ref));
 
         // New query to retrieve accrued bonus and payout bonus data for admin users
-        $query = "
-    SELECT employeeid, 
-           paymonth, 
-           payyear,
-           SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) AS monthly_bonus_amount,
-           SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) AS monthly_payout_bonus,
-           SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_accrued_bonus,
-           SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_payout_bonus,
-           -- Calculate the cumulative balance as accrued minus payout
-           SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth)
-           - SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS balance
-    FROM payslip_component 
-    JOIN payslip_entry ON payslip_entry.payslip_entry_id = payslip_component.payslip_entry_id 
-    WHERE (subcategory = 'Monthly Bonus' OR subcategory = 'Bonus Payout') 
-      AND paymonth <= $1 
-      AND payyear <= $2 
-      AND payslip_entry.employeeid = $3 
-    GROUP BY employeeid, paymonth, payyear, subcategory, amount
-    ORDER BY payyear, paymonth;
-    ";
+        $query = "SELECT employeeid, 
+                    paymonth, 
+                    payyear,
+                    SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) AS monthly_bonus_amount,
+                    SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) AS monthly_payout_bonus,
+                    SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_accrued_bonus,
+                    SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_payout_bonus,
+                    -- Calculate the cumulative balance as accrued minus payout
+                    SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth)
+                    - SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS balance
+                FROM payslip_component 
+                JOIN payslip_entry ON payslip_entry.payslip_entry_id = payslip_component.payslip_entry_id 
+                WHERE (subcategory = 'Monthly Bonus' OR subcategory = 'Bonus Payout') 
+                AND (payyear < $2 OR (payyear = $2 AND paymonth <= $1)) -- Adjusted condition
+                AND payslip_entry.employeeid = $3 
+                GROUP BY employeeid, paymonth, payyear, subcategory, amount
+                ORDER BY payyear, paymonth;";
 
         // Prepare and execute the query with dynamic parameters for admin
         $result_accrued_bonus = pg_query_params($con, $query, array($paymonth_comp, $payyear_comp, $employeeid_comp));
@@ -135,26 +133,23 @@ if ($role == 'Admin') {
                                                                        WHERE employeeid = $2)", array($ref, $user_check));
 
         // New query to retrieve accrued bonus and payout bonus data for non-admin users
-        $query = "
-                SELECT employeeid, 
-                    paymonth, 
-                    payyear,
-                    SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) AS monthly_bonus_amount,
-                    SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) AS monthly_payout_bonus,
-                    SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_accrued_bonus,
-                    SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_payout_bonus,
-                    -- Calculate the cumulative balance as accrued minus payout
-                    SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth)
-                    - SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS balance
-                FROM payslip_component 
-                JOIN payslip_entry ON payslip_entry.payslip_entry_id = payslip_component.payslip_entry_id 
-                WHERE (subcategory = 'Monthly Bonus' OR subcategory = 'Bonus Payout') 
-                AND paymonth <= $1 
-                AND payyear <= $2 
-                AND payslip_entry.employeeid = $3 
-                GROUP BY employeeid, paymonth, payyear, subcategory, amount
-                ORDER BY payyear, paymonth;
-                ";
+        $query = "SELECT employeeid, 
+                        paymonth, 
+                        payyear,
+                        SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) AS monthly_bonus_amount,
+                        SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) AS monthly_payout_bonus,
+                        SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_accrued_bonus,
+                        SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS cumulative_payout_bonus,
+                        -- Calculate the cumulative balance as accrued minus payout
+                        SUM(CASE WHEN subcategory = 'Monthly Bonus' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth)
+                        - SUM(CASE WHEN subcategory = 'Bonus Payout' THEN amount ELSE 0 END) OVER (PARTITION BY employeeid ORDER BY payyear, paymonth) AS balance
+                    FROM payslip_component 
+                    JOIN payslip_entry ON payslip_entry.payslip_entry_id = payslip_component.payslip_entry_id 
+                    WHERE (subcategory = 'Monthly Bonus' OR subcategory = 'Bonus Payout') 
+                    AND (payyear < $2 OR (payyear = $2 AND paymonth <= $1)) -- Adjusted condition
+                    AND payslip_entry.employeeid = $3 
+                    GROUP BY employeeid, paymonth, payyear, subcategory, amount
+                    ORDER BY payyear, paymonth;";
 
         // Prepare and execute the query with dynamic parameters for non-admin
         $result_accrued_bonus = pg_query_params($con, $query, array($paymonth_comp, $payyear_comp, $employeeid_comp));
