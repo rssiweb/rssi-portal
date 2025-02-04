@@ -33,13 +33,13 @@ $students_query = "
         student.photourl,
         CASE
             WHEN exams.exam_date_written IS NULL THEN NULL
-            WHEN TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') > exams.exam_date_written THEN 'BA'
+            WHEN student.doa > exams.exam_date_written THEN 'BA'
             WHEN attendance_written.attendance_status IS NULL THEN 'A'
             ELSE COALESCE(attendance_written.attendance_status, 'A')
         END AS written_attendance_status,
         CASE
             WHEN exams.exam_date_viva IS NULL THEN NULL
-            WHEN TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') > exams.exam_date_viva THEN 'BA'
+            WHEN student.doa > exams.exam_date_viva THEN 'BA'
             WHEN attendance_viva.attendance_status IS NULL THEN 'A'
             ELSE COALESCE(attendance_viva.attendance_status, 'A')
         END AS viva_attendance_status,
