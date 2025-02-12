@@ -177,7 +177,7 @@ if (@$_POST['form-type'] == "exam") {
         ], $examiner_email);
     }
 
-    if ($cmdtuples == 1 && !empty($examiner_email_written)) {
+    if ($cmdtuples == 1 && !empty($examiner_email_written) && ($examiner_email_written != $examiner_email)) {
         sendEmail("exam_create", [
             "exam_id" => $exam_id,
             "exam_type" => $exam_type,
