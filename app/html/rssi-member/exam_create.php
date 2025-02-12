@@ -163,27 +163,36 @@ if (@$_POST['form-type'] == "exam") {
     $examiner_email_written = $examiners[$teacher_id_written]['email'] ?? null;
     $examiner_name_written = $examiners[$teacher_id_written]['fullname'] ?? null;
 
-    // Send emails if conditions are met
+    // Determine the exam mode
+    if ($examiner_email_written == $examiner_email) {
+        $exam_mode = $exam_mode_pg_array;
+    } else {
+        $exam_mode_viva = "Viva";
+        $exam_mode_written = "Written";
+    }
+
+    // Send email for viva examiner
     if ($cmdtuples == 1 && !empty($examiner_email)) {
         sendEmail("exam_create", [
             "exam_id" => $exam_id,
             "exam_type" => $exam_type,
             "academic_year" => $academic_year,
             "subject" => $subject,
-            "exam_mode" => $exam_mode_pg_array,
+            "exam_mode" => ($examiner_email_written == $examiner_email) ? $exam_mode_pg_array : $exam_mode_viva,
             "full_marks_written" => $full_marks_written,
             "full_marks_viva" => $full_marks_viva,
             "examiner_name" => $examiner_name,
         ], $examiner_email);
     }
 
+    // Send email for written examiner
     if ($cmdtuples == 1 && !empty($examiner_email_written) && ($examiner_email_written != $examiner_email)) {
         sendEmail("exam_create", [
             "exam_id" => $exam_id,
             "exam_type" => $exam_type,
             "academic_year" => $academic_year,
             "subject" => $subject,
-            "exam_mode" => $exam_mode_pg_array,
+            "exam_mode" => $exam_mode_written,
             "full_marks_written" => $full_marks_written,
             "full_marks_viva" => $full_marks_viva,
             "examiner_name" => $examiner_name_written,
