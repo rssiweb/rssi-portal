@@ -59,12 +59,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
                 student.photourl,
                 CASE
                     WHEN attendance_written.attendance_status IS NULL 
-                        AND TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') <= exams.exam_date_written THEN 'A'
+                        AND student.doa <= exams.exam_date_written THEN 'A'
                     ELSE attendance_written.attendance_status
                 END AS written_attendance_status,
                 CASE
                     WHEN attendance_viva.attendance_status IS NULL 
-                        AND TO_DATE(student.doa, 'YYYY-MM-DD HH24:MI:SS') <= exams.exam_date_viva THEN 'A'
+                        AND student.doa <= exams.exam_date_viva THEN 'A'
                     ELSE attendance_viva.attendance_status
                 END AS viva_attendance_status
                 FROM exam_marks_data
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
             FROM attendance
         ) a ON s.student_id = a.user_id AND a.date = dr.attendance_date
         WHERE s.student_id = $1
-          AND dr.attendance_date >= TO_DATE(s.doa, 'YYYY-MM-DD hh24:mi:ss')
+          AND dr.attendance_date >= s.doa
     ),
     first_attendance AS (
         SELECT MIN(attendance_date) AS first_attendance_date
