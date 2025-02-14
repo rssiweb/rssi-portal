@@ -480,7 +480,7 @@ if (!function_exists('makeClickableLinks')) {
                                             <form method="POST" class="d-flex">
                                                 <!-- Assigned To -->
                                                 <div class="me-2">
-                                                    <select id="assigned_to" name="assigned_to" class="form-select">
+                                                    <select id="assigned_to" name="assigned_to" class="form-select" required>
                                                         <option <?php echo empty($ticket['assigned_to']) ? 'selected' : ''; ?>>Clear Selection</option>
                                                         <?php foreach ($results as $result): ?>
                                                             <option value="<?php echo htmlspecialchars($result['id']); ?>" <?php echo $result['id'] === $ticket['assigned_to'] ? 'selected' : ''; ?>>
@@ -492,7 +492,7 @@ if (!function_exists('makeClickableLinks')) {
 
                                                 <!-- Status -->
                                                 <div class="me-2">
-                                                    <select id="status" name="status" class="form-select">
+                                                    <select id="status" name="status" class="form-select" required>
                                                         <option disabled>Select Status</option>
                                                         <option value="In Progress" <?php echo $latest_status === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                         <option value="Resolved" <?php echo $latest_status === 'Resolved' ? 'selected' : ''; ?>>Resolved</option>

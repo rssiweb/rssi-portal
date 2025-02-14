@@ -351,7 +351,7 @@ if ($percentage_result) {
                     <input name="student_id" class="form-control" style="width: max-content; display: inline-block;" required placeholder="Student ID" value="<?php echo @$student_id ?>">
                     <select name="exam_type" class="form-control" style="width: max-content; display: inline-block;" required>
                         <?php if ($exam_type == null) { ?>
-                            <option disabled selected hidden>Select Exam Name</option>
+                            <option disabled selected hidden value="">Select Exam Name</option>
                         <?php } else { ?>
                             <option hidden selected><?php echo $exam_type ?></option>
                         <?php } ?>
@@ -361,7 +361,7 @@ if ($percentage_result) {
                     </select>
                     <select name="academic_year" id="academic_year" class="form-control" style="width: max-content; display: inline-block;" required>
                         <?php if ($academic_year == null) { ?>
-                            <option disabled selected hidden>Select Year</option>
+                            <option disabled selected hidden value="">Select Year</option>
                         <?php } else { ?>
                             <option hidden selected><?php echo $academic_year ?></option>
                         <?php } ?>
