@@ -245,7 +245,7 @@ if (!$show_form) {
 </head>
 
 <body>
-    <div class="exam-container">
+    <div class="exam-container" id="exam-form">
         <?php if ($show_form): ?>
             <!-- Show the form if no exam_id is provided -->
             <form method="GET" action="">
@@ -328,12 +328,30 @@ if (!$show_form) {
                     endforeach; ?>
                 </div>
             </div>
-
         <?php endif; ?>
-        <!-- Result Section -->
-        <div id="result-container" class="mt-5 d-none">
-            <h3>Your Result</h3>
-            <p id="score" class="fs-5"></p>
+    </div>
+    <!-- Result Section -->
+    <div id="result-container" class="mt-5 d-none text-center">
+        <div class="card border-success mx-auto" style="max-width: 500px;">
+            <div class="card-header bg-success text-white">
+                <h3 class="card-title mb-0">Exam Submitted Successfully!</h3>
+            </div>
+            <div class="card-body">
+                <!-- Score Display -->
+                <p class="fs-4">
+                    <span id="score" class="text-success fw-bold"></span>
+                </p>
+
+                <!-- Detailed Analysis Note -->
+                <div class="mt-4">
+                    <p class="text-muted">
+                        You can view the detailed analysis of your performance in the <strong>My Exam</strong> section.
+                    </p>
+                    <a href="my_exam.php" class="btn btn-outline-success">
+                        Go to My Exams
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -533,6 +551,7 @@ if (!$show_form) {
                     })
                     .then(response => response.json())
                     .then(result => {
+                        console.log('Result:', result); // Debugging line
                         hideLoadingModal();
 
                         if (result.error) {
@@ -541,24 +560,31 @@ if (!$show_form) {
                         }
 
                         if (result.score !== undefined) {
-                            document.getElementById('exam-form').classList.add('d-none');
-                            document.getElementById('result-container').classList.remove('d-none');
-                            document.getElementById('score').textContent = `Your score is: ${result.score}`;
+                            const resultContainer = document.getElementById('result-container');
+                            const examForm = document.getElementById('exam-form');
 
-                            let countdown = 5;
-                            const countdownMessage = document.createElement('p');
-                            countdownMessage.id = 'countdown';
-                            countdownMessage.textContent = `Redirecting to My Exams in ${countdown} seconds...`;
-                            document.getElementById('result-container').appendChild(countdownMessage);
+                            if (resultContainer && examForm) {
+                                examForm.classList.add('d-none');
+                                resultContainer.classList.remove('d-none');
+                                document.getElementById('score').textContent = `Your score is: ${result.score}`;
 
-                            const countdownInterval = setInterval(() => {
-                                countdown--;
+                                let countdown = 5;
+                                const countdownMessage = document.createElement('p');
+                                countdownMessage.id = 'countdown';
                                 countdownMessage.textContent = `Redirecting to My Exams in ${countdown} seconds...`;
-                                if (countdown === 0) {
-                                    clearInterval(countdownInterval);
-                                    window.location.href = 'my_exam.php';
-                                }
-                            }, 1000);
+                                resultContainer.appendChild(countdownMessage);
+
+                                const countdownInterval = setInterval(() => {
+                                    countdown--;
+                                    countdownMessage.textContent = `Redirecting to My Exams in ${countdown} seconds...`;
+                                    if (countdown === 0) {
+                                        clearInterval(countdownInterval);
+                                        window.location.href = 'my_exam.php';
+                                    }
+                                }, 1000);
+                            } else {
+                                console.error('Error: result-container or exam-form element not found!');
+                            }
                         }
                     })
                     .catch(error => {
