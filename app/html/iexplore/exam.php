@@ -518,21 +518,20 @@ if (!$show_form) {
                 const answers = [];
                 const questionContainers = document.querySelectorAll('.question-container');
 
+                // Loop through all question containers
                 questionContainers.forEach(container => {
                     const questionId = container.dataset.questionId; // Use actual question ID
                     const selectedOption = container.querySelector('input[type="radio"]:checked');
 
-                    if (selectedOption) {
-                        answers.push({
-                            question_id: questionId,
-                            selected_option: selectedOption.value
-                        });
-                    }
+                    // Push the question ID and selected option (or null if unanswered)
+                    answers.push({
+                        question_id: questionId,
+                        selected_option: selectedOption ? selectedOption.value : null // Store null for unanswered questions
+                    });
                 });
 
-                if (answers.length === 0) {
-                    console.warn('No answers selected. Submitting empty responses.');
-                }
+                // Log the answers for debugging
+                console.log('Answers to be submitted:', answers);
 
                 showLoadingModal();
 
@@ -564,10 +563,14 @@ if (!$show_form) {
                             const examForm = document.getElementById('exam-form');
 
                             if (resultContainer && examForm) {
+                                // Hide exam form and show result container
                                 examForm.classList.add('d-none');
                                 resultContainer.classList.remove('d-none');
+
+                                // Display score
                                 document.getElementById('score').textContent = `Your score is: ${result.score}`;
 
+                                // Start countdown
                                 let countdown = 5;
                                 const countdownMessage = document.createElement('p');
                                 countdownMessage.id = 'countdown';
