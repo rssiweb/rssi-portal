@@ -265,7 +265,7 @@ if (!$show_form) {
             <!-- Main Question Area -->
             <div class="question-area">
                 <div class="d-flex justify-content-end">
-                    <div id="timer-container">
+                    <div id="timer-container" style="font-size: 18px;">
                         <!-- Timer content goes here -->
                     </div>
                 </div>
