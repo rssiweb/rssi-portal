@@ -136,6 +136,8 @@ if (!$show_form) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Examination Portal</title>
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
@@ -241,6 +243,10 @@ if (!$show_form) {
             margin-bottom: 1.5rem;
             text-align: center;
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 
@@ -291,6 +297,10 @@ if (!$show_form) {
                                     Previous
                                 </button>
                                 <div>
+                                    <!-- Clear Selection Button -->
+                                    <button type="button" class="btn btn-outline-danger clear-btn hidden">
+                                        Clear Selection
+                                    </button>
                                     <button type="button" class="btn btn-outline-secondary mark-btn">
                                         Mark for Review
                                     </button>
@@ -629,6 +639,71 @@ if (!$show_form) {
         function hideLoadingModal() {
             $('#myModal').modal('hide');
         }
+    </script>
+    <script>
+        document.querySelectorAll('.clear-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear your selection?')) {
+                    const questionContainer = this.closest('.question-container');
+                    const radioButtons = questionContainer.querySelectorAll('.option-input');
+                    radioButtons.forEach(radio => {
+                        radio.checked = false;
+                    });
+                }
+            });
+        });
+    </script>
+    <script>
+        document.querySelectorAll('.clear-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const questionContainer = this.closest('.question-container');
+                const radioButtons = questionContainer.querySelectorAll('.option-input');
+                radioButtons.forEach(radio => {
+                    radio.checked = false;
+                });
+                // Add visual feedback
+                questionContainer.style.opacity = '0.5';
+                setTimeout(() => {
+                    questionContainer.style.opacity = '1';
+                }, 200);
+            });
+        });
+    </script>
+    <script>
+        // Function to toggle "Clear Selection" button visibility
+        function toggleClearButton(questionContainer) {
+            const clearButton = questionContainer.querySelector('.clear-btn');
+            const radioButtons = questionContainer.querySelectorAll('.option-input');
+            const isAnySelected = Array.from(radioButtons).some(radio => radio.checked);
+
+            // Show/hide the "Clear Selection" button
+            if (isAnySelected) {
+                clearButton.classList.remove('hidden');
+            } else {
+                clearButton.classList.add('hidden');
+            }
+        }
+
+        // Add event listeners to all radio buttons
+        document.querySelectorAll('.option-input').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const questionContainer = this.closest('.question-container');
+                toggleClearButton(questionContainer);
+            });
+        });
+
+        // Add event listener to the "Clear Selection" button
+        document.querySelectorAll('.clear-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const questionContainer = this.closest('.question-container');
+                const radioButtons = questionContainer.querySelectorAll('.option-input');
+                radioButtons.forEach(radio => {
+                    radio.checked = false;
+                });
+                // Hide the "Clear Selection" button after clearing
+                this.classList.add('hidden');
+            });
+        });
     </script>
 </body>
 
