@@ -42,6 +42,104 @@ if (!$result) {
 
 $exams = pg_fetch_all($result);
 ?>
+<?php
+$date = date('Y-m-d H:i:s');
+$login_failed_dialog = "";
+
+function afterlogin($con, $date)
+{
+    $email = $_SESSION['aid'];
+    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from test_users WHERE email='$email'");
+    $row = pg_fetch_row($user_query);
+    $password_updated_by = $row[0];
+    $password_updated_on = $row[1];
+    $default_pass_updated_on = $row[2];
+
+    passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
+
+    function getUserIpAddr()
+    {
+        if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
+            return $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+            $ip = trim($ipList[0]);
+            return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : $_SERVER['REMOTE_ADDR'];
+        } else {
+            return $_SERVER['REMOTE_ADDR'];
+        }
+    }
+
+    $user_ip = getUserIpAddr();
+    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$email','$user_ip','$date')");
+
+    // Prevent redirection loop
+    $current_script = basename($_SERVER['SCRIPT_NAME']);
+    if (isset($_SESSION["login_redirect"])) {
+        $target_script = basename($_SESSION["login_redirect"]);
+        if ($current_script !== $target_script) {
+            $params = "";
+            if (isset($_SESSION["login_redirect_params"])) {
+                foreach ($_SESSION["login_redirect_params"] as $key => $value) {
+                    $params .= "$key=$value&";
+                }
+                unset($_SESSION["login_redirect_params"]);
+            }
+            header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
+            unset($_SESSION["login_redirect"]);
+            exit;
+        }
+    } elseif ($current_script !== 'home.php') {
+        header("Location: home.php");
+        exit;
+    }
+}
+
+if (isLoggedIn("aid")) {
+    // Only call afterlogin if the user is not already on the target page
+    $current_script = basename($_SERVER['SCRIPT_NAME']);
+    if ($current_script !== 'home.php' && !isset($_SESSION["login_redirect"])) {
+        afterlogin($con, $date);
+    }
+}
+
+function checkLogin($con, $date)
+{
+    global $login_failed_dialog;
+    $email = $_POST['aid'];
+    $password = $_POST['pass'];
+
+    $query = "SELECT password, absconding FROM test_users WHERE email='$email'";
+    $result = pg_query($con, $query);
+    if ($result) {
+        $user = pg_fetch_assoc($result);
+        if ($user) {
+            $existingHashFromDb = $user['password'];
+            $absconding = $user['absconding'];
+            if (password_verify($password, $existingHashFromDb)) {
+                if (!empty($absconding)) {
+                    $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
+                } else {
+                    $_SESSION['aid'] = $email;
+                    afterlogin($con, $date);
+                }
+            } else {
+                $login_failed_dialog = "Incorrect username or password.";
+            }
+        } else {
+            $login_failed_dialog = "User not found.";
+        }
+    } else {
+        $login_failed_dialog = "Error executing query.";
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['login'])) {
+        checkLogin($con, $date);
+    }
+}
+?>
 
 <!doctype html>
 <html lang="en">
@@ -235,7 +333,9 @@ $exams = pg_fetch_all($result);
                 <?php else : ?>
                     <!-- Guest State -->
                     <a href="register_user.php" class="btn btn-outline-light me-2">Register</a>
-                    <a href="index.php" class="btn btn-primary">Login</a>
+                    <!-- <a href="index.php" class="btn btn-primary">Login</a> -->
+                    <!-- Trigger Button -->
+                    <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -391,14 +491,14 @@ $exams = pg_fetch_all($result);
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
                         <!-- <img src="logo.svg" alt="Logo" style="height: 40px;" class="me-3"> -->
-                        <span class="text-muted">© 2024 Rina Shiksha Sahayak Foundation. All rights reserved.</span>
+                        <span class="text-muted">© 2025 Rina Shiksha Sahayak Foundation. All rights reserved.</span>
                     </div>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="https://www.instagram.com/rssi.in/" class="text-muted  me-3"><i class="bi bi-instagram"></i></a>
-                    <a href="https://www.linkedin.com/company/rssingo/" class="text-muted  me-3"><i class="bi bi-linkedin"></i></a>
-                    <a href="https://www.instagram.com/rssi.in/" class="text-muted me-3"><i class="bi bi-twitter"></i></a>
-                    <a href="https://www.facebook.com/rssi.in" class="text-muted me-3"><i class="bi bi-facebook"></i></a>
+                    <a href="https://www.instagram.com/rssi.in/" class="text-muted  me-3" target="_blank"><i class="bi bi-instagram"></i></a>
+                    <a href="https://www.linkedin.com/company/rssingo/" class="text-muted  me-3" target="_blank"><i class="bi bi-linkedin"></i></a>
+                    <a href="https://x.com/RssiNgo" class="text-muted me-3" target="_blank"><i class="bi bi-twitter" target="_blank"></i></a>
+                    <a href="https://www.facebook.com/rssi.in" class="text-muted me-3" target="_blank"><i class="bi bi-facebook"></i></a>
                 </div>
             </div>
         </div>
@@ -468,6 +568,109 @@ $exams = pg_fetch_all($result);
         });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="loginModalLabel">Login to Your Account</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body p-4">
+                <!-- Error Message -->
+                <?php if ($login_failed_dialog) { ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?php echo $login_failed_dialog; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php } ?>
+
+                <!-- Login Form -->
+                <form method="POST" action="">
+                    <!-- Email Input -->
+                    <div class="mb-3">
+                        <label for="aid" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" id="aid" name="aid" placeholder="Enter your email" required>
+                        </div>
+                    </div>
+
+                    <!-- Password Input -->
+                    <div class="mb-3">
+                        <label for="pass" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" class="form-control" id="pass" name="pass" placeholder="Enter your password" required>
+                        </div>
+                    </div>
+
+                    <!-- Show Password Checkbox -->
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="show-password">
+                        <label class="form-check-label" for="show-password">Show Password</label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary w-100 mb-3" name="login">
+                        Login <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+
+                    <!-- Forgot Password Link -->
+                    <div class="text-center">
+                        <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Modal Footer (Optional) -->
+            <div class="modal-footer bg-light">
+                <p class="text-muted small mb-0">Don't have an account? <a href="register_user.php" class="text-primary text-decoration-none">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">Forgot Password?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Please contact support at <strong>info@rssi.in</strong> or call <strong>7980168159</strong> for assistance.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <?php if ($login_failed_dialog) { ?>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var myModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                myModal.show();
+            });
+        </script>
+    <?php } ?>
+
+    <script>
+        // Show/Hide Password
+        const passwordInput = document.getElementById('pass');
+        const showPasswordCheckbox = document.getElementById('show-password');
+        showPasswordCheckbox.addEventListener('change', function() {
+            passwordInput.type = this.checked ? 'text' : 'password';
+        });
+    </script>
 </body>
 
 </html>

@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "password" => $random_password,
             ], $email);
             // Success message
-            $message = "User registered successfully!";
+            $message = "User registered successfully! Please check your registered email for login credentials.";
         } else {
             // Capture the error message from PostgreSQL
             $errorMessage = pg_last_error($con);
@@ -124,8 +124,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             filter: blur(60px);
         }
 
-        .ad-blob-1 { top: -20%; right: -30%; }
-        .ad-blob-2 { bottom: -30%; left: -20%; }
+        .ad-blob-1 {
+            top: -20%;
+            right: -30%;
+        }
+
+        .ad-blob-2 {
+            bottom: -30%;
+            left: -20%;
+        }
 
         .exam-features li {
             padding: 1rem;
@@ -210,11 +217,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             .split-container {
                 grid-template-columns: 1fr;
             }
-            
+
             .ad-section {
                 padding: 2rem;
             }
-            
+
             .form-container {
                 padding: 2rem;
             }
@@ -262,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h3 class="mb-2">Create Exam Account</h3>
                     <p class="text-muted">Start your exam preparation journey</p>
                 </div>
-                
+
                 <form method="POST" action="">
                     <div class="input-group">
                         <input type="text" class="form-control" id="name" name="name" placeholder="Full Name" required>
@@ -275,8 +282,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="input-group">
-                        <input type="tel" class="form-control" id="contact" name="contact" 
-                               placeholder="Contact Number" required pattern="[0-9]{10}">
+                        <input type="tel" class="form-control" id="contact" name="contact"
+                            placeholder="Contact Number" required pattern="[0-9]{10}">
                         <i class="bi bi-phone input-icon"></i>
                     </div>
 
@@ -286,7 +293,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </form>
 
                 <div class="mt-4 text-center text-muted">
-                    <small>By registering, you agree to our <a href="#" class="text-primary">Terms</a> and <a href="#" class="text-primary">Privacy Policy</a></small>
+                    <p><small>By registering, you agree to our <a href="https://www.rssi.in/terms-of-service" target="_blank" class="text-primary">Terms</a> and <a href="https://www.rssi.in/privacy-policy" target="_blank" class="text-primary">Privacy Policy</a></small></p>
+                    <p class="text-muted small mb-0">Already have an account?
+                        <a href="index.php" class="text-primary text-decoration-none">Login</a>
+                    </p>
                 </div>
             </div>
         </div>

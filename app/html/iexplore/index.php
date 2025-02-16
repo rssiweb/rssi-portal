@@ -96,10 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SmartExams</title>
+    <title>Login - iExplore</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         :root {
@@ -112,8 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: 'Poppins', sans-serif;
             background: #f8fafc;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
+            
         }
 
         .split-container {
@@ -173,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             align-items: center;
             justify-content: center;
             padding: 2rem;
-            background: url('data:image/svg+xml,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path fill="%23e2e8f0" d="M45.7,-45.7C59.3,-32,70.4,-16,70.8,0.3C71.1,16.6,60.7,33.2,47.1,47.9C33.5,62.6,16.7,75.4,-2.1,77.5C-20.9,79.6,-41.8,71,-55.7,56.3C-69.6,41.6,-76.5,20.8,-75.5,0.9C-74.5,-19.1,-65.6,-38.2,-51.7,-51.9C-37.8,-65.6,-18.9,-73.8,-0.3,-73.5Z"/></svg>') no-repeat center center;
+            background: url('data:image/svg+xml,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path fill="%23e2e8f0" d="M45.7,-45.7C59.3,-32,70.4,-16,70.8,0.3C71.1,16.6,60.7,33.2,47.1,47.9C33.5,62.6,16.7,75.4,-2.1,77.5C-20.9,79.6,-41.8,71,-55.7,56.3C-69.6,41.6,-76.5,20.8,-75.5,0.9C-74.5,-19.1,-65.6,-38.2,-51.7,-51.9C-37.8,-65.6,-18.9,-73.8,-0.3,-73.5C18.3,-73.2,36.6,-64.4,45.7,-45.7Z"/></svg>') no-repeat center center;
             background-size: cover;
         }
 
@@ -261,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="ad-blob ad-blob-1"></div>
             <div class="ad-blob ad-blob-2"></div>
             <div class="ad-content">
-                <h2 class="mb-4 animate__animated animate__fadeIn">Welcome Back to SmartExams</h2>
+                <h2 class="mb-4 animate__animated animate__fadeIn">Welcome to iExplore</h2>
                 <ul class="exam-features list-unstyled">
                     <li class="animate__animated animate__fadeInLeft">
                         <h5>📊 Track Your Progress</h5>
@@ -316,7 +315,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </button>
 
                     <div class="mt-3 text-center">
-                        <a href="#" class="text-primary" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
+                        <p><a href="#" class="text-primary" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a></p>
+                        <p class="text-muted small mb-0">Don't have an account? <a href="register_user.php" class="text-primary text-decoration-none">Sign up</a></p>
                     </div>
                 </form>
             </div>
