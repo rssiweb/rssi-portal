@@ -282,9 +282,11 @@ if ($class_category_data) {
     SELECT 
         emd.student_id,
         ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks,
-        SUM(e.full_marks_written) + SUM(e.full_marks_viva) AS total_full_marks,
-        ROUND((SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) * 100.0 / 
-              (SUM(e.full_marks_written) + SUM(e.full_marks_viva)), 2) AS percentage
+        SUM(COALESCE(e.full_marks_written, 0)) + SUM(COALESCE(e.full_marks_viva, 0)) AS total_full_marks,
+        ROUND(
+            (SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) * 100.0 / 
+            NULLIF(SUM(COALESCE(e.full_marks_written, 0)) + SUM(COALESCE(e.full_marks_viva, 0)), 0), 
+        2) AS percentage
     FROM exam_marks_data emd
     JOIN exams e ON emd.exam_id = e.exam_id
     WHERE e.exam_type = $1
@@ -301,6 +303,11 @@ if ($class_category_data) {
         while ($row = pg_fetch_assoc($class_marks_result)) {
             $class_marks[] = $row;
         }
+
+        // Debugging: Print class marks array
+        // echo "<pre>";
+        // print_r($class_marks);
+        // echo "</pre>";
 
         // Find the rank of the specific student
         $rank = 0;
