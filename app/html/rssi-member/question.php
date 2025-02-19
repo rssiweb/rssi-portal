@@ -234,6 +234,7 @@ if ($category === null && $subject === null && $year === null && $exam === null)
                                             <option> Accountancy </option>
                                             <option> Computer </option>
                                             <option> GK </option>
+                                            <option> Hamara Parivesh </option>
                                             <option> ALL </option>
                                         </select>
                                         <select name="get_year" id="get_year" class="form-select" style="width:max-content;display:inline-block">

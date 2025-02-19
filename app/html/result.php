@@ -45,48 +45,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['student_id']) && isset(
 
         // Fetch exam details and marks
         $marks_query = "
-            SELECT 
-                exam_marks_data.exam_id, 
-                ROUND(exam_marks_data.viva_marks) AS viva_marks, 
-                ROUND(exam_marks_data.written_marks) AS written_marks, 
-                exams.subject, 
-                exams.full_marks_written, 
-                exams.full_marks_viva, 
-                exams.exam_date_written, 
-                exams.exam_date_viva, 
-                student.doa, 
-                student.dateofbirth, 
-                student.photourl,
-                CASE
-                    WHEN attendance_written.attendance_status IS NULL 
-                        AND student.doa <= exams.exam_date_written THEN 'A'
-                    ELSE attendance_written.attendance_status
-                END AS written_attendance_status,
-                CASE
-                    WHEN attendance_viva.attendance_status IS NULL 
-                        AND student.doa <= exams.exam_date_viva THEN 'A'
-                    ELSE attendance_viva.attendance_status
-                END AS viva_attendance_status
-                FROM exam_marks_data
-                JOIN exams ON exam_marks_data.exam_id = exams.exam_id
-                LEFT JOIN (
-                    SELECT user_id, date, 'P' AS attendance_status
-                    FROM attendance
-                    GROUP BY user_id, date
-                ) AS attendance_written
-                ON exam_marks_data.student_id = attendance_written.user_id 
-                AND exams.exam_date_written = attendance_written.date
-                LEFT JOIN (
-                    SELECT user_id, date, 'P' AS attendance_status
-                    FROM attendance
-                    GROUP BY user_id, date
-                ) AS attendance_viva
-                ON exam_marks_data.student_id = attendance_viva.user_id 
-                AND exams.exam_date_viva = attendance_viva.date
-                JOIN rssimyprofile_student student ON exam_marks_data.student_id = student.student_id
-                WHERE exam_marks_data.student_id = $1 
-                AND exams.exam_type = $2 
-                AND exams.academic_year = $3";
+    SELECT 
+        exam_marks_data.exam_id, 
+        ROUND(exam_marks_data.viva_marks) AS viva_marks, 
+        ROUND(exam_marks_data.written_marks) AS written_marks, 
+        exams.subject, 
+        exams.full_marks_written, 
+        exams.full_marks_viva, 
+        exams.exam_date_written, 
+        exams.exam_date_viva, 
+        student.doa, 
+        student.dateofbirth, 
+        student.photourl,
+        CASE
+            WHEN attendance_written.attendance_status IS NULL 
+                AND student.doa <= exams.exam_date_written 
+                AND NOT EXISTS (
+                    SELECT 1 
+                    FROM reexamination 
+                    WHERE reexamination.student_id = exam_marks_data.student_id 
+                    AND reexamination.date = exams.exam_date_written
+                ) THEN 'A'
+            ELSE attendance_written.attendance_status
+        END AS written_attendance_status,
+        CASE
+            WHEN attendance_viva.attendance_status IS NULL 
+                AND student.doa <= exams.exam_date_viva 
+                AND NOT EXISTS (
+                    SELECT 1 
+                    FROM reexamination 
+                    WHERE reexamination.student_id = exam_marks_data.student_id 
+                    AND reexamination.date = exams.exam_date_viva
+                ) THEN 'A'
+            ELSE attendance_viva.attendance_status
+        END AS viva_attendance_status
+    FROM exam_marks_data
+    JOIN exams ON exam_marks_data.exam_id = exams.exam_id
+    LEFT JOIN (
+        SELECT user_id, date, 'P' AS attendance_status
+        FROM attendance
+        GROUP BY user_id, date
+    ) AS attendance_written
+    ON exam_marks_data.student_id = attendance_written.user_id 
+    AND exams.exam_date_written = attendance_written.date
+    LEFT JOIN (
+        SELECT user_id, date, 'P' AS attendance_status
+        FROM attendance
+        GROUP BY user_id, date
+    ) AS attendance_viva
+    ON exam_marks_data.student_id = attendance_viva.user_id 
+    AND exams.exam_date_viva = attendance_viva.date
+    JOIN rssimyprofile_student student ON exam_marks_data.student_id = student.student_id
+    WHERE exam_marks_data.student_id = $1 
+    AND exams.exam_type = $2 
+    AND exams.academic_year = $3";
         $marks_result = pg_query_params($con, $marks_query, [$student_id, $exam_type, $academic_year]);
 
         // Process and arrange marks data according to subject sequence
