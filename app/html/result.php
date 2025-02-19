@@ -273,62 +273,115 @@ $class_category_result = pg_query_params($con, $class_category_query, [$student_
 $class_category_data = pg_fetch_assoc($class_category_result);
 ?>
 <?php
-if ($class_category_data) {
-    $student_class = $class_category_data['class'];
-    $student_category = $class_category_data['category'];
-
-    // Fetch marks of all students in the same class and category for the given exam type and academic year
-    $class_marks_query = "
-    SELECT 
-        emd.student_id,
-        ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks,
-        SUM(COALESCE(e.full_marks_written, 0)) + SUM(COALESCE(e.full_marks_viva, 0)) AS total_full_marks,
-        ROUND(
-            (SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) * 100.0 / 
-            NULLIF(SUM(COALESCE(e.full_marks_written, 0)) + SUM(COALESCE(e.full_marks_viva, 0)), 0), 
-        2) AS percentage
+// Step 1: Find grouped exam IDs for the exam type and academic year
+$class_group_query = "
+    SELECT DISTINCT emd.exam_id
     FROM exam_marks_data emd
     JOIN exams e ON emd.exam_id = e.exam_id
     WHERE e.exam_type = $1
       AND e.academic_year = $2
-      AND emd.class = $3
-      AND emd.category = $4
+    GROUP BY emd.exam_id
+    HAVING COUNT(DISTINCT emd.class) > 1;
+";
+
+$class_group_result = pg_query_params($con, $class_group_query, [$exam_type, $academic_year]);
+if (!$class_group_result) {
+    die('Query failed: ' . pg_last_error($con));
+}
+
+$grouped_exam_ids = [];
+while ($row = pg_fetch_assoc($class_group_result)) {
+    $grouped_exam_ids[] = $row['exam_id'];
+}
+
+// Debugging grouped exam IDs
+// var_dump($grouped_exam_ids);
+// exit;
+
+// Step 2: Build dynamic placeholders for IN clause
+if (empty($grouped_exam_ids)) {
+    die('No grouped exam IDs found.');
+}
+
+$placeholders = [];
+foreach ($grouped_exam_ids as $index => $id) {
+    $placeholders[] = '$' . ($index + 3); // +3 because $1 and $2 are already used
+}
+$placeholders_str = implode(',', $placeholders);
+
+// Step 3: Create the query to fetch student ranks across grouped classes
+$class_group_query = "
+    SELECT emd.student_id, 
+           ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
+    FROM exam_marks_data emd
+    JOIN exams e ON emd.exam_id = e.exam_id
+    WHERE e.exam_type = $1
+      AND e.academic_year = $2
+      AND emd.exam_id IN ($placeholders_str)
     GROUP BY emd.student_id
-    ORDER BY percentage DESC, emd.student_id ASC";
+    ORDER BY total_marks DESC;
+";
 
-    $class_marks_result = pg_query_params($con, $class_marks_query, [$exam_type, $academic_year, $student_class, $student_category]);
+// Merge parameters for pg_query_params
+$params = array_merge([$exam_type, $academic_year], $grouped_exam_ids);
 
-    if ($class_marks_result) {
+// Step 4: Execute the query
+$class_group_result = pg_query_params($con, $class_group_query, $params);
+if (!$class_group_result) {
+    die('Query failed: ' . pg_last_error($con));
+}
+
+// Step 5: Process results and find student rank
+$class_marks = [];
+while ($row = pg_fetch_assoc($class_group_result)) {
+    $class_marks[] = $row;
+}
+
+// Debugging: Print class marks array
+// echo "<pre>";
+// print_r($class_marks);
+// echo "</pre>";
+
+// Find the rank of the specific student
+$rank = 'N/A';
+foreach ($class_marks as $index => $student) {
+    if ($student['student_id'] == $student_id) {
+        $rank = $index + 1; // Adjusted to give correct 1-based rank
+        break;
+    }
+}
+
+// If the student is not in a grouped class, calculate rank within their own class
+if ($rank === 'N/A') {
+    $individual_class_query = "
+        SELECT emd.student_id, 
+               ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
+        FROM exam_marks_data emd
+        JOIN exams e ON emd.exam_id = e.exam_id
+        WHERE e.exam_type = $1
+          AND e.academic_year = $2
+          AND emd.class = (SELECT emd.class FROM exam_marks_data emd WHERE emd.student_id = $3 LIMIT 1)
+        GROUP BY emd.student_id
+        ORDER BY total_marks DESC;
+    ";
+
+    $individual_class_result = pg_query_params($con, $individual_class_query, [$exam_type, $academic_year, $student_id]);
+    if ($individual_class_result) {
         $class_marks = [];
-        while ($row = pg_fetch_assoc($class_marks_result)) {
+        while ($row = pg_fetch_assoc($individual_class_result)) {
             $class_marks[] = $row;
         }
 
-        // Debugging: Print class marks array
-        // echo "<pre>";
-        // print_r($class_marks);
-        // echo "</pre>";
-
-        // Find the rank of the specific student
-        $rank = 0;
         foreach ($class_marks as $index => $student) {
             if ($student['student_id'] == $student_id) {
-                $rank = $index + 1; // Adjusted to give correct 1-based rank // Adjusted to give correct 1-based rank
+                $rank = $index + 1;
                 break;
             }
         }
-
-        // Store the rank in a variable
-        $rank = $rank > 0 ? $rank : 'N/A'; // If student not found, set rank as 'N/A'
-    } else {
-        $rank = 'N/A'; // If query fails, set rank as 'N/A'
     }
-} else {
-    $rank = 'N/A'; // If class and category data is not found, set rank as 'N/A'
 }
-
-// Now you can use the $rank variable to display the rank of the student
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -631,7 +684,7 @@ if ($class_category_data) {
                                             </tr>
                                             <tr>
                                                 <td>Overall ranking</td>
-                                                <th><?php echo $rank ?></th>
+                                                <?php echo in_array($rank, [1, 2, 3]) ? "<th>$rank</th>" : "<th></th>"; ?>
                                             </tr>
                                             <tr>
                                                 <td>Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>)</td>
