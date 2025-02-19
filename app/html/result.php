@@ -257,8 +257,71 @@ if ($percentage_result) {
 // Now you can use the $exam_percentages array to display the values in the HTML table
 
 ?>
+<?php
+// SQL query to fetch class and category from exam_marks_data based on filter criteria
+$class_category_query = "
+    SELECT emd.class, emd.category 
+    FROM exam_marks_data emd
+    INNER JOIN exams e ON emd.exam_id = e.exam_id
+    WHERE emd.student_id = $1 
+      AND e.exam_type = $2 
+      AND e.academic_year = $3
+    LIMIT 1;";  // Assuming class and category will be the same, fetching one row
 
+// Execute query
+$class_category_result = pg_query_params($con, $class_category_query, [$student_id, $exam_type, $academic_year]);
+$class_category_data = pg_fetch_assoc($class_category_result);
+?>
+<?php
+if ($class_category_data) {
+    $student_class = $class_category_data['class'];
+    $student_category = $class_category_data['category'];
 
+    // Fetch marks of all students in the same class and category for the given exam type and academic year
+    $class_marks_query = "
+    SELECT 
+        emd.student_id,
+        ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks,
+        SUM(e.full_marks_written) + SUM(e.full_marks_viva) AS total_full_marks,
+        ROUND((SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) * 100.0 / 
+              (SUM(e.full_marks_written) + SUM(e.full_marks_viva)), 2) AS percentage
+    FROM exam_marks_data emd
+    JOIN exams e ON emd.exam_id = e.exam_id
+    WHERE e.exam_type = $1
+      AND e.academic_year = $2
+      AND emd.class = $3
+      AND emd.category = $4
+    GROUP BY emd.student_id
+    ORDER BY percentage DESC, emd.student_id ASC";
+
+    $class_marks_result = pg_query_params($con, $class_marks_query, [$exam_type, $academic_year, $student_class, $student_category]);
+
+    if ($class_marks_result) {
+        $class_marks = [];
+        while ($row = pg_fetch_assoc($class_marks_result)) {
+            $class_marks[] = $row;
+        }
+
+        // Find the rank of the specific student
+        $rank = 0;
+        foreach ($class_marks as $index => $student) {
+            if ($student['student_id'] == $student_id) {
+                $rank = $index + 1; // Adjusted to give correct 1-based rank // Adjusted to give correct 1-based rank
+                break;
+            }
+        }
+
+        // Store the rank in a variable
+        $rank = $rank > 0 ? $rank : 'N/A'; // If student not found, set rank as 'N/A'
+    } else {
+        $rank = 'N/A'; // If query fails, set rank as 'N/A'
+    }
+} else {
+    $rank = 'N/A'; // If class and category data is not found, set rank as 'N/A'
+}
+
+// Now you can use the $rank variable to display the rank of the student
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -481,7 +544,7 @@ if ($percentage_result) {
                             <td>STUDENT ID</td>
                             <th><?php echo $student_details['student_id'] ?></th>
                             <td> LEARNING GROUP/CLASS </td>
-                            <th><?php echo $student_details['category'] ?>/<?php echo $student_details['class'] ?></th>
+                            <th><?php echo $class_category_data['category'] ?>/<?php echo $class_category_data['class'] ?></th>
                         </tr>
                         <tr>
                             <td>NAME OF STUDENT</td>
@@ -561,7 +624,7 @@ if ($percentage_result) {
                                             </tr>
                                             <tr>
                                                 <td>Overall ranking</td>
-                                                <th></th>
+                                                <th><?php echo $rank ?></th>
                                             </tr>
                                             <tr>
                                                 <td>Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>)</td>
