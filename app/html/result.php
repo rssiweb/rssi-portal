@@ -273,8 +273,10 @@ $class_category_result = pg_query_params($con, $class_category_query, [$student_
 $class_category_data = pg_fetch_assoc($class_category_result);
 ?>
 <?php
-// Step 1: Find grouped exam IDs for the exam type and academic year
-$class_group_query = "
+if ($class_category_data) {
+
+    // Step 1: Find grouped exam IDs for the exam type and academic year
+    $class_group_query = "
     SELECT DISTINCT emd.exam_id
     FROM exam_marks_data emd
     JOIN exams e ON emd.exam_id = e.exam_id
@@ -284,33 +286,33 @@ $class_group_query = "
     HAVING COUNT(DISTINCT emd.class) > 1;
 ";
 
-$class_group_result = pg_query_params($con, $class_group_query, [$exam_type, $academic_year]);
-if (!$class_group_result) {
-    die('Query failed: ' . pg_last_error($con));
-}
+    $class_group_result = pg_query_params($con, $class_group_query, [$exam_type, $academic_year]);
+    if (!$class_group_result) {
+        die('Query failed: ' . pg_last_error($con));
+    }
 
-$grouped_exam_ids = [];
-while ($row = pg_fetch_assoc($class_group_result)) {
-    $grouped_exam_ids[] = $row['exam_id'];
-}
+    $grouped_exam_ids = [];
+    while ($row = pg_fetch_assoc($class_group_result)) {
+        $grouped_exam_ids[] = $row['exam_id'];
+    }
 
-// Debugging grouped exam IDs
-// var_dump($grouped_exam_ids);
-// exit;
+    // Debugging grouped exam IDs
+    // var_dump($grouped_exam_ids);
+    // exit;
 
-// Step 2: Build dynamic placeholders for IN clause
-if (empty($grouped_exam_ids)) {
-    die('No grouped exam IDs found.');
-}
+    // Step 2: Build dynamic placeholders for IN clause
+    if (empty($grouped_exam_ids)) {
+        die('No grouped exam IDs found.');
+    }
 
-$placeholders = [];
-foreach ($grouped_exam_ids as $index => $id) {
-    $placeholders[] = '$' . ($index + 3); // +3 because $1 and $2 are already used
-}
-$placeholders_str = implode(',', $placeholders);
+    $placeholders = [];
+    foreach ($grouped_exam_ids as $index => $id) {
+        $placeholders[] = '$' . ($index + 3); // +3 because $1 and $2 are already used
+    }
+    $placeholders_str = implode(',', $placeholders);
 
-// Step 3: Create the query to fetch student ranks across grouped classes
-$class_group_query = "
+    // Step 3: Create the query to fetch student ranks across grouped classes
+    $class_group_query = "
     SELECT emd.student_id, 
            ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
     FROM exam_marks_data emd
@@ -322,38 +324,38 @@ $class_group_query = "
     ORDER BY total_marks DESC;
 ";
 
-// Merge parameters for pg_query_params
-$params = array_merge([$exam_type, $academic_year], $grouped_exam_ids);
+    // Merge parameters for pg_query_params
+    $params = array_merge([$exam_type, $academic_year], $grouped_exam_ids);
 
-// Step 4: Execute the query
-$class_group_result = pg_query_params($con, $class_group_query, $params);
-if (!$class_group_result) {
-    die('Query failed: ' . pg_last_error($con));
-}
-
-// Step 5: Process results and find student rank
-$class_marks = [];
-while ($row = pg_fetch_assoc($class_group_result)) {
-    $class_marks[] = $row;
-}
-
-// Debugging: Print class marks array
-// echo "<pre>";
-// print_r($class_marks);
-// echo "</pre>";
-
-// Find the rank of the specific student
-$rank = 'N/A';
-foreach ($class_marks as $index => $student) {
-    if ($student['student_id'] == $student_id) {
-        $rank = $index + 1; // Adjusted to give correct 1-based rank
-        break;
+    // Step 4: Execute the query
+    $class_group_result = pg_query_params($con, $class_group_query, $params);
+    if (!$class_group_result) {
+        die('Query failed: ' . pg_last_error($con));
     }
-}
 
-// If the student is not in a grouped class, calculate rank within their own class
-if ($rank === 'N/A') {
-    $individual_class_query = "
+    // Step 5: Process results and find student rank
+    $class_marks = [];
+    while ($row = pg_fetch_assoc($class_group_result)) {
+        $class_marks[] = $row;
+    }
+
+    // Debugging: Print class marks array
+    // echo "<pre>";
+    // print_r($class_marks);
+    // echo "</pre>";
+
+    // Find the rank of the specific student
+    $rank = 'N/A';
+    foreach ($class_marks as $index => $student) {
+        if ($student['student_id'] == $student_id) {
+            $rank = $index + 1; // Adjusted to give correct 1-based rank
+            break;
+        }
+    }
+
+    // If the student is not in a grouped class, calculate rank within their own class
+    if ($rank === 'N/A') {
+        $individual_class_query = "
         SELECT emd.student_id, 
                ROUND(SUM(COALESCE(emd.written_marks, 0)) + SUM(COALESCE(emd.viva_marks, 0))) AS total_marks
         FROM exam_marks_data emd
@@ -365,17 +367,18 @@ if ($rank === 'N/A') {
         ORDER BY total_marks DESC;
     ";
 
-    $individual_class_result = pg_query_params($con, $individual_class_query, [$exam_type, $academic_year, $student_id]);
-    if ($individual_class_result) {
-        $class_marks = [];
-        while ($row = pg_fetch_assoc($individual_class_result)) {
-            $class_marks[] = $row;
-        }
+        $individual_class_result = pg_query_params($con, $individual_class_query, [$exam_type, $academic_year, $student_id]);
+        if ($individual_class_result) {
+            $class_marks = [];
+            while ($row = pg_fetch_assoc($individual_class_result)) {
+                $class_marks[] = $row;
+            }
 
-        foreach ($class_marks as $index => $student) {
-            if ($student['student_id'] == $student_id) {
-                $rank = $index + 1;
-                break;
+            foreach ($class_marks as $index => $student) {
+                if ($student['student_id'] == $student_id) {
+                    $rank = $index + 1;
+                    break;
+                }
             }
         }
     }
@@ -684,7 +687,24 @@ if ($rank === 'N/A') {
                                             </tr>
                                             <tr>
                                                 <td>Overall ranking</td>
-                                                <?php echo in_array($rank, [1, 2, 3]) ? "<th>$rank</th>" : "<th></th>"; ?>
+                                                <?php
+                                                function addOrdinalSuffix($number)
+                                                {
+                                                    if (!in_array(($number % 100), [11, 12, 13])) {
+                                                        switch ($number % 10) {
+                                                            case 1:
+                                                                return $number . 'st';
+                                                            case 2:
+                                                                return $number . 'nd';
+                                                            case 3:
+                                                                return $number . 'rd';
+                                                        }
+                                                    }
+                                                    return $number . 'th';
+                                                }
+
+                                                echo ($formattedPercentage >= 75) ? "<th>" . addOrdinalSuffix($rank) . "</th>" : "<th></th>";
+                                                ?>
                                             </tr>
                                             <tr>
                                                 <td>Attendance (<?php echo date('d/m/Y', strtotime($first_attendance_date)) ?>-<?php echo date('d/m/Y', strtotime($end_date)) ?>)</td>
