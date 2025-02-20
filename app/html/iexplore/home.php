@@ -297,50 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-
-    <!-- Modern Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <i class="bi bi-journal-bookmark-fill me-2"></i>
-                iExplore
-            </a>
-            <div class="d-flex align-items-center">
-                <?php if (isLoggedIn("aid")) : ?>
-                    <!-- Logged-in State -->
-                    <a href="#" class="text-white me-3"><i class="bi bi-bell"></i></a>
-                    <div class="dropdown">
-                        <?php
-                        // Get user details from database
-                        $email = $_SESSION['aid'];
-                        $user_query = pg_query($con, "SELECT name FROM test_users WHERE email='$email'");
-                        $user = pg_fetch_assoc($user_query);
-                        $displayName = $user['name'] ?? explode('@', $email)[0];
-                        ?>
-
-                        <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle me-2"></i><?= htmlspecialchars($displayName) ?>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="my_exam.php"><i class="bi bi-graph-up-arrow me-2"></i>My Exam</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
-                        </ul>
-                    </div>
-                <?php else : ?>
-                    <!-- Guest State -->
-                    <a href="register_user.php" class="btn btn-outline-light me-2">Register</a>
-                    <!-- <a href="index.php" class="btn btn-primary">Login</a> -->
-                    <!-- Trigger Button -->
-                    <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a>
-                <?php endif; ?>
-            </div>
-        </div>
-    </nav>
-
+<?php include 'header.php'; ?>
     <main class="container py-5">
         <div class="row g-4">
             <!-- Enhanced Filter Section -->
@@ -484,25 +441,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 
-    <!-- Modern Footer -->
-    <footer class="bg-light border-top py-4 mt-5">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center">
-                        <!-- <img src="logo.svg" alt="Logo" style="height: 40px;" class="me-3"> -->
-                        <span class="text-muted">© 2025 Rina Shiksha Sahayak Foundation. All rights reserved.</span>
-                    </div>
-                </div>
-                <div class="col-md-6 text-end">
-                    <a href="https://www.instagram.com/rssi.in/" class="text-muted  me-3" target="_blank"><i class="bi bi-instagram"></i></a>
-                    <a href="https://www.linkedin.com/company/rssingo/" class="text-muted  me-3" target="_blank"><i class="bi bi-linkedin"></i></a>
-                    <a href="https://x.com/RssiNgo" class="text-muted me-3" target="_blank"><i class="bi bi-twitter-x" target="_blank"></i></a>
-                    <a href="https://www.facebook.com/rssi.in" class="text-muted me-3" target="_blank"><i class="bi bi-facebook"></i></a>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <?php include 'footer.php'; ?>
 
     <!-- Keep existing JavaScript functionality -->
     <script>
