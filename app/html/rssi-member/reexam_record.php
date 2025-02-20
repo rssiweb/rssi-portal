@@ -132,7 +132,7 @@ if (!$result) {
                                             <th>Academic Year</th>
                                             <th>Taken By (Associate ID)</th>
                                             <th>Associate Name</th>
-                                            <th>Remarks</th>
+                                            <!-- <th>Remarks</th> -->
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -148,7 +148,7 @@ if (!$result) {
                                                 <td><?php echo htmlspecialchars($row['academic_year']); ?></td>
                                                 <td><?php echo htmlspecialchars($row['taken_by']); ?></td>
                                                 <td><?php echo htmlspecialchars($row['fullname'] ?? 'N/A'); ?></td>
-                                                <td><?php echo htmlspecialchars($row['remarks']); ?></td>
+                                                <!-- <td><?php echo htmlspecialchars($row['remarks']); ?></td> -->
                                             </tr>
                                         <?php endwhile; ?>
                                     </tbody>

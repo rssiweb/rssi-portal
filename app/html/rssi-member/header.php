@@ -131,6 +131,16 @@
               <span>Students' Progress Curve</span>
             </a>
           </li>
+          <li>
+            <a id="reexam" href="reexam.php">
+              <span>Re-examination Form</span>
+            </a>
+          </li>
+          <li>
+            <a id="reexam_record" href="reexam_record.php">
+              <span>Re-examination Records</span>
+            </a>
+          </li>
           <!-- <li>
             <a id="uploadMarks" href="exam_marks_upload.php">
               <span>Upload Marks</span>
@@ -553,6 +563,14 @@
         id: 'acadamis',
         linkId: 'examSummary',
         url: 'exam_summary_report.php'
+      },{
+        id: 'acadamis',
+        linkId: 'reexam',
+        url: 'reexam.php'
+      },{
+        id: 'acadamis',
+        linkId: 'reexam_record',
+        url: 'reexam_record.php'
       },
       {
         id: 'myservices',

@@ -13,36 +13,53 @@ validation();
 // $con = pg_connect("host=localhost dbname=your_db_name user=your_db_user password=your_db_password");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get form data
-    $studentIds = $_POST['studentId'] ?? []; // Expecting an array
-    $date = $_POST['date'] ?? null;
-    $re_date = $_POST['re_date'] ?? null;
-    $subject = $_POST['subject'] ?? null;
-    $examinationName = $_POST['examinationName'] ?? null;
-    $academicYear = $_POST['academicYear'] ?? null;
-    $takenBy = $_POST['takenBy'] ?? null;
-    $remarks = $_POST['remarks'] ?? null;
+    // Get common fields
+    $commonData = [
+        're_date' => $_POST['re_date'],
+        'examinationName' => $_POST['examinationName'],
+        'academicYear' => $_POST['academicYear']
+    ];
 
-    // Insert into reexamination table for each student ID
-    foreach ($studentIds as $studentId) {
-        $query = "
-            INSERT INTO reexamination (student_id, date, subject, examination_name, academic_year, taken_by, remarks, re_date)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING reexamination_id;
-        ";
-        $params = [$studentId, $date, $subject, $examinationName, $academicYear, $takenBy, $remarks, $re_date];
+    // Get class-wise data
+    $classes = $_POST['class'] ?? [];
+    $subjects = $_POST['subject'] ?? [];
+    $studentIds = $_POST['studentId'] ?? [];
+    $actualDates = $_POST['actualDate'] ?? [];
+    $takenBys = $_POST['takenBy'] ?? []; // New: Taken By is now part of subject data
 
-        $result = pg_query_params($con, $query, $params);
+    // Insert into reexamination table
+    foreach ($classes as $classIndex => $class) {
+        foreach ($subjects[$classIndex] as $subjectIndex => $subject) {
+            $takenBy = $takenBys[$classIndex][$subjectIndex]; // Get Taken By for this subject
+            foreach ($studentIds[$classIndex][$subjectIndex] as $studentId) {
+                $query = "
+                    INSERT INTO reexamination (
+                        re_date, examination_name, academic_year, 
+                        class, subject, student_id, date, taken_by
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                ";
+                $params = [
+                    $commonData['re_date'],
+                    $commonData['examinationName'],
+                    $commonData['academicYear'],
+                    $class,
+                    $subject,
+                    $studentId,
+                    $actualDates[$classIndex][$subjectIndex],
+                    $takenBy // Use the subject-specific Taken By value
+                ];
 
-        if (!$result) {
-            echo json_encode(['status' => 'error', 'message' => 'An error occurred while saving the record for Student ID: ' . $studentId]);
-            pg_close($con);
-            exit;
+                $result = pg_query_params($con, $query, $params);
+
+                if (!$result) {
+                    echo json_encode(['status' => 'error', 'message' => 'Error saving record']);
+                    exit;
+                }
+            }
         }
     }
 
-    echo json_encode(['status' => 'success', 'message' => 'Re-examination records saved successfully!']);
-    pg_close($con);
+    echo json_encode(['status' => 'success', 'message' => 'Records saved successfully!']);
     exit;
 }
 
@@ -75,8 +92,26 @@ while ($row = pg_fetch_assoc($associate_result)) {
         'text' => $row['name'] . ' (' . $row['id'] . ')'
     ];
 }
+$classlist = [
+    "Nursery",
+    "LKG",
+    "UKG",
+    "Pre-school",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    '10',
+    "11",
+    "12",
+    "Vocational training",
+]
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -123,87 +158,51 @@ while ($row = pg_fetch_assoc($associate_result)) {
 
                         <div class="card-body">
                             <br>
-                            <div class="container mt-5">
-                                <div class="row justify-content-center">
-                                    <div class="col-md-6">
+                            <section class="container section dashboard">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <!-- <div class="card"> -->
+                                        <!-- <div class="card-body"> -->
                                         <form id="reexaminationForm">
-                                            <!-- Student ID -->
-                                            <div class="mb-3">
-                                                <label for="studentId" class="form-label">Student ID</label>
-                                                <select id="studentId" name="studentId[]" class="form-control" multiple="multiple" required>
-                                                    <?php foreach ($students as $student): ?>
-                                                        <option value="<?php echo htmlspecialchars($student['id']); ?>">
-                                                            <?php echo htmlspecialchars($student['text']); ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
+                                            <!-- Common Fields -->
+                                            <div class="common-fields mb-5 border p-3">
+                                                <h5>Common Information</h5>
+                                                <div class="row g-3">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Re-exam Date</label>
+                                                        <input type="date" name="re_date" class="form-control" required>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Examination Name</label>
+                                                        <select name="examinationName" class="form-select" required>
+                                                            <option value="">Select Exam</option>
+                                                            <option>First Term</option>
+                                                            <option>Half Yearly</option>
+                                                            <option>Annual</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Academic Year</label>
+                                                        <select name="academicYear" id="academicYear" class="form-select" required></select>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label for="date" class="form-label">Actual date of examination</label>
-                                                <input type="date" class="form-control" name="date" id="date" required>
+
+                                            <!-- Class Sections -->
+                                            <div id="classSections">
+                                                <!-- Class section will be dynamically added here -->
                                             </div>
-                                            <div class="mb-3">
-                                                <label for="re_date" class="form-label">Date of Re-examination</label>
-                                                <input type="date" class="form-control" name="re_date" id="re_date" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="subject" class="form-label">Subject</label>
-                                                <!-- <input type="text" class="form-control" name="subject" id="subject" required> -->
-                                                <select name="subject" id="subject" class="form-select" required>
-                                                    <option disabled selected hidden value="">Select Subject</option>
-                                                    <option> Hindi </option>
-                                                    <option> English </option>
-                                                    <option> Science </option>
-                                                    <option> Physics </option>
-                                                    <option> Physical science </option>
-                                                    <option> Chemistry </option>
-                                                    <option> Biology </option>
-                                                    <option> Life science </option>
-                                                    <option> Mathematics </option>
-                                                    <option> Social Science </option>
-                                                    <option> Accountancy </option>
-                                                    <option> Computer </option>
-                                                    <option> GK </option>
-                                                    <option> Hamara Parivesh </option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="examinationName" class="form-label">Examination Name</label>
-                                                <select name="examinationName" id="examinationName" class="form-select" required>
-                                                    <option disabled selected hidden value="">Select Exam Name</option>
-                                                    <option>First Term</option>
-                                                    <option>Half Yearly</option>
-                                                    <option>Annual</option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="academicYear" class="form-label">Academic Year</label>
-                                                <select name="academicYear" id="academicYear" class="form-select" required>
-                                                    <option disabled selected hidden value="">Select Year</option>
-                                                </select>
-                                            </div>
-                                            <!-- Taken By -->
-                                            <div class="mb-3">
-                                                <label for="takenBy" class="form-label">Taken By</label>
-                                                <select id="takenBy" name="takenBy" class="form-control" required>
-                                                    <?php foreach ($associates as $associate): ?>
-                                                        <option value="<?php echo htmlspecialchars($associate['id']); ?>">
-                                                            <?php echo htmlspecialchars($associate['text']); ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="remarks" class="form-label">Remarks</label>
-                                                <textarea class="form-control" name="remarks" id="remarks" rows="3"></textarea>
-                                            </div>
-                                            <div class="d-flex justify-content-end">
-                                                <button type="submit" class="btn btn-primary">Submit</button>
+
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-success" id="addClass">Add Class</button>
+                                                <button type="submit" class="btn btn-primary">Submit All</button>
                                             </div>
                                         </form>
+                                        <!-- </div> -->
+                                        <!-- </div> -->
                                     </div>
                                 </div>
-                            </div>
+                            </section>
                         </div>
                     </div>
                 </div><!-- End Reports -->
@@ -221,43 +220,6 @@ while ($row = pg_fetch_assoc($associate_result)) {
     <script src="../assets_new/js/main.js"></script>
     <!-- JavaScript for Form Submission -->
     <script>
-        document.getElementById('reexaminationForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent form submission
-
-            // Create FormData object
-            const formData = new FormData(this);
-
-            // Send data to the backend
-            fetch('', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    if (data.status === 'success') {
-                        // Optionally reset the form after successful submission            
-                        if (window.history.replaceState) {
-                            // Update the URL without causing a page reload or resubmission
-                            window.history.replaceState(null, null, window.location.href);
-                        }
-                        window.location.reload(); // Trigger a page reload to reflect changes
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    alert('An error occurred while saving the record.');
-                });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            // Initialize Select2
-            $('#studentId').select2();
-            $('#takenBy').select2();
-        });
-    </script>
-    <script>
         <?php if (date('m') == 1 || date('m') == 2 || date('m') == 3) { ?>
             var currentYear = new Date().getFullYear() - 1;
         <?php } else { ?>
@@ -273,14 +235,127 @@ while ($row = pg_fetch_assoc($associate_result)) {
         }
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const requiredFields = document.querySelectorAll('[required]');
+        $(document).ready(function() {
+            // Initialize Select2
+            $('.select2').select2();
 
-            requiredFields.forEach(field => {
-                const label = document.querySelector(`label[for="${field.id}"]`);
-                if (label) {
-                    label.innerHTML += ' <span style="color: red">*</span>';
-                }
+            // Class counter
+            let classCounter = 0;
+
+            // Add Class
+            $('#addClass').click(function() {
+                classCounter++;
+                const newClass = `
+                <div class="class-section mb-4 border p-3">
+                    <div class="class-header d-flex justify-content-between mb-3">
+                        <h5>Class Information</h5>
+                        <button type="button" class="btn btn-danger btn-sm remove-class">×</button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Class Name</label>
+                            <!--<input type="text" name="class[]" class="form-control" required>-->
+                            <select name="class[]" class="form-select" required>
+                            <option value="">Select Class</option>
+                            <?php foreach ($classlist as $cls) { ?>
+                                                        <option><?php echo $cls ?></option>
+                                                    <?php } ?>
+                </select>
+                        </div>
+                    </div>
+                    <div class="subject-sections mt-3"></div>
+                    <button type="button" class="btn btn-secondary btn-sm add-subject">Add Subject</button>
+                </div>
+            `;
+                $('#classSections').append(newClass);
+            });
+
+            // Add Subject
+            $(document).on('click', '.add-subject', function() {
+                const classSection = $(this).closest('.class-section');
+                const classIndex = classSection.index();
+                const subjectCount = classSection.find('.subject-section').length;
+
+                const newSubject = `
+    <div class="subject-section mb-3 border p-3">
+        <div class="subject-header d-flex justify-content-between mb-3">
+            <h6>Subject Information</h6>
+            <button type="button" class="btn btn-danger btn-sm remove-subject">×</button>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Subject</label>
+                <select name="subject[${classIndex}][]" class="form-select" required>
+                    <option value="">Select Subject</option>
+                    <option> Hindi </option>
+                                                    <option> English </option>
+                                                    <option> Science </option>
+                                                    <option> Physics </option>
+                                                    <option> Physical science </option>
+                                                    <option> Chemistry </option>
+                                                    <option> Biology </option>
+                                                    <option> Life science </option>
+                                                    <option> Mathematics </option>
+                                                    <option> Social Science </option>
+                                                    <option> Accountancy </option>
+                                                    <option> Computer </option>
+                                                    <option> GK </option>
+                                                    <option> Hamara Parivesh </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Actual Exam Date</label>
+                <input type="date" name="actualDate[${classIndex}][]" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Students</label>
+                <select name="studentId[${classIndex}][${subjectCount}][]" class="form-control select2-multiple" multiple required>
+                    <?php foreach ($students as $student): ?>
+                    <option value="<?= $student['id'] ?>"><?= $student['text'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Taken By</label>
+                <select name="takenBy[${classIndex}][${subjectCount}]" class="form-select select2" required>
+                <option value="">Select Associate</option>
+                    <?php foreach ($associates as $associate): ?>
+                    <option value="<?= $associate['id'] ?>"><?= $associate['text'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+    </div>
+`;
+                classSection.find('.subject-sections').append(newSubject);
+                classSection.find('.select2-multiple').select2();
+            });
+
+            // Remove Class
+            $(document).on('click', '.remove-class', function() {
+                $(this).closest('.class-section').remove();
+            });
+
+            // Remove Subject
+            $(document).on('click', '.remove-subject', function() {
+                $(this).closest('.subject-section').remove();
+            });
+
+            // Form Submission
+            $('#reexaminationForm').submit(function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch('', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        if (data.status === 'success') window.location.reload();
+                    })
+                    .catch(error => console.error('Error:', error));
             });
         });
     </script>
