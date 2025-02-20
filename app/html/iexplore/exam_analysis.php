@@ -394,13 +394,23 @@ if ($session_data = pg_fetch_assoc($result)) {
                                                     <li class="list-group-item 
                                         <?= $option['option_key'] === $data['correct_option'] ? 'list-group-item-success' : '' ?>
                                         <?= $option['option_key'] === $data['user_answer'] && $option['option_key'] !== $data['correct_option'] ? 'list-group-item-danger' : '' ?>">
+                                                        <?php
+                                                        $isUserAnswer = $option['option_key'] === $data['user_answer'];
+                                                        $isCorrectOption = $option['option_key'] === $data['correct_option'];
+                                                        ?>
+
+                                                        <?php if ($isUserAnswer || $isCorrectOption): ?>
+                                                            <span class="position-absolute" style="left: 0;">
+                                                                <?php if ($isUserAnswer && !$isCorrectOption): ?>
+                                                                    <span class="text-danger">✘</span>
+                                                                <?php elseif ($isCorrectOption): ?>
+                                                                    <span class="text-success">✔</span>
+                                                                <?php endif; ?>
+                                                            </span>
+                                                        <?php endif; ?>
                                                         <strong><?= $option['option_key'] ?>:</strong> <?= $option['option_text'] ?>
                                                         <?php if ($option['option_key'] === $data['user_answer']): ?>
                                                             <span class="badge text-bg-warning ms-2">Your Answer</span>
-                                                        <?php endif; ?>
-                                                        <?php if ($option['option_key'] === $data['correct_option']): ?>
-                                                            <!-- <span class="badge bg-success ms-2">Correct Answer</span> -->
-                                                            <span class="text-success position-absolute" style="left: 0;">✔</span>
                                                         <?php endif; ?>
                                                     </li>
                                                 <?php endforeach; ?>
