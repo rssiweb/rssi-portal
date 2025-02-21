@@ -178,13 +178,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="previewModalLabel">Preview Questions</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
                 </div>
                 <div class="modal-body" id="previewModalBody">
                     <!-- Preview content will be dynamically inserted here -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back and Edit</button>
+                    <button type="button" class="btn btn-secondary" id="backAndEditButton" data-bs-dismiss="modal">Back and Edit</button>
                     <button type="button" class="btn btn-primary" id="confirmSubmitBtn">Submit</button>
                 </div>
             </div>
@@ -503,8 +503,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         // Handle the "Submit" button in the modal
-        document.getElementById('confirmSubmitBtn').addEventListener('click', function() {
-            // Submit the form
+        document.getElementById('confirmSubmitBtn').addEventListener('click', function(event) {
+            // Prevent the default form submission (if needed)
+            event.preventDefault();
+
+            // Disable both buttons
+            document.getElementById('backAndEditButton').disabled = true;
+            document.getElementById('confirmSubmitBtn').disabled = true;
+
+            // Change the text of the Submit button to "Submitting..." and add a spinner
+            const submitButton = document.getElementById('confirmSubmitBtn');
+            submitButton.innerHTML = `
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Submitting...
+    `;
+
+            // Submit the form programmatically
             document.getElementById('questionsForm').submit();
         });
     </script>
