@@ -34,12 +34,24 @@ $students_query = "
         CASE
             WHEN exams.exam_date_written IS NULL THEN NULL
             WHEN student.doa > exams.exam_date_written THEN 'BA'
+            WHEN EXISTS (
+                SELECT 1 
+                FROM reexamination 
+                WHERE reexamination.student_id = exam_marks_data.student_id 
+                AND reexamination.date = exams.exam_date_written
+            ) THEN 'P'
             WHEN attendance_written.attendance_status IS NULL THEN 'A'
             ELSE COALESCE(attendance_written.attendance_status, 'A')
         END AS written_attendance_status,
         CASE
             WHEN exams.exam_date_viva IS NULL THEN NULL
             WHEN student.doa > exams.exam_date_viva THEN 'BA'
+            WHEN EXISTS (
+                SELECT 1 
+                FROM reexamination 
+                WHERE reexamination.student_id = exam_marks_data.student_id 
+                AND reexamination.date = exams.exam_date_viva
+            ) THEN 'P'
             WHEN attendance_viva.attendance_status IS NULL THEN 'A'
             ELSE COALESCE(attendance_viva.attendance_status, 'A')
         END AS viva_attendance_status,
