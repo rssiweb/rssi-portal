@@ -207,33 +207,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             questionSetCount++;
             const categoryOptions = categories.map(category => `<option value="${category.id}">${category.name}</option>`).join('');
             const questionSetTemplate = `
-            <div class="card mb-4" id="questionSet-${questionSetCount}">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Question Set ${questionSetCount}</span>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestionSet(${questionSetCount})">Remove</button>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="category-${questionSetCount}" class="form-label">Category</label>
-                        <select class="form-select" id="category-${questionSetCount}" name="questionSets[${questionSetCount}][category]" required>
-                            <option value="" selected disabled>Select a category</option>
-                            ${categoryOptions}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="language-${questionSetCount}" class="form-label">Language</label>
-                        <select class="form-select" id="language-${questionSetCount}" name="questionSets[${questionSetCount}][language]" required>
-                            <option value="" selected disabled>Select a language</option>
-                            <option>Hindi</option>
-                            <option>English</option>
-                        </select>
-                    </div>
-                    <div id="questionsContainer-${questionSetCount}">
-                        <!-- Dynamic Questions will be added here -->
-                    </div>
-                    <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addQuestion(${questionSetCount})">+ Add Question</button>
-                </div>
+        <div class="card mb-4" id="questionSet-${questionSetCount}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Question Set ${questionSetCount}</span>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestionSet(${questionSetCount})">Remove</button>
             </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="category-${questionSetCount}" class="form-label">Category</label>
+                    <select class="form-select" id="category-${questionSetCount}" name="questionSets[${questionSetCount}][category]" required>
+                        <option value="" selected disabled>Select a category</option>
+                        ${categoryOptions}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="language-${questionSetCount}" class="form-label">Language</label>
+                    <select class="form-select" id="language-${questionSetCount}" name="questionSets[${questionSetCount}][language]" required>
+                        <option value="" selected disabled>Select a language</option>
+                        <option>Hindi</option>
+                        <option>English</option>
+                    </select>
+                </div>
+                <div id="questionsContainer-${questionSetCount}">
+                    <!-- Dynamic Questions will be added here -->
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addQuestion(${questionSetCount})">+ Add Question</button>
+            </div>
+        </div>
         `;
             document.getElementById('questionSetsContainer').insertAdjacentHTML('beforeend', questionSetTemplate);
             addQuestion(questionSetCount); // Add the first question by default
@@ -258,6 +258,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Update the IDs of the sets to match their new order
                 setElement.id = `questionSet-${index + 1}`;
+
+                // Update the "onclick" attribute of the remove button
+                const removeButton = setElement.querySelector('.btn-danger');
+                if (removeButton) {
+                    removeButton.setAttribute('onclick', `removeQuestionSet(${index + 1})`);
+                }
             });
 
             // Update the global questionSetCount
@@ -275,25 +281,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const questionCount = questionsContainer.querySelectorAll('.card.mb-4').length + 1; // Number of questions in this set + 1
 
             const questionTemplate = `
-            <div class="card mb-4" id="question-${questionSetId}-${questionCount}">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Question ${questionCount}</span>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(${questionSetId}, ${questionCount})">Remove</button>
+        <div class="card mb-4" id="question-${questionSetId}-${questionCount}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Question ${questionCount}</span>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(${questionSetId}, ${questionCount})">Remove</button>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="questionText-${questionSetId}-${questionCount}" class="form-label">Question Text</label>
+                    <input type="text" class="form-control" id="questionText-${questionSetId}-${questionCount}" name="questionSets[${questionSetId}][questions][${questionCount}][text]" placeholder="Enter the question" required>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="questionText-${questionSetId}-${questionCount}" class="form-label">Question Text</label>
-                        <input type="text" class="form-control" id="questionText-${questionSetId}-${questionCount}" name="questionSets[${questionSetId}][questions][${questionCount}][text]" placeholder="Enter the question" required>
+                <div class="mb-3">
+                    <label class="form-label">Options</label>
+                    <div id="optionsContainer-${questionSetId}-${questionCount}">
+                        <!-- Dynamic Options will be added here -->
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Options</label>
-                        <div id="optionsContainer-${questionSetId}-${questionCount}">
-                            <!-- Dynamic Options will be added here -->
-                        </div>
-                        <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addOption(${questionSetId}, ${questionCount})">+ Add Option</button>
-                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addOption(${questionSetId}, ${questionCount})">+ Add Option</button>
                 </div>
             </div>
+        </div>
         `;
             questionsContainer.insertAdjacentHTML('beforeend', questionTemplate);
             addOption(questionSetId, questionCount); // Add the first option by default
@@ -301,30 +307,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Remove question
         function removeQuestion(questionSetId, questionId) {
-            // Remove the question
-            const questionToRemove = document.getElementById(`question-${questionSetId}-${questionId}`);
-            if (questionToRemove) {
-                questionToRemove.remove();
-            }
-
             // Find the questions container for this set
             const questionsContainer = document.getElementById(`questionsContainer-${questionSetId}`);
             if (questionsContainer) {
-                // Update the numbering for remaining questions in the same set
                 const questionElements = questionsContainer.querySelectorAll('.card.mb-4');
-                questionElements.forEach((questionElement, index) => {
+
+                // Prevent deletion if this is the last question
+                if (questionElements.length === 1) {
+                    alert("A question set must have at least one question.");
+                    return;
+                }
+
+                // Remove the question
+                const questionToRemove = document.getElementById(`question-${questionSetId}-${questionId}`);
+                if (questionToRemove) {
+                    questionToRemove.remove();
+                }
+
+                // Renumber the remaining questions in the set
+                const remainingQuestions = questionsContainer.querySelectorAll('.card.mb-4');
+                remainingQuestions.forEach((questionElement, index) => {
+                    const newQuestionId = index + 1;
+
+                    // Update the question ID
+                    questionElement.id = `question-${questionSetId}-${newQuestionId}`;
+
+                    // Update the question number in the header
                     const questionHeader = questionElement.querySelector('.card-header span');
                     if (questionHeader) {
-                        questionHeader.textContent = `Question ${index + 1}`; // Update the question number
+                        questionHeader.textContent = `Question ${newQuestionId}`;
                     }
-
-                    // Update the IDs of the questions to match their new order
-                    questionElement.id = `question-${questionSetId}-${index + 1}`;
 
                     // Update the "onclick" attribute of the remove button
                     const removeButton = questionElement.querySelector('.btn-danger');
                     if (removeButton) {
-                        removeButton.setAttribute('onclick', `removeQuestion(${questionSetId}, ${index + 1})`);
+                        removeButton.setAttribute('onclick', `removeQuestion(${questionSetId}, ${newQuestionId})`);
+                    }
+
+                    // Update the IDs and names of the question text input
+                    const questionTextInput = questionElement.querySelector('input[name$="[text]"]');
+                    if (questionTextInput) {
+                        questionTextInput.id = `questionText-${questionSetId}-${newQuestionId}`;
+                        questionTextInput.name = `questionSets[${questionSetId}][questions][${newQuestionId}][text]`;
+                    }
+
+                    // Update the IDs and names of the options container
+                    const optionsContainer = questionElement.querySelector(`#optionsContainer-${questionSetId}-${questionId}`);
+                    if (optionsContainer) {
+                        optionsContainer.id = `optionsContainer-${questionSetId}-${newQuestionId}`;
                     }
                 });
             }
@@ -348,30 +378,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const optionContainer = document.getElementById(`optionsContainer-${questionSetId}-${questionId}`);
             const optionCount = optionContainer.childElementCount + 1;
             const optionTemplate = `
-            <div class="input-group mb-2" id="question-${questionSetId}-${questionId}-option-${optionCount}">
-                <input type="text" class="form-control" name="questionSets[${questionSetId}][questions][${questionId}][options][${optionCount}][text]" placeholder="Enter option ${optionCount}" required>
-                <label class="input-group-text" style="cursor: pointer;">
-                    <input style="cursor: pointer;" type="radio" name="questionSets[${questionSetId}][questions][${questionId}][correct]" value="${optionCount}" required>
-                </label>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(${questionSetId}, ${questionId}, ${optionCount})">Remove</button>
-            </div>
+        <div class="input-group mb-2" id="question-${questionSetId}-${questionId}-option-${optionCount}">
+            <input type="text" class="form-control" name="questionSets[${questionSetId}][questions][${questionId}][options][${optionCount}][text]" placeholder="Enter option ${optionCount}" required>
+            <label class="input-group-text" style="cursor: pointer;">
+                <input style="cursor: pointer;" type="radio" name="questionSets[${questionSetId}][questions][${questionId}][correct]" value="${optionCount}" required>
+            </label>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(${questionSetId}, ${questionId}, ${optionCount})">Remove</button>
+        </div>
         `;
             optionContainer.insertAdjacentHTML('beforeend', optionTemplate);
         }
 
         // Remove option
         function removeOption(questionSetId, questionId, optionId) {
-            document.getElementById(`question-${questionSetId}-${questionId}-option-${optionId}`).remove();
+            const optionContainer = document.getElementById(`optionsContainer-${questionSetId}-${questionId}`);
+            if (optionContainer) {
+                const optionElements = optionContainer.querySelectorAll('.input-group.mb-2');
+
+                // Prevent deletion if this is the last option
+                if (optionElements.length === 1) {
+                    alert("A question must have at least one option.");
+                    return;
+                }
+
+                // Remove the option
+                const optionToRemove = document.getElementById(`question-${questionSetId}-${questionId}-option-${optionId}`);
+                if (optionToRemove) {
+                    optionToRemove.remove();
+                }
+
+                // Renumber the remaining options
+                const remainingOptions = optionContainer.querySelectorAll('.input-group.mb-2');
+                remainingOptions.forEach((optionElement, index) => {
+                    const newOptionId = index + 1;
+
+                    // Update the option ID
+                    optionElement.id = `question-${questionSetId}-${questionId}-option-${newOptionId}`;
+
+                    // Update the name attribute for the option text input
+                    const optionTextInput = optionElement.querySelector('input[type="text"]');
+                    if (optionTextInput) {
+                        optionTextInput.name = `questionSets[${questionSetId}][questions][${questionId}][options][${newOptionId}][text]`;
+                        optionTextInput.placeholder = `Enter option ${newOptionId}`; // Update the placeholder
+                    }
+
+                    // Update the value and name attribute for the radio button (correct option)
+                    const optionRadioInput = optionElement.querySelector('input[type="radio"]');
+                    if (optionRadioInput) {
+                        optionRadioInput.value = newOptionId;
+                        optionRadioInput.name = `questionSets[${questionSetId}][questions][${questionId}][correct]`;
+                    }
+
+                    // Update the "onclick" attribute of the remove button
+                    const removeButton = optionElement.querySelector('.btn-danger');
+                    if (removeButton) {
+                        removeButton.setAttribute('onclick', `removeOption(${questionSetId}, ${questionId}, ${newOptionId})`);
+                    }
+                });
+            }
         }
 
-        // Handle form submission to show preview modal
         document.getElementById('questionsForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the form from submitting immediately
 
-            // Capture form data
-            const questionSets = [];
+            // Validate question sets
             const questionSetElements = document.querySelectorAll('#questionSetsContainer > .card');
+            let isValid = true;
 
+            questionSetElements.forEach((setElement, setIndex) => {
+                const questionsContainer = setElement.querySelector(`#questionsContainer-${setIndex + 1}`);
+                const questionElements = questionsContainer?.querySelectorAll('.card.mb-4');
+
+                // Check if the set has at least one question
+                if (!questionElements || questionElements.length === 0) {
+                    alert(`Question Set ${setIndex + 1} must have at least one question.`);
+                    isValid = false;
+                    return;
+                }
+
+                // Check if each question has at least one option
+                questionElements.forEach((questionElement, qIndex) => {
+                    const optionElements = questionElement.querySelectorAll('.input-group.mb-2');
+                    if (optionElements.length === 0) {
+                        alert(`Question ${qIndex + 1} in Question Set ${setIndex + 1} must have at least one option.`);
+                        isValid = false;
+                        return;
+                    }
+                });
+            });
+
+            // If validation fails, stop submission
+            if (!isValid) {
+                return;
+            }
+
+            // Proceed with capturing form data and showing the preview modal
+            const questionSets = [];
             questionSetElements.forEach((setElement, setIndex) => {
                 const category = setElement.querySelector('select[name$="[category]"]').value;
                 const language = setElement.querySelector('select[name$="[language]"]').value;
@@ -422,16 +524,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 set.questions.forEach((question, qIndex) => {
                     previewContent += `<div class="card mb-3">
-                    <div class="card-body">
-                        <h6>Question ${qIndex + 1}: ${question.text}</h6>
-                        <div class="options-list">`;
+                <div class="card-body">
+                    <h6>Question ${qIndex + 1}: ${question.text}</h6>
+                    <div class="options-list">`;
 
                     question.options.forEach((option, oIndex) => {
                         const optionLabel = String.fromCharCode(65 + oIndex); // Convert index to A, B, C, etc.
                         previewContent += `<div class="option-item">
-                        <strong>${optionLabel}:</strong> ${option.text} 
-                        ${option.isCorrect ? '<span class="text-success">(Correct)</span>' : ''}
-                    </div>`;
+                    ${optionLabel}: ${option.text} 
+                    ${option.isCorrect ? '<span class="text-success">(Correct)</span>' : ''}
+                </div>`;
                     });
 
                     previewContent += `</div></div></div>`;
