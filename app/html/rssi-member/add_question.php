@@ -198,8 +198,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="../assets_new/js/main.js"></script>
     <script>
         let questionSetCount = 0;
-
-        // Categories from PHP
         const categories = <?php echo json_encode($categories); ?>;
 
         // Add new question set
@@ -248,16 +246,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setToRemove.remove();
             }
 
-            // Update the numbering for remaining sets
+            // Update the numbering for remaining sets (visual only)
             const questionSetElements = document.querySelectorAll('#questionSetsContainer > .card');
             questionSetElements.forEach((setElement, index) => {
                 const setHeader = setElement.querySelector('.card-header span');
                 if (setHeader) {
-                    setHeader.textContent = `Question Set ${index + 1}`; // Update the set number
+                    setHeader.textContent = `Question Set ${index + 1}`; // Update the visual text
                 }
-
-                // Update the IDs of the sets to match their new order
-                setElement.id = `questionSet-${index + 1}`;
             });
 
             // Update the global questionSetCount
@@ -301,30 +296,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Remove question
         function removeQuestion(questionSetId, questionId) {
-            // Remove the question
-            const questionToRemove = document.getElementById(`question-${questionSetId}-${questionId}`);
-            if (questionToRemove) {
-                questionToRemove.remove();
-            }
-
             // Find the questions container for this set
             const questionsContainer = document.getElementById(`questionsContainer-${questionSetId}`);
             if (questionsContainer) {
-                // Update the numbering for remaining questions in the same set
                 const questionElements = questionsContainer.querySelectorAll('.card.mb-4');
-                questionElements.forEach((questionElement, index) => {
+
+                // Prevent deletion if this is the last question
+                if (questionElements.length === 1) {
+                    alert("A question set must have at least one question.");
+                    return;
+                }
+
+                // Remove the question
+                const questionToRemove = document.getElementById(`question-${questionSetId}-${questionId}`);
+                if (questionToRemove) {
+                    questionToRemove.remove();
+                }
+
+                // Renumber the remaining questions in the set (visual only)
+                const remainingQuestions = questionsContainer.querySelectorAll('.card.mb-4');
+                remainingQuestions.forEach((questionElement, index) => {
+                    const newQuestionId = index + 1;
+
+                    // Update the question number in the header (visual only)
                     const questionHeader = questionElement.querySelector('.card-header span');
                     if (questionHeader) {
-                        questionHeader.textContent = `Question ${index + 1}`; // Update the question number
-                    }
-
-                    // Update the IDs of the questions to match their new order
-                    questionElement.id = `question-${questionSetId}-${index + 1}`;
-
-                    // Update the "onclick" attribute of the remove button
-                    const removeButton = questionElement.querySelector('.btn-danger');
-                    if (removeButton) {
-                        removeButton.setAttribute('onclick', `removeQuestion(${questionSetId}, ${index + 1})`);
+                        questionHeader.textContent = `Question ${newQuestionId}`;
                     }
                 });
             }
@@ -361,24 +358,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Remove option
         function removeOption(questionSetId, questionId, optionId) {
-            document.getElementById(`question-${questionSetId}-${questionId}-option-${optionId}`).remove();
+            const optionContainer = document.getElementById(`optionsContainer-${questionSetId}-${questionId}`);
+            if (optionContainer) {
+                const optionElements = optionContainer.querySelectorAll('.input-group.mb-2');
+
+                // Prevent deletion if this is the last option
+                if (optionElements.length === 1) {
+                    alert("A question must have at least one option.");
+                    return;
+                }
+
+                // Remove the option
+                const optionToRemove = document.getElementById(`question-${questionSetId}-${questionId}-option-${optionId}`);
+                if (optionToRemove) {
+                    optionToRemove.remove();
+                }
+
+                // Renumber the remaining options (visual only)
+                const remainingOptions = optionContainer.querySelectorAll('.input-group.mb-2');
+                remainingOptions.forEach((optionElement, index) => {
+                    const newOptionId = index + 1;
+
+                    // Update the placeholder text (visual only)
+                    const optionTextInput = optionElement.querySelector('input[type="text"]');
+                    if (optionTextInput) {
+                        optionTextInput.placeholder = `Enter option ${newOptionId}`;
+                    }
+                });
+            }
         }
 
-        // Handle form submission to show preview modal
+        // Form submission and validation
         document.getElementById('questionsForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the form from submitting immediately
 
-            // Capture form data
-            const questionSets = [];
+            // Validate question sets
             const questionSetElements = document.querySelectorAll('#questionSetsContainer > .card');
+            let isValid = true;
 
-            questionSetElements.forEach((setElement, setIndex) => {
+            questionSetElements.forEach((setElement) => {
+                const setId = setElement.id.split('-')[1]; // Extract the set ID from the element's ID
+                const questionsContainer = setElement.querySelector(`#questionsContainer-${setId}`);
+                const questionElements = questionsContainer?.querySelectorAll('.card.mb-4');
+
+                // Check if the set has at least one question
+                if (!questionElements || questionElements.length === 0) {
+                    alert(`Question Set ${setId} must have at least one question.`);
+                    isValid = false;
+                    return;
+                }
+
+                // Check if each question has at least one option
+                questionElements.forEach((questionElement) => {
+                    const optionElements = questionElement.querySelectorAll('.input-group.mb-2');
+                    if (optionElements.length === 0) {
+                        const questionId = questionElement.id.split('-')[2]; // Extract the question ID from the element's ID
+                        alert(`Question ${questionId} in Question Set ${setId} must have at least one option.`);
+                        isValid = false;
+                        return;
+                    }
+                });
+            });
+
+            // If validation fails, stop submission
+            if (!isValid) {
+                return;
+            }
+
+            // Proceed with capturing form data and showing the preview modal
+            const questionSets = [];
+            questionSetElements.forEach((setElement) => {
+                const setId = setElement.id.split('-')[1]; // Extract the set ID from the element's ID
                 const category = setElement.querySelector('select[name$="[category]"]').value;
                 const language = setElement.querySelector('select[name$="[language]"]').value;
                 const questions = [];
 
                 const questionElements = setElement.querySelectorAll('.card.mb-4');
-                questionElements.forEach((questionElement, qIndex) => {
+                questionElements.forEach((questionElement) => {
                     const questionText = questionElement.querySelector('input[name$="[text]"]').value;
                     const options = [];
                     let correctOption = null;
@@ -429,7 +485,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     question.options.forEach((option, oIndex) => {
                         const optionLabel = String.fromCharCode(65 + oIndex); // Convert index to A, B, C, etc.
                         previewContent += `<div class="option-item">
-                        <strong>${optionLabel}:</strong> ${option.text} 
+                        ${optionLabel}: ${option.text} 
                         ${option.isCorrect ? '<span class="text-success">(Correct)</span>' : ''}
                     </div>`;
                     });
