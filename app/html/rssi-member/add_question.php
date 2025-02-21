@@ -32,14 +32,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($questions as $question) {
         $text = $question['text'];
         $category = $question['category'];
+        $language = $question['language'];
         $correctOptionIndex = $question['correct']; // Correct option index (e.g., 1, 2, 3)
 
         // Convert the correct option index to its corresponding key (A, B, C, D)
         $correctOptionKey = chr(64 + $correctOptionIndex); // 1 -> A, 2 -> B, etc.
 
         // Insert the question into the database with the correct_option
-        $query = "INSERT INTO test_questions (question_text, category_id, correct_option, created_by) VALUES ($1, $2, $3, $4) RETURNING id";
-        $result = pg_query_params($con, $query, array($text, $category, $correctOptionKey, $user_check));
+        $query = "INSERT INTO test_questions (question_text, category_id, correct_option, created_by, q_language) VALUES ($1, $2, $3, $4,$5) RETURNING id";
+        $result = pg_query_params($con, $query, array($text, $category, $correctOptionKey, $user_check, $language));
         if (!$result) {
             die("Error inserting question: " . pg_last_error($con));
         }
@@ -194,6 +195,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </select>
                     </div>
                     <div class="mb-3">
+                        <label for="language-${questionCount}" class="form-label">Language</label>
+                        <select class="form-select" id="language-${questionCount}" name="questions[${questionCount}][language]" required>
+                            <option value="" selected disabled>Select a language</option>
+                            <option>Hindi</option>
+                            <option>English</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Options</label>
                         <div id="optionsContainer-${questionCount}">
                             <!-- Dynamic Options will be added here -->
@@ -255,6 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             questions.forEach((questionCard, index) => {
                 const questionText = questionCard.querySelector(`[id^="questionText-"]`).value;
                 const category = questionCard.querySelector(`[id^="category-"]`).value;
+                const language = questionCard.querySelector(`[id^="language-"]`).value;
                 const options = questionCard.querySelectorAll(`#optionsContainer-${index + 1} .input-group`);
                 const optionsHTML = Array.from(options).map((option, i) => {
                     const optionText = option.querySelector('input[type="text"]').value;
@@ -265,6 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <h5>${index + 1}. ${questionText}</h5>
                     <p><strong>Category:</strong> ${category}</p>
+                    <p><strong>Language:</strong> ${language}</p>
                     <ul>${optionsHTML}</ul>
                 </div>
             `;
