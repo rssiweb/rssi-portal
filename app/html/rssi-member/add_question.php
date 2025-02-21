@@ -376,13 +376,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 set.questions.forEach((question, qIndex) => {
                     previewContent += `<div class="card mb-3">
-                <div class="card-body">
-                    <h6>Question ${qIndex + 1}: ${question.text}</h6>
-                    <ul>`;
+            <div class="card-body">
+                <h6>Question ${qIndex + 1}: ${question.text}</h6>
+                <div class="options-list">`;
+
                     question.options.forEach((option, oIndex) => {
-                        previewContent += `<li>${option.text} ${option.isCorrect ? '<span class="text-success">(Correct)</span>' : ''}</li>`;
+                        const optionLabel = String.fromCharCode(65 + oIndex); // Convert index to A, B, C, etc.
+                        previewContent += `<div class="option-item">
+                ${optionLabel}: ${option.text} 
+                ${option.isCorrect ? '<span class="text-success">(Correct)</span>' : ''}
+            </div>`;
                     });
-                    previewContent += `</ul></div></div>`;
+
+                    previewContent += `</div></div></div>`;
                 });
             });
 
