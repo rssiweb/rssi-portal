@@ -135,10 +135,11 @@ if (!$show_form) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Examination Portal</title>
+    <title>iExplore-Online Examination Portal</title>
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -247,10 +248,74 @@ if (!$show_form) {
         .hidden {
             display: none;
         }
+
+        /* Header Styles */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header .organisation-name,
+        header .user-name {
+            font-size: 1.2rem;
+        }
+
+        /* Sidebar Scrollable */
+        .status-sidebar {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            height: calc(100vh - 200px);
+            /* Adjust height as needed */
+            overflow-y: auto;
+            /* Make the content scrollable */
+        }
     </style>
 </head>
 
 <body>
+    <header style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background-color: var(--primary-color); color: white;">
+        <div class="organisation-name">Rina Shiksha Sahayak Foundation</div>
+        <div class="user-name">
+            <div class="d-flex align-items-center">
+                <?php if (isLoggedIn("aid")) : ?>
+                    <!-- Logged-in State -->
+                    <a href="#" class="text-white me-3"><i class="bi bi-bell"></i></a>
+                    <div class="dropdown">
+                        <?php
+                        // Get user details from database
+                        $email = $_SESSION['aid'];
+                        $user_query = pg_query($con, "SELECT name FROM test_users WHERE email='$email'");
+                        $user = pg_fetch_assoc($user_query);
+                        $displayName = $user['name'] ?? explode('@', $email)[0];
+                        ?>
+
+                        <a class="btn btn-light btn-sm dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-2"></i><?= htmlspecialchars($displayName) ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <!-- <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="my_exam.php"><i class="bi bi-graph-up-arrow me-2"></i>My Exam</a></li> -->
+                            <!-- <li><a class="dropdown-item" href="resetpassword.php"><i class="bi bi-gear me-2"></i>Reset Password</a></li> -->
+                            <!-- <li>
+                                <hr class="dropdown-divider">
+                            </li> -->
+                            <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                <?php else : ?>
+                    <!-- Guest State -->
+                    <a href="register_user.php" class="btn btn-outline-light me-2">Register</a>
+                    <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </header>
     <div class="exam-container" id="exam-form">
         <?php if ($show_form): ?>
             <!-- Show the form if no exam_id is provided -->
