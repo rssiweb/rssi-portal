@@ -4,6 +4,7 @@ include("../../util/login_util_iexplore.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
@@ -48,7 +49,7 @@ if (!$show_form) {
                 pg_query_params($con, $update_query, array($session_id));
 
                 // Redirect to the result page
-                header("Location: result.php?session_id=$session_id");
+                header("Location: my_exam.php?session_id=$session_id");
                 exit;
             }
         } else {

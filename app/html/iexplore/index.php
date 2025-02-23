@@ -59,11 +59,16 @@ function afterLogin($con, $date)
     $user_ip = $_SERVER['REMOTE_ADDR'];
     pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT, '$user_id', '$user_ip', '$date')");
 
-    // Redirect to the appropriate page
     if (isset($_SESSION["login_redirect"])) {
-        $params = http_build_query($_SESSION["login_redirect_params"] ?? []);
+        $params = "";
+        if (isset($_SESSION["login_redirect_params"])) {
+            foreach ($_SESSION["login_redirect_params"] as $key => $value) {
+                $params .= "$key=$value&";
+            }
+            unset($_SESSION["login_redirect_params"]);
+        }
         header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
-        unset($_SESSION["login_redirect"], $_SESSION["login_redirect_params"]);
+        unset($_SESSION["login_redirect"]);
     } else {
         header("Location: home.php");
     }
