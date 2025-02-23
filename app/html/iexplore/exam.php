@@ -664,7 +664,7 @@ if (!$show_form) {
             // Function to handle page reload
             function handleBeforeUnload(event) {
                 // Skip submission if login_redirect is present
-                if (!isExamSubmitted && !isLoginRedirect) {
+                if (!isExamSubmitted) {
                     event.preventDefault();
                     // Submit the exam if the user tries to reload the page
                     submitExam();
