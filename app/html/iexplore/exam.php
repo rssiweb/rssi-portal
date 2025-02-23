@@ -661,6 +661,10 @@ if (!$show_form) {
             // Add event listener for tab change detection
             document.addEventListener('visibilitychange', handleVisibilityChange);
 
+            // Show an alert as soon as the page loads
+            window.onload = function() {
+                alert('If you reload the page, the exam will be submitted automatically.');
+            };
             // Function to handle page reload
             function handleBeforeUnload(event) {
                 // Skip submission if login_redirect is present
