@@ -43,101 +43,166 @@ if (!$result) {
 $exams = pg_fetch_all($result);
 ?>
 <?php
+
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = "";
 
-function afterlogin($con, $date)
+// Function to generate a 12-digit random user ID
+function generateUserId()
 {
-    $email = $_SESSION['aid'];
-    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from test_users WHERE email='$email'");
-    $row = pg_fetch_row($user_query);
-    $password_updated_by = $row[0];
-    $password_updated_on = $row[1];
-    $default_pass_updated_on = $row[2];
+    return str_pad(mt_rand(0, 999999999999), 12, '0', STR_PAD_LEFT);
+}
 
-    passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
-
-    function getUserIpAddr()
-    {
-        if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
-            return $_SERVER['HTTP_CLIENT_IP'];
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-            $ip = trim($ipList[0]);
-            return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : $_SERVER['REMOTE_ADDR'];
-        } else {
-            return $_SERVER['REMOTE_ADDR'];
-        }
-    }
-
-    $user_ip = getUserIpAddr();
-    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$email','$user_ip','$date')");
-
-    // Prevent redirection loop
-    $current_script = basename($_SERVER['SCRIPT_NAME']);
-    if (isset($_SESSION["login_redirect"])) {
-        $target_script = basename($_SESSION["login_redirect"]);
-        if ($current_script !== $target_script) {
-            $params = "";
-            if (isset($_SESSION["login_redirect_params"])) {
-                foreach ($_SESSION["login_redirect_params"] as $key => $value) {
-                    $params .= "$key=$value&";
-                }
-                unset($_SESSION["login_redirect_params"]);
-            }
-            header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
-            unset($_SESSION["login_redirect"]);
-            exit;
-        }
-    } elseif ($current_script !== 'home.php') {
-        header("Location: home.php");
+// Function to handle post-login actions
+function afterLogin($con, $date)
+{
+    if (!isset($_SESSION['aid']) || !isset($_SESSION['user_type'])) {
+        header("Location: index.php");
         exit;
     }
-}
 
-if (isLoggedIn("aid")) {
-    // Only call afterlogin if the user is not already on the target page
-    $current_script = basename($_SERVER['SCRIPT_NAME']);
-    if ($current_script !== 'home.php' && !isset($_SESSION["login_redirect"])) {
-        afterlogin($con, $date);
+    $user_id = $_SESSION['aid'];
+    $user_type = $_SESSION['user_type'];
+
+    // Fetch password-related details based on user type
+    $query = match ($user_type) {
+        'iexplore' => "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM test_users WHERE email='$user_id'",
+        'rssi-member' => "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM rssimyaccount_members WHERE email='$user_id'",
+        'tap' => "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM signup WHERE email='$user_id'",
+        default => null,
+    };
+
+    if (!$query) {
+        header("Location: error.php?message=Invalid user type");
+        exit;
     }
-}
 
+    $result = pg_query($con, $query);
+    if (!$result) {
+        header("Location: error.php?message=Database query failed");
+        exit;
+    }
+
+    $row = pg_fetch_row($result);
+    if (!$row) {
+        header("Location: error.php?message=No data found");
+        exit;
+    }
+
+    // Store password-related details in the session
+    $_SESSION['password_updated_by'] = $row[0];
+    $_SESSION['password_updated_on'] = $row[1];
+    $_SESSION['default_pass_updated_on'] = $row[2];
+
+    // Check if password reset is required
+    passwordCheck($row[0], $row[1], $row[2]);
+
+    // Log the login attempt
+    $user_ip = $_SERVER['REMOTE_ADDR'];
+    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT, '$user_id', '$user_ip', '$date')");
+
+    // Redirect to the appropriate page
+    // if (isset($_SESSION["login_redirect"])) {
+    //     $params = http_build_query($_SESSION["login_redirect_params"] ?? []);
+    //     header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
+    //     unset($_SESSION["login_redirect"], $_SESSION["login_redirect_params"]);
+    // } else {
+    //     header("Location: home.php");
+    // }
+    // exit;
+}
+// Function to handle login
 function checkLogin($con, $date)
 {
     global $login_failed_dialog;
-    $email = $_POST['aid'];
+
+    $username = $_POST['aid'];
     $password = $_POST['pass'];
 
-    $query = "SELECT password, absconding FROM test_users WHERE email='$email'";
+    // Check in rssi-member (rssimyaccount_members table)
+    $query = "SELECT password, absconding, fullname, email, phone FROM rssimyaccount_members WHERE associatenumber='$username'";
     $result = pg_query($con, $query);
-    if ($result) {
-        $user = pg_fetch_assoc($result);
-        if ($user) {
-            $existingHashFromDb = $user['password'];
-            $absconding = $user['absconding'];
-            if (password_verify($password, $existingHashFromDb)) {
-                if (!empty($absconding)) {
-                    $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
-                } else {
-                    $_SESSION['aid'] = $email;
-                    afterlogin($con, $date);
-                }
+    if ($result && $user = pg_fetch_assoc($result)) {
+        if ($user['password'] !== null && password_verify($password, $user['password'])) {
+            if (!empty($user['absconding'])) {
+                $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
             } else {
-                $login_failed_dialog = "Incorrect username or password.";
+                $_SESSION['aid'] = $user['email'];
+                $_SESSION['user_type'] = 'rssi-member';
+
+                // Insert or update user in test_users table
+                $test_user_query = pg_query($con, "SELECT id, name, email, user_type, contact FROM test_users WHERE email='{$user['email']}'");
+                $test_user = pg_fetch_assoc($test_user_query);
+
+                if (!$test_user) {
+                    $new_user_id = generateUserId();
+                    pg_query($con, "INSERT INTO test_users (id, name, email, user_type, contact, created_at) VALUES ('$new_user_id', '{$user['fullname']}', '{$user['email']}', 'rssi-member', '{$user['phone']}', '$date')");
+                } else {
+                    pg_query($con, "UPDATE test_users SET name='{$user['fullname']}', email='{$user['email']}', user_type='rssi-member', contact='{$user['phone']}' WHERE id='{$test_user['id']}'");
+                }
+
+                afterLogin($con, $date);
+                return; // Exit the function after successful login
             }
-        } else {
-            $login_failed_dialog = "User not found.";
         }
-    } else {
-        $login_failed_dialog = "Error executing query.";
     }
+
+    // Check in tap (signup table)
+    $query = "SELECT password, absconding, applicant_name, email, telephone FROM signup WHERE email='$username'";
+    $result = pg_query($con, $query);
+    if ($result && $user = pg_fetch_assoc($result)) {
+        if ($user['password'] !== null && password_verify($password, $user['password'])) {
+            if (!empty($user['absconding'])) {
+                $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
+            } else {
+                $_SESSION['aid'] = $username;
+                $_SESSION['user_type'] = 'tap';
+
+                // Insert or update user in test_users table
+                $test_user_query = pg_query($con, "SELECT id, name, email, user_type, contact FROM test_users WHERE email='{$user['email']}'");
+                $test_user = pg_fetch_assoc($test_user_query);
+
+                if (!$test_user) {
+                    $new_user_id = generateUserId();
+                    pg_query($con, "INSERT INTO test_users (id, name, email, user_type, contact, created_at) VALUES ('$new_user_id', '{$user['applicant_name']}', '{$user['email']}', 'tap', '{$user['telephone']}', '$date')");
+                } else {
+                    pg_query($con, "UPDATE test_users SET name='{$user['applicant_name']}', email='{$user['email']}', user_type='tap', contact='{$user['telephone']}' WHERE id='{$test_user['id']}'");
+                }
+
+                afterLogin($con, $date);
+                return; // Exit the function after successful login
+            }
+        }
+    }
+
+    // Check in iexplore (test_users table)
+    $query = "SELECT password, absconding FROM test_users WHERE email='$username'";
+    $result = pg_query($con, $query);
+    if ($result && $user = pg_fetch_assoc($result)) {
+        if ($user['password'] !== null && password_verify($password, $user['password'])) {
+            if (!empty($user['absconding'])) {
+                $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
+            } else {
+                $_SESSION['aid'] = $username;
+                $_SESSION['user_type'] = 'iexplore';
+                afterLogin($con, $date);
+                return; // Exit the function after successful login
+            }
+        }
+    }
+
+    // If no match found
+    $login_failed_dialog = "Incorrect username or password.";
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['login'])) {
-        checkLogin($con, $date);
-    }
+// Handle login request
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
+    checkLogin($con, $date);
+}
+
+// Redirect logged-in users
+if (isLoggedIn("aid")) {
+    afterLogin($con, $date);
 }
 ?>
 
@@ -177,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-<?php include 'header.php'; ?>
+    <?php include 'header.php'; ?>
     <main class="container py-5">
         <div class="row g-4">
             <!-- Enhanced Filter Section -->
@@ -389,70 +454,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Login Modal -->
-<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <!-- Modal Header -->
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="loginModalLabel">Login to Your Account</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="loginModalLabel">Login to Your Account</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
 
-            <!-- Modal Body -->
-            <div class="modal-body p-4">
-                <!-- Error Message -->
-                <?php if ($login_failed_dialog) { ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <?php echo $login_failed_dialog; ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php } ?>
-
-                <!-- Login Form -->
-                <form method="POST" action="">
-                    <!-- Email Input -->
-                    <div class="mb-3">
-                        <label for="aid" class="form-label">Email Address</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input type="text" class="form-control" id="aid" name="aid" placeholder="Enter your email" required>
+                <!-- Modal Body -->
+                <div class="modal-body p-4">
+                    <!-- Error Message -->
+                    <?php if ($login_failed_dialog) { ?>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <?php echo $login_failed_dialog; ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                    </div>
+                    <?php } ?>
 
-                    <!-- Password Input -->
-                    <div class="mb-3">
-                        <label for="pass" class="form-label">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input type="password" class="form-control" id="pass" name="pass" placeholder="Enter your password" required>
+                    <!-- Login Form -->
+                    <form method="POST" action="">
+                        <!-- Email Input -->
+                        <div class="mb-3">
+                            <label for="aid" class="form-label">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="text" class="form-control" id="aid" name="aid" placeholder="Enter your email" required>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Show Password Checkbox -->
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="show-password">
-                        <label class="form-check-label" for="show-password">Show Password</label>
-                    </div>
+                        <!-- Password Input -->
+                        <div class="mb-3">
+                            <label for="pass" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="pass" name="pass" placeholder="Enter your password" required>
+                            </div>
+                        </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-primary w-100 mb-3" name="login">
-                        Login <i class="bi bi-arrow-right ms-2"></i>
-                    </button>
+                        <!-- Show Password Checkbox -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="show-password">
+                            <label class="form-check-label" for="show-password">Show Password</label>
+                        </div>
 
-                    <!-- Forgot Password Link -->
-                    <div class="text-center">
-                        <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
-                    </div>
-                </form>
-            </div>
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary w-100 mb-3" name="login">
+                            Login <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
 
-            <!-- Modal Footer (Optional) -->
-            <div class="modal-footer bg-light">
-                <p class="text-muted small mb-0">Don't have an account? <a href="register_user.php" class="text-primary text-decoration-none">Sign up</a></p>
+                        <!-- Forgot Password Link -->
+                        <div class="text-center">
+                            <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Modal Footer (Optional) -->
+                <div class="modal-footer bg-light">
+                    <p class="text-muted small mb-0">Don't have an account? <a href="register_user.php" class="text-primary text-decoration-none">Sign up</a></p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Forgot Password Modal -->
     <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">

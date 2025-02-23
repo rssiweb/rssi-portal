@@ -25,7 +25,7 @@ function afterLogin($con, $date)
     // Fetch password-related details based on user type
     $query = match ($user_type) {
         'iexplore' => "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM test_users WHERE email='$user_id'",
-        'rssi-member' => "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM rssimyaccount_members WHERE associatenumber='$user_id'",
+        'rssi-member' => "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM rssimyaccount_members WHERE email='$user_id'",
         'tap' => "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM signup WHERE email='$user_id'",
         default => null,
     };
@@ -85,7 +85,7 @@ function checkLogin($con, $date)
             if (!empty($user['absconding'])) {
                 $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
             } else {
-                $_SESSION['aid'] = $username;
+                $_SESSION['aid'] = $user['email'];
                 $_SESSION['user_type'] = 'rssi-member';
 
                 // Insert or update user in test_users table
