@@ -67,17 +67,17 @@ function afterLogin($con, $date)
             }
             unset($_SESSION["login_redirect_params"]);
         }
-        
+
         // Add the login_redirect=true parameter
         $params .= "login_redirect=true&";
         $params = rtrim($params, '&');
-    
+
         // Construct the full URL
         $redirectUrl = $_SESSION["login_redirect"] . '?' . $params;
-    
+
         // Log the URL to the browser console
         // echo "<script>console.log('Redirect URL:', '" . $redirectUrl . "');</script>";
-    
+
         // Redirect the user
         header("Location: " . $redirectUrl);
         unset($_SESSION["login_redirect"]);
@@ -201,7 +201,7 @@ if (isLoggedIn("aid")) {
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            /* font-family: 'Poppins', sans-serif; */
             background: #f8fafc;
             min-height: 100vh;
 
@@ -346,6 +346,7 @@ if (isLoggedIn("aid")) {
 </head>
 
 <body>
+    <?php include 'banner.php'; ?>
     <div class="split-container">
         <!-- Advertisement Section -->
         <div class="ad-section">
@@ -388,7 +389,7 @@ if (isLoggedIn("aid")) {
 
                 <form method="POST" action="">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="aid" name="aid" placeholder="Email Address" required>
+                        <input type="text" class="form-control" id="aid" name="aid" placeholder="Username" required>
                         <i class="bi bi-envelope input-icon"></i>
                     </div>
 

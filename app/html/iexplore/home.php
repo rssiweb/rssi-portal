@@ -243,6 +243,7 @@ if (isLoggedIn("aid")) {
 
 <body>
     <?php include 'header.php'; ?>
+    <?php include 'banner.php'; ?>
     <main class="container py-5">
         <div class="row g-4">
             <!-- Enhanced Filter Section -->
@@ -477,10 +478,10 @@ if (isLoggedIn("aid")) {
                     <form method="POST" action="">
                         <!-- Email Input -->
                         <div class="mb-3">
-                            <label for="aid" class="form-label">Email Address</label>
+                            <label for="aid" class="form-label">Username</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                <input type="text" class="form-control" id="aid" name="aid" placeholder="Enter your email" required>
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="aid" name="aid" placeholder="Enter your username" required>
                             </div>
                         </div>
 
