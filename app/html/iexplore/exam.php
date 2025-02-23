@@ -2,14 +2,15 @@
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util_iexplore.php");
 
-// Ensure the user is logged in
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
-    $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
     exit;
 }
 
+validation();
+?>
+<?php
 // Get the exam_id and session_id from the query string
 $exam_id = isset($_GET['exam_id']) ? $_GET['exam_id'] : null;
 $session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;

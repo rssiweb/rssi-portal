@@ -28,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = "Contact number must be a valid 10-digit number.";
     } else {
         // If no errors, insert the data into the database
-        $query = "INSERT INTO test_users (id, name, email, password) VALUES ($1, $2, $3, $4)";
-        $result = pg_query_params($con, $query, array($userId, $name, $email, $password));
+        $query = "INSERT INTO test_users (id, name, email, password,user_type,contact) VALUES ($1, $2, $3, $4,'iexplore',$5)";
+        $result = pg_query_params($con, $query, array($userId, $name, $email, $password,$contact));
 
         if ($result) {
             sendEmail("register_user", [

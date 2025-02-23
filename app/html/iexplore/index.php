@@ -5,14 +5,63 @@ include("../../util/login_util_iexplore.php");
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = "";
 
+// Function to generate a 12-digit random user ID
+function generateUserId()
+{
+    return str_pad(mt_rand(0, 999999999999), 12, '0', STR_PAD_LEFT);
+}
+
 function afterlogin($con, $date)
 {
-    $email = $_SESSION['aid'];
-    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from test_users WHERE email='$email'");
+    $user_id = $_SESSION['aid'];
+    $user_type = $_SESSION['user_type']; // Store user type (iexplore, rssi-member, tap)
+
+    // Initialize $user_query to null
+    $user_query = null;
+
+    // Fetch user details based on user type
+    if ($user_type === 'iexplore') {
+        $user_query = pg_query($con, "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM test_users WHERE email='$user_id'");
+    } elseif ($user_type === 'rssi-member') {
+        $user_query = pg_query($con, "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM rssimyaccount_members WHERE associatenumber='$user_id'");
+    } elseif ($user_type === 'tap') {
+        $user_query = pg_query($con, "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM signup WHERE email='$user_id'");
+    } else {
+        // Handle invalid user type
+        error_log("Invalid user type: $user_type");
+        header("Location: error.php?message=Invalid user type");
+        exit;
+    }
+
+    // Check if the query was successful
+    if (!$user_query) {
+        error_log("Database query failed for user: $user_id");
+        header("Location: error.php?message=Database query failed");
+        exit;
+    }
+
+    // Fetch the row
     $row = pg_fetch_row($user_query);
+    if (!$row) {
+        error_log("No data found for user: $user_id");
+        header("Location: error.php?message=No data found");
+        exit;
+    }
+
     $password_updated_by = $row[0];
     $password_updated_on = $row[1];
     $default_pass_updated_on = $row[2];
+
+    // Store these values in the session
+    $_SESSION['password_updated_by'] = $password_updated_by;
+    $_SESSION['password_updated_on'] = $password_updated_on;
+    $_SESSION['default_pass_updated_on'] = $default_pass_updated_on;
+    // Output the values to the browser for debugging
+    // echo "<pre>";
+    // echo "password_updated_by: " . $password_updated_by . "\n";
+    // echo "password_updated_on: " . $password_updated_on . "\n";
+    // echo "default_pass_updated_on: " . $default_pass_updated_on . "\n";
+    // echo "</pre>";
 
     passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
 
@@ -30,7 +79,7 @@ function afterlogin($con, $date)
     }
 
     $user_ip = getUserIpAddr();
-    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$email','$user_ip','$date')");
+    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT, '$user_id', '$user_ip', '$date')");
 
     if (isset($_SESSION["login_redirect"])) {
         $params = "";
@@ -55,10 +104,11 @@ if (isLoggedIn("aid")) {
 function checkLogin($con, $date)
 {
     global $login_failed_dialog;
-    $email = $_POST['aid'];
+    $username = $_POST['aid'];
     $password = $_POST['pass'];
 
-    $query = "SELECT password, absconding FROM test_users WHERE email='$email'";
+    // Check in iexplore (test_users table)
+    $query = "SELECT password, absconding FROM test_users WHERE email='$username'";
     $result = pg_query($con, $query);
     if ($result) {
         $user = pg_fetch_assoc($result);
@@ -69,18 +119,106 @@ function checkLogin($con, $date)
                 if (!empty($absconding)) {
                     $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
                 } else {
-                    $_SESSION['aid'] = $email;
+                    $_SESSION['aid'] = $username;
+                    $_SESSION['user_type'] = 'iexplore'; // Set user type for regular iexplore users
                     afterlogin($con, $date);
                 }
-            } else {
-                $login_failed_dialog = "Incorrect username or password.";
             }
-        } else {
-            $login_failed_dialog = "User not found.";
         }
-    } else {
-        $login_failed_dialog = "Error executing query.";
     }
+
+    // Check in rssi-member (rssimyaccount_members table)
+    $query = "SELECT password, absconding, fullname, email FROM rssimyaccount_members WHERE associatenumber='$username'";
+    $result = pg_query($con, $query);
+    if ($result) {
+        $user = pg_fetch_assoc($result);
+        if ($user) {
+            $existingHashFromDb = $user['password'];
+            $absconding = $user['absconding'];
+            if (password_verify($password, $existingHashFromDb)) {
+                if (!empty($absconding)) {
+                    $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
+                } else {
+                    $_SESSION['aid'] = $username;
+                    $_SESSION['user_type'] = 'rssi-member'; // Set user type for rssi-member users
+
+                    // Check if user exists in test_users table
+                    $test_user_query = pg_query($con, "SELECT id, name, email, user_type FROM test_users WHERE email='{$user['email']}'");
+                    $test_user = pg_fetch_assoc($test_user_query);
+
+                    if (!$test_user) {
+                        // User does not exist in test_users table, create a new row
+                        $new_user_id = generateUserId();
+                        $name = $user['fullname'];
+                        $email = $user['email'];
+                        $user_type = 'rssi-member';
+
+                        pg_query($con, "INSERT INTO test_users (id, name, email, user_type, created_at) VALUES ('$new_user_id', '$name', '$email', '$user_type', '$date')");
+                    } else {
+                        // User exists in test_users table, check for updates
+                        $name = $user['fullname'];
+                        $email = $user['email'];
+                        $user_type = 'rssi-member';
+
+                        if ($test_user['name'] !== $name || $test_user['email'] !== $email || $test_user['user_type'] !== $user_type) {
+                            // Update the row if any field has changed
+                            pg_query($con, "UPDATE test_users SET name='$name', email='$email', user_type='$user_type' WHERE id='{$test_user['id']}'");
+                        }
+                    }
+
+                    afterlogin($con, $date);
+                }
+            }
+        }
+    }
+
+    // Check in tap (signup table)
+    $query = "SELECT password, absconding, applicant_name, email FROM signup WHERE email='$username'";
+    $result = pg_query($con, $query);
+    if ($result) {
+        $user = pg_fetch_assoc($result);
+        if ($user) {
+            $existingHashFromDb = $user['password'];
+            $absconding = $user['absconding'];
+            if (password_verify($password, $existingHashFromDb)) {
+                if (!empty($absconding)) {
+                    $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
+                } else {
+                    $_SESSION['aid'] = $username;
+                    $_SESSION['user_type'] = 'tap'; // Set user type for tap users
+
+                    // Check if user exists in test_users table
+                    $test_user_query = pg_query($con, "SELECT id, name, email, user_type FROM test_users WHERE email='{$user['email']}'");
+                    $test_user = pg_fetch_assoc($test_user_query);
+
+                    if (!$test_user) {
+                        // User does not exist in test_users table, create a new row
+                        $new_user_id = generateUserId();
+                        $name = $user['applicant_name'];
+                        $email = $user['email'];
+                        $user_type = 'tap';
+
+                        pg_query($con, "INSERT INTO test_users (id, name, email, user_type, created_at) VALUES ('$new_user_id', '$name', '$email', '$user_type', '$date')");
+                    } else {
+                        // User exists in test_users table, check for updates
+                        $name = $user['applicant_name'];
+                        $email = $user['email'];
+                        $user_type = 'tap';
+
+                        if ($test_user['name'] !== $name || $test_user['email'] !== $email || $test_user['user_type'] !== $user_type) {
+                            // Update the row if any field has changed
+                            pg_query($con, "UPDATE test_users SET name='$name', email='$email', user_type='$user_type' WHERE id='{$test_user['id']}'");
+                        }
+                    }
+
+                    afterlogin($con, $date);
+                }
+            }
+        }
+    }
+
+    // If no match found
+    $login_failed_dialog = "Incorrect username or password.";
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -112,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: 'Poppins', sans-serif;
             background: #f8fafc;
             min-height: 100vh;
-            
+
         }
 
         .split-container {
@@ -296,7 +434,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <form method="POST" action="">
                     <div class="input-group">
-                        <input type="email" class="form-control" id="aid" name="aid" placeholder="Email Address" required>
+                        <input type="text" class="form-control" id="aid" name="aid" placeholder="Email Address" required>
                         <i class="bi bi-envelope input-icon"></i>
                     </div>
 
