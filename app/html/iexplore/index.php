@@ -67,12 +67,25 @@ function afterLogin($con, $date)
             }
             unset($_SESSION["login_redirect_params"]);
         }
-        header("Location: " . $_SESSION["login_redirect"] . '?' . $params);
+        
+        // Add the login_redirect=true parameter
+        $params .= "login_redirect=true&";
+        $params = rtrim($params, '&');
+    
+        // Construct the full URL
+        $redirectUrl = $_SESSION["login_redirect"] . '?' . $params;
+    
+        // Log the URL to the browser console
+        // echo "<script>console.log('Redirect URL:', '" . $redirectUrl . "');</script>";
+    
+        // Redirect the user
+        header("Location: " . $redirectUrl);
         unset($_SESSION["login_redirect"]);
+        exit;
     } else {
         header("Location: home.php");
+        exit;
     }
-    exit;
 }
 // Function to handle login
 function checkLogin($con, $date)

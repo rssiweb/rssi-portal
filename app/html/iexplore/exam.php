@@ -12,9 +12,10 @@ if (!isLoggedIn("aid")) {
 validation();
 ?>
 <?php
-// Get the exam_id and session_id from the query string
+// Get the exam_id, session_id, and login_redirect from the query string
 $exam_id = isset($_GET['exam_id']) ? $_GET['exam_id'] : null;
 $session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;
+$login_redirect = isset($_GET['login_redirect']) ? $_GET['login_redirect'] : null;
 
 // If no exam_id is provided, set a flag to show the form
 $show_form = !$exam_id;
@@ -37,20 +38,27 @@ if (!$show_form) {
                 echo '
                 <script type="text/javascript">
                     alert("This session has already been completed and cannot be attempted again. You will be redirected to the My Exam page.");
-                    window.location.href = "my_exam.php";
+                    window.location.href = "my_exam.php?session_id=' . $session_id . ($login_redirect ? '&login_redirect=true' : '') . '";
                 </script>';
                 exit; // Stop further execution
             }
 
             // Check if the page is being reloaded
             if (isset($_SERVER['HTTP_CACHE_CONTROL']) && $_SERVER['HTTP_CACHE_CONTROL'] === 'max-age=0') {
-                // Mark the session as submitted
-                $update_query = "UPDATE test_user_sessions SET status = 'submitted', session_end = NOW() WHERE id = $1";
-                pg_query_params($con, $update_query, array($session_id));
+                // Skip marking the session as submitted if login_redirect is present
+                if (!$login_redirect) {
+                    // Mark the session as submitted
+                    $update_query = "UPDATE test_user_sessions SET status = 'submitted', session_end = NOW() WHERE id = $1";
+                    pg_query_params($con, $update_query, array($session_id));
 
-                // Redirect to the result page
-                header("Location: my_exam.php?session_id=$session_id");
-                exit;
+                    // Redirect to the result page with login_redirect
+                    $redirectUrl = "my_exam.php?session_id=$session_id";
+                    if ($login_redirect) {
+                        $redirectUrl .= "&login_redirect=true";
+                    }
+                    header("Location: " . $redirectUrl);
+                    exit;
+                }
             }
         } else {
             echo "Error: Invalid session ID.";
@@ -91,8 +99,12 @@ if (!$show_form) {
         $session_row = pg_fetch_assoc($session_result);
         $session_id = $session_row['id'];
 
-        // Redirect to the same URL with session_id
-        header("Location: exam.php?exam_id=$exam_id&session_id=$session_id");
+        // Redirect to the same URL with session_id and login_redirect
+        $redirectUrl = "exam.php?exam_id=$exam_id&session_id=$session_id";
+        if ($login_redirect) {
+            $redirectUrl .= "&login_redirect=true";
+        }
+        header("Location: " . $redirectUrl);
         exit;
     }
 
@@ -606,6 +618,10 @@ if (!$show_form) {
             let warningCount = 0; // Track the number of tab change warnings
             let isExamSubmitted = false; // Flag to track if the exam has been submitted
 
+            // Get the URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const isLoginRedirect = urlParams.has('login_redirect'); // Check if login_redirect is present
+
             const countdownMessage = document.createElement('p');
             countdownMessage.id = 'timer';
             countdownMessage.textContent = `Time remaining: ${formatTime(countdown)}`;
@@ -632,7 +648,7 @@ if (!$show_form) {
             function handleVisibilityChange() {
                 if (document.visibilityState === 'hidden' && !isExamSubmitted) {
                     warningCount++;
-                    if (warningCount <= 3) {
+                    if (warningCount <= 2) {
                         alert(`Warning ${warningCount}: You are not allowed to change tabs during the exam.`);
                     } else {
                         // Submit the exam after 3 warnings
@@ -647,7 +663,8 @@ if (!$show_form) {
 
             // Function to handle page reload
             function handleBeforeUnload(event) {
-                if (!isExamSubmitted) {
+                // Skip submission if login_redirect is present
+                if (!isExamSubmitted && !isLoginRedirect) {
                     event.preventDefault();
                     // Submit the exam if the user tries to reload the page
                     submitExam();
