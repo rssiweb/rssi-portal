@@ -663,17 +663,14 @@ if (!$show_form) {
 
             // Show an alert as soon as the page loads
             window.onload = function() {
-                alert('If you reload the page, the exam will be submitted automatically.');
+                alert("1. Reloading the page will automatically submit your exam.\n2. Changing or minimizing the screen will result in submission.\n3. Ensure a stable internet connection.\n4. The timer will start immediately after you click OK.\n\nIf you are ready, click OK.");
             };
             // Function to handle page reload
             function handleBeforeUnload(event) {
-                // Skip submission if login_redirect is present
                 if (!isExamSubmitted) {
                     event.preventDefault();
                     // Submit the exam if the user tries to reload the page
                     submitExam();
-                    // Return a message to the user (optional)
-                    event.returnValue = 'Are you sure you want to leave? Your exam will be submitted.';
                 }
             }
 
