@@ -10,47 +10,89 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
-// Get the exam_id from the query string
+// Get the exam_id and session_id from the query string
 $exam_id = isset($_GET['exam_id']) ? $_GET['exam_id'] : null;
+$session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;
 
 // If no exam_id is provided, set a flag to show the form
 $show_form = !$exam_id;
 
 // If exam_id is provided, proceed with fetching exam details
 if (!$show_form) {
-    // Step 1: Insert a new row in the test_user_exams table to track the user's exam participation
-    $user_exam_query = "
-    INSERT INTO test_user_exams (user_id, exam_id)
-    VALUES ($1, $2)
-    RETURNING id";  // Get the user_exam_id for further use
-    $user_exam_result = pg_query_params($con, $user_exam_query, array($id, $exam_id));
+    // Check if session_id is provided
+    if ($session_id) {
+        // Fetch the existing session from test_user_sessions
+        $session_query = "SELECT * FROM test_user_sessions WHERE id = $1";
+        $session_result = pg_query_params($con, $session_query, array($session_id));
+        $session_row = pg_fetch_assoc($session_result);
 
-    if (!$user_exam_result) {
-        // Handle query failure
-        echo "Error inserting user exam: " . pg_last_error($con);
+        if ($session_row) {
+            $user_exam_id = $session_row['user_exam_id'];
+            $status = $session_row['status'];
+
+            if ($status === 'submitted') {
+                // Show a JavaScript alert and redirect to "My Exam" page
+                echo '
+                <script type="text/javascript">
+                    alert("This session has already been completed and cannot be attempted again. You will be redirected to the My Exam page.");
+                    window.location.href = "my_exam.php";
+                </script>';
+                exit; // Stop further execution
+            }
+
+            // Check if the page is being reloaded
+            if (isset($_SERVER['HTTP_CACHE_CONTROL']) && $_SERVER['HTTP_CACHE_CONTROL'] === 'max-age=0') {
+                // Mark the session as submitted
+                $update_query = "UPDATE test_user_sessions SET status = 'submitted', session_end = NOW() WHERE id = $1";
+                pg_query_params($con, $update_query, array($session_id));
+
+                // Redirect to the result page
+                header("Location: result.php?session_id=$session_id");
+                exit;
+            }
+        } else {
+            echo "Error: Invalid session ID.";
+            exit;
+        }
+    } else {
+        // Step 1: Insert a new row in the test_user_exams table to track the user's exam participation
+        $user_exam_query = "
+        INSERT INTO test_user_exams (user_id, exam_id)
+        VALUES ($1, $2)
+        RETURNING id";  // Get the user_exam_id for further use
+        $user_exam_result = pg_query_params($con, $user_exam_query, array($id, $exam_id));
+
+        if (!$user_exam_result) {
+            // Handle query failure
+            echo "Error inserting user exam: " . pg_last_error($con);
+            exit;
+        }
+
+        // Retrieve the user_exam_id
+        $user_exam_row = pg_fetch_assoc($user_exam_result);
+        $user_exam_id = $user_exam_row['id'];
+
+        // Step 2: Insert a new row in the test_user_sessions table to track the session
+        $session_query = "
+        INSERT INTO test_user_sessions (user_exam_id, session_start, status)
+        VALUES ($1, NOW(), 'active')
+        RETURNING id";  // Get the session ID
+        $session_result = pg_query_params($con, $session_query, array($user_exam_id));
+
+        if (!$session_result) {
+            // Handle query failure
+            echo "Error inserting session: " . pg_last_error($con);
+            exit;
+        }
+
+        // Retrieve the session ID
+        $session_row = pg_fetch_assoc($session_result);
+        $session_id = $session_row['id'];
+
+        // Redirect to the same URL with session_id
+        header("Location: exam.php?exam_id=$exam_id&session_id=$session_id");
         exit;
     }
-
-    // Retrieve the user_exam_id
-    $user_exam_row = pg_fetch_assoc($user_exam_result);
-    $user_exam_id = $user_exam_row['id'];
-
-    // Step 2: Insert a new row in the test_user_sessions table to track the session
-    $session_query = "
-    INSERT INTO test_user_sessions (user_exam_id, session_start, status)
-    VALUES ($1, NOW(), 'active')
-    RETURNING id";  // Get the session ID
-    $session_result = pg_query_params($con, $session_query, array($user_exam_id));
-
-    if (!$session_result) {
-        // Handle query failure
-        echo "Error inserting session: " . pg_last_error($con);
-        exit;
-    }
-
-    // Retrieve the session ID
-    $session_row = pg_fetch_assoc($session_result);
-    $session_id = $session_row['id'];
 
     // Step 3: Fetch the total_questions for the exam
     $query = "
@@ -127,7 +169,6 @@ if (!$show_form) {
         ];
     }
 }
-// HTML output starts here
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -560,6 +601,8 @@ if (!$show_form) {
         document.addEventListener('DOMContentLoaded', () => {
             const totalDurationInMinutes = <?php echo $total_duration; ?>;
             let countdown = totalDurationInMinutes * 60;
+            let warningCount = 0; // Track the number of tab change warnings
+            let isExamSubmitted = false; // Flag to track if the exam has been submitted
 
             const countdownMessage = document.createElement('p');
             countdownMessage.id = 'timer';
@@ -576,13 +619,49 @@ if (!$show_form) {
                 }
             }, 1000);
 
+            // Function to format time
             function formatTime(seconds) {
                 const minutes = Math.floor(seconds / 60);
                 const remainingSeconds = seconds % 60;
                 return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
             }
 
+            // Function to handle tab change
+            function handleVisibilityChange() {
+                if (document.visibilityState === 'hidden' && !isExamSubmitted) {
+                    warningCount++;
+                    if (warningCount <= 3) {
+                        alert(`Warning ${warningCount}: You are not allowed to change tabs during the exam.`);
+                    } else {
+                        // Submit the exam after 3 warnings
+                        alert("You have changed tabs too many times. Your exam will now be submitted.");
+                        submitExam();
+                    }
+                }
+            }
+
+            // Add event listener for tab change detection
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+
+            // Function to handle page reload
+            function handleBeforeUnload(event) {
+                if (!isExamSubmitted) {
+                    event.preventDefault();
+                    // Submit the exam if the user tries to reload the page
+                    submitExam();
+                    // Return a message to the user (optional)
+                    event.returnValue = 'Are you sure you want to leave? Your exam will be submitted.';
+                }
+            }
+
+            // Add event listener for page reload detection
+            window.addEventListener('beforeunload', handleBeforeUnload);
+
+            // Function to submit the exam
             function submitExam() {
+                if (isExamSubmitted) return; // Prevent multiple submissions
+                isExamSubmitted = true; // Mark the exam as submitted
+
                 const userExamIdElement = document.getElementById('user_exam_id');
                 if (!userExamIdElement) {
                     console.error('Error: user_exam_id element not found!');
@@ -644,6 +723,9 @@ if (!$show_form) {
 
                                 // Display score
                                 document.getElementById('score').textContent = `Your score is: ${result.score}`;
+
+                                // Remove the beforeunload event listener to prevent resubmission
+                                window.removeEventListener('beforeunload', handleBeforeUnload);
 
                                 // Start countdown
                                 let countdown = 5;
