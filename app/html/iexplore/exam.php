@@ -663,31 +663,18 @@ if (!$show_form) {
 
             // Function to handle page reload
             function handleBeforeUnload(event) {
-                // Skip submission if the exam is already submitted
+                // Skip submission if login_redirect is present
                 if (!isExamSubmitted) {
-                    // Show a confirmation dialog
-                    const confirmationMessage = 'Are you sure you want to leave? Your exam will be submitted.';
-                    event.returnValue = confirmationMessage; // Standard for most browsers
-                    return confirmationMessage; // For some older browsers
+                    event.preventDefault();
+                    // Submit the exam if the user tries to reload the page
+                    submitExam();
+                    // Return a message to the user (optional)
+                    event.returnValue = 'Are you sure you want to leave? Your exam will be submitted.';
                 }
-            }
-
-            // Function to submit the exam
-            function submitExam() {
-                // Your logic to submit the exam
-                console.log('Exam submitted');
-                isExamSubmitted = true; // Mark the exam as submitted
             }
 
             // Add event listener for page reload detection
             window.addEventListener('beforeunload', handleBeforeUnload);
-
-            // Optional: Handle form submission separately
-            document.querySelector('form')?.addEventListener('submit', function(e) {
-                if (!isExamSubmitted) {
-                    submitExam();
-                }
-            });
 
             // Function to submit the exam
             function submitExam() {
