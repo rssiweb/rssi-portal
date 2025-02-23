@@ -23,9 +23,9 @@ function passwordCheck($password_updated_by, $password_updated_on, $default_pass
         // Determine the redirect URL based on user type
         $redirect_url = "defaultpasswordreset.php"; // Default for iexplore
         if ($_SESSION['user_type'] === 'rssi-member') {
-            $redirect_url = "../../rssi-member/defaultpasswordreset.php";
+            $redirect_url = "../../rssi-member/index.php";
         } elseif ($_SESSION['user_type'] === 'tap') {
-            $redirect_url = "../../tap/defaultpasswordreset.php";
+            $redirect_url = "../../tap/index.php";
         }
 
         // Show the alert and redirect using JavaScript
