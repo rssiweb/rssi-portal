@@ -36,7 +36,7 @@
                 <div class="col">
                     <p class="mb-0">
                         Discover a world of knowledge with <strong>iExplore</strong>!
-                        <span class="text-muted">Log in using your Phinox Portal credentials to get started.</span>
+                        <span class="text-muted">Log in using your Phoenix Portal credentials to get started.</span>
                     </p>
                 </div>
 
