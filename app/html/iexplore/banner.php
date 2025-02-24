@@ -26,7 +26,7 @@
         <div class="col">
           <p class="mb-0">
             User already have an account with Rina Shiksha Sahayak Foundation? 
-            <span class="text-muted">Log in using your credentials of Phinox Portal.</span>
+            <span class="text-muted">Log in using your credentials of Phoenix Portal.</span>
           </p>
         </div>
         <div class="col-auto">
