@@ -52,14 +52,14 @@ if (!$show_form) {
         $session_end_time = $session_start + ($total_duration * 60);
 
         // Check if time expired
-        $current_time = time();
-        if ($current_time > $session_end_time) {
-            // Auto-submit and redirect
-            $update_query = "UPDATE test_user_sessions SET status = 'submitted', session_end = NOW() WHERE id = $1";
-            pg_query_params($con, $update_query, array($session_id));
-
-            echo "<script>alert('Session time expired. Submitting the exam.'); window.location.href = 'my_exam.php?session_id=$session_id';</script>";
-            exit;
+        if ($status === 'submitted') {
+            // Show a JavaScript alert and redirect to "My Exam" page
+            echo '
+            <script type="text/javascript">
+                alert("This session has already been completed and cannot be attempted again. You will be redirected to the My Exam page.");
+                window.location.href = "my_exam.php?session_id=' . $session_id . ($login_redirect ? '&login_redirect=true' : '') . '";
+            </script>';
+            exit; // Stop further execution
         }
 
         // Fetch existing questions and user responses from test_user_answers
