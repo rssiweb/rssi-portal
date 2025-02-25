@@ -55,8 +55,9 @@ foreach ($answers as $answer) {
 
     // Insert the answer into the database
     $query = "
-        INSERT INTO test_user_answers (user_exam_id, question_id, selected_option)
-        VALUES ($1, $2, $3)
+        UPDATE test_user_answers
+        SET selected_option = $3
+        WHERE user_exam_id = $1 AND question_id = $2
     ";
     pg_query_params($con, $query, array($user_exam_id, $question_id, $selected_option));
 
