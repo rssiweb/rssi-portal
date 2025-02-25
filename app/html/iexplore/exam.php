@@ -18,6 +18,26 @@ $session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;
 $login_redirect = isset($_GET['login_redirect']) ? $_GET['login_redirect'] : null;
 $questions = []; // Ensure it's initialized
 
+if ($session_id) {
+    // Fetch user_id and session details using a JOIN
+    $query = "
+    SELECT te.user_id
+    FROM test_user_sessions tus
+    JOIN test_user_exams te ON tus.user_exam_id = te.id
+    WHERE tus.id = $1
+";
+    $result = pg_query_params($con, $query, [$session_id]);
+    $session_data = pg_fetch_assoc($result);
+
+    // Echo the logged-in user's ID for debugging
+    // echo "Logged-in User ID: " . $id . "<br>";
+    // Check if the session belongs to the user
+    if (!$session_data || $id != $session_data['user_id']) {
+        echo "<script>alert('Unauthorized Access: You do not have permission to access this exam. This may be because the exam session is not linked to your account or the session is invalid or expired. If you believe this is a mistake, please contact support for assistance.'); window.location.href = 'my_exam.php';</script>";
+        exit();
+    }
+}
+
 // If no exam_id is provided, set a flag to show the form
 $show_form = !$exam_id;
 
