@@ -14,35 +14,30 @@ $session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;
 $show_form = !$session_id;
 
 if ($session_id) {
-    // Fetch user_id and session details using a JOIN
+    // Fetch user_id, user_exam_id, and session details using a JOIN
     $query = "
-    SELECT te.user_id, tus.user_exam_id
-    FROM test_user_sessions tus
-    JOIN test_user_exams te ON tus.user_exam_id = te.id
-    WHERE tus.id = $1
-";
+        SELECT te.user_id, tus.user_exam_id, tus.session_start, tus.session_end
+        FROM test_user_sessions tus
+        JOIN test_user_exams te ON tus.user_exam_id = te.id
+        WHERE tus.id = $1
+    ";
     $result = pg_query_params($con, $query, [$session_id]);
 
-    if ($result && pg_num_rows($result) > 0) {
-        // Fetch the data
-        $session_data = pg_fetch_assoc($result);
-
-        // Echo the logged-in user's ID for debugging
-        // echo "Logged-in User ID: " . $id . "<br>";
-
-        // Check if the session belongs to the user
-        if (!$session_data || $id != $session_data['user_id']) {
-            echo "<script>alert('Unauthorized Access: You do not have permission to access this exam. This may be because the exam session is not linked to your account or the session is invalid or expired. If you believe this is a mistake, please contact support for assistance.'); window.location.href = 'my_exam.php';</script>";
-            exit();
-        }
-
-        // Fetch the user_exam_id from the already fetched data
-        $user_exam_id = $session_data['user_exam_id'];
-    } else {
-        // No matching session found
+    if (!$result || pg_num_rows($result) === 0) {
         echo "<script>alert('Invalid session ID or session not found.'); window.location.href = 'my_exam.php';</script>";
         exit();
     }
+
+    $session_data = pg_fetch_assoc($result);
+
+    // Check if the session belongs to the user
+    if ($id != $session_data['user_id']) {
+        echo "<script>alert('Unauthorized Access: You do not have permission to access this exam. This may be because the exam session is not linked to your account or the session is invalid or expired. If you believe this is a mistake, please contact support for assistance.'); window.location.href = 'my_exam.php';</script>";
+        exit();
+    }
+
+    $user_exam_id = $session_data['user_exam_id'];
+
     // Fetch exam details and user's score
     $exam_query = "
         SELECT 
@@ -55,7 +50,8 @@ if ($session_id) {
             ue.created_at AS exam_date,
             COUNT(ua.id) AS total_questions,
             e.id AS exam_id,
-            s.id AS session_id
+            s.id AS session_id,
+            e.show_answer AS show_answer
         FROM test_user_exams ue
         JOIN test_users u ON u.id = ue.user_id
         JOIN test_exams e ON e.id = ue.exam_id
@@ -64,11 +60,10 @@ if ($session_id) {
         WHERE ue.id = $1
         GROUP BY ue.id, u.id, e.id, s.id
     ";
-
     $exam_result = pg_query_params($con, $exam_query, [$user_exam_id]);
 
     if (!$exam_result) {
-        die("Error fetching exam data: " . pg_last_error());
+        die("Error fetching exam data: " . pg_last_error($con));  // Pass $con explicitly
     }
 
     $exam_details = pg_fetch_assoc($exam_result);
@@ -89,9 +84,8 @@ if ($session_id) {
         WHERE ua.user_exam_id = $1
         GROUP BY c.name
     ";
-
     $category_result = pg_query_params($con, $category_query, [$user_exam_id]);
-    $categories = pg_fetch_all($category_result);
+    $categories = pg_fetch_all($category_result) ?: [];
 
     // Fetch questions and user answers
     $question_query = "
@@ -108,11 +102,10 @@ if ($session_id) {
         WHERE ua.user_exam_id = $1
         ORDER BY q.id, o.option_key
     ";
-
     $question_result = pg_query_params($con, $question_query, [$user_exam_id]);
 
     if (!$question_result) {
-        die("Error fetching question data: " . pg_last_error());
+        die("Error fetching question data: " . pg_last_error($con));  // Pass $con explicitly
     }
 
     // Store questions for display
@@ -139,82 +132,64 @@ if ($session_id) {
         FROM test_user_exams
         WHERE exam_id = $1
     ";
-
     $total_participants_result = pg_query_params($con, $total_participants_query, [$exam_details['exam_id']]);
+
     if (!$total_participants_result) {
-        die("Error fetching total participants: " . pg_last_error());
+        die("Error fetching total participants: " . pg_last_error($con));  // Pass $con explicitly
     }
 
     $total_participants_data = pg_fetch_assoc($total_participants_result);
     $total_participants = $total_participants_data['total_participants'];
 
-    // Fetch all participants' scores for the specific exam, considering each attempt (user_exam_id)
+    // Fetch rank for the current user
     $rank_query = "
-    SELECT 
-        ue.user_id,
-        ue.id AS user_exam_id,  -- Including the attempt ID
-        ue.score,
-        RANK() OVER (PARTITION BY ue.exam_id ORDER BY ue.score DESC) AS rank
-    FROM test_user_exams ue
-    WHERE ue.exam_id = $1
-";
-
+        SELECT 
+            id AS user_exam_id,  -- Use the correct column name
+            RANK() OVER (ORDER BY score DESC) AS rank
+        FROM test_user_exams
+        WHERE exam_id = $1
+    ";
     $rank_result = pg_query_params($con, $rank_query, [$exam_details['exam_id']]);
 
     if (!$rank_result) {
-        die("Error calculating rank: " . pg_last_error());
+        die("Error calculating rank: " . pg_last_error($con));  // Pass $con explicitly
     }
 
-    // Find the rank for the current user and track the total participants
     $current_user_rank = null;
-    $total_participants = 0;
-
     while ($rank_data = pg_fetch_assoc($rank_result)) {
-        // Increment total participants count
-        $total_participants++;
-
-        // Find the rank of the current attempt (user_exam_id) of the current user
-        if ($rank_data['user_exam_id'] == $exam_details['user_exam_id']) {
+        if ($rank_data['user_exam_id'] == $user_exam_id) {
             $current_user_rank = $rank_data['rank'];
+            break;
         }
     }
 
-    // Fetch the total number of participants (this is counted above)
+    // Calculate time spent
+    $session_start = $session_data['session_start'] ?? null;  // Use null coalescing operator
+    $session_end = $session_data['session_end'] ?? null;      // Use null coalescing operator
 
-}
-?>
-<?php
-// Fetch session start and end time for the exam user
-$query = "
-    SELECT session_start, session_end
-    FROM test_user_sessions
-    WHERE user_exam_id = $1 AND status = 'submitted'
-";
-$result = pg_query_params($con, $query, array($user_exam_id));
+    // Calculate the difference between session_start and session_end
+    if ($session_start && $session_end) {
+        $session_start_dt = new DateTime($session_start);
+        $session_end_dt = new DateTime($session_end);
+        $interval = $session_start_dt->diff($session_end_dt);
 
-if ($session_data = pg_fetch_assoc($result)) {
-    $session_start = new DateTime($session_data['session_start']);
-    $session_end = new DateTime($session_data['session_end']);
-
-    // Calculate the difference
-    $interval = $session_start->diff($session_end);
-
-    // Check if the time difference is more than an hour
-    if ($interval->h > 0) {
-        // More than an hour
-        $time_spent = $interval->h . ' hour' . ($interval->h > 1 ? 's' : '') . ' ' . $interval->i . ' minute' . ($interval->i > 1 ? 's' : '');
-    } elseif ($interval->i > 0) {
-        // More than a minute but less than an hour
-        $time_spent = $interval->i . ' minute' . ($interval->i > 1 ? 's' : '');
+        // Format the time difference
+        if ($interval->h > 0) {
+            // More than an hour
+            $time_spent = $interval->h . ' hour' . ($interval->h > 1 ? 's' : '') . ' ' . $interval->i . ' minute' . ($interval->i > 1 ? 's' : '');
+        } elseif ($interval->i > 0) {
+            // More than a minute but less than an hour
+            $time_spent = $interval->i . ' minute' . ($interval->i > 1 ? 's' : '');
+        } else {
+            // Less than a minute (seconds)
+            $time_spent = $interval->s . ' second' . ($interval->s > 1 ? 's' : '');
+        }
     } else {
-        // Less than a minute (seconds)
-        $time_spent = $interval->s . ' second' . ($interval->s > 1 ? 's' : '');
+        // Handle case where session_start or session_end is missing
+        $time_spent = 'Not available';
     }
-} else {
-    $time_spent = 'Not available'; // Handle case where session is not found
 }
 ?>
-
 <!doctype html>
 <html lang="en">
 
@@ -409,52 +384,54 @@ if ($session_data = pg_fetch_assoc($result)) {
                                 </div>
                             </div>
                         </div>
-                        <?php if (!empty($questions)): ?>
-                            <div class="mt-4">
-                                <?php $question_number = 1; // Initialize question number 
-                                ?>
-                                <?php foreach ($questions as $question_id => $data): ?>
-                                    <div class="card mb-3">
-                                        <div class="card-header">
-                                            <!-- Display question number before the question text -->
-                                            <strong>Q <?= $question_number ?>:</strong> <?= $data['question_text'] ?>
-                                        </div>
-                                        <div class="card-body">
-                                            <ul class="list-group">
-                                                <?php foreach ($data['options'] as $option): ?>
-                                                    <li class="list-group-item 
+                        <?php if ($exam_details['show_answer'] == 't'): ?>
+                            <?php if (!empty($questions)): ?>
+                                <div class="mt-4">
+                                    <?php $question_number = 1; // Initialize question number 
+                                    ?>
+                                    <?php foreach ($questions as $question_id => $data): ?>
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <!-- Display question number before the question text -->
+                                                <strong>Q <?= $question_number ?>:</strong> <?= $data['question_text'] ?>
+                                            </div>
+                                            <div class="card-body">
+                                                <ul class="list-group">
+                                                    <?php foreach ($data['options'] as $option): ?>
+                                                        <li class="list-group-item 
                                         <?= $option['option_key'] === $data['correct_option'] ? 'list-group-item-success' : '' ?>
                                         <?= $option['option_key'] === $data['user_answer'] && $option['option_key'] !== $data['correct_option'] ? 'list-group-item-danger' : '' ?>">
-                                                        <?php
-                                                        $isUserAnswer = $option['option_key'] === $data['user_answer'];
-                                                        $isCorrectOption = $option['option_key'] === $data['correct_option'];
-                                                        ?>
+                                                            <?php
+                                                            $isUserAnswer = $option['option_key'] === $data['user_answer'];
+                                                            $isCorrectOption = $option['option_key'] === $data['correct_option'];
+                                                            ?>
 
-                                                        <?php if ($isUserAnswer || $isCorrectOption): ?>
-                                                            <span class="position-absolute" style="left: 0;">
-                                                                <?php if ($isUserAnswer && !$isCorrectOption): ?>
-                                                                    <span class="text-danger">✖</span>
-                                                                <?php elseif ($isCorrectOption): ?>
-                                                                    <span class="text-success">✔</span>
-                                                                <?php endif; ?>
-                                                            </span>
-                                                        <?php endif; ?>
-                                                        <strong><?= $option['option_key'] ?>:</strong> <?= $option['option_text'] ?>
-                                                        <?php if ($option['option_key'] === $data['user_answer']): ?>
-                                                            <span class="badge text-bg-warning ms-2">Your Answer</span>
-                                                        <?php endif; ?>
-                                                    </li>
-                                                <?php endforeach; ?>
-                                            </ul>
+                                                            <?php if ($isUserAnswer || $isCorrectOption): ?>
+                                                                <span class="position-absolute" style="left: 0;">
+                                                                    <?php if ($isUserAnswer && !$isCorrectOption): ?>
+                                                                        <span class="text-danger">✖</span>
+                                                                    <?php elseif ($isCorrectOption): ?>
+                                                                        <span class="text-success">✔</span>
+                                                                    <?php endif; ?>
+                                                                </span>
+                                                            <?php endif; ?>
+                                                            <strong><?= $option['option_key'] ?>:</strong> <?= $option['option_text'] ?>
+                                                            <?php if ($option['option_key'] === $data['user_answer']): ?>
+                                                                <span class="badge text-bg-warning ms-2">Your Answer</span>
+                                                            <?php endif; ?>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <?php $question_number++; // Increment question number after each question 
-                                    ?>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <!-- No questions available -->
-                            <p>No questions found for this attempt.</p>
+                                        <?php $question_number++; // Increment question number after each question 
+                                        ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <!-- No questions available -->
+                                <p>No questions found for this attempt.</p>
+                            <?php endif; ?>
                         <?php endif; ?>
 
                     <?php endif; ?>

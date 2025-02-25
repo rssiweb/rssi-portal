@@ -13,20 +13,20 @@
       to { top: 0; }
     }
     .banner {
-      animation: slideDown 0.5s ease-out;
+      /* animation: slideDown 0.5s ease-out; */
       z-index: 1000; /* Ensure it stays on top */
     }
   </style>
 </head>
 <body>
   <!-- Full-width Banner -->
-  <div class="banner position-fixed top-0 start-0 w-100 bg-white border-bottom py-3" id="floatingBanner">
+  <div class="banner position-fixed bottom-0 start-0 w-100 bg-white border-bottom py-3" id="floatingBanner">
     <div class="container">
       <div class="row align-items-center">
         <div class="col">
           <p class="mb-0">
             User already have an account with Rina Shiksha Sahayak Foundation? 
-            <span class="text-muted">Log in using your credentials of Phoenix Portal.</span>
+            <span class="text-muted">Log in using your credentials of Phinox Portal.</span>
           </p>
         </div>
         <div class="col-auto">
