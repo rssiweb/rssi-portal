@@ -10,10 +10,39 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-$user_exam_id = isset($_GET['user_exam_id']) ? $_GET['user_exam_id'] : null;
-$show_form = !$user_exam_id;
+$session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;
+$show_form = !$session_id;
 
-if ($user_exam_id) {
+if ($session_id) {
+    // Fetch user_id and session details using a JOIN
+    $query = "
+    SELECT te.user_id, tus.user_exam_id
+    FROM test_user_sessions tus
+    JOIN test_user_exams te ON tus.user_exam_id = te.id
+    WHERE tus.id = $1
+";
+    $result = pg_query_params($con, $query, [$session_id]);
+
+    if ($result && pg_num_rows($result) > 0) {
+        // Fetch the data
+        $session_data = pg_fetch_assoc($result);
+
+        // Echo the logged-in user's ID for debugging
+        // echo "Logged-in User ID: " . $id . "<br>";
+
+        // Check if the session belongs to the user
+        if (!$session_data || $id != $session_data['user_id']) {
+            echo "<script>alert('Unauthorized Access: You do not have permission to access this exam. This may be because the exam session is not linked to your account or the session is invalid or expired. If you believe this is a mistake, please contact support for assistance.'); window.location.href = 'my_exam.php';</script>";
+            exit();
+        }
+
+        // Fetch the user_exam_id from the already fetched data
+        $user_exam_id = $session_data['user_exam_id'];
+    } else {
+        // No matching session found
+        echo "<script>alert('Invalid session ID or session not found.'); window.location.href = 'my_exam.php';</script>";
+        exit();
+    }
     // Fetch exam details and user's score
     $exam_query = "
         SELECT 
@@ -25,13 +54,15 @@ if ($user_exam_id) {
             e.total_duration,
             ue.created_at AS exam_date,
             COUNT(ua.id) AS total_questions,
-            e.id AS exam_id
+            e.id AS exam_id,
+            s.id AS session_id
         FROM test_user_exams ue
         JOIN test_users u ON u.id = ue.user_id
         JOIN test_exams e ON e.id = ue.exam_id
+        JOIN test_user_sessions s ON s.user_exam_id = ue.id
         JOIN test_user_answers ua ON ua.user_exam_id = ue.id
         WHERE ue.id = $1
-        GROUP BY ue.id, u.id, e.id
+        GROUP BY ue.id, u.id, e.id, s.id
     ";
 
     $exam_result = pg_query_params($con, $exam_query, [$user_exam_id]);
@@ -228,10 +259,10 @@ if ($session_data = pg_fetch_assoc($result)) {
                 <div class="container">
                     <?php if ($show_form): ?>
                         <!-- Show the form if no exam_id is provided -->
-                        <h4 class="mb-3">Enter Attempt ID</h4>
+                        <h4 class="mb-3">Enter Session ID</h4>
                         <form method="GET" action="">
                             <div class="input-group mb-3">
-                                <input type="text" name="user_exam_id" class="form-control" placeholder="Enter Attempt ID" required>
+                                <input type="text" name="session_id" class="form-control" placeholder="Enter Attempt ID" required>
                                 <button class="btn btn-primary" type="submit">Submit</button>
                             </div>
                         </form>
@@ -247,7 +278,7 @@ if ($session_data = pg_fetch_assoc($result)) {
                                         <div class="mb-4">
                                             <h5 class="text-info">📝 Exam Attempt Details</h5>
                                             <ul class="list-group list-group-flush">
-                                                <li class="list-group-item"><strong>Attempt ID:</strong> <?= $exam_details['user_exam_id'] ?></li>
+                                                <li class="list-group-item"><strong>Attempt ID:</strong> <?= $exam_details['user_exam_id'] ?>/<?= $exam_details['session_id'] ?></li>
                                                 <li class="list-group-item"><strong>User Name:</strong> <?= $exam_details['user_name'] ?> (ID: <?= $exam_details['user_id'] ?>)</li>
                                                 <li class="list-group-item"><strong>Exam Name:</strong> <?= $exam_details['exam_name'] ?></li>
                                                 <li class="list-group-item"><strong>Exam Date:</strong> <?= date("d-m-Y H:i:s", strtotime($exam_details['exam_date'])) ?></li>

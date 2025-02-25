@@ -28,10 +28,12 @@ $query = "SELECT
             uexam.id AS attempt_id, 
             exam.id AS exam_id, 
             exam.name AS exam_name, 
-            uexam.score, 
+            uexam.score,
+            s.id AS session_id, 
             TO_CHAR(uexam.created_at, 'DD-MM-YYYY HH24:MI:SS') AS exam_date
           FROM test_user_exams uexam
           JOIN test_exams exam ON uexam.exam_id = exam.id
+          JOIN test_user_sessions s ON s.user_exam_id = uexam.id
           WHERE uexam.user_id = $1";
 
 $conditions = [];
@@ -162,13 +164,13 @@ if (!$result) {
                             <?php if (pg_num_rows($result) > 0): ?>
                                 <?php while ($row = pg_fetch_assoc($result)): ?>
                                     <tr>
-                                        <td><?= $row['attempt_id'] ?></td>
+                                        <td><?= $row['attempt_id'] ?>/<?= $row['session_id'] ?></td>
                                         <td><?= $row['exam_id'] ?></td>
                                         <td><?= $row['exam_name'] ?></td>
                                         <td><?= (new DateTime($row['exam_date']))->format('d/m/Y h:i A') ?></td>
                                         <td><?= $row['score'] ?></td>
                                         <td>
-                                            <a href="exam_analysis.php?user_exam_id=<?= $row['attempt_id'] ?>" class="btn btn-outline-primary">View Analysis</a>
+                                            <a href="exam_analysis.php?session_id=<?= $row['session_id'] ?>" class="btn btn-outline-primary">View Analysis</a>
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
