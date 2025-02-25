@@ -402,7 +402,7 @@ if ($session_data = pg_fetch_assoc($result)) {
                                                         <?php if ($isUserAnswer || $isCorrectOption): ?>
                                                             <span class="position-absolute" style="left: 0;">
                                                                 <?php if ($isUserAnswer && !$isCorrectOption): ?>
-                                                                    <span class="text-danger">✘</span>
+                                                                    <span class="text-danger">✖</span>
                                                                 <?php elseif ($isCorrectOption): ?>
                                                                     <span class="text-success">✔</span>
                                                                 <?php endif; ?>
