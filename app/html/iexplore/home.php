@@ -426,7 +426,7 @@ if (isLoggedIn("aid")) {
             document.querySelectorAll(".proceed-btn").forEach(function(button) {
                 button.addEventListener("click", function() {
                     const examId = this.dataset.examId;
-                    window.location.href = "exam_test.php?exam_id=" + examId;
+                    window.location.href = "exam.php?exam_id=" + examId;
                 });
             });
         });

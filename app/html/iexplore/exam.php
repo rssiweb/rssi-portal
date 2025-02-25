@@ -12,175 +12,155 @@ if (!isLoggedIn("aid")) {
 validation();
 ?>
 <?php
-// Get the exam_id, session_id, and login_redirect from the query string
+// Get parameters
 $exam_id = isset($_GET['exam_id']) ? $_GET['exam_id'] : null;
 $session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;
 $login_redirect = isset($_GET['login_redirect']) ? $_GET['login_redirect'] : null;
+$questions = []; // Ensure it's initialized
 
 // If no exam_id is provided, set a flag to show the form
 $show_form = !$exam_id;
 
-// If exam_id is provided, proceed with fetching exam details
+if (!$exam_id) {
+    echo "Error: Exam ID is missing.";
+    exit;
+}
+
 if (!$show_form) {
-    // Check if session_id is provided
+    // If session exists, check its status
     if ($session_id) {
-        // Fetch the existing session from test_user_sessions
         $session_query = "SELECT * FROM test_user_sessions WHERE id = $1";
         $session_result = pg_query_params($con, $session_query, array($session_id));
         $session_row = pg_fetch_assoc($session_result);
 
-        if ($session_row) {
-            $user_exam_id = $session_row['user_exam_id'];
-            $status = $session_row['status'];
-
-            if ($status === 'submitted') {
-                // Show a JavaScript alert and redirect to "My Exam" page
-                echo '
-                <script type="text/javascript">
-                    alert("This session has already been completed and cannot be attempted again. You will be redirected to the My Exam page.");
-                    window.location.href = "my_exam.php?session_id=' . $session_id . ($login_redirect ? '&login_redirect=true' : '') . '";
-                </script>';
-                exit; // Stop further execution
-            }
-
-            // Check if the page is being reloaded
-            if (isset($_SERVER['HTTP_CACHE_CONTROL']) && $_SERVER['HTTP_CACHE_CONTROL'] === 'max-age=0') {
-                // Skip marking the session as submitted if login_redirect is present
-                if (!$login_redirect) {
-                    // Mark the session as submitted
-                    $update_query = "UPDATE test_user_sessions SET status = 'submitted', session_end = NOW() WHERE id = $1";
-                    pg_query_params($con, $update_query, array($session_id));
-
-                    // Redirect to the result page with login_redirect
-                    $redirectUrl = "my_exam.php?session_id=$session_id";
-                    if ($login_redirect) {
-                        $redirectUrl .= "&login_redirect=true";
-                    }
-                    header("Location: " . $redirectUrl);
-                    exit;
-                }
-            }
-        } else {
+        if (!$session_row) {
             echo "Error: Invalid session ID.";
             exit;
         }
+
+        $user_exam_id = $session_row['user_exam_id'];
+        $session_start = strtotime($session_row['session_start']);
+        $status = $session_row['status'];
+
+        // Fetch total duration for exam
+        $exam_query = "SELECT total_duration FROM test_exams WHERE id = $1";
+        $exam_result = pg_query_params($con, $exam_query, array($exam_id));
+        $exam_row = pg_fetch_assoc($exam_result);
+        $total_duration = $exam_row['total_duration'];
+
+        // Calculate session end time
+        $session_end_time = $session_start + ($total_duration * 60);
+
+        // Check if time expired
+        $current_time = time();
+        if ($current_time > $session_end_time) {
+            // Auto-submit and redirect
+            $update_query = "UPDATE test_user_sessions SET status = 'submitted', session_end = NOW() WHERE id = $1";
+            pg_query_params($con, $update_query, array($session_id));
+
+            echo "<script>alert('Session time expired. Submitting the exam.'); window.location.href = 'my_exam.php?session_id=$session_id';</script>";
+            exit;
+        }
+
+        // Fetch existing questions and user responses from test_user_answers
+        $question_query = "
+        SELECT q.id AS question_id, q.question_text, o.option_key, o.option_text, ua.selected_option
+        FROM test_user_answers ua
+        JOIN test_questions q ON ua.question_id = q.id
+        JOIN test_options o ON q.id = o.question_id
+        WHERE ua.user_exam_id = $1
+        ORDER BY q.id, o.option_key";
+        $result = pg_query_params($con, $question_query, array($user_exam_id));
+
+        while ($row = pg_fetch_assoc($result)) {
+            if (!isset($questions[$row['question_id']])) {
+                $questions[$row['question_id']] = [
+                    'question_text' => $row['question_text'],
+                    'selected_option' => $row['selected_option'], // Store the selected option
+                    'options' => []
+                ];
+            }
+            $questions[$row['question_id']]['options'][] = [
+                'option_key' => $row['option_key'],
+                'option_text' => $row['option_text']
+            ];
+        }
     } else {
-        // Step 1: Insert a new row in the test_user_exams table to track the user's exam participation
-        $user_exam_query = "
-        INSERT INTO test_user_exams (user_id, exam_id)
-        VALUES ($1, $2)
-        RETURNING id";  // Get the user_exam_id for further use
+        // Create a new exam session
+        $user_exam_query = "INSERT INTO test_user_exams (user_id, exam_id) VALUES ($1, $2) RETURNING id";
         $user_exam_result = pg_query_params($con, $user_exam_query, array($id, $exam_id));
 
         if (!$user_exam_result) {
-            // Handle query failure
             echo "Error inserting user exam: " . pg_last_error($con);
             exit;
         }
 
-        // Retrieve the user_exam_id
         $user_exam_row = pg_fetch_assoc($user_exam_result);
         $user_exam_id = $user_exam_row['id'];
 
-        // Step 2: Insert a new row in the test_user_sessions table to track the session
-        $session_query = "
-        INSERT INTO test_user_sessions (user_exam_id, session_start, status)
-        VALUES ($1, NOW(), 'active')
-        RETURNING id";  // Get the session ID
+        $session_query = "INSERT INTO test_user_sessions (user_exam_id, session_start, status) VALUES ($1, NOW(), 'active') RETURNING id";
         $session_result = pg_query_params($con, $session_query, array($user_exam_id));
 
         if (!$session_result) {
-            // Handle query failure
             echo "Error inserting session: " . pg_last_error($con);
             exit;
         }
 
-        // Retrieve the session ID
         $session_row = pg_fetch_assoc($session_result);
         $session_id = $session_row['id'];
 
-        // Redirect to the same URL with session_id and login_redirect
-        $redirectUrl = "exam.php?exam_id=$exam_id&session_id=$session_id";
-        if ($login_redirect) {
-            $redirectUrl .= "&login_redirect=true";
+        // Fetch categories linked to the exam
+        $category_query = "SELECT category_id FROM test_exam_categories WHERE exam_id = $1";
+        $category_result = pg_query_params($con, $category_query, array($exam_id));
+        $category_ids = [];
+        while ($row = pg_fetch_assoc($category_result)) {
+            $category_ids[] = $row['category_id'];
         }
-        header("Location: " . $redirectUrl);
-        exit;
-    }
 
-    // Step 3: Fetch the total_questions for the exam
-    $query = "
-    SELECT total_questions, total_duration
-    FROM test_exams
-    WHERE id = $1
-    ";
-    $exam_result = pg_query_params($con, $query, array($exam_id));
+        if (empty($category_ids)) {
+            echo "Error: No categories found for this exam.";
+            exit;
+        }
 
-    // If the exam doesn't exist, handle the error
-    if ($exam_row = pg_fetch_assoc($exam_result)) {
-        $total_questions = $exam_row['total_questions'];
-        $total_duration = $exam_row['total_duration'];
-    } else {
-        echo "Error: Exam not found.";
-        exit;
-    }
+        // Fetch random questions for the exam
+        $category_ids_str = implode(",", $category_ids);
+        $question_query = "
+        WITH random_questions AS (
+            SELECT id AS question_id, question_text
+            FROM test_questions
+            WHERE category_id IN ($category_ids_str)
+            ORDER BY RANDOM()
+            LIMIT (SELECT total_questions FROM test_exams WHERE id = $1)
+        )
+        SELECT rq.question_id, rq.question_text, o.option_key, o.option_text
+        FROM random_questions rq
+        JOIN test_options o ON rq.question_id = o.question_id
+        ORDER BY rq.question_id, o.option_key";
+        $result = pg_query_params($con, $question_query, array($exam_id));
 
-    // Step 4: Fetch the categories associated with the exam
-    $query = "
-    SELECT category_id
-    FROM test_exam_categories
-    WHERE exam_id = $1
-    ";
-    $exam_categories_result = pg_query_params($con, $query, array($exam_id));
-
-    // Initialize an array to store the category IDs
-    $category_ids = array();
-    while ($row = pg_fetch_assoc($exam_categories_result)) {
-        $category_ids[] = $row['category_id'];
-    }
-
-    // If no categories are found for the exam, handle the error
-    if (empty($category_ids)) {
-        echo "Error: No categories found for the exam.";
-        exit;
-    }
-
-    // Step 5: Fetch random questions based on the categories and total_questions
-    $category_ids_str = implode(",", $category_ids);
-
-    $question_query = "
-    WITH random_questions AS (
-        SELECT id AS question_id, question_text
-        FROM test_questions
-        WHERE category_id IN ($category_ids_str)
-        ORDER BY RANDOM()
-        LIMIT $1
-    )
-    SELECT rq.question_id, rq.question_text, 
-           o.option_key, o.option_text
-    FROM random_questions rq
-    JOIN test_options o ON rq.question_id = o.question_id
-    ORDER BY rq.question_id, o.option_key
-    ";
-
-    $result = pg_query_params($con, $question_query, array($total_questions));
-
-    // Initialize an array to store the questions by their ID
-    $questions = array();
-    while ($row = pg_fetch_assoc($result)) {
-        // Store the question data
-        if (!isset($questions[$row['question_id']])) {
-            $questions[$row['question_id']] = [
-                'question_text' => $row['question_text'],
-                'options' => []
+        while ($row = pg_fetch_assoc($result)) {
+            if (!isset($questions[$row['question_id']])) {
+                $questions[$row['question_id']] = [
+                    'question_text' => $row['question_text'],
+                    'selected_option' => null, // Initialize selected option as null
+                    'options' => []
+                ];
+            }
+            $questions[$row['question_id']]['options'][] = [
+                'option_key' => $row['option_key'],
+                'option_text' => $row['option_text']
             ];
         }
 
-        // Add options to the question
-        $questions[$row['question_id']]['options'][] = [
-            'option_key' => $row['option_key'],
-            'option_text' => $row['option_text']
-        ];
+        // Insert questions into test_user_answers
+        foreach ($questions as $question_id => $q_data) {
+            $insert_answer_query = "INSERT INTO test_user_answers (user_exam_id, question_id, selected_option) VALUES ($1, $2, $3)";
+            pg_query_params($con, $insert_answer_query, array($user_exam_id, $question_id, null));
+        }
+
+        // Redirect with session_id
+        header("Location: exam.php?exam_id=$exam_id&session_id=$session_id");
+        exit;
     }
 }
 ?>
@@ -599,16 +579,76 @@ if (!$show_form) {
             $('#myModal').modal('hide');
         }
 
-        // Add event listener to form submission
-        document.getElementById('exception').addEventListener('submit', function(event) {
-            // Show loading modal when form is submitted
-            showLoadingModal();
-        });
-
         // Optional: Close loading modal when the page is fully loaded
         window.addEventListener('load', function() {
             // Hide loading modal
             hideLoadingModal();
+        });
+    </script>
+
+    <script>
+        document.querySelectorAll('.clear-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear your selection?')) {
+                    const questionContainer = this.closest('.question-container');
+                    const radioButtons = questionContainer.querySelectorAll('.option-input');
+                    radioButtons.forEach(radio => {
+                        radio.checked = false;
+                    });
+                }
+            });
+        });
+    </script>
+    <script>
+        document.querySelectorAll('.clear-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const questionContainer = this.closest('.question-container');
+                const radioButtons = questionContainer.querySelectorAll('.option-input');
+                radioButtons.forEach(radio => {
+                    radio.checked = false;
+                });
+                // Add visual feedback
+                questionContainer.style.opacity = '0.5';
+                setTimeout(() => {
+                    questionContainer.style.opacity = '1';
+                }, 200);
+            });
+        });
+    </script>
+    <script>
+        // Function to toggle "Clear Selection" button visibility
+        function toggleClearButton(questionContainer) {
+            const clearButton = questionContainer.querySelector('.clear-btn');
+            const radioButtons = questionContainer.querySelectorAll('.option-input');
+            const isAnySelected = Array.from(radioButtons).some(radio => radio.checked);
+
+            // Show/hide the "Clear Selection" button
+            if (isAnySelected) {
+                clearButton.classList.remove('hidden');
+            } else {
+                clearButton.classList.add('hidden');
+            }
+        }
+
+        // Add event listeners to all radio buttons
+        document.querySelectorAll('.option-input').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const questionContainer = this.closest('.question-container');
+                toggleClearButton(questionContainer);
+            });
+        });
+
+        // Add event listener to the "Clear Selection" button
+        document.querySelectorAll('.clear-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const questionContainer = this.closest('.question-container');
+                const radioButtons = questionContainer.querySelectorAll('.option-input');
+                radioButtons.forEach(radio => {
+                    radio.checked = false;
+                });
+                // Hide the "Clear Selection" button after clearing
+                this.classList.add('hidden');
+            });
         });
     </script>
     <script>
@@ -621,28 +661,6 @@ if (!$show_form) {
             // Get the URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const isLoginRedirect = urlParams.has('login_redirect'); // Check if login_redirect is present
-
-            const countdownMessage = document.createElement('p');
-            countdownMessage.id = 'timer';
-            countdownMessage.textContent = `Time remaining: ${formatTime(countdown)}`;
-            document.getElementById('timer-container').appendChild(countdownMessage);
-
-            const countdownInterval = setInterval(() => {
-                countdown--;
-                countdownMessage.textContent = `Time remaining: ${formatTime(countdown)}`;
-
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    submitExam();
-                }
-            }, 1000);
-
-            // Function to format time
-            function formatTime(seconds) {
-                const minutes = Math.floor(seconds / 60);
-                const remainingSeconds = seconds % 60;
-                return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-            }
 
             // Function to handle tab change
             function handleVisibilityChange() {
@@ -660,22 +678,6 @@ if (!$show_form) {
 
             // Add event listener for tab change detection
             document.addEventListener('visibilitychange', handleVisibilityChange);
-
-            // Show an alert as soon as the page loads
-            window.onload = function() {
-                alert("1. Reloading the page will automatically submit your exam.\n2. Changing or minimizing the screen will result in submission.\n3. Ensure a stable internet connection.\n4. The timer will start immediately after you click OK.\n\nIf you are ready, click OK.");
-            };
-            // Function to handle page reload
-            function handleBeforeUnload(event) {
-                if (!isExamSubmitted) {
-                    event.preventDefault();
-                    // Submit the exam if the user tries to reload the page
-                    submitExam();
-                }
-            }
-
-            // Add event listener for page reload detection
-            window.addEventListener('beforeunload', handleBeforeUnload);
 
             // Function to submit the exam
             function submitExam() {
@@ -745,7 +747,7 @@ if (!$show_form) {
                                 document.getElementById('score').textContent = `Your score is: ${result.score}`;
 
                                 // Remove the beforeunload event listener to prevent resubmission
-                                window.removeEventListener('beforeunload', handleBeforeUnload);
+                                // window.removeEventListener('beforeunload', handleBeforeUnload);
 
                                 // Start countdown
                                 let countdown = 5;
@@ -808,68 +810,193 @@ if (!$show_form) {
         }
     </script>
     <script>
-        document.querySelectorAll('.clear-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                if (confirm('Are you sure you want to clear your selection?')) {
-                    const questionContainer = this.closest('.question-container');
-                    const radioButtons = questionContainer.querySelectorAll('.option-input');
-                    radioButtons.forEach(radio => {
-                        radio.checked = false;
-                    });
+        document.addEventListener('DOMContentLoaded', () => {
+            const totalDurationInMinutes = <?php echo $total_duration; ?>;
+            const sessionStartTime = <?php echo $session_start; ?> * 1000; // Convert to milliseconds
+            const sessionEndTime = sessionStartTime + (totalDurationInMinutes * 60 * 1000); // Calculate end time
+            let isExamSubmitted = false; // Flag to track if the exam has been submitted
+
+            // Timer display
+            const timerContainer = document.getElementById('timer-container');
+            const timerElement = document.createElement('div');
+            timerElement.id = 'timer';
+            timerContainer.appendChild(timerElement);
+
+            // Update timer every second
+            const timerInterval = setInterval(() => {
+                const now = Date.now();
+                const timeLeft = sessionEndTime - now;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerElement.textContent = 'Time expired!';
+                    submitExam(); // Auto-submit when time expires
+                } else {
+                    const minutes = Math.floor(timeLeft / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    timerElement.textContent = `Time left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                }
+            }, 1000);
+
+            // Function to save the user's selected answer
+            function saveAnswer(questionContainer) {
+                const questionId = questionContainer.dataset.questionId;
+                const selectedOption = questionContainer.querySelector('input[type="radio"]:checked');
+
+                if (selectedOption) {
+                    // Save the selected option to the database
+                    fetch('save-answer.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                user_exam_id: <?php echo $user_exam_id; ?>,
+                                question_id: questionId,
+                                selected_option: selectedOption.value
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                console.error('Failed to save answer:', data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error saving answer:', error);
+                        });
+                }
+            }
+
+            // Save user responses on "Next" click
+            document.querySelectorAll('.next-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const questionContainer = button.closest('.question-container');
+                    saveAnswer(questionContainer); // Save the answer before moving to the next question
+                });
+            });
+
+            // Save user responses on "Previous" click
+            document.querySelectorAll('.prev-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const questionContainer = button.closest('.question-container');
+                    saveAnswer(questionContainer); // Save the answer before moving to the previous question
+                });
+            });
+
+            // Repopulate user responses on page load
+            const questionContainers = document.querySelectorAll('.question-container');
+            questionContainers.forEach(container => {
+                const questionId = container.dataset.questionId;
+                const selectedOption = <?php echo json_encode($questions); ?>[questionId]?.selected_option;
+
+                if (selectedOption) {
+                    const radioButton = container.querySelector(`input[value="${selectedOption}"]`);
+                    if (radioButton) {
+                        radioButton.checked = true;
+                    }
                 }
             });
-        });
-    </script>
-    <script>
-        document.querySelectorAll('.clear-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const questionContainer = this.closest('.question-container');
-                const radioButtons = questionContainer.querySelectorAll('.option-input');
-                radioButtons.forEach(radio => {
-                    radio.checked = false;
-                });
-                // Add visual feedback
-                questionContainer.style.opacity = '0.5';
-                setTimeout(() => {
-                    questionContainer.style.opacity = '1';
-                }, 200);
-            });
-        });
-    </script>
-    <script>
-        // Function to toggle "Clear Selection" button visibility
-        function toggleClearButton(questionContainer) {
-            const clearButton = questionContainer.querySelector('.clear-btn');
-            const radioButtons = questionContainer.querySelectorAll('.option-input');
-            const isAnySelected = Array.from(radioButtons).some(radio => radio.checked);
 
-            // Show/hide the "Clear Selection" button
-            if (isAnySelected) {
-                clearButton.classList.remove('hidden');
-            } else {
-                clearButton.classList.add('hidden');
+            // Function to submit the exam
+            function submitExam() {
+                if (isExamSubmitted) return; // Prevent multiple submissions
+                isExamSubmitted = true; // Mark the exam as submitted
+
+                const userExamIdElement = document.getElementById('user_exam_id');
+                if (!userExamIdElement) {
+                    console.error('Error: user_exam_id element not found!');
+                    return;
+                }
+
+                const user_exam_id = userExamIdElement.value;
+                const answers = [];
+                const questionContainers = document.querySelectorAll('.question-container');
+
+                // Loop through all question containers
+                questionContainers.forEach(container => {
+                    const questionId = container.dataset.questionId; // Use actual question ID
+                    const selectedOption = container.querySelector('input[type="radio"]:checked');
+
+                    // Push the question ID and selected option (or null if unanswered)
+                    answers.push({
+                        question_id: questionId,
+                        selected_option: selectedOption ? selectedOption.value : null // Store null for unanswered questions
+                    });
+                });
+
+                // Log the answers for debugging
+                console.log('Answers to be submitted:', answers);
+
+                showLoadingModal();
+
+                fetch('submit-answers.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            user_id: "<?php echo $id; ?>",
+                            exam_id: <?php echo $exam_id; ?>,
+                            user_exam_id: user_exam_id,
+                            answers: answers,
+                            form_type: 'exam'
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        console.log('Result:', result); // Debugging line
+                        hideLoadingModal();
+
+                        if (result.error) {
+                            console.error('Submission Error:', result.error);
+                            return;
+                        }
+
+                        if (result.score !== undefined) {
+                            const resultContainer = document.getElementById('result-container');
+                            const examForm = document.getElementById('exam-form');
+
+                            if (resultContainer && examForm) {
+                                // Hide exam form and show result container
+                                examForm.classList.add('d-none');
+                                resultContainer.classList.remove('d-none');
+
+                                // Display score
+                                document.getElementById('score').textContent = `Your score is: ${result.score}`;
+
+                                // Start countdown
+                                let countdown = 5;
+                                const countdownMessage = document.createElement('p');
+                                countdownMessage.id = 'countdown';
+                                countdownMessage.textContent = `Redirecting to My Exams in ${countdown} seconds...`;
+                                resultContainer.appendChild(countdownMessage);
+
+                                const countdownInterval = setInterval(() => {
+                                    countdown--;
+                                    countdownMessage.textContent = `Redirecting to My Exams in ${countdown} seconds...`;
+                                    if (countdown === 0) {
+                                        clearInterval(countdownInterval);
+                                        window.location.href = 'my_exam.php';
+                                    }
+                                }, 1000);
+                            } else {
+                                console.error('Error: result-container or exam-form element not found!');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        hideLoadingModal();
+                        console.error('Error submitting answers:', error);
+                    });
             }
-        }
 
-        // Add event listeners to all radio buttons
-        document.querySelectorAll('.option-input').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const questionContainer = this.closest('.question-container');
-                toggleClearButton(questionContainer);
-            });
-        });
-
-        // Add event listener to the "Clear Selection" button
-        document.querySelectorAll('.clear-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const questionContainer = this.closest('.question-container');
-                const radioButtons = questionContainer.querySelectorAll('.option-input');
-                radioButtons.forEach(radio => {
-                    radio.checked = false;
-                });
-                // Hide the "Clear Selection" button after clearing
-                this.classList.add('hidden');
-            });
+            // Handle session expiry on page load
+            const currentTime = Date.now();
+            if (currentTime > sessionEndTime) {
+                alert('Session expired. Submitting the exam...');
+                submitExam(); // Submit the exam if the session has expired
+            }
         });
     </script>
 </body>
