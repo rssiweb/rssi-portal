@@ -747,7 +747,7 @@ if (!$show_form) {
                                 document.getElementById('score').textContent = `Your score is: ${result.score}`;
 
                                 // Remove the beforeunload event listener to prevent resubmission
-                                window.removeEventListener('beforeunload', handleBeforeUnload);
+                                // window.removeEventListener('beforeunload', handleBeforeUnload);
 
                                 // Start countdown
                                 let countdown = 5;
