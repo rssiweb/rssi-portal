@@ -30,6 +30,7 @@ $query = "SELECT
             exam.name AS exam_name, 
             uexam.score,
             s.id AS session_id, 
+            s.status AS session_status, 
             TO_CHAR(uexam.created_at, 'DD-MM-YYYY HH24:MI:SS') AS exam_date
           FROM test_user_exams uexam
           JOIN test_exams exam ON uexam.exam_id = exam.id
@@ -170,7 +171,15 @@ if (!$result) {
                                         <td><?= (new DateTime($row['exam_date']))->format('d/m/Y h:i A') ?></td>
                                         <td><?= $row['score'] ?></td>
                                         <td>
-                                            <a href="exam_analysis.php?session_id=<?= $row['session_id'] ?>" class="btn btn-outline-primary">View Analysis</a>
+                                            <!-- <a href="exam_analysis.php?session_id=<?= $row['session_id'] ?>" class="btn btn-outline-primary">View Analysis</a> -->
+
+                                            <?php
+                                            if ($row['session_status'] === 'submitted') {
+                                                echo '<a href="exam_analysis.php?session_id=' . $row['session_id'] . '" class="btn btn-outline-primary">View Analysis</a>';
+                                            } else {
+                                                echo '<a href="exam.php?exam_id=' . $row['exam_id'] . '&session_id=' . $row['session_id'].'" class="btn btn-outline-primary">View/Resume Exam</a>';
+                                            }
+                                            ?>
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
