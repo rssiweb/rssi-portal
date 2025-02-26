@@ -77,18 +77,20 @@ if (!$show_form) {
         }
 
         $user_exam_id = $session_row['user_exam_id'];
-        @$session_start = strtotime($session_row['session_start']);
         $status = $session_row['status'];
+        if ($session_row['session_start'] !== null) {
+            $session_start = strtotime($session_row['session_start']);
 
-        // Fetch total duration for exam
-        $exam_query = "SELECT total_duration FROM test_exams WHERE id = $1";
-        $exam_result = pg_query_params($con, $exam_query, array($exam_id));
-        $exam_row = pg_fetch_assoc($exam_result);
-        $total_duration = $exam_row['total_duration'];
 
-        // Calculate session end time
-        $session_end_time = $session_start + ($total_duration * 60);
+            // Fetch total duration for exam
+            $exam_query = "SELECT total_duration FROM test_exams WHERE id = $1";
+            $exam_result = pg_query_params($con, $exam_query, array($exam_id));
+            $exam_row = pg_fetch_assoc($exam_result);
+            $total_duration = $exam_row['total_duration'];
 
+            // Calculate session end time
+            $session_end_time = $session_start + ($total_duration * 60);
+        }
         // Check if time expired
         if ($status === 'submitted') {
             // Show a JavaScript alert and redirect to "My Exam" page
@@ -213,7 +215,7 @@ if (!$show_form) {
         exit;
     }
     // If the exam is restricted, check if the OTP has been validated
-    if ($is_restricted) {
+    if ($is_restricted === 't') {
         // Fetch the session details
         $session_query = "SELECT auth_code, status FROM test_user_sessions WHERE id = $1";
         $session_result = pg_query_params($con, $session_query, array($session_id));
@@ -257,6 +259,19 @@ if (!$show_form) {
                         echo "Database query failed: " . pg_last_error($con);
                         exit;
                     }
+                    // Re-fetch the session start time after updating
+                    $session_query = "SELECT session_start FROM test_user_sessions WHERE id = $1";
+                    $session_result = pg_query_params($con, $session_query, array($session_id));
+                    $session_row = pg_fetch_assoc($session_result);
+                    $session_start = strtotime($session_row['session_start']);
+                    // Fetch total duration for exam
+                    $exam_query = "SELECT total_duration FROM test_exams WHERE id = $1";
+                    $exam_result = pg_query_params($con, $exam_query, array($exam_id));
+                    $exam_row = pg_fetch_assoc($exam_result);
+                    $total_duration = $exam_row['total_duration'];
+
+                    // Calculate session end time
+                    $session_end_time = $session_start + ($total_duration * 60);
                 } else {
                     echo "<script>alert('Invalid OTP. Please try again.'); window.location.href = 'exam.php?exam_id=$exam_id&session_id=$session_id';</script>";
                     exit;
