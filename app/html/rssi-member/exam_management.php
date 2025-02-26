@@ -14,7 +14,7 @@ validation();
 
 // Fetch exams with related categories
 $query = "
-    SELECT te.id AS exam_id, te.name AS exam_name, te.total_questions, te.total_duration, te.is_active, te.created_at,
+    SELECT te.id AS exam_id, te.name AS exam_name, te.total_questions, te.total_duration, te.is_active, te.created_at, te.language, te.show_answer, te.is_restricted, te.is_paid,
            STRING_AGG(tc.name, ', ') AS categories, STRING_AGG(tc.id::text, ', ') AS category_ids -- Fetch category IDs as a comma-separated string
     FROM test_exams te
     LEFT JOIN test_exam_categories tec ON te.id = tec.exam_id
@@ -60,22 +60,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_exam'])) {
 <?php
 // Check if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
+    // Sanitize and validate input data
     $id = isset($_POST['id']) ? intval($_POST['id']) : null;
     $name = pg_escape_string($con, $_POST['name']);
     $total_questions = intval($_POST['total_questions']);
     $total_duration = intval($_POST['total_duration']);
     $categories = $_POST['categories']; // Array of category IDs
-    $status = $_POST['status'];
+    $status = ($_POST['status'] === 'true') ? true : false; // Convert to boolean
+
+    // Handle multi-select language (convert array to comma-separated string)
+    $languages = isset($_POST['language']) ? $_POST['language'] : []; // Array of selected languages
+    $languageString = pg_escape_string($con, implode(',', $languages)); // Convert array to string
+
+    // Handle checkboxes: Set to false if not present in $_POST
+    $show_answer = isset($_POST['show_answer']) && $_POST['show_answer'] == '1' ? 'true' : 'false';
+    $is_restricted = isset($_POST['is_restricted']) && $_POST['is_restricted'] == '1' ? 'true' : 'false';
+    $is_paid = isset($_POST['is_paid']) && $_POST['is_paid'] == '1' ? 'true' : 'false';
 
     if ($id) {
         // Update existing exam
         $updateExamQuery = "
             UPDATE test_exams
-            SET name = $1, total_questions = $2, total_duration = $3, is_active = $5, created_at = CURRENT_TIMESTAMP
-            WHERE id = $4
+            SET 
+                name = $1, 
+                total_questions = $2, 
+                total_duration = $3, 
+                is_active = $4, 
+                language = $5, 
+                show_answer = $6, 
+                is_restricted = $7, 
+                is_paid = $8, 
+                created_at = CURRENT_TIMESTAMP
+            WHERE id = $9
         ";
 
-        $updateExamResult = pg_query_params($con, $updateExamQuery, [$name, $total_questions, $total_duration, $id, $status]);
+        $updateExamResult = pg_query_params($con, $updateExamQuery, [
+            $name,
+            $total_questions,
+            $total_duration,
+            $status,
+            $languageString, // Store multi-select languages as a string
+            $show_answer,
+            $is_restricted,
+            $is_paid,
+            $id
+        ]);
 
         if (!$updateExamResult) {
             die("Error updating exam: " . pg_last_error($con));
@@ -87,12 +116,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
     } else {
         // Insert new exam
         $insertExamQuery = "
-            INSERT INTO test_exams (name, total_questions, total_duration, created_at,is_active)
-            VALUES ($1, $2, $3, CURRENT_TIMESTAMP,$4)
+            INSERT INTO test_exams (
+                name, 
+                total_questions, 
+                total_duration, 
+                is_active, 
+                language, 
+                show_answer, 
+                is_restricted, 
+                is_paid, 
+                created_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
             RETURNING id
         ";
 
-        $insertExamResult = pg_query_params($con, $insertExamQuery, [$name, $total_questions, $total_duration, $status]);
+        $insertExamResult = pg_query_params($con, $insertExamQuery, [
+            $name,
+            $total_questions,
+            $total_duration,
+            $status,
+            $languageString, // Store multi-select languages as a string
+            $show_answer,
+            $is_restricted,
+            $is_paid
+        ]);
 
         if (!$insertExamResult) {
             die("Error inserting exam: " . pg_last_error($con));
@@ -118,6 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
     </script>";
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -206,6 +255,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                 <th>Categories</th>
                                                 <th>Total Duration (min)</th>
                                                 <th>Status</th>
+                                                <th>language</th>
+                                                <th>show_answer</th>
+                                                <th>is_restricted</th>
+                                                <th>is_paid</th>
                                                 <th>Created At</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -219,17 +272,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                     <td><?= $row['categories'] ?></td>
                                                     <td><?= $row['total_duration'] ?></td>
                                                     <td><?= $row['is_active'] === 't' ? 'Active' : 'Inactive' ?></td>
+                                                    <td><?= $row['language'] ?></td>
+                                                    <td><?= $row['show_answer'] ?></td>
+                                                    <td><?= $row['is_restricted'] ?></td>
+                                                    <td><?= $row['is_paid'] ?></td>
                                                     <td><?= $row['created_at'] ?></td>
                                                     <td>
                                                         <button class="btn btn-warning btn-sm me-2 edit-exam"
                                                             data-id="<?= $row['exam_id'] ?>"
-                                                            data-name="<?= $row['exam_name'] ?>"
+                                                            data-name="<?= htmlspecialchars($row['exam_name']) ?>"
                                                             data-total-questions="<?= $row['total_questions'] ?>"
                                                             data-total-duration="<?= $row['total_duration'] ?>"
-                                                            data-categories="<?= $row['category_ids'] ?>"
-                                                            data-status="<?= $row['is_active'] === 't' ? 'true' : 'false' ?>">
+                                                            data-categories="<?= htmlspecialchars($row['category_ids']) ?>"
+                                                            data-status="<?= $row['is_active'] === 't' ? 'true' : 'false' ?>"
+                                                            data-language="<?= htmlspecialchars($row['language']) ?>"
+                                                            data-show-answer="<?= $row['show_answer'] === 't' ? 'true' : 'false' ?>"
+                                                            data-is-restricted="<?= $row['is_restricted'] === 't' ? 'true' : 'false' ?>"
+                                                            data-is-paid="<?= $row['is_paid'] === 't' ? 'true' : 'false' ?>">
                                                             Edit
                                                         </button>
+
                                                         <!-- Delete Form -->
                                                         <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this exam?')">
                                                             <input type="hidden" name="exam_id" value="<?= $row['exam_id'] ?>">
@@ -244,7 +306,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                             </div>
 
                             <!-- Add/Edit Exam Modal -->
-                            <div class="modal fade" id="examModal" tabindex="-1" aria-labelledby="examModalLabel" aria-hidden="true">
+                            <div class="modal fade show" id="examModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="examModalLabel" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
@@ -255,21 +317,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                             <div class="modal-body">
                                                 <input type="hidden" name="id" id="examId">
 
+                                                <!-- Exam Name -->
                                                 <div class="mb-3">
                                                     <label for="examName" class="form-label">Exam Name</label>
                                                     <input type="text" class="form-control" id="examName" name="name" required>
                                                 </div>
 
+                                                <!-- Total Questions -->
                                                 <div class="mb-3">
                                                     <label for="totalQuestions" class="form-label">Total Questions</label>
                                                     <input type="number" class="form-control" id="totalQuestions" name="total_questions" required>
                                                 </div>
 
+                                                <!-- Total Duration -->
                                                 <div class="mb-3">
                                                     <label for="totalDuration" class="form-label">Total Duration (minutes)</label>
                                                     <input type="number" class="form-control" id="totalDuration" name="total_duration" required>
                                                 </div>
 
+                                                <!-- Categories -->
                                                 <div class="mb-3">
                                                     <label for="categories" class="form-label">Categories</label>
                                                     <select class="form-select" id="categories" name="categories[]" multiple required>
@@ -278,6 +344,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                         <?php endwhile; ?>
                                                     </select>
                                                 </div>
+
+                                                <!-- Status -->
                                                 <div class="mb-3">
                                                     <label for="status" class="form-label">Status</label>
                                                     <select class="form-select" id="status" name="status" required>
@@ -285,7 +353,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                         <option value="false">Inactive</option>
                                                     </select>
                                                 </div>
+                                                <!-- Language (Multi-Select Dropdown) -->
+                                                <div class="mb-3">
+                                                    <label for="language" class="form-label">Language</label>
+                                                    <select class="form-select" id="language" name="language[]" multiple required>
+                                                        <?php
+                                                        $languageQuery = "SELECT DISTINCT q_language FROM test_questions";
+                                                        $languageResult = pg_query($con, $languageQuery);
+                                                        while ($lang = pg_fetch_assoc($languageResult)) {
+                                                            echo '<option value="' . htmlspecialchars($lang['q_language']) . '">' . htmlspecialchars($lang['q_language']) . '</option>';
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Show Answer (Boolean) -->
+                                                <div class="mb-3 form-check">
+                                                    <input type="checkbox" class="form-check-input" id="showAnswer" name="show_answer" value='1'>
+                                                    <label class="form-check-label" for="showAnswer">Show Answers After Exam</label>
+                                                </div>
+
+                                                <!-- Is Restricted (Boolean) -->
+                                                <div class="mb-3 form-check">
+                                                    <input type="checkbox" class="form-check-input" id="isRestricted" name="is_restricted" value='1'>
+                                                    <label class="form-check-label" for="isRestricted">Restrict Exam Access</label>
+                                                </div>
+
+                                                <!-- Is Paid (Boolean) -->
+                                                <div class="mb-3 form-check">
+                                                    <input type="checkbox" class="form-check-input" id="isPaid" name="is_paid" value='1'>
+                                                    <label class="form-check-label" for="isPaid">Paid Exam</label>
+                                                </div>
                                             </div>
+
+                                            <!-- Modal Footer -->
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                                 <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -332,8 +433,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                 const totalQuestions = this.dataset.totalQuestions;
                 const totalDuration = this.dataset.totalDuration;
                 const status = this.dataset.status;
+                const showAnswer = this.dataset.showAnswer === 'true'; // Convert to boolean
+                const isRestricted = this.dataset.isRestricted === 'true'; // Convert to boolean
+                const isPaid = this.dataset.isPaid === 'true'; // Convert to boolean
                 // Get the categories as a comma-separated string (e.g., '1,3')
                 const selectedCategories = this.dataset.categories.split(',').map(category => category.trim());
+                // Get the selected languages as a comma-separated string (e.g., 'English,Hindi')
+                const selectedLanguages = this.dataset.language ? this.dataset.language.split(',').map(lang => lang.trim()) : [];
+
 
                 document.getElementById('examId').value = examId;
                 document.getElementById('examName').value = examName;
@@ -341,6 +448,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                 document.getElementById('totalDuration').value = totalDuration;
                 // Set the status dropdown value based on is_active
                 document.getElementById('status').value = status === 'true' ? 'true' : 'false';
+
+                // Pre-select the languages in the multi-select dropdown
+                const languageSelect = document.getElementById('language');
+                for (let option of languageSelect.options) {
+                    if (selectedLanguages.includes(option.value.trim())) {
+                        option.selected = true; // Mark as selected
+                    } else {
+                        option.selected = false; // Ensure it's not selected
+                    }
+                }
+
+                // Set checkboxes
+                document.getElementById('showAnswer').checked = showAnswer;
+                document.getElementById('isRestricted').checked = isRestricted;
+                document.getElementById('isPaid').checked = isPaid;
 
                 // Pre-select the categories in the dropdown
                 const categoriesSelect = document.getElementById('categories');
