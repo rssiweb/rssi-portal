@@ -276,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                     <td><?= $row['show_answer'] ?></td>
                                                     <td><?= $row['is_restricted'] ?></td>
                                                     <td><?= $row['is_paid'] ?></td>
-                                                    <td><?= $row['created_at'] ?></td>
+                                                    <td><?= date("d/m/Y h:i A", strtotime($row['created_at'])) ?></td>
                                                     <td>
                                                         <button class="btn btn-warning btn-sm me-2 edit-exam"
                                                             data-id="<?= $row['exam_id'] ?>"
@@ -307,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
 
                             <!-- Add/Edit Exam Modal -->
                             <div class="modal fade show" id="examModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="examModalLabel" aria-hidden="true">
-                                <div class="modal-dialog">
+                                <div class="modal-dialog modal-lg">
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title" id="examModalLabel">Add/Edit Exam</h5>
@@ -426,61 +426,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
         });
     </script>
     <script>
-        document.querySelectorAll('.edit-exam').forEach(button => {
-            button.addEventListener('click', function() {
-                const examId = this.dataset.id;
-                const examName = this.dataset.name;
-                const totalQuestions = this.dataset.totalQuestions;
-                const totalDuration = this.dataset.totalDuration;
-                const status = this.dataset.status;
-                const showAnswer = this.dataset.showAnswer === 'true'; // Convert to boolean
-                const isRestricted = this.dataset.isRestricted === 'true'; // Convert to boolean
-                const isPaid = this.dataset.isPaid === 'true'; // Convert to boolean
-                // Get the categories as a comma-separated string (e.g., '1,3')
-                const selectedCategories = this.dataset.categories.split(',').map(category => category.trim());
-                // Get the selected languages as a comma-separated string (e.g., 'English,Hindi')
-                const selectedLanguages = this.dataset.language ? this.dataset.language.split(',').map(lang => lang.trim()) : [];
+        document.addEventListener("DOMContentLoaded", function() {
+            const examModal = new bootstrap.Modal(document.getElementById('examModal'));
+            const addExamBtn = document.getElementById('addExamBtn');
 
+            // Handle Add Exam Button Click
+            addExamBtn.addEventListener("click", function() {
+                // Reset form fields
+                document.getElementById('examForm').reset(); // Reset all input fields
+                document.getElementById('examId').value = ''; // Ensure exam ID is empty
 
-                document.getElementById('examId').value = examId;
-                document.getElementById('examName').value = examName;
-                document.getElementById('totalQuestions').value = totalQuestions;
-                document.getElementById('totalDuration').value = totalDuration;
-                // Set the status dropdown value based on is_active
-                document.getElementById('status').value = status === 'true' ? 'true' : 'false';
+                // Reset category and language selections
+                document.getElementById('categories').querySelectorAll('option').forEach(option => option.selected = false);
+                document.getElementById('language').querySelectorAll('option').forEach(option => option.selected = false);
 
-                // Pre-select the languages in the multi-select dropdown
-                const languageSelect = document.getElementById('language');
-                for (let option of languageSelect.options) {
-                    if (selectedLanguages.includes(option.value.trim())) {
-                        option.selected = true; // Mark as selected
-                    } else {
-                        option.selected = false; // Ensure it's not selected
-                    }
-                }
-
-                // Set checkboxes
-                document.getElementById('showAnswer').checked = showAnswer;
-                document.getElementById('isRestricted').checked = isRestricted;
-                document.getElementById('isPaid').checked = isPaid;
-
-                // Pre-select the categories in the dropdown
-                const categoriesSelect = document.getElementById('categories');
-                for (let option of categoriesSelect.options) {
-                    // Check if the option's value is included in the selectedCategories array
-                    if (selectedCategories.includes(option.value.trim())) {
-                        option.selected = true; // Mark the option as selected
-                    } else {
-                        option.selected = false; // Otherwise, ensure it's not selected
-                    }
-                }
-
-                // Show modal
-                const examModal = new bootstrap.Modal(document.getElementById('examModal'));
+                // Open modal
                 examModal.show();
+            });
+
+            // Handle Edit Exam Button Click
+            document.querySelectorAll('.edit-exam').forEach(button => {
+                button.addEventListener('click', function() {
+                    const examId = this.dataset.id;
+                    const examName = this.dataset.name;
+                    const totalQuestions = this.dataset.totalQuestions;
+                    const totalDuration = this.dataset.totalDuration;
+                    const status = this.dataset.status;
+                    const showAnswer = this.dataset.showAnswer === 'true';
+                    const isRestricted = this.dataset.isRestricted === 'true';
+                    const isPaid = this.dataset.isPaid === 'true';
+
+                    // Get selected categories and languages
+                    const selectedCategories = this.dataset.categories.split(',').map(category => category.trim());
+                    const selectedLanguages = this.dataset.language ? this.dataset.language.split(',').map(lang => lang.trim()) : [];
+
+                    document.getElementById('examId').value = examId;
+                    document.getElementById('examName').value = examName;
+                    document.getElementById('totalQuestions').value = totalQuestions;
+                    document.getElementById('totalDuration').value = totalDuration;
+                    document.getElementById('status').value = status === 'true' ? 'true' : 'false';
+
+                    // Set language selections
+                    const languageSelect = document.getElementById('language');
+                    for (let option of languageSelect.options) {
+                        option.selected = selectedLanguages.includes(option.value.trim());
+                    }
+
+                    // Set checkboxes
+                    document.getElementById('showAnswer').checked = showAnswer;
+                    document.getElementById('isRestricted').checked = isRestricted;
+                    document.getElementById('isPaid').checked = isPaid;
+
+                    // Set category selections
+                    const categoriesSelect = document.getElementById('categories');
+                    for (let option of categoriesSelect.options) {
+                        option.selected = selectedCategories.includes(option.value.trim());
+                    }
+
+                    // Show modal
+                    examModal.show();
+                });
             });
         });
     </script>
+
 </body>
 
 </html>
