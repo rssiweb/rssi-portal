@@ -94,16 +94,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_contact'])) {
                         <!-- Profile Photo (Initials) -->
                         <div class="profile-pic">
                             <?php
-                            // Split the name into parts
                             $name_parts = explode(' ', $name);
                             $initials = '';
 
-                            // Get the first character of the first name
                             if (isset($name_parts[0])) {
                                 $initials .= strtoupper(substr($name_parts[0], 0, 1));
                             }
 
-                            // Get the first character of the last name
                             if (isset($name_parts[1])) {
                                 $initials .= strtoupper(substr($name_parts[1], 0, 1));
                             }
@@ -114,22 +111,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_contact'])) {
                         <h2 class="card-title mt-3"><?php echo $name; ?></h2>
                         <p class="card-text"><?php echo $email; ?></p>
                         <p class="card-text">User ID: <?php echo $id; ?></p>
-                        <p class="card-text">Contact: <?php echo $contact ? $contact : 'Not provided'; ?></p>
+                        <p class="card-text">
+                            Contact: <?php echo $contact ? $contact : 'Not provided'; ?>
+                            <span data-bs-toggle="modal" data-bs-target="#updateContactModal" style="cursor: pointer;">
+                                <i class="bi bi-pencil text-secondary ms-2"></i>
+                            </span>
+                        </p>
                         <p class="card-text">Account Created: <?php echo $created_at; ?></p>
+                    </div>
 
-                        <!-- Update Contact Form -->
-                        <form method="POST" class="mt-4">
-                            <div class="mb-3">
-                                <label for="contact" class="form-label">Update Contact Number</label>
-                                <input type="text" class="form-control" id="contact" name="contact" value="<?php echo $contact; ?>" pattern="[0-9]{10}" title="Please enter a valid contact number." required>
+                    <!-- Bootstrap Modal -->
+                    <div class="modal fade" id="updateContactModal" tabindex="-1" aria-labelledby="updateContactModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="updateContactModalLabel">Update Contact Number</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <!-- Update Contact Form -->
+                                    <form method="POST">
+                                        <div class="mb-3">
+                                            <label for="contact" class="form-label">New Contact Number</label>
+                                            <input type="text" class="form-control" id="contact" name="contact" value="<?php echo $contact; ?>" pattern="[0-9]{10}" title="Please enter a valid contact number." required>
+                                        </div>
+                                        <button type="submit" name="update_contact" class="btn btn-primary w-100">Update Contact</button>
+                                    </form>
+                                </div>
                             </div>
-                            <button type="submit" name="update_contact" class="btn btn-primary w-100">Update Contact</button>
-                        </form>
-
-                        <!-- Delete Account Button -->
-                        <!-- <form method="POST" class="mt-4" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
-                            <button type="submit" name="delete_account" class="btn btn-danger w-100">Delete Account</button>
-                        </form> -->
+                        </div>
                     </div>
                 </div>
             </div>
