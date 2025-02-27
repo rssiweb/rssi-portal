@@ -58,7 +58,6 @@ function fetchStudyMaterials($courseid, $con)
 $data = [];
 
 // Determine the associate number to use for the query
-$user_check = 'ELKO22072';
 $associateNumber = $user_check;
 
 // Define the query template
