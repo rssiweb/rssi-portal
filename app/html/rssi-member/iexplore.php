@@ -2,6 +2,8 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
+include("../../util/email.php");
+include("../../util/drive.php");
 
 
 if (!isLoggedIn("aid")) {
@@ -123,6 +125,96 @@ if ($result) {
     }
 }
 ?>
+<?php
+// File: submit_external_score.php
+
+// Check if the form is submitted via POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Validate required fields
+    if (
+        !isset($_POST['course_id']) ||
+        !isset($_POST['completion_date']) ||
+        !isset($_POST['score']) ||
+        !isset($_FILES['supporting_file'])
+    ) {
+        die("Error: All fields are required.");
+    }
+
+    // Get form data
+    $courseId = $_POST['course_id'];
+    $completionDate = $_POST['completion_date'];
+    $score = $_POST['score'];
+    $supportingFile = $_FILES['supporting_file'];
+
+    // send $file to google =======> google (rssi.in) // robotic service account credential.json
+    $doclink = null;
+    if (!empty($supportingFile['name'])) {
+        $filename = "doc_" . $courseId . "_" . $user_check . "_" . uniqid();
+        $parent = '1gKsezcOdVg08jdUvwd1g8crd8FQHTt6X';
+        $doclink = uploadeToDrive($supportingFile, $parent, $filename);
+    }
+
+    // Validate score (must be between 0 and 100)
+    if ($score < 0 || $score > 100) {
+        die("Error: Score must be between 0 and 100.");
+    }
+
+    // Validate file upload
+    if ($supportingFile['error'] !== UPLOAD_ERR_OK) {
+        die("Error: File upload failed.");
+    }
+
+    // Insert data into the database
+    try {
+        // Prepare the SQL query
+        $query = "
+            INSERT INTO external_exam_scores (
+                course_id, 
+                associate_number, 
+                submission_time, 
+                completion_date, 
+                score, 
+                supporting_file
+            ) VALUES ($1, $2, $3, $4, $5, $6)
+        ";
+
+        // Prepare the statement
+        $stmt = pg_prepare($con, "insert_external_score", $query);
+        if (!$stmt) {
+            die("Error: Failed to prepare SQL statement.");
+        }
+
+        // Execute the statement
+        $result = pg_execute($con, "insert_external_score", [
+            $courseId,
+            $user_check, // Assuming $user_check contains the logged-in user's data
+            date('Y-m-d H:i:s'), // Current timestamp
+            $completionDate,
+            $score,
+            $doclink // Path to the uploaded file
+        ]);
+
+        // Check if the query was successful
+        if (!$result) {
+            echo "<script>alert('Error: Failed to insert data into the database.'); window.history.back();</script>";
+            exit;
+        }
+
+        // Success message
+        echo "<script>alert('Score updated successfully!'); 
+           if (window.history.replaceState) {
+                        // Update the URL without causing a page reload or resubmission
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                    window.location.reload(); // Trigger a page reload to reflect changes
+            </script>";
+        exit;
+    } catch (Exception $e) {
+        echo "<script>alert('Error: " . addslashes($e->getMessage()) . "'); window.history.back();</script>";
+        exit;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -166,12 +258,6 @@ if ($result) {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <!-- CSS Library Files -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
-    <!-- JavaScript Library Files -->
-    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
     <style>
         .tag {
             display: inline-block;
@@ -320,9 +406,17 @@ if ($result) {
                                 <?php if ($resultArr1 != null) : ?>
                                     <div class="accordion" id="courseAccordion">
                                         <?php foreach ($resultArr1 as $array) : ?>
+                                            <?php
+                                            // Generate unique IDs for accordion and modals
+                                            $courseId = $array['courseid'];
+                                            $accordionHeadingId = "heading-$courseId";
+                                            $accordionCollapseId = "collapse-$courseId";
+                                            $attemptHistoryModalId = "attemptHistoryModal-$courseId";
+                                            $externalScoreModalId = "externalScoreModal-$courseId";
+                                            ?>
                                             <div class="accordion-item">
-                                                <h2 class="accordion-header" id="heading-<?php echo $array['courseid']; ?>">
-                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?php echo $array['courseid']; ?>" aria-expanded="false" aria-controls="collapse-<?php echo $array['courseid']; ?>">
+                                                <h2 class="accordion-header" id="<?= $accordionHeadingId; ?>">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#<?= $accordionCollapseId; ?>" aria-expanded="false" aria-controls="<?= $accordionCollapseId; ?>">
                                                         <span><strong>Course ID:</strong> <?php echo $array['courseid']; ?> &nbsp; | &nbsp; <strong>Name:</strong> <?php echo $array['coursename']; ?></span>
                                                         <!-- <span class="tag-container">
                                                             <div class="tag <?php echo ($array['type'] === 'Internal') ? 'internal' : 'external'; ?>">
@@ -331,7 +425,7 @@ if ($result) {
                                                         </span> -->
                                                     </button>
                                                 </h2>
-                                                <div id="collapse-<?php echo $array['courseid']; ?>" class="accordion-collapse collapse" aria-labelledby="heading-<?php echo $array['courseid']; ?>" data-bs-parent="#courseAccordion">
+                                                <div id="<?= $accordionCollapseId; ?>" class="accordion-collapse collapse" aria-labelledby="<?= $accordionHeadingId; ?>" data-bs-parent="#courseAccordion">
                                                     <div class="accordion-body">
                                                         <div class="container mt-3">
                                                             <div class="card border-0 shadow-sm p-3">
@@ -414,8 +508,14 @@ if ($result) {
                                                                         <!-- Attempt History Button -->
                                                                         <div>
                                                                             <!-- Button to open modal -->
-                                                                            <a href="#" class="text-danger small" data-bs-toggle="modal" data-bs-target="#attemptHistoryModal-<?= $array['courseid']; ?>">Attempt History</a>
+                                                                            <a href="#" class="text-danger small" data-bs-toggle="modal" data-bs-target="#<?= $attemptHistoryModalId; ?>">Attempt History</a>
                                                                         </div>
+                                                                        <!-- External Score Update Button (Only for External Courses) -->
+                                                                        <?php if ($array['type'] === 'External') : ?>
+                                                                            <div>
+                                                                                <a href="#" class="text-primary small" data-bs-toggle="modal" data-bs-target="#<?= $externalScoreModalId; ?>">Update Score</a>
+                                                                            </div>
+                                                                        <?php endif; ?>
 
 
                                                                         <!-- Bootstrap Modal for Attempt History -->
@@ -471,8 +571,65 @@ if ($result) {
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-
                                                                     </div>
+                                                                    <!-- External Score Update Modal (Only for External Courses) -->
+                                                                    <?php if ($array['type'] === 'External') : ?>
+                                                                        <div class="modal fade" id="<?= $externalScoreModalId; ?>" tabindex="-1" aria-labelledby="<?= $externalScoreModalId; ?>Label" aria-hidden="true">
+                                                                            <div class="modal-dialog">
+                                                                                <div class="modal-content">
+                                                                                    <div class="modal-header">
+                                                                                        <h5 class="modal-title" id="<?= $externalScoreModalId; ?>Label">Update External Score for Course ID: <?= htmlspecialchars($array['courseid']); ?></h5>
+                                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                    </div>
+                                                                                    <div class="modal-body">
+                                                                                        <!-- External Score Update Form -->
+                                                                                        <form id="external_score_<?= $array['courseid'] ?>" action="#" method="POST" enctype="multipart/form-data">
+                                                                                            <input type="hidden" name="course_id" value="<?= $array['courseid']; ?>">
+                                                                                            <div class="mb-3">
+                                                                                                <label for="completion_date" class="form-label">Completion Date</label>
+                                                                                                <input type="date" class="form-control" id="completion_date" name="completion_date" required>
+                                                                                            </div>
+                                                                                            <div class="mb-3">
+                                                                                                <label for="score" class="form-label">Score (%)</label>
+                                                                                                <input type="number" class="form-control" id="score" name="score" min="0" max="100" required>
+                                                                                            </div>
+                                                                                            <div class="mb-3">
+                                                                                                <label for="supporting_file" class="form-label">Upload Supporting File</label>
+                                                                                                <input type="file" class="form-control" id="supporting_file" name="supporting_file" required>
+                                                                                            </div>
+                                                                                            <button type="submit" class="btn btn-primary">Submit</button>
+                                                                                        </form>
+                                                                                        <script>
+                                                                                            // Function to show loading modal
+                                                                                            function showLoadingModal() {
+                                                                                                $('#myModal').modal('show');
+                                                                                            }
+
+                                                                                            // Function to hide loading modal
+                                                                                            function hideLoadingModal() {
+                                                                                                $('#myModal').modal('hide');
+                                                                                            }
+
+                                                                                            // Add event listener to form submission
+                                                                                            document.getElementById('external_score_<?= $array['courseid'] ?>').addEventListener('submit', function(event) {
+                                                                                                // Show loading modal when form is submitted
+                                                                                                showLoadingModal();
+                                                                                            });
+
+                                                                                            // Optional: Close loading modal when the page is fully loaded
+                                                                                            window.addEventListener('load', function() {
+                                                                                                // Hide loading modal
+                                                                                                hideLoadingModal();
+                                                                                            });
+                                                                                        </script>
+                                                                                    </div>
+                                                                                    <div class="modal-footer">
+                                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    <?php endif; ?>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -529,6 +686,47 @@ if ($result) {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <!-- Add this script at the end of the HTML body -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p id="loadingMessage">Submission in progress.
+                            Please do not close or reload this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Create a new Bootstrap modal instance with backdrop: 'static' and keyboard: false options
+        const myModal = new bootstrap.Modal(document.getElementById("myModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        // Add event listener to intercept Escape key press
+        document.body.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                // Prevent default behavior of Escape key
+                event.preventDefault();
+            }
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('input, select, textarea').each(function() {
+                if ($(this).prop('required')) { // Check if the element has the required attribute
+                    $(this).closest('.mb-3').find('label').append(' <span style="color: red">*</span>');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
