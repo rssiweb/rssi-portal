@@ -198,13 +198,13 @@ if ($result) {
         }
 
         .tag.internal {
-            background-color: #796AD2;
+            background-color: #818ECE;
             /* Green for Internal */
             color: white;
         }
 
         .tag.internal::after {
-            border-left-color: #796AD2;
+            border-left-color: #818ECE;
         }
 
         .tag.external {
