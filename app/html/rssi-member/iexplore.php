@@ -199,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Success message
-        echo "<script>alert('Score updated successfully!'); 
+        echo "<script>alert('Request submitted successfully! The status will be updated within 24 hours after receiving the update request.'); 
            if (window.history.replaceState) {
                         // Update the URL without causing a page reload or resubmission
                         window.history.replaceState(null, null, window.location.href);
@@ -573,7 +573,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                                     </div>
                                                                                     <div class="modal-body">
-                                                                                        <p class="small text-muted">Completion status of External course will be updated after 24 hours from the time of completion.</p>
+                                                                                        <p class="small text-muted">Completion status of External course will be updated within 24 hours after receiving the update request.</p>
                                                                                         <!-- External Score Update Form -->
                                                                                         <form id="external_score_<?= $array['courseid'] ?>" action="#" method="POST" enctype="multipart/form-data">
                                                                                             <input type="hidden" name="course_id" value="<?= $array['courseid']; ?>">
