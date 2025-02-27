@@ -54,7 +54,76 @@ function fetchStudyMaterials($courseid, $con)
     return pg_fetch_all($result);
 }
 ?>
+<?php
+$data = [];
 
+// Determine the associate number to use for the query
+$user_check = 'ELKO22072';
+$associateNumber = $user_check;
+
+// Define the query template
+$query = "
+WITH LatestAttempts AS (
+    SELECT 
+        ws.associatenumber,
+        ws.courseid,
+        MAX(ws.timestamp) AS latest_timestamp
+    FROM 
+        wbt_status ws
+    JOIN 
+        wbt w ON ws.courseid = w.courseid
+    WHERE 
+        w.is_mandatory = TRUE
+    GROUP BY 
+        ws.associatenumber, ws.courseid
+)
+SELECT 
+    ws.associatenumber,
+    ws.timestamp AS completed_on,
+    w.courseid,
+    w.coursename,
+    ROUND(ws.f_score * 100, 2) AS score_percentage,
+    CASE 
+        WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 'Completed'
+        ELSE 'Incomplete'
+    END AS status,
+    CASE 
+        WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN 
+            TO_CHAR(ws.timestamp + (w.validity || ' years')::INTERVAL, 'YYYY-MM-DD HH24:MI:SS')
+        ELSE NULL
+    END AS valid_upto,
+    CASE 
+        WHEN ROUND(ws.f_score * 100, 2) >= w.passingmarks THEN
+            CASE 
+                WHEN ws.timestamp + (w.validity || ' years')::INTERVAL > NOW() THEN 'Active'
+                ELSE 'Expired'
+            END
+        ELSE NULL
+    END AS additional_status
+FROM 
+    wbt_status ws
+JOIN 
+    LatestAttempts la ON ws.associatenumber = la.associatenumber 
+                      AND ws.courseid = la.courseid 
+                      AND ws.timestamp = la.latest_timestamp
+JOIN 
+    wbt w ON ws.courseid = w.courseid
+WHERE 
+    ws.associatenumber = $1"; // The WHERE clause will be dynamically adjusted based on role
+
+// Prepare the statement
+$stmt = pg_prepare($con, "fetch_data", $query);
+
+// Execute the query with the appropriate associate number
+$result = pg_execute($con, "fetch_data", [$associateNumber]);
+
+// Fetch the results if the query was successful
+if ($result) {
+    while ($row = pg_fetch_assoc($result)) {
+        $data[] = $row;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -104,6 +173,63 @@ function fetchStudyMaterials($courseid, $con)
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <style>
+        .tag {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 10px 0 0 10px;
+            position: relative;
+            margin-left: 10px;
+            /* Adds space between name and tag */
+        }
+
+        .tag::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -6px;
+            width: 0;
+            height: 0;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            border-left: 6px solid;
+            /* Arrow color will inherit from .tag */
+        }
+
+        .tag.internal {
+            background-color: #796AD2;
+            /* Green for Internal */
+            color: white;
+        }
+
+        .tag.internal::after {
+            border-left-color: #796AD2;
+        }
+
+        .tag.external {
+            background-color: #D77BB8;
+            /* Grey for External */
+            color: white;
+        }
+
+        .tag.external::after {
+            border-left-color: #D77BB8;
+        }
+
+        .accordion-button {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .tag-container {
+            /* margin-left: auto; */
+            /* Pushes tag to the right */
+        }
+    </style>
 </head>
 
 <body>
@@ -137,11 +263,6 @@ function fetchStudyMaterials($courseid, $con)
                         <div class="card-body">
                             <br>
                             <div class="container">
-                                <div class="row">
-                                    <div class="col" style="text-align: right;">
-                                        <a href="my_learning.php" target="_self">My Learning History</a>
-                                    </div>
-                                </div>
                                 <?php if ($role != 'Admin') { ?>
                                 <?php } ?>
                                 <?php
@@ -210,48 +331,180 @@ function fetchStudyMaterials($courseid, $con)
                                             <div class="accordion-item">
                                                 <h2 class="accordion-header" id="heading-<?php echo $array['courseid']; ?>">
                                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?php echo $array['courseid']; ?>" aria-expanded="false" aria-controls="collapse-<?php echo $array['courseid']; ?>">
-                                                        <strong>Course ID:</strong> <?php echo $array['courseid']; ?> &nbsp; | &nbsp; <strong>Name:</strong> <?php echo $array['coursename']; ?>
+                                                        <span><strong>Course ID:</strong> <?php echo $array['courseid']; ?> &nbsp; | &nbsp; <strong>Name:</strong> <?php echo $array['coursename']; ?></span>
+                                                        <span class="tag-container">
+                                                            <div class="tag <?php echo ($array['type'] === 'Internal') ? 'internal' : 'external'; ?>">
+                                                                <?php echo htmlspecialchars($array['type']); ?>
+                                                            </div>
+                                                        </span>
                                                     </button>
                                                 </h2>
                                                 <div id="collapse-<?php echo $array['courseid']; ?>" class="accordion-collapse collapse" aria-labelledby="heading-<?php echo $array['courseid']; ?>" data-bs-parent="#courseAccordion">
                                                     <div class="accordion-body">
-                                                        <!-- Course Information -->
-                                                        <div class="mb-4">
-                                                            <h6 class="fw-bold mb-3">Course Details</h6>
-                                                            <strong>Course ID:</strong> <?php echo $array['courseid']; ?> &nbsp; | &nbsp; <strong>Name:</strong> <?php echo $array['coursename']; ?>
-                                                            <div class="row">
-                                                                <div class="col-md-3"><strong>Language:</strong> <?php echo $array['language']; ?></div>
-                                                                <div class="col-md-3"><strong>Type:</strong> <?php echo $array['type']; ?></div>
-                                                                <div class="col-md-3"><strong>Mastery Score:</strong> <?php echo $array['passingmarks']; ?>%</div>
-                                                                <div class="col-md-3"><strong>Validity:</strong> <?php echo $array['validity']; ?> years</div>
+                                                        <div class="container mt-3">
+                                                            <div class="card border-0 shadow-sm p-3">
+                                                                <div class="row align-items-center">
+                                                                    <!-- Course Title -->
+                                                                    <div class="col-md-12 fw-bold fs-5 mb-2">
+                                                                        <?= htmlspecialchars($array['coursename']) ?>
+                                                                    </div>
+
+                                                                    <!-- Course Details -->
+                                                                    <div class="col-md-2 text-center">
+                                                                        <span class="d-block"><i class="bi bi-globe"></i> Language</span>
+                                                                        <strong><?= htmlspecialchars($array['language']) ?></strong>
+                                                                    </div>
+                                                                    <div class="col-md-2 text-center">
+                                                                        <span class="d-block"><i class="bi bi-mortarboard"></i> Mastery Score</span>
+                                                                        <strong><?= htmlspecialchars($array['passingmarks']) ?></strong>
+                                                                    </div>
+
+                                                                    <!-- Fetch User Attempt Data -->
+                                                                    <?php
+                                                                    $courseId = $array['courseid'];
+                                                                    $userAttempt = null;
+
+                                                                    foreach ($data as $row) {
+                                                                        if ($row['courseid'] === $courseId) {
+                                                                            $userAttempt = $row;
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    ?>
+
+                                                                    <!-- Score -->
+                                                                    <div class="col-md-2 text-center">
+                                                                        <span class="d-block"><i class="bi bi-trophy"></i> Score</span>
+                                                                        <?php if ($userAttempt): ?>
+                                                                            <strong class="<?= $userAttempt['status'] === 'Completed' ? 'text-success' : 'text-danger' ?>">
+                                                                                <?= htmlspecialchars($userAttempt['score_percentage']) ?>%
+                                                                            </strong>
+                                                                        <?php else: ?>
+                                                                            <strong class="text-danger">Not Attempted</strong>
+                                                                        <?php endif; ?>
+                                                                    </div>
+
+                                                                    <!-- Status -->
+                                                                    <div class="col-md-2 text-center">
+                                                                        <span class="d-block"><i class="bi bi-circle"></i> Status</span>
+                                                                        <?php if ($userAttempt): ?>
+                                                                            <?php if ($userAttempt['status'] === 'Incomplete'): ?>
+                                                                                <strong class="text-warning">Incomplete</strong>
+                                                                            <?php elseif ($userAttempt['additional_status'] === 'Active'): ?>
+                                                                                <strong class="text-success">Active</strong>
+                                                                            <?php elseif ($userAttempt['additional_status'] === 'Expired'): ?>
+                                                                                <strong class="text-danger">Expired</strong>
+                                                                            <?php endif; ?>
+                                                                        <?php else: ?>
+                                                                            <strong class="text-warning">Incomplete</strong>
+                                                                        <?php endif; ?>
+                                                                    </div>
+
+                                                                    <!-- Validity Date (Only if completed) -->
+                                                                    <div class="col-md-2 text-center">
+                                                                        <?php if ($userAttempt && $userAttempt['status'] === 'Completed'): ?>
+                                                                            <span class="d-block"><i class="bi bi-calendar"></i> Valid Until</span>
+                                                                            <strong><?= date("d/m/Y", strtotime($userAttempt['valid_upto'])) ?></strong>
+                                                                        <?php endif; ?>
+                                                                    </div>
+
+                                                                    <!-- Action Buttons -->
+                                                                    <!-- <div class="col-md-2 text-center">
+                                                                        <a href="#" class="text-danger">View More</a>
+                                                                    </div> -->
+                                                                    <div class="col-md-2 text-center">
+                                                                        <a href="<?= htmlspecialchars($array['url']) ?>" class="btn btn-danger px-4">Launch</a>
+                                                                        <!-- Attempt History Button -->
+                                                                        <div>
+                                                                            <!-- Button to open modal -->
+                                                                            <a href="#" class="text-danger small" data-bs-toggle="modal" data-bs-target="#attemptHistoryModal-<?= $array['courseid']; ?>">Attempt History</a>
+                                                                        </div>
+
+
+                                                                        <!-- Bootstrap Modal for Attempt History -->
+                                                                        <div class="modal fade" id="attemptHistoryModal-<?= $array['courseid']; ?>" tabindex="-1" aria-labelledby="attemptHistoryModalLabel" aria-hidden="true">
+                                                                            <div class="modal-dialog modal-lg">
+                                                                                <div class="modal-content">
+                                                                                    <div class="modal-header">
+                                                                                        <h5 class="modal-title" id="attemptHistoryModalLabel">Last 10 Attempts for Course ID: <?= htmlspecialchars($array['courseid']) ?></h5>
+                                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                    </div>
+                                                                                    <div class="modal-body">
+                                                                                        <?php
+                                                                                        // Fetch last 10 attempts for the user and course
+                                                                                        $courseId = $array['courseid'];
+                                                                                        $attemptsQuery = "SELECT timestamp, ROUND(f_score * 100, 2) AS score_percentage FROM wbt_status 
+                                                                                        WHERE associatenumber = $1 AND courseid = $2 
+                                                                                        ORDER BY timestamp DESC 
+                                                                                        LIMIT 10";
+
+                                                                                        $attemptsStmt = pg_prepare($con, "fetch_attempts_$courseId", $attemptsQuery);
+                                                                                        $attemptsResult = pg_execute($con, "fetch_attempts_$courseId", [$user_check, $courseId]);
+
+                                                                                        if ($attemptsResult && pg_num_rows($attemptsResult) > 0) :
+                                                                                        ?>
+                                                                                            <table class="table table-bordered">
+                                                                                                <thead class="table-dark">
+                                                                                                    <tr>
+                                                                                                        <th>#</th>
+                                                                                                        <th>Date & Time</th>
+                                                                                                        <th>Score (%)</th>
+                                                                                                    </tr>
+                                                                                                </thead>
+                                                                                                <tbody>
+                                                                                                    <?php
+                                                                                                    $count = 1;
+                                                                                                    while ($attemptRow = pg_fetch_assoc($attemptsResult)) :
+                                                                                                    ?>
+                                                                                                        <tr>
+                                                                                                            <td><?= $count++; ?></td>
+                                                                                                            <td><?= date("d/m/Y H:i:s", strtotime($attemptRow['timestamp'])); ?></td>
+                                                                                                            <td><?= htmlspecialchars($attemptRow['score_percentage']) ?>%</td>
+                                                                                                        </tr>
+                                                                                                    <?php endwhile; ?>
+                                                                                                </tbody>
+                                                                                            </table>
+                                                                                        <?php else : ?>
+                                                                                            <p class="text-muted text-center">No attempt history available.</p>
+                                                                                        <?php endif; ?>
+                                                                                    </div>
+                                                                                    <div class="modal-footer">
+                                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
-
                                                         <!-- Study Materials -->
                                                         <div class="mb-4">
-                                                            <h6 class="fw-bold mb-3">📚 Study Materials</h6>
-                                                            <?php
-                                                            // Fetch study materials for the current course
-                                                            $studyMaterials = fetchStudyMaterials($array['courseid'], $con);
-                                                            if (!empty($studyMaterials)) : ?>
-                                                                <ul class="list-unstyled">
-                                                                    <?php foreach ($studyMaterials as $material) : ?>
-                                                                        <li class="mb-2">
-                                                                            <a href="<?php echo $material['link']; ?>" target="_blank" class="text-decoration-none"><?php echo $material['material_name']; ?></a>
-                                                                        </li>
-                                                                    <?php endforeach; ?>
-                                                                </ul>
-                                                            <?php else : ?>
-                                                                <p class="text-muted">No study materials available.</p>
-                                                            <?php endif; ?>
-                                                        </div>
 
-                                                        <!-- Assessment Link -->
-                                                        <div>
-                                                            <h6 class="fw-bold mb-3">📝 Assessment</h6>
-                                                            <a href="<?php echo $array['url']; ?>" target="_blank" class="btn btn-primary btn-sm">Launch Assessment</a>
+                                                            <div class="card shadow-sm">
+                                                                <div class="card-body">
+                                                                    <p class="fw-bold mb-3">Study Materials</p>
+                                                                    <?php
+                                                                    // Fetch study materials for the current course
+                                                                    $studyMaterials = fetchStudyMaterials($array['courseid'], $con);
+                                                                    if (!empty($studyMaterials)) : ?>
+                                                                        <ul class="list-group list-group-flush">
+                                                                            <?php foreach ($studyMaterials as $material) : ?>
+                                                                                <li class="list-group-item">
+                                                                                    <a href="<?php echo $material['link']; ?>" target="_blank" class="text-decoration-none">
+                                                                                        <?php echo $material['material_name']; ?>
+                                                                                    </a>
+                                                                                </li>
+                                                                            <?php endforeach; ?>
+                                                                        </ul>
+                                                                    <?php else : ?>
+                                                                        <p class="text-muted mb-0">No study materials available.</p>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    </div> <!-- End accordion-body -->
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
@@ -261,7 +514,6 @@ function fetchStudyMaterials($courseid, $con)
                                 <?php else : ?>
                                     <div class="text-center text-muted py-4">No record found for <?php echo $courseid1 . ' ' . $language1 . ' ' . $type1; ?></div>
                                 <?php endif; ?>
-
                             </div>
                         </div>
                     </div>
