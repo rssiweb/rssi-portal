@@ -153,7 +153,7 @@ if (!$result) {
                     <table class="table" id="table-id">
                         <thead>
                             <tr>
-                                <th>Attempt ID</th>
+                                <th>Session ID</th>
                                 <th>Exam ID</th>
                                 <th>Exam Name</th>
                                 <th>Date Taken</th>
@@ -165,7 +165,7 @@ if (!$result) {
                             <?php if (pg_num_rows($result) > 0): ?>
                                 <?php while ($row = pg_fetch_assoc($result)): ?>
                                     <tr>
-                                        <td><?= $row['attempt_id'] ?>/<?= $row['session_id'] ?></td>
+                                        <td><?= $row['session_id'] ?></td>
                                         <td><?= $row['exam_id'] ?></td>
                                         <td><?= $row['exam_name'] ?></td>
                                         <td><?= (new DateTime($row['exam_date']))->format('d/m/Y h:i A') ?></td>

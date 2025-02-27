@@ -253,7 +253,7 @@ if ($session_id) {
                                         <div class="mb-4">
                                             <h5 class="text-info">📝 Exam Attempt Details</h5>
                                             <ul class="list-group list-group-flush">
-                                                <li class="list-group-item"><strong>Attempt ID:</strong> <?= $exam_details['user_exam_id'] ?>/<?= $exam_details['session_id'] ?></li>
+                                                <li class="list-group-item"><strong>Session ID:</strong> <?= $exam_details['session_id'] ?></li>
                                                 <li class="list-group-item"><strong>User Name:</strong> <?= $exam_details['user_name'] ?> (ID: <?= $exam_details['user_id'] ?>)</li>
                                                 <li class="list-group-item"><strong>Exam Name:</strong> <?= $exam_details['exam_name'] ?></li>
                                                 <li class="list-group-item"><strong>Exam Date:</strong> <?= date("d-m-Y H:i:s", strtotime($exam_details['exam_date'])) ?></li>
