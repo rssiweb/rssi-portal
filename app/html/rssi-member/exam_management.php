@@ -14,7 +14,7 @@ validation();
 
 // Fetch exams with related categories
 $query = "
-    SELECT te.id AS exam_id, te.name AS exam_name, te.total_questions, te.total_duration, te.is_active, te.created_at, te.language, te.show_answer, te.is_restricted, te.is_paid,
+    SELECT te.id AS exam_id, te.name AS exam_name, te.total_questions, te.total_duration, te.is_active, te.created_at, te.language, te.show_answer, te.is_restricted, te.is_paid, te.course_id,
            STRING_AGG(tc.name, ', ') AS categories, STRING_AGG(tc.id::text, ', ') AS category_ids -- Fetch category IDs as a comma-separated string
     FROM test_exams te
     LEFT JOIN test_exam_categories tec ON te.id = tec.exam_id
@@ -63,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
     // Sanitize and validate input data
     $id = isset($_POST['id']) ? intval($_POST['id']) : null;
     $name = pg_escape_string($con, $_POST['name']);
+    $courseId = pg_escape_string($con, $_POST['courseId']);
     $total_questions = intval($_POST['total_questions']);
     $total_duration = intval($_POST['total_duration']);
     $categories = $_POST['categories']; // Array of category IDs
@@ -89,7 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                 language = $5, 
                 show_answer = $6, 
                 is_restricted = $7, 
-                is_paid = $8, 
+                is_paid = $8,
+                course_id = $10,
                 created_at = CURRENT_TIMESTAMP
             WHERE id = $9
         ";
@@ -103,7 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
             $show_answer,
             $is_restricted,
             $is_paid,
-            $id
+            $id,
+            $courseId
         ]);
 
         if (!$updateExamResult) {
@@ -125,9 +128,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                 show_answer, 
                 is_restricted, 
                 is_paid, 
-                created_at
+                created_at,
+                course_id
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP,$9)
             RETURNING id
         ";
 
@@ -139,7 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
             $languageString, // Store multi-select languages as a string
             $show_answer,
             $is_restricted,
-            $is_paid
+            $is_paid,
+            $courseId
         ]);
 
         if (!$insertExamResult) {
@@ -250,15 +255,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
+                                                <th>Course ID</th>
                                                 <th>Name</th>
                                                 <th>Total Questions</th>
                                                 <th>Categories</th>
                                                 <th>Total Duration (min)</th>
                                                 <th>Status</th>
                                                 <th>language</th>
-                                                <th>show_answer</th>
-                                                <th>is_restricted</th>
-                                                <th>is_paid</th>
+                                                <th>Show Ans.</th>
+                                                <th>Res.</th>
+                                                <th>Paid</th>
                                                 <th>Created At</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -267,6 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                             <?php while ($row = pg_fetch_assoc($result)): ?>
                                                 <tr>
                                                     <td><?= $row['exam_id'] ?></td>
+                                                    <td><?= $row['course_id'] ?></td>
                                                     <td><?= $row['exam_name'] ?></td>
                                                     <td><?= $row['total_questions'] ?></td>
                                                     <td><?= $row['categories'] ?></td>
@@ -281,6 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                         <button class="btn btn-warning btn-sm me-2 edit-exam"
                                                             data-id="<?= $row['exam_id'] ?>"
                                                             data-name="<?= htmlspecialchars($row['exam_name']) ?>"
+                                                            data-course_id="<?= $row['course_id'] ?>"
                                                             data-total-questions="<?= $row['total_questions'] ?>"
                                                             data-total-duration="<?= $row['total_duration'] ?>"
                                                             data-categories="<?= htmlspecialchars($row['category_ids']) ?>"
@@ -321,6 +329,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                 <div class="mb-3">
                                                     <label for="examName" class="form-label">Exam Name</label>
                                                     <input type="text" class="form-control" id="examName" name="name" required>
+                                                </div>
+                                                <!-- Checkbox for WBT -->
+                                                <div class="mb-3 form-check">
+                                                    <input type="checkbox" class="form-check-input" id="isWBT">
+                                                    <label class="form-check-label" for="isWBT">Is it a WBT?</label>
+                                                </div>
+
+                                                <!-- Course ID (initially disabled and not required) -->
+                                                <div class="mb-3">
+                                                    <label for="courseId" class="form-label">Course ID</label>
+                                                    <input type="text" class="form-control" id="courseId" name="courseId" disabled>
                                                 </div>
 
                                                 <!-- Total Questions -->
@@ -449,6 +468,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                 button.addEventListener('click', function() {
                     const examId = this.dataset.id;
                     const examName = this.dataset.name;
+                    const courseId = this.dataset.course_id;
                     const totalQuestions = this.dataset.totalQuestions;
                     const totalDuration = this.dataset.totalDuration;
                     const status = this.dataset.status;
@@ -462,6 +482,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
 
                     document.getElementById('examId').value = examId;
                     document.getElementById('examName').value = examName;
+                    document.getElementById('courseId').value = courseId;
                     document.getElementById('totalQuestions').value = totalQuestions;
                     document.getElementById('totalDuration').value = totalDuration;
                     document.getElementById('status').value = status === 'true' ? 'true' : 'false';
@@ -487,6 +508,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                     examModal.show();
                 });
             });
+        });
+    </script>
+    <script>
+        document.getElementById('isWBT').addEventListener('change', function() {
+            const courseIdField = document.getElementById('courseId');
+            const isWBTChecked = this.checked;
+
+            // Enable/disable the Course ID field
+            courseIdField.disabled = !isWBTChecked;
+
+            // Make the Course ID field required if the checkbox is checked
+            courseIdField.required = isWBTChecked;
         });
     </script>
 

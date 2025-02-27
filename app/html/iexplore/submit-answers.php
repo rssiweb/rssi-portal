@@ -83,5 +83,60 @@ $query = "
 ";
 pg_query_params($con, $query, array($user_exam_id));
 
+// Fetch the user's email and user_type from the test_users table
+$query = "
+    SELECT email, user_type
+    FROM test_users
+    WHERE id = $1
+";
+$result = pg_query_params($con, $query, array($user_id));
+$user_data = pg_fetch_assoc($result);
+
+if ($user_data) {
+    $user_email = $user_data['email'];
+    $user_type = $user_data['user_type'];
+
+    // Fetch the exam name and course_id from the test_exams table
+    $query = "
+        SELECT name, total_questions, course_id
+        FROM test_exams
+        WHERE id = $1
+    ";
+    $result = pg_query_params($con, $query, array($exam_id));
+    $exam_data = pg_fetch_assoc($result);
+
+    if ($exam_data) {
+        $exam_name = $exam_data['name'];
+        $total_questions = $exam_data['total_questions'];
+        $course_id = $exam_data['course_id']; // Fetch the course_id from the exam data
+
+        // Check if the exam has a course_id and the user_type is "rssi-member"
+        if (!empty($course_id) && $user_type === 'rssi-member') {
+            // Fetch the associatenumber from rssimyaccount_members using the email
+            $query = "
+                SELECT associatenumber
+                FROM rssimyaccount_members
+                WHERE email = $1
+            ";
+            $result = pg_query_params($con, $query, array($user_email));
+            $member_data = pg_fetch_assoc($result);
+
+            if ($member_data) {
+                $associatenumber = $member_data['associatenumber'];
+
+                // Calculate the f_score (score divided by total questions)
+                $f_score = $total_questions > 0 ? ($score / $total_questions) : 0;
+
+                // Insert data into the wbt_status table using course_id instead of exam_id
+                $insert_query = "
+                    INSERT INTO wbt_status (associatenumber, courseid, timestamp, f_score, email)
+                    VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)
+                ";
+                pg_query_params($con, $insert_query, array($associatenumber, $course_id, $f_score, $user_email));
+            }
+        }
+    }
+}
+
 // Return the result as JSON
 echo json_encode(['score' => $score]);
