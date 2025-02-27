@@ -218,6 +218,7 @@ function fetchStudyMaterials($courseid, $con)
                                                         <!-- Course Information -->
                                                         <div class="mb-4">
                                                             <h6 class="fw-bold mb-3">Course Details</h6>
+                                                            <strong>Course ID:</strong> <?php echo $array['courseid']; ?> &nbsp; | &nbsp; <strong>Name:</strong> <?php echo $array['coursename']; ?>
                                                             <div class="row">
                                                                 <div class="col-md-3"><strong>Language:</strong> <?php echo $array['language']; ?></div>
                                                                 <div class="col-md-3"><strong>Type:</strong> <?php echo $array['type']; ?></div>

@@ -15,27 +15,72 @@ validation();
 ?>
 <?php
 if (@$_POST['form-type'] == "wbt") {
-    $courseid = $_POST['courseid'];
-    $coursename = $_POST['coursename'];
-    $language = $_POST['language'];
-    $passingmarks = $_POST['passingmarks'];
-    $url = $_POST['url'];
-    $validity = $_POST['validity'];
-    $issuedby = $_POST['issuedby'];
-    $type = $_POST['type'];
-    $now = date('Y-m-d H:i:s');
-    $updateQuery = "UPDATE wbt 
-                                    SET date = '$now', 
-                                        coursename = '$coursename', 
-                                        language = '$language', 
-                                        passingmarks = '$passingmarks', 
-                                        url = '$url', 
-                                        issuedby = '$issuedby', 
-                                        validity = '$validity',
-                                        type = '$type' 
-                                    WHERE courseid = '$courseid'";
-    $result = pg_query($con, $updateQuery);
-    $cmdtuples = pg_affected_rows($result);
+
+    @$courseid = $_POST['courseid'];
+    @$coursename = $_POST['coursename'];
+    @$language = $_POST['language'];
+    @$passingmarks = $_POST['passingmarks'];
+    @$url = $_POST['url'];
+    @$validity = $_POST['validity'];
+    @$issuedby = $_POST['issuedby'];
+    @$type = $_POST['type'];
+    @$material_names = $_POST['material_name']; // Array of study material names
+    @$material_links = $_POST['material_link']; // Array of study material links
+    @$now = date('Y-m-d H:i:s');
+
+    if ($courseid != "") {
+        // Update course in the wbt table
+        $updateQuery = "UPDATE wbt 
+                        SET date = '$now', 
+                            coursename = '$coursename', 
+                            language = '$language', 
+                            passingmarks = '$passingmarks', 
+                            url = '$url', 
+                            issuedby = '$issuedby', 
+                            validity = '$validity',
+                            type = '$type' 
+                        WHERE courseid = '$courseid'";
+        $result = pg_query($con, $updateQuery);
+        $cmdtuples = pg_affected_rows($result);
+
+        if ($cmdtuples > 0) {
+            // Course updated successfully, now update study materials
+            if (!empty($material_names) && !empty($material_links)) {
+                // Delete existing study materials for the course
+                $deleteQuery = "DELETE FROM wbt_study_materials WHERE courseid = '$courseid'";
+                pg_query($con, $deleteQuery);
+
+                // Insert new study materials into wbt_study_materials table
+                foreach ($material_names as $index => $material_name) {
+                    $material_link = $material_links[$index];
+
+                    // Insert study material into wbt_study_materials table
+                    $study_material_query = "INSERT INTO wbt_study_materials (courseid, material_name, link) 
+                                             VALUES ('$courseid', '$material_name', '$material_link')";
+                    $study_material_result = pg_query($con, $study_material_query);
+
+                    if (!$study_material_result) {
+                        // Log the error if study material insertion fails
+                        error_log("Failed to insert study material: " . pg_last_error($con));
+                    }
+                }
+            }
+
+            // Redirect with success message
+            echo "<script>
+                    alert('Course and study materials have been updated successfully!');
+                    window.location.href = 'iexplore.php';
+                  </script>";
+            exit;
+        } else {
+            // Redirect with error message if course update fails
+            echo "<script>
+                    alert('Error updating Course! Unfortunately, there was an error updating Course. Please try again later or contact support for assistance.');
+                    window.location.href = 'iexplore.php';
+                  </script>";
+            exit;
+        }
+    }
 }
 ?>
 

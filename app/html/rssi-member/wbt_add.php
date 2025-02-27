@@ -24,11 +24,49 @@ if (@$_POST['form-type'] == "wbt") {
     @$validity = $_POST['validity'];
     @$issuedby = $_POST['issuedby'];
     @$type = $_POST['type'];
+    @$material_names = $_POST['material_name']; // Array of study material names
+    @$material_links = $_POST['material_link']; // Array of study material links
     @$now = date('Y-m-d H:i:s');
+
     if ($courseid != "") {
-        $wbt = "INSERT INTO wbt (date, courseid, coursename, language, passingmarks, url, issuedby,validity,type) VALUES ('$now','$courseid','$coursename','$language','$passingmarks','$url','$issuedby','$validity','$type')";
+        // Insert course into the wbt table
+        $wbt = "INSERT INTO wbt (date, courseid, coursename, language, passingmarks, url, issuedby, validity, type) 
+                VALUES ('$now', '$courseid', '$coursename', '$language', '$passingmarks', '$url', '$issuedby', '$validity', '$type')";
         $result = pg_query($con, $wbt);
         $cmdtuples = pg_affected_rows($result);
+
+        if ($cmdtuples > 0) {
+            // Course inserted successfully, now insert study materials
+            if (!empty($material_names) && !empty($material_links)) {
+                foreach ($material_names as $index => $material_name) {
+                    $material_link = $material_links[$index];
+
+                    // Insert study material into wbt_study_materials table
+                    $study_material_query = "INSERT INTO wbt_study_materials (courseid, material_name, link) 
+                                             VALUES ('$courseid', '$material_name', '$material_link')";
+                    $study_material_result = pg_query($con, $study_material_query);
+
+                    if (!$study_material_result) {
+                        // Log the error if study material insertion fails
+                        error_log("Failed to insert study material: " . pg_last_error($con));
+                    }
+                }
+            }
+
+            // Redirect with success message
+            echo "<script>
+                    alert('Course and study materials have been added successfully!');
+                    window.location.href = 'iexplore.php';
+                  </script>";
+            exit;
+        } else {
+            // Redirect with error message if course insertion fails
+            echo "<script>
+                    alert('Error adding Course! Unfortunately, there was an error adding Course. Please try again later or contact support for assistance.');
+                    window.location.href = 'iexplore.php';
+                  </script>";
+            exit;
+        }
     }
 }
 ?>
