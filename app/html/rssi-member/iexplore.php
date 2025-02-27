@@ -343,7 +343,7 @@ $resultArr1 = pg_fetch_all($result1);
                                         <td><?php echo $array['validity']; ?></td>
                                         <td>
                                             <div class="col">
-                                            <a href="<?php echo $array['url'] . ($array['type'] === 'Internal' ? $associatenumber : ''); ?>" target="_blank" title="<?php echo $array['coursename'] . '-' . $array['language']; ?>">Launch</a>
+                                            <a href="<?php echo $array['url'] ?>" target="_blank" title="<?php echo $array['coursename'] . '-' . $array['language']; ?>">Launch</a>
                                             </div>
                                         </td>
                                     </tr>
