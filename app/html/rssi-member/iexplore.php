@@ -223,11 +223,6 @@ if ($result) {
             align-items: center;
             width: 100%;
         }
-
-        .tag-container {
-            /* margin-left: auto; */
-            /* Pushes tag to the right */
-        }
     </style>
 </head>
 
@@ -262,8 +257,6 @@ if ($result) {
                         <div class="card-body">
                             <br>
                             <div class="container">
-                                <?php if ($role != 'Admin') { ?>
-                                <?php } ?>
                                 <?php
                                 // Initialize filter variables
                                 $courseid1 = isset($_GET['courseid1']) ? trim($_GET['courseid1']) : '';
@@ -331,11 +324,11 @@ if ($result) {
                                                 <h2 class="accordion-header" id="heading-<?php echo $array['courseid']; ?>">
                                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?php echo $array['courseid']; ?>" aria-expanded="false" aria-controls="collapse-<?php echo $array['courseid']; ?>">
                                                         <span><strong>Course ID:</strong> <?php echo $array['courseid']; ?> &nbsp; | &nbsp; <strong>Name:</strong> <?php echo $array['coursename']; ?></span>
-                                                        <span class="tag-container">
+                                                        <!-- <span class="tag-container">
                                                             <div class="tag <?php echo ($array['type'] === 'Internal') ? 'internal' : 'external'; ?>">
                                                                 <?php echo htmlspecialchars($array['type']); ?>
                                                             </div>
-                                                        </span>
+                                                        </span> -->
                                                     </button>
                                                 </h2>
                                                 <div id="collapse-<?php echo $array['courseid']; ?>" class="accordion-collapse collapse" aria-labelledby="heading-<?php echo $array['courseid']; ?>" data-bs-parent="#courseAccordion">
@@ -346,6 +339,11 @@ if ($result) {
                                                                     <!-- Course Title -->
                                                                     <div class="col-md-12 fw-bold fs-5 mb-2">
                                                                         <?= htmlspecialchars($array['coursename']) ?>
+                                                                        <span class="tag-container">
+                                                                            <div class="tag <?php echo ($array['type'] === 'Internal') ? 'internal' : 'external'; ?>">
+                                                                                <?php echo htmlspecialchars($array['type']); ?>
+                                                                            </div>
+                                                                        </span>
                                                                     </div>
 
                                                                     <!-- Course Details -->
@@ -478,6 +476,7 @@ if ($result) {
                                                                 </div>
                                                             </div>
                                                         </div>
+
                                                         <!-- Study Materials -->
                                                         <div class="mb-4">
 
