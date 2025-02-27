@@ -106,6 +106,13 @@ MissingCourses AS (
             lac.associatenumber IS NULL  
             OR lac.score < w.passingmarks  
         )
+        -- Exclude courses that are already expired
+        AND NOT EXISTS (
+            SELECT 1
+            FROM ExpiredCourses ec
+            WHERE ec.associatenumber = rm.associatenumber
+              AND ec.courseid = mc.courseid
+        )
 )
 ";
 
