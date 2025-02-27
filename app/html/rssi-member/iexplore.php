@@ -73,8 +73,6 @@ WITH LatestAttempts AS (
         wbt_status ws
     JOIN 
         wbt w ON ws.courseid = w.courseid
-    WHERE 
-        w.is_mandatory = TRUE
     GROUP BY 
         ws.associatenumber, ws.courseid
 )
@@ -510,13 +508,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                             <!-- Button to open modal -->
                                                                             <a href="#" class="text-danger small" data-bs-toggle="modal" data-bs-target="#<?= $attemptHistoryModalId; ?>">Attempt History</a>
                                                                         </div>
-                                                                        <!-- External Score Update Button (Only for External Courses) -->
-                                                                        <?php if ($array['type'] === 'External') : ?>
-                                                                            <div>
-                                                                                <a href="#" class="text-primary small" data-bs-toggle="modal" data-bs-target="#<?= $externalScoreModalId; ?>">Update Score</a>
-                                                                            </div>
-                                                                        <?php endif; ?>
-
 
                                                                         <!-- Bootstrap Modal for Attempt History -->
                                                                         <div class="modal fade" id="attemptHistoryModal-<?= $array['courseid']; ?>" tabindex="-1" aria-labelledby="attemptHistoryModalLabel" aria-hidden="true">
@@ -540,11 +531,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                                                                         if ($attemptsResult && pg_num_rows($attemptsResult) > 0) :
                                                                                         ?>
-                                                                                            <table class="table table-bordered">
-                                                                                                <thead class="table-dark">
+                                                                                            <table class="table">
+                                                                                                <thead>
                                                                                                     <tr>
-                                                                                                        <th>#</th>
-                                                                                                        <th>Date & Time</th>
+                                                                                                        <th>SL.</th>
+                                                                                                        <th>Attempt Date & Time (IST)</th>
                                                                                                         <th>Score (%)</th>
                                                                                                     </tr>
                                                                                                 </thead>
@@ -582,6 +573,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                                     </div>
                                                                                     <div class="modal-body">
+                                                                                        <p class="small text-muted">Completion status of External course will be updated after 24 hours from the time of completion.</p>
                                                                                         <!-- External Score Update Form -->
                                                                                         <form id="external_score_<?= $array['courseid'] ?>" action="#" method="POST" enctype="multipart/form-data">
                                                                                             <input type="hidden" name="course_id" value="<?= $array['courseid']; ?>">
@@ -631,6 +623,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                         </div>
                                                                     <?php endif; ?>
                                                                 </div>
+                                                                <!-- External Score Update Button (Only for External Courses) -->
+                                                                <?php if ($array['type'] === 'External') : ?>
+                                                                    <div class="text-muted small mt-3">
+                                                                        Score Not Updated?<br>
+                                                                        <a href="#" class="fw-bold text-danger text-decoration-none"
+                                                                            data-bs-toggle="modal" data-bs-target="#<?= $externalScoreModalId; ?>">
+                                                                            Update Score
+                                                                        </a>
+                                                                    </div>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </div>
 

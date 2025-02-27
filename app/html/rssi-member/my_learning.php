@@ -28,8 +28,6 @@ WITH LatestAttempts AS (
         wbt_status ws
     JOIN 
         wbt w ON ws.courseid = w.courseid
-    WHERE 
-        w.is_mandatory = TRUE
     GROUP BY 
         ws.associatenumber, ws.courseid
 )
