@@ -74,19 +74,18 @@ if (!empty($courseid_search)) {
             policyLink: 'https://www.rssi.in/disclaimer'
         });
     </script>
-    <!-- CSS Library Files -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <!-- JavaScript Library Files -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
 </head>
 
 <body>
     <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
     <main id="main" class="main">
-    <div class="pagetitle">
+        <div class="pagetitle">
             <h1>iExplore Manager</h1>
             <nav>
                 <ol class="breadcrumb">
@@ -119,24 +118,23 @@ if (!empty($courseid_search)) {
                                             <span>Database has been updated successfully for course id <?php echo @$courseid ?>.</span>
                                         </div>
                                     <?php } ?>
-                                    <!-- <div class="row">
-                                        <div class="col" style="text-align: right;">
-                                            <a href="iexplore_defaulters.php">iExplore Defaulters</a>
-                                        </div>
-                                    </div> -->
                                     <div class="container">
                                         <div class="row">
-                                            <div class="col">
-                                                <h3>Search Course</h3>
-                                                <form action="" method="GET">
-                                                    <div class="input-group mb-3">
-                                                        <input type="text" name="courseid_search" class="form-control" placeholder="Enter Course ID" value="<?php echo @$courseid_search ?>">
-                                                        <button type="submit" name="courseid_search_button" class="btn btn-primary">Search</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                            <div class="col">
+                                            <div class="col-6">
                                                 <h3>Modify Course</h3>
+                                                <!-- Course Selection Form -->
+                                                <form id="courseSearchForm" action="" method="GET" class="mb-5">
+                                                    <div class="mb-3">
+                                                        <select id="courseid_search" name="courseid_search" class="form-select" required>
+                                                            <option value="">Search for a Course</option>
+                                                        </select>
+                                                        <div class="form-text">Start typing the course name or any part of it. Matching results will appear as you type.</div>
+                                                    </div>
+                                                    <button type="submit" name="courseid_search_button" id="courseSearchButton" class="btn btn-primary">
+                                                        Get Details
+                                                    </button>
+                                                </form>
+
                                                 <form autocomplete="off" name="wbt" id="wbt" method="POST">
                                                     <input type="hidden" name="form-type" value="wbt">
                                                     <div class="mb-3">
@@ -232,6 +230,12 @@ if (!empty($courseid_search)) {
                                                     </div>
 
                                                     <div class="form-check mb-3">
+                                                        <input type="checkbox" class="form-check-input" id="mandatory_course" name="mandatory_course" value='1'
+                                                            <?php echo (@$row['is_mandatory'] == 't') ? 'checked' : ''; ?>>
+                                                        <label class="form-check-label" for="mandatory_course">Mark as Mandatory Course</label>
+                                                    </div>
+
+                                                    <div class="form-check mb-3">
                                                         <input type="checkbox" class="form-check-input" id="addNewCheckbox">
                                                         <label class="form-check-label" for="addNewCheckbox">Add New Course</label>
                                                     </div>
@@ -261,12 +265,12 @@ if (!empty($courseid_search)) {
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
     <script>
-    // JavaScript to handle dynamic addition and removal of study material fields
-    document.getElementById('add-material').addEventListener('click', function() {
-        const container = document.getElementById('study-materials-container');
-        const newItem = document.createElement('div');
-        newItem.classList.add('study-material-item', 'mb-2');
-        newItem.innerHTML = `
+        // JavaScript to handle dynamic addition and removal of study material fields
+        document.getElementById('add-material').addEventListener('click', function() {
+            const container = document.getElementById('study-materials-container');
+            const newItem = document.createElement('div');
+            newItem.classList.add('study-material-item', 'mb-2');
+            newItem.innerHTML = `
             <div class="row">
                 <div class="col">
                     <input type="text" name="material_name[]" class="form-control" placeholder="Material Name" required>
@@ -279,51 +283,83 @@ if (!empty($courseid_search)) {
                 </div>
             </div>
         `;
-        container.appendChild(newItem);
-    });
-
-    // Event delegation for remove buttons
-    document.getElementById('study-materials-container').addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-material')) {
-            e.target.closest('.study-material-item').remove();
-        }
-    });
-
-    // Handle form submission for Update and Add New buttons
-    const form = document.getElementById('wbt');
-    const submit2Button = document.getElementById('submit2');
-    const submit3Button = document.getElementById('submit3');
-    const addNewCheckbox = document.getElementById('addNewCheckbox');
-
-    if (submit2Button && submit3Button && addNewCheckbox) {
-        // Set initial button visibility
-        updateButtonVisibility();
-
-        // Add event listener to checkbox
-        addNewCheckbox.addEventListener('change', updateButtonVisibility);
-
-        // Handle form action based on button clicked
-        submit2Button.addEventListener('click', function() {
-            form.action = 'wbt_update.php';
+            container.appendChild(newItem);
         });
 
-        submit3Button.addEventListener('click', function() {
-            form.action = 'wbt_add.php';
+        // Event delegation for remove buttons
+        document.getElementById('study-materials-container').addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-material')) {
+                e.target.closest('.study-material-item').remove();
+            }
         });
-    }
 
-    function updateButtonVisibility() {
-        if (addNewCheckbox.checked) {
-            // If "Add New Course" is checked, show "Add New" button and hide "Update" button
-            submit2Button.style.display = 'none';
-            submit3Button.style.display = 'inline-block';
-        } else {
-            // If "Add New Course" is unchecked, show "Update" button and hide "Add New" button
-            submit2Button.style.display = 'inline-block';
-            submit3Button.style.display = 'none';
+        // Handle form submission for Update and Add New buttons
+        const form = document.getElementById('wbt');
+        const submit2Button = document.getElementById('submit2');
+        const submit3Button = document.getElementById('submit3');
+        const addNewCheckbox = document.getElementById('addNewCheckbox');
+
+        if (submit2Button && submit3Button && addNewCheckbox) {
+            // Set initial button visibility
+            updateButtonVisibility();
+
+            // Add event listener to checkbox
+            addNewCheckbox.addEventListener('change', updateButtonVisibility);
+
+            // Handle form action based on button clicked
+            submit2Button.addEventListener('click', function() {
+                form.action = 'wbt_update.php';
+            });
+
+            submit3Button.addEventListener('click', function() {
+                form.action = 'wbt_add.php';
+            });
         }
-    }
-</script>
+
+        function updateButtonVisibility() {
+            if (addNewCheckbox.checked) {
+                // If "Add New Course" is checked, show "Add New" button and hide "Update" button
+                submit2Button.style.display = 'none';
+                submit3Button.style.display = 'inline-block';
+            } else {
+                // If "Add New Course" is unchecked, show "Update" button and hide "Add New" button
+                submit2Button.style.display = 'inline-block';
+                submit3Button.style.display = 'none';
+            }
+        }
+    </script>
+    <!-- Initialize Select2 with AJAX -->
+    <script>
+        $(document).ready(function() {
+            $('#courseid_search').select2({
+                placeholder: "Enter Course Name",
+                allowClear: true,
+                ajax: {
+                    url: 'fetch_courses.php', // Backend script to fetch course data
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            searchTerm: params.term
+                        }; // Pass the search term
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                }
+            });
+        });
+    </script>
+    <!-- JavaScript to Handle Button Disable and Text Change -->
+    <script>
+        document.getElementById('courseSearchForm').addEventListener('submit', function() {
+            let searchButton = document.getElementById('courseSearchButton');
+            searchButton.innerHTML = 'Fetching Data...'; // Change button text
+            searchButton.disabled = true; // Disable button
+        });
+    </script>
 </body>
 
 </html>

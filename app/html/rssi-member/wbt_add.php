@@ -26,12 +26,13 @@ if (@$_POST['form-type'] == "wbt") {
     @$type = $_POST['type'];
     @$material_names = $_POST['material_name']; // Array of study material names
     @$material_links = $_POST['material_link']; // Array of study material links
+    @$mandatory_course = isset($_POST['mandatory_course']) && $_POST['mandatory_course'] == '1' ? 'true' : 'false';
     @$now = date('Y-m-d H:i:s');
 
     if ($courseid != "") {
         // Insert course into the wbt table
-        $wbt = "INSERT INTO wbt (date, courseid, coursename, language, passingmarks, url, issuedby, validity, type) 
-                VALUES ('$now', '$courseid', '$coursename', '$language', '$passingmarks', '$url', '$issuedby', '$validity', '$type')";
+        $wbt = "INSERT INTO wbt (date, courseid, coursename, language, passingmarks, url, issuedby, validity, type,is_mandatory) 
+                VALUES ('$now', '$courseid', '$coursename', '$language', '$passingmarks', '$url', '$issuedby', '$validity', '$type','$mandatory_course')";
         $result = pg_query($con, $wbt);
         $cmdtuples = pg_affected_rows($result);
 
@@ -56,14 +57,18 @@ if (@$_POST['form-type'] == "wbt") {
             // Redirect with success message
             echo "<script>
                     alert('Course and study materials have been added successfully!');
-                    window.location.href = 'iexplore.php';
+                    if (window.history.replaceState) {
+                        // Update the URL without causing a page reload or resubmission
+                        window.history.replaceState(null, null, window.location.href);
+                    }
+                   window.location.href = 'iexplore_admin.php';
                   </script>";
             exit;
         } else {
             // Redirect with error message if course insertion fails
             echo "<script>
                     alert('Error adding Course! Unfortunately, there was an error adding Course. Please try again later or contact support for assistance.');
-                    window.location.href = 'iexplore.php';
+                    window.history.back();
                   </script>";
             exit;
         }
