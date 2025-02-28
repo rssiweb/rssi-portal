@@ -316,18 +316,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <main id="main" class="main">
 
-        <div class="pagetitle">
+    <div class="pagetitle">
             <h1>iExplore</h1>
             <nav>
-                <div class="row">
-                    <div class="col" style="display: inline-block; width:50%;">
-                        <?php if ($role == 'Admin') { ?>
-                            Home / iExplore Management System
-                        <?php } else { ?>
-                            Home / iExplore Web-based training (WBT)
-                        <?php } ?>
-                    </div>
-                </div>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
+                    <li class="breadcrumb-item active">iExplore</li>
+                </ol>
             </nav>
         </div><!-- End Page Title -->
 

@@ -210,7 +210,6 @@ $result = pg_query($con, $query); // Assuming $con is your PostgreSQL connection
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
-                    <li class="breadcrumb-item"><a href="iexplore.php">iExplore</a></li>
                     <li class="breadcrumb-item active">iExplore Defaulters</li>
                 </ol>
             </nav>
@@ -225,6 +224,11 @@ $result = pg_query($con, $query); // Assuming $con is your PostgreSQL connection
 
                         <div class="card-body">
                             <br>
+                            <div class="row">
+                                        <div class="col" style="text-align: right;">
+                                            <a href="my_learning.php">iExplore Learning</a>
+                                        </div>
+                                    </div>
                             <div class="container my-4">
                                 <!-- <h3 class="mb-3">iExplore Defaulters</h3> -->
 

@@ -99,12 +99,12 @@ if (@$_POST['form-type'] == "wbt") {
 <?php if (@$cmdtuples == 0) { ?>
     <script>
         alert("Error adding Course! Unfortunately, there was an error adding Course. Please try again later or contact support for assistance.");
-        window.location.href = "iexplore.php";
+        window.location.href = "iexplore_admin.php";
     </script>
 <?php } else if (@$cmdtuples > 0) { ?>
     <script>
         alert("Course has been added successfully! Course has been added.");
-        window.location.href = "iexplore.php";
+        window.location.href = "iexplore_admin.php";
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
         }

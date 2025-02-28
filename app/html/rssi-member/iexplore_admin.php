@@ -56,7 +56,7 @@ if (!empty($courseid_search)) {
     </script>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>iExplore</title>
+    <title>iExplore Manager</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
     <!-- Favicons -->
@@ -85,20 +85,15 @@ if (!empty($courseid_search)) {
 <body>
     <?php include 'inactive_session_expire_check.php'; ?>
     <?php include 'header.php'; ?>
-
     <main id="main" class="main">
-        <div class="pagetitle">
-            <h1>iExplore</h1>
+    <div class="pagetitle">
+            <h1>iExplore Manager</h1>
             <nav>
-                <div class="row">
-                    <div class="col" style="display: inline-block; width:50%;">
-                        <?php if ($role == 'Admin') { ?>
-                            Home / iExplore Management System
-                        <?php } else { ?>
-                            Home / iExplore Web-based training (WBT)
-                        <?php } ?>
-                    </div>
-                </div>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
+                    <li class="breadcrumb-item active">iExplore Manager</li>
+                </ol>
             </nav>
         </div><!-- End Page Title -->
 
@@ -124,11 +119,11 @@ if (!empty($courseid_search)) {
                                             <span>Database has been updated successfully for course id <?php echo @$courseid ?>.</span>
                                         </div>
                                     <?php } ?>
-                                    <div class="row">
+                                    <!-- <div class="row">
                                         <div class="col" style="text-align: right;">
                                             <a href="iexplore_defaulters.php">iExplore Defaulters</a>
                                         </div>
-                                    </div>
+                                    </div> -->
                                     <div class="container">
                                         <div class="row">
                                             <div class="col">
@@ -186,13 +181,14 @@ if (!empty($courseid_search)) {
                                                         <select name="validity" class="form-select" required>
                                                             <option disabled selected>Select Validity</option>
                                                             <?php
-                                                            $validities = array("0.5", "1", "2", "3", "5", "Lifetime");
+                                                            $validities = array("0.5", "1", "2", "3", "5", "100");
                                                             foreach ($validities as $validity) {
                                                                 $selected = ($validity == @$row['validity']) ? "selected" : "";
                                                                 echo "<option $selected>$validity</option>";
                                                             }
                                                             ?>
                                                         </select>
+                                                        <div class="form-text">Choose the validity period in years. 0.5 represents 6 months.</div>
                                                     </div>
                                                     <input type="hidden" name="issuedby" class="form-control" value="<?php echo $fullname ?>" required readonly>
 

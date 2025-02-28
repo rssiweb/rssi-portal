@@ -214,6 +214,16 @@
               <span>Libary</span>
             </a>
           </li>
+          <li>
+            <a id="iexplore_admin" href="iexplore_admin.php">
+              <span>iExplore Manager</span>
+            </a>
+          </li>
+          <li>
+            <a id="iexplore_defaulters" href="iexplore_defaulters.php">
+              <span>iExplore Defaulters</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
       <li class="nav-item">
@@ -605,10 +615,6 @@
         id: 'learning',
         linkId: 'iexploreLink',
         url: 'iexplore.php'
-      }, {
-        id: 'learning',
-        linkId: 'iexploreLink',
-        url: 'iexplore_defaulters.php'
       },
       {
         id: 'learning',
@@ -624,6 +630,14 @@
         id: 'learning',
         linkId: 'libraryLink',
         url: 'library.php'
+      },{
+        id: 'learning',
+        linkId: 'iexplore_admin',
+        url: 'iexplore_admin.php'
+      },{
+        id: 'learning',
+        linkId: 'iexplore_defaulters',
+        url: 'iexplore_defaulters.php'
       },
       {
         id: 'learning',

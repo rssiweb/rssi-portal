@@ -139,7 +139,7 @@ if ($result) {
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
-                    <li class="breadcrumb-item"><a href="iexplore.php">iExplore</a></li>
+                    <li class="breadcrumb-item"><a href="iexplore_defaulters.php">iExplore Defaulters</a></li>
                     <li class="breadcrumb-item active">My Learning</li>
                 </ol>
             </nav>
@@ -193,7 +193,7 @@ if ($result) {
                                                 <?php foreach ($data as $row): ?>
                                                     <tr>
                                                         <td><?= htmlspecialchars($row['associatenumber']) ?></td>
-                                                        <td><?= htmlspecialchars($row['completed_on']) ?></td>
+                                                        <td><?= date('d/m/Y h:i A', strtotime($row['completed_on'])) ?></td>
                                                         <td><?= htmlspecialchars($row['courseid']) ?></td>
                                                         <td><?= htmlspecialchars($row['coursename']) ?></td>
                                                         <td><?= htmlspecialchars($row['score_percentage']) ?>%</td>
@@ -208,7 +208,7 @@ if ($result) {
                                                         </td>
                                                         <td>
                                                             <?php if ($row['status'] === 'Completed'): ?>
-                                                                <?= htmlspecialchars($row['valid_upto']) ?>
+                                                                <?= date('d/m/Y h:i A', strtotime($row['valid_upto'])) ?>
                                                             <?php endif; ?>
                                                         </td>
                                                     </tr>
