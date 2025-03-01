@@ -13,33 +13,68 @@ exit('
             text-align: center;
             padding: 50px;
             background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .container {
             background: white;
-            padding: 20px;
+            padding: 40px;
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            display: inline-block;
+            display: flex;
+            align-items: center;
+            max-width: 800px;
+            width: 100%;
+        }
+        .content {
+            flex: 1;
+            text-align: left;
         }
         h1 {
             color: #ff5733;
+            margin-bottom: 20px;
         }
         p {
             color: #333;
+            margin-bottom: 20px;
+        }
+        #countdown {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff5733;
+        }
+        .vector-image {
+            width: 200px;
+            margin-left: 40px;
         }
     </style>
     <script>
-        // Redirect to the home page after 5 seconds
-        setTimeout(function() {
-            window.location.href = "home.php";
-        }, 5000);
+        var timeLeft = 5; // Set countdown time in seconds
+
+        function updateTimer() {
+            document.getElementById("countdown").textContent = timeLeft;
+            if (timeLeft <= 0) {
+                window.location.href = "home.php"; // Redirect to home page
+            } else {
+                timeLeft--;
+                setTimeout(updateTimer, 1000);
+            }
+        }
+
+        window.onload = updateTimer; // Start countdown on page load
     </script>
 </head>
 <body>
     <div class="container">
-        <h1>🚧 Under Maintenance 🚧</h1>
-        <p>We are currently performing maintenance. Please check back soon.</p>
-        <p>You will be redirected to the homepage in a few seconds...</p>
+        <div class="content">
+            <h1>🚧 Under Maintenance 🚧</h1>
+            <p>It’s not you, it’s us! We’re working hard to improve your experience. Please check back soon.</p>
+            <p>Redirecting to homepage in <span id="countdown">5</span> seconds...</p>
+        </div>
+        <img src="../img/maintenance.jpg" alt="Maintenance" class="vector-image">
     </div>
 </body>
 </html>
