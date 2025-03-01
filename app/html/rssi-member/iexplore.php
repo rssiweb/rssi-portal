@@ -1,3 +1,4 @@
+<?php include 'error.php'; ?>
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 
