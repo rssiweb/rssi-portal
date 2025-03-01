@@ -265,16 +265,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div class="carousel-inner">
                             <div class="carousel-item active">
-                                <a href="#"
-                                    target="_blank"><img
-                                        src="../img/image.jpg"
-                                        class="d-block w-100" alt="Slide 1"></a>
+                                <img
+                                    src="../img/image.jpg"
+                                    class="d-block w-100" alt="Slide 1">
                             </div>
                             <div class="carousel-item">
-                                <a href="#"
-                                    target="_blank"><img
-                                        src="../img/81-of-Data-Breaches.jpg"
-                                        class="d-block w-100" alt="Slide 2"></a>
+                                <img
+                                    src="../img/81-of-Data-Breaches.jpg"
+                                    class="d-block w-100" alt="Slide 2">
                             </div>
                             <!-- <div class="carousel-item">
                                 <a href="https://www.mygov.in/task/drawing-competition-poshan-nutrition/?target=inapp&type=task&nid=353539"
