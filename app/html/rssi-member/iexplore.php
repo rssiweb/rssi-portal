@@ -1,4 +1,3 @@
-<?php include 'error.php'; ?>
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 
@@ -317,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <main id="main" class="main">
 
-    <div class="pagetitle">
+        <div class="pagetitle">
             <h1>iExplore</h1>
             <nav>
                 <ol class="breadcrumb">
