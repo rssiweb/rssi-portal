@@ -108,6 +108,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   exit;
 }
 ?>
+<?php
+if (!function_exists('makeClickableLinks')) {
+    function makeClickableLinks($text)
+    {
+        // Regular expression to identify URLs in the text
+        $text = preg_replace(
+            '~(https?://[^\s]+)~i', // Match URLs starting with http or https
+            '<a href="$1" target="_blank">$1</a>', // Replace with anchor tag
+            $text
+        );
+        return $text;
+    }
+}
+?>
 
 <!doctype html>
 <html lang="en">
@@ -274,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                   </div>
 
-                                  <p class="text-muted"><?= $event['event_description'] ?></p>
+                                  <p class="text-muted"><?= nl2br(makeClickableLinks($event['event_description'])); ?></p>
 
                                   <?php if (!empty($event['event_image_url'])): ?>
                                     <?php
