@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-<?php include 'banner.php'; ?>
+    <?php include 'banner.php'; ?>
     <main>
         <div class="container">
             <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
@@ -236,7 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
 
-    <!-- <div class="modal fade show" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-modal="true"
+    <div class="modal fade show" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-modal="true"
         role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content">
@@ -250,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 class="active"></button>
                             <button type="button" data-bs-target="#carouselExampleIndicators"
                                 data-bs-slide-to="1"></button>
-                            <button type="button" data-bs-target="#carouselExampleIndicators"
+                            <!-- <button type="button" data-bs-target="#carouselExampleIndicators"
                                 data-bs-slide-to="2"></button>
                             <button type="button" data-bs-target="#carouselExampleIndicators"
                                 data-bs-slide-to="3"></button>
@@ -261,22 +261,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <button type="button" data-bs-target="#carouselExampleIndicators"
                                 data-bs-slide-to="6"></button>
                             <button type="button" data-bs-target="#carouselExampleIndicators"
-                                data-bs-slide-to="7"></button>
+                                data-bs-slide-to="7"></button> -->
                         </div>
                         <div class="carousel-inner">
                             <div class="carousel-item active">
-                                <a href="https://www.mygov.in/campaigns/poshan-abhiyaan-2024/?target=webview&type=campaign&nid=0"
+                                <a href="#"
                                     target="_blank"><img
-                                        src="https://static.mygov.in/static/s3fs-public/styles/home-slider-image/public/mygov_1725880437110258821.jpg"
+                                        src="../img/image.jpg"
                                         class="d-block w-100" alt="Slide 1"></a>
                             </div>
                             <div class="carousel-item">
-                                <a href="https://www.mygov.in/task/selfie-your-kitchen-garden/?target=inapp&type=task&nid=353550"
+                                <a href="#"
                                     target="_blank"><img
-                                        src="https://static.mygov.in/static/s3fs-public/mygov_1725863329110258821.png"
+                                        src="../img/81-of-Data-Breaches.jpg"
                                         class="d-block w-100" alt="Slide 2"></a>
                             </div>
-                            <div class="carousel-item">
+                            <!-- <div class="carousel-item">
                                 <a href="https://www.mygov.in/task/drawing-competition-poshan-nutrition/?target=inapp&type=task&nid=353539"
                                     target="_blank"><img
                                         src="https://static.mygov.in/static/s3fs-public/mygov_1725862673110258821_1.png"
@@ -312,7 +312,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     target="_blank"><img
                                         src="https://static.mygov.in/media/quiz/2024/09/mygov_66ded9542454c.jpg"
                                         class="d-block w-100" alt="Slide 8"></a>
-                            </div>
+                            </div> -->
                         </div>
                         <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators"
                             data-bs-slide="prev">
@@ -328,17 +328,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="modal-footer d-flex justify-content-between">
-                    <div class="d-flex flex-grow-1">
+                    <!-- <div class="d-flex flex-grow-1">
                         <p class="mb-0" style="text-align: left;">
                             Click on the image above to learn more about this topic or to take further action.
                         </p>
-                    </div>
+                    </div> -->
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
 
             </div>
         </div>
-    </div> -->
+    </div>
     <!-- <div class="modal fade show" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-modal="true"
         role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
@@ -365,11 +365,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             </div>
         </div>
-    </div>
+    </div>-->
     <script>
         var myModal = new bootstrap.Modal(document.getElementById('myModal'));
         myModal.show();
-    </script> -->
+    </script>
 </body>
 
 </html>
