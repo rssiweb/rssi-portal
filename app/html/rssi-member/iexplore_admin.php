@@ -56,7 +56,7 @@ if (!empty($courseid_search)) {
     </script>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>iExplore Manager</title>
+    <title>Modify Course</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
     <!-- Favicons -->
@@ -86,12 +86,12 @@ if (!empty($courseid_search)) {
     <?php include 'header.php'; ?>
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>iExplore Manager</h1>
+            <h1>Modify Course</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
-                    <li class="breadcrumb-item active">iExplore Manager</li>
+                    <li class="breadcrumb-item active">Modify Course</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -121,7 +121,7 @@ if (!empty($courseid_search)) {
                                     <div class="container">
                                         <div class="row">
                                             <div class="col-6">
-                                                <h3>Modify Course</h3>
+                                                <h3>Search Course</h3>
                                                 <!-- Course Selection Form -->
                                                 <form id="courseSearchForm" action="" method="GET" class="mb-5">
                                                     <div class="mb-3">

@@ -204,7 +204,7 @@
               <span>iExplore</span>
             </a>
           </li>
-          <li>
+          <!-- <li>
             <a id="viscoLink" href="visco.php">
               <span>VISCO</span>
             </a>
@@ -213,10 +213,10 @@
             <a id="libraryLink" href="library.php">
               <span>Libary</span>
             </a>
-          </li>
+          </li>-->
           <li>
             <a id="iexplore_admin" href="iexplore_admin.php">
-              <span>iExplore Manager</span>
+              <span>Modify Course</span>
             </a>
           </li>
           <li>
@@ -224,6 +224,12 @@
               <span>iExplore Defaulters</span>
             </a>
           </li>
+          <li>
+            <a id="iexplore_workflow" href="iexplore_workflow.php">
+              <span>iExplore Workflow</span>
+            </a>
+          </li>
+
         </ul>
       </li><!-- End Components Nav -->
       <li class="nav-item">
@@ -573,11 +579,11 @@
         id: 'acadamis',
         linkId: 'examSummary',
         url: 'exam_summary_report.php'
-      },{
+      }, {
         id: 'acadamis',
         linkId: 'reexam',
         url: 'reexam.php'
-      },{
+      }, {
         id: 'acadamis',
         linkId: 'reexam_record',
         url: 'reexam_record.php'
@@ -630,14 +636,18 @@
         id: 'learning',
         linkId: 'libraryLink',
         url: 'library.php'
-      },{
+      }, {
         id: 'learning',
         linkId: 'iexplore_admin',
         url: 'iexplore_admin.php'
-      },{
+      }, {
         id: 'learning',
         linkId: 'iexplore_defaulters',
         url: 'iexplore_defaulters.php'
+      }, {
+        id: 'learning',
+        linkId: 'iexplore_workflow',
+        url: 'iexplore_workflow.php'
       },
       {
         id: 'learning',
