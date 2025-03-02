@@ -49,7 +49,7 @@ function checkPageAccess()
     $roleAccessControl = array();
 
     // Add a default "User" role entry
-    $roleAccessControl["User"] = array(""); 
+    $roleAccessControl["User"] = array("");
 
     // Legacy db connection using pg_connect
     $servername = $_ENV["DB_HOST"];
@@ -134,3 +134,24 @@ function validation()
         exit; // Exit to prevent further execution
     }
 }
+function checkMaintenanceStatus($pageName) {
+    global $con; // Ensure the database connection is available
+
+    // Query the active_maintenance table to check if the page is under maintenance
+    $query = "SELECT is_under_maintenance FROM active_maintenance WHERE page_name = $1;";
+    $result = pg_query_params($con, $query, [$pageName]);
+
+    if ($result && pg_num_rows($result) > 0) {
+        $row = pg_fetch_assoc($result);
+        if ($row['is_under_maintenance'] === 't') {
+            // Redirect to under_maintenance.php with the original page name as a query parameter
+            header("Location: under_maintenance.php?page=" . urlencode($pageName));
+            exit;
+        }
+    }
+}
+// Automatically check maintenance status for the current page
+$currentPage = basename($_SERVER['PHP_SELF']); // Get the current page name
+checkMaintenanceStatus($currentPage);
+
+// Rest of your existing code in login_util.php
