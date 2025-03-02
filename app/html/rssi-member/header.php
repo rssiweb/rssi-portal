@@ -42,7 +42,7 @@
             </li>
 
             <li>
-              <a class="dropdown-item d-flex align-items-center" href="myprofile.php" target="_blank">
+              <a class="dropdown-item d-flex align-items-center" href="hrms.php">
                 <i class="bi bi-person"></i>
                 <span>My Profile</span>
               </a>
@@ -518,6 +518,11 @@
               <span>Access Panel</span>
             </a>
           </li>
+          <li>
+            <a id="maintenance_panel" href="maintenance_panel.php">
+              <span>Maintenance Panel</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Forms Nav -->
 
@@ -807,6 +812,10 @@
         id: 'myservices',
         linkId: 'documentLink',
         url: 'bankdetails.php'
+      }, {
+        id: 'work',
+        linkId: 'maintenance_panel',
+        url: 'maintenance_panel.php'
       }, {
         id: 'work',
         linkId: 'archive_approval',

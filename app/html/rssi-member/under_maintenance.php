@@ -31,10 +31,12 @@ if ($endDate) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Under Maintenance</title>
+    <title>Site Under Maintenance</title>
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            /* font-family: Arial, sans-serif; */
             text-align: center;
             /* padding: 50px; */
             background-color: #f4f4f4;
@@ -78,7 +80,7 @@ if ($endDate) {
         }
 
         .vector-image {
-            width: 200px;
+            width: 50%;
             margin-left: 40px;
         }
     </style>
@@ -102,14 +104,14 @@ if ($endDate) {
 <body>
     <div class="container">
         <div class="content">
-            <h1>🚧 Under Maintenance 🚧</h1>
+            <h1>Under Maintenance</h1>
             <p>It’s not you, it’s us! We’re working hard to improve your experience.</p>
             <?php if ($formattedEndDate): ?>
                 <p>We expect to be back by <strong><?php echo $formattedEndDate; ?></strong>.</p>
             <?php endif; ?>
             <p>Redirecting to homepage in <span id="countdown">10</span> seconds...</p>
         </div>
-        <img src="../img/maintenance.jpg" alt="Maintenance" class="vector-image">
+        <img src="../img/6029646.jpg" alt="Maintenance" class="vector-image">
     </div>
 </body>
 
