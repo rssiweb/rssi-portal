@@ -689,12 +689,14 @@ if (!empty($interviewData['submitted_by'])) {
                                                                     <label for="writtenTest" class="form-label">Written Test Marks (RTET)</label>
                                                                 </div>
                                                                 <div class="col-md-6">
-                                                                    <div class="input-group">
+                                                                    <div class="input-group mb-2">
                                                                         <input type="number" class="form-control" name="writtenTest" id="writtenTest" placeholder="Enter marks"
                                                                             value="<?php echo isset($interviewDataResponse['writtenTest']) ? htmlspecialchars($interviewDataResponse['writtenTest']) : ''; ?>"
                                                                             <?php echo isRequired('writtenTest', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
                                                                         <button type="button" id="fetchWrittenTest" class="btn btn-primary">Fetch</button>
                                                                     </div>
+                                                                    <!-- Get Exam Details Link -->
+                                                                    <a href="#" id="getExamDetails" class="text-decoration-none">Get Exam Details</a>
                                                                 </div>
 
                                                                 <!-- Experience and Qualifications -->
@@ -807,6 +809,42 @@ if (!empty($interviewData['submitted_by'])) {
         </section>
 
     </main><!-- End #main -->
+    <!-- Exam Details Modal -->
+    <div class="modal fade" id="examDetailsModal" tabindex="-1" aria-labelledby="examDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="examDetailsModalLabel">Exam Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Loading Indicator -->
+                    <div id="loadingIndicator" class="text-center">
+                        <p>Loading...</p>
+                    </div>
+                    <!-- Exam Details (Initially Hidden) -->
+                    <div id="examDetailsContent" style="display: none;">
+                        <p><strong>Exam Name:</strong> <span id="examName">N/A</span></p>
+                        <p><strong>Session ID:</strong> <span id="sessionId">N/A</span></p>
+                        <p><strong>OTP:</strong> <span id="otp" class="text-danger">N/A</span></p>
+                    </div>
+                    <!-- Instructions for Interviewer -->
+                    <div class="mt-4">
+                        <h6>Instructions for Interviewer:</h6>
+                        <ol>
+                            <li>Ask the candidate to log in to their profile and navigate to the <strong>Assessment Section</strong> to start the exam.</li>
+                            <li>Before sharing the OTP, ensure the candidate's exam setup meets the required standards.</li>
+                            <li>Only after confirming the exam setup is correct, share the OTP with the candidate.</li>
+                            <li>Remind the candidate that the exam is being monitored, and any suspicious activity may result in disqualification.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         window.onload = function() {
@@ -1005,7 +1043,57 @@ if (!empty($interviewData['submitted_by'])) {
             });
         });
     </script>
+    <script>
+        document.getElementById('getExamDetails').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent the default link behavior
 
+            // Show the modal immediately with the "Loading..." indicator
+            const examDetailsModal = new bootstrap.Modal(document.getElementById('examDetailsModal'));
+            examDetailsModal.show();
+
+            // Show the "Loading..." indicator and hide the exam details
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('examDetailsContent').style.display = 'none';
+
+            // Get the application number from the response data
+            const applicationNumber = "<?php echo $responseData['application_number']; ?>";
+
+            // Make an AJAX request to fetch exam details
+            fetch('get_exam_details.php?application_number=' + applicationNumber)
+                .then(response => response.json())
+                .then(data => {
+                    const examNameSpan = document.getElementById('examName');
+                    const sessionIdSpan = document.getElementById('sessionId');
+                    const otpSpan = document.getElementById('otp');
+
+                    if (data.success) {
+                        // Display the exam details in the modal
+                        examNameSpan.textContent = data.examName;
+                        sessionIdSpan.textContent = data.sessionId;
+                        otpSpan.textContent = data.otp;
+                    } else {
+                        // Show "Exam not created yet" message
+                        examNameSpan.textContent = 'Exam not created yet';
+                        sessionIdSpan.textContent = 'N/A';
+                        otpSpan.textContent = 'N/A';
+                    }
+
+                    // Hide the "Loading..." indicator and show the exam details
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('examDetailsContent').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error fetching exam details:', error);
+
+                    // Hide the "Loading..." indicator and show an error message
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('examDetailsContent').style.display = 'block';
+                    document.getElementById('examName').textContent = 'Error fetching details';
+                    document.getElementById('sessionId').textContent = 'N/A';
+                    document.getElementById('otp').textContent = 'N/A';
+                });
+        });
+    </script>
 </body>
 
 </html>
