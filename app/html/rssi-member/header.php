@@ -409,6 +409,11 @@
               <span>Interview Central</span>
             </a>
           </li>
+          <li>
+            <a id="rtet" href="rtet.php">
+              <span>Create Assessment (RTET)</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Components Nav -->
 

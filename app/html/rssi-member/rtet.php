@@ -1,14 +1,25 @@
 <?php
-require_once __DIR__ . "/../../bootstrap.php"; // Include the database connection
+require_once __DIR__ . "/../../bootstrap.php";
+
+include("../../util/login_util.php");
+
+if (!isLoggedIn("aid")) {
+    $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
+    header("Location: index.php");
+    exit;
+}
+
+validation();
 
 // Function to generate a random auth code
-function generateAuthCode() {
+function generateAuthCode()
+{
     return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
 }
 
 // Fetch the list of exams from the database
 $exams = [];
-$query = "SELECT id, name, total_questions, total_duration, language FROM test_exams WHERE is_active = TRUE;";
+$query = "SELECT id, name, total_questions, total_duration, language, is_restricted FROM test_exams WHERE is_active = TRUE AND is_restricted=TRUE;";
 $result = pg_query($con, $query);
 if ($result) {
     while ($row = pg_fetch_assoc($result)) {
@@ -55,31 +66,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $examRow = pg_fetch_assoc($insertExamResult);
                     $userExamId = $examRow['id'];
 
-                    // Generate auth code
-                    $authCode = generateAuthCode();
+                    // Fetch exam details to check if it's restricted
+                    $examDetailsQuery = "SELECT is_restricted, total_duration,id,name,total_questions,total_duration,language FROM test_exams WHERE id = $1;";
+                    $examDetailsResult = pg_query_params($con, $examDetailsQuery, [$examId]);
+                    $examDetails = pg_fetch_assoc($examDetailsResult);
+                    $isRestricted = $examDetails['is_restricted'];
+
+                    // Generate auth code for restricted exams
+                    $authCode = ($isRestricted === 't') ? generateAuthCode() : null;
+
+                    // Set session status based on whether the exam is restricted
+                    $sessionStatus = ($isRestricted === 't') ? 'pending' : 'active';
 
                     // Insert into test_user_sessions
-                    $insertSessionQuery = "INSERT INTO test_user_sessions (user_exam_id, auth_code) VALUES ($1, $2) RETURNING id, auth_code;";
-                    $insertSessionResult = pg_query_params($con, $insertSessionQuery, [$userExamId, $authCode]);
+                    $insertSessionQuery = "INSERT INTO test_user_sessions (user_exam_id, auth_code, status) VALUES ($1, $2, $3) RETURNING id, auth_code;";
+                    $insertSessionResult = pg_query_params($con, $insertSessionQuery, [$userExamId, $authCode, $sessionStatus]);
 
                     if ($insertSessionResult && pg_num_rows($insertSessionResult) > 0) {
                         $sessionRow = pg_fetch_assoc($insertSessionResult);
                         $sessionId = $sessionRow['id'];
                         $otp = $sessionRow['auth_code'];
 
-                        // Update rtet_session_id in signup table
-                        $updateSignupQuery = "UPDATE signup SET rtet_session_id = $1 WHERE application_number = $2;";
-                        $updateSignupResult = pg_query_params($con, $updateSignupQuery, [$sessionId, $applicationNumber]);
+                        // Update signup table with session_id and exam_id
+                        $updateSignupQuery = "UPDATE signup SET rtet_session_id = $1, exam_id = $2 WHERE application_number = $3;";
+                        $updateSignupResult = pg_query_params($con, $updateSignupQuery, [$sessionId, $examId, $applicationNumber]);
 
                         if (!$updateSignupResult) {
-                            echo "<script>alert('Failed to update rtet_session_id in signup table.');</script>";
+                            echo "<script>alert('Failed to update rtet_session_id and exam_id in signup table.');</script>";
                         }
 
-                        // Fetch exam details for display
-                        $examDetailsQuery = "SELECT name, total_questions, total_duration, language FROM test_exams WHERE id = $1;";
-                        $examDetailsResult = pg_query_params($con, $examDetailsQuery, [$examId]);
-                        if ($examDetailsResult && pg_num_rows($examDetailsResult) > 0) {
-                            $examDetails = pg_fetch_assoc($examDetailsResult);
+                        // Fetch categories linked to the exam
+                        $category_query = "SELECT category_id FROM test_exam_categories WHERE exam_id = $1";
+                        $category_result = pg_query_params($con, $category_query, array($examId));
+                        $category_ids = [];
+                        while ($row = pg_fetch_assoc($category_result)) {
+                            $category_ids[] = $row['category_id'];
+                        }
+
+                        if (empty($category_ids)) {
+                            echo "Error: No categories found for this exam.";
+                            exit;
+                        }
+
+                        // Fetch random questions for the exam
+                        $category_ids_str = implode(",", $category_ids);
+                        $question_query = "
+                        WITH random_questions AS (
+                            SELECT id AS question_id, question_text
+                            FROM test_questions
+                            WHERE category_id IN ($category_ids_str)
+                            ORDER BY RANDOM()
+                            LIMIT (SELECT total_questions FROM test_exams WHERE id = $1)
+                        )
+                        SELECT rq.question_id, rq.question_text, o.option_key, o.option_text
+                        FROM random_questions rq
+                        JOIN test_options o ON rq.question_id = o.question_id
+                        ORDER BY rq.question_id, o.option_key";
+                        $result = pg_query_params($con, $question_query, array($examId));
+
+                        $questions = [];
+                        while ($row = pg_fetch_assoc($result)) {
+                            if (!isset($questions[$row['question_id']])) {
+                                $questions[$row['question_id']] = [
+                                    'question_text' => $row['question_text'],
+                                    'selected_option' => null, // Initialize selected option as null
+                                    'options' => []
+                                ];
+                            }
+                            $questions[$row['question_id']]['options'][] = [
+                                'option_key' => $row['option_key'],
+                                'option_text' => $row['option_text']
+                            ];
+                        }
+
+                        // Insert questions into test_user_answers
+                        foreach ($questions as $question_id => $q_data) {
+                            $insert_answer_query = "INSERT INTO test_user_answers (user_exam_id, question_id, selected_option) VALUES ($1, $2, $3)";
+                            pg_query_params($con, $insert_answer_query, array($userExamId, $question_id, null));
+                        }
+
+                        // Display success message with OTP (if restricted)
+                        if ($isRestricted === 't') {
+                            echo "<script>alert('Exam session created successfully. Your OTP is: $otp');</script>";
+                        } else {
+                            echo "<script>alert('Exam session created successfully.');</script>";
                         }
                     } else {
                         echo "<script>alert('Failed to create session.');</script>";
@@ -98,60 +168,359 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+<?php
+// Add this at the top of your PHP file
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'searchApplicant') {
+    $searchQuery = $_GET['query'] ?? null;
 
-<!DOCTYPE html>
+    if ($searchQuery) {
+        // Fetch applicant details from the signup table
+        $signupQuery = "SELECT applicant_name, application_number, email FROM signup 
+                        WHERE applicant_name ILIKE $1 OR application_number ILIKE $1 OR email ILIKE $1;";
+        $signupResult = pg_query_params($con, $signupQuery, ["%$searchQuery%"]);
+
+        if ($signupResult && pg_num_rows($signupResult) > 0) {
+            $applicants = [];
+            while ($row = pg_fetch_assoc($signupResult)) {
+                $applicants[] = $row;
+            }
+            echo json_encode([
+                'status' => 'success',
+                'data' => $applicants
+            ]);
+        } else {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'No applicants found.'
+            ]);
+        }
+    } else {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Search query is required.'
+        ]);
+    }
+    exit;
+}
+?>
+
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Exam</title>
-    <!-- Bootstrap 5.3 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Create Assessment (RTET)</title>
+
+    <!-- Favicons -->
+    <link href="../img/favicon.ico" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Template Main CSS File -->
+    <link href="../assets_new/css/style.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://www.rssi.in/disclaimer'
+        });
+    </script>
+    <style>
+        @media (min-width:767px) {
+            .left {
+                margin-left: 2%;
+            }
+        }
+    </style>
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            /* background-color: #f9f9f9; */
+        }
+
+        .success-card {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">Create Exam</h1>
-        <form method="POST" action="" class="mb-4">
-            <div class="mb-3">
-                <label for="application_number" class="form-label">Application Number:</label>
-                <input type="text" id="application_number" name="application_number" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="exam_id" class="form-label">Select Exam:</label>
-                <select id="exam_id" name="exam_id" class="form-select" required>
-                    <option value="">-- Select Exam --</option>
-                    <?php foreach ($exams as $exam): ?>
-                        <option value="<?php echo $exam['id']; ?>"><?php echo htmlspecialchars($exam['name']); ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Create Exam</button>
-        </form>
+    <?php include 'inactive_session_expire_check.php'; ?>
+    <?php include 'header.php'; ?>
 
-        <?php if ($applicantName && $applicantEmail && $applicationNumber && $sessionId && $otp && $examDetails): ?>
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h2 class="card-title mb-0">Exam Created Successfully!</h2>
-                </div>
-                <div class="card-body">
-                    <p><strong>Applicant Name:</strong> <?php echo htmlspecialchars($applicantName); ?></p>
-                    <p><strong>Applicant Email:</strong> <?php echo htmlspecialchars($applicantEmail); ?></p>
-                    <p><strong>Application Number:</strong> <?php echo htmlspecialchars($applicationNumber); ?></p>
-                    <p><strong>Session ID:</strong> <?php echo htmlspecialchars($sessionId); ?></p>
-                    <p><strong>OTP:</strong> <?php echo htmlspecialchars($otp); ?></p>
-                    <p><strong>Exam Name:</strong> <?php echo htmlspecialchars($examDetails['name']); ?></p>
-                    <p><strong>Total Questions:</strong> <?php echo htmlspecialchars($examDetails['total_questions']); ?></p>
-                    <p><strong>Total Duration:</strong> <?php echo htmlspecialchars($examDetails['total_duration']); ?> minutes</p>
-                    <p><strong>Language:</strong> <?php echo htmlspecialchars($examDetails['language']); ?></p>
-                </div>
-            </div>
-        <?php endif; ?>
-    </div>
+    <main id="main" class="main">
 
-    <!-- Bootstrap 5.3 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <div class="pagetitle">
+            <h1>Create Assessment</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="home.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">People Plus</a></li>
+                    <li class="breadcrumb-item active">Create Assessment</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section dashboard">
+            <div class="row">
+                <!-- Reports -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <br>
+                            <div class="container mt-5">
+                                <div class="form-container">
+                                    <form method="POST" action="" class="mb-4" id="examForm">
+                                        <!-- Search Field -->
+                                        <div class="mb-3">
+                                            <label for="searchInput" class="form-label">Search Applicant:</label>
+                                            <div class="input-group">
+                                                <input type="text" id="searchInput" class="form-control" placeholder="Search by name, application number, or email">
+                                                <button type="button" class="btn btn-secondary" id="searchButton">Search</button>
+                                            </div>
+                                            <!-- Search Results -->
+                                            <div id="searchResults" class="search-results">
+                                                <div class="list-group" id="resultsList"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Application Number Field (Locked After Selection) -->
+                                        <div class="mb-3">
+                                            <label for="application_number" class="form-label">Application Number:</label>
+                                            <input type="text" id="application_number" name="application_number" class="form-control" readonly required>
+                                        </div>
+
+                                        <!-- Exam Selection Field -->
+                                        <div class="mb-3">
+                                            <label for="exam_id" class="form-label">Select Exam:</label>
+                                            <select id="exam_id" name="exam_id" class="form-select" required>
+                                                <option value="">-- Select Exam --</option>
+                                                <?php foreach ($exams as $exam): ?>
+                                                    <option value="<?php echo $exam['id']; ?>"><?php echo htmlspecialchars($exam['name']); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+
+                                        <!-- Submit Button -->
+                                        <button type="submit" class="btn btn-primary w-100" id="submitBtn" disabled>Create Exam</button>
+                                    </form>
+                                </div>
+
+                                <?php if ($applicantName && $applicantEmail && $applicationNumber && $sessionId && $otp && $examDetails): ?>
+                                    <div class="card border-dark shadow-sm mt-4" id="examDetails">
+                                        <div class="card-header bg-dark text-white text-center">
+                                            <h3 class="mb-0">Exam Confirmation Details</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h5 class="mb-3">Applicant Details</h5>
+                                                    <table class="table table-bordered table-sm">
+                                                        <tbody>
+                                                            <tr>
+                                                                <th scope="row">Applicant Name</th>
+                                                                <td><?php echo htmlspecialchars($applicantName); ?></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row">Applicant Email</th>
+                                                                <td><?php echo htmlspecialchars($applicantEmail); ?></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row">Application Number</th>
+                                                                <td><?php echo htmlspecialchars($applicationNumber); ?></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h5 class="mb-3">Exam Details</h5>
+                                                    <table class="table table-bordered table-sm">
+                                                        <tbody>
+                                                            <tr>
+                                                                <th scope="row">Exam ID</th>
+                                                                <td><?php echo htmlspecialchars($examDetails['id']); ?></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row">Exam Name</th>
+                                                                <td><?php echo htmlspecialchars($examDetails['name']); ?></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row">Total Questions</th>
+                                                                <td><?php echo htmlspecialchars($examDetails['total_questions']); ?></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row">Total Duration</th>
+                                                                <td><?php echo htmlspecialchars($examDetails['total_duration']); ?> minutes</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row">Language</th>
+                                                                <td><?php echo htmlspecialchars($examDetails['language']); ?></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="row mt-4">
+                                                <div class="col-md-6">
+                                                    <h5 class="mb-3">Session Details</h5>
+                                                    <table class="table table-bordered table-sm">
+                                                        <tbody>
+                                                            <tr>
+                                                                <th scope="row">Session ID</th>
+                                                                <td><?php echo htmlspecialchars($sessionId); ?></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row">OTP</th>
+                                                                <td><?php echo htmlspecialchars($otp); ?></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="text-center mt-4">
+                                                <button class="btn btn-primary" onclick="printExamDetails()">Print</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <script>
+                                        function printExamDetails() {
+                                            var content = document.getElementById('examDetails').innerHTML;
+                                            var printWindow = window.open('', '', 'width=800,height=600');
+                                            printWindow.document.write('<html><head><title>Print Exam Details</title>');
+                                            printWindow.document.write('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">');
+                                            printWindow.document.write('</head><body>');
+                                            printWindow.document.write(content);
+                                            printWindow.document.write('</body></html>');
+                                            printWindow.document.close();
+                                            printWindow.print();
+                                        }
+                                    </script>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- End Reports -->
+            </div>
+        </section>
+
+    </main><!-- End #main -->
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <!-- Template Main JS File -->
+    <script src="../assets_new/js/main.js"></script>
+    <script>
+        // Prevent form resubmission on page reload or back
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+
+        // Disable submit button after form submission
+        document.getElementById('examForm').addEventListener('submit', function() {
+            document.getElementById('submitBtn').disabled = true;
+        });
+    </script>
+    <script>
+        function printExamDetails() {
+            var content = document.getElementById('examDetails').innerHTML;
+            var printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.write('<html><head><title>Print Exam Details</title>');
+            printWindow.document.write('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(content);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+    </script>
+    <script>
+        // Handle search button click
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const searchQuery = document.getElementById('searchInput').value;
+
+            if (!searchQuery) {
+                alert('Please enter a search term.');
+                return;
+            }
+
+            // Fetch applicant details via AJAX
+            fetch(`?action=searchApplicant&query=${searchQuery}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsList = document.getElementById('resultsList');
+                    resultsList.innerHTML = ''; // Clear previous results
+
+                    if (data.status === 'success' && data.data.length > 0) {
+                        data.data.forEach(applicant => {
+                            const listItem = document.createElement('div');
+                            listItem.className = 'list-group-item';
+                            listItem.innerHTML = `
+                                <strong>Name:</strong> ${applicant.applicant_name}<br>
+                                <strong>Application Number:</strong> ${applicant.application_number}<br>
+                                <strong>Email:</strong> ${applicant.email}
+                            `;
+                            listItem.addEventListener('click', () => {
+                                // Populate application number field
+                                document.getElementById('application_number').value = applicant.application_number;
+                                document.getElementById('application_number').readOnly = true;
+
+                                // Hide search results
+                                document.getElementById('searchResults').style.display = 'none';
+
+                                // Enable form submission
+                                document.getElementById('submitBtn').disabled = false;
+                            });
+                            resultsList.appendChild(listItem);
+                        });
+
+                        // Show search results
+                        document.getElementById('searchResults').style.display = 'block';
+                    } else {
+                        alert('No applicants found.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while fetching applicant details.');
+                });
+        });
+
+        // Prevent form resubmission on page reload or back
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+
+        // Disable submit button after form submission
+        document.getElementById('examForm').addEventListener('submit', function() {
+            document.getElementById('submitBtn').disabled = true;
+        });
+    </script>
 </body>
 
 </html>
