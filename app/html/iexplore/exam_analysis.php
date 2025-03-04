@@ -17,7 +17,7 @@ $show_form = !$session_id;
 if ($session_id) {
     // Fetch user_id, user_exam_id, and session details using a JOIN
     $query = "
-        SELECT te.user_id, tus.user_exam_id, tus.session_start, tus.session_end
+        SELECT te.user_id, tus.user_exam_id, tus.session_start, tus.session_end, tus.auth_code
         FROM test_user_sessions tus
         JOIN test_user_exams te ON tus.user_exam_id = te.id
         WHERE tus.id = $1
@@ -32,9 +32,20 @@ if ($session_id) {
     $session_data = pg_fetch_assoc($result);
 
     // Check if the session belongs to the user
-    if ($id != $session_data['user_id']) {
-        echo "<script>alert('Unauthorized Access: You do not have permission to access this exam. This may be because the exam session is not linked to your account or the session is invalid or expired. If you believe this is a mistake, please contact support for assistance.'); window.location.href = 'my_exam.php';</script>";
-        exit();
+    // if ($id != $session_data['user_id']) {
+    //     echo "<script>alert('Unauthorized Access: You do not have permission to access this exam. This may be because the exam session is not linked to your account or the session is invalid or expired. If you believe this is a mistake, please contact support for assistance.'); window.location.href = 'my_exam.php';</script>";
+    //     exit();
+    // }
+
+    // Check if auth_code is present in the URL
+    if (isset($_GET['auth_code']) && $_GET['auth_code'] === $session_data['auth_code']) {
+        // Allow access without checking user ID
+    } else {
+        // Check if the session belongs to the user
+        if ($id != $session_data['user_id']) {
+            echo "<script>alert('Unauthorized Access: You do not have permission to access this exam. This may be because the exam session is not linked to your account or the session is invalid or expired. If you believe this is a mistake, please contact support for assistance.'); window.location.href = 'my_exam.php';</script>";
+            exit();
+        }
     }
 
     $user_exam_id = $session_data['user_exam_id'];

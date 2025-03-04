@@ -107,17 +107,17 @@ if ($signupResult && pg_num_rows($signupResult) > 0) {
                             <div class="container py-5">
                                 <div class="row justify-content-center">
                                     <div class="col-lg-6 col-md-8">
-                                        <div class="card shadow-sm border-0">
-                                            <div class="card-header bg-light text-center">
-                                                <h5 class="mb-0">Assessment Summary</h5>
+                                        <?php if ($noExamDetails): ?>
+                                            <!-- No Exam Details Message -->
+                                            <div class="alert alert-info text-center">
+                                                Your exam has not been created yet.
                                             </div>
-                                            <div class="card-body">
-                                                <?php if ($noExamDetails): ?>
-                                                    <!-- No Exam Details Message -->
-                                                    <div class="alert alert-info text-center">
-                                                        Your exam has not been created yet.
-                                                    </div>
-                                                <?php else: ?>
+                                        <?php else: ?>
+                                            <div class="card shadow-sm border-0">
+                                                <div class="card-header bg-light text-center">
+                                                    <h5 class="mb-0">Assessment Summary</h5>
+                                                </div>
+                                                <div class="card-body">
                                                     <!-- Exam Details -->
                                                     <ul class="list-group list-group-flush">
                                                         <li class="list-group-item"><strong>Exam Name:</strong> <span id="examName"><?php echo htmlspecialchars($examDetails['name']); ?></span></li>
@@ -131,8 +131,8 @@ if ($signupResult && pg_num_rows($signupResult) > 0) {
                                                         </button>
                                                     </div>
                                                 <?php endif; ?>
+                                                </div>
                                             </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
