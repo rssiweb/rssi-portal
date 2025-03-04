@@ -12,6 +12,10 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
+// Initialize exam details and flags
+$examDetails = null;
+$noExamDetails = false;
+
 // Fetch exam details
 $applicationNumber = $application_number; // Replace with actual application number
 $signupQuery = "SELECT rtet_session_id, exam_id FROM signup WHERE application_number = $1;";
@@ -29,10 +33,10 @@ if ($signupResult && pg_num_rows($signupResult) > 0) {
     if ($examResult && pg_num_rows($examResult) > 0) {
         $examDetails = pg_fetch_assoc($examResult);
     } else {
-        die("Exam details not found.");
+        $noExamDetails = true; // No exam details found
     }
 } else {
-    die("Application number not found.");
+    $noExamDetails = true; // Application number not found
 }
 ?>
 <!doctype html>
@@ -95,11 +99,9 @@ if ($signupResult && pg_num_rows($signupResult) > 0) {
 
         <section class="section dashboard">
             <div class="row">
-
                 <!-- Reports -->
                 <div class="col-12">
                     <div class="card">
-
                         <div class="card-body">
                             <br>
                             <div class="container py-5">
@@ -110,23 +112,30 @@ if ($signupResult && pg_num_rows($signupResult) > 0) {
                                                 <h5 class="mb-0">Assessment Summary</h5>
                                             </div>
                                             <div class="card-body">
-                                                <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item"><strong>Exam Name:</strong> <span id="examName"><?php echo htmlspecialchars($examDetails['name']); ?></span></li>
-                                                    <li class="list-group-item"><strong>Total Questions:</strong> <span id="totalQuestions"><?php echo htmlspecialchars($examDetails['total_questions']); ?></span></li>
-                                                    <li class="list-group-item"><strong>Total Duration:</strong> <span id="totalDuration"><?php echo htmlspecialchars($examDetails['total_duration']); ?> minutes</span></li>
-                                                    <li class="list-group-item"><strong>Language:</strong> <span id="language"><?php echo htmlspecialchars($examDetails['language']); ?></span></li>
-                                                </ul>
-                                                <div class="text-center mt-4">
-                                                    <button type="button" class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#examInstructionsModal">
-                                                        Start Assessment
-                                                    </button>
-                                                </div>
+                                                <?php if ($noExamDetails): ?>
+                                                    <!-- No Exam Details Message -->
+                                                    <div class="alert alert-info text-center">
+                                                        Your exam has not been created yet.
+                                                    </div>
+                                                <?php else: ?>
+                                                    <!-- Exam Details -->
+                                                    <ul class="list-group list-group-flush">
+                                                        <li class="list-group-item"><strong>Exam Name:</strong> <span id="examName"><?php echo htmlspecialchars($examDetails['name']); ?></span></li>
+                                                        <li class="list-group-item"><strong>Total Questions:</strong> <span id="totalQuestions"><?php echo htmlspecialchars($examDetails['total_questions']); ?></span></li>
+                                                        <li class="list-group-item"><strong>Total Duration:</strong> <span id="totalDuration"><?php echo htmlspecialchars($examDetails['total_duration']); ?> minutes</span></li>
+                                                        <li class="list-group-item"><strong>Language:</strong> <span id="language"><?php echo htmlspecialchars($examDetails['language']); ?></span></li>
+                                                    </ul>
+                                                    <div class="text-center mt-4">
+                                                        <button type="button" class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#examInstructionsModal">
+                                                            Start Assessment
+                                                        </button>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
 
                             <!-- Exam Instructions Modal -->
                             <div class="modal fade" id="examInstructionsModal" tabindex="-1" aria-labelledby="examInstructionsModalLabel" aria-hidden="true">
@@ -164,11 +173,9 @@ if ($signupResult && pg_num_rows($signupResult) > 0) {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
-                </div>
-            </div><!-- End Reports -->
+                </div><!-- End Reports -->
             </div>
         </section>
 
