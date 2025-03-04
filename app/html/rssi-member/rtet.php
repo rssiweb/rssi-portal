@@ -249,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Create Assessment (RTET)</title>
+    <title>Create RTET</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -312,12 +312,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Create Assessment</h1>
+            <h1>Create RTET</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
                     <li class="breadcrumb-item"><a href="#">People Plus</a></li>
-                    <li class="breadcrumb-item active">Create Assessment</li>
+                    <li class="breadcrumb-item active">Create RTET</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->

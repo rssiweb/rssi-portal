@@ -411,7 +411,7 @@
           </li>
           <li>
             <a id="rtet" href="rtet.php">
-              <span>Create Assessment (RTET)</span>
+              <span>Create RTET</span>
             </a>
           </li>
         </ul>
@@ -911,7 +911,11 @@
         id: 'peoplePlus',
         linkId: 'talent_pool',
         url: 'applicant_profile.php'
-      }, {
+      },  {
+        id: 'peoplePlus',
+        linkId: 'rtet',
+        url: 'rtet.php'
+      },{
         id: 'work',
         linkId: 'access_panel',
         url: 'access_panel.php'

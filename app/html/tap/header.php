@@ -147,6 +147,11 @@
         <span>Document Verification</span>
       </a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link collapsed" id="assessment" href="assessment.php">
+        <span>Assessment</span>
+      </a>
+    </li>
 
     <li class="nav-heading">Pages</li>
 
@@ -221,4 +226,5 @@
   toggleCollapsedClass('application_form.php', 'applicationForm');
   toggleCollapsedClass('identity_verification.php', 'indentityVerification');
   toggleCollapsedClass('document_verification.php', 'documentVerification');
+  toggleCollapsedClass('assessment.php', 'assessment');
 </script>
