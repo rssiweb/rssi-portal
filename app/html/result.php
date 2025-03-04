@@ -703,7 +703,7 @@ if ($class_category_data) {
                                                     return $number . 'th';
                                                 }
 
-                                                echo ($formattedPercentage >= 75) ? "<th>" . addOrdinalSuffix($rank) . "</th>" : "<th></th>";
+                                                echo ($formattedPercentage >= 75 && $rank <= 3) ? "<th>" . addOrdinalSuffix($rank) . "</th>" : "<th></th>";
                                                 ?>
                                             </tr>
                                             <tr>
