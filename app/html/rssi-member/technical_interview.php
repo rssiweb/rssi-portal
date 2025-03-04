@@ -558,13 +558,31 @@ if (!empty($interviewData['submitted_by'])) {
                                                                     <tr>
                                                                         <td></td>
                                                                         <td>
-                                                                            <a href="<?php echo htmlspecialchars($responseData['resumeLink']); ?>"
-                                                                                target="_blank" id="resumeText">View
-                                                                                Applicant CV</a><br>
-                                                                            <a href="tap_doc_approval.php?application_number=<?php echo htmlspecialchars($responseData['application_number']); ?>"
-                                                                                id="resumeText">Centralized Document Verification System</a>
+                                                                            <ul class="list-group list-group-flush">
+                                                                                <li class="list-group-item">
+                                                                                    <a href="<?php echo htmlspecialchars($responseData['resumeLink']); ?>"
+                                                                                        target="_blank"
+                                                                                        class="btn btn-outline-primary btn-sm w-100 text-start">
+                                                                                        <i class="bi bi-file-earmark-pdf"></i> View Applicant CV
+                                                                                    </a>
+                                                                                </li>
+                                                                                <li class="list-group-item">
+                                                                                    <a href="tap_doc_approval.php?application_number=<?php echo htmlspecialchars($responseData['application_number']); ?>"
+                                                                                        class="btn btn-outline-success btn-sm w-100 text-start">
+                                                                                        <i class="bi bi-file-earmark-check"></i> Centralized Document Verification System
+                                                                                    </a>
+                                                                                </li>
+                                                                                <?php if ($documentVerification == true): ?>
+                                                                                    <li class="list-group-item">
+                                                                                        <a href="#"
+                                                                                            id="getExamDetails"
+                                                                                            class="btn btn-outline-info btn-sm w-100 text-start">
+                                                                                            <i class="bi bi-info-circle"></i> Check RTET Information
+                                                                                        </a>
+                                                                                    </li>
+                                                                                <?php endif; ?>
+                                                                            </ul>
                                                                         </td>
-
                                                                     </tr>
                                                                 </tbody>
                                                             </table>
@@ -695,8 +713,6 @@ if (!empty($interviewData['submitted_by'])) {
                                                                             <?php echo isRequired('writtenTest', $associationRequirements, $currentAssociationType) ? 'required' : ''; ?>>
                                                                         <button type="button" id="fetchWrittenTest" class="btn btn-primary">Fetch</button>
                                                                     </div>
-                                                                    <!-- Get Exam Details Link -->
-                                                                    <a href="#" id="getExamDetails" class="text-decoration-none">Get Exam Details</a>
                                                                 </div>
 
                                                                 <!-- Experience and Qualifications -->

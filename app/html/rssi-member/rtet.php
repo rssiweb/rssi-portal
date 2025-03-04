@@ -17,6 +17,12 @@ function generateAuthCode()
     return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
 }
 
+// Function to generate a 12-digit random user ID
+function generateUserId()
+{
+    return str_pad(mt_rand(0, 999999999999), 12, '0', STR_PAD_LEFT);
+}
+
 // Fetch the list of exams from the database
 $exams = [];
 $query = "SELECT id, name, total_questions, total_duration, language, is_restricted FROM test_exams WHERE is_active = TRUE AND is_restricted=TRUE;";
@@ -41,124 +47,144 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $applicationNumber = $_POST['application_number'] ?? null;
 
     if ($examId && $applicationNumber) {
-        // Fetch email from signup table using application_number
-        $signupQuery = "SELECT applicant_name, email FROM signup WHERE application_number = $1;";
+        // Fetch email and other details from signup table using application_number
+        $signupQuery = "SELECT applicant_name, email, telephone FROM signup WHERE application_number = $1;";
         $signupResult = pg_query_params($con, $signupQuery, [$applicationNumber]);
 
         if ($signupResult && pg_num_rows($signupResult) > 0) {
             $signupRow = pg_fetch_assoc($signupResult);
             $applicantName = $signupRow['applicant_name'];
             $applicantEmail = $signupRow['email'];
+            $telephone = $signupRow['telephone'];
 
             // Fetch user_id from test_users table using email
             $userQuery = "SELECT id FROM test_users WHERE email = $1;";
             $userResult = pg_query_params($con, $userQuery, [$applicantEmail]);
 
             if ($userResult && pg_num_rows($userResult) > 0) {
+                // User exists in test_users table
                 $userRow = pg_fetch_assoc($userResult);
                 $userId = $userRow['id'];
+            } else {
+                // User does not exist in test_users table, insert new user
+                $userId = generateUserId();
+                $insertUserQuery = "INSERT INTO test_users (id, name, email, created_at, user_type, contact) 
+                                    VALUES ($1, $2, $3, NOW(), 'tap', $4);";
+                $insertUserResult = pg_query_params($con, $insertUserQuery, [
+                    $userId,
+                    $applicantName,
+                    $applicantEmail,
+                    $telephone
+                ]);
 
-                // Insert into test_user_exams
-                $insertExamQuery = "INSERT INTO test_user_exams (user_id, exam_id) VALUES ($1, $2) RETURNING id;";
-                $insertExamResult = pg_query_params($con, $insertExamQuery, [$userId, $examId]);
+                if (!$insertUserResult) {
+                    echo "<script>alert('Failed to insert user into test_users table.');</script>";
+                    exit;
+                }
+            }
 
-                if ($insertExamResult && pg_num_rows($insertExamResult) > 0) {
-                    $examRow = pg_fetch_assoc($insertExamResult);
-                    $userExamId = $examRow['id'];
+            // Insert into test_user_exams
+            $insertExamQuery = "INSERT INTO test_user_exams (user_id, exam_id) VALUES ($1, $2) RETURNING id;";
+            $insertExamResult = pg_query_params($con, $insertExamQuery, [$userId, $examId]);
 
-                    // Fetch exam details to check if it's restricted
-                    $examDetailsQuery = "SELECT is_restricted, total_duration,id,name,total_questions,total_duration,language FROM test_exams WHERE id = $1;";
-                    $examDetailsResult = pg_query_params($con, $examDetailsQuery, [$examId]);
-                    $examDetails = pg_fetch_assoc($examDetailsResult);
-                    $isRestricted = $examDetails['is_restricted'];
+            if ($insertExamResult && pg_num_rows($insertExamResult) > 0) {
+                $examRow = pg_fetch_assoc($insertExamResult);
+                $userExamId = $examRow['id'];
 
-                    // Generate auth code for restricted exams
-                    $authCode = ($isRestricted === 't') ? generateAuthCode() : null;
+                // Fetch exam details to check if it's restricted
+                $examDetailsQuery = "SELECT is_restricted, total_duration, id, name, total_questions, language 
+                                     FROM test_exams WHERE id = $1;";
+                $examDetailsResult = pg_query_params($con, $examDetailsQuery, [$examId]);
+                $examDetails = pg_fetch_assoc($examDetailsResult);
+                $isRestricted = $examDetails['is_restricted'];
 
-                    // Set session status based on whether the exam is restricted
-                    $sessionStatus = ($isRestricted === 't') ? 'pending' : 'active';
+                // Generate auth code for restricted exams
+                $authCode = ($isRestricted === 't') ? generateAuthCode() : null;
 
-                    // Insert into test_user_sessions
-                    $insertSessionQuery = "INSERT INTO test_user_sessions (user_exam_id, auth_code, status) VALUES ($1, $2, $3) RETURNING id, auth_code;";
-                    $insertSessionResult = pg_query_params($con, $insertSessionQuery, [$userExamId, $authCode, $sessionStatus]);
+                // Set session status based on whether the exam is restricted
+                $sessionStatus = ($isRestricted === 't') ? 'pending' : 'active';
 
-                    if ($insertSessionResult && pg_num_rows($insertSessionResult) > 0) {
-                        $sessionRow = pg_fetch_assoc($insertSessionResult);
-                        $sessionId = $sessionRow['id'];
-                        $otp = $sessionRow['auth_code'];
+                // Insert into test_user_sessions
+                $insertSessionQuery = "INSERT INTO test_user_sessions (user_exam_id, auth_code, status) 
+                                        VALUES ($1, $2, $3) RETURNING id, auth_code;";
+                $insertSessionResult = pg_query_params($con, $insertSessionQuery, [$userExamId, $authCode, $sessionStatus]);
 
-                        // Update signup table with session_id and exam_id
-                        $updateSignupQuery = "UPDATE signup SET rtet_session_id = $1, exam_id = $2 WHERE application_number = $3;";
-                        $updateSignupResult = pg_query_params($con, $updateSignupQuery, [$sessionId, $examId, $applicationNumber]);
+                if ($insertSessionResult && pg_num_rows($insertSessionResult) > 0) {
+                    $sessionRow = pg_fetch_assoc($insertSessionResult);
+                    $sessionId = $sessionRow['id'];
+                    $otp = $sessionRow['auth_code'];
 
-                        if (!$updateSignupResult) {
-                            echo "<script>alert('Failed to update rtet_session_id and exam_id in signup table.');</script>";
-                        }
+                    // Update signup table with session_id and exam_id
+                    $updateSignupQuery = "UPDATE signup SET rtet_session_id = $1, exam_id = $2 
+                                          WHERE application_number = $3;";
+                    $updateSignupResult = pg_query_params($con, $updateSignupQuery, [$sessionId, $examId, $applicationNumber]);
 
-                        // Fetch categories linked to the exam
-                        $category_query = "SELECT category_id FROM test_exam_categories WHERE exam_id = $1";
-                        $category_result = pg_query_params($con, $category_query, array($examId));
-                        $category_ids = [];
-                        while ($row = pg_fetch_assoc($category_result)) {
-                            $category_ids[] = $row['category_id'];
-                        }
+                    if (!$updateSignupResult) {
+                        echo "<script>alert('Failed to update rtet_session_id and exam_id in signup table.');</script>";
+                    }
 
-                        if (empty($category_ids)) {
-                            echo "Error: No categories found for this exam.";
-                            exit;
-                        }
+                    // Fetch categories linked to the exam
+                    $category_query = "SELECT category_id FROM test_exam_categories WHERE exam_id = $1";
+                    $category_result = pg_query_params($con, $category_query, array($examId));
+                    $category_ids = [];
+                    while ($row = pg_fetch_assoc($category_result)) {
+                        $category_ids[] = $row['category_id'];
+                    }
 
-                        // Fetch random questions for the exam
-                        $category_ids_str = implode(",", $category_ids);
-                        $question_query = "
-                        WITH random_questions AS (
-                            SELECT id AS question_id, question_text
-                            FROM test_questions
-                            WHERE category_id IN ($category_ids_str)
-                            ORDER BY RANDOM()
-                            LIMIT (SELECT total_questions FROM test_exams WHERE id = $1)
-                        )
-                        SELECT rq.question_id, rq.question_text, o.option_key, o.option_text
-                        FROM random_questions rq
-                        JOIN test_options o ON rq.question_id = o.question_id
-                        ORDER BY rq.question_id, o.option_key";
-                        $result = pg_query_params($con, $question_query, array($examId));
+                    if (empty($category_ids)) {
+                        echo "Error: No categories found for this exam.";
+                        exit;
+                    }
 
-                        $questions = [];
-                        while ($row = pg_fetch_assoc($result)) {
-                            if (!isset($questions[$row['question_id']])) {
-                                $questions[$row['question_id']] = [
-                                    'question_text' => $row['question_text'],
-                                    'selected_option' => null, // Initialize selected option as null
-                                    'options' => []
-                                ];
-                            }
-                            $questions[$row['question_id']]['options'][] = [
-                                'option_key' => $row['option_key'],
-                                'option_text' => $row['option_text']
+                    // Fetch random questions for the exam
+                    $category_ids_str = implode(",", $category_ids);
+                    $question_query = "
+                    WITH random_questions AS (
+                        SELECT id AS question_id, question_text
+                        FROM test_questions
+                        WHERE category_id IN ($category_ids_str)
+                        ORDER BY RANDOM()
+                        LIMIT (SELECT total_questions FROM test_exams WHERE id = $1)
+                    )
+                    SELECT rq.question_id, rq.question_text, o.option_key, o.option_text
+                    FROM random_questions rq
+                    JOIN test_options o ON rq.question_id = o.question_id
+                    ORDER BY rq.question_id, o.option_key";
+                    $result = pg_query_params($con, $question_query, array($examId));
+
+                    $questions = [];
+                    while ($row = pg_fetch_assoc($result)) {
+                        if (!isset($questions[$row['question_id']])) {
+                            $questions[$row['question_id']] = [
+                                'question_text' => $row['question_text'],
+                                'selected_option' => null, // Initialize selected option as null
+                                'options' => []
                             ];
                         }
+                        $questions[$row['question_id']]['options'][] = [
+                            'option_key' => $row['option_key'],
+                            'option_text' => $row['option_text']
+                        ];
+                    }
 
-                        // Insert questions into test_user_answers
-                        foreach ($questions as $question_id => $q_data) {
-                            $insert_answer_query = "INSERT INTO test_user_answers (user_exam_id, question_id, selected_option) VALUES ($1, $2, $3)";
-                            pg_query_params($con, $insert_answer_query, array($userExamId, $question_id, null));
-                        }
+                    // Insert questions into test_user_answers
+                    foreach ($questions as $question_id => $q_data) {
+                        $insert_answer_query = "INSERT INTO test_user_answers (user_exam_id, question_id, selected_option) 
+                                               VALUES ($1, $2, $3)";
+                        pg_query_params($con, $insert_answer_query, array($userExamId, $question_id, null));
+                    }
 
-                        // Display success message with OTP (if restricted)
-                        if ($isRestricted === 't') {
-                            echo "<script>alert('Exam session created successfully. Your OTP is: $otp');</script>";
-                        } else {
-                            echo "<script>alert('Exam session created successfully.');</script>";
-                        }
+                    // Display success message with OTP (if restricted)
+                    if ($isRestricted === 't') {
+                        echo "<script>alert('Exam session created successfully. Your OTP is: $otp');</script>";
                     } else {
-                        echo "<script>alert('Failed to create session.');</script>";
+                        echo "<script>alert('Exam session created successfully.');</script>";
                     }
                 } else {
-                    echo "<script>alert('Failed to create exam.');</script>";
+                    echo "<script>alert('Failed to create session.');</script>";
                 }
             } else {
-                echo "<script>alert('User not found in test_users table.');</script>";
+                echo "<script>alert('Failed to create exam.');</script>";
             }
         } else {
             echo "<script>alert('Applicant not found in signup table.');</script>";
@@ -260,9 +286,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
             /* background-color: #f9f9f9; */
         }
 
-        .success-card {
-            max-width: 600px;
-            margin: 20px auto;
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .search-results .list-group-item {
+            cursor: pointer;
+        }
+
+        .search-results .list-group-item:hover {
+            background-color: #f8f9fa;
         }
     </style>
 </head>
@@ -416,7 +454,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                                             printWindow.document.write(content);
                                             printWindow.document.write('</body></html>');
                                             printWindow.document.close();
-                                            printWindow.print();
+                                            // Wait for the Bootstrap CSS to load before printing
+                                            printWindow.onload = function() {
+                                                printWindow.focus();
+                                                printWindow.print();
+                                            };
                                         }
                                     </script>
                                 <?php endif; ?>
@@ -447,79 +489,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         });
     </script>
     <script>
-        function printExamDetails() {
-            var content = document.getElementById('examDetails').innerHTML;
-            var printWindow = window.open('', '', 'width=800,height=600');
-            printWindow.document.write('<html><head><title>Print Exam Details</title>');
-            printWindow.document.write('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">');
-            printWindow.document.write('</head><body>');
-            printWindow.document.write(content);
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.print();
-        }
-    </script>
-    <script>
-        // Handle search button click
-        document.getElementById('searchButton').addEventListener('click', function() {
-            const searchQuery = document.getElementById('searchInput').value;
+document.getElementById('searchButton').addEventListener('click', function() {
+    const searchQuery = document.getElementById('searchInput').value;
+    const resultsList = document.getElementById('resultsList');
+    const searchResults = document.getElementById('searchResults');
 
-            if (!searchQuery) {
-                alert('Please enter a search term.');
-                return;
-            }
+    if (!searchQuery) {
+        alert('Please enter a search term.');
+        return;
+    }
 
-            // Fetch applicant details via AJAX
-            fetch(`?action=searchApplicant&query=${searchQuery}`)
-                .then(response => response.json())
-                .then(data => {
-                    const resultsList = document.getElementById('resultsList');
-                    resultsList.innerHTML = ''; // Clear previous results
+    // Show loading message
+    resultsList.innerHTML = '<div class="text-center text-muted">Loading...</div>';
+    searchResults.style.display = 'block';
 
-                    if (data.status === 'success' && data.data.length > 0) {
-                        data.data.forEach(applicant => {
-                            const listItem = document.createElement('div');
-                            listItem.className = 'list-group-item';
-                            listItem.innerHTML = `
-                                <strong>Name:</strong> ${applicant.applicant_name}<br>
-                                <strong>Application Number:</strong> ${applicant.application_number}<br>
-                                <strong>Email:</strong> ${applicant.email}
-                            `;
-                            listItem.addEventListener('click', () => {
-                                // Populate application number field
-                                document.getElementById('application_number').value = applicant.application_number;
-                                document.getElementById('application_number').readOnly = true;
+    // Fetch applicant details via AJAX
+    fetch(`?action=searchApplicant&query=${searchQuery}`)
+        .then(response => response.json())
+        .then(data => {
+            resultsList.innerHTML = ''; // Clear previous results
 
-                                // Hide search results
-                                document.getElementById('searchResults').style.display = 'none';
-
-                                // Enable form submission
-                                document.getElementById('submitBtn').disabled = false;
-                            });
-                            resultsList.appendChild(listItem);
-                        });
-
-                        // Show search results
-                        document.getElementById('searchResults').style.display = 'block';
-                    } else {
-                        alert('No applicants found.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while fetching applicant details.');
+            if (data.status === 'success' && data.data.length > 0) {
+                data.data.forEach(applicant => {
+                    const listItem = document.createElement('div');
+                    listItem.className = 'list-group-item';
+                    listItem.innerHTML = `
+                        <strong>Name:</strong> ${applicant.applicant_name}<br>
+                        <strong>Application Number:</strong> ${applicant.application_number}<br>
+                        <strong>Email:</strong> ${applicant.email}
+                    `;
+                    listItem.addEventListener('click', () => {
+                        document.getElementById('application_number').value = applicant.application_number;
+                        document.getElementById('application_number').readOnly = true;
+                        searchResults.style.display = 'none';
+                        document.getElementById('submitBtn').disabled = false;
+                    });
+                    resultsList.appendChild(listItem);
                 });
+            } else {
+                resultsList.innerHTML = '<div class="text-center text-danger">No applicants found.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultsList.innerHTML = '<div class="text-center text-danger">An error occurred. Please try again.</div>';
         });
+});
 
-        // Prevent form resubmission on page reload or back
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
-
-        // Disable submit button after form submission
-        document.getElementById('examForm').addEventListener('submit', function() {
-            document.getElementById('submitBtn').disabled = true;
-        });
     </script>
 </body>
 
