@@ -487,55 +487,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         document.getElementById('examForm').addEventListener('submit', function() {
             document.getElementById('submitBtn').disabled = true;
         });
-    </script>
-    <script>
-document.getElementById('searchButton').addEventListener('click', function() {
-    const searchQuery = document.getElementById('searchInput').value;
-    const resultsList = document.getElementById('resultsList');
-    const searchResults = document.getElementById('searchResults');
 
-    if (!searchQuery) {
-        alert('Please enter a search term.');
-        return;
-    }
+        // Search button click event
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const searchQuery = document.getElementById('searchInput').value;
+            const resultsList = document.getElementById('resultsList');
+            const searchResults = document.getElementById('searchResults');
+            const searchButton = document.getElementById('searchButton');
 
-    // Show loading message
-    resultsList.innerHTML = '<div class="text-center text-muted">Loading...</div>';
-    searchResults.style.display = 'block';
-
-    // Fetch applicant details via AJAX
-    fetch(`?action=searchApplicant&query=${searchQuery}`)
-        .then(response => response.json())
-        .then(data => {
-            resultsList.innerHTML = ''; // Clear previous results
-
-            if (data.status === 'success' && data.data.length > 0) {
-                data.data.forEach(applicant => {
-                    const listItem = document.createElement('div');
-                    listItem.className = 'list-group-item';
-                    listItem.innerHTML = `
-                        <strong>Name:</strong> ${applicant.applicant_name}<br>
-                        <strong>Application Number:</strong> ${applicant.application_number}<br>
-                        <strong>Email:</strong> ${applicant.email}
-                    `;
-                    listItem.addEventListener('click', () => {
-                        document.getElementById('application_number').value = applicant.application_number;
-                        document.getElementById('application_number').readOnly = true;
-                        searchResults.style.display = 'none';
-                        document.getElementById('submitBtn').disabled = false;
-                    });
-                    resultsList.appendChild(listItem);
-                });
-            } else {
-                resultsList.innerHTML = '<div class="text-center text-danger">No applicants found.</div>';
+            if (!searchQuery) {
+                alert('Please enter a search term.');
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            resultsList.innerHTML = '<div class="text-center text-danger">An error occurred. Please try again.</div>';
-        });
-});
 
+            // Show loading spinner and disable the search button
+            searchButton.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Searching...
+        `;
+            searchButton.disabled = true;
+
+            // Show loading message in the results list
+            resultsList.innerHTML = '<div class="text-center text-muted">Loading...</div>';
+            searchResults.style.display = 'block';
+
+            // Fetch applicant details via AJAX
+            fetch(`?action=searchApplicant&query=${searchQuery}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsList.innerHTML = ''; // Clear previous results
+
+                    if (data.status === 'success' && data.data.length > 0) {
+                        data.data.forEach(applicant => {
+                            const listItem = document.createElement('div');
+                            listItem.className = 'list-group-item';
+                            listItem.innerHTML = `
+                            <strong>Name:</strong> ${applicant.applicant_name}<br>
+                            <strong>Application Number:</strong> ${applicant.application_number}<br>
+                            <strong>Email:</strong> ${applicant.email}
+                        `;
+                            listItem.addEventListener('click', () => {
+                                document.getElementById('application_number').value = applicant.application_number;
+                                document.getElementById('application_number').readOnly = true;
+                                searchResults.style.display = 'none';
+                                document.getElementById('submitBtn').disabled = false;
+                            });
+                            resultsList.appendChild(listItem);
+                        });
+                    } else {
+                        resultsList.innerHTML = '<div class="text-center text-danger">No applicants found.</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    resultsList.innerHTML = '<div class="text-center text-danger">An error occurred. Please try again.</div>';
+                })
+                .finally(() => {
+                    // Reset the search button text and enable it
+                    searchButton.innerHTML = 'Search';
+                    searchButton.disabled = false;
+                });
+        });
     </script>
 </body>
 

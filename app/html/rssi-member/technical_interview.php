@@ -1026,6 +1026,14 @@ if (!empty($interviewData['submitted_by'])) {
                     return;
                 }
 
+                // Show loading spinner
+                const fetchButton = document.getElementById('fetchWrittenTest');
+                fetchButton.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Loading...
+            `;
+                fetchButton.disabled = true; // Disable the button during loading
+
                 // Make AJAX request to fetch written test data
                 $.ajax({
                     url: 'payment-api.php',
@@ -1037,6 +1045,10 @@ if (!empty($interviewData['submitted_by'])) {
                     dataType: 'json', // Expect JSON response
                     success: function(response) {
                         console.log("Response received:", response); // Log the entire response for debugging
+
+                        // Reset the button text and enable it
+                        fetchButton.innerHTML = 'Fetch';
+                        fetchButton.disabled = false;
 
                         // Check if the response status is 'success'
                         if (response.status === 'success') {
@@ -1051,6 +1063,10 @@ if (!empty($interviewData['submitted_by'])) {
                         }
                     },
                     error: function(xhr, status, error) {
+                        // Reset the button text and enable it
+                        fetchButton.innerHTML = 'Fetch';
+                        fetchButton.disabled = false;
+
                         // Handle AJAX errors
                         console.error('AJAX Error:', error);
                         alert('An error occurred while fetching data.');
