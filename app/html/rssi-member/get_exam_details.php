@@ -15,7 +15,7 @@ if ($applicationNumber) {
 
         if ($rtetSessionId) {
             // Fetch exam details using rtet_session_id
-            $examQuery = "SELECT te.name, tus.auth_code 
+            $examQuery = "SELECT te.name, tus.auth_code, tus.status 
                           FROM test_user_sessions tus
                           JOIN test_user_exams tue ON tus.user_exam_id = tue.id
                           JOIN test_exams te ON tue.exam_id = te.id
@@ -28,7 +28,8 @@ if ($applicationNumber) {
                     'success' => true,
                     'examName' => $examRow['name'],
                     'sessionId' => $rtetSessionId,
-                    'otp' => $examRow['auth_code']
+                    'otp' => $examRow['auth_code'],
+                    'status' => $examRow['status']
                 ]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Exam not created yet']);

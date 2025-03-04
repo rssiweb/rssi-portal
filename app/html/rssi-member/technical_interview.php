@@ -825,7 +825,7 @@ if (!empty($interviewData['submitted_by'])) {
         </section>
 
     </main><!-- End #main -->
-    <!-- Exam Details Modal -->
+    <!-- Modal -->
     <div class="modal fade" id="examDetailsModal" tabindex="-1" aria-labelledby="examDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -836,14 +836,23 @@ if (!empty($interviewData['submitted_by'])) {
                 <div class="modal-body">
                     <!-- Loading Indicator -->
                     <div id="loadingIndicator" class="text-center">
-                        <p>Loading...</p>
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading exam details...</p>
                     </div>
-                    <!-- Exam Details (Initially Hidden) -->
+
+                    <!-- Exam Details Content -->
                     <div id="examDetailsContent" style="display: none;">
-                        <p><strong>Exam Name:</strong> <span id="examName">N/A</span></p>
-                        <p><strong>Session ID:</strong> <span id="sessionId">N/A</span></p>
-                        <p><strong>OTP:</strong> <span id="otp" class="text-danger">N/A</span></p>
+                        <p><strong>Exam Name:</strong> <span id="examName"></span></p>
+                        <p><strong>Session ID:</strong> <span id="sessionId"></span></p>
+                        <p><strong>OTP:</strong> <span id="otp" class="text-danger"></span></p>
+                        <p><strong>Test Result:</strong> <span id="testResult"></span></p>
+                        <a id="examAnalysisLink" href="#" target="_blank" class="btn btn-primary mt-3" style="display: none;">
+                            View Exam Analysis
+                        </a>
                     </div>
+
                     <!-- Instructions for Interviewer -->
                     <div class="mt-4">
                         <h6>Instructions for Interviewer:</h6>
@@ -856,6 +865,10 @@ if (!empty($interviewData['submitted_by'])) {
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <!-- Refresh Button -->
+                    <button type="button" id="refreshButton" class="btn btn-info">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -1076,19 +1089,14 @@ if (!empty($interviewData['submitted_by'])) {
         });
     </script>
     <script>
-        document.getElementById('getExamDetails').addEventListener('click', function(event) {
-            event.preventDefault(); // Prevent the default link behavior
-
-            // Show the modal immediately with the "Loading..." indicator
-            const examDetailsModal = new bootstrap.Modal(document.getElementById('examDetailsModal'));
-            examDetailsModal.show();
+        // Function to fetch exam details
+        function fetchExamDetails() {
+            // Get the application number from the response data
+            const applicationNumber = "<?php echo $responseData['application_number']; ?>";
 
             // Show the "Loading..." indicator and hide the exam details
             document.getElementById('loadingIndicator').style.display = 'block';
             document.getElementById('examDetailsContent').style.display = 'none';
-
-            // Get the application number from the response data
-            const applicationNumber = "<?php echo $responseData['application_number']; ?>";
 
             // Make an AJAX request to fetch exam details
             fetch('get_exam_details.php?application_number=' + applicationNumber)
@@ -1097,17 +1105,37 @@ if (!empty($interviewData['submitted_by'])) {
                     const examNameSpan = document.getElementById('examName');
                     const sessionIdSpan = document.getElementById('sessionId');
                     const otpSpan = document.getElementById('otp');
+                    const testResultSpan = document.getElementById('testResult');
+                    const examAnalysisLink = document.getElementById('examAnalysisLink');
 
                     if (data.success) {
                         // Display the exam details in the modal
                         examNameSpan.textContent = data.examName;
                         sessionIdSpan.textContent = data.sessionId;
                         otpSpan.textContent = data.otp;
+
+                        // Handle status-based messages and links
+                        if (data.status === 'pending') {
+                            testResultSpan.textContent = 'Exam has not started yet.';
+                            examAnalysisLink.style.display = 'none'; // Hide the link
+                        } else if (data.status === 'active') {
+                            testResultSpan.textContent = 'Exam is still in progress.';
+                            examAnalysisLink.style.display = 'none'; // Hide the link
+                        } else if (data.status === 'submitted') {
+                            testResultSpan.textContent = 'Exam completed. Click below to view results.';
+                            examAnalysisLink.href = `../iexplore/exam_analysis.php?session_id=${data.sessionId}`;
+                            examAnalysisLink.style.display = 'block'; // Show the link
+                        } else {
+                            testResultSpan.textContent = 'Invalid exam status.';
+                            examAnalysisLink.style.display = 'none'; // Hide the link
+                        }
                     } else {
                         // Show "Exam not created yet" message
                         examNameSpan.textContent = 'Exam not created yet';
                         sessionIdSpan.textContent = 'N/A';
                         otpSpan.textContent = 'N/A';
+                        testResultSpan.textContent = 'N/A';
+                        examAnalysisLink.style.display = 'none'; // Hide the link
                     }
 
                     // Hide the "Loading..." indicator and show the exam details
@@ -1123,7 +1151,27 @@ if (!empty($interviewData['submitted_by'])) {
                     document.getElementById('examName').textContent = 'Error fetching details';
                     document.getElementById('sessionId').textContent = 'N/A';
                     document.getElementById('otp').textContent = 'N/A';
+                    document.getElementById('testResult').textContent = 'An error occurred. Please try again.';
+                    document.getElementById('examAnalysisLink').style.display = 'none'; // Hide the link
                 });
+        }
+
+        // Event listener for the "Check RTET Information" link
+        document.getElementById('getExamDetails').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent the default link behavior
+
+            // Show the modal immediately with the "Loading..." indicator
+            const examDetailsModal = new bootstrap.Modal(document.getElementById('examDetailsModal'));
+            examDetailsModal.show();
+
+            // Fetch exam details
+            fetchExamDetails();
+        });
+
+        // Event listener for the refresh button
+        document.getElementById('refreshButton').addEventListener('click', function() {
+            // Fetch exam details
+            fetchExamDetails();
         });
     </script>
 </body>
