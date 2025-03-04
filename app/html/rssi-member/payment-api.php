@@ -335,34 +335,59 @@ if ($formtype == "fetch_employee") {
 
 if ($formtype == "fetch_rtet") {
   if (isset($_POST['application_number']) && !empty(trim($_POST['application_number']))) {
-    // Sanitize the application number by trimming any unnecessary spaces
-    $applicationNumber = trim($_POST['application_number']);
+      // Sanitize the application number by trimming any unnecessary spaces
+      $applicationNumber = trim($_POST['application_number']);
 
-    // Prepare the query with a placeholder for the application number
-    $query = "SELECT score FROM rtet WHERE application_id = $1";
+      // Step 1: Fetch rtet_session_id from the signup table
+      $signupQuery = "SELECT rtet_session_id FROM signup WHERE application_number = $1;";
+      $signupResult = pg_query_params($con, $signupQuery, array($applicationNumber));
 
-    // Prepare the statement
-    $result = pg_prepare($con, "fetch_rtet_query", $query);
+      if ($signupResult && pg_num_rows($signupResult) > 0) {
+          $signupRow = pg_fetch_assoc($signupResult);
+          $rtetSessionId = $signupRow['rtet_session_id'];
 
-    // Execute the prepared statement with the sanitized application number
-    $result = pg_execute($con, "fetch_rtet_query", array($applicationNumber));
+          if ($rtetSessionId) {
+              // Step 2: Fetch status and user_exam_id from test_user_sessions table
+              $sessionQuery = "SELECT status, user_exam_id FROM test_user_sessions WHERE id = $1;";
+              $sessionResult = pg_query_params($con, $sessionQuery, array($rtetSessionId));
 
-    if ($result) {
-      if (pg_num_rows($result) > 0) {
-        $data = pg_fetch_assoc($result);
-        // Return the fetched score as a float in the response
-        echo json_encode(['status' => 'success', 'writtenTest' => floatval($data['score'])]);
+              if ($sessionResult && pg_num_rows($sessionResult) > 0) {
+                  $sessionRow = pg_fetch_assoc($sessionResult);
+                  $status = $sessionRow['status'];
+                  $userExamId = $sessionRow['user_exam_id'];
+
+                  // Step 3: Check the status and fetch score accordingly
+                  if ($status === 'submitted') {
+                      // Fetch score from test_user_exams table
+                      $scoreQuery = "SELECT score FROM test_user_exams WHERE id = $1;";
+                      $scoreResult = pg_query_params($con, $scoreQuery, array($userExamId));
+
+                      if ($scoreResult && pg_num_rows($scoreResult) > 0) {
+                          $scoreRow = pg_fetch_assoc($scoreResult);
+                          $score = floatval($scoreRow['score']);
+                          echo json_encode(['status' => 'success', 'writtenTest' => $score]);
+                      } else {
+                          echo json_encode(['status' => 'error', 'message' => 'Score not found for the exam.']);
+                      }
+                  } elseif ($status === 'pending') {
+                      echo json_encode(['status' => 'error', 'message' => 'Exam has not started yet.']);
+                  } elseif ($status === 'active') {
+                      echo json_encode(['status' => 'error', 'message' => 'Exam is still in progress.']);
+                  } else {
+                      echo json_encode(['status' => 'error', 'message' => 'Invalid exam status.']);
+                  }
+              } else {
+                  echo json_encode(['status' => 'error', 'message' => 'Session not found for the given application number.']);
+              }
+          } else {
+              echo json_encode(['status' => 'error', 'message' => 'No RTET session found for the given application number.']);
+          }
       } else {
-        // If no records found
-        echo json_encode(['status' => 'no_records', 'message' => 'No records found for the given application number.']);
+          echo json_encode(['status' => 'error', 'message' => 'Application number not found in the signup table.']);
       }
-    } else {
-      // In case of query failure
-      echo json_encode(['status' => 'error', 'message' => 'Database query failed: ' . pg_last_error($con)]);
-    }
   } else {
-    // If application number is missing or invalid
-    echo json_encode(['status' => 'error', 'message' => 'Application number is missing or invalid.']);
+      // If application number is missing or invalid
+      echo json_encode(['status' => 'error', 'message' => 'Application number is missing or invalid.']);
   }
 }
 
