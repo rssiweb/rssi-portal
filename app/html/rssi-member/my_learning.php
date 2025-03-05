@@ -9,12 +9,14 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
+// Initialize $data as an empty array
+$data = [];
+
 // Handle the filter submission (only for Admin users)
 $selectedAssociate = ($role === 'Admin') ? ($_POST['associatenumber'] ?? null) : null;
 $selectedCourse = ($role === 'Admin') ? ($_POST['course'] ?? null) : null;
 $selectedAssociateStatus = ($role === 'Admin') ? ($_POST['associate_status'] ?? null) : null;
 $selectedCourseStatus = ($role === 'Admin') ? ($_POST['course_status'] ?? null) : null;
-$data = [];
 
 // Check if any filter is selected (only for Admin users)
 $isFilterSelected = ($role === 'Admin') ? ($selectedAssociate || $selectedCourse || $selectedAssociateStatus || $selectedCourseStatus) : false;
@@ -91,6 +93,11 @@ if ($role === 'Admin') {
         } elseif ($selectedCourseStatus === 'Incomplete') {
             $query .= " AND ROUND(ws.f_score * 100, 2) < w.passingmarks";
         }
+    }
+
+    // If no filters are selected for Admin users, do not fetch any data
+    if (!$isFilterSelected) {
+        $query .= " AND 1=0"; // Force no results
     }
 } else {
     // For non-Admin users, restrict data to their own associatenumber
@@ -321,7 +328,7 @@ if ($role === 'Admin') {
                                                         <th>Associate Number</th>
                                                         <th>Name</th>
                                                     <?php endif; ?>
-                                                    <th>Completed On</th>
+                                                    <th>Attempt Date</th>
                                                     <th>Course ID</th>
                                                     <th>Course Name</th>
                                                     <th>Score</th>
@@ -363,7 +370,7 @@ if ($role === 'Admin') {
                                     <!-- Show "No records found" message only for Admin users when filters are applied -->
                                     <p class="text-danger">No records found for the selected filters.</p>
                                 <?php elseif ($role === 'Admin'): ?>
-                                    <!-- Show "Please select at least one filter" message only for Admin users -->
+                                    <!-- Show "Please select at least one filter" message only for Admin users when no filters are selected -->
                                     <p class="text-danger">Please select at least one filter to view results.</p>
                                 <?php else: ?>
                                     <!-- Show a generic message for non-Admin users if no data is found -->
