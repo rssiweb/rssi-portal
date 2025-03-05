@@ -10,7 +10,8 @@ if (!isLoggedIn("aid")) {
 
 validation();
 
-$searchTerm = $_GET['searchTerm'] ?? '';
+// Get the search term from the AJAX request
+$searchTerm = $_GET['q'] ?? '';
 
 $query = "SELECT courseid, coursename FROM wbt WHERE coursename ILIKE '%$searchTerm%' ORDER BY coursename LIMIT 10";
 $result = pg_query($con, $query);

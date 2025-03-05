@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
-
 include("../../util/login_util.php");
 
 if (!isLoggedIn("aid")) {
@@ -12,12 +11,15 @@ validation();
 
 // Handle the filter submission
 $selectedAssociate = $_POST['associatenumber'] ?? null;
+$selectedCourse = $_POST['course'] ?? null;
+$selectedAssociateStatus = $_POST['associate_status'] ?? null;
+$selectedCourseStatus = $_POST['course_status'] ?? null;
 $data = [];
 
-// Determine the associate number to use for the query
-$associateNumber = ($role === 'Admin' && $selectedAssociate) ? $selectedAssociate : $user_check;
+// Check if any filter is selected
+$isFilterSelected = $selectedAssociate || $selectedCourse || $selectedAssociateStatus || $selectedCourseStatus;
 
-// Define the query template
+// Define the base query template
 $query = "
 WITH LatestAttempts AS (
     SELECT 
@@ -33,6 +35,7 @@ WITH LatestAttempts AS (
 )
 SELECT 
     ws.associatenumber,
+    ram.fullname, -- Fetch fullname from rssimyaccount_members
     ws.timestamp AS completed_on,
     w.courseid,
     w.coursename,
@@ -62,14 +65,38 @@ JOIN
                       AND ws.timestamp = la.latest_timestamp
 JOIN 
     wbt w ON ws.courseid = w.courseid
+JOIN 
+    rssimyaccount_members ram ON ws.associatenumber = ram.associatenumber -- Join with rssimyaccount_members
 WHERE 
-    ws.associatenumber = $1"; // The WHERE clause will be dynamically adjusted based on role
+    1=1"; // Start with a true condition to allow dynamic WHERE clauses
+
+// Add filters dynamically based on user input
+$params = [];
+if ($selectedAssociate) {
+    $query .= " AND ws.associatenumber = $" . (count($params) + 1);
+    $params[] = $selectedAssociate;
+}
+if ($selectedCourse) {
+    $query .= " AND w.courseid = $" . (count($params) + 1);
+    $params[] = $selectedCourse;
+}
+if ($selectedAssociateStatus) {
+    $query .= " AND EXISTS (SELECT 1 FROM rssimyaccount_members ram WHERE ram.associatenumber = ws.associatenumber AND ram.filterstatus = $" . (count($params) + 1) . ")";
+    $params[] = $selectedAssociateStatus;
+}
+if ($selectedCourseStatus) {
+    if ($selectedCourseStatus === 'Active' || $selectedCourseStatus === 'Expired') {
+        $query .= " AND ws.timestamp + (w.validity || ' years')::INTERVAL " . ($selectedCourseStatus === 'Active' ? ">" : "<=") . " NOW()";
+    } elseif ($selectedCourseStatus === 'Incomplete') {
+        $query .= " AND ROUND(ws.f_score * 100, 2) < w.passingmarks";
+    }
+}
 
 // Prepare the statement
 $stmt = pg_prepare($con, "fetch_data", $query);
 
-// Execute the query with the appropriate associate number
-$result = pg_execute($con, "fetch_data", [$associateNumber]);
+// Execute the query with the appropriate parameters
+$result = pg_execute($con, "fetch_data", $params);
 
 // Fetch the results if the query was successful
 if ($result) {
@@ -77,6 +104,16 @@ if ($result) {
         $data[] = $row;
     }
 }
+
+// Fetch all courses for the course filter dropdown
+$coursesQuery = "SELECT courseid, coursename FROM wbt";
+$coursesResult = pg_query($con, $coursesQuery);
+$courses = pg_fetch_all($coursesResult);
+
+// Fetch all associate statuses for the status filter dropdown
+$statusQuery = "SELECT DISTINCT filterstatus FROM rssimyaccount_members";
+$statusResult = pg_query($con, $statusQuery);
+$statuses = pg_fetch_all($statusResult);
 ?>
 
 <!doctype html>
@@ -105,6 +142,7 @@ if ($result) {
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
@@ -124,7 +162,56 @@ if ($result) {
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
+    <!-- AJAX for Associatenumber and Course Dropdowns -->
+    <script>
+        $(document).ready(function() {
+            // Fetch Associates
+            // Initialize Select2 for associatenumber dropdown
+            $('#associatenumber').select2({
+                ajax: {
+                    url: 'fetch_associates.php', // Path to the PHP script
+                    dataType: 'json',
+                    delay: 250, // Delay in milliseconds before sending the request
+                    data: function(params) {
+                        return {
+                            q: params.term // Search term
+                        };
+                    },
+                    processResults: function(data) {
+                        // Map the results to the format expected by Select2
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true // Cache results for better performance
+                },
+                minimumInputLength: 1 // Require at least 1 character to start searching
+            });
+
+            // Fetch Courses
+            $('#course').select2({
+                ajax: {
+                    url: 'fetch_courses.php', // Create this file to fetch courses
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term // Search term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
+        });
+    </script>
 </head>
 
 <body>
@@ -156,31 +243,72 @@ if ($result) {
                             <br>
                             <div class="container my-5">
                                 <!-- Filter Form -->
-                                <?php if ($role === 'Admin'): ?>
-                                    <form method="POST" class="mb-4">
-                                        <div class="mb-3">
-                                            <label for="associatenumber" class="form-label">Associate Number</label>
-                                            <div class="input-group">
-                                                <input
-                                                    type="text"
-                                                    class="form-control"
-                                                    id="associatenumber"
-                                                    name="associatenumber"
-                                                    value="<?= htmlspecialchars($selectedAssociate ?? '') ?>"
-                                                    placeholder="Enter Associate Number"
-                                                    required>
-                                                <button type="submit" class="btn btn-primary">Filter</button>
+                                <form method="POST" class="mb-4">
+                                    <div class="row">
+                                        <?php if ($role === 'Admin'): ?>
+                                            <div class="col-md-3 mb-3">
+                                                <label for="associatenumber" class="form-label">Associate</label>
+                                                <select class="form-control select2" id="associatenumber" name="associatenumber">
+                                                    <option value="">Select Associate</option>
+                                                    <?php if ($selectedAssociate): ?>
+                                                        <!-- Pre-select the selected associate if it exists -->
+                                                        <option value="<?= htmlspecialchars($selectedAssociate) ?>" selected>
+                                                            <?= htmlspecialchars($selectedAssociate) ?> <!-- You can fetch and display the associate's name here if needed -->
+                                                        </option>
+                                                    <?php endif; ?>
+                                                </select>
                                             </div>
+                                        <?php endif; ?>
+
+                                        <div class="col-md-3 mb-3">
+                                            <label for="course" class="form-label">Course</label>
+                                            <select class="form-control select2" id="course" name="course">
+                                                <option value="">Select Course</option>
+                                                <?php if ($selectedCourse): ?>
+                                                    <!-- Pre-select the selected course if it exists -->
+                                                    <option value="<?= htmlspecialchars($selectedCourse) ?>" selected>
+                                                        <?= htmlspecialchars($selectedCourse) ?> <!-- You can fetch and display the course name here if needed -->
+                                                    </option>
+                                                <?php endif; ?>
+                                            </select>
                                         </div>
-                                    </form>
-                                <?php endif; ?>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="associate_status" class="form-label">Associate Status</label>
+                                            <select class="form-select" id="associate_status" name="associate_status">
+                                                <option value="">Select Status</option>
+                                                <?php foreach ($statuses as $status): ?>
+                                                    <option value="<?= htmlspecialchars($status['filterstatus']) ?>" <?= ($selectedAssociateStatus == $status['filterstatus']) ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($status['filterstatus']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="course_status" class="form-label">Course Status</label>
+                                            <select class="form-select" id="course_status" name="course_status">
+                                                <option value="">Select Status</option>
+                                                <option value="Active" <?= ($selectedCourseStatus == 'Active') ? 'selected' : '' ?>>Active</option>
+                                                <option value="Expired" <?= ($selectedCourseStatus == 'Expired') ? 'selected' : '' ?>>Expired</option>
+                                                <option value="Incomplete" <?= ($selectedCourseStatus == 'Incomplete') ? 'selected' : '' ?>>Incomplete</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <button type="submit" class="btn btn-primary">Filter</button>
+                                            <!-- Reset Button -->
+                                            <button type="button" id="resetFilters" class="btn btn-secondary">Reset</button>
+                                        </div>
+                                    </div>
+                                </form>
                                 <!-- Data Table -->
-                                <?php if ($data): ?>
+                                <?php if ($isFilterSelected && $data): ?>
                                     <div class="table-responsive">
                                         <table id="coursesTable" class="table">
                                             <thead>
                                                 <tr>
                                                     <th>Associate Number</th>
+                                                    <th>Name</th>
                                                     <th>Completed On</th>
                                                     <th>Course ID</th>
                                                     <th>Course Name</th>
@@ -193,6 +321,7 @@ if ($result) {
                                                 <?php foreach ($data as $row): ?>
                                                     <tr>
                                                         <td><?= htmlspecialchars($row['associatenumber']) ?></td>
+                                                        <td><?= htmlspecialchars($row['fullname']) ?></td>
                                                         <td><?= date('d/m/Y h:i A', strtotime($row['completed_on'])) ?></td>
                                                         <td><?= htmlspecialchars($row['courseid']) ?></td>
                                                         <td><?= htmlspecialchars($row['coursename']) ?></td>
@@ -216,8 +345,10 @@ if ($result) {
                                             </tbody>
                                         </table>
                                     </div>
-                                <?php elseif ($selectedAssociate): ?>
-                                    <p class="text-danger">No records found for the selected associate number.</p>
+                                <?php elseif ($isFilterSelected): ?>
+                                    <p class="text-danger">No records found for the selected filters.</p>
+                                <?php else: ?>
+                                    <p class="text-danger">Please select at least one filter to view results.</p>
                                 <?php endif; ?>
                             </div>
 
@@ -247,6 +378,24 @@ if ($result) {
                     // other options...
                 });
             <?php endif; ?>
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Reset Filters Button
+            $('#resetFilters').on('click', function() {
+                // Reset form fields
+                $('#associatenumber').val('').trigger('change'); // Clear Select2 dropdown
+                $('#course').val('').trigger('change'); // Clear Select2 dropdown
+                $('#associate_status').val(''); // Clear associate status dropdown
+                $('#course_status').val(''); // Clear course status dropdown
+
+                // Option 1: Reload the page to reset everything
+                window.location.href = window.location.pathname; // Reload the page without query parameters
+
+                // Option 2: Reset the table (if you don't want to reload the page)
+                // fetchAndDisplayData(); // Call a function to fetch and display all data
+            });
         });
     </script>
 

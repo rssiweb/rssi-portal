@@ -340,7 +340,7 @@ if (!empty($courseid_search)) {
                     delay: 250,
                     data: function(params) {
                         return {
-                            searchTerm: params.term
+                            q: params.term
                         }; // Pass the search term
                     },
                     processResults: function(data) {
