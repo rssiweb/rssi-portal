@@ -169,7 +169,7 @@ $result = pg_query($con, $query); // Assuming $con is your PostgreSQL connection
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>iExplore Defaulters</title>
+    <title>Defaulters List</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -205,12 +205,12 @@ $result = pg_query($con, $query); // Assuming $con is your PostgreSQL connection
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>iExplore Defaulters</h1>
+            <h1>Defaulters List</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
-                    <li class="breadcrumb-item active">iExplore Defaulters</li>
+                    <li class="breadcrumb-item"><a href="#">iExplore Learner</a></li>
+                    <li class="breadcrumb-item active">Defaulters List</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -230,7 +230,7 @@ $result = pg_query($con, $query); // Assuming $con is your PostgreSQL connection
                                         </div>
                                     </div>
                             <div class="container my-4">
-                                <!-- <h3 class="mb-3">iExplore Defaulters</h3> -->
+                                <!-- <h3 class="mb-3">Defaulters List</h3> -->
 
                                 <div class="table-responsive">
                                     <table id="coursesTable" class="table">

@@ -112,7 +112,7 @@ $resultArr = pg_fetch_all($result);
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
+                    <li class="breadcrumb-item"><a href="#">iExplore Learner</a></li>
                     <li class="breadcrumb-item"><a href="library.php">Libary</a></li>
                     <li class="breadcrumb-item active">My Book</li>
                 </ol>

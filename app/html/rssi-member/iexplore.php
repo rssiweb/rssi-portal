@@ -232,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>iExplore</title>
+    <title>Courses</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -317,12 +317,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>iExplore</h1>
+            <h1>Courses</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
-                    <li class="breadcrumb-item active">iExplore</li>
+                    <li class="breadcrumb-item"><a href="#">iExplore Learner</a></li>
+                    <li class="breadcrumb-item active">Courses</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->

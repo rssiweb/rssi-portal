@@ -196,20 +196,20 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#learning" data-bs-toggle="collapse" href="#">
-          <span>Learning & Collaboration</span><i class="bi bi-chevron-down ms-auto"></i>
+          <span>iExplore Learner</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="learning" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
             <a id="iexploreLink" href="iexplore.php">
-              <span>iExplore</span>
-            </a>
-          </li>
-          <!-- <li>
-            <a id="viscoLink" href="visco.php">
-              <span>VISCO</span>
+              <span>Courses</span>
             </a>
           </li>
           <li>
+            <a id="my_learning" href="my_learning.php">
+              <span>My Learnings</span>
+            </a>
+          </li>
+          <!-- <li>
             <a id="libraryLink" href="library.php">
               <span>Libary</span>
             </a>
@@ -221,7 +221,7 @@
           </li>
           <li>
             <a id="iexplore_defaulters" href="iexplore_defaulters.php">
-              <span>iExplore Defaulters</span>
+              <span>Defaulters List</span>
             </a>
           </li>
           <li>
@@ -634,7 +634,7 @@
       },
       {
         id: 'learning',
-        linkId: 'iexploreLink',
+        linkId: 'my_learning',
         url: 'my_learning.php'
       },
       {

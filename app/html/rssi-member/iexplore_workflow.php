@@ -184,7 +184,7 @@ if (!$result) {
             <nav>
             <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
+                    <li class="breadcrumb-item"><a href="#">iExplore Learner</a></li>
                     <li class="breadcrumb-item active">iExplore Workflow</li>
                 </ol>
             </nav>

@@ -9,15 +9,15 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-// Handle the filter submission
-$selectedAssociate = $_POST['associatenumber'] ?? null;
-$selectedCourse = $_POST['course'] ?? null;
-$selectedAssociateStatus = $_POST['associate_status'] ?? null;
-$selectedCourseStatus = $_POST['course_status'] ?? null;
+// Handle the filter submission (only for Admin users)
+$selectedAssociate = ($role === 'Admin') ? ($_POST['associatenumber'] ?? null) : null;
+$selectedCourse = ($role === 'Admin') ? ($_POST['course'] ?? null) : null;
+$selectedAssociateStatus = ($role === 'Admin') ? ($_POST['associate_status'] ?? null) : null;
+$selectedCourseStatus = ($role === 'Admin') ? ($_POST['course_status'] ?? null) : null;
 $data = [];
 
-// Check if any filter is selected
-$isFilterSelected = $selectedAssociate || $selectedCourse || $selectedAssociateStatus || $selectedCourseStatus;
+// Check if any filter is selected (only for Admin users)
+$isFilterSelected = ($role === 'Admin') ? ($selectedAssociate || $selectedCourse || $selectedAssociateStatus || $selectedCourseStatus) : false;
 
 // Define the base query template
 $query = "
@@ -70,26 +70,32 @@ JOIN
 WHERE 
     1=1"; // Start with a true condition to allow dynamic WHERE clauses
 
-// Add filters dynamically based on user input
+// Add filters dynamically based on user input (only for Admin users)
 $params = [];
-if ($selectedAssociate) {
-    $query .= " AND ws.associatenumber = $" . (count($params) + 1);
-    $params[] = $selectedAssociate;
-}
-if ($selectedCourse) {
-    $query .= " AND w.courseid = $" . (count($params) + 1);
-    $params[] = $selectedCourse;
-}
-if ($selectedAssociateStatus) {
-    $query .= " AND EXISTS (SELECT 1 FROM rssimyaccount_members ram WHERE ram.associatenumber = ws.associatenumber AND ram.filterstatus = $" . (count($params) + 1) . ")";
-    $params[] = $selectedAssociateStatus;
-}
-if ($selectedCourseStatus) {
-    if ($selectedCourseStatus === 'Active' || $selectedCourseStatus === 'Expired') {
-        $query .= " AND ws.timestamp + (w.validity || ' years')::INTERVAL " . ($selectedCourseStatus === 'Active' ? ">" : "<=") . " NOW()";
-    } elseif ($selectedCourseStatus === 'Incomplete') {
-        $query .= " AND ROUND(ws.f_score * 100, 2) < w.passingmarks";
+if ($role === 'Admin') {
+    if ($selectedAssociate) {
+        $query .= " AND ws.associatenumber = $" . (count($params) + 1);
+        $params[] = $selectedAssociate;
     }
+    if ($selectedCourse) {
+        $query .= " AND w.courseid = $" . (count($params) + 1);
+        $params[] = $selectedCourse;
+    }
+    if ($selectedAssociateStatus) {
+        $query .= " AND EXISTS (SELECT 1 FROM rssimyaccount_members ram WHERE ram.associatenumber = ws.associatenumber AND ram.filterstatus = $" . (count($params) + 1) . ")";
+        $params[] = $selectedAssociateStatus;
+    }
+    if ($selectedCourseStatus) {
+        if ($selectedCourseStatus === 'Active' || $selectedCourseStatus === 'Expired') {
+            $query .= " AND ws.timestamp + (w.validity || ' years')::INTERVAL " . ($selectedCourseStatus === 'Active' ? ">" : "<=") . " NOW()";
+        } elseif ($selectedCourseStatus === 'Incomplete') {
+            $query .= " AND ROUND(ws.f_score * 100, 2) < w.passingmarks";
+        }
+    }
+} else {
+    // For non-Admin users, restrict data to their own associatenumber
+    $query .= " AND ws.associatenumber = $" . (count($params) + 1);
+    $params[] = $user_check;
 }
 
 // Prepare the statement
@@ -105,17 +111,22 @@ if ($result) {
     }
 }
 
-// Fetch all courses for the course filter dropdown
-$coursesQuery = "SELECT courseid, coursename FROM wbt";
-$coursesResult = pg_query($con, $coursesQuery);
-$courses = pg_fetch_all($coursesResult);
+// Fetch all courses for the course filter dropdown (only for Admin users)
+$courses = [];
+if ($role === 'Admin') {
+    $coursesQuery = "SELECT courseid, coursename FROM wbt";
+    $coursesResult = pg_query($con, $coursesQuery);
+    $courses = pg_fetch_all($coursesResult);
+}
 
-// Fetch all associate statuses for the status filter dropdown
-$statusQuery = "SELECT DISTINCT filterstatus FROM rssimyaccount_members";
-$statusResult = pg_query($con, $statusQuery);
-$statuses = pg_fetch_all($statusResult);
+// Fetch all associate statuses for the status filter dropdown (only for Admin users)
+$statuses = [];
+if ($role === 'Admin') {
+    $statusQuery = "SELECT DISTINCT filterstatus FROM rssimyaccount_members";
+    $statusResult = pg_query($con, $statusQuery);
+    $statuses = pg_fetch_all($statusResult);
+}
 ?>
-
 <!doctype html>
 <html lang="en">
 
@@ -135,7 +146,7 @@ $statuses = pg_fetch_all($statusResult);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>My Learning</title>
+    <title>My Learnings</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -221,13 +232,12 @@ $statuses = pg_fetch_all($statusResult);
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>My Learning</h1>
+            <h1>My Learnings</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Learning & Collaboration</a></li>
-                    <li class="breadcrumb-item"><a href="iexplore_defaulters.php">iExplore Defaulters</a></li>
-                    <li class="breadcrumb-item active">My Learning</li>
+                    <li class="breadcrumb-item"><a href="#">iExplore Learner</a></li>
+                    <li class="breadcrumb-item active">My Learnings</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -242,10 +252,10 @@ $statuses = pg_fetch_all($statusResult);
                         <div class="card-body">
                             <br>
                             <div class="container my-5">
-                                <!-- Filter Form -->
-                                <form method="POST" class="mb-4">
-                                    <div class="row">
-                                        <?php if ($role === 'Admin'): ?>
+                                <?php if ($role === 'Admin'): ?>
+                                    <!-- Filter Form for Admin Users -->
+                                    <form method="POST" class="mb-4">
+                                        <div class="row">
                                             <div class="col-md-3 mb-3">
                                                 <label for="associatenumber" class="form-label">Associate</label>
                                                 <select class="form-control select2" id="associatenumber" name="associatenumber">
@@ -258,57 +268,59 @@ $statuses = pg_fetch_all($statusResult);
                                                     <?php endif; ?>
                                                 </select>
                                             </div>
-                                        <?php endif; ?>
 
-                                        <div class="col-md-3 mb-3">
-                                            <label for="course" class="form-label">Course</label>
-                                            <select class="form-control select2" id="course" name="course">
-                                                <option value="">Select Course</option>
-                                                <?php if ($selectedCourse): ?>
-                                                    <!-- Pre-select the selected course if it exists -->
-                                                    <option value="<?= htmlspecialchars($selectedCourse) ?>" selected>
-                                                        <?= htmlspecialchars($selectedCourse) ?> <!-- You can fetch and display the course name here if needed -->
-                                                    </option>
-                                                <?php endif; ?>
-                                            </select>
+                                            <div class="col-md-3 mb-3">
+                                                <label for="course" class="form-label">Course</label>
+                                                <select class="form-control select2" id="course" name="course">
+                                                    <option value="">Select Course</option>
+                                                    <?php if ($selectedCourse): ?>
+                                                        <!-- Pre-select the selected course if it exists -->
+                                                        <option value="<?= htmlspecialchars($selectedCourse) ?>" selected>
+                                                            <?= htmlspecialchars($selectedCourse) ?> <!-- You can fetch and display the course name here if needed -->
+                                                        </option>
+                                                    <?php endif; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label for="associate_status" class="form-label">Associate Status</label>
+                                                <select class="form-select" id="associate_status" name="associate_status">
+                                                    <option value="">Select Status</option>
+                                                    <?php foreach ($statuses as $status): ?>
+                                                        <option value="<?= htmlspecialchars($status['filterstatus']) ?>" <?= ($selectedAssociateStatus == $status['filterstatus']) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($status['filterstatus']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label for="course_status" class="form-label">Course Status</label>
+                                                <select class="form-select" id="course_status" name="course_status">
+                                                    <option value="">Select Status</option>
+                                                    <option value="Active" <?= ($selectedCourseStatus == 'Active') ? 'selected' : '' ?>>Active</option>
+                                                    <option value="Expired" <?= ($selectedCourseStatus == 'Expired') ? 'selected' : '' ?>>Expired</option>
+                                                    <option value="Incomplete" <?= ($selectedCourseStatus == 'Incomplete') ? 'selected' : '' ?>>Incomplete</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div class="col-md-3 mb-3">
-                                            <label for="associate_status" class="form-label">Associate Status</label>
-                                            <select class="form-select" id="associate_status" name="associate_status">
-                                                <option value="">Select Status</option>
-                                                <?php foreach ($statuses as $status): ?>
-                                                    <option value="<?= htmlspecialchars($status['filterstatus']) ?>" <?= ($selectedAssociateStatus == $status['filterstatus']) ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($status['filterstatus']) ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <button type="submit" class="btn btn-primary">Filter</button>
+                                                <!-- Reset Button -->
+                                                <button type="button" id="resetFilters" class="btn btn-secondary">Reset</button>
+                                            </div>
                                         </div>
-                                        <div class="col-md-3 mb-3">
-                                            <label for="course_status" class="form-label">Course Status</label>
-                                            <select class="form-select" id="course_status" name="course_status">
-                                                <option value="">Select Status</option>
-                                                <option value="Active" <?= ($selectedCourseStatus == 'Active') ? 'selected' : '' ?>>Active</option>
-                                                <option value="Expired" <?= ($selectedCourseStatus == 'Expired') ? 'selected' : '' ?>>Expired</option>
-                                                <option value="Incomplete" <?= ($selectedCourseStatus == 'Incomplete') ? 'selected' : '' ?>>Incomplete</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <button type="submit" class="btn btn-primary">Filter</button>
-                                            <!-- Reset Button -->
-                                            <button type="button" id="resetFilters" class="btn btn-secondary">Reset</button>
-                                        </div>
-                                    </div>
-                                </form>
+                                    </form>
+                                <?php endif; ?>
                                 <!-- Data Table -->
-                                <?php if ($isFilterSelected && $data): ?>
+                                <?php if ($data): ?>
                                     <div class="table-responsive">
                                         <table id="coursesTable" class="table">
                                             <thead>
                                                 <tr>
-                                                    <th>Associate Number</th>
-                                                    <th>Name</th>
+                                                    <?php if ($role === 'Admin'): ?>
+                                                        <th>Associate Number</th>
+                                                        <th>Name</th>
+                                                    <?php endif; ?>
                                                     <th>Completed On</th>
                                                     <th>Course ID</th>
                                                     <th>Course Name</th>
@@ -320,8 +332,10 @@ $statuses = pg_fetch_all($statusResult);
                                             <tbody>
                                                 <?php foreach ($data as $row): ?>
                                                     <tr>
-                                                        <td><?= htmlspecialchars($row['associatenumber']) ?></td>
-                                                        <td><?= htmlspecialchars($row['fullname']) ?></td>
+                                                        <?php if ($role === 'Admin'): ?>
+                                                            <td><?= htmlspecialchars($row['associatenumber']) ?></td>
+                                                            <td><?= htmlspecialchars($row['fullname']) ?></td>
+                                                        <?php endif; ?>
                                                         <td><?= date('d/m/Y h:i A', strtotime($row['completed_on'])) ?></td>
                                                         <td><?= htmlspecialchars($row['courseid']) ?></td>
                                                         <td><?= htmlspecialchars($row['coursename']) ?></td>
@@ -345,10 +359,15 @@ $statuses = pg_fetch_all($statusResult);
                                             </tbody>
                                         </table>
                                     </div>
-                                <?php elseif ($isFilterSelected): ?>
+                                <?php elseif ($role === 'Admin' && $isFilterSelected): ?>
+                                    <!-- Show "No records found" message only for Admin users when filters are applied -->
                                     <p class="text-danger">No records found for the selected filters.</p>
-                                <?php else: ?>
+                                <?php elseif ($role === 'Admin'): ?>
+                                    <!-- Show "Please select at least one filter" message only for Admin users -->
                                     <p class="text-danger">Please select at least one filter to view results.</p>
+                                <?php else: ?>
+                                    <!-- Show a generic message for non-Admin users if no data is found -->
+                                    <p class="text-danger">No records found.</p>
                                 <?php endif; ?>
                             </div>
 
