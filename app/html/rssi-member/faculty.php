@@ -26,7 +26,7 @@ $is_user = isset($_POST['is_user']) ? $_POST['is_user'] : null;
 $commonJoins = "
     LEFT JOIN (SELECT status, userid FROM asset) asset ON asset.userid = rssimyaccount_members.associatenumber
     LEFT JOIN (SELECT DISTINCT username, MAX(logintime) AS logintime FROM userlog_member GROUP BY username) userlog_member ON rssimyaccount_members.associatenumber = userlog_member.username
-    LEFT JOIN (SELECT taggedto FROM gps) gps ON rssimyaccount_members.associatenumber = gps.taggedto
+    LEFT JOIN (SELECT taggedto FROM gps where asset_status='Active') gps ON rssimyaccount_members.associatenumber = gps.taggedto
     LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS sltd FROM leavedb_leavedb WHERE typeofleave = 'Sick Leave' AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) sltaken ON rssimyaccount_members.associatenumber = sltaken.applicantid
     LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS cltd FROM leavedb_leavedb WHERE typeofleave = 'Casual Leave' AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) cltaken ON rssimyaccount_members.associatenumber = cltaken.applicantid
     LEFT JOIN (SELECT applicantid, COALESCE(SUM(days), 0) AS lwptd FROM leavedb_leavedb WHERE typeofleave = 'Leave Without Pay' AND lyear = '$lyear' AND status = 'Approved' GROUP BY applicantid) lwptaken ON rssimyaccount_members.associatenumber = lwptaken.applicantid
