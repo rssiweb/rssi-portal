@@ -157,7 +157,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
   <link href="../img/favicon.ico" rel="icon">
 
   <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+  <!-- JavaScript Library Files -->
+  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+  <!-- AJAX for Associatenumber and Course Dropdowns -->
+  <script>
+    $(document).ready(function() {
+      // Fetch Associates
+      // Initialize Select2 for associatenumber dropdown
+      $('#lookupEmployeeId').select2({
+        ajax: {
+          url: 'fetch_associates.php', // Path to the PHP script
+          dataType: 'json',
+          delay: 250, // Delay in milliseconds before sending the request
+          data: function(params) {
+            return {
+              q: params.term // Search term
+            };
+          },
+          processResults: function(data) {
+            // Map the results to the format expected by Select2
+            return {
+              results: data.results
+            };
+          },
+          cache: true // Cache results for better performance
+        },
+        minimumInputLength: 1 // Require at least 1 character to start searching
+      });
+    });
+  </script>
 </head>
 
 <body>
@@ -184,11 +215,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
       <hr>
       <div class="row">
         <div class="col-md-6">
-          <div class="mb-3">
-            <label for="lookupEmployeeId" class="form-label">Associate Number:</label>
-            <input type="text" class="form-control" id="lookupEmployeeId" name="lookupEmployeeId" value="<?php echo $associate_number ?>" placeholder="Enter associate number" required>
-            <div class="form-text">Enter the associate number to search for their information.</div>
-          </div>
+          <label for="lookupEmployeeId" class="form-label">Associate</label>
+          <select class="form-control select2" id="lookupEmployeeId" name="lookupEmployeeId">
+            <option value="">Select Associate</option>
+            <?php if ($associate_number): ?>
+              <!-- Pre-select the selected associate if it exists -->
+              <option value="<?= htmlspecialchars($associate_number) ?>" selected>
+                <?= htmlspecialchars($associate_number) ?> <!-- You can fetch and display the associate's name here if needed -->
+              </option>
+            <?php endif; ?>
+
+          </select>
         </div>
         <div class="col-md-6">
           <div class="mb-3">
@@ -627,9 +664,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form-type']) && $_POS
           var subCategoryOptions = [];
 
           if (selectedComponent === "Earning") {
-            subCategoryOptions = ["Basic Salary", "Bonus", "Monthly Bonus","Bonus Payout","Overtime Pay"];
+            subCategoryOptions = ["Basic Salary", "Bonus", "Monthly Bonus", "Bonus Payout", "Overtime Pay"];
           } else if (selectedComponent === "Deduction") {
-            subCategoryOptions = ["Payment adjustment", "LWP deduction", "Service Charge", "Salary Advance Recovery","Deferred Bonus Deduction"];
+            subCategoryOptions = ["Payment adjustment", "LWP deduction", "Service Charge", "Salary Advance Recovery", "Deferred Bonus Deduction"];
           } else {
             subCategoryOptions = [];
           }

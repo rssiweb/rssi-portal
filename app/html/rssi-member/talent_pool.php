@@ -322,7 +322,6 @@ $resultArr = pg_fetch_all($result);
                                                 ? (new DateTime($array['tech_interview_schedule']))->format('d/m/Y h:i a')
                                                 : 'No interview scheduled') . ". Please ensure you arrive on time at the interview location.\n\n"
                                                 . "Please ensure you have the following items with you for the interview:\n"
-                                                . "• Your Gmail ID and password\n"
                                                 . "• Proof of identity\n"
                                                 . "• Educational certificates\n"
                                                 . "• Professional certifications (if any)\n"
