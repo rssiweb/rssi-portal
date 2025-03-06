@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 
 $user_check = $_SESSION['aid'];
+$_SESSION['user_type'] = 'rssi-member';
 $view_users_query = "
     SELECT * 
     FROM rssimyaccount_members 
