@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($change_password_query) {
             // Execute the query using prepared statements
-            $result = pg_query_params($con, $change_password_query, [$newpass_hash, $user_check, $now, $user_id]);
+            $result = pg_query_params($con, $change_password_query, [$newpass_hash, $associatenumber, $now, $user_id]);
 
             if (!$result) {
                 // If the query fails, show an error

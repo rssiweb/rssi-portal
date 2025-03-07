@@ -85,7 +85,7 @@ if (isset($_POST['approve']) || isset($_POST['reject'])) {
         $updateStmt = pg_prepare($con, "update_external_score", $updateQuery);
         $updateResult = pg_execute($con, "update_external_score", [
             $action,
-            $user_check, // Assuming $user_check contains the logged-in user's data
+            $associatenumber, // Assuming $associatenumber contains the logged-in user's data
             date('Y-m-d H:i:s'), // Current timestamp
             $externalScoreId
         ]);

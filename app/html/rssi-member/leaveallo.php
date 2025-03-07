@@ -29,7 +29,7 @@ if ($role == "Admin") {
         $allo_daycount = isset($_POST['allo_daycount']) ? $_POST['allo_daycount'] : null;
         $allo_leavetype = isset($_POST['allo_leavetype']) ? $_POST['allo_leavetype'] : null;
         $allo_remarks = isset($_POST['allo_remarks']) ? $_POST['allo_remarks'] : null;
-        $allocatedbyid = $user_check;
+        $allocatedbyid = $associatenumber;
         $allo_academicyear = isset($_POST['allo_academicyear']) ? $_POST['allo_academicyear'] : null;
 
         // Check if the leave allocation ID is set

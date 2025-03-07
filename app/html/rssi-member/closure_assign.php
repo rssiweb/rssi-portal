@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $assigned_to = $_POST['associateId'];
     $timestamp = date('Y-m-d H:i:s');
     $id = uniqid(); // Generate unique ID in PHP
-    $assigned_by = $user_check; // Use the logged-in user's identifier for submission tracking
+    $assigned_by = $associatenumber; // Use the logged-in user's identifier for submission tracking
 
     // Prepare and execute query using $con
     $query = "INSERT INTO closure_assign (id, date, assigned_to, assigned_by, timestamp) VALUES ($1, $2, $3, $4, $5)";

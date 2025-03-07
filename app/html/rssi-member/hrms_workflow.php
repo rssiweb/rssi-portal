@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           WHERE workflow_id = $2";
 
         // Prepare and execute the query
-        $result = pg_query_params($con, $query, array($user_check, $workflow_id));
+        $result = pg_query_params($con, $query, array($associatenumber, $workflow_id));
 
         if ($result) {
             // Sanitize the field name to prevent SQL injection
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           WHERE workflow_id = $2";
 
         // Prepare and execute the query
-        $result = pg_query_params($con, $query, array($user_check, $workflow_id));
+        $result = pg_query_params($con, $query, array($associatenumber, $workflow_id));
 
         if ($result) {
             if (!empty($requestedby_email)) {

@@ -17,22 +17,22 @@ if (!isLoggedIn("aid")) {
 validation();
 ?>
 <?php
-$associatenumber = ($role === 'Admin')
+$search_id = ($role === 'Admin')
     ? (isset($_GET['associatenumber']) ? $_GET['associatenumber'] : null)
-    : $user_check;
+    : $associatenumber;
 
 // Deny access if non-Admin user manipulates the URL
-if ($role !== 'Admin' && isset($_GET['associatenumber']) && $_GET['associatenumber'] !== $user_check) {
+if ($role !== 'Admin' && isset($_GET['associatenumber']) && $_GET['associatenumber'] !== $associatenumber) {
     echo "<script>
     alert('You are not authorized to view this data.');
-    window.location.href = 'hrms.php?associatenumber=$user_check';
+    window.location.href = 'hrms.php?associatenumber=$associatenumber';
 </script>";
     exit;
 }
 
 
 // Step 1: Fetch current associate data (this part remains the same)
-$sql = "SELECT * FROM rssimyaccount_members WHERE associatenumber='$associatenumber'";
+$sql = "SELECT * FROM rssimyaccount_members WHERE associatenumber='$search_id'";
 $result = pg_query($con, $sql);
 $resultArr = pg_fetch_all($result);
 
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Fetch existing values for the associatenumber
     $query = "SELECT * FROM rssimyaccount_members WHERE associatenumber = $1";
-    $result = pg_query_params($con, $query, [$associatenumber]);
+    $result = pg_query_params($con, $query, [$search_id]);
 
     if ($result && pg_num_rows($result) > 0) {
         $current_data = pg_fetch_assoc($result);
@@ -182,13 +182,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Admin and user role validation as before
             if ($role === 'Admin' && in_array($field, $admin_only_fields)) {
-                if ($associatenumber === $user_check) {
+                if ($search_id === $associatenumber) {
                     $unauthorized_updates[] = $field; // Admin cannot update their own data
                 } else {
                     $update_fields[] = "$field = " . ($new_value === null ? "NULL" : "'$new_value'");
                     $updated_fields[] = $field;
                 }
-            } elseif ($associatenumber === $user_check && in_array($field, $user_editable_fields)) {
+            } elseif ($search_id === $associatenumber && in_array($field, $user_editable_fields)) {
                 if (in_array($field, $fields_requiring_approval)) {
                     // Track pending approval fields
                     $pending_approval_fields[] = $field;
@@ -227,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // If there are fields to update, build the query and execute it
         if (!empty($update_fields)) {
-            $update_sql = "UPDATE rssimyaccount_members SET " . implode(", ", $update_fields) . " WHERE associatenumber = '$associatenumber'";
+            $update_sql = "UPDATE rssimyaccount_members SET " . implode(", ", $update_fields) . " WHERE associatenumber = '$search_id'";
 
             $update_result = pg_query($con, $update_sql);
             $cmdtuples = pg_affected_rows($update_result);
@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($pending_approval_fields as $field) {
             $new_value = pg_escape_string($con, $_POST[$field]);
             $workflow_query = "INSERT INTO hrms_workflow (associatenumber, fieldname, submitted_value, submission_timestamp, reviewer_status) VALUES ($1, $2, $3, NOW(), 'Pending')";
-            $workflow_result = pg_query_params($con, $workflow_query, [$associatenumber, $field, $new_value]);
+            $workflow_result = pg_query_params($con, $workflow_query, [$search_id, $field, $new_value]);
 
             if (!$workflow_result) {
                 echo "<script>
@@ -253,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pending_fields_list = implode(", ", $pending_approval_fields);
             if (!empty($requestedby_email)) {
                 sendEmail("hrms_workflow", [
-                    "associatenumber" => $associatenumber,
+                    "associatenumber" => $search_id,
                     "fullname" => $fullname,
                     "pending_fields_list" => $pending_fields_list,
                     "now" => date("d/m/Y g:i a"),
@@ -307,7 +307,7 @@ $card_access = [
 $accessible_cards = isset($card_access[$role]) ? $card_access[$role] : [];
 
 // Non-Admin specific logic
-if ($associatenumber === $user_check) {
+if ($search_id === $associatenumber) {
     $accessible_cards = ['address_details', 'national_identifier', 'religion-caste', 'qualification', 'experience', 'social']; // Non-Admin can edit these cards only for their own data
 }
 ?>
@@ -329,7 +329,7 @@ $query = "
     ORDER BY workflow.fieldname
 ";
 
-$result = pg_query_params($con, $query, [$associatenumber]);
+$result = pg_query_params($con, $query, [$search_id]);
 
 $pendingFields = [];
 if ($result) {
@@ -620,7 +620,7 @@ echo "<script>
                             <br>
                             <?php
                             // If no application number is provided, show the input form
-                            if (!$associatenumber): ?>
+                            if (!$search_id): ?>
                                 <div class="container mt-5">
                                     <h4 class="mb-3">Enter Associate Number</h4>
                                     <form method="GET" action="">

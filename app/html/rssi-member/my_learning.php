@@ -102,7 +102,7 @@ if ($role === 'Admin') {
 } else {
     // For non-Admin users, restrict data to their own associatenumber
     $query .= " AND ws.associatenumber = $" . (count($params) + 1);
-    $params[] = $user_check;
+    $params[] = $associatenumber;
 }
 
 // Prepare the statement

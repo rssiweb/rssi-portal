@@ -41,7 +41,7 @@ if ($role == 'Admin') {
     }
 }
 if ($role != 'Admin') {
-    $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber where associatenumber='$user_check'");
+    $result = pg_query($con, "select * from asset inner join rssimyaccount_members ON asset.userid=rssimyaccount_members.associatenumber where associatenumber='$associatenumber'");
 }
 if (!$result) {
     echo "An error occurred.\n";

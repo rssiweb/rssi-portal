@@ -7,8 +7,8 @@ $login_failed_dialog = "";
 
 function afterlogin($con, $date)
 {
-    $associatenumber = $_SESSION['aid'];
-    $user_query = pg_query($con, "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM rssimyaccount_members WHERE associatenumber='$associatenumber'");
+    $user_check = $_SESSION['aid'];
+    $user_query = pg_query($con, "SELECT password_updated_by, password_updated_on, default_pass_updated_on FROM rssimyaccount_members WHERE email='$user_check'");
     $row = pg_fetch_row($user_query);
     $password_updated_by = $row[0];
     $password_updated_on = $row[1];
@@ -30,7 +30,7 @@ function afterlogin($con, $date)
     }
 
     $user_ip = getUserIpAddr();
-    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT, '$associatenumber', '$user_ip', '$date')");
+    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT, '$user_check', '$user_ip', '$date')");
 
     if (isset($_SESSION["login_redirect"])) {
         $params = "";
@@ -55,10 +55,10 @@ if (isLoggedIn("aid")) {
 function checkLogin($con, $date)
 {
     global $login_failed_dialog;
-    $associatenumber = strtoupper($_POST['aid']);
+    $username = strtolower($_POST['aid']);
     $password = $_POST['pass'];
 
-    $query = "SELECT password, absconding FROM rssimyaccount_members WHERE associatenumber='$associatenumber'";
+    $query = "SELECT password, absconding FROM rssimyaccount_members WHERE email='$username'";
     $result = pg_query($con, $query);
     if ($result) {
         $user = pg_fetch_assoc($result);
@@ -69,7 +69,7 @@ function checkLogin($con, $date)
                 if (!empty($absconding)) {
                     $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
                 } else {
-                    $_SESSION['aid'] = $associatenumber;
+                    $_SESSION['aid'] = $username;
                     afterlogin($con, $date);
                 }
             } else {
@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <label for="yourUsername" class="form-label">Username</label>
                                             <div class="input-group has-validation">
                                                 <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                                <input type="text" name="aid" class="form-control" placeholder="Associate Number" required>
+                                                <input type="email" name="aid" class="form-control" placeholder="Username" required>
                                                 <div class="invalid-feedback">Please enter your username.</div>
                                             </div>
                                         </div>

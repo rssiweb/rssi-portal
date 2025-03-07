@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $exit_time = $_POST['exit_time_s'];
     $timestamp = date('Y-m-d H:i:s');
     $id = uniqid(); // Generate unique ID in PHP
-    $submittedBy = $user_check; // Use the logged-in user's identifier for submission tracking
+    $submittedBy = $associatenumber; // Use the logged-in user's identifier for submission tracking
 
     // Prepare SQL query
     $query = "INSERT INTO associate_schedule (id, associate_number, start_date, reporting_time, exit_time, timestamp, submittedby)

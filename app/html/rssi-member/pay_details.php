@@ -67,7 +67,7 @@ if ($role == 'Admin') {
     } else {
         // Construct the SQL query for non-Admin role with month and year filters
         $query = "SELECT * FROM payslip_entry 
-            WHERE employeeid = '$user_check' $yearFilter $monthFilter
+            WHERE employeeid = '$associatenumber' $yearFilter $monthFilter
             ORDER BY payslip_issued_on DESC";
     }
 

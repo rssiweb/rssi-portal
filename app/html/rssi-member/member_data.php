@@ -11,7 +11,7 @@ $view_users_query = "
         WHERE CURRENT_DATE BETWEEN fromdate AND todate AND status='Approved'
     ) onleave 
     ON rssimyaccount_members.associatenumber = onleave.applicantid
-    WHERE associatenumber = '$user_check';";
+    WHERE email = '$user_check';";
 
 // Execute the query
 $run = pg_query($con, $view_users_query);

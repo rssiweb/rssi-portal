@@ -60,7 +60,7 @@ function fetchStudyMaterials($courseid, $con)
 $data = [];
 
 // Determine the associate number to use for the query
-$associateNumber = $user_check;
+$associateNumber = $associatenumber;
 
 // Define the query template
 $query = "
@@ -147,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // send $file to google =======> google (rssi.in) // robotic service account credential.json
     $doclink = null;
     if (!empty($supportingFile['name'])) {
-        $filename = "doc_" . $courseId . "_" . $user_check . "_" . uniqid();
+        $filename = "doc_" . $courseId . "_" . $associatenumber . "_" . uniqid();
         $parent = '1gKsezcOdVg08jdUvwd1g8crd8FQHTt6X';
         $doclink = uploadeToDrive($supportingFile, $parent, $filename);
     }
@@ -185,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Execute the statement
         $result = pg_execute($con, "insert_external_score", [
             $courseId,
-            $user_check, // Assuming $user_check contains the logged-in user's data
+            $associatenumber, // Assuming $associatenumber contains the logged-in user's data
             date('Y-m-d H:i:s'), // Current timestamp
             $completionDate,
             $score,
@@ -523,7 +523,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                         LIMIT 10";
 
                                                                                         $attemptsStmt = pg_prepare($con, "fetch_attempts_$courseId", $attemptsQuery);
-                                                                                        $attemptsResult = pg_execute($con, "fetch_attempts_$courseId", [$user_check, $courseId]);
+                                                                                        $attemptsResult = pg_execute($con, "fetch_attempts_$courseId", [$associatenumber, $courseId]);
 
                                                                                         if ($attemptsResult && pg_num_rows($attemptsResult) > 0) :
                                                                                         ?>

@@ -36,13 +36,13 @@ if ($role == 'Admin') {
 
 if ($role != 'Admin') {
     if ($status == null) {
-        $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$user_check' order by timestamp desc");
+        $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$associatenumber' order by timestamp desc");
     } else if ($status == 'ALL') {
-        $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$user_check' order by timestamp desc");
+        $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$associatenumber' order by timestamp desc");
     } else if ($status > 0 && $status != 'ALL') {
-        $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$user_check' AND bookstatus='$status' order by timestamp desc");
+        $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$associatenumber' AND bookstatus='$status' order by timestamp desc");
     } else {
-        $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$user_check' order by timestamp desc");
+        $result = pg_query($con, "SELECT * FROM bookdata_book WHERE yourid='$associatenumber' order by timestamp desc");
     }
 }
 

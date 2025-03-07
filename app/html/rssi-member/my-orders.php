@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['entry_id'])) {
     $entryId = $_POST['entry_id'];
     $status = $_POST['status'];
     $remarks = $_POST['remarks'];
-    $updated_by = $user_check;
+    $updated_by = $associatenumber;
     $updated_on = date('Y-m-d H:i:s'); // Format: YYYY-MM-DD HH:MM:SS
 
     $updateQuery = "

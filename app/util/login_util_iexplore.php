@@ -10,12 +10,6 @@ function isLoggedIn(string $key)
 
 function passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on)
 {
-    // If the values are NULL, try fetching them from the session
-    if ($password_updated_by === NULL || $password_updated_on === NULL || $default_pass_updated_on === NULL) {
-        $password_updated_by = $_SESSION['password_updated_by'] ?? NULL;
-        $password_updated_on = $_SESSION['password_updated_on'] ?? NULL;
-        $default_pass_updated_on = $_SESSION['default_pass_updated_on'] ?? NULL;
-    }
     if ($password_updated_by == null || $password_updated_on < $default_pass_updated_on) {
         // Start output buffering
         ob_start();

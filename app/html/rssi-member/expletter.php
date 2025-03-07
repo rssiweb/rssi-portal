@@ -20,12 +20,12 @@ $date = date('Y-m-d H:i:s');
 if ($role == 'Admin') {
     @$id = strtoupper($_GET['get_id']);
     $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$id'"); //select query for viewing users.
-    $resultt = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$user_check'");
+    $resultt = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'");
 }
 
 if ($role != 'Admin') {
 
-    $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$user_check'"); //select query for viewing users.
+    $result = pg_query($con, "select * from rssimyaccount_members WHERE associatenumber='$associatenumber'"); //select query for viewing users.
 }
 
 
@@ -62,7 +62,7 @@ if (!$result) {
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <?php if ($role != 'Admin') { ?>
-        <title>Experience Letter_<?php echo $user_check ?></title>
+        <title>Experience Letter_<?php echo $associatenumber ?></title>
     <?php } ?>
     <?php if ($role == 'Admin' && $id != null) { ?>
         <title>Experience Letter_<?php echo $id ?></title>

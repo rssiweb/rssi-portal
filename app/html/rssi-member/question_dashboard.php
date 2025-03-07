@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
         SET question_text = $1, category_id = $2, correct_option = $3, created_at=$5, created_by=$6
         WHERE id = $4
     ";
-    $result = pg_query_params($con, $updateQuery, array($questionText, $categoryId, $correctOption, $questionId, $modifiedAt, $user_check));
+    $result = pg_query_params($con, $updateQuery, array($questionText, $categoryId, $correctOption, $questionId, $modifiedAt, $associatenumber));
 
     if ($result) {
         // Update the options
@@ -261,7 +261,7 @@ $result = pg_query($con, $query);
                                                         <td><?= $optionsDisplay ?></td>
                                                         <td><?= (new DateTime($row['created_at']))->format('d/m/Y h:i A') ?> by <?= $row['created_by'] ?></td>
                                                         <td>
-                                                            <?php if ($role === 'Admin' || $row['created_by'] === $user_check): ?>
+                                                            <?php if ($role === 'Admin' || $row['created_by'] === $associatenumber): ?>
                                                                 <!-- Edit button -->
                                                                 <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal"
                                                                     data-id="<?= $row['id'] ?>" data-question="<?= htmlspecialchars($row['question_text']) ?>"

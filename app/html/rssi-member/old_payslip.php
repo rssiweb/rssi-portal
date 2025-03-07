@@ -29,8 +29,8 @@ if ($role == 'Admin') {
 
 
 if ($role != 'Admin') {
-    $result = pg_query($con, "select * from payslip where associatenumber='$user_check' ORDER BY slno DESC;");
-    $totalamount = pg_query($con, "SELECT SUM(netpay) FROM payslip where associatenumber='$user_check'");
+    $result = pg_query($con, "select * from payslip where associatenumber='$associatenumber' ORDER BY slno DESC;");
+    $totalamount = pg_query($con, "SELECT SUM(netpay) FROM payslip where associatenumber='$associatenumber'");
 }
 if (!$result) {
     echo "An error occurred.\n";

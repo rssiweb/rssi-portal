@@ -48,12 +48,12 @@ function afterLogin($con, $date)
     }
 
     // Store password-related details in the session
-    $_SESSION['password_updated_by'] = $row[0];
-    $_SESSION['password_updated_on'] = $row[1];
-    $_SESSION['default_pass_updated_on'] = $row[2];
+    $password_updated_by = $row[0];
+    $password_updated_on = $row[1];
+    $default_pass_updated_on = $row[2];
 
     // Check if password reset is required
-    passwordCheck($row[0], $row[1], $row[2]);
+    passwordCheck($password_updated_by, $password_updated_on, $default_pass_updated_on);
 
     // Log the login attempt
     $user_ip = $_SERVER['REMOTE_ADDR'];
@@ -96,7 +96,7 @@ function checkLogin($con, $date)
     $password = $_POST['pass'];
 
     // Check in rssi-member (rssimyaccount_members table)
-    $query = "SELECT password, absconding, fullname, email, phone FROM rssimyaccount_members WHERE associatenumber='$username'";
+    $query = "SELECT password, absconding, fullname, email, phone FROM rssimyaccount_members WHERE email='$username'";
     $result = pg_query($con, $query);
     if ($result && $user = pg_fetch_assoc($result)) {
         if ($user['password'] !== null && password_verify($password, $user['password'])) {
@@ -389,7 +389,7 @@ if (isLoggedIn("aid")) {
 
                 <form method="POST" action="">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="aid" name="aid" placeholder="Username" required>
+                        <input type="email" class="form-control" id="aid" name="aid" placeholder="Username" required>
                         <i class="bi bi-envelope input-icon"></i>
                     </div>
 

@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Insert the question into the database with the correct_option
                 $query = "INSERT INTO test_questions (question_text, category_id, correct_option, created_by, q_language) VALUES ($1, $2, $3, $4, $5) RETURNING id";
-                $result = pg_query_params($con, $query, array($text, $category, $correctOptionKey, $user_check, $language));
+                $result = pg_query_params($con, $query, array($text, $category, $correctOptionKey, $associatenumber, $language));
                 if (!$result) {
                     throw new Exception("Error inserting question: " . pg_last_error($con));
                 }

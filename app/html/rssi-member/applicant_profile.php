@@ -162,7 +162,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 supporting_document AS iddoc,
                 education_qualification AS eduq,
                 specialization AS mjorsub,
-                '$user_check' AS approvedby,
+                '$associatenumber' AS approvedby,
                 CONCAT(
                 RIGHT(EXTRACT(YEAR FROM CURRENT_DATE)::text, 2),   -- Current Year (2 digits)
                 LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::text, 2, '0'), -- Current Month (2 digits)

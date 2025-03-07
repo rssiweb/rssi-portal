@@ -29,7 +29,7 @@ if ($role == 'Admin') {
   }
 }
 if ($role != 'Admin') {
-  $result = pg_query($con, "SELECT * FROM medimate WHERE registrationid='$user_check' AND year='$status' order by id desc");
+  $result = pg_query($con, "SELECT * FROM medimate WHERE registrationid='$associatenumber' AND year='$status' order by id desc");
 }
 if (!$result) {
   echo "An error occurred.\n";

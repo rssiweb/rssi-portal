@@ -94,7 +94,7 @@ if ($role == 'Admin') {
                                      LEFT JOIN rssimyaccount_members 
                                      ON rssimyaccount_members.associatenumber = payslip_entry.employeeid 
                                      WHERE payslip_entry_id = $1 
-                                     AND employeeid = $2", array($ref, $user_check));
+                                     AND employeeid = $2", array($ref, $associatenumber));
 
     // Fetch required data from the result
     if ($row = pg_fetch_assoc($result)) {
@@ -110,7 +110,7 @@ if ($role == 'Admin') {
                                                    AND payslip_entry_id IN 
                                                        (SELECT payslip_entry_id 
                                                        FROM payslip_entry 
-                                                       WHERE employeeid = $2)", array($ref, $user_check));
+                                                       WHERE employeeid = $2)", array($ref, $associatenumber));
 
         // Query to calculate total earnings for non-admin users
         $result_component_earning_total = pg_query_params($con, "SELECT SUM(amount) 
@@ -120,7 +120,7 @@ if ($role == 'Admin') {
                                                                  AND payslip_entry_id IN 
                                                                      (SELECT payslip_entry_id 
                                                                      FROM payslip_entry 
-                                                                     WHERE employeeid = $2)", array($ref, $user_check));
+                                                                     WHERE employeeid = $2)", array($ref, $associatenumber));
 
         // Query to calculate total deductions for non-admin users
         $result_component_deduction_total = pg_query_params($con, "SELECT SUM(amount) 
@@ -130,7 +130,7 @@ if ($role == 'Admin') {
                                                                    AND payslip_entry_id IN 
                                                                        (SELECT payslip_entry_id 
                                                                        FROM payslip_entry 
-                                                                       WHERE employeeid = $2)", array($ref, $user_check));
+                                                                       WHERE employeeid = $2)", array($ref, $associatenumber));
 
         // New query to retrieve accrued bonus and payout bonus data for non-admin users
         $query = "SELECT employeeid, 
@@ -623,7 +623,7 @@ foreach ($accountNatures as $accountNature) {
                             } else {
                                 if (pg_num_rows($result) == 0 && @$check_employeeid == null) {
                                     $error_message = "No record found for the entered reference ID";
-                                } else if (pg_num_rows($result) == 0 && $check_employeeid != $user_check) {
+                                } else if (pg_num_rows($result) == 0 && $check_employeeid != $associatenumber) {
                                     $error_message = "You are trying to access data that does not belong to you. If you think this is a mistake, please contact RSSI support team.";
                                 }
                             }

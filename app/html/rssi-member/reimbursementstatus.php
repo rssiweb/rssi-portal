@@ -25,7 +25,7 @@ if ($role == 'Admin' && $filterstatus == 'Active') {
   $id = isset($_POST['get_aid']) ? strtoupper($_POST['get_aid']) : null;
 } else {
   $status = isset($_POST['get_id']) ? $_POST['get_id'] : $currentAcademicYear;
-  $id = $user_check;
+  $id = $associatenumber;
 }
 
 $reimbid = isset($_POST['reimbid']) ? $_POST['reimbid'] : null;
