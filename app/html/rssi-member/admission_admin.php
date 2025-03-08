@@ -295,7 +295,10 @@ if (@$_POST['form-type'] == "admission_admin") {
                             <div class="col-md-12 text-end">
                                 <a href="#" data-bs-toggle="modal" data-bs-target="#joining-letter-modal-<?php echo $array['student_id'] ?>">
                                     <img src="https://cdn.iconscout.com/icon/free/png-256/free-aadhaar-2085055-1747945.png" alt="Student's Aadhaar" title="Student's Aadhaar" width="70px" />
-                                </a>&nbsp;|&nbsp;<a href="student-profile.php?get_id=<?php echo $array['student_id'] ?>" target="_blank">Admission form</a>
+                                </a><br>
+                                <a href="student-profile.php?get_id=<?php echo $array['student_id'] ?>" target="_blank">Admission form</a>
+                                <br>
+                                <a href="pdf_application.php?student_id=<?php echo $array['student_id'] ?>" target="_blank">Parental Consent Form for Repeating a Grade</a>
                             </div>
                         </div>
                         <div class="row align-items-center">
