@@ -86,7 +86,7 @@ if (!$result) {
         $randomNumber = mt_rand(100000000000, 999999999999); // Generates a 12-digit random number
         $pdf->SetXY(155, 48); // Adjust position for the name
         $pdf->Cell(0, 0, $randomNumber, 0, 1, 'L'); // Dynamic full name from database
-        $pdf->SetXY(155, -48); // Adjust position for the name
+        $pdf->SetXY(155, -38); // Adjust position for the name
         $pdf->Cell(0, 0, $randomNumber, 0, 1, 'L'); // Dynamic full name from database
 
         $pdf->SetFont('Times', '', 9);
