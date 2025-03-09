@@ -5,17 +5,17 @@ require_once __DIR__ . '/vendor/autoload.php';
 $sessionName = 'default_session'; // Default session name if no match is found
 
 if (strpos($_SERVER['REQUEST_URI'], '/rssi-student/') !== false) {
-    $sessionName = 'rssi_student_session';
+    $sessionName = 'rssi-student-session';
 } elseif (strpos($_SERVER['REQUEST_URI'], '/rssi-member/') !== false) {
-    $sessionName = 'rssi_member_session';
+    $sessionName = 'rssi-member-session';
 } elseif (strpos($_SERVER['REQUEST_URI'], '/tap/') !== false) {
-    $sessionName = 'tap_session';
+    $sessionName = 'tap-session';
 }elseif (strpos($_SERVER['REQUEST_URI'], '/iexplore/') !== false) {
-    $sessionName = 'iexplore_session';
+    $sessionName = 'iexplore-session';
 }
 
 // Set the session name
-session_name($sessionName);
+session_id($sessionName);
 session_start(); // Start the session after assigning the name
 date_default_timezone_set('Asia/Kolkata');
 

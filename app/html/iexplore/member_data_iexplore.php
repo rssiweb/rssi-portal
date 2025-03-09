@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 
-$user_check = $_SESSION['aid'];
+$user_check = $_SESSION['eid'];
 $user_type = $_SESSION['user_type'];
 
 // Always fetch id, name, and email from test_users

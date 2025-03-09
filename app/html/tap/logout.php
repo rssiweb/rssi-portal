@@ -1,6 +1,6 @@
 <?php
 // Start the session with the correct session name for members
-session_name('tap_session');  // Use the session name you defined for the member portal
+session_id('tap-session');  // Use the session name you defined for the member portal
 session_start();
 
 // Unset the session variable for the member

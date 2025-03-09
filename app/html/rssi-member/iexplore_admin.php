@@ -173,7 +173,7 @@ if (!empty($courseid_search)) {
                                                         <input type="number" name="passingmarks" max="100" min="0" class="form-control" placeholder="Mastery Score" value="<?php echo @$row['passingmarks']; ?>">
                                                     </div>
                                                     <div class="mb-3">
-                                                        <input type="url" name="url" class="form-control" placeholder="URL" value="<?php echo @$row['url']; ?>" required>
+                                                        <input type="text" name="url" class="form-control" placeholder="URL" value="<?php echo @$row['url']; ?>" required>
                                                     </div>
                                                     <div class="mb-3">
                                                         <select name="validity" class="form-select" required>

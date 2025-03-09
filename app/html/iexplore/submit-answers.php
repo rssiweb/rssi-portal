@@ -5,7 +5,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util.php");
 
 // Ensure the user is logged in
-if (!isLoggedIn("aid")) {
+if (!isLoggedIn("eid")) {
     http_response_code(401); // Unauthorized
     echo json_encode(['error' => 'User is not logged in.']);
     exit;

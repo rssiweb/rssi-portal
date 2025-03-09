@@ -14,12 +14,12 @@ function generateUserId()
 // Function to handle post-login actions
 function afterLogin($con, $date)
 {
-    if (!isset($_SESSION['aid']) || !isset($_SESSION['user_type'])) {
+    if (!isset($_SESSION['eid']) || !isset($_SESSION['user_type'])) {
         header("Location: index.php");
         exit;
     }
 
-    $user_id = $_SESSION['aid'];
+    $user_id = $_SESSION['eid'];
     $user_type = $_SESSION['user_type'];
 
     // Fetch password-related details based on user type
@@ -92,7 +92,7 @@ function checkLogin($con, $date)
 {
     global $login_failed_dialog;
 
-    $username = $_POST['aid'];
+    $username = $_POST['eid'];
     $password = $_POST['pass'];
 
     // Check in rssi-member (rssimyaccount_members table)
@@ -103,7 +103,7 @@ function checkLogin($con, $date)
             if (!empty($user['absconding'])) {
                 $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
             } else {
-                $_SESSION['aid'] = $user['email'];
+                $_SESSION['eid'] = $user['email'];
                 $_SESSION['user_type'] = 'rssi-member';
 
                 // Insert or update user in test_users table
@@ -114,7 +114,7 @@ function checkLogin($con, $date)
                     $new_user_id = generateUserId();
                     pg_query($con, "INSERT INTO test_users (id, name, email, user_type, contact, created_at) VALUES ('$new_user_id', '{$user['fullname']}', '{$user['email']}', 'rssi-member', '{$user['phone']}', '$date')");
                 } else {
-                    pg_query($con, "UPDATE test_users SET name='{$user['fullname']}', email='{$user['email']}', user_type='rssi-member', contact='{$user['phone']}' WHERE id='{$test_user['id']}'");
+                    pg_query($con, "UPDATE test_users SET name='{$user['fullname']}', user_type='rssi-member', contact='{$user['phone']}' WHERE id='{$test_user['id']}'");
                 }
 
                 afterLogin($con, $date);
@@ -131,7 +131,7 @@ function checkLogin($con, $date)
             if (!empty($user['absconding'])) {
                 $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
             } else {
-                $_SESSION['aid'] = $username;
+                $_SESSION['eid'] = $username;
                 $_SESSION['user_type'] = 'tap';
 
                 // Insert or update user in test_users table
@@ -142,7 +142,7 @@ function checkLogin($con, $date)
                     $new_user_id = generateUserId();
                     pg_query($con, "INSERT INTO test_users (id, name, email, user_type, contact, created_at) VALUES ('$new_user_id', '{$user['applicant_name']}', '{$user['email']}', 'tap', '{$user['telephone']}', '$date')");
                 } else {
-                    pg_query($con, "UPDATE test_users SET name='{$user['applicant_name']}', email='{$user['email']}', user_type='tap', contact='{$user['telephone']}' WHERE id='{$test_user['id']}'");
+                    pg_query($con, "UPDATE test_users SET name='{$user['applicant_name']}', user_type='tap', contact='{$user['telephone']}' WHERE id='{$test_user['id']}'");
                 }
 
                 afterLogin($con, $date);
@@ -159,7 +159,7 @@ function checkLogin($con, $date)
             if (!empty($user['absconding'])) {
                 $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
             } else {
-                $_SESSION['aid'] = $username;
+                $_SESSION['eid'] = $username;
                 $_SESSION['user_type'] = 'iexplore';
                 afterLogin($con, $date);
                 return; // Exit the function after successful login
@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 }
 
 // Redirect logged-in users
-if (isLoggedIn("aid")) {
+if (isLoggedIn("eid")) {
     afterLogin($con, $date);
 }
 ?>
@@ -389,7 +389,7 @@ if (isLoggedIn("aid")) {
 
                 <form method="POST" action="">
                     <div class="input-group">
-                        <input type="email" class="form-control" id="aid" name="aid" placeholder="Username" required>
+                        <input type="email" class="form-control" id="eid" name="eid" placeholder="Username" required>
                         <i class="bi bi-envelope input-icon"></i>
                     </div>
 

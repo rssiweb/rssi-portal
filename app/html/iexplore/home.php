@@ -56,12 +56,12 @@ function generateUserId()
 // Function to handle post-login actions
 function afterLogin($con, $date)
 {
-    if (!isset($_SESSION['aid']) || !isset($_SESSION['user_type'])) {
+    if (!isset($_SESSION['eid']) || !isset($_SESSION['user_type'])) {
         header("Location: index.php");
         exit;
     }
 
-    $user_id = $_SESSION['aid'];
+    $user_id = $_SESSION['eid'];
     $user_type = $_SESSION['user_type'];
 
     // Fetch password-related details based on user type
@@ -116,7 +116,7 @@ function checkLogin($con, $date)
 {
     global $login_failed_dialog;
 
-    $username = $_POST['aid'];
+    $username = $_POST['eid'];
     $password = $_POST['pass'];
 
     // Check in rssi-member (rssimyaccount_members table)
@@ -127,7 +127,7 @@ function checkLogin($con, $date)
             if (!empty($user['absconding'])) {
                 $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
             } else {
-                $_SESSION['aid'] = $user['email'];
+                $_SESSION['eid'] = $user['email'];
                 $_SESSION['user_type'] = 'rssi-member';
 
                 // Insert or update user in test_users table
@@ -155,7 +155,7 @@ function checkLogin($con, $date)
             if (!empty($user['absconding'])) {
                 $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
             } else {
-                $_SESSION['aid'] = $username;
+                $_SESSION['eid'] = $username;
                 $_SESSION['user_type'] = 'tap';
 
                 // Insert or update user in test_users table
@@ -183,7 +183,7 @@ function checkLogin($con, $date)
             if (!empty($user['absconding'])) {
                 $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
             } else {
-                $_SESSION['aid'] = $username;
+                $_SESSION['eid'] = $username;
                 $_SESSION['user_type'] = 'iexplore';
                 afterLogin($con, $date);
                 return; // Exit the function after successful login
@@ -201,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 }
 
 // Redirect logged-in users
-if (isLoggedIn("aid")) {
+if (isLoggedIn("eid")) {
     afterLogin($con, $date);
 }
 ?>
@@ -478,10 +478,10 @@ if (isLoggedIn("aid")) {
                     <form method="POST" action="">
                         <!-- Email Input -->
                         <div class="mb-3">
-                            <label for="aid" class="form-label">Username</label>
+                            <label for="eid" class="form-label">Username</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                <input type="text" class="form-control" id="aid" name="aid" placeholder="Enter your username" required>
+                                <input type="text" class="form-control" id="eid" name="eid" placeholder="Enter your username" required>
                             </div>
                         </div>
 

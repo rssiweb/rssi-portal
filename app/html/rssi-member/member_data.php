@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 
-$user_check = $_SESSION['aid'];
+// Step 2: Get data from rssi-member-session
+$user_check = $_SESSION['aid']; // Copy aid
+
 $view_users_query = "
     SELECT * 
     FROM rssimyaccount_members 

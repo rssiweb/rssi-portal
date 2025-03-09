@@ -2,7 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util_iexplore.php");
 
-if (!isLoggedIn("aid")) {
+if (!isLoggedIn("eid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");
@@ -338,13 +338,13 @@ if (!$show_form) {
         <div class="organisation-name">Rina Shiksha Sahayak Foundation</div>
         <div class="user-name">
             <div class="d-flex align-items-center">
-                <?php if (isLoggedIn("aid")) : ?>
+                <?php if (isLoggedIn("eid")) : ?>
                     <!-- Logged-in State -->
                     <a href="#" class="text-white me-3"><i class="bi bi-bell"></i></a>
                     <div class="dropdown">
                         <?php
                         // Get user details from database
-                        $email = $_SESSION['aid'];
+                        $email = $_SESSION['eid'];
                         $user_query = pg_query($con, "SELECT name FROM test_users WHERE email='$email'");
                         $user = pg_fetch_assoc($user_query);
                         $displayName = $user['name'] ?? explode('@', $email)[0];

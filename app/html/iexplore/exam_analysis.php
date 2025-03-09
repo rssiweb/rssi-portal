@@ -2,7 +2,7 @@
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util_iexplore.php");
 
-if (!isLoggedIn("aid")) {
+if (!isLoggedIn("eid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     $_SESSION["login_redirect_params"] = $_GET;
     header("Location: index.php");

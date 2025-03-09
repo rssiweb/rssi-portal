@@ -7,7 +7,7 @@ $login_failed_dialog = "";
 
 function afterlogin($con, $date)
 {
-    $email = $_SESSION['aid'];
+    $email = $_SESSION['eid'];
     $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from test_users WHERE email='$email'");
     $row = pg_fetch_row($user_query);
     $password_updated_by = $row[0];
@@ -48,14 +48,14 @@ function afterlogin($con, $date)
     exit;
 }
 
-if (isLoggedIn("aid")) {
+if (isLoggedIn("eid")) {
     afterlogin($con, $date);
 }
 
 function checkLogin($con, $date)
 {
     global $login_failed_dialog;
-    $email = $_POST['aid'];
+    $email = $_POST['eid'];
     $password = $_POST['pass'];
 
     $query = "SELECT password, absconding FROM test_users WHERE email='$email'";
@@ -69,7 +69,7 @@ function checkLogin($con, $date)
                 if (!empty($absconding)) {
                     $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
                 } else {
-                    $_SESSION['aid'] = $email;
+                    $_SESSION['eid'] = $email;
                     afterlogin($con, $date);
                 }
             } else {
@@ -296,7 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <form method="POST" action="">
                     <div class="input-group">
-                        <input type="email" class="form-control" id="aid" name="aid" placeholder="Email Address" required>
+                        <input type="email" class="form-control" id="eid" name="eid" placeholder="Email Address" required>
                         <i class="bi bi-envelope input-icon"></i>
                     </div>
 

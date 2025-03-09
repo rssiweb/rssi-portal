@@ -180,13 +180,13 @@
 
         <!-- User Actions -->
         <div class="d-flex align-items-center">
-            <?php if (isLoggedIn("aid")) : ?>
+            <?php if (isLoggedIn("eid")) : ?>
                 <!-- Logged-in State -->
                 <a href="#" class="text-white me-3"><i class="bi bi-bell"></i></a>
                 <div class="dropdown">
                     <?php
                     // Get user details from database
-                    $email = $_SESSION['aid'];
+                    $email = $_SESSION['eid'];
                     $user_query = pg_query($con, "SELECT name FROM test_users WHERE email='$email'");
                     $user = pg_fetch_assoc($user_query);
                     $displayName = $user['name'] ?? explode('@', $email)[0];
