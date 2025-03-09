@@ -4,7 +4,7 @@ include("../../util/login_util_tap.php");
 include("../../util/email.php");
 include("../../util/drive.php");
 
-if (!isLoggedIn("aid")) {
+if (!isLoggedIn("tid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;
@@ -200,7 +200,7 @@ if ($signupResult && pg_num_rows($signupResult) > 0) {
         document.getElementById('startExamButton').addEventListener('click', function() {
             const examId = "<?php echo htmlspecialchars($examId); ?>";
             const sessionId = "<?php echo htmlspecialchars($rtetSessionId); ?>";
-            window.location.href = `../iexplore/exam.php?exam_id=${examId}&session_id=${sessionId}`;
+            window.location.href = `redirect_iexplore.php?path=exam&exam_id=${examId}&session_id=${sessionId}`;
         });
     </script>
 </body>

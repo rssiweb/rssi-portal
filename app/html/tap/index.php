@@ -7,8 +7,8 @@ $login_failed_dialog = "";
 
 function afterlogin($con, $date)
 {
-    $application_number = $_SESSION['aid'];
-    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from signup WHERE email='$application_number'");
+    $username = $_SESSION['tid'];
+    $user_query = pg_query($con, "select password_updated_by,password_updated_on,default_pass_updated_on from signup WHERE email='$username'");
     $row = pg_fetch_row($user_query);
     $password_updated_by = $row[0];
     $password_updated_on = $row[1];
@@ -30,7 +30,7 @@ function afterlogin($con, $date)
     }
 
     $user_ip = getUserIpAddr();
-    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$application_number','$user_ip','$date')");
+    pg_query($con, "INSERT INTO userlog_member VALUES (DEFAULT,'$username','$user_ip','$date')");
 
     if (isset($_SESSION["login_redirect"])) {
         $params = "";
@@ -48,17 +48,17 @@ function afterlogin($con, $date)
     exit;
 }
 
-if (isLoggedIn("aid")) {
+if (isLoggedIn("tid")) {
     afterlogin($con, $date);
 }
 
 function checkLogin($con, $date)
 {
     global $login_failed_dialog;
-    $application_number = $_POST['aid'];
+    $username = $_POST['tid'];
     $password = $_POST['pass'];
 
-    $query = "SELECT password, absconding FROM signup WHERE email='$application_number'";
+    $query = "SELECT password, absconding FROM signup WHERE email='$username'";
     $result = pg_query($con, $query);
     if ($result) {
         $user = pg_fetch_assoc($result);
@@ -69,7 +69,7 @@ function checkLogin($con, $date)
                 if (!empty($absconding)) {
                     $login_failed_dialog = "Your account has been flagged as inactive. Please contact support.";
                 } else {
-                    $_SESSION['aid'] = $application_number;
+                    $_SESSION['tid'] = $username;
                     afterlogin($con, $date);
                 }
             } else {
@@ -155,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <label for="yourUsername" class="form-label">Username</label>
                                             <div class="input-group has-validation">
                                                 <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-person"></i></span>
-                                                <input type="email" name="aid" class="form-control" id="aid" placeholder="Username" required>
+                                                <input type="email" name="tid" class="form-control" id="tid" placeholder="Username" required>
                                                 <div class="invalid-feedback">Please enter your username.</div>
                                             </div>
                                         </div>

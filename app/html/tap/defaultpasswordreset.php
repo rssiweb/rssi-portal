@@ -3,7 +3,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util_tap.php");
 
-if (!isLoggedIn("aid")) {
+if (!isLoggedIn("tid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     header("Location: index.php");
     exit;

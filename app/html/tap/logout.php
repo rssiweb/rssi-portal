@@ -1,15 +1,24 @@
 <?php
-// Start the session with the correct session name for members
-session_id('tap-session');  // Use the session name you defined for the member portal
+// rssi-member/logout.php
+
+// Step 1: Start rssi-member-session
+session_id('tap-session');
 session_start();
 
-// Unset the session variable for the member
-unset($_SESSION['aid']);  // Unset the session variable specific to the member portal
+// Step 2: Clear rssi-member-session data
+unset($_SESSION['tid']);  // Unset the session variable specific to the member portal
+session_destroy(); // Destroy the session
+session_write_close();
+// Step 3: Start iexplore-session
+session_id('iexplore-session');
+session_start();
 
-// Destroy the session to completely log out the member
-session_destroy();
+// // Step 4: Clear iexplore-session data
+unset($_SESSION['eid']);  // Unset the session variable specific to the member portal
+session_destroy(); // Destroy the session
+session_write_close();
 
-// Redirect to the login page or home page after logout
-header("Location: index.php");  // Change this to the appropriate redirection URL
+// Step 5: Redirect to the login page or home page after logout
+header("Location: index.php"); // Change this to the appropriate redirection URL
 exit;
 ?>

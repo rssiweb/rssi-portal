@@ -4,7 +4,7 @@ include("../../util/login_util_tap.php");
 include("../../util/email.php");
 include("../../util/drive.php");
 
-if (!isLoggedIn("aid")) {
+if (!isLoggedIn("tid")) {
   $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
   header("Location: index.php");
   exit;

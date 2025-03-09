@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 
-$user_check = $_SESSION['aid'];
+$user_check = $_SESSION['tid'];
 $view_users_query = "SELECT * FROM signup
 WHERE email='$user_check'"; // Select query for viewing users.
 $run = pg_query($con, $view_users_query); // Execute the SQL query.
