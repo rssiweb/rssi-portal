@@ -2,7 +2,7 @@
 // iexplore/logout.php
 
 // Step 1: Start iexplore-session
-session_id('iexplore-session');
+session_name('iexplore-session');
 session_start();
 
 // Step 2: Clear iexplore-session data

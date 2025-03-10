@@ -200,7 +200,7 @@ if ($signupResult && pg_num_rows($signupResult) > 0) {
         document.getElementById('startExamButton').addEventListener('click', function() {
             const examId = "<?php echo htmlspecialchars($examId); ?>";
             const sessionId = "<?php echo htmlspecialchars($rtetSessionId); ?>";
-            window.location.href = `redirect_iexplore.php?path=exam&exam_id=${examId}&session_id=${sessionId}`;
+            window.location.href = `redirect_iexplore.php?path=exam&exam_id=${examId}&session_name=${sessionId}`;
         });
     </script>
 </body>

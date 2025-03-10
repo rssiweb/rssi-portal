@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $sessionId = $sessionRow['id'];
                     $otp = $sessionRow['auth_code'];
 
-                    // Update signup table with session_id and exam_id
+                    // Update signup table with session_name and exam_id
                     $updateSignupQuery = "UPDATE signup SET rtet_session_id = $1, exam_id = $2 
                                           WHERE application_number = $3;";
                     $updateSignupResult = pg_query_params($con, $updateSignupQuery, [$sessionId, $examId, $applicationNumber]);

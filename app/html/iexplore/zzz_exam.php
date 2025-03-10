@@ -12,9 +12,9 @@ if (!isLoggedIn("eid")) {
 validation();
 ?>
 <?php
-// Get the exam_id, session_id, and login_redirect from the query string
+// Get the exam_id, session_name, and login_redirect from the query string
 $exam_id = isset($_GET['exam_id']) ? $_GET['exam_id'] : null;
-$session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;
+$session_name = isset($_GET['session_name']) ? $_GET['session_name'] : null;
 $login_redirect = isset($_GET['login_redirect']) ? $_GET['login_redirect'] : null;
 
 // If no exam_id is provided, set a flag to show the form
@@ -22,11 +22,11 @@ $show_form = !$exam_id;
 
 // If exam_id is provided, proceed with fetching exam details
 if (!$show_form) {
-    // Check if session_id is provided
-    if ($session_id) {
+    // Check if session_name is provided
+    if ($session_name) {
         // Fetch the existing session from test_user_sessions
         $session_query = "SELECT * FROM test_user_sessions WHERE id = $1";
-        $session_result = pg_query_params($con, $session_query, array($session_id));
+        $session_result = pg_query_params($con, $session_query, array($session_name));
         $session_row = pg_fetch_assoc($session_result);
 
         if ($session_row) {
@@ -38,7 +38,7 @@ if (!$show_form) {
                 echo '
                 <script type="text/javascript">
                     alert("This session has already been completed and cannot be attempted again. You will be redirected to the My Exam page.");
-                    window.location.href = "my_exam.php?session_id=' . $session_id . ($login_redirect ? '&login_redirect=true' : '') . '";
+                    window.location.href = "my_exam.php?session_name=' . $session_name . ($login_redirect ? '&login_redirect=true' : '') . '";
                 </script>';
                 exit; // Stop further execution
             }
@@ -49,10 +49,10 @@ if (!$show_form) {
                 if (!$login_redirect) {
                     // Mark the session as submitted
                     $update_query = "UPDATE test_user_sessions SET status = 'submitted', session_end = NOW() WHERE id = $1";
-                    pg_query_params($con, $update_query, array($session_id));
+                    pg_query_params($con, $update_query, array($session_name));
 
                     // Redirect to the result page with login_redirect
-                    $redirectUrl = "my_exam.php?session_id=$session_id";
+                    $redirectUrl = "my_exam.php?session_name=$session_name";
                     if ($login_redirect) {
                         $redirectUrl .= "&login_redirect=true";
                     }
@@ -97,10 +97,10 @@ if (!$show_form) {
 
         // Retrieve the session ID
         $session_row = pg_fetch_assoc($session_result);
-        $session_id = $session_row['id'];
+        $session_name = $session_row['id'];
 
-        // Redirect to the same URL with session_id and login_redirect
-        $redirectUrl = "exam.php?exam_id=$exam_id&session_id=$session_id";
+        // Redirect to the same URL with session_name and login_redirect
+        $redirectUrl = "exam.php?exam_id=$exam_id&session_name=$session_name";
         if ($login_redirect) {
             $redirectUrl .= "&login_redirect=true";
         }

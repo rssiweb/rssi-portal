@@ -29,7 +29,7 @@ $query = "SELECT
             exam.id AS exam_id, 
             exam.name AS exam_name, 
             uexam.score,
-            s.id AS session_id, 
+            s.id AS session_name, 
             s.status AS session_status, 
             TO_CHAR(uexam.created_at, 'DD-MM-YYYY HH24:MI:SS') AS exam_date
           FROM test_user_exams uexam
@@ -165,19 +165,19 @@ if (!$result) {
                             <?php if (pg_num_rows($result) > 0): ?>
                                 <?php while ($row = pg_fetch_assoc($result)): ?>
                                     <tr>
-                                        <td><?= $row['session_id'] ?></td>
+                                        <td><?= $row['session_name'] ?></td>
                                         <td><?= $row['exam_id'] ?></td>
                                         <td><?= $row['exam_name'] ?></td>
                                         <td><?= (new DateTime($row['exam_date']))->format('d/m/Y h:i A') ?></td>
                                         <td><?= $row['score'] ?></td>
                                         <td>
-                                            <!-- <a href="exam_analysis.php?session_id=<?= $row['session_id'] ?>" class="btn btn-outline-primary">View Analysis</a> -->
+                                            <!-- <a href="exam_analysis.php?session_name=<?= $row['session_name'] ?>" class="btn btn-outline-primary">View Analysis</a> -->
 
                                             <?php
                                             if ($row['session_status'] === 'submitted') {
-                                                echo '<a href="exam_analysis.php?session_id=' . $row['session_id'] . '" class="btn btn-outline-primary">View Analysis</a>';
+                                                echo '<a href="exam_analysis.php?session_name=' . $row['session_name'] . '" class="btn btn-outline-primary">View Analysis</a>';
                                             } else {
-                                                echo '<a href="exam.php?exam_id=' . $row['exam_id'] . '&session_id=' . $row['session_id'].'" class="btn btn-outline-primary">View/Resume Exam</a>';
+                                                echo '<a href="exam.php?exam_id=' . $row['exam_id'] . '&session_name=' . $row['session_name'].'" class="btn btn-outline-primary">View/Resume Exam</a>';
                                             }
                                             ?>
                                         </td>

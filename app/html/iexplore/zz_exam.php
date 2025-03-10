@@ -50,7 +50,7 @@ if (!$show_form) {
 
     // Retrieve the session ID
     $session_row = pg_fetch_assoc($session_result);
-    $session_id = $session_row['id'];
+    $session_name = $session_row['id'];
 
     // Step 3: Fetch the total_questions for the exam
     $query = "

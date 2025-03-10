@@ -14,12 +14,12 @@ validation();
 <?php
 // Get parameters
 $exam_id = isset($_GET['exam_id']) ? $_GET['exam_id'] : null;
-$session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;
+$session_name = isset($_GET['session_name']) ? $_GET['session_name'] : null;
 $auth_code = isset($_GET['auth_code']) ? $_GET['auth_code'] : null;
 $login_redirect = isset($_GET['login_redirect']) ? $_GET['login_redirect'] : null;
 $questions = []; // Ensure it's initialized
 
-if ($session_id) {
+if ($session_name) {
     // Fetch user_id and session details using a JOIN
     $query = "
     SELECT te.user_id
@@ -27,7 +27,7 @@ if ($session_id) {
     JOIN test_user_exams te ON tus.user_exam_id = te.id
     WHERE tus.id = $1
 ";
-    $result = pg_query_params($con, $query, [$session_id]);
+    $result = pg_query_params($con, $query, [$session_name]);
     $session_data = pg_fetch_assoc($result);
 
     // Echo the logged-in user's ID for debugging
@@ -66,9 +66,9 @@ $is_restricted = $exam_row['is_restricted'];
 
 if (!$show_form) {
     // If session exists, check its status
-    if ($session_id) {
+    if ($session_name) {
         $session_query = "SELECT * FROM test_user_sessions WHERE id = $1";
-        $session_result = pg_query_params($con, $session_query, array($session_id));
+        $session_result = pg_query_params($con, $session_query, array($session_name));
         $session_row = pg_fetch_assoc($session_result);
 
         if (!$session_row) {
@@ -97,7 +97,7 @@ if (!$show_form) {
             echo '
             <script type="text/javascript">
                 alert("This session has already been completed and cannot be attempted again. You will be redirected to the My Exam page.");
-                window.location.href = "my_exam.php?session_id=' . $session_id . ($login_redirect ? '&login_redirect=true' : '') . '";
+                window.location.href = "my_exam.php?session_name=' . $session_name . ($login_redirect ? '&login_redirect=true' : '') . '";
             </script>';
             exit; // Stop further execution
         }
@@ -159,7 +159,7 @@ if (!$show_form) {
         }
 
         $session_row = pg_fetch_assoc($session_result);
-        $session_id = $session_row['id'];
+        $session_name = $session_row['id'];
 
         // Fetch categories linked to the exam
         $category_query = "SELECT category_id FROM test_exam_categories WHERE exam_id = $1";
@@ -210,15 +210,15 @@ if (!$show_form) {
             pg_query_params($con, $insert_answer_query, array($user_exam_id, $question_id, null));
         }
 
-        // Redirect with session_id
-        header("Location: exam.php?exam_id=$exam_id&session_id=$session_id");
+        // Redirect with session_name
+        header("Location: exam.php?exam_id=$exam_id&session_name=$session_name");
         exit;
     }
     // If the exam is restricted, check if the OTP has been validated
     if ($is_restricted === 't') {
         // Fetch the session details
         $session_query = "SELECT auth_code, status FROM test_user_sessions WHERE id = $1";
-        $session_result = pg_query_params($con, $session_query, array($session_id));
+        $session_result = pg_query_params($con, $session_query, array($session_name));
 
         if (!$session_result) {
             echo "Database query failed: " . pg_last_error($con);
@@ -242,7 +242,7 @@ if (!$show_form) {
             <script type="text/javascript">
                 var otp = prompt("This is a restricted exam. Please enter the 6-digit OTP to proceed.\\n\\nTo receive the OTP, please contact RSSI Support Team.");
                 if (otp !== null) {
-                    window.location.href = "exam.php?exam_id=' . $exam_id . '&session_id=' . $session_id . '&auth_code=" + otp;
+                    window.location.href = "exam.php?exam_id=' . $exam_id . '&session_name=' . $session_name . '&auth_code=" + otp;
                 } else {
                     window.location.href = "my_exam.php"; // Redirect if the user cancels the prompt
                 }
@@ -253,7 +253,7 @@ if (!$show_form) {
                 if ($auth_code === $stored_auth_code) {
                     // Update session status to 'active' and start the exam
                     $update_query = "UPDATE test_user_sessions SET status = 'active', session_start = NOW() WHERE id = $1";
-                    $update_result = pg_query_params($con, $update_query, array($session_id));
+                    $update_result = pg_query_params($con, $update_query, array($session_name));
 
                     if (!$update_result) {
                         echo "Database query failed: " . pg_last_error($con);
@@ -261,7 +261,7 @@ if (!$show_form) {
                     }
                     // Re-fetch the session start time after updating
                     $session_query = "SELECT session_start FROM test_user_sessions WHERE id = $1";
-                    $session_result = pg_query_params($con, $session_query, array($session_id));
+                    $session_result = pg_query_params($con, $session_query, array($session_name));
                     $session_row = pg_fetch_assoc($session_result);
                     $session_start = strtotime($session_row['session_start']);
                     // Fetch total duration for exam
@@ -273,7 +273,7 @@ if (!$show_form) {
                     // Calculate session end time
                     $session_end_time = $session_start + ($total_duration * 60);
                 } else {
-                    echo "<script>alert('Invalid OTP. Please try again.'); window.location.href = 'exam.php?exam_id=$exam_id&session_id=$session_id';</script>";
+                    echo "<script>alert('Invalid OTP. Please try again.'); window.location.href = 'exam.php?exam_id=$exam_id&session_name=$session_name';</script>";
                     exit;
                 }
             }

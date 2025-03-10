@@ -65,7 +65,7 @@ if ($rssi_user) {
 
 session_write_close(); // Close iexplore-session
 // Step 4: Start iexplore-session
-session_id('iexplore-session');
+session_name('iexplore-session');
 session_start();
 
 // Step 5: Copy data to iexplore-session
@@ -74,7 +74,7 @@ $_SESSION['user_type'] = 'rssi-member'; // Copy user_type
 
 // Step 6: Close iexplore-session
 session_write_close(); // Close iexplore-session
-session_id('rssi-member-session');
+session_name('rssi-member-session');
 session_start();
 
 // Capture all query parameters from the URL

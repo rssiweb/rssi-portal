@@ -11,10 +11,10 @@ if (!isLoggedIn("eid")) {
 
 validation();
 
-$session_id = isset($_GET['session_id']) ? $_GET['session_id'] : null;
-$show_form = !$session_id;
+$session_name = isset($_GET['session_name']) ? $_GET['session_name'] : null;
+$show_form = !$session_name;
 
-if ($session_id) {
+if ($session_name) {
     // Fetch user_id, user_exam_id, and session details using a JOIN
     $query = "
         SELECT te.user_id, tus.user_exam_id, tus.session_start, tus.session_end, tus.auth_code
@@ -22,7 +22,7 @@ if ($session_id) {
         JOIN test_user_exams te ON tus.user_exam_id = te.id
         WHERE tus.id = $1
     ";
-    $result = pg_query_params($con, $query, [$session_id]);
+    $result = pg_query_params($con, $query, [$session_name]);
 
     if (!$result || pg_num_rows($result) === 0) {
         echo "<script>alert('Invalid session ID or session not found.'); window.location.href = 'my_exam.php';</script>";
@@ -62,7 +62,7 @@ if ($session_id) {
             ue.created_at AS exam_date,
             COUNT(ua.id) AS total_questions,
             e.id AS exam_id,
-            s.id AS session_id,
+            s.id AS session_name,
             e.show_answer AS show_answer
         FROM test_user_exams ue
         JOIN test_users u ON u.id = ue.user_id
@@ -249,7 +249,7 @@ if ($session_id) {
                         <h4 class="mb-3">Enter Session ID</h4>
                         <form method="GET" action="">
                             <div class="input-group mb-3">
-                                <input type="text" name="session_id" class="form-control" placeholder="Enter Attempt ID" required>
+                                <input type="text" name="session_name" class="form-control" placeholder="Enter Attempt ID" required>
                                 <button class="btn btn-primary" type="submit">Submit</button>
                             </div>
                         </form>
@@ -265,7 +265,7 @@ if ($session_id) {
                                         <div class="mb-4">
                                             <h5 class="text-info">📝 Exam Attempt Details</h5>
                                             <ul class="list-group list-group-flush">
-                                                <li class="list-group-item"><strong>Session ID:</strong> <?= $exam_details['session_id'] ?></li>
+                                                <li class="list-group-item"><strong>Session ID:</strong> <?= $exam_details['session_name'] ?></li>
                                                 <li class="list-group-item"><strong>User Name:</strong> <?= $exam_details['user_name'] ?> (ID: <?= $exam_details['user_id'] ?>)</li>
                                                 <li class="list-group-item"><strong>Exam Name:</strong> <?= $exam_details['exam_name'] ?></li>
                                                 <li class="list-group-item"><strong>Exam Date:</strong> <?= date("d-m-Y H:i:s", strtotime($exam_details['exam_date'])) ?></li>

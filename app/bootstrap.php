@@ -15,7 +15,7 @@ if (strpos($_SERVER['REQUEST_URI'], '/rssi-student/') !== false) {
 }
 
 // Set the session name
-session_id($sessionName);
+session_name($sessionName);
 session_start(); // Start the session after assigning the name
 date_default_timezone_set('Asia/Kolkata');
 
