@@ -590,7 +590,7 @@ $categories = [
 
     <script>
         var data = <?php echo json_encode($resultArr) ?>;
-        var aid = <?php echo json_encode($_SESSION['aid']) ?>; // Enclose session data in json_encode
+        var aid = <?php echo json_encode($associatenumber) ?>; // Enclose session data in json_encode
 
         const scriptURL = 'payment-api.php';
 

@@ -876,7 +876,7 @@ if ($formtype === "attendance") {
   }
 
   $ip_address = getUserIpAddr();
-  $recorded_by = $_SESSION['aid'];
+  $recorded_by = $associatenumber; //$_SESSION['aid']
 
   // Assuming the GPS location is sent from the frontend in the following format
   $latitude = @$_POST['latitude'];

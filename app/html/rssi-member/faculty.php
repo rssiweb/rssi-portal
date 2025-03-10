@@ -580,7 +580,7 @@ $resultArr = pg_fetch_all($result);
 
                             <script>
                                 var data = <?php echo json_encode($resultArr) ?>;
-                                var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
+                                var aid = <?php echo '"' . $associatenumber . '"' ?>;
 
                                 const scriptURL = 'payment-api.php'
 

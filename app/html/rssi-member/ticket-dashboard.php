@@ -84,7 +84,7 @@ if ($ticket_id) {
 
         // Handle status insertion
         if ($status) {
-            $inserted_by = $_SESSION['aid'];
+            $inserted_by = $associatenumber;
             handleInsertion($con, "
                 INSERT INTO support_ticket_status (ticket_id, status, updated_by) 
                 VALUES ($1, $2, $3)
@@ -93,7 +93,7 @@ if ($ticket_id) {
 
         // Handle assigned_to insertion
         if ($assigned_to) {
-            $inserted_by = $_SESSION['aid'];
+            $inserted_by = $associatenumber;
             handleInsertion($con, "
         INSERT INTO support_ticket_assignment (ticket_id, assigned_to, assigned_by) 
         VALUES ($1, $2, $3)
@@ -135,7 +135,7 @@ if ($ticket_id) {
 
         // Handle new comment submission
         if ($comment) {
-            $commented_by = $_SESSION['aid'];
+            $commented_by = $associatenumber;
             // Upload and insert passbook page if provided
             $doclink = null;
             $filename = null;

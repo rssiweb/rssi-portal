@@ -554,7 +554,7 @@ $classlist = [
 
                       <script>
                         var data = <?php echo json_encode($resultArr) ?>;
-                        var aid = <?php echo '"' . $_SESSION['aid'] . '"' ?>;
+                        var aid = <?php echo '"' . $associatenumber . '"' ?>;
 
                         // Get the modal
                         var modal = document.getElementById("myModal");
