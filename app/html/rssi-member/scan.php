@@ -458,6 +458,7 @@ if (!$result) {
             try {
                 var data = new FormData();
                 data.set("userId", userId);
+                data.set("recorded_by", "<?php echo $associatenumber; ?>");
                 data.set("form-type", "attendance");
                 data.set("latitude", latitude);
                 data.set("longitude", longitude);

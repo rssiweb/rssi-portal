@@ -335,59 +335,59 @@ if ($formtype == "fetch_employee") {
 
 if ($formtype == "fetch_rtet") {
   if (isset($_POST['application_number']) && !empty(trim($_POST['application_number']))) {
-      // Sanitize the application number by trimming any unnecessary spaces
-      $applicationNumber = trim($_POST['application_number']);
+    // Sanitize the application number by trimming any unnecessary spaces
+    $applicationNumber = trim($_POST['application_number']);
 
-      // Step 1: Fetch rtet_session_id from the signup table
-      $signupQuery = "SELECT rtet_session_id FROM signup WHERE application_number = $1;";
-      $signupResult = pg_query_params($con, $signupQuery, array($applicationNumber));
+    // Step 1: Fetch rtet_session_id from the signup table
+    $signupQuery = "SELECT rtet_session_id FROM signup WHERE application_number = $1;";
+    $signupResult = pg_query_params($con, $signupQuery, array($applicationNumber));
 
-      if ($signupResult && pg_num_rows($signupResult) > 0) {
-          $signupRow = pg_fetch_assoc($signupResult);
-          $rtetSessionId = $signupRow['rtet_session_id'];
+    if ($signupResult && pg_num_rows($signupResult) > 0) {
+      $signupRow = pg_fetch_assoc($signupResult);
+      $rtetSessionId = $signupRow['rtet_session_id'];
 
-          if ($rtetSessionId) {
-              // Step 2: Fetch status and user_exam_id from test_user_sessions table
-              $sessionQuery = "SELECT status, user_exam_id FROM test_user_sessions WHERE id = $1;";
-              $sessionResult = pg_query_params($con, $sessionQuery, array($rtetSessionId));
+      if ($rtetSessionId) {
+        // Step 2: Fetch status and user_exam_id from test_user_sessions table
+        $sessionQuery = "SELECT status, user_exam_id FROM test_user_sessions WHERE id = $1;";
+        $sessionResult = pg_query_params($con, $sessionQuery, array($rtetSessionId));
 
-              if ($sessionResult && pg_num_rows($sessionResult) > 0) {
-                  $sessionRow = pg_fetch_assoc($sessionResult);
-                  $status = $sessionRow['status'];
-                  $userExamId = $sessionRow['user_exam_id'];
+        if ($sessionResult && pg_num_rows($sessionResult) > 0) {
+          $sessionRow = pg_fetch_assoc($sessionResult);
+          $status = $sessionRow['status'];
+          $userExamId = $sessionRow['user_exam_id'];
 
-                  // Step 3: Check the status and fetch score accordingly
-                  if ($status === 'submitted') {
-                      // Fetch score from test_user_exams table
-                      $scoreQuery = "SELECT score FROM test_user_exams WHERE id = $1;";
-                      $scoreResult = pg_query_params($con, $scoreQuery, array($userExamId));
+          // Step 3: Check the status and fetch score accordingly
+          if ($status === 'submitted') {
+            // Fetch score from test_user_exams table
+            $scoreQuery = "SELECT score FROM test_user_exams WHERE id = $1;";
+            $scoreResult = pg_query_params($con, $scoreQuery, array($userExamId));
 
-                      if ($scoreResult && pg_num_rows($scoreResult) > 0) {
-                          $scoreRow = pg_fetch_assoc($scoreResult);
-                          $score = floatval($scoreRow['score']);
-                          echo json_encode(['status' => 'success', 'writtenTest' => $score]);
-                      } else {
-                          echo json_encode(['status' => 'error', 'message' => 'Score not found for the exam.']);
-                      }
-                  } elseif ($status === 'pending') {
-                      echo json_encode(['status' => 'error', 'message' => 'Exam has not started yet.']);
-                  } elseif ($status === 'active') {
-                      echo json_encode(['status' => 'error', 'message' => 'Exam is still in progress.']);
-                  } else {
-                      echo json_encode(['status' => 'error', 'message' => 'Invalid exam status.']);
-                  }
-              } else {
-                  echo json_encode(['status' => 'error', 'message' => 'Session not found for the given application number.']);
-              }
+            if ($scoreResult && pg_num_rows($scoreResult) > 0) {
+              $scoreRow = pg_fetch_assoc($scoreResult);
+              $score = floatval($scoreRow['score']);
+              echo json_encode(['status' => 'success', 'writtenTest' => $score]);
+            } else {
+              echo json_encode(['status' => 'error', 'message' => 'Score not found for the exam.']);
+            }
+          } elseif ($status === 'pending') {
+            echo json_encode(['status' => 'error', 'message' => 'Exam has not started yet.']);
+          } elseif ($status === 'active') {
+            echo json_encode(['status' => 'error', 'message' => 'Exam is still in progress.']);
           } else {
-              echo json_encode(['status' => 'error', 'message' => 'No RTET session found for the given application number.']);
+            echo json_encode(['status' => 'error', 'message' => 'Invalid exam status.']);
           }
+        } else {
+          echo json_encode(['status' => 'error', 'message' => 'Session not found for the given application number.']);
+        }
       } else {
-          echo json_encode(['status' => 'error', 'message' => 'Application number not found in the signup table.']);
+        echo json_encode(['status' => 'error', 'message' => 'No RTET session found for the given application number.']);
       }
+    } else {
+      echo json_encode(['status' => 'error', 'message' => 'Application number not found in the signup table.']);
+    }
   } else {
-      // If application number is missing or invalid
-      echo json_encode(['status' => 'error', 'message' => 'Application number is missing or invalid.']);
+    // If application number is missing or invalid
+    echo json_encode(['status' => 'error', 'message' => 'Application number is missing or invalid.']);
   }
 }
 
@@ -855,7 +855,8 @@ if ($formtype == "test") {
 
 
 if ($formtype === "attendance") {
-  $user_id = @$_POST['userId'];
+  $user_id = isset($_POST['userId']) ? $_POST['userId'] : null;
+  $recorded_by = isset($_POST['recorded_by']) ? $_POST['recorded_by'] : null;
   $punch_time = date('Y-m-d H:i:s');
   $date = date('Y-m-d');
   function getUserIpAddr()
@@ -876,7 +877,6 @@ if ($formtype === "attendance") {
   }
 
   $ip_address = getUserIpAddr();
-  $recorded_by = $associatenumber; //$_SESSION['aid']
 
   // Assuming the GPS location is sent from the frontend in the following format
   $latitude = @$_POST['latitude'];
