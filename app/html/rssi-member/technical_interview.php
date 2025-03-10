@@ -1123,7 +1123,7 @@ if (!empty($interviewData['submitted_by'])) {
                             examAnalysisLink.style.display = 'none'; // Hide the link
                         } else if (data.status === 'submitted') {
                             testResultSpan.textContent = 'Exam completed. Click below to view results.';
-                            examAnalysisLink.href = `../iexplore/exam_analysis.php?session_id=${data.sessionId}&auth_code=${data.otp}`;
+                            examAnalysisLink.href = `redirect_iexplore.php?path=exam_analysis&session_id=${data.sessionId}&auth_code=${data.otp}`;
                             examAnalysisLink.style.display = 'block'; // Show the link
                         } else {
                             testResultSpan.textContent = 'Invalid exam status.';
