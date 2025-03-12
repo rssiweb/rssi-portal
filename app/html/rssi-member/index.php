@@ -235,43 +235,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
-
-    <div class="modal fade show" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-modal="true"
-        role="dialog">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
-                        <div class="carousel-indicators">
-                        </div>
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <iframe class="d-block w-100"
-                                    src="https://www.youtube.com/embed/NnXrLAcxnmM?autoplay=1&mute=1&loop=1"
-                                    frameborder="0" allow="autoplay; encrypted-media" allowfullscreen
-                                    style="height: 500px;"></iframe>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer d-flex justify-content-between">
-                        <div class="d-flex flex-grow-1">
-                        </div>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-            });
-        </script>
 </body>
 
 </html>
