@@ -104,7 +104,7 @@ if (!$show_form) {
 
         // Fetch existing questions and user responses from test_user_answers
         $question_query = "
-        SELECT q.id AS question_id, q.question_text, o.option_key, o.option_text, ua.selected_option
+        SELECT q.id AS question_id, q.question_text, o.option_key, o.option_text, ua.selected_option, ua.marked_for_review
         FROM test_user_answers ua
         JOIN test_questions q ON ua.question_id = q.id
         JOIN test_options o ON q.id = o.question_id
@@ -117,6 +117,7 @@ if (!$show_form) {
                 $questions[$row['question_id']] = [
                     'question_text' => $row['question_text'],
                     'selected_option' => $row['selected_option'], // Store the selected option
+                    'marked_for_review' => $row['marked_for_review'], // Store the marked_for_review status
                     'options' => []
                 ];
             }
@@ -595,27 +596,6 @@ if (!$show_form) {
             updateStatusIndicator();
         }
 
-        function updateStatusIndicator() {
-            statusItems.forEach((item, index) => {
-                const container = questionContainers[index];
-                const answered = container.querySelector('input:checked');
-                const statusIndicator = item.querySelector('.status-indicator');
-                const statusText = item.querySelector('.text-muted');
-                const isMarked = container.classList.contains('marked-for-review');
-
-                if (isMarked) {
-                    statusIndicator.style.backgroundColor = '#ffc107';
-                    statusText.textContent = 'Marked for Review';
-                } else if (answered) {
-                    statusIndicator.style.backgroundColor = '#28a745';
-                    statusText.textContent = 'Answered';
-                } else {
-                    statusIndicator.style.backgroundColor = '';
-                    statusText.textContent = 'Not Answered';
-                }
-            });
-        }
-
         document.querySelectorAll('.next-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (currentQuestionIndex < questionContainers.length - 1) {
@@ -637,17 +617,6 @@ if (!$show_form) {
         statusItems.forEach((item, index) => {
             item.addEventListener('click', () => {
                 showQuestion(index);
-            });
-        });
-
-        document.querySelectorAll('.mark-btn').forEach((btn, index) => {
-            btn.addEventListener('click', () => {
-                const container = questionContainers[index];
-                container.classList.toggle('marked-for-review');
-                btn.textContent = container.classList.contains('marked-for-review') ?
-                    'Clear Review' :
-                    'Mark for Review';
-                updateStatusIndicator();
             });
         });
     </script>
@@ -733,42 +702,6 @@ if (!$show_form) {
         });
     </script>
     <script>
-        // Function to toggle "Clear Selection" button visibility
-        function toggleClearButton(questionContainer) {
-            const clearButton = questionContainer.querySelector('.clear-btn');
-            const radioButtons = questionContainer.querySelectorAll('.option-input');
-            const isAnySelected = Array.from(radioButtons).some(radio => radio.checked);
-
-            // Show/hide the "Clear Selection" button
-            if (isAnySelected) {
-                clearButton.classList.remove('hidden');
-            } else {
-                clearButton.classList.add('hidden');
-            }
-        }
-
-        // Add event listeners to all radio buttons
-        document.querySelectorAll('.option-input').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const questionContainer = this.closest('.question-container');
-                toggleClearButton(questionContainer);
-            });
-        });
-
-        // Add event listener to the "Clear Selection" button
-        document.querySelectorAll('.clear-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const questionContainer = this.closest('.question-container');
-                const radioButtons = questionContainer.querySelectorAll('.option-input');
-                radioButtons.forEach(radio => {
-                    radio.checked = false;
-                });
-                // Hide the "Clear Selection" button after clearing
-                this.classList.add('hidden');
-            });
-        });
-    </script>
-    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const totalDurationInMinutes = <?php echo $total_duration; ?>;
             let countdown = totalDurationInMinutes * 60;
@@ -783,7 +716,7 @@ if (!$show_form) {
             function handleVisibilityChange() {
                 if (document.visibilityState === 'hidden' && !isExamSubmitted) {
                     warningCount++;
-                    if (warningCount <= 2) {
+                    if (warningCount <= 20) {
                         alert(`Warning ${warningCount}: You are not allowed to change tabs during the exam.`);
                     } else {
                         // Submit the exam after 3 warnings
@@ -956,56 +889,114 @@ if (!$show_form) {
             }, 1000);
 
             // Function to save the user's selected answer
-            function saveAnswer(questionContainer) {
+            function saveAnswer(questionContainer, selectedOptionValue = null, markedForReview = false) {
                 const questionId = questionContainer.dataset.questionId;
-                const selectedOption = questionContainer.querySelector('input[type="radio"]:checked');
 
-                if (selectedOption) {
-                    // Save the selected option to the database
-                    fetch('save-answer.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                user_exam_id: <?php echo $user_exam_id; ?>,
-                                question_id: questionId,
-                                selected_option: selectedOption.value
-                            })
+                // Save the selected option to the database
+                fetch('save-answer.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            user_exam_id: <?php echo $user_exam_id; ?>,
+                            question_id: questionId,
+                            selected_option: selectedOptionValue,
+                            marked_for_review: markedForReview
                         })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data.success) {
-                                console.error('Failed to save answer:', data.error);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error saving answer:', error);
-                        });
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            console.error('Failed to save answer:', data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error saving answer:', error);
+                    });
+            }
+
+            // Function to toggle "Clear Selection" button visibility
+            function toggleClearButton(questionContainer) {
+                const clearButton = questionContainer.querySelector('.clear-btn');
+                const radioButtons = questionContainer.querySelectorAll('.option-input');
+                const isAnySelected = Array.from(radioButtons).some(radio => radio.checked);
+
+                // Show/hide the "Clear Selection" button
+                if (isAnySelected) {
+                    clearButton.classList.remove('hidden');
+                } else {
+                    clearButton.classList.add('hidden');
                 }
             }
 
-            // // Save user responses on "Next" click
-            // document.querySelectorAll('.next-btn').forEach(button => {
-            //     button.addEventListener('click', () => {
-            //         const questionContainer = button.closest('.question-container');
-            //         saveAnswer(questionContainer); // Save the answer before moving to the next question
-            //     });
-            // });
+            // Function to update status indicators
+            function updateStatusIndicator() {
+                const statusItems = document.querySelectorAll('.status-item');
+                const questionContainers = document.querySelectorAll('.question-container');
 
-            // // Save user responses on "Previous" click
-            // document.querySelectorAll('.prev-btn').forEach(button => {
-            //     button.addEventListener('click', () => {
-            //         const questionContainer = button.closest('.question-container');
-            //         saveAnswer(questionContainer); // Save the answer before moving to the previous question
-            //     });
-            // });
+                statusItems.forEach((item, index) => {
+                    const container = questionContainers[index];
+                    const answered = container.querySelector('input:checked');
+                    const statusIndicator = item.querySelector('.status-indicator');
+                    const statusText = item.querySelector('.text-muted');
+                    const isMarked = container.classList.contains('marked-for-review');
+
+                    if (isMarked) {
+                        statusIndicator.style.backgroundColor = '#ffc107';
+                        statusText.textContent = 'Marked for Review';
+                    } else if (answered) {
+                        statusIndicator.style.backgroundColor = '#28a745';
+                        statusText.textContent = 'Answered';
+                    } else {
+                        statusIndicator.style.backgroundColor = '';
+                        statusText.textContent = 'Not Answered';
+                    }
+                });
+            }
 
             // Add event listeners to radio buttons to save answers immediately
             document.querySelectorAll('.question-container input[type="radio"]').forEach(radio => {
                 radio.addEventListener('change', () => {
                     const questionContainer = radio.closest('.question-container');
-                    saveAnswer(questionContainer);
+                    const markedForReview = questionContainer.classList.contains('marked-for-review');
+                    saveAnswer(questionContainer, radio.value, markedForReview);
+                    toggleClearButton(questionContainer);
+                    updateStatusIndicator(); // Update status immediately after saving the answer
+                });
+            });
+
+            // Add event listener to the "Clear Selection" button
+            document.querySelectorAll('.clear-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const questionContainer = this.closest('.question-container');
+                    const radioButtons = questionContainer.querySelectorAll('.option-input');
+                    radioButtons.forEach(radio => {
+                        radio.checked = false;
+                    });
+
+                    // Trigger save with null value
+                    const markedForReview = questionContainer.classList.contains('marked-for-review');
+                    saveAnswer(questionContainer, null, markedForReview);
+
+                    // Hide the "Clear Selection" button after clearing
+                    this.classList.add('hidden');
+
+                    // Update status indicators after clearing
+                    updateStatusIndicator();
+                });
+            });
+
+            // Add event listeners to "Mark for Review" buttons
+            document.querySelectorAll('.mark-btn').forEach((btn, index) => {
+                btn.addEventListener('click', () => {
+                    const container = questionContainers[index];
+                    container.classList.toggle('marked-for-review');
+                    const markedForReview = container.classList.contains('marked-for-review');
+                    btn.textContent = markedForReview ? 'Clear Review' : 'Mark for Review';
+                    const selectedOption = container.querySelector('input:checked') ? container.querySelector('input:checked').value : null;
+                    saveAnswer(container, selectedOption, markedForReview); // Save marked for review status
+                    updateStatusIndicator(); // Update status immediately after marking for review
                 });
             });
 
@@ -1013,15 +1004,33 @@ if (!$show_form) {
             const questionContainers = document.querySelectorAll('.question-container');
             questionContainers.forEach(container => {
                 const questionId = container.dataset.questionId;
-                const selectedOption = <?php echo json_encode($questions); ?>[questionId]?.selected_option;
+                const questionData = <?php echo json_encode($questions); ?>[questionId];
+                const selectedOption = questionData?.selected_option;
+                const markedForReview = questionData?.marked_for_review;
 
+                // Repopulate selected option
                 if (selectedOption) {
                     const radioButton = container.querySelector(`input[value="${selectedOption}"]`);
                     if (radioButton) {
                         radioButton.checked = true;
                     }
                 }
+
+                // Repopulate marked for review status
+                if (markedForReview === "t") { // Check if marked_for_review is "t" (true)
+                    container.classList.add('marked-for-review');
+                    const markButton = container.querySelector('.mark-btn');
+                    if (markButton) {
+                        markButton.textContent = 'Clear Review';
+                    }
+                }
+
+                // Toggle the visibility of the clear button based on the initial state
+                toggleClearButton(container);
             });
+
+            // Call updateStatusIndicator after repopulating user responses to ensure the status indicators are correct on page load
+            updateStatusIndicator();
 
             // Function to submit the exam
             function submitExam() {
