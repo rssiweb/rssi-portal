@@ -985,19 +985,27 @@ if (!$show_form) {
                 }
             }
 
-            // Save user responses on "Next" click
-            document.querySelectorAll('.next-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const questionContainer = button.closest('.question-container');
-                    saveAnswer(questionContainer); // Save the answer before moving to the next question
-                });
-            });
+            // // Save user responses on "Next" click
+            // document.querySelectorAll('.next-btn').forEach(button => {
+            //     button.addEventListener('click', () => {
+            //         const questionContainer = button.closest('.question-container');
+            //         saveAnswer(questionContainer); // Save the answer before moving to the next question
+            //     });
+            // });
 
-            // Save user responses on "Previous" click
-            document.querySelectorAll('.prev-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const questionContainer = button.closest('.question-container');
-                    saveAnswer(questionContainer); // Save the answer before moving to the previous question
+            // // Save user responses on "Previous" click
+            // document.querySelectorAll('.prev-btn').forEach(button => {
+            //     button.addEventListener('click', () => {
+            //         const questionContainer = button.closest('.question-container');
+            //         saveAnswer(questionContainer); // Save the answer before moving to the previous question
+            //     });
+            // });
+
+            // Add event listeners to radio buttons to save answers immediately
+            document.querySelectorAll('.question-container input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const questionContainer = radio.closest('.question-container');
+                    saveAnswer(questionContainer);
                 });
             });
 
