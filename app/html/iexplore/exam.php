@@ -377,8 +377,10 @@ if (!$show_form) {
             cursor: pointer;
         }
 
-        .status-item:hover {
+        .status-item:hover,
+        .status-item.active {
             background-color: #f8f9fa;
+            /* Same as hover effect */
         }
 
         .status-indicator {
@@ -1131,6 +1133,100 @@ if (!$show_form) {
                 alert('Session expired. Submitting the exam...');
                 submitExam(); // Submit the exam if the session has expired
             }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusItems = document.querySelectorAll('.status-item');
+            const questionContainers = document.querySelectorAll('.question-container');
+            const nextButtons = document.querySelectorAll('.next-btn');
+            const prevButtons = document.querySelectorAll('.prev-btn');
+
+            // Function to highlight the active question in the sidebar
+            function highlightActiveQuestion(activeQuestionId) {
+                // Remove the 'active' class from all status items
+                statusItems.forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // Add the 'active' class to the status item corresponding to the active question
+                const activeStatusItem = document.querySelector(`.status-item[data-question-id="${activeQuestionId}"]`);
+                if (activeStatusItem) {
+                    activeStatusItem.classList.add('active');
+                }
+            }
+
+            // Function to get the currently visible question ID
+            function getActiveQuestionId() {
+                for (const container of questionContainers) {
+                    if (container.style.display !== 'none') {
+                        return container.dataset.questionId;
+                    }
+                }
+                return null; // If no question is visible
+            }
+
+            // Function to update the active question highlight
+            function updateActiveQuestionHighlight() {
+                const activeQuestionId = getActiveQuestionId();
+                if (activeQuestionId) {
+                    highlightActiveQuestion(activeQuestionId);
+                }
+            }
+
+            // Highlight the first question by default
+            if (questionContainers.length > 0) {
+                questionContainers[0].style.display = 'block'; // Ensure the first question is visible
+                const firstQuestionId = questionContainers[0].dataset.questionId;
+                highlightActiveQuestion(firstQuestionId);
+            }
+
+            // Add event listeners for Next buttons
+            nextButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const currentQuestionContainer = button.closest('.question-container');
+                    const nextQuestionContainer = currentQuestionContainer.nextElementSibling;
+
+                    if (nextQuestionContainer && nextQuestionContainer.classList.contains('question-container')) {
+                        currentQuestionContainer.style.display = 'none';
+                        nextQuestionContainer.style.display = 'block';
+                        updateActiveQuestionHighlight();
+                    }
+                });
+            });
+
+            // Add event listeners for Previous buttons
+            prevButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const currentQuestionContainer = button.closest('.question-container');
+                    const prevQuestionContainer = currentQuestionContainer.previousElementSibling;
+
+                    if (prevQuestionContainer && prevQuestionContainer.classList.contains('question-container')) {
+                        currentQuestionContainer.style.display = 'none';
+                        prevQuestionContainer.style.display = 'block';
+                        updateActiveQuestionHighlight();
+                    }
+                });
+            });
+
+            // Add event listeners for sidebar clicks
+            statusItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const questionId = item.dataset.questionId;
+                    const questionContainer = document.querySelector(`.question-container[data-question-id="${questionId}"]`);
+
+                    if (questionContainer) {
+                        // Hide all question containers
+                        questionContainers.forEach(container => {
+                            container.style.display = 'none';
+                        });
+
+                        // Show the selected question container
+                        questionContainer.style.display = 'block';
+                        highlightActiveQuestion(questionId);
+                    }
+                });
+            });
         });
     </script>
 </body>
