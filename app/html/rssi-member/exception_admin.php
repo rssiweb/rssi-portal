@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
 
                         <div class="card-body">
                             <br>
-                            <form action="" method="POST">
+                            <form action="" method="POST" class="mb-3">
                                 <div class="form-group" style="display: inline-block;">
                                     <div class="col2" style="display: inline-block;">
                                         <input name="exception_id" id="exception_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Exception ID" value="<?php echo $exception_id ?>">
@@ -267,12 +267,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col2 left" style="display: inline-block;">
+                                <div class="col2 left mb-3" style="display: inline-block;">
                                     <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                         <i class="bi bi-search"></i>&nbsp;Search</button>
                                 </div>
                                 <div id="filter-checks">
-                                    <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                                    <input type="checkbox" class="form-check-input" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
                                     <label for="is_user" style="font-weight: 400;">Search by Exception ID</label>
                                 </div>
                             </form>
