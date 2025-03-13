@@ -716,7 +716,7 @@ if (!$show_form) {
             function handleVisibilityChange() {
                 if (document.visibilityState === 'hidden' && !isExamSubmitted) {
                     warningCount++;
-                    if (warningCount <= 20) {
+                    if (warningCount <= 2) {
                         alert(`Warning ${warningCount}: You are not allowed to change tabs during the exam.`);
                     } else {
                         // Submit the exam after 3 warnings
