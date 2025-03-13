@@ -494,7 +494,7 @@ if (!$show_form) {
                         <div class="question-container" data-question-id="<?= $questionId ?>" <?= $sequenceNumber > 1 ? 'style="display:none;"' : '' ?>>
                             <!-- Display the sequence number (e.g., "1 of 5") -->
                             <div class="question-number">Question <?= $sequenceNumber ?> of <?= count($questions) ?></div>
-                            <div class="question-text"><?= $question['question_text'] ?></div>
+                            <div class="question-text"><?= nl2br($question['question_text']) ?></div>
 
                             <!-- Display options for the question -->
                             <div class="options-container">
@@ -706,13 +706,13 @@ if (!$show_form) {
     <script>
         document.querySelectorAll('.clear-btn').forEach(button => {
             button.addEventListener('click', function() {
-                if (confirm('Are you sure you want to clear your selection?')) {
-                    const questionContainer = this.closest('.question-container');
-                    const radioButtons = questionContainer.querySelectorAll('.option-input');
-                    radioButtons.forEach(radio => {
-                        radio.checked = false;
-                    });
-                }
+                // if (confirm('Are you sure you want to clear your selection?')) {
+                const questionContainer = this.closest('.question-container');
+                const radioButtons = questionContainer.querySelectorAll('.option-input');
+                radioButtons.forEach(radio => {
+                    radio.checked = false;
+                });
+                // }
             });
         });
     </script>

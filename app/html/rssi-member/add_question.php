@@ -277,9 +277,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="questionText-${questionSetId}-${questionCount}" class="form-label">Question Text</label>
-                        <input type="text" class="form-control" id="questionText-${questionSetId}-${questionCount}" name="questionSets[${questionSetId}][questions][${questionCount}][text]" placeholder="Enter the question" required>
-                    </div>
+    <label for="questionText-${questionSetId}-${questionCount}" class="form-label">Question Text</label>
+    <textarea class="form-control" id="questionText-${questionSetId}-${questionCount}" 
+              name="questionSets[${questionSetId}][questions][${questionCount}][text]" 
+              placeholder="Enter the question" required rows="3"></textarea>
+</div>
                     <div class="mb-3">
                         <label class="form-label">Options</label>
                         <div id="optionsContainer-${questionSetId}-${questionCount}">
@@ -435,7 +437,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 const questionElements = setElement.querySelectorAll('.card.mb-4');
                 questionElements.forEach((questionElement) => {
-                    const questionText = questionElement.querySelector('input[name$="[text]"]').value;
+                    const questionText = questionElement.querySelector('textarea[name$="[text]"]').value;
                     const options = [];
                     let correctOption = null;
 
@@ -479,7 +481,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 set.questions.forEach((question, qIndex) => {
                     previewContent += `<div class="card mb-3">
                     <div class="card-body">
-                        <h6>Question ${qIndex + 1}: ${question.text}</h6>
+                        <h6>Question ${qIndex + 1}: ${nl2br(question.text)}</h6>
                         <div class="options-list">`;
 
                     question.options.forEach((option, oIndex) => {
@@ -521,6 +523,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Submit the form programmatically
             document.getElementById('questionsForm').submit();
         });
+    </script>
+    <script>
+        function nl2br(text) {
+            return text.replace(/\n/g, '<br>');
+        }
     </script>
 </body>
 
