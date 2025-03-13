@@ -75,7 +75,43 @@ if (!$result) {
 
 $resultArr = pg_fetch_all($result);
 ?>
+<?php
+// Check if the form is submitted via POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
+    // Retrieve and sanitize POST data
+    $selected_ids = explode(',', $_POST['selected_ids']);
+    $bulk_status = $_POST['bulk_status'];
+    $bulk_remarks = $_POST['bulk_remarks'];
+    $reviewer_id = $associatenumber;
 
+    // Validate inputs
+    if (!empty($selected_ids) && !empty($bulk_status)) {
+        // Escape and format the ID list properly for VARCHAR type
+        $escaped_ids = array_map(fn($id) => "'" . pg_escape_string($con, trim($id)) . "'", $selected_ids);
+        $ids_string = implode(',', $escaped_ids); // Create a comma-separated list of quoted IDs
+
+        // Build the query (use pg_escape_string for safety)
+        $query = "UPDATE exception_requests 
+                  SET status = '" . pg_escape_string($con, $bulk_status) . "',
+                      reviewer_id = '" . pg_escape_string($con, $reviewer_id) . "',
+                      reviewer_status_updated_on = NOW(),
+                      reviewer_remarks = '" . pg_escape_string($con, $bulk_remarks) . "'
+                  WHERE id IN ($ids_string)";
+
+        // Execute the query
+        $result = pg_query($con, $query);
+
+        // Check if the query was successful
+        if ($result) {
+            echo "<script>alert('Bulk review applied successfully.'); window.location.href = window.location.href;</script>";
+        } else {
+            echo "<script>alert('Error applying bulk review.');</script>";
+        }
+    } else {
+        echo "<script>alert('No rows selected or status not provided.');</script>";
+    }
+}
+?>
 
 <!doctype html>
 <html lang="en">
@@ -118,6 +154,15 @@ $resultArr = pg_fetch_all($result);
         .input-help {
             vertical-align: top;
             display: inline-block;
+        }
+    </style>
+    <style>
+        tbody tr {
+            cursor: pointer;
+        }
+
+        tbody tr:hover {
+            background-color: #f5f5f5;
         }
     </style>
     <!-- CSS Library Files -->
@@ -237,14 +282,24 @@ $resultArr = pg_fetch_all($result);
                                 }
                             </script>
 
-                            <div class="col" style="display: inline-block; width:100%; text-align:right;">
+                            <!-- <div class="col" style="display: inline-block; width:100%; text-align:right;">
                                 Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                            </div>
+                            </div> -->
+                            <?php if ($role == 'Admin') { ?>
+                                <div class="text-end">
+                                    <!-- Bulk Review Button -->
+                                    <div style="margin-bottom: 10px;">
+                                        <button id="bulk-review-button" class="btn btn-primary" disabled>Bulk Review (0)</button>
+                                    </div>
+                                </div>
+                            <?php } ?>
 
                             <div class="table-responsive">
+                                <!-- Table with Checkboxes -->
                                 <table class="table" id="table-id">
                                     <thead>
                                         <tr>
+                                            <th></th>
                                             <th>Exception ID</th>
                                             <th>Submitted By</th>
                                             <th>Submitted On</th>
@@ -254,25 +309,17 @@ $resultArr = pg_fetch_all($result);
                                             <th>Status</th>
                                             <th>Reviewed By</th>
                                             <th>Remarks</th>
-                                            <?php if ($role == 'Admin') { ?>
-                                                <th>Actions</th>
-                                            <?php } ?>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (sizeof($resultArr) > 0) { ?>
                                             <?php foreach ($resultArr as $array) { ?>
                                                 <tr>
+                                                    <td><input type="checkbox" class="form-check-input" name="selected_ids[]" value="<?php echo $array['id']; ?>"></td>
                                                     <td><?php echo $array['id']; ?></td>
-                                                    <td>
-                                                        <?php echo $array['submitted_by'] . '<br>' . (!empty($array['fullname']) ? $array['fullname'] : $array['studentname']); ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php echo @date("d/m/Y g:i a", strtotime($array['submitted_on'])); ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php echo htmlspecialchars($array['sub_exception_type'] ?? ''); ?>
-                                                    </td>
+                                                    <td><?php echo $array['submitted_by'] . '<br>' . (!empty($array['fullname']) ? $array['fullname'] : $array['studentname']); ?></td>
+                                                    <td><?php echo @date("d/m/Y g:i a", strtotime($array['submitted_on'])); ?></td>
+                                                    <td><?php echo htmlspecialchars($array['sub_exception_type'] ?? ''); ?></td>
                                                     <td>
                                                         <?php
                                                         if (!empty($array['start_date_time'])) {
@@ -284,253 +331,27 @@ $resultArr = pg_fetch_all($result);
                                                         }
                                                         ?>
                                                     </td>
-
-                                                    <td>
-                                                        <?php echo $array['reason'] ?? ''; ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php echo htmlspecialchars($array['status'] ?? ''); ?>
-                                                    </td>
+                                                    <td><?php echo $array['reason'] ?? ''; ?></td>
+                                                    <td><?php echo htmlspecialchars($array['status'] ?? ''); ?></td>
                                                     <td>
                                                         <?php
                                                         echo htmlspecialchars($array['reviewer_id'] ?? '');
-
                                                         echo !empty($array['reviewer_status_updated_on'])
                                                             ? " on " . date("d/m/Y g:i a", strtotime($array['reviewer_status_updated_on']))
                                                             : '';
                                                         ?>
                                                     </td>
-                                                    <td>
-                                                        <?php echo htmlspecialchars($array['reviewer_remarks'] ?? ''); ?>
-                                                    </td>
-                                                    <?php if ($role == 'Admin') { ?>
-                                                        <td>
-                                                            <button type="button" onclick="showDetails('<?php echo $array['id']; ?>')" title="Details" style="background: none; border: none;">
-                                                                <i class="bi bi-box-arrow-up-right" style="font-size: 14px; color:#777777;"></i>
-                                                            </button>
-
-                                                            <?php if (!empty($array['phone']) || !empty($array['contact'])) { ?>
-                                                                <a href="https://api.whatsapp.com/send?phone=91<?php echo $array['phone'] ?? $array['contact']; ?>&text=Dear <?php echo $array['fullname'] ?? $array['studentname']; ?> (<?php echo $array['submitted_by']; ?>),%0A%0AYour exception request (ID: <?php echo $array['id']; ?>) has been processed. Status: <?php echo $array['status']; ?>.%0A%0AFor more detailed information, please check your email.%0A%0A--RSSI%0A%0A**This is a system generated message." target="_blank">
-                                                                    <i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS"></i>
-                                                                </a>
-                                                            <?php } else { ?>
-                                                                <i class="bi bi-whatsapp" style="color:#A2A2A2;" title="Send SMS"></i>
-                                                            <?php } ?>
-
-                                                            <?php if (!empty($array['email'])) { ?>
-                                                                <form action="#" name="email-form-<?php echo $array['id']; ?>" id="email-form-<?php echo $array['id']; ?>" method="POST" style="display: inline-block;">
-
-                                                                    <!-- Existing hidden fields -->
-                                                                    <input type="hidden" name="template" value="exception_notify">
-                                                                    <input type="hidden" name="data[id]" value="<?php echo $array['id']; ?>">
-                                                                    <input type="hidden" name="data[submitted_by]" value="<?php echo $array['submitted_by']; ?>">
-                                                                    <input type="hidden" name="data[fullname]" value="<?php echo $array['fullname']; ?>">
-                                                                    <input type="hidden" name="data[exception_type]" value="<?php echo $array['exception_type']; ?>">
-                                                                    <input type="hidden" name="data[reason]" value="<?php echo $array['reason']; ?>">
-                                                                    <?php
-                                                                    $dateTime = !empty($array['start_date_time']) ? $array['start_date_time'] : $array['end_date_time'];
-                                                                    ?>
-                                                                    <input type="hidden" name="data[date_time]" value="<?php echo @date("d/m/Y g:i a", strtotime($dateTime)); ?>">
-
-                                                                    <!-- Additional hidden fields similar to the sample provided -->
-                                                                    <input type="hidden" name="data[exception_status]" value="<?php echo @strtoupper($array['status']); ?>">
-                                                                    <input type="hidden" name="data[reviewer_remarks]" value="<?php echo $array['reviewer_remarks']; ?>">
-
-                                                                    <!-- Include email fields -->
-                                                                    <input type="hidden" name="email" value="<?php echo $array['email']; ?>">
-
-                                                                    <!-- Submit button to send email -->
-                                                                    <button type="submit" style="background: none; border: none;">
-                                                                        <i class="bi bi-envelope-at" style="color:#444444;" title="Send Email"></i>
-                                                                    </button>
-                                                                </form>
-                                                            <?php } else { ?>
-                                                                <i class="bi bi-envelope-at" style="color:#A2A2A2;" title="Send Email"></i>
-                                                            <?php } ?>
-
-                                                        </td>
-                                                    <?php } ?>
+                                                    <td><?php echo htmlspecialchars($array['reviewer_remarks'] ?? ''); ?></td>
                                                 </tr>
                                             <?php } ?>
                                         <?php } else { ?>
                                             <tr>
-                                                <td colspan="10">No records found for the selected filter value.</td>
+                                                <td colspan="11">No records found for the selected filter value.</td>
                                             </tr>
                                         <?php } ?>
                                     </tbody>
                                 </table>
                             </div>
-
-                            <!--------------- POP-UP BOX FOR EXCEPTION REQUEST UPDATE ------------ -------------------------------------->
-
-                            <style>
-                                .modal {
-                                    background-color: rgba(0, 0, 0, 0.4);
-                                    /* Black w/ opacity */
-                                }
-                            </style>
-
-                            <div class="modal" id="myModal" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Exception Request Details</h1>
-                                            <button type="button" id="closedetails-header" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-
-                                            <div style="width:100%; text-align:right">
-                                                <p id="status" class="badge" style="display: inline !important;"><span class="id"></span></p>
-                                            </div>
-
-                                            <!-- Update Form for Exception Request -->
-                                            <form id="exceptionreviewform" name="exceptionreviewform" action="#" method="POST">
-                                                <input type="hidden" class="form-control" name="form-type" value="exceptionreviewform" readonly>
-                                                <input type="hidden" class="form-control" name="reviewer_id" id="reviewer_id" value="<?php echo $associatenumber ?>" readonly>
-                                                <input type="hidden" class="form-control" name="exceptionid" id="exceptionid" readonly>
-
-                                                <select name="exception_status" id="exception_status" class="form-select" required>
-                                                    <option disabled selected hidden>Status</option>
-                                                    <option value="Approved">Approved</option>
-                                                    <option value="Under review">Under review</option>
-                                                    <option value="Rejected">Rejected</option>
-                                                </select>
-
-                                                <div class="mb-3">
-                                                    <label for="reviewer_remarks" class="form-label">Reviewer Remarks</label>
-                                                    <textarea name="reviewer_remarks" id="reviewer_remarks" class="form-control" placeholder="Remarks"></textarea>
-                                                </div>
-
-                                                <br>
-                                                <button type="submit" id="exceptionupdate" class="btn btn-danger btn-sm">Update</button>
-                                            </form>
-                                            <div class="modal-footer">
-                                                <button type="button" id="closedetails-footer" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <script>
-                                var data = <?php echo json_encode($resultArr); ?>;
-
-                                // Get the modal
-                                var modal = document.getElementById("myModal");
-
-                                // Get the elements that close the modal
-                                var closedetails = [
-                                    document.getElementById("closedetails-header"),
-                                    document.getElementById("closedetails-footer")
-                                ];
-
-                                function showDetails(id) {
-                                    var mydata = undefined;
-
-                                    // Find the data item with the matching id
-                                    data.forEach(item => {
-                                        if (item["id"] == id) {
-                                            mydata = item;
-                                        }
-                                    });
-
-                                    if (!mydata) return; // Exit if no data found
-
-                                    // Update modal content dynamically based on mydata
-                                    var keys = Object.keys(mydata);
-                                    keys.forEach(key => {
-                                        var span = modal.getElementsByClassName(key);
-                                        if (span.length > 0) {
-                                            span[0].innerHTML = mydata[key];
-                                        }
-                                    });
-
-                                    // Show the modal
-                                    modal.style.display = "block";
-
-                                    // Update status badge class based on status
-                                    var status = document.getElementById("status");
-                                    if (mydata["status"] === "Approved") {
-                                        status.classList.add("bg-success");
-                                        status.classList.remove("bg-danger");
-                                    } else {
-                                        status.classList.remove("bg-success");
-                                        status.classList.add("bg-danger");
-                                    }
-
-                                    // Populate form fields with data
-                                    document.getElementById("exceptionid").value = mydata["id"]; // Correctly set exceptionid
-                                    if (mydata["status"] !== null) {
-                                        document.getElementById("exception_status").value = mydata["status"];
-                                    }
-
-                                    // Correctly set reviewer remarks
-                                    if (mydata["reviewer_remarks"] !== null && mydata["reviewer_remarks"] !== undefined) {
-                                        document.getElementById("reviewer_remarks").value = mydata["reviewer_remarks"];
-                                    } else {
-                                        document.getElementById("reviewer_remarks").value = ""; // Ensure it's empty if not set
-                                    }
-
-                                    // Set approval date and disable update button if already approved
-                                    if (mydata["status"] == 'Approved' || mydata["status"] == 'Rejected') {
-                                        document.getElementById("exceptionupdate").disabled = true;
-                                    } else {
-                                        document.getElementById("exceptionupdate").disabled = false;
-                                    }
-                                }
-
-                                // Close the modal when user clicks on the close buttons
-                                closedetails.forEach(function(element) {
-                                    element.addEventListener("click", closeModal);
-                                });
-
-                                function closeModal() {
-                                    modal.style.display = "none";
-                                }
-                            </script>
-
-                            <script>
-                                var data = <?php echo json_encode($resultArr) ?>;
-                                //For form submission - to update Remarks
-                                const scriptURL = 'payment-api.php'
-
-                                const form = document.getElementById('exceptionreviewform')
-                                form.addEventListener('submit', e => {
-                                    e.preventDefault()
-                                    fetch(scriptURL, {
-                                            method: 'POST',
-                                            body: new FormData(document.getElementById('exceptionreviewform'))
-                                        })
-                                        .then(response => response.text())
-                                        .then(result => {
-                                            if (result === 'success') {
-                                                alert("Record has been updated.");
-                                                location.reload();
-                                            } else {
-                                                alert("Error updating record. Please try again later or contact support.");
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Error!', error.message);
-                                        });
-                                });
-
-                                data.forEach(item => {
-                                    const formId = 'email-form-' + item.id
-                                    const form = document.forms[formId]
-                                    form.addEventListener('submit', e => {
-                                        e.preventDefault()
-                                        fetch('mailer.php', {
-                                                method: 'POST',
-                                                body: new FormData(document.forms[formId])
-                                            })
-                                            .then(response =>
-                                                alert("Email has been sent.")
-                                            )
-                                            .catch(error => console.error('Error!', error.message))
-                                    })
-                                })
-                            </script>
-
                         </div>
                     </div>
                 </div><!-- End Reports -->
@@ -538,6 +359,37 @@ $resultArr = pg_fetch_all($result);
         </section>
 
     </main><!-- End #main -->
+
+    <!-- Bulk Review Modal -->
+    <div class="modal fade" id="bulkReviewModal" tabindex="-1" aria-labelledby="bulkReviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkReviewModalLabel">Bulk Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bulk-review-form" action="exception_admin.php" method="POST">
+                        <input type="hidden" name="selected_ids" id="selected-ids">
+                        <div class="mb-3">
+                            <label for="bulk-status" class="form-label">Status</label>
+                            <select name="bulk_status" id="bulk-status" class="form-select" required>
+                                <option disabled selected hidden>Select Status</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Under review">Under review</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bulk-remarks" class="form-label">Remarks</label>
+                            <textarea name="bulk_remarks" id="bulk-remarks" class="form-control" placeholder="Remarks"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
@@ -579,6 +431,66 @@ $resultArr = pg_fetch_all($result);
                 });
             <?php endif; ?>
         });
+    </script>
+    <script>
+        // Make the entire row clickable to toggle the checkbox
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                // Check if the click was on the checkbox itself to avoid double toggling
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {
+                    const checkbox = row.querySelector('.form-check-input');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+
+                        // Trigger the change event manually to update the bulk review button
+                        const event = new Event('change', {
+                            bubbles: true
+                        });
+                        checkbox.dispatchEvent(event);
+                    }
+                }
+            });
+        });
+
+        // Function to update the bulk review button
+        function updateBulkReviewButton() {
+            const selectedCount = document.querySelectorAll('.form-check-input:checked').length;
+            const bulkReviewButton = document.getElementById('bulk-review-button');
+            bulkReviewButton.textContent = `Bulk Review (${selectedCount})`;
+            bulkReviewButton.disabled = selectedCount === 0;
+        }
+
+        // Attach event listeners to checkboxes to update the button
+        document.querySelectorAll('.form-check-input').forEach(checkbox => {
+            checkbox.addEventListener('change', updateBulkReviewButton);
+        });
+
+        // Initial update of the button
+        updateBulkReviewButton();
+    </script>
+    <script>
+        // Open the bulk review modal and populate selected IDs
+        document.getElementById('bulk-review-button').addEventListener('click', () => {
+            const selectedIds = getSelectedIds();
+            if (selectedIds.length > 0) {
+                document.getElementById('selected-ids').value = selectedIds.join(',');
+
+                // Initialize and show the modal
+                const bulkReviewModal = new bootstrap.Modal(document.getElementById('bulkReviewModal'));
+                bulkReviewModal.show();
+            } else {
+                alert('Please select at least one row to proceed.');
+            }
+        });
+
+        // Function to get selected IDs
+        function getSelectedIds() {
+            const selectedIds = [];
+            document.querySelectorAll('.form-check-input:checked').forEach(checkbox => {
+                selectedIds.push(checkbox.value);
+            });
+            return selectedIds;
+        }
     </script>
 
 </body>
