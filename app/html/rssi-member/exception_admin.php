@@ -237,45 +237,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
 
                         <div class="card-body">
                             <br>
-                            <form action="" method="POST" class="mb-3">
-                                <div class="form-group" style="display: inline-block;">
-                                    <div class="col2" style="display: inline-block;">
-                                        <input name="exception_id" id="exception_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Exception ID" value="<?php echo $exception_id ?>">
+                            <div class="row align-items-center">
+                                <div class="col-md-9">
+                                    <form action="" method="POST" class="mb-3">
+                                        <div class="form-group d-inline-block">
+                                            <div class="col2 d-inline-block">
+                                                <input name="exception_id" id="exception_id" class="form-control d-inline-block" style="width:max-content;" placeholder="Exception ID" value="<?php echo $exception_id ?>">
 
-                                        <?php if ($role == 'Admin') { ?>
-                                            <!-- Only show this input if the user is an admin -->
-                                            <input name="applicant_id" id="applicant_id" class="form-control" style="width:max-content; display:inline-block" placeholder="Applicant ID" value="<?php echo $applicant_id ?>">
-                                        <?php } ?>
+                                                <?php if ($role == 'Admin') { ?>
+                                                    <input name="applicant_id" id="applicant_id" class="form-control d-inline-block" style="width:max-content;" placeholder="Applicant ID" value="<?php echo $applicant_id ?>">
+                                                <?php } ?>
 
-                                        <select name="lyear" id="lyear" class="form-select" style="width:max-content; display:inline-block" placeholder="Academic Year" required>
-                                            <?php if ($lyear == null) { ?>
-                                                <option disabled selected hidden>Academic Year</option>
-                                            <?php } else { ?>
-                                                <option hidden selected><?php echo $lyear ?></option>
-                                            <?php } ?>
-                                            <!-- Add options dynamically if needed -->
-                                            <?php
-                                            // Dynamically generate the academic year options
-                                            $currentYear = date('Y');
-                                            for ($i = 0; $i < 5; $i++) {
-                                                $startYear = $currentYear - $i;
-                                                $endYear = $startYear + 1;
-                                                $value = "$startYear-$endYear";
-                                                echo "<option value='$value'>$value</option>";
-                                            }
-                                            ?>
-                                        </select>
+                                                <select name="lyear" id="lyear" class="form-select d-inline-block" style="width:max-content;" required>
+                                                    <?php if ($lyear == null) { ?>
+                                                        <option disabled selected hidden>Academic Year</option>
+                                                    <?php } else { ?>
+                                                        <option hidden selected><?php echo $lyear ?></option>
+                                                    <?php } ?>
+                                                    <?php
+                                                    $currentYear = date('Y');
+                                                    for ($i = 0; $i < 5; $i++) {
+                                                        $startYear = $currentYear - $i;
+                                                        $endYear = $startYear + 1;
+                                                        echo "<option value='$startYear-$endYear'>$startYear-$endYear</option>";
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col2 left mb-3 d-inline-block">
+                                            <button type="submit" name="search_by_id" class="btn btn-success btn-sm">
+                                                <i class="bi bi-search"></i>&nbsp;Search
+                                            </button>
+                                        </div>
+                                        <div id="filter-checks">
+                                            <input type="checkbox" class="form-check-input" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
+                                            <label for="is_user" style="font-weight: 400;">Search by Exception ID</label>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <?php if ($role == 'Admin') { ?>
+                                    <div class="col-md-3 text-end">
+                                        <button id="bulk-review-button" class="btn btn-primary" disabled>Bulk Review (0)</button>
                                     </div>
-                                </div>
-                                <div class="col2 left mb-3" style="display: inline-block;">
-                                    <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
-                                        <i class="bi bi-search"></i>&nbsp;Search</button>
-                                </div>
-                                <div id="filter-checks">
-                                    <input type="checkbox" class="form-check-input" name="is_user" id="is_user" value="1" <?php if (isset($_POST['is_user'])) echo "checked='checked'"; ?> />
-                                    <label for="is_user" style="font-weight: 400;">Search by Exception ID</label>
-                                </div>
-                            </form>
+                                <?php } ?>
+                            </div>
 
                             <script>
                                 // Initial check for checkbox status
@@ -319,18 +326,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
                                     currentYear--;
                                 }
                             </script>
-
-                            <!-- <div class="col" style="display: inline-block; width:100%; text-align:right;">
-                                Record count:&nbsp;<?php echo sizeof($resultArr) ?>
-                            </div> -->
-                            <?php if ($role == 'Admin') { ?>
-                                <div class="text-end">
-                                    <!-- Bulk Review Button -->
-                                    <div style="margin-bottom: 10px;">
-                                        <button id="bulk-review-button" class="btn btn-primary" disabled>Bulk Review (0)</button>
-                                    </div>
-                                </div>
-                            <?php } ?>
 
                             <div class="table-responsive">
                                 <!-- Table with Checkboxes -->
@@ -421,7 +416,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
                             <select name="bulk_status" id="bulk-status" class="form-select" required>
                                 <option disabled selected hidden>Select Status</option>
                                 <option value="Approved">Approved</option>
-                                <option value="Under review">Under review</option>
+                                <!-- <option value="Under review">Under review</option> -->
                                 <option value="Rejected">Rejected</option>
                             </select>
                         </div>
@@ -478,64 +473,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
         });
     </script>
     <script>
-        // Make the entire row clickable to toggle the checkbox
-        document.querySelectorAll('tbody tr').forEach(row => {
-            row.addEventListener('click', (e) => {
-                // Check if the click was on the checkbox itself to avoid double toggling
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {
-                    const checkbox = row.querySelector('.form-check-input');
-                    if (checkbox && !checkbox.disabled) {
-                        checkbox.checked = !checkbox.checked;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Make the entire row clickable to toggle the checkbox
+            document.querySelectorAll('tbody tr').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    // Check if the click was on a checkbox, link, or button to avoid unwanted toggling
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {
+                        const checkbox = row.querySelector('td .form-check-input'); // Select only table checkboxes
+                        if (checkbox && !checkbox.disabled) {
+                            checkbox.checked = !checkbox.checked;
 
-                        // Trigger the change event manually to update the bulk review button
-                        const event = new Event('change', {
-                            bubbles: true
-                        });
-                        checkbox.dispatchEvent(event);
+                            // Trigger the change event manually to update the bulk review button
+                            checkbox.dispatchEvent(new Event('change', {
+                                bubbles: true
+                            }));
+                        }
                     }
+                });
+            });
+
+            // Function to update the bulk review button
+            function updateBulkReviewButton() {
+                // Only count checkboxes inside the table
+                const selectedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+                const bulkReviewButton = document.getElementById('bulk-review-button');
+                bulkReviewButton.textContent = `Bulk Review (${selectedCount})`;
+                bulkReviewButton.disabled = selectedCount === 0;
+            }
+
+            // Attach event listeners to table checkboxes only
+            document.querySelectorAll('tbody .form-check-input').forEach(checkbox => {
+                checkbox.addEventListener('change', updateBulkReviewButton);
+            });
+
+            // Initial update of the button
+            updateBulkReviewButton();
+
+            // Open the bulk review modal and populate selected IDs
+            document.getElementById('bulk-review-button').addEventListener('click', () => {
+                const selectedIds = getSelectedIds();
+                if (selectedIds.length > 0) {
+                    document.getElementById('selected-ids').value = selectedIds.join(',');
+
+                    // Initialize and show the modal
+                    const bulkReviewModal = new bootstrap.Modal(document.getElementById('bulkReviewModal'));
+                    bulkReviewModal.show();
+                } else {
+                    alert('Please select at least one row to proceed.');
                 }
             });
-        });
 
-        // Function to update the bulk review button
-        function updateBulkReviewButton() {
-            const selectedCount = document.querySelectorAll('.form-check-input:checked').length;
-            const bulkReviewButton = document.getElementById('bulk-review-button');
-            bulkReviewButton.textContent = `Bulk Review (${selectedCount})`;
-            bulkReviewButton.disabled = selectedCount === 0;
-        }
-
-        // Attach event listeners to checkboxes to update the button
-        document.querySelectorAll('.form-check-input').forEach(checkbox => {
-            checkbox.addEventListener('change', updateBulkReviewButton);
-        });
-
-        // Initial update of the button
-        updateBulkReviewButton();
-    </script>
-    <script>
-        // Open the bulk review modal and populate selected IDs
-        document.getElementById('bulk-review-button').addEventListener('click', () => {
-            const selectedIds = getSelectedIds();
-            if (selectedIds.length > 0) {
-                document.getElementById('selected-ids').value = selectedIds.join(',');
-
-                // Initialize and show the modal
-                const bulkReviewModal = new bootstrap.Modal(document.getElementById('bulkReviewModal'));
-                bulkReviewModal.show();
-            } else {
-                alert('Please select at least one row to proceed.');
+            // Function to get selected IDs (only from table checkboxes)
+            function getSelectedIds() {
+                const selectedIds = [];
+                document.querySelectorAll('tbody .form-check-input:checked').forEach(checkbox => {
+                    selectedIds.push(checkbox.value);
+                });
+                return selectedIds;
             }
         });
-
-        // Function to get selected IDs
-        function getSelectedIds() {
-            const selectedIds = [];
-            document.querySelectorAll('.form-check-input:checked').forEach(checkbox => {
-                selectedIds.push(checkbox.value);
-            });
-            return selectedIds;
-        }
     </script>
 
 </body>
