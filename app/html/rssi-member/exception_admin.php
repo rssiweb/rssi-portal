@@ -90,19 +90,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
         $escaped_ids = array_map(fn($id) => "'" . pg_escape_string($con, trim($id)) . "'", $selected_ids);
         $ids_string = implode(',', $escaped_ids); // Create a comma-separated list of quoted IDs
 
-        // Build the query (use pg_escape_string for safety)
-        $query = "UPDATE exception_requests 
-                  SET status = '" . pg_escape_string($con, $bulk_status) . "',
-                      reviewer_id = '" . pg_escape_string($con, $reviewer_id) . "',
-                      reviewer_status_updated_on = NOW(),
-                      reviewer_remarks = '" . pg_escape_string($con, $bulk_remarks) . "'
-                  WHERE id IN ($ids_string)";
+        // First, update the database
+        $query_update = "UPDATE exception_requests 
+                         SET status = '" . pg_escape_string($con, $bulk_status) . "',
+                             reviewer_id = '" . pg_escape_string($con, $reviewer_id) . "',
+                             reviewer_status_updated_on = NOW(),
+                             reviewer_remarks = '" . pg_escape_string($con, $bulk_remarks) . "'
+                         WHERE id IN ($ids_string)";
+        $result_update = pg_query($con, $query_update);
 
-        // Execute the query
-        $result = pg_query($con, $query);
+        if ($result_update) {
+            // Now, fetch the updated data for email notification
+            $query_fetch = "SELECT e.id, e.submitted_by, e.exception_type, e.reason, e.start_date_time, 
+                                   e.end_date_time, e.status, e.reviewer_remarks, m.email, m.fullname 
+                            FROM exception_requests e
+                            LEFT JOIN rssimyaccount_members m ON e.submitted_by = m.associatenumber
+                            WHERE e.id IN ($ids_string)";
+            $result_fetch = pg_query($con, $query_fetch);
 
-        // Check if the query was successful
-        if ($result) {
+            if ($result_fetch) {
+                while ($row = pg_fetch_assoc($result_fetch)) {
+                    $submitted_by = $row['submitted_by'];
+                    $email = $row['email'];
+                    $fullname = $row['fullname'];
+                    $exception_type = $row['exception_type'];
+                    $reason = $row['reason'];
+                    $dateTime = !empty($row['start_date_time']) ? $row['start_date_time'] : $row['end_date_time'];
+                    $exception_status = strtoupper($row['status']);  // Now contains updated status
+                    $reviewer_remarks = $row['reviewer_remarks'];  // Now contains updated remarks
+
+                    if (!empty($email)) {
+                        $emailData = [
+                            "template" => "exception_notify",
+                            "data" => [
+                                "id" => $row['id'],
+                                "submitted_by" => $submitted_by,
+                                "fullname" => $fullname,
+                                "exception_type" => $exception_type,
+                                "reason" => $reason,
+                                "date_time" => @date("d/m/Y g:i a", strtotime($dateTime)),
+                                "exception_status" => $exception_status,  // Now updated
+                                "reviewer_remarks" => $reviewer_remarks  // Now updated
+                            ],
+                            "email" => $email
+                        ];
+
+                        // Send email
+                        sendEmail("exception_notify", $emailData['data'], $emailData['email'], false);
+                    }
+                }
+            }
+
             echo "<script>alert('Bulk review applied successfully.'); window.location.href = window.location.href;</script>";
         } else {
             echo "<script>alert('Error applying bulk review.');</script>";
@@ -315,7 +353,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
                                         <?php if (sizeof($resultArr) > 0) { ?>
                                             <?php foreach ($resultArr as $array) { ?>
                                                 <tr>
-                                                    <td><input type="checkbox" class="form-check-input" name="selected_ids[]" value="<?php echo $array['id']; ?>"></td>
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            class="form-check-input"
+                                                            name="selected_ids[]"
+                                                            value="<?php echo $array['id']; ?>"
+                                                            <?php echo ($array['status'] === 'Approved' || $array['status'] === 'Rejected') ? 'disabled' : ''; ?>>
+                                                    </td>
                                                     <td><?php echo $array['id']; ?></td>
                                                     <td><?php echo $array['submitted_by'] . '<br>' . (!empty($array['fullname']) ? $array['fullname'] : $array['studentname']); ?></td>
                                                     <td><?php echo @date("d/m/Y g:i a", strtotime($array['submitted_on'])); ?></td>
@@ -439,7 +484,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_status'])) {
                 // Check if the click was on the checkbox itself to avoid double toggling
                 if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {
                     const checkbox = row.querySelector('.form-check-input');
-                    if (checkbox) {
+                    if (checkbox && !checkbox.disabled) {
                         checkbox.checked = !checkbox.checked;
 
                         // Trigger the change event manually to update the bulk review button
