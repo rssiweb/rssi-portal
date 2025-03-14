@@ -368,15 +368,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                         </div>
 
                         <!-- Checkbox for WBT -->
-                        <div class="mb-3 form-check">
+                        <!-- <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="isWBT">
                             <label class="form-check-label" for="isWBT">Is it a WBT?</label>
-                        </div>
+                        </div> -->
 
                         <!-- Course ID (initially disabled and not required) -->
                         <div class="mb-3">
                             <label for="courseId" class="form-label">Course ID</label>
-                            <input type="text" class="form-control" id="courseId" name="courseId" disabled>
+                            <input type="text" class="form-control" id="courseId" name="courseId">
+                            <div class="form-text">
+                                Enter the Course/WBT ID to link it with iExplore Learner.
+                            </div>
                         </div>
 
                         <!-- Total Questions -->
@@ -606,7 +609,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
             });
         });
     </script>
-    <script>
+    <!-- <script>
         document.getElementById('isWBT').addEventListener('change', function() {
             const courseIdField = document.getElementById('courseId');
             const isWBTChecked = this.checked;
@@ -617,7 +620,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
             // Make the Course ID field required if the checkbox is checked
             courseIdField.required = isWBTChecked;
         });
-    </script>
+    </script> -->
 
 </body>
 
