@@ -11,11 +11,12 @@ if (!isLoggedIn("aid")) {
 validation();
 ?>
 <?php
-
-// Fetch exams with related categories
+// After fetching the exam details, add the question counts to the dataset
 $query = "
     SELECT te.id AS exam_id, te.name AS exam_name, te.total_questions, te.total_duration, te.is_active, te.created_at, te.language, te.show_answer, te.is_restricted, te.is_paid, te.course_id,
-           STRING_AGG(tc.name, ', ') AS categories, STRING_AGG(tc.id::text, ', ') AS category_ids -- Fetch category IDs as a comma-separated string
+           STRING_AGG(tc.name, ', ') AS categories, 
+           STRING_AGG(tc.id::text, ', ') AS category_ids, -- Fetch category IDs as a comma-separated string
+           STRING_AGG(tec.question_count::text, ', ') AS question_counts -- Fetch question counts as a comma-separated string
     FROM test_exams te
     LEFT JOIN test_exam_categories tec ON te.id = tec.exam_id
     LEFT JOIN test_categories tc ON tec.category_id = tc.id
@@ -35,6 +36,10 @@ $categoriesResult = pg_query($con, $categoriesQuery);
 if (!$categoriesResult) {
     die("Error in categories query: " . pg_last_error($con));
 }
+
+// Fetch distinct languages for the language dropdown
+$languageQuery = "SELECT DISTINCT q_language FROM test_questions";
+$languageResult = pg_query($con, $languageQuery);
 ?>
 <?php
 // Handle the delete operation
@@ -63,10 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
     // Sanitize and validate input data
     $id = isset($_POST['id']) ? intval($_POST['id']) : null;
     $name = pg_escape_string($con, $_POST['name']);
-    $courseId = pg_escape_string($con, $_POST['courseId']);
+    @$courseId = pg_escape_string($con, $_POST['courseId']);
     $total_questions = intval($_POST['total_questions']);
     $total_duration = intval($_POST['total_duration']);
     $categories = $_POST['categories']; // Array of category IDs
+    $question_counts = $_POST['question_count']; // Array of question counts for each category
     $status = ($_POST['status'] === 'true') ? true : false; // Convert to boolean
 
     // Handle multi-select language (convert array to comma-separated string)
@@ -155,10 +161,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
         $id = $row['id'];
     }
 
-    // Insert categories
+    // Insert categories with question counts
     foreach ($categories as $category_id) {
-        $insertCategoryQuery = "INSERT INTO test_exam_categories (exam_id, category_id) VALUES ($1, $2)";
-        pg_query_params($con, $insertCategoryQuery, [$id, $category_id]);
+        $question_count = isset($question_counts[$category_id]) ? intval($question_counts[$category_id]) : 0;
+        $insertCategoryQuery = "INSERT INTO test_exam_categories (exam_id, category_id, question_count) VALUES ($1, $2, $3)";
+        pg_query_params($con, $insertCategoryQuery, [$id, $category_id, $question_count]);
     }
 
     // Show success message
@@ -291,9 +298,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                                             data-course_id="<?= $row['course_id'] ?>"
                                                             data-total-questions="<?= $row['total_questions'] ?>"
                                                             data-total-duration="<?= $row['total_duration'] ?>"
-                                                            data-categories="<?= htmlspecialchars($row['category_ids']) ?>"
+                                                            data-categories="<?= htmlspecialchars($row['category_ids'] ?? '') ?>"
+                                                            data-question-counts="<?= htmlspecialchars($row['question_counts'] ?? '') ?>"
                                                             data-status="<?= $row['is_active'] === 't' ? 'true' : 'false' ?>"
-                                                            data-language="<?= htmlspecialchars($row['language']) ?>"
+                                                            data-language="<?= htmlspecialchars($row['language'] ?? '') ?>"
                                                             data-show-answer="<?= $row['show_answer'] === 't' ? 'true' : 'false' ?>"
                                                             data-is-restricted="<?= $row['is_restricted'] === 't' ? 'true' : 'false' ?>"
                                                             data-is-paid="<?= $row['is_paid'] === 't' ? 'true' : 'false' ?>">
@@ -312,110 +320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                                     </table>
                                 </div>
                             </div>
-
-                            <!-- Add/Edit Exam Modal -->
-                            <div class="modal fade show" id="examModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="examModalLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="examModalLabel">Add/Edit Exam</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <form id="examForm" action="#" method="POST">
-                                            <div class="modal-body">
-                                                <input type="hidden" name="id" id="examId">
-
-                                                <!-- Exam Name -->
-                                                <div class="mb-3">
-                                                    <label for="examName" class="form-label">Exam Name</label>
-                                                    <input type="text" class="form-control" id="examName" name="name" required>
-                                                </div>
-                                                <!-- Checkbox for WBT -->
-                                                <div class="mb-3 form-check">
-                                                    <input type="checkbox" class="form-check-input" id="isWBT">
-                                                    <label class="form-check-label" for="isWBT">Is it a WBT?</label>
-                                                </div>
-
-                                                <!-- Course ID (initially disabled and not required) -->
-                                                <div class="mb-3">
-                                                    <label for="courseId" class="form-label">Course ID</label>
-                                                    <input type="text" class="form-control" id="courseId" name="courseId" disabled>
-                                                </div>
-
-                                                <!-- Total Questions -->
-                                                <div class="mb-3">
-                                                    <label for="totalQuestions" class="form-label">Total Questions</label>
-                                                    <input type="number" class="form-control" id="totalQuestions" name="total_questions" required>
-                                                </div>
-
-                                                <!-- Total Duration -->
-                                                <div class="mb-3">
-                                                    <label for="totalDuration" class="form-label">Total Duration (minutes)</label>
-                                                    <input type="number" class="form-control" id="totalDuration" name="total_duration" required>
-                                                </div>
-
-                                                <!-- Categories -->
-                                                <div class="mb-3">
-                                                    <label for="categories" class="form-label">Categories</label>
-                                                    <select class="form-select" id="categories" name="categories[]" multiple required>
-                                                        <?php while ($cat = pg_fetch_assoc($categoriesResult)): ?>
-                                                            <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
-                                                        <?php endwhile; ?>
-                                                    </select>
-                                                </div>
-
-                                                <!-- Status -->
-                                                <div class="mb-3">
-                                                    <label for="status" class="form-label">Status</label>
-                                                    <select class="form-select" id="status" name="status" required>
-                                                        <option value="true">Active</option>
-                                                        <option value="false">Inactive</option>
-                                                    </select>
-                                                </div>
-                                                <!-- Language (Multi-Select Dropdown) -->
-                                                <div class="mb-3">
-                                                    <label for="language" class="form-label">Language</label>
-                                                    <select class="form-select" id="language" name="language[]" multiple required>
-                                                        <?php
-                                                        $languageQuery = "SELECT DISTINCT q_language FROM test_questions";
-                                                        $languageResult = pg_query($con, $languageQuery);
-                                                        while ($lang = pg_fetch_assoc($languageResult)) {
-                                                            echo '<option value="' . htmlspecialchars($lang['q_language']) . '">' . htmlspecialchars($lang['q_language']) . '</option>';
-                                                        }
-                                                        ?>
-                                                    </select>
-                                                </div>
-
-                                                <!-- Show Answer (Boolean) -->
-                                                <div class="mb-3 form-check">
-                                                    <input type="checkbox" class="form-check-input" id="showAnswer" name="show_answer" value='1'>
-                                                    <label class="form-check-label" for="showAnswer">Show Answers After Exam</label>
-                                                </div>
-
-                                                <!-- Is Restricted (Boolean) -->
-                                                <div class="mb-3 form-check">
-                                                    <input type="checkbox" class="form-check-input" id="isRestricted" name="is_restricted" value='1'>
-                                                    <label class="form-check-label" for="isRestricted">Restrict Exam Access</label>
-                                                </div>
-
-                                                <!-- Is Paid (Boolean) -->
-                                                <div class="mb-3 form-check">
-                                                    <input type="checkbox" class="form-check-input" id="isPaid" name="is_paid" value='1'>
-                                                    <label class="form-check-label" for="isPaid">Paid Exam</label>
-                                                </div>
-                                            </div>
-
-                                            <!-- Modal Footer -->
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-
                     </div>
                 </div>
             </div><!-- End Reports -->
@@ -444,10 +349,170 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
             <?php endif; ?>
         });
     </script>
+    <!-- Add/Edit Exam Modal -->
+    <div class="modal fade show" id="examModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="examModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="examModalLabel">Add/Edit Exam</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="examForm" action="#" method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="examId">
+
+                        <!-- Exam Name -->
+                        <div class="mb-3">
+                            <label for="examName" class="form-label">Exam Name</label>
+                            <input type="text" class="form-control" id="examName" name="name" required>
+                        </div>
+
+                        <!-- Checkbox for WBT -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="isWBT">
+                            <label class="form-check-label" for="isWBT">Is it a WBT?</label>
+                        </div>
+
+                        <!-- Course ID (initially disabled and not required) -->
+                        <div class="mb-3">
+                            <label for="courseId" class="form-label">Course ID</label>
+                            <input type="text" class="form-control" id="courseId" name="courseId" disabled>
+                        </div>
+
+                        <!-- Total Questions -->
+                        <div class="mb-3">
+                            <label for="totalQuestions" class="form-label">Total Questions</label>
+                            <input type="number" class="form-control" id="totalQuestions" name="total_questions" required>
+                        </div>
+
+                        <!-- Total Duration -->
+                        <div class="mb-3">
+                            <label for="totalDuration" class="form-label">Total Duration (minutes)</label>
+                            <input type="number" class="form-control" id="totalDuration" name="total_duration" required>
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="mb-3">
+                            <label for="categories" class="form-label">Categories</label>
+                            <select class="form-select" id="categories" name="categories[]" multiple required>
+                                <?php while ($cat = pg_fetch_assoc($categoriesResult)): ?>
+                                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+
+                        <!-- Informational Block for Category-wise Question Counts -->
+                        <div id="infoBlock" class="mb-3">
+                            <h6>Current Question Counts per Category</h6>
+                            <ul id="infoList"></ul>
+                        </div>
+
+                        <!-- Question Count per Category -->
+                        <div id="questionCountContainer" class="mb-3">
+                            <!-- Dynamically generated question count inputs will go here -->
+                        </div>
+
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+
+                        <!-- Language (Multi-Select Dropdown) -->
+                        <div class="mb-3">
+                            <label for="language" class="form-label">Language</label>
+                            <select class="form-select" id="language" name="language[]" multiple required>
+                                <?php
+                                $languageQuery = "SELECT DISTINCT q_language FROM test_questions";
+                                $languageResult = pg_query($con, $languageQuery);
+                                while ($lang = pg_fetch_assoc($languageResult)) {
+                                    echo '<option value="' . htmlspecialchars($lang['q_language']) . '">' . htmlspecialchars($lang['q_language']) . '</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+
+                        <!-- Show Answer (Boolean) -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="showAnswer" name="show_answer" value='1'>
+                            <label class="form-check-label" for="showAnswer">Show Answers After Exam</label>
+                        </div>
+
+                        <!-- Is Restricted (Boolean) -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="isRestricted" name="is_restricted" value='1'>
+                            <label class="form-check-label" for="isRestricted">Restrict Exam Access</label>
+                        </div>
+
+                        <!-- Is Paid (Boolean) -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="isPaid" name="is_paid" value='1'>
+                            <label class="form-check-label" for="isPaid">Paid Exam</label>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const examModal = new bootstrap.Modal(document.getElementById('examModal'));
             const addExamBtn = document.getElementById('addExamBtn');
+            const categoriesSelect = document.getElementById('categories');
+            const questionCountContainer = document.getElementById('questionCountContainer');
+            const infoBlock = document.getElementById('infoBlock');
+            const infoList = document.getElementById('infoList');
+
+            // Function to generate question count inputs
+            function generateQuestionCountInputs(questionCounts = {}) {
+                questionCountContainer.innerHTML = ''; // Clear existing inputs
+                const selectedCategories = Array.from(categoriesSelect.selectedOptions).map(option => option.value);
+
+                selectedCategories.forEach(categoryId => {
+                    const categoryName = categoriesSelect.querySelector(`option[value="${categoryId}"]`).textContent;
+                    const count = questionCounts[categoryId] || 0; // Use the provided count or default to 0
+
+                    const inputGroup = document.createElement('div');
+                    inputGroup.className = 'mb-3';
+
+                    const label = document.createElement('label');
+                    label.className = 'form-label';
+                    label.textContent = `Number of Questions for ${categoryName}`;
+                    inputGroup.appendChild(label);
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'form-control';
+                    input.name = `question_count[${categoryId}]`;
+                    input.required = true;
+                    input.min = 0;
+                    input.value = count;
+                    inputGroup.appendChild(input);
+
+                    questionCountContainer.appendChild(inputGroup);
+                });
+            }
+
+            // Function to populate informational block
+            function populateInfoBlock(questionCounts = {}) {
+                infoList.innerHTML = ''; // Clear existing info
+                for (const [categoryId, count] of Object.entries(questionCounts)) {
+                    const categoryName = categoriesSelect.querySelector(`option[value="${categoryId}"]`).textContent;
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${categoryName}: ${count} questions`;
+                    infoList.appendChild(listItem);
+                }
+            }
 
             // Handle Add Exam Button Click
             addExamBtn.addEventListener("click", function() {
@@ -456,11 +521,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                 document.getElementById('examId').value = ''; // Ensure exam ID is empty
 
                 // Reset category and language selections
-                document.getElementById('categories').querySelectorAll('option').forEach(option => option.selected = false);
+                categoriesSelect.querySelectorAll('option').forEach(option => option.selected = false);
                 document.getElementById('language').querySelectorAll('option').forEach(option => option.selected = false);
+
+                // Clear question count inputs and info block
+                questionCountContainer.innerHTML = '';
+                infoList.innerHTML = '';
 
                 // Open modal
                 examModal.show();
+            });
+
+            // Handle Category Selection Change
+            categoriesSelect.addEventListener('change', function() {
+                generateQuestionCountInputs();
             });
 
             // Handle Edit Exam Button Click
@@ -476,8 +550,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                     const isRestricted = this.dataset.isRestricted === 'true';
                     const isPaid = this.dataset.isPaid === 'true';
 
-                    // Get selected categories and languages
+                    // Get selected categories and question counts
                     const selectedCategories = this.dataset.categories.split(',').map(category => category.trim());
+                    const questionCounts = this.dataset.questionCounts.split(',').reduce((acc, count, index) => {
+                        acc[selectedCategories[index]] = count.trim();
+                        return acc;
+                    }, {});
                     const selectedLanguages = this.dataset.language ? this.dataset.language.split(',').map(lang => lang.trim()) : [];
 
                     document.getElementById('examId').value = examId;
@@ -499,14 +577,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                     document.getElementById('isPaid').checked = isPaid;
 
                     // Set category selections
-                    const categoriesSelect = document.getElementById('categories');
                     for (let option of categoriesSelect.options) {
                         option.selected = selectedCategories.includes(option.value.trim());
                     }
 
+                    // Generate question count inputs for selected categories with existing data
+                    generateQuestionCountInputs(questionCounts);
+
+                    // Populate informational block with existing data
+                    populateInfoBlock(questionCounts);
+
                     // Show modal
                     examModal.show();
                 });
+            });
+
+            // Validate total questions and sum of questions per category before form submission
+            document.getElementById('examForm').addEventListener('submit', function(event) {
+                const totalQuestions = parseInt(document.getElementById('totalQuestions').value, 10);
+                const questionCounts = Array.from(document.querySelectorAll('input[name^="question_count"]'))
+                    .map(input => parseInt(input.value, 10))
+                    .reduce((sum, count) => sum + count, 0);
+
+                if (questionCounts !== totalQuestions) {
+                    event.preventDefault();
+                    alert('The total number of questions does not match the sum of questions per category.');
+                }
             });
         });
     </script>
