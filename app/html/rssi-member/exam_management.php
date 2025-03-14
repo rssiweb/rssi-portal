@@ -403,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
 
                         <!-- Informational Block for Category-wise Question Counts -->
                         <div id="infoBlock" class="mb-3">
-                            <h6>Current Question Counts per Category</h6>
+                            <h6>Question count by category</h6>
                             <ul id="infoList"></ul>
                         </div>
 
