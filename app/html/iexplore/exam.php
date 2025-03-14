@@ -162,47 +162,79 @@ if (!$show_form) {
         $session_row = pg_fetch_assoc($session_result);
         $session_name = $session_row['id'];
 
-        // Fetch categories linked to the exam
-        $category_query = "SELECT category_id FROM test_exam_categories WHERE exam_id = $1";
-        $category_result = pg_query_params($con, $category_query, array($exam_id));
-        $category_ids = [];
-        while ($row = pg_fetch_assoc($category_result)) {
-            $category_ids[] = $row['category_id'];
+        // Fetch the language for the exam
+        $language_query = "SELECT language FROM test_exams WHERE id = $1";
+        $language_result = pg_query_params($con, $language_query, array($exam_id));
+        $language_row = pg_fetch_assoc($language_result);
+        $language = $language_row['language']; // e.g., "Hindi", "English", or "Hindi,English"
+
+        // Prepare the language filter for the query
+        $language_filter = '';
+        if ($language === 'Hindi') {
+            $language_filter = "AND q_language = 'Hindi'"; // Use q_language instead of language
+        } elseif ($language === 'English') {
+            $language_filter = "AND q_language = 'English'"; // Use q_language instead of language
+        } elseif ($language === 'Hindi,English' || $language === 'English,Hindi') {
+            $language_filter = "AND q_language IN ('Hindi', 'English')"; // Use q_language instead of language
+        } else {
+            echo "Error: Invalid language configuration for the exam.";
+            exit;
         }
 
-        if (empty($category_ids)) {
+        // Fetch categories linked to the exam with question counts
+        $category_query = "SELECT category_id, question_count FROM test_exam_categories WHERE exam_id = $1";
+        $category_result = pg_query_params($con, $category_query, array($exam_id));
+        $category_data = [];
+        while ($row = pg_fetch_assoc($category_result)) {
+            $category_data[] = $row; // Store category_id and question_count
+        }
+
+        if (empty($category_data)) {
             echo "Error: No categories found for this exam.";
             exit;
         }
 
-        // Fetch random questions for the exam
-        $category_ids_str = implode(",", $category_ids);
-        $question_query = "
+        // Fetch random questions for the exam based on question_count for each category and language
+        $questions = [];
+        foreach ($category_data as $category) {
+            $category_id = $category['category_id'];
+            $question_count = $category['question_count'];
+
+            if ($question_count > 0) {
+                $question_query = "
         WITH random_questions AS (
             SELECT id AS question_id, question_text
             FROM test_questions
-            WHERE category_id IN ($category_ids_str)
+            WHERE category_id = $1
+            $language_filter
             ORDER BY RANDOM()
-            LIMIT (SELECT total_questions FROM test_exams WHERE id = $1)
+            LIMIT $2
         )
         SELECT rq.question_id, rq.question_text, o.option_key, o.option_text
         FROM random_questions rq
         JOIN test_options o ON rq.question_id = o.question_id
         ORDER BY rq.question_id, o.option_key";
-        $result = pg_query_params($con, $question_query, array($exam_id));
+                $result = pg_query_params($con, $question_query, array($category_id, $question_count));
 
-        while ($row = pg_fetch_assoc($result)) {
-            if (!isset($questions[$row['question_id']])) {
-                $questions[$row['question_id']] = [
-                    'question_text' => $row['question_text'],
-                    'selected_option' => null, // Initialize selected option as null
-                    'options' => []
-                ];
+                if (!$result) {
+                    echo "Error: Failed to fetch questions for category $category_id.";
+                    exit;
+                }
+
+                while ($row = pg_fetch_assoc($result)) {
+                    if (!isset($questions[$row['question_id']])) {
+                        $questions[$row['question_id']] = [
+                            'question_text' => $row['question_text'],
+                            'selected_option' => null, // Initialize selected option as null
+                            'options' => []
+                        ];
+                    }
+                    $questions[$row['question_id']]['options'][] = [
+                        'option_key' => $row['option_key'],
+                        'option_text' => $row['option_text']
+                    ];
+                }
             }
-            $questions[$row['question_id']]['options'][] = [
-                'option_key' => $row['option_key'],
-                'option_text' => $row['option_text']
-            ];
         }
 
         // Insert questions into test_user_answers
