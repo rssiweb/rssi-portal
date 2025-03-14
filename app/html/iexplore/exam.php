@@ -746,6 +746,102 @@ if (!$show_form) {
                 const answers = [];
                 const questionContainers = document.querySelectorAll('.question-container');
 
+                // Check if any questions are marked for review
+                const markedForReview = Array.from(questionContainers).some(container => {
+                    return container.classList.contains('marked-for-review');
+                });
+
+                // Show confirmation modal based on whether there are marked questions
+                if (markedForReview) {
+                    showConfirmationModal(
+                        'You have some questions marked for review. Do you really want to submit your exam?',
+                        () => {
+                            // User confirmed submission
+                            submitAnswers(user_exam_id, answers);
+                        },
+                        () => {
+                            // User chose to continue the exam
+                            isExamSubmitted = false; // Reset the submission flag
+                        }
+                    );
+                } else {
+                    showConfirmationModal(
+                        'Are you sure you want to submit your exam? After submission, you cannot modify your answers.',
+                        () => {
+                            // User confirmed submission
+                            submitAnswers(user_exam_id, answers);
+                        },
+                        () => {
+                            // User chose to continue the exam
+                            isExamSubmitted = false; // Reset the submission flag
+                        }
+                    );
+                }
+            }
+
+            // Function to show a confirmation modal
+            function showConfirmationModal(message, onConfirm, onCancel) {
+                const modal = document.createElement('div');
+                modal.id = 'confirmation-modal'; // Add a unique identifier
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                modal.style.display = 'flex';
+                modal.style.justifyContent = 'center';
+                modal.style.alignItems = 'center';
+                modal.style.zIndex = '1000';
+
+                const modalContent = document.createElement('div');
+                modalContent.style.backgroundColor = '#fff';
+                modalContent.style.padding = '20px';
+                modalContent.style.borderRadius = '8px';
+                modalContent.style.textAlign = 'center';
+
+                const modalMessage = document.createElement('p');
+                modalMessage.textContent = message;
+                modalContent.appendChild(modalMessage);
+
+                const confirmButton = document.createElement('button');
+                confirmButton.textContent = 'Submit Exam';
+                confirmButton.style.margin = '10px';
+                confirmButton.style.padding = '10px 20px';
+                confirmButton.style.backgroundColor = '#dc3545';
+                confirmButton.style.color = '#fff';
+                confirmButton.style.border = 'none';
+                confirmButton.style.borderRadius = '4px';
+                confirmButton.style.cursor = 'pointer';
+                confirmButton.addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    onConfirm();
+                });
+
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = 'Continue Exam';
+                cancelButton.style.margin = '10px';
+                cancelButton.style.padding = '10px 20px';
+                cancelButton.style.backgroundColor = '#6c757d';
+                cancelButton.style.color = '#fff';
+                cancelButton.style.border = 'none';
+                cancelButton.style.borderRadius = '4px';
+                cancelButton.style.cursor = 'pointer';
+                cancelButton.addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    onCancel();
+                });
+
+                modalContent.appendChild(confirmButton);
+                modalContent.appendChild(cancelButton);
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+            }
+
+            // Function to submit answers to the server
+            function submitAnswers(user_exam_id, answers) {
+                const questionContainers = document.querySelectorAll('.question-container');
+
                 // Loop through all question containers
                 questionContainers.forEach(container => {
                     const questionId = container.dataset.questionId; // Use actual question ID
@@ -797,9 +893,6 @@ if (!$show_form) {
 
                                 // Display score
                                 document.getElementById('score').textContent = `Your score is: ${result.score}`;
-
-                                // Remove the beforeunload event listener to prevent resubmission
-                                // window.removeEventListener('beforeunload', handleBeforeUnload);
 
                                 // Start countdown
                                 let countdown = 5;
@@ -1038,6 +1131,12 @@ if (!$show_form) {
             function submitExam() {
                 if (isExamSubmitted) return; // Prevent multiple submissions
                 isExamSubmitted = true; // Mark the exam as submitted
+
+                // Remove the confirmation modal (if it exists)
+                const confirmationModal = document.getElementById('confirmation-modal');
+                if (confirmationModal) {
+                    document.body.removeChild(confirmationModal);
+                }
 
                 const userExamIdElement = document.getElementById('user_exam_id');
                 if (!userExamIdElement) {
