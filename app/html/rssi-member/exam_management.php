@@ -222,6 +222,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <style>
+        .form-switch .form-check-input {
+            width: 3em;
+            /* Adjust width */
+            height: 1.5em;
+            /* Adjust height */
+            margin-left: 10px;
+            /* Add some spacing */
+        }
+
+        /* Custom CSS for better alignment */
+        .form-check.form-switch {
+            display: flex;
+            align-items: center;
+        }
+
+        .form-check-input {
+            margin-right: 0.5rem;
+            /* Adjust spacing between switch and label */
+        }
+    </style>
 </head>
 
 <body>
@@ -357,8 +378,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                     <h5 class="modal-title" id="examModalLabel">Add/Edit Exam</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+
                 <form id="examForm" action="#" method="POST">
                     <div class="modal-body">
+                        <!-- Toggle Switch Button -->
+                        <div class="d-flex justify-content-end align-items-center mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editToggle">
+                                <label class="form-check-label" for="editToggle">Edit Mode</label>
+                            </div>
+                        </div>
                         <input type="hidden" name="id" id="examId">
 
                         <!-- Exam Name -->
@@ -366,12 +395,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
                             <label for="examName" class="form-label">Exam Name</label>
                             <input type="text" class="form-control" id="examName" name="name" required>
                         </div>
-
-                        <!-- Checkbox for WBT -->
-                        <!-- <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="isWBT">
-                            <label class="form-check-label" for="isWBT">Is it a WBT?</label>
-                        </div> -->
 
                         <!-- Course ID (initially disabled and not required) -->
                         <div class="mb-3">
@@ -609,19 +632,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_exam'])) {
             });
         });
     </script>
-    <!-- <script>
-        document.getElementById('isWBT').addEventListener('change', function() {
-            const courseIdField = document.getElementById('courseId');
-            const isWBTChecked = this.checked;
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editToggle = document.getElementById('editToggle');
+            const examForm = document.getElementById('examForm');
+            const formElements = examForm.querySelectorAll('input, select, textarea, button');
+            const questionCountContainer = document.getElementById('questionCountContainer');
 
-            // Enable/disable the Course ID field
-            courseIdField.disabled = !isWBTChecked;
+            // Function to enable/disable form elements
+            function toggleFormEditable(isEditable) {
+                formElements.forEach(element => {
+                    if (element !== editToggle) { // Exclude the toggle switch itself
+                        element.disabled = !isEditable;
+                    }
+                });
 
-            // Make the Course ID field required if the checkbox is checked
-            courseIdField.required = isWBTChecked;
+                // Handle dynamically generated inputs inside questionCountContainer
+                const dynamicInputs = questionCountContainer.querySelectorAll('input, select, textarea');
+                dynamicInputs.forEach(input => {
+                    input.disabled = !isEditable;
+                });
+            }
+
+            // Initial state: form is disabled
+            toggleFormEditable(false);
+
+            // Add event listener to the toggle switch
+            editToggle.addEventListener('change', function() {
+                toggleFormEditable(this.checked);
+            });
+
+            // Observer to watch for changes in the questionCountContainer
+            const observer = new MutationObserver(function(mutationsList) {
+                mutationsList.forEach(mutation => {
+                    if (mutation.type === 'childList') {
+                        // If new inputs are added, disable/enable them based on the toggle state
+                        const dynamicInputs = questionCountContainer.querySelectorAll('input, select, textarea');
+                        dynamicInputs.forEach(input => {
+                            input.disabled = !editToggle.checked;
+                        });
+                    }
+                });
+            });
+
+            // Start observing the questionCountContainer for changes
+            observer.observe(questionCountContainer, {
+                childList: true,
+                subtree: true
+            });
         });
-    </script> -->
-
+    </script>
 </body>
 
 </html>
