@@ -1,7 +1,7 @@
 <?php
-require_once __DIR__ . "/../../bootstrap.php";
-include("../../util/login_util.php");
-include("../../util/email.php");
+require_once __DIR__ . '/../bootstrap.php';
+include(__DIR__ . "/../util/login_util.php");
+include(__DIR__ . "../../util/email.php");
 
 // Function to validate password
 function validatePassword($password)
@@ -24,7 +24,7 @@ function validatePassword($password)
 
 // Check if the "c" code is present in the URL
 if (!isset($_GET['c'])) {
-    die("<script>alert('Invalid URL.'); window.location.href = 'index.php';</script>");
+    die("<script>alert('Invalid URL.'); window.location.href = 'rssi-member/index.php';</script>");
 }
 
 $reset_code = $_GET['c'];
@@ -35,7 +35,7 @@ $stmt = pg_prepare($con, "fetch_reset_code", $query);
 $result = pg_execute($con, "fetch_reset_code", array($reset_code));
 
 if (pg_num_rows($result) == 0) {
-    die("<script>alert('Invalid URL.'); window.location.href = 'index.php';</script>");
+    die("<script>alert('Invalid URL.'); window.location.href = 'rssi-member/index.php';</script>");
 }
 
 $row = pg_fetch_assoc($result);
@@ -44,11 +44,11 @@ $reset_timestamp = strtotime($row['reset_auth_code_timestamp']);
 $current_timestamp = time();
 
 // Calculate remaining time in seconds
-$remaining_time = 600 - ($current_timestamp - $reset_timestamp); // 600 seconds = 10 minutes
+$remaining_time = 3600 - ($current_timestamp - $reset_timestamp); // 600 seconds = 10 minutes
 
 // Check if the link has expired (10 minutes)
 if ($remaining_time <= 0) {
-    die("<script>alert('This link has expired.'); window.location.href = 'index.php';</script>");
+    die("<script>alert('This link has expired.'); window.location.href = 'rssi-member/index.php';</script>");
 }
 
 // Handle form submission
@@ -73,9 +73,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update_result = pg_execute($con, "update_password", array($newpass_hash, $email, $email));
 
             if ($update_result) {
+                // Fetch user location using Geolocation API
+                $location = 'Location not available'; // Default value
+                if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                    $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+                } else {
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                }
+
+                // Use an IP geolocation API to fetch location
+                $location_data = @file_get_contents("http://ip-api.com/json/{$ip}");
+                if ($location_data) {
+                    $location_data = json_decode($location_data, true);
+                    if ($location_data['status'] === 'success') {
+                        $location = $location_data['city'] . ', ' . $location_data['country'];
+                    }
+                }
+
+                // Prepare email data
+                $email_data = [
+                    "name" => $name, // User's name fetched from the database
+                    "reset_auth_code" => $reset_auth_code, // Generated reset auth code
+                    "now" => date("d/m/Y g:i a"), // Current date and time
+                    "ip_address" => $_SERVER['REMOTE_ADDR'], // User's IP address
+                    "device" => $_SERVER['HTTP_USER_AGENT'], // User's device information
+                    "location" => $location, // User's location
+                ];
+
+                // Send email
+                if (!empty($email)) {
+                    sendEmail("rest_pass_conf", $email_data, $email);
+                }
                 echo "<script>
                     alert('Password has been updated successfully. Click OK to go to the login page.');
-                    window.location.href = 'index.php';
+                    window.location.href = 'rssi-member/index.php';
                 </script>";
                 exit;
             } else {
@@ -201,14 +232,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <!-- Minimalistic Footer -->
-    <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #f8f9fa; padding: 10px; border-top: 1px solid #e9ecef; font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color: #6c757d; text-align: center;" class="mt-5">
+    <!-- Minimalistic Footer position: fixed; bottom: 0; left: 0; -->
+    <footer style="width: 100%; background-color: #f8f9fa; padding: 10px; border-top: 1px solid #e9ecef; font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color: #6c757d; text-align: center;" class="mt-5">
         <div style="max-width: 1200px; margin: 0 auto;">
-            <div style="margin-bottom: 5px;">
-                <strong>IP Address:</strong> <?php echo $_SERVER['REMOTE_ADDR']; ?> |
-                <strong>Device:</strong> <?php echo $_SERVER['HTTP_USER_AGENT']; ?> |
-                <strong>Location:</strong> <span id="location">Fetching...</span>
-            </div>
             <div>
                 &copy; <?php echo date("Y"); ?> RSSI. All rights reserved. |
                 <a href="https://www.rssi.in/privacy-policy" style="color: #6c757d; text-decoration: none;">Privacy Policy</a> |
@@ -293,7 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 clearInterval(timer);
                 expiryTimer.textContent = 'Expired';
                 alert('This link has expired. You will be redirected to the login page.');
-                window.location.href = 'index.php';
+                window.location.href = 'rssi-member/index.php';
             }
         }, 1000);
 
@@ -306,30 +332,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             submitButton.disabled = true;
             loader.style.display = 'inline-block';
         });
-    </script>
-    <script>
-        // Fetch user location using Geolocation API
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`)
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById('location').textContent = `${data.locality}, ${data.countryName}`;
-                        })
-                        .catch(() => {
-                            document.getElementById('location').textContent = 'Location not available';
-                        });
-                },
-                () => {
-                    document.getElementById('location').textContent = 'Location access denied';
-                }
-            );
-        } else {
-            document.getElementById('location').textContent = 'Geolocation not supported';
-        }
     </script>
 </body>
 
