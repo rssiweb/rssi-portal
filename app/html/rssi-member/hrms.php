@@ -591,6 +591,68 @@ echo "<script>
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        /* Custom CSS to make Select2 look like an input field */
+        .select2-container .select2-selection--single {
+            height: 38px;
+            /* Match Bootstrap input height */
+            border: 1px solid #ced4da;
+            /* Match Bootstrap input border */
+            border-radius: 0.25rem;
+            /* Match Bootstrap input border radius */
+            padding: 0.375rem 0.75rem;
+            /* Match Bootstrap input padding */
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+            /* Align arrow with input height */
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+            /* Align text vertically */
+            padding-left: 0;
+            /* Remove extra padding */
+        }
+    </style>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('#associatenumber').select2({
+                ajax: {
+                    url: 'fetch_associates.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term // Search term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1, // Require at least 1 character to start searching
+                placeholder: "Enter Associate Number", // Placeholder text
+                allowClear: true // Allow clearing the selection
+            });
+
+            // Make Select2 look like an input field
+            $('#associatenumber').on('select2:open', function() {
+                document.querySelector('.select2-search__field').focus();
+            });
+        });
+    </script>
 </head>
 
 <body>
@@ -625,7 +687,15 @@ echo "<script>
                                     <h4 class="mb-3">Enter Associate Number</h4>
                                     <form method="GET" action="">
                                         <div class="input-group mb-3">
-                                            <input type="text" name="associatenumber" class="form-control" placeholder="Enter Associate Number" required>
+                                            <!-- Replace the input with a Select2 dropdown -->
+                                            <select class="form-control select2" id="associatenumber" name="associatenumber" required>
+                                                <option value="">Enter Associate Number</option>
+                                                <?php if ($selectedAssociate): ?>
+                                                    <option value="<?= htmlspecialchars($selectedAssociate) ?>" selected>
+                                                        <?= htmlspecialchars($selectedAssociate) ?>
+                                                    </option>
+                                                <?php endif; ?>
+                                            </select>
                                             <button class="btn btn-primary" type="submit">Submit</button>
                                         </div>
                                     </form>
