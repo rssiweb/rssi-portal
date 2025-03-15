@@ -66,6 +66,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (count($errors) > 0) {
             $password_errors = implode("<br>", $errors);
         } else {
+            // Fetch the current password hash from the database
+            $query = "SELECT password FROM rssimyaccount_members WHERE email = $1";
+            $stmt = pg_prepare($con, "fetch_current_password", $query);
+            $result = pg_execute($con, "fetch_current_password", array($email));
+
+            if (pg_num_rows($result) > 0) {
+                $row = pg_fetch_assoc($result);
+                $current_password_hash = $row['password'];
+
+                // Check if the new password is the same as the current password
+                if (password_verify($newpass, $current_password_hash)) {
+                    echo "<script>
+                        alert('New password cannot be the same as the current password. Please choose a different password.');
+                        window.history.back(); // Go back to the previous page
+                    </script>";
+                    exit;
+                }
+            }
+
             // Hash the new password
             $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
 
@@ -89,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         return $_SERVER['REMOTE_ADDR'];
                     }
                 }
-            
+
                 $ip = getUserIpAddr();
 
                 // Use an IP geolocation API to fetch location
@@ -104,9 +123,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Prepare email data
                 $email_data = [
                     "name" => $name, // User's name fetched from the database
-                    "reset_auth_code" => $reset_auth_code, // Generated reset auth code
                     "reset_time" => date("d/m/Y g:i a"), // Current date and time
-                    "ip_address" => $_SERVER['REMOTE_ADDR'], // User's IP address
+                    "ip_address" => $ip, // User's IP address
                     "device" => $_SERVER['HTTP_USER_AGENT'], // User's device information
                     "location" => $location, // User's location
                 ];
