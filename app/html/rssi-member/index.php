@@ -286,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
                 <!-- Modal Body -->
                 <div class="modal-body">
                     <!-- Form with ID and correct action -->
-                    <form id="forgot-password-form" action="#" method="POST">
+                    <form id="forgot-password-form" action="#" method="POST" onsubmit="showSpinner()">
                         <!-- Email Input -->
                         <div class="mb-3">
                             <label for="reset_username" class="form-label">Email Address</label>
@@ -305,8 +305,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
                 <div class="modal-footer">
                     <!-- Close Button -->
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <!-- Send OTP Button -->
-                    <button type="submit" class="btn btn-primary" form="forgot-password-form">Send Email</button>
+                    <!-- Send Email Button with Spinner -->
+                    <button type="submit" class="btn btn-primary" id="send-email-button" form="forgot-password-form">
+                        <span id="button-text">Send Email</span>
+                        <span id="spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -314,6 +317,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        function showSpinner() {
+            // Disable the submit button to prevent multiple submissions
+            const submitButton = document.getElementById('send-email-button');
+            submitButton.disabled = true;
+
+            // Show the spinner
+            const spinner = document.getElementById('spinner');
+            spinner.style.display = 'inline-block';
+
+            // Change the button text (optional)
+            const buttonText = document.getElementById('button-text');
+            buttonText.textContent = 'Sending...';
+        }
+    </script>
 </body>
 
 </html>

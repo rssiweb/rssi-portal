@@ -15,26 +15,39 @@ $login_failed_dialog = false;
 $newpass = "";
 $oldpass = "";
 $cmdtuples = 0;
-if (isset($_POST['login'])) {
 
+if (isset($_POST['login'])) {
     $newpass = $_POST['newpass'];
     $oldpass = $_POST['oldpass'];
-    if ($newpass == $oldpass) {
 
+    // Check if new password and confirm password match
+    if ($newpass == $oldpass) {
         $password = $_POST['currentpass'];
 
-        $query = "select password from rssimyaccount_members WHERE associatenumber='$associatenumber'";
+        // Fetch the current password hash from the database
+        $query = "SELECT password FROM rssimyaccount_members WHERE associatenumber='$associatenumber'";
         $result = pg_query($con, $query);
         $rows = pg_num_rows($result); //Som added this line.
         $user = pg_fetch_row($result);
         $existingHashFromDb = $user[0];
 
+        // Verify the current password
         $loginSuccess = password_verify($password, $existingHashFromDb);
         if ($loginSuccess) {
-            $newpass = $_POST['newpass'];
+            // Check if the new password is the same as the current password
+            if (password_verify($newpass, $existingHashFromDb)) {
+                echo "<script>
+                    alert('New password cannot be the same as the current password. Please choose a different password.');
+                    window.history.back(); // Go back to the previous page
+                </script>";
+                exit;
+            }
 
+            // Hash the new password
             $newpass_hash = password_hash($newpass, PASSWORD_DEFAULT);
             $now = date('Y-m-d H:i:s');
+
+            // Update the password and related fields in the database
             $change_password_query = "UPDATE rssimyaccount_members SET password='$newpass_hash', password_updated_by='$associatenumber', password_updated_on='$now' where associatenumber='$associatenumber'";
             $result = pg_query($con, $change_password_query);
             $cmdtuples = pg_affected_rows($result);
