@@ -30,7 +30,7 @@ if (!isset($_GET['c'])) {
 $reset_code = $_GET['c'];
 
 // Fetch the reset_auth_code and reset_auth_code_timestamp from the database
-$query = "SELECT email, reset_auth_code_timestamp FROM rssimyaccount_members WHERE reset_auth_code = $1";
+$query = "SELECT associatenumber, fullname, email, reset_auth_code_timestamp FROM rssimyaccount_members WHERE reset_auth_code = $1";
 $stmt = pg_prepare($con, "fetch_reset_code", $query);
 $result = pg_execute($con, "fetch_reset_code", array($reset_code));
 
@@ -40,11 +40,13 @@ if (pg_num_rows($result) == 0) {
 
 $row = pg_fetch_assoc($result);
 $email = $row['email'];
+$associate_id = $row['associatenumber'];
+$name = $row['fullname'];
 $reset_timestamp = strtotime($row['reset_auth_code_timestamp']);
 $current_timestamp = time();
 
 // Calculate remaining time in seconds
-$remaining_time = 3600 - ($current_timestamp - $reset_timestamp); // 600 seconds = 10 minutes
+$remaining_time = 600 - ($current_timestamp - $reset_timestamp); // 600 seconds = 10 minutes
 
 // Check if the link has expired (10 minutes)
 if ($remaining_time <= 0) {
@@ -70,16 +72,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update the password and related fields in the database
             $update_query = "UPDATE rssimyaccount_members SET password = $1, password_updated_by = $2, password_updated_on = NOW(), reset_auth_code = NULL, reset_auth_code_timestamp = NULL WHERE email = $3";
             $update_stmt = pg_prepare($con, "update_password", $update_query);
-            $update_result = pg_execute($con, "update_password", array($newpass_hash, $email, $email));
+            $update_result = pg_execute($con, "update_password", array($newpass_hash, $associate_id, $email));
 
             if ($update_result) {
                 // Fetch user location using Geolocation API
                 $location = 'Location not available'; // Default value
-                if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-                    $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-                } else {
-                    $ip = $_SERVER['REMOTE_ADDR'];
+                function getUserIpAddr()
+                {
+                    if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
+                        return $_SERVER['HTTP_CLIENT_IP'];
+                    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                        $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+                        $ip = trim($ipList[0]);
+                        return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : $_SERVER['REMOTE_ADDR'];
+                    } else {
+                        return $_SERVER['REMOTE_ADDR'];
+                    }
                 }
+            
+                $ip = getUserIpAddr();
 
                 // Use an IP geolocation API to fetch location
                 $location_data = @file_get_contents("http://ip-api.com/json/{$ip}");
@@ -94,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $email_data = [
                     "name" => $name, // User's name fetched from the database
                     "reset_auth_code" => $reset_auth_code, // Generated reset auth code
-                    "now" => date("d/m/Y g:i a"), // Current date and time
+                    "reset_time" => date("d/m/Y g:i a"), // Current date and time
                     "ip_address" => $_SERVER['REMOTE_ADDR'], // User's IP address
                     "device" => $_SERVER['HTTP_USER_AGENT'], // User's device information
                     "location" => $location, // User's location
