@@ -588,7 +588,20 @@ echo "<script>
             /* Show button */
         }
     </style>
+    <style>
+        .callout {
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid #eee;
+            border-left-width: 5px;
+            border-radius: 4px;
+        }
 
+        .callout-info {
+            border-left-color: #5bc0de;
+            background-color: #f4f8fa;
+        }
+    </style>
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <!-- Select2 CSS -->
@@ -791,10 +804,10 @@ echo "<script>
                                                 <a class="nav-link" href="#work-details" data-bs-toggle="tab">Work Details</a>
                                             </li>
                                             <li class="nav-item">
-                                                <a class="nav-link" href="#learnings" data-bs-toggle="tab">Learnings</a>
+                                                <a class="nav-link" href="#learnings" data-bs-toggle="tab">Qualifications and Experience</a>
                                             </li>
                                             <li class="nav-item">
-                                                <a class="nav-link" href="#published-documents" data-bs-toggle="tab">Published Documents</a>
+                                                <a class="nav-link" href="#published-documents" data-bs-toggle="tab">Learnings</a>
                                             </li>
                                             <li class="nav-item">
                                                 <a class="nav-link" href="#status_compensation" data-bs-toggle="tab">Status & Compensation</a>
@@ -927,6 +940,9 @@ echo "<script>
                                                                 <?php endif; ?>
                                                             </div>
                                                             <div class="card-body">
+                                                                <div class="callout callout-info">
+                                                                    If you have selected a caste other than General, please upload a valid caste certificate by navigating to: My Services > My Documents > Digital Archive.
+                                                                </div>
                                                                 <div class="table-responsive">
                                                                     <table class="table table-borderless">
                                                                         <tbody>
@@ -1326,7 +1342,11 @@ echo "<script>
                                                                     </span>
                                                                 <?php endif; ?>
                                                             </div>
+
                                                             <div class="card-body">
+                                                                <div class="callout callout-info">
+                                                                    Please upload your marksheet by navigating to: My Services > My Documents > Digital Archive.
+                                                                </div>
                                                                 <div class="table-responsive">
                                                                     <table class="table table-borderless">
                                                                         <tbody>
@@ -1384,6 +1404,9 @@ echo "<script>
                                                                 <?php endif; ?>
                                                             </div>
                                                             <div class="card-body">
+                                                                <div class="callout callout-info">
+                                                                    Please upload supporting document for Relevant Previous Experience by navigating to: My Services > My Documents > Digital Archive.
+                                                                </div>
                                                                 <div class="table-responsive">
                                                                     <table class="table table-borderless">
                                                                         <tbody>
