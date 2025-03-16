@@ -225,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) &&
 
                 // Send email
                 if (!empty($email)) {
-                    sendEmail("reset_auth_code", $email_data, $email, false);
+                    sendEmail("forgot_pass_link", $email_data, $email, false);
                 }
 
                 echo "<script>alert('A password reset link has been sent to your email address. Please check your inbox.');</script>";
