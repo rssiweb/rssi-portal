@@ -139,18 +139,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                // Get the user agent string
+                $userAgent = $_SERVER['HTTP_USER_AGENT'];
+
+                // Function to extract browser information
+                function getBrowser($userAgent)
+                {
+                    $browser = "Unknown Browser";
+                    $browserVersion = "";
+
+                    // Check for Chrome
+                    if (preg_match('/Chrome\/([\d\.]+)/i', $userAgent, $matches)) {
+                        $browser = "Chrome";
+                        $browserVersion = $matches[1];
+                    }
+                    // Check for Firefox
+                    elseif (preg_match('/Firefox\/([\d\.]+)/i', $userAgent, $matches)) {
+                        $browser = "Firefox";
+                        $browserVersion = $matches[1];
+                    }
+                    // Check for Safari
+                    elseif (preg_match('/Safari\/([\d\.]+)/i', $userAgent, $matches)) {
+                        $browser = "Safari";
+                        $browserVersion = $matches[1];
+                    }
+                    // Check for Edge
+                    elseif (preg_match('/Edg\/([\d\.]+)/i', $userAgent, $matches)) {
+                        $browser = "Edge";
+                        $browserVersion = $matches[1];
+                    }
+                    // Check for Internet Explorer
+                    elseif (preg_match('/MSIE ([\d\.]+)/i', $userAgent, $matches)) {
+                        $browser = "Internet Explorer";
+                        $browserVersion = $matches[1];
+                    }
+
+                    return $browser . " " . $browserVersion;
+                }
+
+                // Function to extract operating system information
+                function getOperatingSystem($userAgent)
+                {
+                    $os = "Unknown OS";
+                    $osVersion = "";
+
+                    // Check for Android
+                    if (preg_match('/Android ([\d\.]+)/i', $userAgent, $matches)) {
+                        $os = "Android";
+                        $osVersion = $matches[1];
+                    }
+                    // Check for iOS
+                    elseif (preg_match('/iPhone|iPad|iPod/i', $userAgent)) {
+                        $os = "iOS";
+                        if (preg_match('/OS ([\d_]+)/i', $userAgent, $matches)) {
+                            $osVersion = str_replace('_', '.', $matches[1]);
+                        }
+                    }
+                    // Check for Windows
+                    elseif (preg_match('/Windows NT ([\d\.]+)/i', $userAgent, $matches)) {
+                        $os = "Windows";
+                        $osVersion = $matches[1];
+                    }
+                    // Check for macOS
+                    elseif (preg_match('/Macintosh/i', $userAgent)) {
+                        $os = "macOS";
+                        if (preg_match('/Mac OS X ([\d_]+)/i', $userAgent, $matches)) {
+                            $osVersion = str_replace('_', '.', $matches[1]);
+                        }
+                    }
+                    // Check for Linux
+                    elseif (preg_match('/Linux/i', $userAgent)) {
+                        $os = "Linux";
+                    }
+
+                    return $os . " " . $osVersion;
+                }
+
+                // Get browser and OS information
+                $browser = getBrowser($userAgent);
+                $os = getOperatingSystem($userAgent);
+
                 // Prepare email data
                 $email_data = [
                     "name" => $name, // User's name fetched from the database
                     "reset_time" => date("d/m/Y g:i a"), // Current date and time
                     "ip_address" => $ip, // User's IP address
-                    "device" => $_SERVER['HTTP_USER_AGENT'], // User's device information
+                    "device" => $os . '/' . $browser, // User's device information
                     "location" => $location, // User's location
                 ];
 
                 // Send email
                 if (!empty($email)) {
-                    sendEmail("rest_pass_conf", $email_data, $email);
+                    sendEmail("rest_pass_conf", $email_data, $email, false);
                 }
                 echo "<script>
                     alert('Password has been updated successfully. Click OK to go to the login page.');
