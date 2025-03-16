@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../../bootstrap.php";
 include("../../util/login_util_tap.php");
+include("../../util/email.php");
 
 $date = date('Y-m-d H:i:s');
 $login_failed_dialog = "";
@@ -86,6 +87,64 @@ function checkLogin($con, $date)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['login'])) {
         checkLogin($con, $date);
+    }
+}
+?>
+<?php
+// Check if the form is submitted with the correct identifier
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_identifier']) && $_POST['form_identifier'] === 'forgot_password_form') {
+    $email = $_POST['reset_username'];
+
+    // Validate email
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo "<script>alert('Invalid email address.');</script>";
+        exit;
+    }
+
+    // Check if the email exists in the database
+    try {
+        // Query to check if the email exists and fetch the user's name
+        $query = "SELECT applicant_name FROM signup WHERE email = $1";
+        $stmt = pg_prepare($con, "check_email", $query);
+        $result = pg_execute($con, "check_email", array($email));
+
+        if (pg_num_rows($result) > 0) {
+            // Fetch the user's name
+            $row = pg_fetch_assoc($result);
+            $name = $row['applicant_name'];
+            $reset_auth_code_timestamp = date('Y-m-d H:i:s');
+
+            // Generate a 20-character random alphanumeric string
+            $reset_auth_code = bin2hex(random_bytes(10)); // 10 bytes = 20 hexadecimal characters
+
+            // Update the reset_auth_code column in the database
+            $update_query = "UPDATE signup SET reset_auth_code = $1, reset_auth_code_timestamp=$3 WHERE email = $2";
+            $update_stmt = pg_prepare($con, "update_reset_auth_code", $update_query);
+            $update_result = pg_execute($con, "update_reset_auth_code", array($reset_auth_code, $email, $reset_auth_code_timestamp));
+
+            // Check if the update was successful
+            if ($update_result && pg_affected_rows($update_result) > 0) {
+                // Prepare email data
+                $email_data = [
+                    "name" => $name, // User's name fetched from the database
+                    "reset_auth_code" => $reset_auth_code, // Generated reset auth code
+                    "now" => date("d/m/Y g:i a", strtotime($reset_auth_code_timestamp)), // Format the future date, // Current date and time
+                ];
+
+                // Send email
+                if (!empty($email)) {
+                    sendEmail("reset_auth_code", $email_data, $email, false);
+                }
+
+                echo "<script>alert('A password reset link has been sent to your email address. Please check your inbox.');</script>";
+            } else {
+                echo "<script>alert('Failed to update the reset auth code. Please try again.');</script>";
+            }
+        } else {
+            echo "<script>alert('No account found with this email address. Please enter a valid username.');</script>";
+        }
+    } catch (Exception $e) {
+        echo "<script>alert('Database error: " . addslashes($e->getMessage()) . "');</script>";
     }
 }
 ?>
@@ -242,18 +301,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popupLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <!-- Header -->
+                <!-- Modal Header -->
                 <div class="modal-header">
                     <h5 class="modal-title" id="popupLabel">Forgot password?</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <!-- Body -->
+
+                <!-- Modal Body -->
                 <div class="modal-body">
-                    Please contact RSSI Admin at 7980168159 or email at info@rssi.in
+                    <!-- Form with ID and correct action -->
+                    <form id="forgot-password-form" action="#" method="POST" onsubmit="showSpinner()">
+                        <!-- Email Input -->
+                        <div class="mb-3">
+                            <label for="reset_username" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="reset_username" name="reset_username" placeholder="Enter your email address" required>
+                            <div class="form-text help-text">
+                                Please enter the email address associated with your account. We will send you a link to reset your password.
+                            </div>
+                        </div>
+
+                        <!-- Hidden Form Identifier -->
+                        <input type="hidden" name="form_identifier" value="forgot_password_form">
+                    </form>
                 </div>
-                <!-- Footer -->
+
+                <!-- Modal Footer -->
                 <div class="modal-footer">
+                    <!-- Close Button -->
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <!-- Send Email Button with Spinner -->
+                    <button type="submit" class="btn btn-primary" id="send-email-button" form="forgot-password-form">
+                        <span id="button-text">Send Email</span>
+                        <span id="spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -264,6 +344,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Template Main JS File -->
     <script src="../assets_new/js/main.js"></script>
+    <script>
+        function showSpinner() {
+            // Disable the submit button to prevent multiple submissions
+            const submitButton = document.getElementById('send-email-button');
+            submitButton.disabled = true;
+
+            // Show the spinner
+            const spinner = document.getElementById('spinner');
+            spinner.style.display = 'inline-block';
+
+            // Change the button text (optional)
+            const buttonText = document.getElementById('button-text');
+            buttonText.textContent = 'Sending...';
+        }
+    </script>
 
 </body>
 
