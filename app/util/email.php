@@ -5,11 +5,44 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
+// function template($string, $hash)
+// {
+//     foreach ($hash as $ind => $val) {
+//         @$string = str_replace('{{' . $ind . '}}', $val, $string);
+//     }
+//     $string = preg_replace('/\{\{(.*?)\}\}/is', '', $string);
+//     return $string;
+// }
+
 function template($string, $hash)
 {
     foreach ($hash as $ind => $val) {
-        @$string = str_replace('{{' . $ind . '}}', $val, $string);
+        // Handle arrays (e.g., uploaded_files)
+        if (is_array($val)) {
+            if ($ind === 'uploaded_files') {
+                // Generate an HTML table for uploaded_files
+                $replacement = '<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse;">';
+                $replacement .= '<thead><tr><th>File Name</th><th>Transaction ID</th><th>Uploaded On</th></tr></thead>';
+                $replacement .= '<tbody>';
+                foreach ($val as $item) {
+                    $replacement .= '<tr>';
+                    $replacement .= '<td>' . htmlspecialchars($item['file_name']) . '</td>';
+                    $replacement .= '<td>' . htmlspecialchars($item['transaction_id']) . '/' . htmlspecialchars($item['doc_id']) . '</td>';
+                    $replacement .= '<td>' . htmlspecialchars($item['uploaded_on']) . '</td>';
+                    $replacement .= '</tr>';
+                }
+                $replacement .= '</tbody></table>';
+            } else {
+                // Handle other arrays (if any)
+                $replacement = implode(', ', $val);
+            }
+            $string = str_replace('{{' . $ind . '}}', $replacement, $string);
+        } else {
+            // Handle non-array values (existing behavior)
+            $string = str_replace('{{' . $ind . '}}', $val, $string);
+        }
     }
+    // Remove any remaining placeholders
     $string = preg_replace('/\{\{(.*?)\}\}/is', '', $string);
     return $string;
 }

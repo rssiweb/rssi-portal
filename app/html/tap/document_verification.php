@@ -13,7 +13,7 @@ if (!isLoggedIn("tid")) {
 validation();
 $uploadedfor = !empty($id) ? $id : $application_number ?? '';
 
-$selectMemberQuery = "SELECT applicant_name,education_qualification,application_status,tech_interview_schedule,identity_verification FROM signup WHERE application_number='$application_number'";
+$selectMemberQuery = "SELECT applicant_name,education_qualification,application_status,tech_interview_schedule,identity_verification,email FROM signup WHERE application_number='$application_number'";
 $memberResult = pg_query($con, $selectMemberQuery);
 
 if ($memberResult && pg_num_rows($memberResult) > 0) {
@@ -21,6 +21,7 @@ if ($memberResult && pg_num_rows($memberResult) > 0) {
     $memberData = pg_fetch_assoc($memberResult);
     $datafor = $memberData['applicant_name'];
     $education_qualification = $memberData['education_qualification'];
+    $uploadedfor_email = $memberData['email'];
     $isFormDisabled = ($memberData["identity_verification"] !== 'Approved' ||
         (!empty($memberData["tech_interview_schedule"]) && $memberData["application_status"] === 'No-Show'))
         ? 'disabled'
@@ -70,11 +71,25 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
 
             if ($doclink !== null) {
                 $insertQuery = "INSERT INTO archive (file_name, file_path, uploaded_for, uploaded_by, uploaded_on, transaction_id)
-                                VALUES ($1, $2, $3, $4, $5, $6)";
+                                VALUES ($1, $2, $3, $4, $5, $6)
+                                RETURNING doc_id"; // Add RETURNING clause
                 $result = pg_query_params($con, $insertQuery, [$inputName, $doclink, $uploadedfor, $uploadedby, $now, $transaction_id]);
 
                 if ($result && pg_affected_rows($result) > 0) {
                     $successfullyUploaded[] = $inputName;
+                }
+
+                if ($result) {
+                    // Fetch the returned doc_id
+                    $row = pg_fetch_assoc($result);
+                    $doc_id = $row['doc_id'];
+                    // Add uploaded file details to the array
+                    $uploadedFilesData[] = [
+                        "file_name" => $inputName,
+                        "transaction_id" => $transaction_id,
+                        "uploaded_on" => date("d/m/Y g:i a", strtotime($now)),
+                        "doc_id" => $doc_id, // Add the returned doc_id
+                    ];
                 }
             }
         }
@@ -90,6 +105,14 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
     }
     if (empty($message)) {
         $message = "No files were uploaded.";
+    }
+
+    // Send a single email with all uploaded file details
+    if (!empty($uploadedfor_email) && !empty($uploadedFilesData)) {
+        sendEmail("doc_upload", [
+            "datafor" => $datafor,
+            "uploaded_files" => $uploadedFilesData, // Pass all uploaded file details
+        ], $uploadedfor_email);
     }
 
     // Output the JavaScript alert and redirection with form clearing logic

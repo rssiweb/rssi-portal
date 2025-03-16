@@ -3,6 +3,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
 include("../../util/drive.php");
+include("../../util/email.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -16,7 +17,7 @@ validation();
 // }
 $uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
 
-$selectMemberQuery = "SELECT fullname,eduq,applicationnumber FROM rssimyaccount_members WHERE associatenumber = '$uploadedfor'";
+$selectMemberQuery = "SELECT fullname,eduq,applicationnumber,email FROM rssimyaccount_members WHERE associatenumber = '$uploadedfor'";
 $memberResult = pg_query($con, $selectMemberQuery);
 
 if ($memberResult && pg_num_rows($memberResult) > 0) {
@@ -25,8 +26,69 @@ if ($memberResult && pg_num_rows($memberResult) > 0) {
     $datafor = $memberData['fullname'];
     $eduq = $memberData['eduq'];
     $applicationnumber = $memberData['applicationnumber'];
+    $uploadedfor_email = $memberData['email'];
 }
 
+
+// if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
+//     // Sanitize and validate user inputs
+
+//     // Define uploaded files
+//     $uploadedFiles = [
+//         'highschool' => $_FILES['highschool'] ?? null,
+//         'intermediate' => $_FILES['intermediate'] ?? null,
+//         'graduation' => $_FILES['graduation'] ?? null,
+//         'post_graduation' => $_FILES['post_graduation'] ?? null,
+//         'additional_certificate' => $_FILES['additional_certificate'] ?? null,
+//         'pan_card' => $_FILES['pan_card'] ?? null,
+//         'aadhar_card' => $_FILES['aadhar_card'] ?? null,
+//         'offer_letter' => $_FILES['offer_letter'] ?? null,
+//         'previous_employment_information' => $_FILES['previous_employment_information'] ?? null,
+//         'additional_doc' => $_FILES['additional_doc'] ?? null,
+//     ];
+
+//     // Get other form data
+//     $uploadedfor = !empty($id) ? $id : $associatenumber ?? '';
+//     $uploadedby = $associatenumber ?? ''; // Make sure you have the $associatenumber variable defined somewhere
+//     $now = date('Y-m-d H:i:s');
+//     $transaction_id = time();
+
+//     // Insert uploaded files into archive table
+//     foreach ($uploadedFiles as $inputName => $uploadedFile) {
+//         if (!empty($uploadedFile['name'])) {
+//             $filename = $uploadedfor . "_" . $inputName . "_" . time();
+//             $parent = '1S6uLPt5G7hX4Iacgzx73gqdXsO-uKA4R';
+//             $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
+
+//             if ($doclink !== null) {
+//                 // Determine the certificate name based on the input name
+//                 if ($inputName === 'additional_certificate') {
+//                     $certificateName = $_POST['additional_certificate_name'] ?? null;
+//                 } elseif ($inputName === 'additional_doc') {
+//                     $certificateName = $_POST['additional_doc_name'] ?? null;
+//                 } else {
+//                     $certificateName = null;
+//                 }
+
+//                 $insertQuery = "INSERT INTO archive (file_name, file_path, uploaded_for, uploaded_by, uploaded_on, transaction_id, certificate_name)
+//                                 VALUES ($1, $2, $3, $4, $5, $6, $7)";
+//                 $result = pg_query_params($con, $insertQuery, array($inputName, $doclink, $uploadedfor, $uploadedby, $now, $transaction_id, $certificateName));
+//                 $cmdtuples = pg_affected_rows($result);
+//                 if ($result) {
+//                     // Handle insert error
+//                     // Send email notification if the query is successful
+//                     if (!empty($uploadedfor_email)) {
+//                         sendEmail("doc_upload", [
+//                             "doc_id" => $transaction_id,
+//                             "file_name" => $inputName,
+//                             "now" => date("d/m/Y g:i a", strtotime($now)),
+//                         ], $uploadedfor_email);
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
     // Sanitize and validate user inputs
@@ -51,6 +113,9 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
     $now = date('Y-m-d H:i:s');
     $transaction_id = time();
 
+    // Initialize an array to store uploaded file details
+    $uploadedFilesData = [];
+
     // Insert uploaded files into archive table
     foreach ($uploadedFiles as $inputName => $uploadedFile) {
         if (!empty($uploadedFile['name'])) {
@@ -68,15 +133,35 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
                     $certificateName = null;
                 }
 
+                // Insert query with RETURNING clause to fetch the doc_id
                 $insertQuery = "INSERT INTO archive (file_name, file_path, uploaded_for, uploaded_by, uploaded_on, transaction_id, certificate_name)
-                                VALUES ($1, $2, $3, $4, $5, $6, $7)";
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING doc_id"; // Add RETURNING clause
                 $result = pg_query_params($con, $insertQuery, array($inputName, $doclink, $uploadedfor, $uploadedby, $now, $transaction_id, $certificateName));
                 $cmdtuples = pg_affected_rows($result);
-                if (!$result) {
-                    // Handle insert error
+
+                if ($result) {
+                    // Fetch the returned doc_id
+                    $row = pg_fetch_assoc($result);
+                    $doc_id = $row['doc_id'];
+                    // Add uploaded file details to the array
+                    $uploadedFilesData[] = [
+                        "file_name" => $inputName,
+                        "transaction_id" => $transaction_id,
+                        "uploaded_on" => date("d/m/Y g:i a", strtotime($now)),
+                        "doc_id" => $doc_id, // Add the returned doc_id
+                    ];
                 }
             }
         }
+    }
+
+    // Send a single email with all uploaded file details
+    if (!empty($uploadedfor_email) && !empty($uploadedFilesData)) {
+        sendEmail("doc_upload", [
+            "datafor" => $datafor,
+            "uploaded_files" => $uploadedFilesData, // Pass all uploaded file details
+        ], $uploadedfor_email);
     }
 }
 
