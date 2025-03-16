@@ -24,7 +24,7 @@ function validatePassword($password)
 
 // Check if the "c" code is present in the URL
 if (!isset($_GET['c'])) {
-    die("<script>alert('Invalid URL.'); window.location.href = 'rssi-member/index.php';</script>");
+    die("<script>alert('Invalid URL.'); window.location.href = 'select-account.php';</script>");
 }
 
 $reset_code = $_GET['c'];
@@ -43,25 +43,26 @@ $redirect_url = '';
 
 // Loop through each table to find the reset code
 foreach ($tables as $table => $details) {
-    $query = "SELECT email, reset_auth_code_timestamp, {$details['name_column']} as name FROM $table WHERE reset_auth_code = $1";
+    $query = "SELECT {$details['associate_id']} as associate_id, email, reset_auth_code_timestamp, {$details['name_column']} as name FROM $table WHERE reset_auth_code = $1";
     $stmt = pg_prepare($con, "fetch_reset_code_$table", $query);
     $result = pg_execute($con, "fetch_reset_code_$table", array($reset_code));
 
     if (pg_num_rows($result) > 0) {
         $found = true;
         $table_name = $table;
-        $name = $details['name_column'];
+        $name_column = $details['name_column'];
         $redirect_url = $details['redirect'];
         $row = pg_fetch_assoc($result);
         $email = $row['email'];
-        $associate_id = $details['associate_id'];
+        $associate_id = $row['associate_id']; // Fetch the actual associate ID value
+        $name = $row['name']; // Fetch the actual name value
         $reset_timestamp = strtotime($row['reset_auth_code_timestamp']);
         break;
     }
 }
 
 if (!$found) {
-    die("<script>alert('Invalid URL.'); window.location.href = 'rssi-member/index.php';</script>");
+    die("<script>alert('Invalid URL.'); window.location.href = 'select-account.php';</script>");
 }
 
 $current_timestamp = time();
@@ -366,7 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 clearInterval(timer);
                 expiryTimer.textContent = 'Expired';
                 alert('This link has expired. You will be redirected to the login page.');
-                window.location.href = 'rssi-member/index.php';
+                window.location.href = '<?php echo $redirect_url; ?>';
             }
         }, 1000);
 
