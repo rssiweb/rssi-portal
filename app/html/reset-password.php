@@ -31,9 +31,9 @@ $reset_code = $_GET['c'];
 
 // Define the tables and their respective name columns and redirect URLs
 $tables = [
-    'rssimyaccount_members' => ['name_column' => 'fullname', 'redirect' => 'rssi-member/index.php'],
-    'signup' => ['name_column' => 'applicant_name', 'redirect' => 'tap/index.php'],
-    'test_users' => ['name_column' => 'name', 'redirect' => 'iexplore/home.php']
+    'rssimyaccount_members' => ['associate_id' => 'associatenumber', 'name_column' => 'fullname', 'redirect' => 'rssi-member/index.php'],
+    'signup' => ['associate_id' => 'application_number', 'name_column' => 'applicant_name', 'redirect' => 'tap/index.php'],
+    'test_users' => ['associate_id' => 'id', 'name_column' => 'name', 'redirect' => 'iexplore/home.php']
 ];
 
 $found = false;
@@ -43,19 +43,18 @@ $redirect_url = '';
 
 // Loop through each table to find the reset code
 foreach ($tables as $table => $details) {
-    $query = "SELECT associatenumber, email, reset_auth_code_timestamp, {$details['name_column']} as name FROM $table WHERE reset_auth_code = $1";
+    $query = "SELECT email, reset_auth_code_timestamp, {$details['name_column']} as name FROM $table WHERE reset_auth_code = $1";
     $stmt = pg_prepare($con, "fetch_reset_code_$table", $query);
     $result = pg_execute($con, "fetch_reset_code_$table", array($reset_code));
 
     if (pg_num_rows($result) > 0) {
         $found = true;
         $table_name = $table;
-        $name_column = $details['name_column'];
+        $name = $details['name_column'];
         $redirect_url = $details['redirect'];
         $row = pg_fetch_assoc($result);
         $email = $row['email'];
-        $associate_id = $row['associatenumber'];
-        $name = $row['name'];
+        $associate_id = $details['associate_id'];
         $reset_timestamp = strtotime($row['reset_auth_code_timestamp']);
         break;
     }
