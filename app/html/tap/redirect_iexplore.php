@@ -88,8 +88,43 @@ $exam_id = isset($_GET['exam_id']) ? $_GET['exam_id'] : '';
     <script>
         window.onload = (event) => {
             console.log("page is fully loaded");
-            // Construct the URL based on the captured parameters
-            var url = '/iexplore/<?php echo $path; ?>.php<?php echo $exam_id ? "?exam_id=" . $exam_id : ""; ?>';
+
+            // Function to get query parameters from the current URL
+            function getQueryParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const pairs = queryString.split('&');
+
+                pairs.forEach(pair => {
+                    const [key, value] = pair.split('=');
+                    if (key) {
+                        params[decodeURIComponent(key)] = decodeURIComponent(value || '');
+                    }
+                });
+
+                return params;
+            }
+
+            // Get the parameters from the current URL
+            const params = getQueryParams();
+
+            // Construct the base URL
+            let url = '/iexplore/' + (params.path || 'home') + '.php';
+
+            // Add additional parameters (excluding 'path')
+            const queryParams = [];
+            for (const key in params) {
+                if (key !== 'path' && params[key]) {
+                    queryParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+                }
+            }
+
+            // Append query parameters to the URL
+            if (queryParams.length > 0) {
+                url += '?' + queryParams.join('&');
+            }
+
+            // Redirect to the constructed URL
             window.location = url;
         };
     </script>
