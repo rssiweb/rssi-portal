@@ -100,20 +100,58 @@ if ($result && pg_num_rows($result) > 0) {
 ?>
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Initialize arrays to store the parts of the UPDATE query
-    $update_fields = [];
-    $updated_fields = []; // To track which fields were updated
-    $unauthorized_updates = []; // To track unauthorized update attempts
-    $pending_approval_fields = []; // Initialize to track fields for pending approval
 
     // Fetch existing values for the associatenumber
     $query = "SELECT * FROM rssimyaccount_members WHERE associatenumber = $1";
     $result = pg_query_params($con, $query, [$search_id]);
 
     if ($result && pg_num_rows($result) > 0) {
-        $current_data = pg_fetch_assoc($result);
+        $current_data = pg_fetch_assoc($result); // Initialize $current_data here
         $fullname = $current_data['fullname'];
         $requestedby_email = $current_data['email'];
+
+        // Check if the user is updating eduq or mjorsub
+        $isUpdatingEduq = isset($_POST['eduq']) && trim($_POST['eduq']) !== $current_data['eduq'];
+        $isUpdatingMjorsub = isset($_POST['mjorsub']) && trim($_POST['mjorsub']) !== $current_data['mjorsub'];
+
+        // If updating eduq or mjorsub, enforce checkbox validation
+        if (($isUpdatingEduq || $isUpdatingMjorsub) && !isset($_POST['markSheetCheckbox'])) {
+            echo "<script>
+                alert('Please confirm that you have uploaded the mark sheet by checking the checkbox.');
+                window.history.back();
+            </script>";
+            exit;
+        }
+
+        // Check if the user is updating workexperience
+        $isUpdatingWorkexperience = isset($_POST['workexperience']) && trim($_POST['workexperience']) !== $current_data['workexperience'];
+
+        // Check if the user is updating caste and the new value is not "General"
+        $isUpdatingCaste = isset($_POST['caste']) && trim($_POST['caste']) !== $current_data['caste'];
+        $isCasteNotGeneral = $isUpdatingCaste && strtolower(trim($_POST['caste'])) !== 'general';
+
+        // If updating workexperience, enforce checkbox validation for supporting document
+        if ($isUpdatingWorkexperience && !isset($_POST['workexperienceDocumentCheckbox'])) {
+            echo "<script>
+                          alert('Please confirm that you have uploaded the supporting document for Relevant Previous Experience by checking the checkbox.');
+                          window.history.back();
+                      </script>";
+            exit;
+        }
+
+        // If updating caste and the new value is not "General", enforce checkbox validation for caste certificate
+        if ($isCasteNotGeneral && !isset($_POST['casteCertificateCheckbox'])) {
+            echo "<script>
+                          alert('If you have selected a caste other than General, please confirm that you have uploaded a valid caste certificate by checking the checkbox.');
+                          window.history.back();
+                      </script>";
+            exit;
+        }
+        // Initialize arrays to store the parts of the UPDATE query
+        $update_fields = [];
+        $updated_fields = []; // To track which fields were updated
+        $unauthorized_updates = []; // To track unauthorized update attempts
+        $pending_approval_fields = []; // Initialize to track fields for pending approval
 
         // Define field groups
         $admin_only_fields = [
@@ -940,9 +978,6 @@ echo "<script>
                                                                 <?php endif; ?>
                                                             </div>
                                                             <div class="card-body">
-                                                                <div class="callout callout-info">
-                                                                    If you have selected a caste other than General, please upload a valid caste certificate by navigating to: My Services > My Documents > Digital Archive.
-                                                                </div>
                                                                 <div class="table-responsive">
                                                                     <table class="table table-borderless">
                                                                         <tbody>
@@ -953,7 +988,7 @@ echo "<script>
                                                                                     <select name="religion" id="religion" disabled class="form-select" style="display:none;">
                                                                                         <option disabled selected>Select Religion</option>
                                                                                         <?php
-                                                                                        // List of Base Branches
+                                                                                        // List of Religions
                                                                                         $religion_select = [
                                                                                             "Hinduism",
                                                                                             "Islam",
@@ -966,9 +1001,11 @@ echo "<script>
                                                                                             "Bahá'í Faith",
                                                                                             "Others"
                                                                                         ];
-                                                                                        // Generate <option> elements dynamically for Base Branch
+
+                                                                                        // Generate <option> elements dynamically for Religion
                                                                                         foreach ($religion_select as $religion) {
-                                                                                            $selected = ($array["religion"] == $branch) ? "selected" : "";
+                                                                                            // Compare $array["religion"] with $religion (not $branch)
+                                                                                            $selected = ($array["religion"] == $religion) ? "selected" : "";
                                                                                             echo "<option value=\"$religion\" $selected>$religion</option>";
                                                                                         }
                                                                                         ?>
@@ -1000,6 +1037,24 @@ echo "<script>
                                                                                         }
                                                                                         ?>
                                                                                     </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <!-- Checkbox for Caste Certificate -->
+                                                                            <tr id="casteCertificateRow" style="display: none;">
+                                                                                <td></td>
+                                                                                <td>
+                                                                                    <div id="casteCertificateSection" style="display: none;">
+                                                                                        <div class="form-check" style="display: none;">
+                                                                                            <input class="form-check-input" type="checkbox" value="" id="casteCertificateCheckbox" name="casteCertificateCheckbox" required>
+                                                                                            <label class="form-check-label" for="casteCertificateCheckbox">
+                                                                                                I have uploaded a valid caste certificate.
+                                                                                            </label>
+                                                                                        </div>
+                                                                                        <!-- Help text with link -->
+                                                                                        <div class="form-text mt-2">
+                                                                                            If you have not uploaded the caste certificate yet, <a href="digital_archive.php" target="_blank">click here to upload</a>.
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
@@ -1344,9 +1399,6 @@ echo "<script>
                                                             </div>
 
                                                             <div class="card-body">
-                                                                <div class="callout callout-info">
-                                                                    Please upload your marksheet by navigating to: My Services > My Documents > Digital Archive.
-                                                                </div>
                                                                 <div class="table-responsive">
                                                                     <table class="table table-borderless">
                                                                         <tbody>
@@ -1375,7 +1427,6 @@ echo "<script>
                                                                                         }
                                                                                         ?>
                                                                                     </select>
-                                                                                    </select>
                                                                                 </td>
                                                                             </tr>
                                                                             <!-- Area of Specialization -->
@@ -1384,6 +1435,24 @@ echo "<script>
                                                                                 <td>
                                                                                     <span id="mjorsubText"><?php echo $array['mjorsub']; ?></span>
                                                                                     <input type="text" name="mjorsub" id="mjorsub" value="<?php echo $array["mjorsub"]; ?>" placeholder="e.g., Computer Science, Physics, Fine Arts" disabled class="form-control" style="display:none;">
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td></td>
+                                                                                <td>
+                                                                                    <!-- Checkbox with required attribute -->
+                                                                                    <div id="upload_marksheet" style="display: none;">
+                                                                                        <div class="form-check" style="display:none;">
+                                                                                            <input class="form-check-input" type="checkbox" value="" id="markSheetCheckbox" name="markSheetCheckbox" required>
+                                                                                            <label class="form-check-label" for="markSheetCheckbox">
+                                                                                                I have uploaded the mark sheet as supporting documentation for the changes in qualification details.
+                                                                                            </label>
+                                                                                        </div>
+                                                                                        <!-- Help text with link -->
+                                                                                        <div class="form-text mt-2">
+                                                                                            If you have not uploaded the document yet, <a href="digital_archive.php" target="_blank">click here to upload</a>.
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
@@ -1404,9 +1473,6 @@ echo "<script>
                                                                 <?php endif; ?>
                                                             </div>
                                                             <div class="card-body">
-                                                                <div class="callout callout-info">
-                                                                    Please upload supporting document for Relevant Previous Experience by navigating to: My Services > My Documents > Digital Archive.
-                                                                </div>
                                                                 <div class="table-responsive">
                                                                     <table class="table table-borderless">
                                                                         <tbody>
@@ -1418,13 +1484,24 @@ echo "<script>
                                                                                     </select>
                                                                                 </td>
                                                                             </tr>
-                                                                            <!-- Area of Specialization -->
-                                                                            <!-- <tr>
-                                                                                <td><label for="mjorsub">Area of Specialization:</label></td>
+                                                                            <!-- Checkbox for Relevant Previous Experience -->
+                                                                            <tr>
+                                                                                <td></td>
                                                                                 <td>
-                                                                                    <?php echo $array["mjorsub"] ?>
+                                                                                    <div id="workexperienceDocumentSection" style="display: none;">
+                                                                                        <div class="form-check" style="display: none;">
+                                                                                            <input class="form-check-input" type="checkbox" value="" id="workexperienceDocumentCheckbox" name="workexperienceDocumentCheckbox" required>
+                                                                                            <label class="form-check-label" for="workexperienceDocumentCheckbox">
+                                                                                                I have uploaded the supporting document for Relevant Previous Experience.
+                                                                                            </label>
+                                                                                        </div>
+                                                                                        <!-- Help text with link -->
+                                                                                        <div class="form-text mt-2">
+                                                                                            If you have not uploaded the document yet, <a href="digital_archive.php" target="_blank">click here to upload</a>.
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </td>
-                                                                            </tr> -->
+                                                                            </tr>
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -1740,7 +1817,7 @@ echo "<script>
                     if (input.tagName.toLowerCase() === "textarea" || input.type === "checkbox") {
                         if (input.type === "checkbox") {
                             // For checkboxes, toggle the 'disabled' state and visibility of its container
-                            const container = input.closest('div'); // Get the parent container (e.g., absconding-container)
+                            const container = input.closest('div'); // Get the parent container (e.g., upload_marksheet)
                             if (container) {
                                 container.style.display = container.style.display === 'none' ? 'block' : 'none'; // Toggle visibility of checkbox container
                                 input.disabled = !input.disabled; // Toggle the disabled state of the checkbox
@@ -1769,6 +1846,36 @@ echo "<script>
                 if (editIcon && saveIcon) {
                     editIcon.style.display = 'none'; // Hide pencil icon
                     saveIcon.style.display = 'inline'; // Show save icon
+                }
+
+                // Explicitly handle the #upload_marksheet container and its checkbox
+                const uploadMarksheetContainer = section.querySelector('#upload_marksheet');
+                const markSheetCheckbox = section.querySelector('#markSheetCheckbox');
+
+                if (uploadMarksheetContainer && markSheetCheckbox) {
+                    uploadMarksheetContainer.style.display = uploadMarksheetContainer.style.display === 'none' ? 'block' : 'none'; // Toggle container visibility
+                    markSheetCheckbox.disabled = !markSheetCheckbox.disabled; // Toggle checkbox disabled state
+                    markSheetCheckbox.style.display = markSheetCheckbox.disabled ? 'none' : 'inline'; // Toggle checkbox visibility
+                }
+
+                // Explicitly handle the #workexperienceDocumentSection container and its checkbox
+                const workexperienceDocumentSection = section.querySelector('#workexperienceDocumentSection');
+                const workexperienceDocumentCheckbox = section.querySelector('#workexperienceDocumentCheckbox');
+
+                if (workexperienceDocumentSection && workexperienceDocumentCheckbox) {
+                    workexperienceDocumentSection.style.display = workexperienceDocumentSection.style.display === 'none' ? 'block' : 'none'; // Toggle container visibility
+                    workexperienceDocumentCheckbox.disabled = !workexperienceDocumentCheckbox.disabled; // Toggle checkbox disabled state
+                    workexperienceDocumentCheckbox.style.display = workexperienceDocumentCheckbox.disabled ? 'none' : 'inline'; // Toggle checkbox visibility
+                }
+
+                // Explicitly handle the #casteCertificateSection container and its checkbox
+                const casteCertificateSection = section.querySelector('#casteCertificateSection');
+                const casteCertificateCheckbox = section.querySelector('#casteCertificateCheckbox');
+
+                if (casteCertificateSection && casteCertificateCheckbox) {
+                    casteCertificateSection.style.display = casteCertificateSection.style.display === 'none' ? 'block' : 'none'; // Toggle container visibility
+                    casteCertificateCheckbox.disabled = !casteCertificateCheckbox.disabled; // Toggle checkbox disabled state
+                    casteCertificateCheckbox.style.display = casteCertificateCheckbox.disabled ? 'none' : 'inline'; // Toggle checkbox visibility
                 }
             }
         }
@@ -2024,6 +2131,30 @@ echo "<script>
 
         // Initial sync to ensure visibility consistency
         syncVisibility();
+    </script>
+    <!-- JavaScript to handle dynamic visibility -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const casteSelect = document.getElementById('caste');
+            const casteCertificateRow = document.getElementById('casteCertificateRow');
+
+            if (casteSelect && casteCertificateRow) {
+                // Function to toggle visibility of caste certificate row
+                function toggleCasteCertificateRow() {
+                    if (casteSelect.value !== "General" && casteSelect.value !== "") {
+                        casteCertificateRow.style.display = 'table-row'; // Show the row
+                    } else {
+                        casteCertificateRow.style.display = 'none'; // Hide the row
+                    }
+                }
+
+                // Attach event listener to caste select
+                casteSelect.addEventListener('change', toggleCasteCertificateRow);
+
+                // Initial check on page load
+                toggleCasteCertificateRow();
+            }
+        });
     </script>
 </body>
 
