@@ -360,37 +360,17 @@ if (!empty($interviewData['submitted_by'])) {
         });
     </script>
     <style>
-        @media (min-width:767px) {
-            .left {
-                margin-left: 2%;
-            }
+        .callout {
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid #eee;
+            border-left-width: 5px;
+            border-radius: 4px;
         }
 
-        .notification-box {
-            background-color: #e0f7fa;
-            /* border: 1px solid #b2ebf2; */
-            border-left: 5px solid #9EEAF9;
-            /* Darker shade line */
-            padding: 15px;
-            margin: 20px auto;
-            width: 80%;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            /* Optional box shadow */
-        }
-
-        .notification-box a {
-            color: #0277bd;
-            text-decoration: underline;
-        }
-
-        .highlight {
-            color: red;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .notification-box {
-                animation: none;
-            }
+        .callout-info {
+            border-left-color: #5bc0de;
+            background-color: #f4f8fa;
         }
     </style>
     <!-- CSS Library Files -->
@@ -637,9 +617,9 @@ if (!empty($interviewData['submitted_by'])) {
                                             <?php
                                             // Check if documentVerification is false or if there are missing or unverified documents
                                             if ($documentVerification != true) { ?>
-                                                <div class="notification-box">
+                                                <div class="callout callout-info">
                                                     Please complete document verification before proceeding with the interview. If you have already completed it, please refresh the page.
-                                                    <a href="tap_doc_approval.php?application_number=<?php echo $responseData['application_number']; ?>">Centralized Document Verification System</a>
+                                                    <!-- <a href="tap_doc_approval.php?application_number=<?php echo $responseData['application_number']; ?>">Centralized Document Verification System</a> -->
                                                 </div>
                                             <?php } ?>
                                             <?php if ($documentVerification === true): ?>

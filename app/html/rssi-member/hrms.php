@@ -626,20 +626,6 @@ echo "<script>
             /* Show button */
         }
     </style>
-    <style>
-        .callout {
-            padding: 1rem;
-            margin: 1rem 0;
-            border: 1px solid #eee;
-            border-left-width: 5px;
-            border-radius: 4px;
-        }
-
-        .callout-info {
-            border-left-color: #5bc0de;
-            background-color: #f4f8fa;
-        }
-    </style>
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
     <!-- Select2 CSS -->
