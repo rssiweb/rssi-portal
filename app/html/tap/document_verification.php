@@ -50,6 +50,9 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
     $alreadyVerified = [];
     $successfullyUploaded = [];
 
+    // Initialize an array to store uploaded file details
+    $uploadedFilesData = [];
+
     foreach ($uploadedFiles as $inputName => $uploadedFile) {
         if (!empty($uploadedFile['name'])) {
             // Check if the file has already been verified
@@ -107,11 +110,25 @@ if (isset($_POST['form-type']) && $_POST['form-type'] === "archive") {
         $message = "No files were uploaded.";
     }
 
+    // Generate the HTML table for uploaded files
+    $uploadedFilesTable = '<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse;">';
+    $uploadedFilesTable .= '<thead><tr><th>File Name</th><th>Transaction ID</th><th>Uploaded On</th><th>Document ID</th></tr></thead>';
+    $uploadedFilesTable .= '<tbody>';
+    foreach ($uploadedFilesData as $file) {
+        $uploadedFilesTable .= '<tr>';
+        $uploadedFilesTable .= '<td>' . htmlspecialchars($file['file_name']) . '</td>';
+        $uploadedFilesTable .= '<td>' . htmlspecialchars($file['transaction_id']) . '</td>';
+        $uploadedFilesTable .= '<td>' . htmlspecialchars($file['uploaded_on']) . '</td>';
+        $uploadedFilesTable .= '<td>' . htmlspecialchars($file['doc_id']) . '</td>';
+        $uploadedFilesTable .= '</tr>';
+    }
+    $uploadedFilesTable .= '</tbody></table>';
+
     // Send a single email with all uploaded file details
     if (!empty($uploadedfor_email) && !empty($uploadedFilesData)) {
         sendEmail("doc_upload", [
             "datafor" => $datafor,
-            "uploaded_files" => $uploadedFilesData, // Pass all uploaded file details
+            "uploaded_files" => $uploadedFilesTable, // Pass the generated HTML table
         ], $uploadedfor_email);
     }
 

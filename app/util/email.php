@@ -19,22 +19,15 @@ function template($string, $hash)
     foreach ($hash as $ind => $val) {
         // Handle arrays (e.g., uploaded_files)
         if (is_array($val)) {
-            if ($ind === 'uploaded_files') {
-                // Generate an HTML table for uploaded_files
-                $replacement = '<table border="1" cellpadding="5" cellspacing="0" style="width: 100%; border-collapse: collapse;">';
-                $replacement .= '<thead><tr><th>File Name</th><th>Transaction ID</th><th>Uploaded On</th></tr></thead>';
-                $replacement .= '<tbody>';
-                foreach ($val as $item) {
-                    $replacement .= '<tr>';
-                    $replacement .= '<td>' . htmlspecialchars($item['file_name']) . '</td>';
-                    $replacement .= '<td>' . htmlspecialchars($item['transaction_id']) . '/' . htmlspecialchars($item['doc_id']) . '</td>';
-                    $replacement .= '<td>' . htmlspecialchars($item['uploaded_on']) . '</td>';
-                    $replacement .= '</tr>';
+            $replacement = ''; // Initialize an empty string for array replacement
+            foreach ($val as $item) {
+                if (is_array($item)) {
+                    // If the item is an array, convert it to a string (e.g., for uploaded_files)
+                    $replacement .= implode(', ', $item) . "\n";
+                } else {
+                    // If the item is a string, append it directly
+                    $replacement .= $item . "\n";
                 }
-                $replacement .= '</tbody></table>';
-            } else {
-                // Handle other arrays (if any)
-                $replacement = implode(', ', $val);
             }
             $string = str_replace('{{' . $ind . '}}', $replacement, $string);
         } else {
