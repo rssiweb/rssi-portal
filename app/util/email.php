@@ -32,7 +32,10 @@ function template($string, $hash)
             $string = str_replace('{{' . $ind . '}}', $replacement, $string);
         } else {
             // Handle non-array values (existing behavior)
-            $string = str_replace('{{' . $ind . '}}', $val, $string);
+            // Add null check to avoid passing null to str_replace
+            if ($val !== null) {
+                $string = str_replace('{{' . $ind . '}}', $val, $string);
+            }
         }
     }
     // Remove any remaining placeholders
