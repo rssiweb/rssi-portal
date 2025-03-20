@@ -194,7 +194,7 @@ WHERE id = '$product_id'";
         }
     </style>
     <!-- JavaScript Library Files -->
-    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 
 <body>

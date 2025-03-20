@@ -7,7 +7,7 @@ $query_notices = "
     FROM notice 
     WHERE category = 'Public' 
     ORDER BY date DESC 
-    LIMIT 5";
+    LIMIT 3";
 $result_notices = pg_query($con, $query_notices);
 
 $notices = [];
