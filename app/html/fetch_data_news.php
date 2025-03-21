@@ -32,8 +32,7 @@ $query_notices = "
     SELECT noticeid, refnumber, date, subject, url 
     FROM notice 
     WHERE category = 'Public' 
-    ORDER BY date DESC 
-    LIMIT 3";
+    ORDER BY date DESC";
 $result_notices = pg_query($con, $query_notices);
 
 $notices = [];
