@@ -171,6 +171,7 @@ if ($role == 'Admin') {
                                                     ?>
                                                     <option>Internal</option>
                                                     <option>Public</option>
+                                                    <option>News & Press Releases</option>
                                                 </select>
                                                 <small id="passwordHelpBlock" class="form-text text-muted">Category</small>
                                             </span>
