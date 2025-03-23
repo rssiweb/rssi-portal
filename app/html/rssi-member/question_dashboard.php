@@ -116,7 +116,7 @@ $query = "
     FROM test_questions q
     LEFT JOIN test_categories c ON q.category_id = c.id
     $whereSql
-    AND q.id>2508
+    AND q.id>2522
     ORDER BY q.created_at DESC
 ";
 
