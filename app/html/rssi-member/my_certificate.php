@@ -721,15 +721,15 @@ include("../../util/email.php");
                                         <?php echo '
 
                                 <td>' ?>
-                                        <?php if (@$array['phone'] != null || @$array['out_phone'] != null || @$array['contact'] != null) {
+                                        <?php if (@$array['awarded_to_phone'] != null || @$array['out_phone'] != null || @$array['awarded_to_student_phone'] != null) {
 
                                             if (@$array['badge_name'] == 'Offer Letter' || @$array['badge_name'] == 'Joining Letter') {
 
-                                                echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYour ' . $array['badge_name'] . ' has been issued. Please check your email and take the necessary action.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '"></i></a>' ?>
+                                                echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYour ' . $array['badge_name'] . ' has been issued. Please check your email and take the necessary action.%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone'] . '"></i></a>' ?>
 
                                             <?php } else {
 
-                                                echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0A' . $array['certificate_url'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['phone'] . @$array['contact'] . @$array['out_phone'] . '"></i></a>' ?>
+                                                echo '<a href="https://api.whatsapp.com/send?phone=91' . @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone'] . '&text=Dear ' . @$array['fullname'] . @$array['studentname'] . @$array['awarded_to_name'] . ' (' . $array['awarded_to_id'] . '),%0A%0AYou have received ' . $array['badge_name'] . '. To view your e-Certificate and Gems (if applicable), please log on to your Profile > My Documents > My Certificate or you can click on the link below to access it directly.%0A%0A' . $array['certificate_url'] . '%0A%0A--RSSI%0A%0A**This is an automatically generated SMS" target="_blank"><i class="bi bi-whatsapp" style="color:#444444;" title="Send SMS ' . @$array['awarded_to_phone'] . @$array['awarded_to_student_phone'] . @$array['out_phone'] . '"></i></a>' ?>
 
                                             <?php }
                                         } else { ?>
