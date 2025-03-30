@@ -24,8 +24,9 @@ include("../../util/email.php");
         @$badge_name = $_POST['badge_name'];
         @$comment = htmlspecialchars($_POST['comment'], ENT_QUOTES, 'UTF-8');
         @$gems = $_POST['gems'];
+        @$template_code = $_POST['template_code'];
         @$certificate_url = $_POST['certificate_url'];
-        @$issuedby = $fullname;
+        @$nominatedby = $_POST['nominatedby'];;
 
         @$awarded_to_name = $_POST['out_name'];
         @$out_phone = $_POST['out_phone'];
@@ -56,7 +57,7 @@ include("../../util/email.php");
                 }
                 $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
             }
-            // $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, issuedby,awarded_to_name,out_phone,out_email,out_scode,out_flag,pdf_certificate) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$doclink','$issuedby','$awarded_to_name','$out_phone','$out_email','$out_scode','$out_flag','$pdf_certificate')";
+            // $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, nominatedby,awarded_to_name,out_phone,out_email,out_scode,out_flag,pdf_certificate) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$doclink','$nominatedby','$awarded_to_name','$out_phone','$out_email','$out_scode','$out_flag','$pdf_certificate')";
             // $result = pg_query($con, $certificate);
             // $cmdtuples = pg_affected_rows($result);
 
@@ -69,13 +70,14 @@ include("../../util/email.php");
                 "comment" => $comment,
                 "gems" => $gems,
                 "certificate_url" => $doclink,
-                "issuedby" => $issuedby,
+                "nominatedby" => $nominatedby,
                 "awarded_to_name" => $awarded_to_name,
                 "out_phone" => $out_phone,
                 "out_email" => $out_email,
                 "out_scode" => $out_scode,
                 "out_flag" => $out_flag,
                 "pdf_certificate" => $pdf_certificate,
+                "template_code" => $template_code,
             ];
 
             // Initialize arrays for dynamic query construction
@@ -145,10 +147,18 @@ include("../../util/email.php");
 
     if (($get_certificate_no == null && $get_nomineeid == null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate  
-        left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber
-        left join (SELECT student_id,studentname,emailaddress, contact FROM rssimyprofile_student) student ON certificate.awarded_to_id=student.student_id
-        order by issuedon desc");
+        $result = pg_query($con, "SELECT certificate.*, 
+        faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone, 
+        student.studentname AS awarded_to_student_name, student.emailaddress AS awarded_to_student_email, student.contact AS awarded_to_student_phone,
+        nominator.fullname AS nominated_by_name
+    FROM certificate  
+    LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
+        ON certificate.awarded_to_id = faculty.associatenumber
+    LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
+        ON certificate.awarded_to_id = student.student_id
+    LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
+        ON certificate.nominatedby = nominator.associatenumber
+    ORDER BY issuedon DESC");
         $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems");
         $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate");
         $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -158,7 +168,16 @@ include("../../util/email.php");
 
     if (($get_certificate_no != null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where certificate_no='$get_certificate_no' order by issuedon desc");
+        $result = pg_query($con, "SELECT certificate.*, 
+        faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone, 
+        nominator.fullname AS nominated_by_name
+    FROM certificate  
+    LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
+        ON certificate.awarded_to_id = faculty.associatenumber
+    LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
+        ON certificate.nominatedby = nominator.associatenumber
+    WHERE certificate_no='$get_certificate_no' 
+    ORDER BY issuedon DESC");
         $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
         $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
         $totalgemsredeem_admin = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
@@ -168,7 +187,16 @@ include("../../util/email.php");
 
     if (($get_nomineeid != null)) {
 
-        $result = pg_query($con, "SELECT * FROM certificate left join (SELECT associatenumber,fullname,email, phone FROM rssimyaccount_members) faculty ON certificate.awarded_to_id=faculty.associatenumber where awarded_to_id='$get_nomineeid' order by issuedon desc");
+        $result = pg_query($con, "SELECT certificate.*, 
+        faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone, 
+        nominator.fullname AS nominated_by_name
+    FROM certificate  
+    LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
+        ON certificate.awarded_to_id = faculty.associatenumber
+    LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
+        ON certificate.nominatedby = nominator.associatenumber
+    WHERE awarded_to_id='$get_nomineeid' 
+    ORDER BY issuedon DESC");
         $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$get_nomineeid' AND (reviewer_status is null or reviewer_status !='Rejected')");
         $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$get_nomineeid'");
         $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
@@ -234,6 +262,7 @@ include("../../util/email.php");
     <!-- Vendor CSS Files -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Template Main CSS File -->
     <link href="../assets_new/css/style.css" rel="stylesheet">
@@ -252,6 +281,34 @@ include("../../util/email.php");
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
     <!-- JavaScript Library Files -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <!-- AJAX for Associatenumber and Course Dropdowns -->
+    <script>
+        $(document).ready(function() {
+            // Fetch Associates
+            // Initialize Select2 for associatenumber dropdown
+            $('#nominatedby').select2({
+                ajax: {
+                    url: 'fetch_associates.php', // Path to the PHP script
+                    dataType: 'json',
+                    delay: 250, // Delay in milliseconds before sending the request
+                    data: function(params) {
+                        return {
+                            q: params.term // Search term
+                        };
+                    },
+                    processResults: function(data) {
+                        // Map the results to the format expected by Select2
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true // Cache results for better performance
+                },
+                minimumInputLength: 1 // Require at least 1 character to start searching
+            });
+        });
+    </script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 
@@ -397,7 +454,23 @@ include("../../util/email.php");
                                             <input type="file" name="certificate_url" class="form-control" />
                                             <small id="passwordHelpBlock" class="form-text text-muted">Documents</small>
                                         </div>
-                                        <button type="submit" name="search_by_id" class="btn btn-danger btn-sm" style="outline: none;">
+                                        <div class="col-md-3 mb-3">
+                                            <label for="nominatedby" class="form-label">Nominated by</label>
+                                            <select class="form-control select2" id="nominatedby" name="nominatedby" required>
+                                                <option value="">Select Associate</option>
+
+                                            </select>
+                                        </div>
+                                        <!-- Dropdown for selecting certificate template -->
+                                        <div id="certificate_dropdown" style="display: none; width: max-content" class="mb-3">
+                                            <label for="template_code" class="form-label">Select Certificate Template</label>
+                                            <select name="template_code" id="template_code" class="form-select">
+                                                <option value="">-- Select Template --</option>
+                                                <option value="certificate_of_achievement">Certificate of Achievement</option>
+                                                <option value="certificate_of_appreciation">Certificate of Appreciation</option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" name="search_by_id" class="btn btn-danger btn-sm mb-3" style="outline: none;">
                                             <i class="bi bi-plus-lg"></i>&nbsp;&nbsp;Add
                                         </button>
                                     </div>
@@ -406,9 +479,25 @@ include("../../util/email.php");
                                         <label for="is_users" class="form-check-label">Non-registered candidate</label>
                                     </div>
                                     <div class="form-check">
-                                        <input type="checkbox" name="pdf_certificate" id="pdf_certificate" class="form-check-input" value="true">
+                                        <input type="checkbox" name="pdf_certificate" id="pdf_certificate" class="form-check-input" value="true" onchange="toggleCertificateDropdown()">
                                         <label for="pdf_certificate" class="form-check-label">Include PDF Certificate</label>
                                     </div>
+
+                                    <script>
+                                        function toggleCertificateDropdown() {
+                                            var checkbox = document.getElementById("pdf_certificate");
+                                            var dropdown = document.getElementById("certificate_dropdown");
+                                            var select = document.getElementById("template_code");
+
+                                            if (checkbox.checked) {
+                                                dropdown.style.display = "inline-block";
+                                                select.setAttribute("required", "required"); // Add required attribute
+                                            } else {
+                                                dropdown.style.display = "none";
+                                                select.removeAttribute("required"); // Remove required attribute
+                                            }
+                                        }
+                                    </script>
                                 </form>
 
 
@@ -523,9 +612,9 @@ include("../../util/email.php");
                                         <button type="submit" name="search_by_id" class="btn btn-success btn-sm" style="outline: none;">
                                             <i class="bi bi-search"></i>&nbsp;Search</button>
                                     </div>
-                                    <div id="filter-checks">
-                                        <input type="checkbox" name="is_user" id="is_user" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
-                                        <label for="is_user" style="font-weight: 400;">Search by Nominee id</label>
+                                    <div id="filter-checks" class="form-check mt-3">
+                                        <input type="checkbox" name="is_user" id="is_user" class="form-check-input" value="1" <?php if (isset($_GET['is_user'])) echo "checked='checked'"; ?> />
+                                        <label for="is_user">Search by Nominee id</label>
                                     </div>
                                 </form>
                                 <script>
@@ -569,7 +658,7 @@ include("../../util/email.php");
                             <th scope="col" width="20%">Remarks</th>
                             <th scope="col">Gems</th>
                             <th scope="col">Issued on</th>
-                            <th scope="col">Issued by</th>
+                            <th scope="col">Nominated by</th>
                             <th scope="col">Certificate</th>' ?>
                             <?php if ($role == 'Admin') { ?>
                                 <?php echo '<th scope="col"></th>' ?>
@@ -617,7 +706,7 @@ include("../../util/email.php");
                                         <?php echo '<td>' . @date("d/m/Y g:i a", strtotime($array['issuedon'])) . '</td>' ?>
                                     <?php } ?>
 
-                                    <?php echo '<td>' . $array['issuedby'] . '</td>' ?>
+                                    <?php echo '<td>' . $array['nominated_by_name'] . '</td>' ?>
 
                                     <?php if ($array['certificate_url'] == null && $array['pdf_certificate'] == true) { ?>
                                         <?php echo '<td><a href="pdf_certificate_of_appreciation.php?certificate_no=' . $array['certificate_no'] . '" target="_blank"><i class="bi bi-file-earmark-pdf" style="font-size: 16px ;color:#777777" title="' . $array['certificate_no'] . '" display:inline;></i></a></td>' ?>

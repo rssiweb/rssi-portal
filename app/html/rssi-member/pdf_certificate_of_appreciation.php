@@ -66,9 +66,24 @@ if (!$result) {
         <?php
         // Create an instance of FPDI
         $pdf = new Fpdi();
+        // Ensure 'template_code' exists and is not empty
+        if (!isset($array['template_code']) || empty($array['template_code'])) {
+            die("Error: Template code is missing.");
+        }
+
+        // Get the template code
+        $template_code = trim($array['template_code']); // Trim to remove any whitespace
+
+        // Construct the template file path dynamically
+        $template_file = "../pdf_template/{$template_code}.pdf";
+
+        // Debugging: Print to verify
+        if (!file_exists($template_file)) {
+            die("Error: Template file '{$template_file}' not found.");
+        }
 
         // Set the source file (certificate template PDF)
-        $pageCount = $pdf->setSourceFile('../pdf_template/certificate_of_appreciation.pdf');
+        $pageCount = $pdf->setSourceFile($template_file);
 
         // Import the first page of the template
         $templateId = $pdf->importPage(1);
