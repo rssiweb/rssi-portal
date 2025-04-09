@@ -80,7 +80,6 @@ validation();
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Class details</a></li>
                     <li class="breadcrumb-item"><a href="#">AttendX</a></li>
                 </ol>
             </nav>
@@ -103,7 +102,7 @@ validation();
                                             <div class="card text-center">
                                                 <div class="card-body">
                                                     <i class="bi bi-qr-code-scan icon"></i>
-                                                    <h5 class="card-title mt-3">Scanning</h5>
+                                                    <h5 class="card-title mt-3">QR Attendance Scanner</h5>
                                                 </div>
                                             </div>
                                         </a>
@@ -124,6 +123,16 @@ validation();
                                                 <div class="card-body">
                                                     <i class="bi bi-calendar-check icon"></i>
                                                     <h5 class="card-title mt-3">Monthly Attendance Report</h5>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <a href="attendance-analytics.php" class="card-link">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <i class="bi bi-graph-up-arrow icon"></i>
+                                                    <h5 class="card-title mt-3">Attendance Analytics Dashboard</h5>
                                                 </div>
                                             </div>
                                         </a>

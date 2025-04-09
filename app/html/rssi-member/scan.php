@@ -50,7 +50,7 @@ if (!$result) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>AttendX</title>
+    <title>QR Attendance Scanner</title>
 
     <!-- Favicons -->
     <link href="../img/favicon.ico" rel="icon">
@@ -110,12 +110,12 @@ if (!$result) {
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>AttendX</h1>
+            <h1>QR Attendance Scanner</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="home.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Class details</a></li>
-                    <li class="breadcrumb-item active">AttendX</li>
+                    <li class="breadcrumb-item"><a href="attendx.php">AttendX</a></li>
+                    <li class="breadcrumb-item active">QR Attendance Scanner</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
