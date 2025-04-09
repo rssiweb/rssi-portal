@@ -971,5 +971,6 @@
     toggleCollapsedClass('in_out_tracker.php', 'attendX');
     toggleCollapsedClass('monthly_attd_report.php', 'attendX');
     toggleCollapsedClass('monthly_attd_report_associate.php', 'attendX');
+    toggleCollapsedClass('attendance-analytics.php', 'attendX');
     toggleCollapsedClass('attendx.php', 'attendX');
   </script>
