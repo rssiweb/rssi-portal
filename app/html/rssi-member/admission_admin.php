@@ -405,6 +405,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                             ?>
                                             <option value="New Admission">New Admission</option>
                                             <option value="Transfer Admission">Transfer Admission</option>
+                                            <option value="Existing Admission">Existing Admission</option>
                                         </select>
                                         <small id="type-of-admission-help" class="form-text text-muted">Please select the type
                                             of
