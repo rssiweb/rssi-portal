@@ -424,18 +424,23 @@
         </a>
         <ul id="feePortal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="fee_collection" href="fee_collection.php">
+            <a id="fee_collection" href="fee_collection.php" target="_blank">
               <span>Fee Collection</span>
             </a>
           </li>
           <li>
-            <a id="fee_structure_management" href="fee_structure_management.php">
+            <a id="settlement" href="settlement.php" target="_blank">
+              <span>Fee Settlement</span>
+            </a>
+          </li>
+          <li>
+            <a id="fee_structure_management" href="fee_structure_management.php" target="_blank">
               <span>Fee Structure Management</span>
             </a>
           </li>
           <li>
-            <a id="settlement" href="settlement.php">
-              <span>Fee Settlement</span>
+            <a id="fee_lock_management" href="fee_lock_management.php" target="_blank">
+              <span>Fee Collection Lock Management</span>
             </a>
           </li>
         </ul>
@@ -954,7 +959,11 @@
         linkId: 'settlement',
         url: 'settlement.php'
       },
-
+      {
+        id: 'feePortal',
+        linkId: 'fee_lock_management',
+        url: 'fee_lock_management.php'
+      },
       {
         id: 'work',
         linkId: 'access_panel',

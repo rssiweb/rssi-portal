@@ -290,7 +290,18 @@ $collectorsQuery = "SELECT associatenumber, fullname FROM rssimyaccount_members 
 $collectorsResult = pg_query($con, $collectorsQuery);
 $collectors = pg_fetch_all($collectorsResult) ?? [];
 ?>
+<?php
+// Check fee sheet lock status - treat missing records as LOCKED (default)
+$lockQuery = "SELECT is_locked FROM fee_collection_lock WHERE month = $1 AND year = $2";
+$lockResult = pg_query_params($con, $lockQuery, [$month, $year]);
 
+// Default to LOCKED (true) if no record exists
+$isLocked = true; // Changed from false to true for default state
+if ($lockStatus = pg_fetch_assoc($lockResult)) {
+    $isLocked = ($lockStatus['is_locked'] === 't'); 
+    // This will now only set to false if there's an explicit record with is_locked = false
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -431,7 +442,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                         <span><?= $fullname ?> (<?= $associatenumber ?>)</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="home.php"><i class="fas fa-home me-2"></i> Home</a></li>
+                        <!-- <li><a class="dropdown-item" href="home.php"><i class="fas fa-home me-2"></i> Home</a></li> -->
                         <li>
                             <hr class="dropdown-divider">
                         </li>
@@ -533,7 +544,17 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                         </div>
                     </div>
                 </div>
-
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-success w-100" id="exportReport">
+                        <i class="fas fa-file-excel"></i> Export Report
+                    </button>
+                </div>
+                <?php if ($isLocked): ?>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-lock"></i> Fee collection is currently locked for <?= $month ?> <?= $year ?>.
+                        Please contact administration to unlock.
+                    </div>
+                <?php endif; ?>
                 <!-- Student List -->
                 <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
                     <table class="table table-striped table-hover table-bordered" id="table-id">
@@ -630,9 +651,11 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                             data-student-name="<?= htmlspecialchars($student['studentname']) ?>"
                                             data-student-class="<?= htmlspecialchars($student['class']) ?>"
                                             data-net-fee="<?= $student['net_fee'] ?>"
-                                            data-due-amount="<?= $student['due_amount'] ?>">
+                                            data-due-amount="<?= $student['due_amount'] ?>"
+                                            <?= $isLocked ? 'disabled title="Fee collection is locked for this month"' : '' ?>>
                                             <i class="fas fa-hand-holding-usd"></i> Collect
                                         </button>
+
                                         <button class="btn btn-sm btn-info view-history"
                                             data-student-id="<?= $student['student_id'] ?>">
                                             <i class="fas fa-history"></i> History
@@ -1142,6 +1165,27 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                     }
                 });
             });
+        });
+    </script>
+
+    <script>
+        // Export button handler
+        $("#exportReport").click(function() {
+            // Get current filter values
+            const status = $("select[name='status']").val();
+            const month = $("select[name='month']").val();
+            const year = $("select[name='year']").val();
+            const classFilter = $("select[name='class']").val();
+
+            // Build export URL with all current filters
+            let exportUrl = `export_monthly_fees.php?status=${encodeURIComponent(status)}&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`;
+
+            if (classFilter) {
+                exportUrl += `&class=${encodeURIComponent(classFilter)}`;
+            }
+
+            // Open in new tab to trigger download
+            window.open(exportUrl, '_blank');
         });
     </script>
 </body>

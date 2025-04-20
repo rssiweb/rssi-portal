@@ -28,10 +28,10 @@ if ($status === 'unsettled') {
                       JOIN rssimyaccount_members m ON p.collected_by = m.associatenumber
                       WHERE p.is_settled = FALSE
                       ORDER BY p.collection_date";
-    
+
     $paymentsResult = pg_query($con, $paymentsQuery);
     $payments = pg_fetch_all($paymentsResult) ?? [];
-    
+
     // Get summary
     $summaryQuery = "SELECT COUNT(*) as total_payments, 
                             SUM(amount) as total_amount,
@@ -39,7 +39,7 @@ if ($status === 'unsettled') {
                             SUM(CASE WHEN payment_type = 'online' THEN amount ELSE 0 END) as online_amount
                      FROM fee_payments
                      WHERE is_settled = FALSE";
-    
+
     $summaryResult = pg_query($con, $summaryQuery);
     $summary = pg_fetch_assoc($summaryResult);
 } else {
@@ -48,7 +48,7 @@ if ($status === 'unsettled') {
                          FROM settlements s
                          JOIN rssimyaccount_members m ON s.settled_by = m.associatenumber
                          ORDER BY s.settlement_date DESC";
-    
+
     $settlementsResult = pg_query($con, $settlementsQuery);
     $settlements = pg_fetch_all($settlementsResult) ?? [];
 }
@@ -61,24 +61,54 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settlement Management</title>
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .summary-card { border-left: 5px solid; margin-bottom: 20px; }
-        .summary-card.total { border-color: #007bff; }
-        .summary-card.cash { border-color: #28a745; }
-        .summary-card.online { border-color: #17a2b8; }
+        .summary-card {
+            border-left: 5px solid;
+            margin-bottom: 20px;
+        }
+
+        .summary-card.total {
+            border-color: #007bff;
+        }
+
+        .summary-card.cash {
+            border-color: #28a745;
+        }
+
+        .summary-card.online {
+            border-color: #17a2b8;
+        }
     </style>
 </head>
+
 <body>
     <div class="container-fluid mt-4">
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-primary text-white" style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 class="card-title"><i class="fas fa-calculator"></i> Settlement Management</h3>
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; margin-right: 8px;">
+                            <?= strtoupper(substr($fullname, 0, 1)) ?>
+                        </div>
+                        <span><?= $fullname ?> (<?= $associatenumber ?>)</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <!-- <li><a class="dropdown-item" href="home.php"><i class="fas fa-home me-2"></i> Home</a></li> -->
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
             </div>
             <div class="card-body">
                 <!-- Filters -->
@@ -199,7 +229,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                     <input type="hidden" name="create_settlement" value="1">
                                     <input type="hidden" id="settlementPaymentIds" name="payment_ids">
                                     <input type="hidden" id="settlementDate" name="settlement_date" value="<?= $settlementDate ?>">
-                                    
+
                                     <div class="modal-body">
                                         <div class="row mb-3">
                                             <div class="col-md-6">
@@ -211,7 +241,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                 <div class="form-control-plaintext fw-bold" id="settlementCash">₹0.00</div>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="row mb-3">
                                             <div class="col-md-6">
                                                 <label class="form-label">Online Amount:</label>
@@ -221,14 +251,14 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                                 <label for="settledBy" class="form-label">Settled By:</label>
                                                 <select class="form-select" id="settledBy" name="settled_by" required>
                                                     <?php foreach ($collectors as $collector): ?>
-                                                        <option value="<?= $collector['associatenumber'] ?>" <?= $collector['associatenumber'] == $_SESSION['associatenumber'] ? 'selected' : '' ?>>
+                                                        <option value="<?= $collector['associatenumber'] ?>" <?= $collector['associatenumber'] == $associatenumber ? 'selected' : '' ?>>
                                                             <?= htmlspecialchars($collector['fullname']) ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="mb-3">
                                             <label for="settlementNotes" class="form-label">Notes:</label>
                                             <textarea class="form-control" id="settlementNotes" name="notes" rows="3"></textarea>
@@ -314,7 +344,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                 $("#selectAllPayments").change(function() {
                     $(".payment-check").prop("checked", $(this).prop("checked"));
                 });
-                
+
                 // Create settlement button handler
                 $("#createSettlement").click(function() {
                     const checkedPayments = $(".payment-check:checked");
@@ -322,20 +352,22 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                         alert("Please select at least one payment to settle");
                         return;
                     }
-                    
+
                     const paymentIds = checkedPayments.map(function() {
                         return $(this).data("id");
                     }).get();
-                    
+
                     $("#settlementPaymentIds").val(paymentIds.join(","));
-                    
+
                     // Calculate totals
-                    let total = 0, cash = 0, online = 0;
+                    let total = 0,
+                        cash = 0,
+                        online = 0;
                     checkedPayments.each(function() {
                         const row = $(this).closest("tr");
                         const amount = parseFloat(row.find("td:eq(7)").text().replace('₹', ''));
                         const type = row.find("td:eq(8)").text().toLowerCase();
-                        
+
                         total += amount;
                         if (type === 'cash') {
                             cash += amount;
@@ -343,11 +375,11 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                             online += amount;
                         }
                     });
-                    
+
                     $("#settlementTotal").text("₹" + total.toFixed(2));
                     $("#settlementCash").text("₹" + cash.toFixed(2));
                     $("#settlementOnline").text("₹" + online.toFixed(2));
-                    
+
                     const settlementModal = new bootstrap.Modal(document.getElementById("settlementModal"));
                     settlementModal.show();
                 });
@@ -355,11 +387,13 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                 // View settlement button handler
                 $(".view-settlement").click(function() {
                     const settlementId = $(this).data("id");
-                    
+
                     $.ajax({
                         url: "get_settlement_details.php",
                         method: "GET",
-                        data: { settlement_id: settlementId },
+                        data: {
+                            settlement_id: settlementId
+                        },
                         success: function(data) {
                             $("#settlementDetailsContent").html(data);
                             const detailsModal = new bootstrap.Modal(document.getElementById("settlementDetailsModal"));
@@ -370,20 +404,20 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                         }
                     });
                 });
-                
+
                 // Print settlement button handler
                 $(".print-settlement").click(function() {
                     const settlementId = $(this).data("id");
                     window.open("print_settlement.php?settlement_id=" + settlementId, "_blank");
                 });
-                
+
                 // Print button in modal
                 $("#printSettlementDetails").click(function() {
                     const settlementId = $(".view-settlement").data("id");
                     window.open("print_settlement.php?settlement_id=" + settlementId, "_blank");
                 });
             <?php endif; ?>
-            
+
             // Export button handler
             $("#exportSettlement").click(function() {
                 window.location.href = "export_settlement.php?status=<?= $status ?>&settlement_date=<?= $settlementDate ?>";
@@ -391,4 +425,5 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
         });
     </script>
 </body>
+
 </html>
