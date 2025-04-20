@@ -5,17 +5,17 @@ include("../../util/login_util.php");
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
     $_SESSION["login_redirect_params"] = $_GET;
-    header("Location: login.php");
+    header("Location: index.php");
     exit;
 }
 validation();
 
 // Process form submissions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['submit_payment'])) {
-        require_once __DIR__ . "/process_payment.php";
-    }
-}
+// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//     if (isset($_POST['submit_payment'])) {
+//         require_once __DIR__ . "/process_payment.php";
+//     }
+// }
 
 // Get filter parameters
 $status = $_GET['status'] ?? 'Active';
@@ -295,9 +295,22 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
 <html lang="en">
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11316670180"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-11316670180');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monthly Fee Collection System</title>
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -349,14 +362,82 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
             top: 0;
             background: white;
         }
+
+
+        .prebanner {
+            display: none;
+        }
+
+        .back-to-top {
+            position: fixed;
+            visibility: hidden;
+            opacity: 0;
+            right: 15px;
+            bottom: 15px;
+            z-index: 99999;
+            background: #4154f1;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            transition: all 0.4s;
+        }
+
+        .back-to-top i {
+            font-size: 24px;
+            color: #fff;
+            line-height: 0;
+        }
+
+        .back-to-top:hover {
+            background: #6776f4;
+            color: #fff;
+        }
+
+        .back-to-top.active {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
+    <!------ Include the above in your HEAD tag ---------->
+    <script src="https://cdn.jsdelivr.net/gh/manucaralmo/GlowCookies@3.0.1/src/glowCookies.min.js"></script>
+
+    <!-- Glow Cookies v3.0.1 -->
+    <script>
+        glowCookies.start('en', {
+            analytics: 'G-S25QWTFJ2S',
+            //facebookPixel: '',
+            policyLink: 'https://www.rssi.in/disclaimer'
+        });
+    </script>
 </head>
 
 <body>
     <div class="container-fluid mt-4">
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-primary text-white" style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> Monthly Fee Collection - <?= $month ?> <?= $year ?></h3>
+
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="rounded-circle bg-light text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; margin-right: 8px;">
+                            <?= strtoupper(substr($fullname, 0, 1)) ?>
+                        </div>
+                        <span><?= $fullname ?> (<?= $associatenumber ?>)</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="home.php"><i class="fas fa-home me-2"></i> Home</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
             </div>
             <div class="card-body">
                 <!-- Filters -->
@@ -455,7 +536,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
 
                 <!-- Student List -->
                 <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                    <table class="table table-striped table-hover table-bordered">
+                    <table class="table table-striped table-hover table-bordered" id="table-id">
                         <thead>
                             <tr>
                                 <th>Student ID</th>
@@ -565,9 +646,23 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
             </div>
         </div>
     </div>
-
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+
+    <script>
+        $(document).ready(function() {
+            // Check if resultArr is empty
+            <?php if (!empty($categories)) : ?>
+                // Initialize DataTables only if resultArr is not empty
+                $('#table-id').DataTable({
+                    paging: false,
+                    "order": [] // Disable initial sorting
+                    // other options...
+                });
+            <?php endif; ?>
+        });
+    </script>
 
     <!-- Payment History Modal -->
     <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">

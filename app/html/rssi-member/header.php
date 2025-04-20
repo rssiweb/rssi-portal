@@ -419,6 +419,30 @@
 
 
       <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#feePortal" data-bs-toggle="collapse" href="#">
+          <span>Fee Portal</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="feePortal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="fee_collection" href="fee_collection.php">
+              <span>Fee Collection</span>
+            </a>
+          </li>
+          <li>
+            <a id="fee_structure_management" href="fee_structure_management.php">
+              <span>Fee Structure Management</span>
+            </a>
+          </li>
+          <li>
+            <a id="settlement" href="settlement.php">
+              <span>Fee Settlement</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
+
+
+      <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#work" data-bs-toggle="collapse" href="#">
           <span>Work</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -911,11 +935,27 @@
         id: 'peoplePlus',
         linkId: 'talent_pool',
         url: 'applicant_profile.php'
-      },  {
+      }, {
         id: 'peoplePlus',
         linkId: 'rtet',
         url: 'rtet.php'
-      },{
+      },
+
+      {
+        id: 'feePortal',
+        linkId: 'fee_collection',
+        url: 'fee_collection.php'
+      }, {
+        id: 'feePortal',
+        linkId: 'fee_structure_management',
+        url: 'fee_structure_management.php'
+      }, {
+        id: 'feePortal',
+        linkId: 'settlement',
+        url: 'settlement.php'
+      },
+
+      {
         id: 'work',
         linkId: 'access_panel',
         url: 'access_panel.php'
