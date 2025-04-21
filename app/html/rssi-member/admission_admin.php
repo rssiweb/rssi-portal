@@ -29,8 +29,34 @@ if (!$result) {
 ?>
 <?php
 if (@$_POST['form-type'] == "admission_admin") {
+
+    // First, fetch the current student data including DOA
+    $student_id = $_POST['student-id'];
+    $currentStudentQuery = "SELECT type_of_admission, doa FROM rssimyprofile_student WHERE student_id = '$student_id'";
+    $currentStudentResult = pg_query($con, $currentStudentQuery);
+    $currentStudentData = pg_fetch_assoc($currentStudentResult);
+
+    $original_type_of_admission = $currentStudentData['type_of_admission'] ?? '';
+    $original_doa = $currentStudentData['doa'] ?? date('Y-m-d'); // Fallback to today if not set
+
     // Get the form data
     $type_of_admission = $_POST['type-of-admission'];
+    $effective_from_date = $_POST['effective-from-date'] ?? date('Y-m-d');
+
+    // Validate effective date
+    if (!empty($_POST['effective-from-date'])) {
+        $effective_from_date = date('Y-m-d', strtotime($_POST['effective-from-date']));
+        // Ensure effective date isn't before DOA
+        if (strtotime($effective_from_date) < strtotime($original_doa)) {
+            $effective_from_date = $original_doa;
+        }
+    } else {
+        $effective_from_date = date('Y-m-d');
+    }
+
+    // Check if type of admission has changed
+    $type_changed = ($type_of_admission != $original_type_of_admission);
+
     $student_name = $_POST['student-name'];
     $date_of_birth = $_POST['date-of-birth'];
     $gender = $_POST['gender'];
@@ -170,6 +196,72 @@ if (@$_POST['form-type'] == "admission_admin") {
     @$student_update = "UPDATE rssimyprofile_student SET $field_string WHERE student_id = '$student_id'";
     $resultt = pg_query($con, $student_update);
     $cmdtuples = pg_affected_rows($resultt);
+
+    // If type of admission changed, update the history table
+    if ($type_changed && $cmdtuples > 0) {
+        // Determine the category type (New/Existing) based on admission type
+        $category_type = (in_array($type_of_admission, ['New Admission', 'Transfer Admission'])) 
+            ? 'New' : 'Existing';
+        
+        // First, close any open history records for this student that overlap with the new effective date
+        $closeHistoryQuery = "UPDATE student_category_history 
+                            SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
+                            WHERE student_id = '$student_id' 
+                            AND (effective_until IS NULL OR effective_until >= DATE '$effective_from_date')
+                            AND effective_from < DATE '$effective_from_date'";
+        pg_query($con, $closeHistoryQuery);
+        
+        // Also adjust any future-dated records that would now be incorrect
+        $adjustFutureRecords = "UPDATE student_category_history 
+                              SET effective_from = DATE '$effective_from_date'
+                              WHERE student_id = '$student_id' 
+                              AND effective_from >= DATE '$effective_from_date'";
+        pg_query($con, $adjustFutureRecords);
+        
+        // Insert new history record
+        $insertHistoryQuery = "INSERT INTO student_category_history (
+                                student_id, 
+                                category_type, 
+                                effective_from, 
+                                created_by
+                              ) VALUES (
+                                '$student_id', 
+                                '$category_type', 
+                                DATE '$effective_from_date', 
+                                '$updated_by'
+                              )";
+        pg_query($con, $insertHistoryQuery);
+        
+        // For new admissions, ensure we have a complete history from admission date
+        if (in_array($type_of_admission, ['New Admission', 'Transfer Admission'])) {
+            $checkHistoryQuery = "SELECT COUNT(*) as count, 
+                                MIN(effective_from) as min_date 
+                                FROM student_category_history 
+                                WHERE student_id = '$student_id'";
+            $historyResult = pg_query($con, $checkHistoryQuery);
+            $historyData = pg_fetch_assoc($historyResult);
+            $historyCount = $historyData['count'];
+            $minHistoryDate = $historyData['min_date'];
+            
+            // If the earliest record isn't from admission date, add it
+            if ($minHistoryDate != $original_doa) {
+                $insertInitialHistory = "INSERT INTO student_category_history (
+                                        student_id, 
+                                        category_type, 
+                                        effective_from, 
+                                        effective_until,
+                                        created_by
+                                      ) VALUES (
+                                        '$student_id', 
+                                        '$original_type_of_admission', 
+                                        DATE '$original_doa', 
+                                        DATE '$effective_from_date' - INTERVAL '1 day',
+                                        '$updated_by'
+                                      )";
+                pg_query($con, $insertInitialHistory);
+            }
+        }
+    }
 }
 ?>
 <!doctype html>
@@ -397,19 +489,26 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         <select class="form-select" id="type-of-admission" name="type-of-admission" required>
                                             <?php if ($array['type_of_admission'] == null) { ?>
                                                 <option selected>--Select Type of Admission--</option>
-                                            <?php
-                                            } else { ?>
+                                            <?php } else { ?>
                                                 <option selected>--Select Type of Admission--</option>
                                                 <option hidden selected><?php echo $array['type_of_admission'] ?></option>
-                                            <?php }
-                                            ?>
+                                            <?php } ?>
                                             <option value="New Admission">New Admission</option>
                                             <option value="Transfer Admission">Transfer Admission</option>
                                             <option value="Existing Admission">Existing Admission</option>
                                         </select>
-                                        <small id="type-of-admission-help" class="form-text text-muted">Please select the type
-                                            of
-                                            admission you are applying for.</small>
+                                        <!-- Add hidden field to store original type for comparison -->
+                                        <input type="hidden" name="original_type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
+                                        <small id="type-of-admission-help" class="form-text text-muted">Please select the type of admission you are applying for.</small>
+                                    </td>
+                                </tr>
+                                <tr id="effective-date-row" style="display:none;">
+                                    <td>
+                                        <label for="effective-from-date">Effective From Date:</label>
+                                    </td>
+                                    <td>
+                                        <input type="date" class="form-control" id="effective-from-date" name="effective-from-date">
+                                        <small class="form-text text-muted">Select the date when this admission type should take effect</small>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1225,6 +1324,22 @@ if (@$_POST['form-type'] == "admission_admin") {
             button.addEventListener("click", function() {
                 location.reload();
             });
+        });
+    </script>
+    <script>
+        document.getElementById('type-of-admission').addEventListener('change', function() {
+            const originalType = document.querySelector('input[name="original_type_of_admission"]').value;
+            const newType = this.value;
+            const effectiveDateRow = document.getElementById('effective-date-row');
+
+            // Show effective date only if type is changing
+            if (originalType && newType !== originalType) {
+                effectiveDateRow.style.display = '';
+                // Set default effective date to today
+                document.getElementById('effective-from-date').valueAsDate = new Date();
+            } else {
+                effectiveDateRow.style.display = 'none';
+            }
         });
     </script>
 </body>

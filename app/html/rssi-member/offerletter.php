@@ -198,7 +198,7 @@ if (!$result) {
 
                                         <p>Thank you for exploring career opportunities with Rina Shiksha Sahayak Foundation (RSSI). You have successfully completed our initial selection process and we are pleased to make you an offer.</p>
 
-                                        <p>This offer is based on your profile and performance in the selection process. You have been selected for the position of <b>' . $array['position'] . ' (' . $array['job_type'] . ')</b>. Your gross salary including all benefits will be <b>₹' . $array['salary'] . '/- per annum</b>, as per the terms and conditions set out herein.</p>'
+                                        <p>This offer is based on your profile and performance in the selection process. You have been selected for the position of <b>' . $array['position'] . ' (' . $array['job_type'] . ')</b>.</p>'
                                 ?>
 
                                 <p>Please sign the offer letter and email the scanned copy to us at info@rssi.in as a token of your acceptance. If not accepted within 3 calendar days, it will be construed that you are not interested in this employment and this offer will be automatically withdrawn.</p>
@@ -208,7 +208,7 @@ if (!$result) {
                                 <p>Please find attached the terms and conditions of your employment.</p>
                                 <p><b><u>COMPENSATION and BENEFITS</u></b></p>
                                 <ol>
-                                    <li>You will be eligible for a gross salary of <b>₹<?php echo $array['salary'] / 12 ?>/- per month</b>. Please refer to the attached Annexure 1 for a complete breakdown of your compensation.</li>
+                                    <li>Your gross salary including all benefits will be <b>₹<?=$array['salary']?>/- per annum</b>, as per the terms and conditions set out herein. Please refer to the attached Annexure 1 for a complete breakdown of your compensation.</li>
                                     <li>You will receive reimbursement for the reasonable and properly documented pre-approved expenses and costs you incur in carrying out your service.
                                         You may receive non-cash benefits, e.g. Free tickets, and free access to services but if these types of benefits are accepted regularly and have substantial value, they may need to be taxed.</li>
                                 </ol>
@@ -295,7 +295,7 @@ if (!$result) {
                                                 ]
                                             ];
 
-                                            $position_associate = $array['engagement'];
+                                            $position_associate = $array['position'];
                                             foreach ($links as $key => $items) {
                                                 if (str_contains($position_associate, $key)) {
                                                     foreach ($items as $text => $url) {
