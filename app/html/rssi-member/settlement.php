@@ -27,7 +27,7 @@ if ($status === 'unsettled') {
                       JOIN rssimyprofile_student s ON p.student_id = s.student_id
                       JOIN rssimyaccount_members m ON p.collected_by = m.associatenumber
                       WHERE p.is_settled = FALSE
-                      ORDER BY p.collection_date";
+                      ORDER BY p.created_at DESC";
 
     $paymentsResult = pg_query($con, $paymentsQuery);
     $payments = pg_fetch_all($paymentsResult) ?? [];

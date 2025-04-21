@@ -424,22 +424,22 @@
         </a>
         <ul id="feePortal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="fee_collection" href="fee_collection.php" target="_blank">
+            <a id="fee_collection" href="fee_collection.php">
               <span>Fee Collection</span>
             </a>
           </li>
           <li>
-            <a id="settlement" href="settlement.php" target="_blank">
+            <a id="settlement" href="settlement.php">
               <span>Fee Settlement</span>
             </a>
           </li>
           <li>
-            <a id="fee_structure_management" href="fee_structure_management.php" target="_blank">
+            <a id="fee_structure_management" href="fee_structure_management.php">
               <span>Fee Structure Management</span>
             </a>
           </li>
           <li>
-            <a id="fee_lock_management" href="fee_lock_management.php" target="_blank">
+            <a id="fee_lock_management" href="fee_lock_management.php">
               <span>Fee Collection Lock Management</span>
             </a>
           </li>
