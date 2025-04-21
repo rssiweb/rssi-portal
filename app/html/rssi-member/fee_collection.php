@@ -31,15 +31,15 @@ function getStudentTypeForDate($con, $studentId, $targetDate) {
         return $row['category_type'];
     }
     
-    // If no history record exists for this month, use the original admission type
-    $originalTypeQuery = "SELECT type_of_admission FROM rssimyprofile_student WHERE student_id = $1";
-    $originalTypeResult = pg_query_params($con, $originalTypeQuery, array($studentId));
-    if ($originalType = pg_fetch_assoc($originalTypeResult)) {
-        return (in_array($originalType['type_of_admission'], ['New Admission', 'Transfer Admission'])) ? 'New' : 'Existing';
-    }
-    
-    // Final fallback
-    return 'Existing';
+// Directly fetch the type_of_admission from the database
+$originalTypeQuery = "SELECT type_of_admission FROM rssimyprofile_student WHERE student_id = $1";
+$originalTypeResult = pg_query_params($con, $originalTypeQuery, array($studentId));
+if ($originalType = pg_fetch_assoc($originalTypeResult)) {
+    return $originalType['type_of_admission'];
+}
+
+// If no record is found, handle the case (optional)
+return null; // Or handle it differently, e.g., return 'Unknown'
 }
 
 // Get filter parameters

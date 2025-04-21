@@ -84,7 +84,7 @@ if (@$_POST['form-type'] == "admission_admin") {
     $c_authentication_code = $_POST['c-authentication-code'];
     $transaction_id = $_POST['transaction-id'];
     $subject_select = $_POST['subject-select'];
-    $access_category = $_POST['access_category'];
+    // $access_category = $_POST['access_category'];
     $payment_type = $_POST['payment_type'];
 
     $module = $_POST['module'];
@@ -173,8 +173,8 @@ if (@$_POST['form-type'] == "admission_admin") {
         "age='$age'",
         "updated_on='$timestamp'",
         "payment_type='$payment_type'",
-        "caste='$caste'",
-        "access_category='$access_category'"
+        "caste='$caste'"
+        // "access_category='$access_category'"
     ];
 
     // Include file links only if they are set
@@ -200,9 +200,8 @@ if (@$_POST['form-type'] == "admission_admin") {
     // If type of admission changed, update the history table
     if ($type_changed && $cmdtuples > 0) {
         // Determine the category type (New/Existing) based on admission type
-        $category_type = (in_array($type_of_admission, ['New Admission', 'Transfer Admission'])) 
-            ? 'New' : 'Existing';
-        
+        $category_type = $type_of_admission;
+
         // First, close any open history records for this student that overlap with the new effective date
         $closeHistoryQuery = "UPDATE student_category_history 
                             SET effective_until = DATE '$effective_from_date' - INTERVAL '1 day'
@@ -210,14 +209,14 @@ if (@$_POST['form-type'] == "admission_admin") {
                             AND (effective_until IS NULL OR effective_until >= DATE '$effective_from_date')
                             AND effective_from < DATE '$effective_from_date'";
         pg_query($con, $closeHistoryQuery);
-        
+
         // Also adjust any future-dated records that would now be incorrect
         $adjustFutureRecords = "UPDATE student_category_history 
                               SET effective_from = DATE '$effective_from_date'
                               WHERE student_id = '$student_id' 
                               AND effective_from >= DATE '$effective_from_date'";
         pg_query($con, $adjustFutureRecords);
-        
+
         // Insert new history record
         $insertHistoryQuery = "INSERT INTO student_category_history (
                                 student_id, 
@@ -231,9 +230,9 @@ if (@$_POST['form-type'] == "admission_admin") {
                                 '$updated_by'
                               )";
         pg_query($con, $insertHistoryQuery);
-        
+
         // For new admissions, ensure we have a complete history from admission date
-        if (in_array($type_of_admission, ['New Admission', 'Transfer Admission'])) {
+        if (in_array($type_of_admission, ['Basic', 'Regular', 'Premium', 'General'])) {
             $checkHistoryQuery = "SELECT COUNT(*) as count, 
                                 MIN(effective_from) as min_date 
                                 FROM student_category_history 
@@ -242,7 +241,7 @@ if (@$_POST['form-type'] == "admission_admin") {
             $historyData = pg_fetch_assoc($historyResult);
             $historyCount = $historyData['count'];
             $minHistoryDate = $historyData['min_date'];
-            
+
             // If the earliest record isn't from admission date, add it
             if ($minHistoryDate != $original_doa) {
                 $insertInitialHistory = "INSERT INTO student_category_history (
@@ -483,23 +482,24 @@ if (@$_POST['form-type'] == "admission_admin") {
                                 </tr>
                                 <tr>
                                     <td>
-                                        <label for="type-of-admission">Type of Admission:</label>
+                                        <label for="type-of-admission">Access Category:</label>
                                     </td>
                                     <td>
                                         <select class="form-select" id="type-of-admission" name="type-of-admission" required>
                                             <?php if ($array['type_of_admission'] == null) { ?>
-                                                <option selected>--Select Type of Admission--</option>
+                                                <option selected>--Select Access Category--</option>
                                             <?php } else { ?>
-                                                <option selected>--Select Type of Admission--</option>
+                                                <option selected>--Select Access Category--</option>
                                                 <option hidden selected><?php echo $array['type_of_admission'] ?></option>
                                             <?php } ?>
-                                            <option value="New Admission">New Admission</option>
-                                            <option value="Transfer Admission">Transfer Admission</option>
-                                            <option value="Existing Admission">Existing Admission</option>
+                                            <option value="Basic">Basic</option>
+                                            <option value="Regular">Regular</option>
+                                            <option value="Premium">Premium</option>
+                                            <option value="General">General</option>
                                         </select>
                                         <!-- Add hidden field to store original type for comparison -->
                                         <input type="hidden" name="original_type_of_admission" value="<?php echo $array['type_of_admission'] ?? '' ?>">
-                                        <small id="type-of-admission-help" class="form-text text-muted">Please select the type of admission you are applying for.</small>
+                                        <small id="type-of-admission-help" class="form-text text-muted">Please select the type of access you are applying for.</small>
                                     </td>
                                 </tr>
                                 <tr id="effective-date-row" style="display:none;">
@@ -1089,7 +1089,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                         </td>
                                     </tr>
 
-                                    <tr>
+                                    <!-- <tr>
                                         <td>
                                             <label for="access_category" class="form-label">Access Category:</label>
                                         </td>
@@ -1107,7 +1107,7 @@ if (@$_POST['form-type'] == "admission_admin") {
                                                 <option value="Regular">Regular</option>
                                             </select>
                                         </td>
-                                    </tr>
+                                    </tr> -->
                                     <tr>
                                         <td>
                                             <label for="module">Module</label>

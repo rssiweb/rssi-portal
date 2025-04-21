@@ -176,6 +176,7 @@ $feeStructure = pg_fetch_all(pg_query(
 <head>
     <meta charset="UTF-8">
     <title>Fee Structure Management</title>
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
@@ -304,11 +305,13 @@ $feeStructure = pg_fetch_all(pg_query(
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="student_type" class="form-label">Student Type</label>
+                                    <label for="student_type" class="form-label">Access Category</label>
                                     <select name="student_type" class="form-select" required>
-                                        <option value="">Select Type</option>
-                                        <option value="New">New Student</option>
-                                        <option value="Existing">Existing Student</option>
+                                        <option value="">--Select Access Category--</option>
+                                        <option value="Basic">Basic</option>
+                                        <option value="Regular">Regular</option>
+                                        <option value="Premium">Premium</option>
+                                        <option value="General">General</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -355,11 +358,13 @@ $feeStructure = pg_fetch_all(pg_query(
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="student_type" class="form-label">Student Type</label>
+                                    <label for="student_type" class="form-label">Access Category</label>
                                     <select name="student_type" class="form-select" required>
-                                        <option value="">Select Type</option>
-                                        <option value="New">New Student</option>
-                                        <option value="Existing">Existing Student</option>
+                                        <option value="">--Select Access Category--</option>
+                                        <option value="Basic">Basic</option>
+                                        <option value="Regular">Regular</option>
+                                        <option value="Premium">Premium</option>
+                                        <option value="General">General</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
