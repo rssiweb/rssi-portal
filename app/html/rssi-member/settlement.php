@@ -87,6 +87,12 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
             border-color: #17a2b8;
         }
     </style>
+    <!-- CSS Library Files -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.4/css/dataTables.bootstrap5.css">
+    <!-- JavaScript Library Files -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.4/js/dataTables.bootstrap5.js"></script>
 </head>
 
 <body>
@@ -182,10 +188,10 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
 
                     <div class="table-responsive">
                         <table class="table table-striped table-hover table-bordered" id="paymentsTable">
-                            <thead class="table-dark">
+                            <thead class="table">
                                 <tr>
                                     <th width="40">
-                                        <input type="checkbox" id="selectAllPayments">
+                                        <input type="checkbox" class="form-check-input" id="selectAllPayments">
                                     </th>
                                     <th>Payment ID</th>
                                     <th>Date</th>
@@ -195,22 +201,26 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                     <th>Year</th>
                                     <th>Amount</th>
                                     <th>Type</th>
+                                    <th>Transaction ID</th>
                                     <th>Collector</th>
+                                    <th>Data Entry Timestamp</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($payments as $payment): ?>
                                     <tr>
-                                        <td><input type="checkbox" class="payment-check" data-id="<?= $payment['id'] ?>"></td>
+                                        <td><input type="checkbox" class="form-check-input payment-check" data-id="<?= $payment['id'] ?>"></td>
                                         <td><?= $payment['id'] ?></td>
-                                        <td><?= date('d-M-Y H:i', strtotime($payment['collection_date'])) ?></td>
+                                        <td><?= date('d/m/Y', strtotime($payment['collection_date'])) ?></td>
                                         <td><?= htmlspecialchars($payment['studentname']) ?></td>
                                         <td><?= htmlspecialchars($payment['class']) ?></td>
                                         <td><?= $payment['month'] ?></td>
                                         <td><?= $payment['academic_year'] ?></td>
                                         <td>₹<?= number_format($payment['amount'], 2) ?></td>
                                         <td><?= ucfirst($payment['payment_type']) ?></td>
+                                        <td><?= $payment['transaction_id'] ?: 'N/A' ?></td>
                                         <td><?= htmlspecialchars($payment['collector_name']) ?></td>
+                                        <td><?= date('d/m/Y h:i A', strtotime($payment['created_at'])) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -275,8 +285,8 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                 <?php else: ?>
                     <!-- Settled Payments -->
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover table-bordered">
-                            <thead class="table-dark">
+                        <table class="table table-striped table-hover table-bordered" id="settlementsTable">
+                            <thead class="table">
                                 <tr>
                                     <th>Settlement ID</th>
                                     <th>Date</th>
@@ -319,7 +329,16 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <div id="settlementDetailsContent"></div>
+                                    <div id="settlementDetailsContent">
+                                        <div id="settlementLoading" class="text-center py-4" style="display: none;">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <div>Loading settlement details...</div>
+                                        </div>
+                                        <!-- Actual content will be injected here -->
+                                        <div id="settlementLoadedContent"></div>
+                                    </div>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -336,7 +355,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
     <script>
         $(document).ready(function() {
             <?php if ($status === 'unsettled'): ?>
@@ -365,7 +384,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                         online = 0;
                     checkedPayments.each(function() {
                         const row = $(this).closest("tr");
-                        const amount = parseFloat(row.find("td:eq(7)").text().replace('₹', ''));
+                        const amount = parseFloat(row.find("td:eq(7)").text().replace(/[^0-9.]/g, ''));
                         const type = row.find("td:eq(8)").text().toLowerCase();
 
                         total += amount;
@@ -386,24 +405,32 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
             <?php else: ?>
                 // View settlement button handler
                 $(".view-settlement").click(function() {
-                    const settlementId = $(this).data("id");
+    const settlementId = $(this).data("id");
 
-                    $.ajax({
-                        url: "get_settlement_details.php",
-                        method: "GET",
-                        data: {
-                            settlement_id: settlementId
-                        },
-                        success: function(data) {
-                            $("#settlementDetailsContent").html(data);
-                            const detailsModal = new bootstrap.Modal(document.getElementById("settlementDetailsModal"));
-                            detailsModal.show();
-                        },
-                        error: function(xhr, status, error) {
-                            alert("Error loading settlement details: " + error);
-                        }
-                    });
-                });
+    // Show spinner, hide old content
+    $("#settlementLoading").show();
+    $("#settlementLoadedContent").html('');
+
+    const detailsModal = new bootstrap.Modal(document.getElementById("settlementDetailsModal"));
+    detailsModal.show();
+
+    $.ajax({
+        url: "get_settlement_details.php",
+        method: "GET",
+        data: {
+            settlement_id: settlementId
+        },
+        success: function(data) {
+            $("#settlementLoading").hide();
+            $("#settlementLoadedContent").html(data);
+        },
+        error: function(xhr, status, error) {
+            $("#settlementLoading").hide();
+            $("#settlementLoadedContent").html('<div class="text-danger">Error loading settlement details: ' + error + '</div>');
+        }
+    });
+});
+
 
                 // Print settlement button handler
                 $(".print-settlement").click(function() {
@@ -422,6 +449,28 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
             $("#exportSettlement").click(function() {
                 window.location.href = "export_settlement.php?status=<?= $status ?>&settlement_date=<?= $settlementDate ?>";
             });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            <?php if (!empty($payments)) : ?>
+                $('#paymentsTable').DataTable({
+                    paging: false,
+                    order: [], // Disable initial sorting
+                    columnDefs: [{
+                            targets: 0,
+                            orderable: false
+                        } // Disable sorting on the first column (index 0)
+                    ]
+                });
+            <?php endif; ?>
+
+            <?php if (!empty($settlements)) : ?>
+                $('#settlementsTable').DataTable({
+                    paging: false,
+                    order: [] // Disable initial sorting
+                });
+            <?php endif; ?>
         });
     </script>
 </body>
