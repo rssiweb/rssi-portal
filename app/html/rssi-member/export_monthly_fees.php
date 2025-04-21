@@ -8,6 +8,38 @@ if (!isLoggedIn("aid")) {
     exit;
 }
 
+function getStudentTypeForDate($con, $studentId, $targetDate) {
+    // Convert target date to first day of month
+    $targetMonthStart = date('Y-m-01', strtotime($targetDate));
+    
+    // First try to get from history table for the month
+    $query = "SELECT category_type 
+              FROM student_category_history 
+              WHERE student_id = $1 
+              AND (
+                  (effective_from <= '$targetMonthStart' AND (effective_until >= '$targetMonthStart' OR effective_until IS NULL))
+                  OR
+                  (TO_CHAR(effective_from, 'YYYY-MM') = TO_CHAR('$targetMonthStart'::date, 'YYYY-MM'))
+              )
+              ORDER BY effective_from DESC 
+              LIMIT 1";
+    
+    $result = pg_query_params($con, $query, array($studentId));
+    if ($row = pg_fetch_assoc($result)) {
+        return $row['category_type'];
+    }
+    
+// Directly fetch the type_of_admission from the database
+$originalTypeQuery = "SELECT type_of_admission FROM rssimyprofile_student WHERE student_id = $1";
+$originalTypeResult = pg_query_params($con, $originalTypeQuery, array($studentId));
+if ($originalType = pg_fetch_assoc($originalTypeResult)) {
+    return $originalType['type_of_admission'];
+}
+
+// If no record is found, handle the case (optional)
+return null; // Or handle it differently, e.g., return 'Unknown'
+}
+
 // Get filter parameters from URL
 $status = $_GET['status'] ?? 'Active';
 $month = $_GET['month'] ?? date('F');
@@ -50,18 +82,17 @@ $categories = pg_fetch_all(pg_query(
 $processedStudents = [];
 foreach ($students as $student) {
     $studentId = $student['student_id'];
-    $studentType = (in_array($student['type_of_admission'], ['New Admission', 'Transfer Admission']))
-        ? 'New' : 'Existing';
-
-
+    
+    // Get student type for the current month being processed
+    $studentType = getStudentTypeForDate($con, $studentId, $firstDayOfMonth);
 
     // Get student-specific fees with details
     $studentSpecificDetails = [];
     $studentSpecificQuery = "SELECT fc.category_name, ssf.amount 
-                              FROM student_specific_fees ssf
-                              JOIN fee_categories fc ON ssf.category_id = fc.id
-                              WHERE ssf.student_id = '{$student['student_id']}'
-                              AND '$firstDayOfMonth' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
+                            FROM student_specific_fees ssf
+                            JOIN fee_categories fc ON ssf.category_id = fc.id
+                            WHERE ssf.student_id = '{$student['student_id']}'
+                            AND '$firstDayOfMonth' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
     $studentSpecificResult = pg_query($con, $studentSpecificQuery);
     $studentSpecificItems = pg_fetch_all($studentSpecificResult) ?? [];
 
@@ -73,7 +104,6 @@ foreach ($students as $student) {
             'amount' => $fee['amount']
         ];
     }
-
 
     // 1. Get current month's base fees
     $feeQuery = "SELECT fc.id, fc.category_name, fs.amount, fc.fee_type
@@ -108,7 +138,7 @@ foreach ($students as $student) {
     }
     $currentMonthFees = array_sum($feeDetails);
 
-    // 2. Get current month's STUDENT-SPECIFIC fees (additional fees for this student)
+    // 3. Get current month's STUDENT-SPECIFIC fees (additional fees for this student)
     $studentSpecificQuery = "SELECT fc.id, fc.category_name, ssf.amount, fc.fee_type
                 FROM student_specific_fees ssf
                 JOIN fee_categories fc ON ssf.category_id = fc.id
@@ -127,7 +157,7 @@ foreach ($students as $student) {
     // 5. Combine both fee types (student-specific fees are ADDED to standard fees)
     $totalCurrentMonthFees = $currentMonthFees + $studentSpecificTotal;
 
-    // 3. Get current month's payments
+    // 6. Get current month's payments
     $paymentsQuery = "SELECT 
                     COALESCE(SUM(amount), 0) as paid_amount,
                     COALESCE(SUM(CASE 
@@ -147,7 +177,7 @@ foreach ($students as $student) {
     $paidAmount = (float)($paymentData['paid_amount'] ?? 0);
     $corePaidAmount = (float)($paymentData['core_paid_amount'] ?? 0);
 
-    // 4. Get current concessions
+    // 7. Get current concessions
     $concessionQuery = "SELECT COALESCE(SUM(concession_amount), 0) as concession_amount
                        FROM student_concessions
                        WHERE student_id = '$studentId'
@@ -155,7 +185,7 @@ foreach ($students as $student) {
     $concessionResult = pg_query($con, $concessionQuery);
     $concessionAmount = (float)(pg_fetch_assoc($concessionResult)['concession_amount'] ?? 0);
 
-    // 5. Calculate carry forward (previous months' unpaid dues)
+    // 8. Calculate carry forward (previous months' unpaid dues)
     $carryForward = 0;
     if ($monthNumber != '04') { // No carry forward in April (start of academic year)
         // Get all months from April to previous month of current year
@@ -165,13 +195,17 @@ foreach ($students as $student) {
         for ($m = $startMonth; $m <= $endMonth; $m++) {
             $loopMonthNum = str_pad($m, 2, '0', STR_PAD_LEFT);
             $loopMonthName = date('F', mktime(0, 0, 0, $m, 1));
+            $loopMonthDate = "$year-$loopMonthNum-01";
+            
+            // Get student type for this historical month
+            $loopStudentType = getStudentTypeForDate($con, $studentId, $loopMonthDate);
 
             // Get month's fees
             $loopFeeQuery = "SELECT COALESCE(SUM(fs.amount), 0) as total_fee
                            FROM fee_structure fs
                            JOIN fee_categories fc ON fs.category_id = fc.id
                            WHERE fs.class = '{$student['class']}'
-                           AND fs.student_type = '$studentType'
+                           AND fs.student_type = '$loopStudentType'
                            AND '$year-$loopMonthNum-01' BETWEEN fs.effective_from AND COALESCE(fs.effective_until, '9999-12-31')
                            AND (
                                fc.category_name != 'Admission Fee'
@@ -191,10 +225,10 @@ foreach ($students as $student) {
 
             // Get month's STUDENT-SPECIFIC fees
             $loopStudentSpecificQuery = "SELECT COALESCE(SUM(ssf.amount), 0) as total_fee
-FROM student_specific_fees ssf
-JOIN fee_categories fc ON ssf.category_id = fc.id
-WHERE ssf.student_id = '{$student['student_id']}'
-AND '$year-$loopMonthNum-01' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
+                                      FROM student_specific_fees ssf
+                                      JOIN fee_categories fc ON ssf.category_id = fc.id
+                                      WHERE ssf.student_id = '{$student['student_id']}'
+                                      AND '$year-$loopMonthNum-01' BETWEEN ssf.effective_from AND COALESCE(ssf.effective_until, '9999-12-31')";
             $loopStudentSpecificResult = pg_query($con, $loopStudentSpecificQuery);
             $loopStudentSpecificFee = (float)(pg_fetch_assoc($loopStudentSpecificResult)['total_fee'] ?? 0);
 
@@ -203,12 +237,12 @@ AND '$year-$loopMonthNum-01' BETWEEN ssf.effective_from AND COALESCE(ssf.effecti
 
             // Get month's payments for core categories (Admission, Monthly, Miscellaneous)
             $loopPaymentsQuery = "SELECT COALESCE(SUM(p.amount), 0) as paid_amount
-FROM fee_payments p
-JOIN fee_categories fc ON p.category_id = fc.id
-WHERE p.student_id = '$studentId'
-AND p.month = '$loopMonthName'
-AND p.academic_year = '$year'
-AND fc.category_name IN ('Admission Fee', 'Monthly Fee', 'Miscellaneous', 'Exam Fee')";
+                               FROM fee_payments p
+                               JOIN fee_categories fc ON p.category_id = fc.id
+                               WHERE p.student_id = '$studentId'
+                               AND p.month = '$loopMonthName'
+                               AND p.academic_year = '$year'
+                               AND fc.category_name IN ('Admission Fee', 'Monthly Fee', 'Miscellaneous', 'Exam Fee')";
 
             $loopPaymentsResult = pg_query($con, $loopPaymentsQuery);
             $loopPaidAmount = (float)(pg_fetch_assoc($loopPaymentsResult)['paid_amount'] ?? 0);
@@ -226,13 +260,11 @@ AND fc.category_name IN ('Admission Fee', 'Monthly Fee', 'Miscellaneous', 'Exam 
             $loopDueAmount = $loopNetFee - $loopPaidAmount;
 
             // Add to carry forward if positive
-            // if ($loopDueAmount > 0) {
             $carryForward += $loopDueAmount;
-            // }
         }
     }
 
-    // 6. Calculate current month's net fee and due amount
+    // 9. Calculate current month's net fee and due amount
     $netFee = ($totalCurrentMonthFees) - $concessionAmount;
     $dueAmount = ($netFee - $corePaidAmount) + $carryForward;
     $totalAmount = $totalCurrentMonthFees + $carryForward;
@@ -249,7 +281,7 @@ AND fc.category_name IN ('Admission Fee', 'Monthly Fee', 'Miscellaneous', 'Exam 
         'monthly_fee' => $feeDetails['Monthly Fee'],
         'miscellaneous' => $feeDetails['Miscellaneous'],
         'student_specific_fees' => $studentSpecificTotal,
-        'student_specific_details' => $studentSpecificDetails, // Add this line
+        'student_specific_details' => $studentSpecificDetails,
         'total_fee' => $currentMonthFees,
         'concession_amount' => $concessionAmount,
         'carry_forward' => $carryForward,
@@ -266,7 +298,7 @@ $summary = [
     'total_fee' => array_sum(array_column($processedStudents, 'total_fee')),
     'total_concession' => array_sum(array_column($processedStudents, 'concession_amount')),
     'total_net_fee' => array_sum(array_column($processedStudents, 'net_fee')),
-    'total_paid' => array_sum(array_column($processedStudents, 'paid_amount')),
+    'total_paid' => array_sum(array_column($processedStudents, 'core_paid_amount')),
     'total_due' => array_sum(array_column($processedStudents, 'due_amount')),
     'total_carry_forward' => array_sum(array_column($processedStudents, 'carry_forward'))
 ];
@@ -306,7 +338,7 @@ echo '<tr>';
 echo '<td>' . $summary['total_students'] . '</td>';
 echo '<td>₹' . number_format($summary['total_fee'], 2) . '</td>';
 echo '<td>₹' . number_format($summary['total_concession'], 2) . '</td>';
-echo '<td>₹' . number_format($summary['total_net_fee'], 2) . '</td>';
+echo '<td>₹' . number_format(($summary['total_net_fee']-$summary['total_concession']), 2) . '</td>';
 echo '<td>₹' . number_format($summary['total_paid'], 2) . '</td>';
 echo '<td>₹' . number_format($summary['total_due'], 2) . '</td>';
 echo '<td>₹' . number_format($summary['total_carry_forward'], 2) . '</td>';

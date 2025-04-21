@@ -175,7 +175,7 @@ $collectors = pg_fetch_all($collectorsResult) ?? [];
                     </div>
 
                     <div class="mb-3">
-                        <button type="button" class="btn btn-success" id="createSettlement">
+                        <button type="button" class="btn btn-success" id="createSettlement" <?php if ($role !== 'Admin') echo 'disabled'; ?>>
                             <i class="fas fa-file-invoice-dollar"></i> Create Settlement
                         </button>
                     </div>

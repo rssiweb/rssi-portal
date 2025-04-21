@@ -300,7 +300,7 @@ $summary = [
     'total_fee' => array_sum(array_column($processedStudents, 'total_fee')),
     'total_concession' => array_sum(array_column($processedStudents, 'concession_amount')),
     'total_net_fee' => array_sum(array_column($processedStudents, 'net_fee')),
-    'total_paid' => array_sum(array_column($processedStudents, 'paid_amount')),
+    'total_paid' => array_sum(array_column($processedStudents, 'core_paid_amount')),
     'total_due' => array_sum(array_column($processedStudents, 'due_amount')),
     'total_carry_forward' => array_sum(array_column($processedStudents, 'carry_forward'))
 ];
@@ -548,7 +548,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                         <div class="card summary-card net">
                             <div class="card-body">
                                 <h6 class="card-title">Net Fee</h6>
-                                <p class="card-text h4">₹<?= number_format($summary['total_net_fee'], 2) ?></p>
+                                <p class="card-text h4">₹<?= number_format(($summary['total_net_fee']-$summary['total_concession']), 2) ?></p>
                             </div>
                         </div>
                     </div>
@@ -943,7 +943,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <option value="<?= $associatenumber ?>" selected>
-                                            <?= htmlspecialchars($collectorName) ?>
+                                            <?= htmlspecialchars($fullname) ?>
                                         </option>
                                     <?php endif; ?>
                                 </select>
