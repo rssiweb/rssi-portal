@@ -1063,6 +1063,20 @@ if (@$_POST['form-type'] == "admission") {
 
   $result = pg_query($con, $student);
 
+    // Insert new history record
+    $insertHistoryQuery = "INSERT INTO student_category_history (
+      student_id, 
+      category_type, 
+      effective_from, 
+      created_by
+    ) VALUES (
+      '$student_id', 
+      '$type_of_admission', 
+      DATE '$timestamp', 
+      'System'
+    )";
+    pg_query($con, $insertHistoryQuery);
+
   if ($result) {
     $cmdtuples = pg_affected_rows($result);
     if ($cmdtuples == 1) {
