@@ -1002,13 +1002,13 @@ if (@$_POST['form-type'] == "admission") {
   $caste = $_POST['caste'];
 
   // Determine if student is new admission or not
-  $is_new_admission = ''; // Set to true if new admission, false otherwise
+  $is_new_admission = 'A'; // Set to true if new admission, false otherwise
 
-  if ($type_of_admission == 'New Admission') {
-    $is_new_admission = 'A';
-  } else {
-    $is_new_admission = 'B';
-  }
+  // if ($type_of_admission == 'New Admission') {
+  //   $is_new_admission = 'A';
+  // } else {
+  //   $is_new_admission = 'B';
+  // }
 
   // Determine branch code
   $branch = ''; // Set branch code (LKO for Lucknow, KOL for West Bengal)
@@ -1063,8 +1063,8 @@ if (@$_POST['form-type'] == "admission") {
 
   $result = pg_query($con, $student);
 
-    // Insert new history record
-    $insertHistoryQuery = "INSERT INTO student_category_history (
+  // Insert new history record
+  $insertHistoryQuery = "INSERT INTO student_category_history (
       student_id, 
       category_type, 
       effective_from, 
@@ -1075,7 +1075,7 @@ if (@$_POST['form-type'] == "admission") {
       DATE '$timestamp', 
       'System'
     )";
-    pg_query($con, $insertHistoryQuery);
+  pg_query($con, $insertHistoryQuery);
 
   if ($result) {
     $cmdtuples = pg_affected_rows($result);

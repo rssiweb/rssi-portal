@@ -467,7 +467,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                         <span><?= $fullname ?> (<?= $associatenumber ?>)</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <!-- <li><a class="dropdown-item" href="home.php"><i class="fas fa-home me-2"></i> Home</a></li> -->
+                        <li><a class="dropdown-item" href="home.php"><i class="fas fa-home me-2"></i> Home</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
