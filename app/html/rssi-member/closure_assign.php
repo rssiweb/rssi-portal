@@ -3,6 +3,7 @@ require_once __DIR__ . "/../../bootstrap.php";
 
 include("../../util/login_util.php");
 include("../../util/drive.php");
+include("../../util/email.php");
 
 if (!isLoggedIn("aid")) {
     $_SESSION["login_redirect"] = $_SERVER["PHP_SELF"];
@@ -25,6 +26,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = pg_query_params($con, $query, [$id, $date, $assigned_to, $assigned_by, $timestamp]);
 
     if ($result) {
+
+        // Fetch email of the assigned associate
+        $query_email = "SELECT email, fullname FROM rssimyaccount_members WHERE associatenumber = $1";
+        $res_email = pg_query_params($con, $query_email, [$assigned_to]);
+
+        if ($res_email && pg_num_rows($res_email) > 0) {
+            $row_email = pg_fetch_assoc($res_email);
+            $email = $row_email['email'];
+            $associate_name = $row_email['fullname'];
+
+            // Send closing duty email
+            if (!empty($email)) {
+                sendEmail("closingduty", [
+                    "name" => $associate_name,
+                    "date" => date("d/m/Y", strtotime($date)),
+                    "timestamp" => date("d/m/Y g:i a", strtotime($timestamp)),
+                ], $email);
+            }
+        }
+
         // Return a success response
         echo json_encode(['success' => true]);
     } else {
@@ -191,7 +212,11 @@ echo "<script>var userRole = '$role';</script>";
                                                         <!-- Dynamically populated -->
                                                     </select>
                                                 </div>
-                                                <button type="submit" class="btn btn-primary" id="saveAssignment">Save</button>
+                                                <button type="submit" class="btn btn-primary" id="saveAssignment">
+                                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="saveSpinner"></span>
+                                                    <span id="saveText">Save</span>
+                                                </button>
+
                                             </form>
                                         </div>
                                     </div>
@@ -352,34 +377,50 @@ echo "<script>var userRole = '$role';</script>";
             });
 
             // Handle form submission via AJAX
-            const assignForm = document.getElementById('assignForm');
+            const saveBtn = document.getElementById('saveAssignment');
+            const spinner = document.getElementById('saveSpinner');
+            const saveText = document.getElementById('saveText');
+
             assignForm.addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent default form submission
+                event.preventDefault();
+
+                // Show spinner
+                spinner.classList.remove('d-none');
+                saveText.textContent = 'Saving...';
+                saveBtn.disabled = true;
 
                 const formData = new FormData(assignForm);
 
-                // Send AJAX request to server
                 fetch('<?php echo $_SERVER['PHP_SELF']; ?>', {
                         method: 'POST',
                         body: formData
                     })
                     .then(response => response.json())
                     .then(data => {
+                        // Reset button
+                        spinner.classList.add('d-none');
+                        saveText.textContent = 'Save';
+                        saveBtn.disabled = false;
+
                         if (data.success) {
                             alert('Assignment saved successfully');
-                            modal.hide(); // Hide the modal after successful submission
-                            calendar.refetchEvents(); // Optionally refetch events
-                            // Reload the page after showing the alert
+                            modal.hide();
+                            calendar.refetchEvents();
                             location.reload();
                         } else {
                             alert('Error: ' + data.error);
                         }
                     })
                     .catch(error => {
+                        spinner.classList.add('d-none');
+                        saveText.textContent = 'Save';
+                        saveBtn.disabled = false;
                         console.error('Error:', error);
                         alert('Something went wrong');
                     });
             });
+
+
         });
     </script>
 </body>
