@@ -424,23 +424,41 @@
         </a>
         <ul id="feePortal" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a id="fee_collection" href="fee_collection.php">
+            <a id="fee_collection" href="fee_collection.php" target="_blank">
               <span>Fee Collection</span>
             </a>
           </li>
           <li>
-            <a id="settlement" href="settlement.php">
+            <a id="settlement" href="settlement.php" target="_blank">
               <span>Fee Settlement</span>
             </a>
           </li>
           <li>
-            <a id="fee_structure_management" href="fee_structure_management.php">
+            <a id="fee_structure_management" href="fee_structure_management.php" target="_blank">
               <span>Fee Structure Management</span>
             </a>
           </li>
           <li>
-            <a id="fee_lock_management" href="fee_lock_management.php">
+            <a id="fee_lock_management" href="fee_lock_management.php" target="_blank">
               <span>Fee Collection Lock Management</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Components Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#irc" data-bs-toggle="collapse" href="#">
+          <span>Information Resource Center</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="irc" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a id="books" href="books.php" target="_blank">
+              <span>Library Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a id="orders" href="orders.php" target="_blank">
+              <span>Library Orders Management</span>
             </a>
           </li>
         </ul>
