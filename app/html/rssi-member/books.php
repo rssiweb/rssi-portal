@@ -32,7 +32,7 @@ $limit = ($page == 1) ? $initial_limit : $initial_limit + (($page - 1) * $load_m
 $search = isset($_GET['search']) ? pg_escape_string($con, $_GET['search']) : '';
 $author = isset($_GET['author']) ? pg_escape_string($con, $_GET['author']) : '';
 $publisher = isset($_GET['publisher']) ? pg_escape_string($con, $_GET['publisher']) : '';
-$category = isset($_GET['category']) ? pg_escape_string($con, $_GET['category']) : '';
+$category = isset($_GET['search_category']) ? pg_escape_string($con, $_GET['search_category']) : '';
 
 // Place order (teacher placing order for self or student)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['place_order'])) {
@@ -345,6 +345,12 @@ $stats = [
             gap: 10px;
             margin-top: 20px;
         }
+
+        #new_category,
+        #add_category_btn,
+        #category_feedback {
+            display: none;
+        }
     </style>
 </head>
 
@@ -472,8 +478,8 @@ $stats = [
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label for="category" class="form-label">Category</label>
-                            <select class="form-select" id="category" name="category">
+                            <label for="search_category" class="form-label">Category</label>
+                            <select class="form-select" id="search_category" name="search_category">
                                 <option value="">All Categories</option>
                                 <?php while ($row = pg_fetch_assoc($categories)): ?>
                                     <option value="<?= htmlspecialchars($row['category']) ?>" <?= $category == $row['category'] ? 'selected' : '' ?>>
@@ -607,10 +613,32 @@ $stats = [
                                                         <input type="number" class="form-control" id="edit_publication_year_<?= $book['book_id'] ?>" name="publication_year"
                                                             min="1800" max="<?= date('Y') ?>" value="<?= $book['publication_year'] ?>">
                                                     </div>
-                                                    <div class="col-md-4 mb-3">
+                                                    <!-- <div class="col-md-4 mb-3">
                                                         <label for="edit_category_<?= $book['book_id'] ?>" class="form-label">Category</label>
                                                         <input type="text" class="form-control" id="edit_category_<?= $book['book_id'] ?>" name="category" value="<?= htmlspecialchars($book['category']) ?>">
+                                                    </div> -->
+                                                    <div class="col-md-4 mb-3">
+                                                        <label for="edit_category_<?= $book['book_id'] ?>" class="form-label">Category</label>
+
+                                                        <select class="form-select category-select" id="edit_category_<?= $book['book_id'] ?>" name="category" required>
+                                                            <option value="">Select a category</option>
+                                                            <?php
+                                                            $categories_query = pg_query($con, "SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND category != '' ORDER BY category");
+                                                            while ($cat = pg_fetch_assoc($categories_query)) {
+                                                                $selected = ($book['category'] == $cat['category']) ? 'selected' : '';
+                                                                echo '<option value="' . htmlspecialchars($cat['category']) . '" ' . $selected . '>' . htmlspecialchars($cat['category']) . '</option>';
+                                                            }
+                                                            ?>
+                                                            <option value="__new__">+ Add New Category</option>
+                                                        </select>
+
+                                                        <div class="mt-2 new-category-group" style="display: none;">
+                                                            <input type="text" class="form-control new-category-input" placeholder="Enter new category">
+                                                            <div class="invalid-feedback new-category-feedback">Please enter a category name</div>
+                                                            <button type="button" class="btn btn-outline-secondary mt-2 add-category-btn">Add Category</button>
+                                                        </div>
                                                     </div>
+
                                                     <div class="col-md-4 mb-3">
                                                         <label for="edit_location_<?= $book['book_id'] ?>" class="form-label">Location</label>
                                                         <input type="text" class="form-control" id="edit_location_<?= $book['book_id'] ?>" name="location" value="<?= htmlspecialchars($book['location']) ?>">
@@ -693,7 +721,7 @@ $stats = [
                         <h5 class="modal-title" id="addBookModalLabel">Add New Book</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form method="POST" action="#">
+                    <form method="POST" action="#" id="addBookForm">
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -723,7 +751,30 @@ $stats = [
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="category" class="form-label">Category</label>
-                                    <input type="text" class="form-control" id="category" name="category">
+                                    <div class="input-group">
+                                        <select class="form-select" id="category" name="category" required>
+                                            <option value="">Select a category</option>
+                                            <?php
+                                            $categories_query = pg_query($con, "SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND category != '' ORDER BY category");
+                                            while ($cat = pg_fetch_assoc($categories_query)) {
+                                                $selected = (!empty($_POST['category']) && $_POST['category'] == $cat['category']) ? 'selected' : '';
+                                                echo '<option value="' . htmlspecialchars($cat['category']) . '" ' . $selected . '>' . htmlspecialchars($cat['category']) . '</option>';
+                                            }
+                                            ?>
+                                            <option value="__new__">+ Add New Category</option>
+                                        </select>
+                                        <!-- New Category Input -->
+                                        <div class="mb-3">
+                                            <input type="text" id="new_category" class="form-control" placeholder="Enter new category">
+                                            <div id="category_feedback" class="invalid-feedback"></div>
+                                        </div>
+
+                                        <!-- Add Category Button -->
+                                        <div class="mb-3">
+                                            <button type="button" id="add_category_btn" class="btn btn-outline-secondary">Add Category</button>
+                                        </div>
+                                    </div>
+                                    <div id="category_feedback" class="invalid-feedback">Please select or create a category</div>
                                 </div>
 
                                 <div class="col-md-4 mb-3">
@@ -757,6 +808,7 @@ $stats = [
     <?php endif; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Enhance filter dropdowns with search functionality
         document.querySelectorAll('select.form-select').forEach(select => {
@@ -772,6 +824,93 @@ $stats = [
             });
         });
     </script>
+    <!-- Custom JS -->
+    <script>
+        $(document).ready(function() {
+            $('#category').on('change', function() {
+                if ($(this).val() === '__new__') {
+                    $(this).hide();
+                    $('#new_category').val('').show().focus();
+                    $('#add_category_btn').show();
+                }
+            });
+
+            $('#add_category_btn').on('click', function() {
+                var newCat = $('#new_category').val().trim();
+                if (!newCat) {
+                    $('#new_category').addClass('is-invalid');
+                    $('#category_feedback').text('Please enter a category name').show();
+                    return;
+                }
+
+                // Add new category
+                $('#category')
+                    .append($('<option>', {
+                        value: newCat,
+                        text: newCat
+                    }))
+                    .val(newCat)
+                    .show();
+
+                // Reset new category input
+                $('#new_category').val('').hide().removeClass('is-invalid');
+                $('#add_category_btn').hide();
+                $('#category_feedback').hide();
+            });
+
+            $('#addBookForm').on('submit', function(e) {
+                if ($('#category').val() === '__new__') {
+                    var inputVal = $('#new_category').val().trim();
+                    if (!inputVal) {
+                        e.preventDefault();
+                        $('#new_category').addClass('is-invalid').show().focus();
+                        $('#category_feedback').text('Please enter a new category name').show();
+                        $('#add_category_btn').show();
+                        $('#category').hide();
+                    }
+                }
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Handle category change
+            $(document).on('change', '.category-select', function() {
+                const $wrapper = $(this).closest('.col-md-4');
+                if ($(this).val() === '__new__') {
+                    $(this).hide();
+                    $wrapper.find('.new-category-group').show();
+                    $wrapper.find('.new-category-input').val('').focus();
+                }
+            });
+
+            // Add new category
+            $(document).on('click', '.add-category-btn', function() {
+                const $wrapper = $(this).closest('.col-md-4');
+                const newCategory = $wrapper.find('.new-category-input').val().trim();
+
+                if (!newCategory) {
+                    $wrapper.find('.new-category-input').addClass('is-invalid');
+                    $wrapper.find('.new-category-feedback').show();
+                    return;
+                }
+
+                const $select = $wrapper.find('.category-select');
+                $select
+                    .append($('<option>', {
+                        value: newCategory,
+                        text: newCategory
+                    }))
+                    .val(newCategory)
+                    .show();
+
+                $wrapper.find('.new-category-input').val('').removeClass('is-invalid');
+                $wrapper.find('.new-category-feedback').hide();
+                $wrapper.find('.new-category-group').hide();
+            });
+        });
+    </script>
+
 </body>
 
 </html>
