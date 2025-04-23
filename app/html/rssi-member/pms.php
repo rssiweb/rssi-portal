@@ -87,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     [
                         "fullname" => $fullname,
                         "associatenumber" => $user_id,
+                        "username" => $email,
                         "password" => $password,
                     ],
                     $email,
