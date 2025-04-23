@@ -23,7 +23,6 @@ include("../../util/email.php");
         @$awarded_to_id = strtoupper($_POST['awarded_to_id'] ?? "na");
         @$badge_name = $_POST['badge_name'];
         @$comment = htmlspecialchars($_POST['comment'], ENT_QUOTES, 'UTF-8');
-        @$gems = $_POST['gems'];
         @$template_code = $_POST['template_code'];
         @$certificate_url = $_POST['certificate_url'];
         @$nominatedby = $_POST['nominatedby'];;
@@ -44,7 +43,6 @@ include("../../util/email.php");
             if (empty($_FILES['certificate_url']['name'])) {
                 $doclink = null;
             } else {
-
                 if ($badge_name == 'Offer Letter') {
                     $parent = '1ax2QbjgC3yjJK3ezbrS9ZtOllRlUHOR8';
                     $filename = $awarded_to_id . "_" . $badge_name . "_" . time();
@@ -57,9 +55,6 @@ include("../../util/email.php");
                 }
                 $doclink = uploadeToDrive($uploadedFile, $parent, $filename);
             }
-            // $certificate = "INSERT INTO certificate (certificate_no, issuedon, awarded_to_id, badge_name, comment, gems, certificate_url, nominatedby,awarded_to_name,out_phone,out_email,out_scode,out_flag,pdf_certificate) VALUES ('$certificate_no','$now','$awarded_to_id','$badge_name','$comment', NULLIF('$gems','')::integer,'$doclink','$nominatedby','$awarded_to_name','$out_phone','$out_email','$out_scode','$out_flag','$pdf_certificate')";
-            // $result = pg_query($con, $certificate);
-            // $cmdtuples = pg_affected_rows($result);
 
             // Define all possible fields and their corresponding variables
             $data = [
@@ -68,7 +63,6 @@ include("../../util/email.php");
                 "awarded_to_id" => $awarded_to_id,
                 "badge_name" => $badge_name,
                 "comment" => $comment,
-                "gems" => $gems,
                 "certificate_url" => $doclink,
                 "nominatedby" => $nominatedby,
                 "awarded_to_name" => $awarded_to_name,
@@ -105,7 +99,6 @@ include("../../util/email.php");
 
                 if ($result) {
                     $cmdtuples = pg_affected_rows($result);
-                    // echo "$cmdtuples rows affected.";
                 } else {
                     error_log("Query failed: " . pg_last_error($con));
                     die("An error occurred while processing your request.");
@@ -140,14 +133,16 @@ include("../../util/email.php");
             ), $email_nominee, False);
         }
     }
+?>
+<?php
 
     @$get_certificate_no = strtoupper($_GET['get_certificate_no']);
     @$get_nomineeid = strtoupper($_GET['get_nomineeid']);
     @$is_user = $_GET['is_user'];
+    @$academic_year = $_GET['academic_year'];
 
-    if (($get_certificate_no == null && $get_nomineeid == null)) {
-
-        $result = pg_query($con, "SELECT certificate.*, 
+    // Build base query
+    $query = "SELECT certificate.*, 
         faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone, 
         student.studentname AS awarded_to_student_name, student.emailaddress AS awarded_to_student_email, student.contact AS awarded_to_student_phone,
         nominator.fullname AS nominated_by_name
@@ -157,52 +152,42 @@ include("../../util/email.php");
     LEFT JOIN (SELECT student_id, studentname, emailaddress, contact FROM rssimyprofile_student) student 
         ON certificate.awarded_to_id = student.student_id
     LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
-        ON certificate.nominatedby = nominator.associatenumber
-    ORDER BY issuedon DESC");
-        $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems");
-        $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate");
-        $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
-        $totalgemsreceived_admin = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$associatenumber'");
-        $totalgemsredeem_approved = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems");
+        ON certificate.nominatedby = nominator.associatenumber";
+
+    // Add WHERE conditions based on filters
+    $conditions = array();
+
+    if ($get_certificate_no != null) {
+        $conditions[] = "certificate_no='$get_certificate_no'";
     }
 
-    if (($get_certificate_no != null)) {
-
-        $result = pg_query($con, "SELECT certificate.*, 
-        faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone, 
-        nominator.fullname AS nominated_by_name
-    FROM certificate  
-    LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
-        ON certificate.awarded_to_id = faculty.associatenumber
-    LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
-        ON certificate.nominatedby = nominator.associatenumber
-    WHERE certificate_no='$get_certificate_no' 
-    ORDER BY issuedon DESC");
-        $totalgemsredeem = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
-        $totalgemsreceived = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
-        $totalgemsredeem_admin = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
-        $totalgemsreceived_admin = pg_query($con, "SELECT SUM(gems) FROM certificate where certificate_no=''");
-        $totalgemsredeem_approved = pg_query($con, "SELECT SUM(redeem_gems_point) FROM gems where redeem_id=''");
+    if ($get_nomineeid != null) {
+        $conditions[] = "awarded_to_id='$get_nomineeid'";
     }
 
-    if (($get_nomineeid != null)) {
-
-        $result = pg_query($con, "SELECT certificate.*, 
-        faculty.fullname AS awarded_to_name, faculty.email AS awarded_to_email, faculty.phone AS awarded_to_phone, 
-        nominator.fullname AS nominated_by_name
-    FROM certificate  
-    LEFT JOIN (SELECT associatenumber, fullname, email, phone FROM rssimyaccount_members) faculty 
-        ON certificate.awarded_to_id = faculty.associatenumber
-    LEFT JOIN (SELECT associatenumber, fullname FROM rssimyaccount_members) nominator 
-        ON certificate.nominatedby = nominator.associatenumber
-    WHERE awarded_to_id='$get_nomineeid' 
-    ORDER BY issuedon DESC");
-        $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$get_nomineeid' AND (reviewer_status is null or reviewer_status !='Rejected')");
-        $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$get_nomineeid'");
-        $totalgemsredeem_admin = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
-        $totalgemsreceived_admin = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$associatenumber'");
-        $totalgemsredeem_approved = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$get_nomineeid' AND reviewer_status='Approved'");
+    if ($academic_year != null && $academic_year != '') {
+        $start_date = $academic_year . '-04-01';
+        $end_date = ($academic_year + 1) . '-03-31';
+        $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
+    } else {
+        // Default to current academic year if no filters are set
+        if ($get_certificate_no == null && $get_nomineeid == null) {
+            $currentMonth = date('m');
+            $currentYear = date('Y');
+            $academicYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
+            $start_date = $academicYear . '-04-01';
+            $end_date = ($academicYear + 1) . '-03-31';
+            $conditions[] = "issuedon BETWEEN '$start_date' AND '$end_date'";
+        }
     }
+
+    if (!empty($conditions)) {
+        $query .= " WHERE " . implode(' AND ', $conditions);
+    }
+
+    $query .= " ORDER BY issuedon DESC";
+
+    $result = pg_query($con, $query);
 
     if (!$result) {
         echo "An error occurred.\n";
@@ -210,17 +195,31 @@ include("../../util/email.php");
     }
 
     $resultArr = pg_fetch_all($result);
-    $resultArrr = pg_fetch_result($totalgemsreceived, 0, 0);
-    $resultArrrr = pg_fetch_result($totalgemsredeem, 0, 0);
-    $resultArrr_admin = pg_fetch_result($totalgemsreceived_admin, 0, 0);
-    $resultArrrr_admin = pg_fetch_result($totalgemsredeem_admin, 0, 0);
-    $gems_approved = pg_fetch_result($totalgemsredeem_approved, 0, 0);
 } ?>
 <?php if ($role != 'Admin') {
+    @$academic_year = $_GET['academic_year'];
 
-    $result = pg_query($con, "SELECT * FROM certificate where awarded_to_id='$associatenumber' order by issuedon desc");
-    $totalgemsredeem = pg_query($con, "SELECT COALESCE(SUM(redeem_gems_point),0) FROM gems where user_id='$associatenumber'AND (reviewer_status is null or reviewer_status !='Rejected')");
-    $totalgemsreceived = pg_query($con, "SELECT COALESCE(SUM(gems),0) FROM certificate where awarded_to_id='$associatenumber'");
+    // Build base query for non-admin users
+    $query = "SELECT * FROM certificate WHERE awarded_to_id='$associatenumber'";
+
+    // Add academic year condition if selected
+    if ($academic_year != null && $academic_year != '') {
+        $start_date = $academic_year . '-04-01';
+        $end_date = ($academic_year + 1) . '-03-31';
+        $query .= " AND issuedon BETWEEN '$start_date' AND '$end_date'";
+    } else {
+        // Default to current academic year if no filter is set
+        $currentMonth = date('m');
+        $currentYear = date('Y');
+        $academicYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
+        $start_date = $academicYear . '-04-01';
+        $end_date = ($academicYear + 1) . '-03-31';
+        $query .= " AND issuedon BETWEEN '$start_date' AND '$end_date'";
+    }
+
+    $query .= " ORDER BY issuedon DESC";
+
+    $result = pg_query($con, $query);
 
     if (!$result) {
         echo "An error occurred.\n";
@@ -228,10 +227,7 @@ include("../../util/email.php");
     }
 
     $resultArr = pg_fetch_all($result);
-    $resultArrr = pg_fetch_result($totalgemsreceived, 0, 0);
-    $resultArrrr = pg_fetch_result($totalgemsredeem, 0, 0);
 } ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -392,9 +388,7 @@ include("../../util/email.php");
                                     <?php } ?>
                                 <?php } ?>
                             </div>
-                            <?php if ($resultArrr == null) { ?>
-                            <?php } ?>
-                            <br>
+
                             <?php if ($role == 'Admin') { ?>
 
                                 <form autocomplete="off" name="cms" id="cms" action="my_certificate.php" method="POST" enctype="multipart/form-data">
@@ -575,22 +569,6 @@ include("../../util/email.php");
                                     });
                                 </script>
 
-
-                                <?php if ($get_nomineeid != null) { ?>
-                                    <div class="col" style="display: inline-block; width: 100%; text-align: right;">
-                                        <div style="display: inline-block; width: 100%; text-align: right;">
-                                            Total Gems:&nbsp;
-                                            <span class="badge bg-secondary"><?php echo $resultArrr ?></span><br>
-                                            Balance:&nbsp;
-                                            <?php if ($resultArrr - $gems_approved <= 0) { ?>
-                                                <span class="badge bg-danger"><?php echo ($resultArrr - $gems_approved) ?></span><br><br>
-                                            <?php } else { ?>
-                                                <span class="badge bg-info"><?php echo ($resultArrr - $gems_approved) ?></span><br><br>
-                                            <?php } ?>
-                                        </div>
-                                    </div>
-
-                                <?php } ?>
                                 <div style="display: inline-block; width:100%; text-align:right;">Record count:&nbsp;<?php echo sizeof($resultArr) ?>
                                 </div>
 
@@ -606,6 +584,28 @@ include("../../util/email.php");
                                         </div>
                                         <div class="col2" style="display: inline-block;">
                                             <input name="get_nomineeid" id="get_nomineeid" class="form-control" style="width:max-content; display:inline-block" placeholder="Nominee id" value="<?php echo $get_nomineeid ?>">
+                                        </div>
+                                        <div class="col2" style="display: inline-block;">
+                                            <select name="academic_year" id="academic_year" class="form-select">
+                                                <option value="">All Academic Years</option>
+                                                <?php
+                                                // Generate academic years from 2020 to current year + 1
+                                                $currentYear = date('Y');
+                                                $currentMonth = date('m');
+                                                // If current month is Jan-Mar, show previous year as current academic year
+                                                $displayCurrentYear = ($currentMonth < 4) ? $currentYear - 1 : $currentYear;
+
+                                                for ($year = 2020; $year <= $currentYear + 1; $year++) {
+                                                    $nextYear = $year + 1;
+                                                    $selected = (isset($_GET['academic_year']) && $_GET['academic_year'] == $year) ? 'selected' : '';
+                                                    // If no academic year selected, default to current academic year
+                                                    if (!isset($_GET['academic_year']) && $year == $displayCurrentYear) {
+                                                        $selected = 'selected';
+                                                    }
+                                                    echo "<option value='$year' $selected>$year-$nextYear</option>";
+                                                }
+                                                ?>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col2 left" style="display: inline-block;">
