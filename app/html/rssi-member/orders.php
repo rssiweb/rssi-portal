@@ -500,7 +500,7 @@ for ($i = $current_year - 4; $i <= $current_year + 2; $i++) {
                                                 <small><strong>Returned:</strong> <?php echo date('d M Y', strtotime($order['return_date'])); ?></small><br>
                                                 <?php if ($order['fine_amount'] > 0): ?>
                                                     <small><strong>Fine:</strong> ₹<?php echo number_format($order['fine_amount'], 2); ?></small>
-                                                    <?php if (!empty($order['fine_settled']) && $order['fine_settled'] == true): ?>
+                                                    <?php if (!empty($order['fine_settled']) && $order['fine_settled'] === 't'): ?>
                                                         <span class="badge bg-success">Settled</span>
                                                     <?php else: ?>
                                                         <span class="badge bg-warning">Pending</span>
