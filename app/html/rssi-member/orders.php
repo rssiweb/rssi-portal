@@ -312,9 +312,12 @@ for ($i = $current_year - 4; $i <= $current_year + 2; $i++) {
                     <h1 class="h2">Library Orders Management</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <div class="btn-group me-2">
-                            <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#settleFinesModal">
-                                <i class="bi bi-cash-coin"></i> Settle Fines
-                            </button>
+                            <?php if ($role === 'Admin'): ?>
+                                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#settleFinesModal">
+                                    <i class="bi bi-cash-coin"></i> Settle Fines
+                                </button>
+                            <?php endif; ?>
+
                             <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settlementHistoryModal">
                                 <i class="bi bi-clock-history"></i> History
                             </button>
