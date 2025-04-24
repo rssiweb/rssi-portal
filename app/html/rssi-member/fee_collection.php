@@ -10,10 +10,11 @@ if (!isLoggedIn("aid")) {
 }
 validation();
 
-function getStudentTypeForDate($con, $studentId, $targetDate) {
+function getStudentTypeForDate($con, $studentId, $targetDate)
+{
     // Convert target date to first day of month
     $targetMonthStart = date('Y-m-01', strtotime($targetDate));
-    
+
     // First try to get from history table for the month
     $query = "SELECT category_type 
               FROM student_category_history 
@@ -25,21 +26,21 @@ function getStudentTypeForDate($con, $studentId, $targetDate) {
               )
               ORDER BY effective_from DESC 
               LIMIT 1";
-    
+
     $result = pg_query_params($con, $query, array($studentId));
     if ($row = pg_fetch_assoc($result)) {
         return $row['category_type'];
     }
-    
-// Directly fetch the type_of_admission from the database
-$originalTypeQuery = "SELECT type_of_admission FROM rssimyprofile_student WHERE student_id = $1";
-$originalTypeResult = pg_query_params($con, $originalTypeQuery, array($studentId));
-if ($originalType = pg_fetch_assoc($originalTypeResult)) {
-    return $originalType['type_of_admission'];
-}
 
-// If no record is found, handle the case (optional)
-return null; // Or handle it differently, e.g., return 'Unknown'
+    // Directly fetch the type_of_admission from the database
+    $originalTypeQuery = "SELECT type_of_admission FROM rssimyprofile_student WHERE student_id = $1";
+    $originalTypeResult = pg_query_params($con, $originalTypeQuery, array($studentId));
+    if ($originalType = pg_fetch_assoc($originalTypeResult)) {
+        return $originalType['type_of_admission'];
+    }
+
+    // If no record is found, handle the case (optional)
+    return null; // Or handle it differently, e.g., return 'Unknown'
 }
 
 // Get filter parameters
@@ -84,7 +85,7 @@ $categories = pg_fetch_all(pg_query(
 $processedStudents = [];
 foreach ($students as $student) {
     $studentId = $student['student_id'];
-    
+
     // Get student type for the current month being processed
     $studentType = getStudentTypeForDate($con, $studentId, $firstDayOfMonth);
 
@@ -198,7 +199,7 @@ foreach ($students as $student) {
             $loopMonthNum = str_pad($m, 2, '0', STR_PAD_LEFT);
             $loopMonthName = date('F', mktime(0, 0, 0, $m, 1));
             $loopMonthDate = "$year-$loopMonthNum-01";
-            
+
             // Get student type for this historical month
             $loopStudentType = getStudentTypeForDate($con, $studentId, $loopMonthDate);
 
@@ -323,7 +324,7 @@ $lockResult = pg_query_params($con, $lockQuery, [$month, $year]);
 // Default to LOCKED (true) if no record exists
 $isLocked = true; // Changed from false to true for default state
 if ($lockStatus = pg_fetch_assoc($lockResult)) {
-    $isLocked = ($lockStatus['is_locked'] === 't'); 
+    $isLocked = ($lockStatus['is_locked'] === 't');
     // This will now only set to false if there's an explicit record with is_locked = false
 }
 ?>
@@ -348,6 +349,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
     <title>Monthly Fee Collection System</title>
     <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .due-positive {
@@ -432,6 +434,13 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
         .back-to-top.active {
             visibility: visible;
             opacity: 1;
+        }
+
+        .fee-notice {
+            background-color: #f8f9fa;
+            border-left: 4px solid #d9d9d9 !important;
+            padding: 12px;
+            font-size: 0.95rem;
         }
     </style>
     <!-- CSS Library Files -->
@@ -548,7 +557,7 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                         <div class="card summary-card net">
                             <div class="card-body">
                                 <h6 class="card-title">Net Fee</h6>
-                                <p class="card-text h4">₹<?= number_format(($summary['total_net_fee']-$summary['total_concession']), 2) ?></p>
+                                <p class="card-text h4">₹<?= number_format(($summary['total_net_fee'] - $summary['total_concession']), 2) ?></p>
                             </div>
                         </div>
                     </div>
@@ -886,6 +895,12 @@ if ($lockStatus = pg_fetch_assoc($lockResult)) {
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <h5>Fee Collection</h5>
+                                    <!-- Fee Categories Notice -->
+                                    <div class="fee-notice mb-4 p-3 bg-light border-start border-4 border-primary">
+                                        <p class="mb-0 text-muted">
+                                            Dues can be collected under Admission, Monthly, Exam, or Miscellaneous fees.
+                                        </p>
+                                    </div>
                                     <div id="feeActions" class="d-flex justify-content-end mb-3"></div>
                                     <table class="table table-bordered">
                                         <thead>
