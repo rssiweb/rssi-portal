@@ -311,7 +311,8 @@ $feeStructure = pg_fetch_all(pg_query(
                                         <option value="Basic">Basic</option>
                                         <option value="Regular">Regular</option>
                                         <option value="Premium">Premium</option>
-                                        <option value="General">General</option>
+                                        <option value="Classic">Classic</option>
+                                        <option value="Excellence">Excellence</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -364,7 +365,8 @@ $feeStructure = pg_fetch_all(pg_query(
                                         <option value="Basic">Basic</option>
                                         <option value="Regular">Regular</option>
                                         <option value="Premium">Premium</option>
-                                        <option value="General">General</option>
+                                        <option value="Classic">Classic</option>
+                                        <option value="Excellence">Excellence</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
